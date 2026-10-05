@@ -17,22 +17,25 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.contribuyente.inventory.records import (
-    InventoryAcquisitionCompleteness,
-    InventoryAcquisitionCost,
-    InventoryAcquisitionEvidence,
-    InventoryAcquisitionEvidenceKind,
+
+from .....domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
     InventoryClosingValuationBasis,
-    MovementKind,
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
     PhysicalClosingObservation,
     PriorClosingContinuityEvidence,
-    ValuationMethod,
     fingerprint_prior_authoritative_closing,
+)
+from .....domain.contribuyente.inventory.records import (
+    InventoryAcquisitionCompleteness,
+    InventoryAcquisitionCost,
+    InventoryAcquisitionEvidence,
+    InventoryAcquisitionEvidenceKind,
+    MovementKind,
+    ValuationMethod,
 )
 
 if TYPE_CHECKING:

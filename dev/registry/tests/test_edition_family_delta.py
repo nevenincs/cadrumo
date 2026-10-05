@@ -17,8 +17,9 @@ from cadrumo.core.toml import parse_toml
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_migration import assess_migration_state
-from ..edition_family_delta import collapse_keyed_families, restates_stated_whole_sequence
+from ..edition_delta_assessment import assess_migration_state
+from ..edition_family_delta import restates_stated_whole_sequence
+from ..edition_family_delta_collapse import collapse_keyed_families
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

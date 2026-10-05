@@ -36,26 +36,36 @@ def check() -> None:
     """Require consistent release markers and usable search indexes on both mounts."""
     releases: set[str] = set()
     for base in BASES:
-        for path in ("/", "/en/", "/es/", "/ca/", "/hu/"):
-            headers, _ = probe(base + path)
-            release = headers.get("x-cadrumo-docs-release")
-            if not release:
-                raise ValueError(f"Missing release identity: {base}{path}")
-            if headers.get("x-cadrumo-docs-delivery") != "static":
-                raise ValueError(f"Documentation is not on native static delivery: {base}{path}")
-            releases.add(release)
-            if path != "/":
-                for kind in ("index", "fragment"):
-                    _, payload = probe(base + f"/_health{path}{kind}", redirect_release=release)
-                    if not payload:
-                        raise ValueError(f"Empty public search payload: {base}{path}{kind}")
-        _, body = probe(base + "/en/pagefind/pagefind-entry.json")
-        entry = json.loads(body)
-        if not any(row.get("page_count", 0) > 0 for row in entry.get("languages", {}).values()):
-            raise ValueError(f"Search index is empty: {base}")
+        _check_mount(base, releases)
     if len(releases) != 1:
         raise ValueError("Documentation mounts serve inconsistent releases")
     print(f"Documentation health passed: {next(iter(releases))}")
+
+
+def _check_mount(base: str, releases: set[str]) -> None:
+    """Check mount."""
+    for path in ("/", "/en/", "/es/", "/ca/", "/hu/"):
+        _check_mount_path(base, path, releases)
+    _, body = probe(base + "/en/pagefind/pagefind-entry.json")
+    entry = json.loads(body)
+    if not any(row.get("page_count", 0) > 0 for row in entry.get("languages", {}).values()):
+        raise ValueError(f"Search index is empty: {base}")
+
+
+def _check_mount_path(base: str, path: str, releases: set[str]) -> None:
+    """Check mount path."""
+    headers, _ = probe(base + path)
+    release = headers.get("x-cadrumo-docs-release")
+    if not release:
+        raise ValueError(f"Missing release identity: {base}{path}")
+    if headers.get("x-cadrumo-docs-delivery") != "static":
+        raise ValueError(f"Documentation is not on native static delivery: {base}{path}")
+    releases.add(release)
+    if path != "/":
+        for kind in ("index", "fragment"):
+            _, payload = probe(base + f"/_health{path}{kind}", redirect_release=release)
+            if not payload:
+                raise ValueError(f"Empty public search payload: {base}{path}{kind}")
 
 
 if __name__ == "__main__":

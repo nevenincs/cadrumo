@@ -87,7 +87,7 @@ wizard:
             description: Discapacidad reconocida del 65% o más - mayor incremento
               del mínimo personal.
             label: Discapacidad del 65% o superior
-          assistance-or-mobility:
+          assistance-or-reduced-mobility:
             description: Necesidad acreditada de ayuda de terceros o movilidad reducida
               - añade el incremento por asistencia.
             label: Ayuda de terceros o movilidad reducida
@@ -121,20 +121,20 @@ wizard:
           en total, no vuelve a empezar con la adopción.'
         prompt: Fecha de la primera resolución de acogimiento
       alta-posterior-nacimiento-mes:
-        help: Indique un mes del 1 al 12. Debe coincidir con el primer mes declarado
-          en los meses de trabajo; déjelo en blanco si la madre ya cumplía el requisito
+        help: Indica un mes del 1 al 12. Debe coincidir con el primer mes declarado
+          en los meses de trabajo; déjalo en blanco si la madre ya cumplía el requisito
           al nacer.
         invalid_range: El mes debe estar entre %{minimum} y %{maximum}.
         prompt: Mes en que la madre completó los 30 días de cotización tras el nacimiento
       birth-date:
         prompt: Fecha de nacimiento
       convivencia:
-        prompt: ¿Este descendiente convive con usted?
+        prompt: ¿Este descendiente convive contigo?
       count:
-        help: 'Cuente los hijos que pueden dar derecho al mínimo por descendientes
+        help: 'Cuenta los hijos que pueden dar derecho al mínimo por descendientes
           (art. 58 LIRPF): menores de 25 años (o cualquier edad con discapacidad)
-          que convivan con usted.'
-        prompt: ¿Cuántos descendientes (hijos) quiere declarar?
+          que convivan contigo.'
+        prompt: ¿Cuántos descendientes (hijos) quieres declarar?
       custodia-compartida:
         prompt: ¿La custodia es compartida con el otro progenitor?
       declaracion-propia:
@@ -146,13 +146,13 @@ wizard:
             label: No contribuyo a su mantenimiento
           'true':
             label: Sí, contribuyo a su mantenimiento
-        help: Responda solo si el descendiente no convive con usted. Un progenitor
-          sin guarda y custodia, ni siquiera compartida, que no paga anualidades por
-          alimentos por decisión judicial pero contribuye al mantenimiento del hijo,
-          tiene derecho al mínimo por descendientes. Si usted declara anualidades
-          por alimentos, esta asimilación no se aplica a ningún descendiente mientras
-          la aplicación no pueda repartirlas por hijo.
-        prompt: ¿Contribuye usted al mantenimiento económico de este descendiente?
+        help: Responde solo si el descendiente no convive contigo. Un progenitor sin
+          guarda y custodia, ni siquiera compartida, que no paga anualidades por alimentos
+          por decisión judicial pero contribuye al mantenimiento del hijo, tiene derecho
+          al mínimo por descendientes. Si declaras anualidades por alimentos, esta
+          asimilación no se aplica a ningún descendiente mientras la aplicación no
+          pueda repartirlas por hijo.
+        prompt: ¿Contribuyes al mantenimiento económico de este descendiente?
       discapacidad:
         choices:
           '0':
@@ -168,35 +168,35 @@ wizard:
         relacion_mismatch: Esta fecha no corresponde a la relación indicada. La inscripción
           en el Registro Civil solo se indica para un descendiente adoptado, y la
           resolución de acogimiento solo para un acogimiento preadoptivo o permanente,
-          o para un adoptado que antes estuvo acogido. Corrija la relación o borre
+          o para un adoptado que antes estuvo acogido. Corrige la relación o borra
           la fecha.
       fallecimiento:
         help: Déjelo en blanco si este descendiente no ha fallecido.
         prompt: Fecha de fallecimiento
       gastos-guarderia:
-        both_declared: Indique el total anual de guardería o los importes mes a mes
+        both_declared: Indica el total anual de guardería o los importes mes a mes
           de este hijo, pero no ambos. El detalle mensual es el único que puede expresar
-          el año en que el hijo cumple tres años, así que borre el total anual.
+          el año en que el hijo cumple tres años, así que borra el total anual.
         help: Importes pagados a una guardería o centro de educación infantil autorizado
           (art. 81.2 LIRPF) que incrementan la deducción por maternidad; euros enteros.
-        invalid_negative: Los gastos de guardería no pueden ser negativos; introduzca
+        invalid_negative: Los gastos de guardería no pueden ser negativos; introduce
           0 o un importe positivo en euros (art. 81 bis LIRPF).
         prompt: Gastos de guardería pagados en el año de declaración (euros)
       gastos-guarderia-mensuales:
-        help: 'Utilice esta casilla en lugar del total anual cuando el hijo cumpla
+        help: 'Utiliza esta casilla en lugar del total anual cuando el hijo cumpla
           tres años durante el ejercicio: solo cuentan los meses posteriores al cumpleaños
-          y un importe anual no puede repartirse entre ellos. Escriba cada mes y su
+          y un importe anual no puede repartirse entre ellos. Escribe cada mes y su
           importe como MM:IMPORTE separados por punto y coma, o un periodo como MM-MM:IMPORTE,
           por ejemplo 9-12:210;1:180. Los meses con derecho son los que certifica
-          su guardería.'
-        invalid_grammar: Escriba cada mes y su importe como MM:IMPORTE separados por
+          tu guardería.'
+        invalid_grammar: Escribe cada mes y su importe como MM:IMPORTE separados por
           punto y coma; un periodo puede escribirse MM-MM:IMPORTE. Por ejemplo 9-12:210;1:180.
           Los meses van del 1 al 12, los importes son euros enteros y cada mes puede
           aparecer una sola vez.
         prompt: Gastos de guardería de este hijo, mes a mes (opcional)
       inscripcion-registro-civil:
         help: Fecha en que la adopción se inscribió en el Registro Civil. Si la inscripción
-          no era necesaria, indique la fecha de la resolución judicial o administrativa.
+          no era necesaria, indica la fecha de la resolución judicial o administrativa.
           Desde esa fecha se cuenta el aumento por menor de tres años.
         prompt: Fecha de inscripción en el Registro Civil
       meses-madre-trabajo:
@@ -204,10 +204,10 @@ wizard:
           la madre a la Seguridad Social mientras este hijo daba derecho -- menor
           de 3 años, o (con independencia de la edad) dentro de la ventana de fecha
           de entrada de adopción/acogimiento registrada en INSCRIPCION/ACOGIMIENTO.
-          Escriba MM o MM-MM, separados por '';'' (por ejemplo 5-8 o 1;2;11;12). Los
+          Escribe MM o MM-MM, separados por '';'' (por ejemplo 5-8 o 1;2;11;12). Los
           meses y no su número, porque el incremento por guardería se prorratea por
           los meses que estos y los de guardería comparten.'
-        invalid_range: Indique los meses como MM o MM-MM, separados por ';' (por ejemplo
+        invalid_range: Indica los meses como MM o MM-MM, separados por ';' (por ejemplo
           5-8 o 1;2;11;12), cada uno entre %{minimum} y %{maximum}.
         prompt: Qué meses trabajó la madre con derecho a la deducción -- hijo menor
           de 3 años, o adopción/acogimiento dentro de su ventana de fecha de entrada
@@ -237,7 +237,7 @@ wizard:
             label: Guarda y custodia por resolución judicial
           tutela:
             label: Tutela o representación legal
-        help: Elija la relación legal. Todas dan derecho al mínimo por descendientes.
+        help: Elige la relación legal. Todas dan derecho al mínimo por descendientes.
           Solo la adopción y el acogimiento preadoptivo o permanente dan además derecho
           al aumento por menor de tres años con independencia de la edad; el acogimiento
           temporal y la tutela no.
@@ -266,10 +266,6 @@ wizard:
         prompt: Hijos menores en unidad familiar
       title: Unidad familiar
     filing-export:
-      charge-iban:
-        help: IBAN que la AEAT puede cargar cuando una declaración del Modelo 303
-          elige la domiciliacion. Es distinto de la cuenta de devolución.
-        prompt: IBAN para la domiciliacion de la AEAT
       title: Cuenta de cargo del Modelo 303
     flags:
       activity:
@@ -285,9 +281,6 @@ wizard:
           agrícolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
-      charge-iban:
-        help: IBAN que la AEAT puede cargar para una domiciliacion elegida del Modelo
-          303.
       cloud-evidence-upload:
         help: Permitir subir evidencia sensible a proveedores LLM en la nube (desactivado
           por defecto).
@@ -295,7 +288,7 @@ wizard:
         help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
       declaration-roles:
-        help: Rol declarante del modelo 347; indique --declaration-roles una vez por
+        help: Rol declarante del modelo 347; indica --declaration-roles una vez por
           rol
       descendiente:
         help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
@@ -325,7 +318,7 @@ wizard:
       irpf-estimation-regime:
         help: Régimen de estimación IRPF para la renta de actividad económica
       irpf-income-categories:
-        help: Categoría de renta IRPF; indique --irpf-income-categories una vez por
+        help: Categoría de renta IRPF; indica --irpf-income-categories una vez por
           categoría
       irpf-special-regime:
         help: Régimen especial IRPF. "general" para la mayoría de contribuyentes.
@@ -423,7 +416,7 @@ wizard:
       pays-rent-with-retencion:
         help: Paga alquiler de local con retención
       premio-loteria-gravamen-especial-sin-retencion:
-        help: Obtuvo un premio de loterías o apuestas sujeto al gravamen especial
+        help: Obtuviste un premio de loterías o apuestas sujeto al gravamen especial
           sin retención ni ingreso a cuenta (Modelo 136)
       premio-loteria-gravamen-especial-trimestres:
         help: Trimestres en que se cobró el premio, como tokens AAAA-nT separados
@@ -506,7 +499,9 @@ wizard:
       taxpayer-sex:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
-        help: Operaciones con terceros superan el umbral del Modelo 347
+        help: Declara que, en el año natural que cubre el Modelo 347, tus operaciones
+          con una misma persona o entidad superaron 3.005,06 € (300,51 € en cobros
+          por cuenta de terceros).
     format:
       amount-eur: Importe en euros con punto decimal, p. ej. 50000.00.
       date-iso: Fecha en formato AAAA-MM-DD, p. ej. 2024-03-01.
@@ -531,13 +526,13 @@ wizard:
       Después de guardar, revisa el progreso con `aeat config profile status`.'
     iva:
       iva-cash-accounting-regime-enrolled:
-        prompt: ¿Está inscrito en el régimen especial del criterio de caja?
+        prompt: ¿Estás inscrito en el régimen especial del criterio de caja?
       iva-group-dominant-entity-enrolled:
         prompt: Alta como entidad dominante de un grupo de IVA
       iva-group-member-enrolled:
         prompt: Alta como entidad miembro de un grupo de IVA
       iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
-        prompt: ¿Tiene derecho a deducir pagos anticipados del régimen de depósitos
+        prompt: ¿Tienes derecho a deducir pagos anticipados del régimen de depósitos
           fiscales de hidrocarburos?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
@@ -552,7 +547,7 @@ wizard:
       iva-sii-enrolled:
         prompt: Inscrito en el SII (Suministro Inmediato de Información)
       iva-voluntary-sii-enrolled:
-        prompt: ¿Está inscrito voluntariamente en el SII?
+        prompt: ¿Estás inscrito voluntariamente en el SII?
       m303-regime-composition:
         choices:
           general:
@@ -597,8 +592,11 @@ wizard:
       irpf-special-regime:
         choices:
           general:
+            description: Tributas en IRPF por el régimen general (modelo 100).
             label: Régimen general
           impatriado:
+            description: Has optado por el régimen especial del art. 93 LIRPF (modelo
+              151).
             label: Impatriado - Ley Beckham (Art. 93 LIRPF)
         help: El régimen de impatriados (Ley Beckham) se aplica durante los primeros
           6 años tras el traslado. La mayoría tributa en régimen general.
@@ -647,7 +645,7 @@ wizard:
       pays-rent-with-retencion:
         prompt: Paga alquiler de local con retención
       premio-loteria-gravamen-especial-sin-retencion:
-        prompt: Obtuvo un premio de loterías o apuestas sujeto al gravamen especial
+        prompt: Obtuviste un premio de loterías o apuestas sujeto al gravamen especial
           sin retención ni ingreso a cuenta
       premio-loteria-gravamen-especial-trimestres:
         help: Un token AAAA-nT por trimestre natural, separados por | (por ejemplo
@@ -657,7 +655,9 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: Al menos 70% de los ingresos profesionales con retención previa
       third-party-transactions-above-347-threshold:
-        prompt: Operaciones con terceros superan el umbral del Modelo 347
+        prompt: En el año natural que cubre el Modelo 347, ¿tus operaciones con una
+          misma persona o entidad superaron 3.005,06 € (300,51 € en los cobros que
+          hagas por cuenta de terceros), contando por separado las ventas y las compras?
       title: Obligaciones
     preferencias:
       title: Preferencias y capacidades
@@ -687,7 +687,7 @@ wizard:
             label: Régimen especial de la agricultura, ganadería y pesca (REAGP)
           recargo-equivalencia:
             description: 'Para comercio minorista: el proveedor aplica un recargo
-              adicional y usted no presenta declaraciones de IVA por esa actividad.'
+              adicional y no presentas declaraciones de IVA por esa actividad.'
             label: Recargo de equivalencia
           simplificado:
             description: Régimen simplificado por módulos para actividades acogidas
@@ -720,10 +720,10 @@ wizard:
       taxation-type:
         choices:
           individual:
-            description: Use este valor cuando presente solo su declaración individual
+            description: Usa este valor cuando presentes solo tu declaración individual
             label: 1 - individual
           joint:
-            description: Use este valor solo para tributación conjunta de unidad familiar
+            description: Usa este valor solo para tributación conjunta de unidad familiar
             label: 2 - conjunta
         prompt: Código del tipo de tributación
       title: Identidad del perfil
@@ -893,7 +893,7 @@ wizard:
           347: cobro de honorarios por cuenta de terceros (art. 31.3), comunidad de
           propietarios (Ley 49/1960), entidad de carácter social (art. 20.tres LIVA),
           entidad sometida al deber de informar (art. 94 LGT) o administración pública
-          integrada. Déjelo en blanco si no corresponde.'
+          integrada. Déjalo en blanco si no corresponde.'
         prompt: ¿La entidad declarante desempeña alguno de estos papeles frente a
           la declaración de operaciones con terceros (Modelo 347)?
       entity-type:

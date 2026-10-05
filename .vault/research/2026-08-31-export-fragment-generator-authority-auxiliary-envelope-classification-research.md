@@ -3,22 +3,24 @@ tags:
   - '#research'
   - '#export-fragment-generator-authority'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:987cce4ee9f67fe57e26e53449d09bbd9a422b7d424858a169acb64aa98c0b9d'
+body_hash: 'sha256:7c90d5360504600c20baf61a5deafd410804aa292089d52b3d4d5afbe3a2de37'
 related:
   - "[[2026-08-28-registry-narrow-mechanism-widening-adr]]"
 ---
 
 # `export-fragment-generator-authority` research: `auxiliary envelope classification is spelling-determined`
 
-## What was asked
+## Findings
+
+### What was asked
 
 Whether the eighteen-byte file closer that Modelo 390's page-zero design prints at row
 20 is required in the emitted fichero, given that the generated export tree drops it and
 two published Modelo 232 trees drop it too.
 
-## What the design says row 20 is
+### What the design says row 20 is
 
 It is numbered field 15 in the sheet's own `Nº` column, which runs 1 to 15. It sits
 inside the field sequence, not below it, and it is eighteen bytes of type `An` whose
@@ -39,7 +41,7 @@ The bundled consolidated corpus does not speak to fichero structure at all, so t
 authority here is the design workbook, which the registry already classifies as
 `evidence_tier = "layout_authority"`, `authority = "aeat"`, `review_status = "reviewed"`.
 
-## The classification is determined by capitalisation, not by shape
+### The classification is determined by capitalisation, not by shape
 
 Modelo 303's `DP30300` and Modelo 390's `Pág. 0` are row-for-row identical in structure.
 Read directly from the two bundled workbooks:
@@ -69,29 +71,37 @@ envelope reached by a different branch because AEAT typed one cell in lower case
 branch's docstring calls the shape total-less, but 390 does declare a total at row 21; it
 reads as total-less through the same comparison.
 
-## The second hard-coded spelling
+### The second hard-coded spelling
 
-Even correctly classified, both modelos would be refused by `_CLOSER_RE` in
-`dev/registry/pipeline/_variable_envelope.py:126`, which admits `AAAA` or four concrete
+Even correctly classified, both modelos would be refused by `_CLOSER_RE` , which admits `AAAA` or four concrete
 digits for the year and nothing else. Its own comment says "TWO official spellings, both
 admitted" and reasons that neither is asserted against a filing instance because the
 instance supplies the year. `EEEE` is a third spelling of that same placeholder, and the
 comment's reasoning covers it, but the pattern does not.
 
-## Scope of the consequence
+### Scope of the consequence
 
 This is not a Modelo 390 defect. Both published Modelo 232 revisions ship the same
 omission from the same cause, and 390 would be the third. A ruling that the closer is
 required is repaired once in the shared contract and fixes all three.
 
-## Verification
+### Verification
 
 The capitalisation contrast and the field numbering in this record were read directly
 from the two bundled workbooks with `openpyxl`, not taken from a report. The two parser
 comparisons and the closer pattern were read at `HEAD`, not in the working tree.
 
-## Open
+### Open
 
 Whether an accepted filing or a live oracle confirms the closer in emitted bytes. This
 record grounds the answer in the AEAT design document, which is the strongest authority
 available without filing, and is the same authority every other layout decision rests on.
+
+## Sources
+
+- `dev/registry/compiler/record_design.py:1853,1894` — the exact-case checks that classify variable-length records.
+- the former source file — the closer pattern that admits two placeholder spellings.
+- `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx` — the Modelo 390 row-20 closer and variable-envelope declaration.
+- `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx` — the structurally matching Modelo 303 envelope.
+- `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_232/files/01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx` — the Modelo 232 envelope using the same placeholder.
+- the former source file — the real extraction and envelope classification tests.

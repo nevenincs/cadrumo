@@ -55,7 +55,7 @@ target_casilla_id = "16"
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
 expression = {op = "max", args = [{literal = "0"}, {op = "subtract", args = [{op = "add", args = [{op = "subtract", args = [{op = "subtract", args = [{op = "subtract", args = [{op = "add", args = [{op = "add", args = [{casilla_id = "13"}, {casilla_id = "44"}]}, {casilla_id = "45"}]}, {casilla_id = "46"}]}, {casilla_id = "14"}]}, {casilla_id = "15"}]}, {casilla_id = "47"}]}, {casilla_id = "48"}]}]}
-source_citations = [{source_ref = "aeat-modelo-222-instructions-2019-2022", required_text = ["la clave [16] será = clave [13] + clave [44] + clave [45]", "sin poder ser negativa"]}]
+source_citations = [{source_ref = "aeat-modelo-222-instructions-2019-2022", required_text = ["la clave [16] será = clave [13] + clave [44] + clave [45] – clave [46] – clave [14] – clave [15] + clave [47] – clave [48], sin poder ser negativa"]}]
 source_refs = ["aeat-modelo-222-instructions-2019-2022"]
 
 [[revisions.2022.formulas]]
@@ -67,6 +67,11 @@ expression = {op = "subtract", args = [{op = "add", args = [{op = "subtract", ar
 source_citations = [{source_ref = "aeat-modelo-222-instructions-2019-2022", required_text = ["la clave [18] será = clave [16] x clave [17] /100 + clave [49] + clave [50] - clave [51]"]}]
 source_refs = ["aeat-modelo-222-instructions-2019-2022"]
 
+# [19] repeats [16]'s expression because the instructions print the same base
+# for both lanes, B.1 for a group with one percentage and B.2 for a group with
+# more than one ("CLAVES [16] Y [17]" and "CLAVES [19], [21], [22], [24] Y [25]");
+# B.2 then splits that base into [20] and [23] = [19] - [20]. The 2025 design
+# makes [23] filer input and [19] the sum of the tramos instead.
 [[revisions.2022.formulas]]
 id = "modelo-222-base-pago-fraccionado-b2"
 target_casilla_id = "19"

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -10,9 +12,17 @@ import pytest
 from ....core.config import override_settings
 from ....core.storage_taxonomy import StorageArea, StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
+from ....tests.env_scope import derived_storage_settings
 from .cli_runner import invoke_cached_cli, semantic_cli_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def derived_storage_baseline(tmp_path: Path) -> Iterator[None]:
+    """Derive every category from the root under test, not from the runner's explicit paths."""
+    with derived_storage_settings(tmp_path / "ambient-storage"):
+        yield
 
 
 def _json_envelope(args: list[str]) -> Any:

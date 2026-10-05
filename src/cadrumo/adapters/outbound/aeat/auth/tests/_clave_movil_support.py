@@ -15,6 +15,7 @@ EXTERNAL = Settings.external_constants()
 _DOMAINS = EXTERNAL.aeat.domains
 _CLAVE_SURFACE = EXTERNAL.aeat.clave_movil
 _PRE303_SURFACE = EXTERNAL.aeat.pre303
+_DEFAULT_PREFER_NON_QR = Settings.model_fields["cadrumo_clave_prefer_non_qr"].default is True
 
 
 def _run[T](coroutine: Coroutine[Any, Any, T]) -> T:
@@ -35,10 +36,14 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
     }
     unexpected = set(env_overrides) - expected_keys
     assert unexpected == set()
+    # An unsupplied route takes the model default rather than whatever the
+    # developer's environment holds, so the harness exercises the route an
+    # operator who never chose one actually gets.
+    route = env_overrides.get("cadrumo_clave_prefer_non_qr")
     return Settings(
         cadrumo_token_dir=tmp_path,
         cadrumo_local_storage_root=tmp_path / "storage",
-        cadrumo_clave_prefer_non_qr=_bool_setting(env_overrides.get("cadrumo_clave_prefer_non_qr")),
+        cadrumo_clave_prefer_non_qr=_DEFAULT_PREFER_NON_QR if route is None else route.lower() == "true",
         cadrumo_clave_movil_dni_nie=_secret_or_none(env_overrides.get("cadrumo_clave_movil_dni_nie")),
         cadrumo_clave_movil_dni_fecha=env_overrides.get("cadrumo_clave_movil_dni_fecha"),
         cadrumo_clave_movil_nie_soporte=_secret_or_none(env_overrides.get("cadrumo_clave_movil_nie_soporte")),
@@ -47,7 +52,3 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
 
 def _secret_or_none(value: str | None) -> SecretStr | None:
     return None if value is None else SecretStr(value)
-
-
-def _bool_setting(value: str | None) -> bool:
-    return False if value is None else value.lower() == "true"

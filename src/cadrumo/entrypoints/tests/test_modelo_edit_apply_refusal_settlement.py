@@ -20,6 +20,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloEditScalarAddressV1,
@@ -27,11 +28,8 @@ from ...application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ...application.modelo.edit_services import writable_scalar_entry
-from ...application.modelo.operation_definitions import (
-    ModeloEditApplyOperationRequestV1,
-    ModeloEditApplySubmissionV1,
-)
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.hashing import content_hash_hex
@@ -46,7 +44,7 @@ from .modelo_operation_test_support import (
 from .test_registered_executor_conformance import (
     _CloseWitness,
     _runtime,
-    _seeded_modelo_edit_submission,
+    seeded_modelo_edit_submission,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -127,13 +125,11 @@ def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The operator sees a localized refusal naming the family, and no catalogue changed."""
-    with _runtime(tmp_path / "runtime", cleanup=_CloseWitness()) as (driver, registry, profile_id):
-        definition = registry.lookup(_EDIT_APPLY)
-        work_unit_id, wire = _seeded_modelo_edit_submission(profile_id, operation=operation)
+    with _runtime(tmp_path / "runtime", cleanup=_CloseWitness()) as (driver, _registry, profile_id):
+        work_unit_id, wire = seeded_modelo_edit_submission(profile_id, operation=operation)
         assert isinstance(wire, ModeloEditApplySubmissionV1)
         refused = ModeloEditApplySubmissionV1.from_submission(variant(wire.to_submission()))
-        payload = definition.request_type.model_validate({"submission": refused}, strict=True)
-        assert isinstance(payload, ModeloEditApplyOperationRequestV1)
+        payload = ModeloEditOperatorInputV2(submission=refused)
         catalogues_before = _catalogue_digests()
 
         _submitted, observed = asyncio.run(

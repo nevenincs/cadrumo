@@ -5,26 +5,17 @@ from __future__ import annotations
 import asyncio
 from contextlib import AbstractAsyncContextManager, AbstractContextManager, nullcontext
 from datetime import UTC, datetime, timedelta
-from functools import partial
 from types import TracebackType
 from typing import override
 from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Button, Input, Select, Static
+from textual.widgets import Input, Select
 
-from cadrumo.application.runtime.management_status import (
-    RuntimeListenerState,
-    RuntimeManagementSnapshot,
-    RuntimeManagerAvailability,
-)
-from cadrumo.entrypoints.tests.test_runtime_management import StopFixture
-from cadrumo.entrypoints.tui import runtime_management
-from cadrumo.entrypoints.tui.runtime_management import RuntimeManagementScreen, RuntimeStopConfirmationScreen
-
-from ....adapters.local_runtime.framing import RuntimeTransportCleanup
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.profile_access import RuntimeProfileStatus
@@ -39,10 +30,12 @@ from ....application.user_profile.login_interaction import (
     ProfileLoginInventoryV1,
 )
 from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from ....core.i18n.render import tr
 from .. import installed_session
 from ..runtime_admission import runtime_login_session
-from ..secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginMethod
+from ..secret.runtime_login_contracts import (
+    RuntimeLoginHandoff,
+    RuntimeLoginMethod,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -398,68 +391,3 @@ def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
         asyncio.run(retained.retry_cleanup())
         asyncio.run(retained.retry_cleanup())
         assert native.attempts == 2 and owner.released
-
-
-@pytest.mark.asyncio
-async def test_prelogin_installed_runner_retains_stop_cleanup_after_modal_close(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Installed scope exit retains failed stop release after its modal disappears."""
-    fixture = StopFixture(channel_failures=3)
-    monkeypatch.setattr(runtime_management, "preview_installed_runtime_stop", fixture.open)
-
-    async def read() -> RuntimeManagementSnapshot:
-        return RuntimeManagementSnapshot(
-            listener=RuntimeListenerState.READY,
-            manager_availability=RuntimeManagerAvailability.UNAVAILABLE,
-        )
-
-    monkeypatch.setattr(runtime_management, "RuntimeManagementScreen", partial(RuntimeManagementScreen, reader=read))
-    calls = 0
-
-    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
-        nonlocal calls
-        calls += 1
-        raise AssertionError("runtime status must not open a profile client")
-
-    async def drive(pilot: Pilot[object]) -> None:
-        async with asyncio.timeout(10):
-            pilot.app.screen.query_one("#runtime-login-runtime-status", Button).press()
-            while not isinstance(pilot.app.screen, RuntimeManagementScreen):
-                await pilot.pause(0.02)
-            screen = pilot.app.screen
-            while screen._busy or tr("tui.runtime_management.listener.ready") not in str(
-                screen.query_one("#runtime-management-listener", Static).content
-            ):
-                await pilot.pause(0.02)
-            screen.query_one("#runtime-management-stop", Button).press()
-            while not isinstance(pilot.app.screen, RuntimeStopConfirmationScreen):
-                await pilot.pause(0.02)
-            pilot.app.screen.query_one("#runtime-stop-confirm", Button).press()
-            while screen._busy or fixture.channel.close_calls != 1:
-                await pilot.pause(0.02)
-            assert fixture.consent.accepted is not None
-            assert "synthetic private" not in str(screen.query_one("#runtime-management-status", Static).content)
-            screen.action_close()
-
-            def modal_closed() -> bool:
-                return screen not in pilot.app.screen_stack and fixture.channel.close_calls == 2
-
-            while not modal_closed():
-                await pilot.pause(0.02)
-            pilot.app.exit()
-
-    with pytest.raises(AsyncResourceCleanupError) as failed:
-        async with runtime_login_session(
-            choices=(ProfileLoginChoice(profile_id=str(uuid4()), label="Unused profile"),),
-            open_client=open_client,
-            headless=True,
-            auto_pilot=drive,
-        ):
-            pytest.fail("failed native cleanup must prevent a successful login-scope exit")
-    assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 1
-    assert fixture.channel.confirmations == 1
-    await failed.value.retry_cleanup()
-    assert fixture.channel.close_calls == 4 and fixture.endpoint.close_calls == 1
-    assert fixture.consent.released and fixture.channel.confirmations == 1
-    assert calls == 0

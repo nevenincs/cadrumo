@@ -11,6 +11,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -21,6 +22,7 @@ from ....domain.buckets.event_repository import append_bucket_event, build_bucke
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...bucket_event_projection import BucketEventProjection
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
@@ -41,6 +43,8 @@ from ..access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OperationAccessRequest,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -48,18 +52,16 @@ from ..access_contracts import (
     SessionState,
 )
 from ..access_errors import ProfileAccessRefusedError
-from ..access_policy import evaluate_operation_access
+from ..history_contracts import ProfileHistoryExecutionResult, ProfileHistoryProjection, ProfileHistoryRequest
 from ..history_operation import (
     PROFILE_HISTORY_OPERATION_DEFINITION_ID,
-    ProfileHistoryExecutionResult,
     ProfileHistoryExecutor,
-    ProfileHistoryProjection,
     ProfileHistoryReadPorts,
-    ProfileHistoryRequest,
     build_profile_history_definition,
     build_profile_history_registration,
     resolve_profile_history_access,
 )
+from ..operation_access_policy import evaluate_operation_access
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -178,6 +180,87 @@ def test_history_contract_requires_all_periods_and_exact_result_destination() ->
             ),
         )
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def _history_context(
+    action: AccessAction,
+    *,
+    destination_id: UUID,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+    admitted: OperationAccessRequest | None = None,
+    authority: PinnedAuthorityOperation | None = None,
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=destination_id,
+        action=action,
+        frontend=frontend,
+        contract=_registry().lookup_public_contract(PROFILE_HISTORY_OPERATION_DEFINITION_ID),
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted,
+        authority_operation=authority,
+    )
+
+
+@pytest.mark.parametrize(
+    "action", [AccessAction.OBSERVE, AccessAction.RESULT, AccessAction.CANCEL, AccessAction.DETACH]
+)
+def test_history_replay_from_a_fresh_process_keeps_the_admitted_scope(action: AccessAction) -> None:
+    """A later session has a new destination; replay binds profile, definition and scope, not origin."""
+    admitted = resolve_profile_history_access(
+        _access_request(), _history_context(AccessAction.SUBMIT, destination_id=uuid4(), authority=_PIN)
+    ).request
+    fresh_destination = uuid4()
+
+    for frontend in OperationFrontendProjection:
+        replayed = resolve_profile_history_access(
+            _access_request(),
+            _history_context(action, destination_id=fresh_destination, frontend=frontend, admitted=admitted),
+        )
+        assert replayed.request.destination_id == fresh_destination
+        assert replayed.request.period_independent and replayed.request.action is action
+        assert all(item.destination_id == fresh_destination for item in replayed.policy.disclosures)
+
+    period_scoped = admitted.model_copy(
+        update={"periods": frozenset({Period.from_year_and_code(2026, "1T")}), "period_independent": False}
+    )
+    for foreign in (
+        admitted.model_copy(update={"profile_id": _OTHER}),
+        admitted.model_copy(update={"definition_id": "user-profile.other"}),
+        admitted.model_copy(update={"action": AccessAction.START}),
+        period_scoped,
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_profile_history_access(
+                _access_request(),
+                _history_context(action, destination_id=fresh_destination, admitted=foreign, authority=_PIN),
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START, AccessAction.RESUME])
+def test_history_entry_actions_resolve_under_held_authority_not_the_admission(action: AccessAction) -> None:
+    period_scoped = OperationAccessRequest(
+        profile_id=_OTHER,
+        definition_id="user-profile.other",
+        action=AccessAction.SUBMIT,
+        frontend=OperationFrontendProjection.MCP,
+        periods=frozenset({Period.from_year_and_code(2026, "1T")}),
+        period_independent=False,
+        destination_id=uuid4(),
+    )
+    destination = uuid4()
+
+    fresh = resolve_profile_history_access(
+        _access_request(),
+        _history_context(action, destination_id=destination, admitted=period_scoped, authority=_PIN),
+    )
+    assert fresh.request.destination_id == destination and fresh.request.action is action
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_profile_history_access(
+            _access_request(), _history_context(action, destination_id=destination, admitted=period_scoped)
+        )
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
 
 
 @pytest.mark.parametrize("missing", [DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES, None])
@@ -302,7 +385,7 @@ def test_history_result_requires_complete_profile_and_tax_disclosure_consent(
                     login_id="synthetic-login",
                     os_owner_id=binding.os_owner_id,
                     active=True,
-                    locked=False,
+                    lock_state=OsLockState.UNLOCKED,
                     unattended=LoginEligibility.ELIGIBLE,
                     credential_facilities=Availability.AVAILABLE,
                 ),
@@ -318,9 +401,7 @@ def test_history_result_requires_complete_profile_and_tax_disclosure_consent(
 
 @pytest.mark.asyncio
 async def test_executor_retains_full_ordered_filtered_events_without_writes(monkeypatch: pytest.MonkeyPatch) -> None:
-    from .. import history_operation as module
-
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     first = _event(marker="first", minute=1)
     chosen = _event(marker="chosen", minute=2)
     wrong_actor = _event(marker="chosen", minute=3, actor="other")

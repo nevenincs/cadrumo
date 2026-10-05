@@ -16,16 +16,13 @@ complete backup read as malformed.
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydantic import BaseModel, Field, field_validator
 
-from .....core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from .....core.identity.bucket import BucketId
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.product_identity import PRODUCT_IDENTITY
-from .....core.time.utc import validate_utc_aware
+from .....core.time.utc import UtcInstant
 
 #: The one archive framing this build reads and writes. The header declares
 #: it and the model refuses every other value, so a bundle carrying a
@@ -55,7 +52,7 @@ class ExportArchiveHeader(BaseModel):
     bucket_id: BucketId
     manifest_digest: ContentDigest
     archive_schema_version: int = Field(ge=1)
-    created_at: datetime
+    created_at: UtcInstant
 
     @field_validator("product")
     @classmethod
@@ -82,15 +79,6 @@ class ExportArchiveHeader(BaseModel):
                 f"this build neither reads nor writes any other archive framing",
             )
         return value
-
-    @field_validator("created_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _check_created_at(cls, value: datetime) -> datetime:
-        try:
-            return validate_utc_aware(value)
-        except CoreValidationError as exc:
-            raise ValueError(str(exc)) from exc
 
 
 __all__ = ["ARCHIVE_SCHEMA_VERSION", "ExportArchiveHeader"]

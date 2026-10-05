@@ -16,6 +16,7 @@ from typing import cast
 
 from pydantic import ValidationError
 
+from .....core.config import Settings, load_settings
 from ..crypto.aes_gcm import KEY_SIZE
 from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
@@ -56,8 +57,9 @@ from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 class _SupervisedKdfWorker:
     """One process with a complete no-fallback lifecycle and bounded pipes."""
 
-    def __init__(self, *, deadline: float) -> None:
+    def __init__(self, *, deadline: float, settings: Settings | None = None) -> None:
         self._deadline = deadline
+        self._temporary_root = (settings or load_settings()).cadrumo_temp_dir
         self._process: subprocess.Popen[bytes] | None = None
         self._request_fd: int | None = None
         self._result_fd: int | None = None
@@ -169,7 +171,11 @@ class _SupervisedKdfWorker:
             self._expected_posix_file_descriptors = (request_read, result_write)
         self._request_fd = request_write
         self._result_fd = result_read
-        self._neutral_directory = tempfile.TemporaryDirectory(prefix="cadrumo-profile-kdf-")
+        self._temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        self._neutral_directory = tempfile.TemporaryDirectory(
+            prefix="cadrumo-profile-kdf-",
+            dir=self._temporary_root,
+        )
         try:
             self._process, self._job = _launch_worker(
                 neutral_root=Path(self._neutral_directory.name),

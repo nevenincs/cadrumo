@@ -15,30 +15,33 @@ from ....core.json_contract import strict_round_trip
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion, submitted_operation_error
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import submitted_operation_error
 from .runtime_auth_teardown import run_auth_teardown
 from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.auth.operator_results import AuthConfigureResult
+    from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
     from ....application.operator_actions.models import PreconditionVerdict
     from ....core.json_contract import ResolvedPreconditionAction
 
 
-def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
+def _auth_configure_lines(configure_result: AuthConfigurePublicResultV2) -> list[str]:
     """Render the operator text dump for a completed auth configure.
 
     Cl@ve Móvil is the only provider that binds a taxpayer identity, so its
-    three identity lines (and the alignment detail, when the backend states
-    one) are emitted for that provider alone.
+    three identity-readiness lines are emitted for that provider alone.
     """
     lines = [
         f"provider\t{configure_result.provider}",
-        f"file\t{configure_result.file}",
+        f"changed\t{configure_result.changed}",
+        f"certificate_file_provided\t{configure_result.certificate_file_provided}",
         f"status\t{'configured' if configure_result.complete else 'incomplete'}",
     ]
     if not configure_result.complete:
-        lines.append(f"incomplete_reason\t{configure_result.incomplete_reason}")
+        verdict = configure_result.precondition_verdict
+        if verdict is not None:
+            lines.append(f"incomplete_condition\t{verdict.failed_condition_id}")
     if configure_result.provider != "clave_movil":
         return lines
     lines.extend(
@@ -48,8 +51,6 @@ def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
             f"identity_alignment\t{configure_result.identity_alignment}",
         ),
     )
-    if configure_result.identity_alignment_detail:
-        lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")
     return lines
 
 
@@ -82,6 +83,7 @@ def auth_providers(
 def auth_configure(
     ctx: typer.Context,
     provider: str,
+    clave_movil_route: str | None = None,
     file: Path | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
@@ -89,7 +91,9 @@ def auth_configure(
     _activate_subcommand_output_language(ctx, output_language)
     from .runtime_auth_configure import run_auth_configure
 
-    configure_result = run_auth_configure(ctx, provider=provider, certificate_path=file)
+    configure_result = run_auth_configure(
+        ctx, provider=provider, certificate_path=file, clave_movil_route=clave_movil_route
+    )
     from ..config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
     precondition_action = (

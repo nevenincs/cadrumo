@@ -53,8 +53,7 @@ allow-list is correct for the surface. That second question is answered
 per module by that module's own proof, and only against the AEAT
 behaviour observed so far.
 
-Public surface: :class:`Expediente`, :class:`JustificanteRef`,
-:class:`SedeCapture`, :class:`FiledDeclaracionArtefact`,
+Public surface: :class:`FiledDeclaracionArtefact`,
 :class:`ObservedCasillaValue`, :class:`FiledDeclaracionObservation`,
 :class:`FiledDeclarationAvailability`,
 :class:`FiledDeclarationAvailabilityReport`.
@@ -74,7 +73,6 @@ from .....core.decimal.coercion import coerce_decimal_strict
 from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
-from .....core.identity.aeat_csv import AeatCsv
 from .....core.identity.aeat_expediente import AeatExpedienteId
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -84,120 +82,6 @@ from .....core.time.utc import UtcInstant
 from .....core.unit_proportion import UnitFraction
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import SedeValidationError
-
-
-class Expediente(BaseModel):
-    """One AEAT expediente as listed under *Mis Expedientes*.
-
-    The sede renders an AJAX-expanded category tree at
-    ``/wlpl/TEWV-CORE/ResumenVlt``; leaf rows carry the expediente id
-    as the link text and the detail URL on the ``<a>`` ``href``.
-
-    Attributes:
-        expediente_id: AEAT-assigned identifier. Shape
-            ``<year><sequence><checksum-letter>``, e.g.
-            ``"202310013522456T"``.
-        modelo: Modelo code inferred from the category path when
-            resolvable (e.g. ``"100"`` for IRPF anuales). ``None`` for
-            categories that do not map 1:1 to a modelo (sanciones,
-            recursos, certificados).
-        ejercicio: Tax year inferred from the expediente id's leading
-            four digits. Captured against 2021 / 2022 / 2023 IRPF.
-        category_path: Breadcrumb through the sede's tree, from
-            root to leaf. Example: a four-element tuple from
-            "Agencia Estatal de Administración Tributaria" down to
-            "Modelo 100- Modelo 102. IRPF. Declaración y documento
-            de ingreso o devolución.".
-        detail_url: Full URL of the expediente's detail page. Per-year
-            endpoint for IRPF:
-            ``/wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>``.
-        mode: Declared-shape read-only marker (documentation and tests only;
-            no production reader - see the module docstring).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    expediente_id: AeatExpedienteId
-    modelo: str | None = Field(default=None, max_length=8)
-    ejercicio: FilingYear | None = None
-    category_path: tuple[str, ...] = Field(min_length=1)
-    detail_url: AnyHttpUrl
-    mode: Literal["read"] = "read"
-
-    @field_validator("category_path")
-    @classmethod
-    @pydantic_validation_boundary
-    def _category_path_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        """Reject empty / whitespace entries inside ``category_path``."""
-        for entry in value:
-            if not entry:
-                error = SedeValidationError("category_path entries must be non-empty")
-                # Pydantic consumes builtin validation errors; keep the
-                # registered sede refusal available as the causal error.
-                raise ValueError(str(error)) from error
-        return value
-
-
-class JustificanteRef(BaseModel):
-    """CSV-keyed handle for AEAT's document verifier.
-
-    On every expediente detail page, the *Grabación de la declaración*
-    link carries the document's CSV in its ``href``. The same CSV
-    unlocks both the HTML cotejo viewer (``CotejoIdSv``) and the raw
-    PDF (``CotejoDocIdSv``).
-
-    Attributes:
-        csv: Código Seguro de Verificación — AEAT's per-document hash.
-        expediente_id: The expediente this CSV belongs to; tracked so
-            reconciliation can tie a justificante back to its listing
-            row.
-        cotejo_url: Viewer URL
-            ``/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>``.
-        pdf_url: Raw PDF URL
-            ``/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=<csv>``.
-        mode: Declared-shape read-only marker (documentation and tests only;
-            no production reader - see the module docstring).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    csv: AeatCsv
-    expediente_id: AeatExpedienteId
-    cotejo_url: AnyHttpUrl
-    pdf_url: AnyHttpUrl
-    mode: Literal["read"] = "read"
-
-
-class SedeCapture(BaseModel):
-    """One complete sede-side capture of a filing.
-
-    Bundles the expediente listing metadata, the CSV handle, the raw
-    PDF bytes, and the captured-at timestamp. Produced by
-    :func:`adapters.outbound.aeat.sede.walker.capture_justificante`; consumed by the reconciler.
-
-    Attributes:
-        expediente: The expediente the capture originated from.
-        ref: The CSV handle the capture used.
-        pdf_bytes: Raw PDF body as served by AEAT.
-        pdf_sha256: SHA-256 of ``pdf_bytes``, typed as the canonical
-            :data:`~core.identity.digest.ContentDigest` rather than a locally
-            re-declared hex-64 pattern. The three digest fields in this module
-            each carried their own copy of that regex and so each rejected a
-            whitespace-wrapped digest the canonical alias trims — one shape,
-            three spellings, three answers.
-        captured_at: UTC timestamp of the fetch completion.
-        mode: Declared-shape read-only marker (documentation and tests only;
-            no production reader - see the module docstring).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    expediente: Expediente
-    ref: JustificanteRef
-    pdf_bytes: bytes
-    pdf_sha256: ContentDigest
-    captured_at: datetime
-    mode: Literal["read"] = "read"
 
 
 class FiledDeclaracionArtefact(BaseModel):
@@ -471,14 +355,11 @@ class FiledDeclaracionObservation(BaseModel):
 
 
 __all__ = [
-    "Expediente",
     "FiledDeclaracionArtefact",
     "FiledDeclaracionObservation",
     "FiledDeclarationAvailability",
     "FiledDeclarationAvailabilityReport",
     "IvaCompensationWalletObservation",
     "IvaCompensationWalletRow",
-    "JustificanteRef",
     "ObservedCasillaValue",
-    "SedeCapture",
 ]

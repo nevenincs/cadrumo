@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#m100-dependent-modelo-applicability'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e55491e09c025f82214657d45ed5db42a8356941f4aa815f3453d5e97328ae69'
+body_hash: 'sha256:6392f2d5b14b79626baaccb57587b0e2080c1df38022ba20bf3adf8927953d6d'
 related:
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'
   - '[[2026-06-19-m100-dependent-modelo-applicability-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#m100-dependent-modelo-applic
 
 ### adr
 
-- `2026-06-19-m100-dependent-modelo-applicability-adr` - `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `accepted`)
+- `2026-06-19-m100-dependent-modelo-applicability-adr` - `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `superseded`)
 
 ### research
 

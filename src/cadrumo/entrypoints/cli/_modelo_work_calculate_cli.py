@@ -9,9 +9,11 @@ import typer
 from pydantic import ValidationError
 
 from ...application.modelo.action_errors import M303FilingEvidenceError
-from ...application.modelo.calculation_request_fields import ModeloCalculationInputFieldsV1, ModeloCalculationOverride
+from ...application.modelo.calculate_input import Modelo202ModalitySummary
+from ...application.modelo.calculation_request_fields import ModeloCalculationInputFieldsV1
 from ...application.modelo.m303_filing_evidence import m303_filing_evidence_failure
-from ...application.modelo.operation_definitions import (
+from ...application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculatePublicResultV2,
     ModeloWorkCalculateRequest,
@@ -26,6 +28,7 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.json_contract import Notice
 from ...core.rescate_type import RescateType
 from ._modelo_cli_support import (
+    calculation_overrides,
     optional_decimal_option,
     parse_work_calculate_wire_specs,
     resolve_actor_option,
@@ -51,6 +54,35 @@ from .runtime_profile_binding import require_profile_client
 
 if TYPE_CHECKING:
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
+    from ...application.modelo.printed_boxes import PrintedBoxes
+
+
+def _ordinary_m303_evidence(
+    joint_return_elected: bool | None,
+    m303_exonerado_390_attachment_id: str | None,
+    m303_exonerado_390_sha256: str | None,
+    modelo: str,
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None:
+    """Ordinary m303 evidence."""
+    supplied_m303 = (
+        joint_return_elected is not None
+        or m303_exonerado_390_attachment_id is not None
+        or m303_exonerado_390_sha256 is not None
+    )
+    ordinary_m303 = (
+        ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+            joint_return_elected=joint_return_elected,
+            m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
+            m303_exonerado_390_sha256=m303_exonerado_390_sha256,
+        )
+        if supplied_m303 and joint_return_elected is not None
+        else None
+    )
+    if supplied_m303 and joint_return_elected is None:
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure("missing", {"modelo": modelo, "evidence_present": True})
+        )
+    return ordinary_m303
 
 
 def _validated_amount(raw: str | None, *, translation_key: str) -> str | None:
@@ -109,15 +141,9 @@ def _run_work_calculate(
         casilla=casilla, binding=binding, relation=relation, row=row
     )
     inputs = ModeloCalculationInputFieldsV1(
-        casilla_overrides=tuple(
-            ModeloCalculationOverride(key=str(key), value=value) for key, value in casilla_pairs.items()
-        ),
-        binding_overrides=tuple(
-            ModeloCalculationOverride(key=str(key), value=value) for key, value in binding_pairs.items()
-        ),
-        relation_overrides=tuple(
-            ModeloCalculationOverride(key=str(key), value=value) for key, value in relation_pairs.items()
-        ),
+        casilla_overrides=calculation_overrides(casilla_pairs),
+        binding_overrides=calculation_overrides(binding_pairs),
+        relation_overrides=calculation_overrides(relation_pairs),
         borrador_snapshot_id=borrador_snapshot_id,
         m210_gross_income_source_mode=m210_gross_income_source,
         prestacion_inss_exenta=_validated_amount(
@@ -150,32 +176,16 @@ def _run_work_calculate(
             autoconsumo_promotor_base, translation_key="cli.app.modelo.work.sal_reserva_not_decimal"
         ),
     )
-    supplied_m303 = (
-        joint_return_elected is not None
-        or m303_exonerado_390_attachment_id is not None
-        or m303_exonerado_390_sha256 is not None
+    ordinary_m303 = _ordinary_m303_evidence(
+        joint_return_elected, m303_exonerado_390_attachment_id, m303_exonerado_390_sha256, str(unit.modelo)
     )
-    ordinary_m303 = (
-        ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
-            joint_return_elected=joint_return_elected,
-            m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
-            m303_exonerado_390_sha256=m303_exonerado_390_sha256,
-        )
-        if supplied_m303 and joint_return_elected is not None
-        else None
-    )
-    if supplied_m303 and joint_return_elected is None:
-        raise M303FilingEvidenceError(
-            precondition_failure=m303_filing_evidence_failure(
-                "missing", {"modelo": str(unit.modelo), "evidence_present": True}
-            )
-        )
     try:
         request = ModeloWorkCalculateRequest.model_validate_json(
             canonical_json_bytes(
                 {
                     "work_unit_id": str(unit.work_unit_id),
                     "actor": resolve_actor_option(actor),
+                    "caller_context": ModeloWorkCalculateCallerContext.EXPLICIT.value,
                     "ordinary_m303_filing_evidence": ordinary_m303.model_dump(mode="json") if ordinary_m303 else None,
                     "inputs": inputs.model_dump(mode="json"),
                     "detail_rows": [item.model_dump(mode="json") for item in detail_rows],
@@ -197,9 +207,10 @@ def _run_work_calculate(
         state=calculation_revision_state_label(snapshot.state.value),
     )
     modality = advisories.to_modality()
-    modality_payload = {"modality": modality.modality, "modality_reason": modality.reason} if modality else {}
-    modality_lines = [f"modality\t{modality.modality}"] if modality else []
-    source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(advisories.to_diagnostics())
+    modality_payload, modality_lines = _work_calculation_modality_output(modality)
+    source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(
+        advisories.to_diagnostics(), advisories.to_printed_boxes()
+    )
     posture = advisories.to_deadline_posture()
     deadline_payload, deadline_notices = work_deadline_output_from_posture(
         posture, fallback_legal_ref=advisories.fallback_recargo_legal_ref
@@ -238,6 +249,7 @@ def _run_work_calculate(
 
 def _work_calculate_source_advisory_output(
     diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    boxes: PrintedBoxes | None = None,
 ) -> tuple[list[Notice], list[str]]:
     """Project NON-blocking source diagnostics into notices + human lines.
 
@@ -265,7 +277,7 @@ def _work_calculate_source_advisory_output(
     notices: list[Notice] = []
     seen_notices: set[str] = set()
     for diagnostic in diagnostics:
-        notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory")
+        notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory", boxes=boxes)
         notice_identity = notice.model_dump_json()
         if notice_identity in seen_notices:
             continue
@@ -347,3 +359,12 @@ def work_calculate(
         m303_exonerado_390_sha256=m303_exonerado_390_sha256,
         output_language=output_language,
     )
+
+
+def _work_calculation_modality_output(modality: Modelo202ModalitySummary | None) -> tuple[dict[str, str], list[str]]:
+    """Render the existing modality payload and text from one canonical summary."""
+    modality_payload: dict[str, str] = (
+        {"modality": modality.modality, "modality_reason": modality.reason} if modality else {}
+    )
+    modality_lines: list[str] = [f"modality\t{modality.modality}"] if modality else []
+    return modality_payload, modality_lines

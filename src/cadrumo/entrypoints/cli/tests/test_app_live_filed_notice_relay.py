@@ -22,10 +22,7 @@ from typing import NotRequired, TypedDict
 
 import pytest
 
-from ....application.live.filed_data_capture import (
-    FiledHistoryOnboardingRun,
-    FiledHistoryPairOutcome,
-)
+from ....application.live.filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
 from ....application.live.filed_observation_persistence import (
     FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
     FiledJustificanteUnreachedReason,

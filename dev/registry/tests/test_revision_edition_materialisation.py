@@ -24,7 +24,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
-from cadrumo.domain.calculations.registry.schema import CasillaFieldOverride, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_overrides import CasillaFieldOverride
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest

@@ -25,7 +25,8 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
     OperationCancellationSuccessV1,
@@ -47,16 +48,17 @@ from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
 from ....core.time.clock import now
+from ...operation_notice_messages import operation_notice_message
 from ..components.theme import tokenised
-from .controller_port import OperationControllerPort
+from .controller_port import OperationControllerPort, OperationErrorDetailPort
 from .interactions import (
     OperationModalInteractionStateV1,
     OperationModalReviewInteractionV1,
     resolve_modal_interaction_state,
 )
-from .logs import OperationModalLogViewV1, build_initial_log_view, fold_event_page
+from .logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
-from .refusal_explanation import public_refusal_explanation
+from .refusal_explanation import operation_error_explanation, public_refusal_explanation
 
 _POLL_INTERVAL = timedelta(milliseconds=200)
 
@@ -67,6 +69,8 @@ class OperationModalSettledOutcomeV1(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     disposition: Literal["settled"] = "settled"
     view_model: OperationModalViewModelV1
+    #: The stopped executor's own localized message, when it recorded one.
+    error_explanation: str | None = None
 
 
 class OperationModalDetachedOutcomeV1(BaseModel):
@@ -204,13 +208,21 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 return
             self._refresh_view_state()
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
-                self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model))
+                explanation = await self._settled_error_explanation(observed.projection)
+                self.dismiss(OperationModalSettledOutcomeV1(view_model=self._view_model, error_explanation=explanation))
                 return
             await asyncio.sleep(_POLL_INTERVAL.total_seconds())
 
     def _observing(self) -> bool:
         """Read the current state, which another action may change across an await."""
         return not self._observation_stopped
+
+    async def _settled_error_explanation(self, projection: OperationPublicProjectionV1) -> str | None:
+        """Read the stopped executor's own message when the bound controller can supply its detail."""
+        controller = self._controller
+        if not isinstance(controller, OperationErrorDetailPort):
+            return None
+        return operation_error_explanation(await controller.settled_error_detail(projection))
 
     def _runtime_access_lost(self, error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> None:
         self._observation_stopped = True
@@ -261,7 +273,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         else:
             review.update("")
         log_widget = self.query_one("#operation-modal-log", Static)
-        log_widget.update("\n".join(tr(row.code) for row in self._log_view.rows))
+        log_widget.update("\n".join(_log_row_text(row) for row in self._log_view.rows))
         self.query_one("#btn-operation-cancel", Button).disabled = not view_model.cancel_control_enabled
         self.query_one("#btn-operation-detach", Button).disabled = not view_model.detach_control_enabled
         apply_enabled = isinstance(interaction, OperationModalReviewInteractionV1) and interaction.apply_enabled
@@ -455,6 +467,15 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self.query_one("#operation-modal-action-refusal", Static).update(
             "" if refusal is None else f"{tr('operation.modal.detail.action_refused')}: {refusal}"
         )
+
+
+def _log_row_text(row: OperationModalLogRowV1) -> str:
+    """Render one log row, as the operator's own prompt when its notice asks them to act."""
+    if row.notice_code is not None:
+        prompt = operation_notice_message(row.notice_code, row.display_code)
+        if prompt is not None:
+            return prompt
+    return f"{tr(row.code)}: {row.display_code}" if row.display_code is not None else tr(row.code)
 
 
 __all__ = [

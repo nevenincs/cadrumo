@@ -77,7 +77,7 @@ class TestTheAdvisoryReachesTheOperator:
         assert accumulator.recapture_notices == []
 
     def test_the_run_model_exposes_the_notices(self) -> None:
-        from ..filed_data_capture import FiledHistoryOnboardingRun
+        from ..filed_history_discovery import FiledHistoryOnboardingRun
 
         assert "recapture_notices" in FiledHistoryOnboardingRun.model_fields
 

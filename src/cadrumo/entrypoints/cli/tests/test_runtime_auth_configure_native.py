@@ -13,12 +13,13 @@ from pydantic import BaseModel
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.auth.operation_definitions import AUTH_CONFIGURE_OPERATION_DEFINITION_ID
-from ....application.auth.provider_configure_operation_access import AuthConfigureOperationProjection
+from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....tests.cli_envelope import unwrap_cli_result
 from ..config import runtime_auth_configure as configure_bridge
-from ..runtime_registered_operation import RegisteredOperationCompletion, run_registered_operation
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..runtime_registered_operation import run_registered_operation
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, RuntimeFailureObservation, native_cli_profile_scope
 
@@ -125,8 +126,13 @@ def test_native_cli_auth_configure_settles_and_reads_back_exact_profile_state(
         assert raised == (), (configured.output, raised)
         payload = unwrap_cli_result(configured)
         assert payload["provider"] == "certificate"
-        assert payload["file"] == str(certificate)
+        assert payload["changed"] is True
+        assert payload["certificate_file_provided"] is True
         assert payload["complete"] is True
+        # The public result never carries the private certificate location.
+        assert "file" not in payload
+        assert str(certificate) not in configured.stdout
+        assert certificate.name not in configured.stdout
 
         assert len(observed) == 1
         definition_id, condition, effect, refusal_code, projection = observed[0]
@@ -134,11 +140,62 @@ def test_native_cli_auth_configure_settles_and_reads_back_exact_profile_state(
         assert condition is OperationTerminalCondition.SUCCEEDED
         assert effect is OperationEffect.UPDATED
         assert refusal_code is None
-        assert isinstance(projection, AuthConfigureOperationProjection)
+        assert isinstance(projection, AuthConfigurePublicResultV2)
         assert projection.profile_id == active_profile_id
+
+        # Selecting the configuration already recorded writes nothing.
+        repeated = _invoke(
+            profile,
+            "config",
+            "auth",
+            "configure",
+            "--provider",
+            "certificate",
+            "--file",
+            str(certificate),
+        )
+        assert repeated.exit_code == 0, (repeated.output, observations)
+        assert unwrap_cli_result(repeated)["changed"] is False
+        assert observed[-1][2] is OperationEffect.NONE
 
         status = _invoke(profile, "config", "auth", "status")
         assert status.exit_code == 0, (status.output, observations)
         status_payload = unwrap_cli_result(status)
         assert status_payload["provider"] == "certificate"
         assert status_payload["certificate_path"] == str(certificate)
+
+
+def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unknown_choices(tmp_path: Path) -> None:
+    """A route is saved with its provider, and an invalid choice is refused without being echoed."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(
+            label="native-auth-route",
+            facts={
+                "identity.name": "Synthetic",
+                "identity.surnames": "Auth Route",
+                "identity.tax_id": "12345678Z",
+                "auth.dni_nie": "87654321X",
+                "activities.description": "synthetic test profile",
+            },
+        )
+        invalid = "secret-auth-choice-must-not-appear"
+        refused = _invoke(profile, "config", "auth", "configure", "--provider", invalid)
+        assert refused.exit_code != 0
+        assert invalid not in refused.output
+
+        configured = _invoke(
+            profile, "config", "auth", "configure", "--provider", "clave_movil", "--clave-movil-route", "qr"
+        )
+        assert configured.exit_code == 0, configured.output
+        payload = unwrap_cli_result(configured)
+        assert payload["provider"] == "clave_movil"
+        # The two identities disagree; the result says so without naming either.
+        assert payload["identity_alignment"] == "mismatch"
+        assert payload["complete"] is False
+        assert payload["precondition_action"]["failed_condition_id"] == "auth.clave_movil.identity_aligned"
+        assert "12345678Z" not in configured.stdout
+        assert "87654321X" not in configured.stdout
+
+        status = _invoke(profile, "config", "auth", "status")
+        assert status.exit_code == 0, status.output
+        assert unwrap_cli_result(status)["provider"] == "clave_movil"

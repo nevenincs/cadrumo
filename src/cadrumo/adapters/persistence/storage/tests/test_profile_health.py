@@ -22,7 +22,7 @@ from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.login_session_port import profile_login_session_port
 from .....application.user_profile.profile_pointer import active_profile_pointer_transaction
-from .....application.user_profile.profile_record_repository import bound_profile_record_session
+from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .....application.workflow.profile_health import assess_active_profile_health, repair_active_profile_pointer
 from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, read_pointer, write_pointer

@@ -160,7 +160,7 @@ class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice view``.
 
     Projects the rich :class:`Invoice` resolved by
-    :func:`resolve_catalogue_invoice_from_repository`.
+    :func:`~cadrumo.application.invoices.catalogue_lifecycle.resolve_catalogue_invoice`.
     """
 
 

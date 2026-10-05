@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#verification-contract-coverage'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:81133b9ea9ea69f77ae65a915e014bd63925428dcc6558604929606d99433833'
+modified: '2026-10-03'
+body_hash: 'sha256:f2536eeace5a354978a8b5e2117703778b44f03d4fb438a1f8a399b43b1a62d4'
 related: []
 ---
 
@@ -48,7 +48,7 @@ The obvious way to enroll every computed casilla without breaking filings would 
 SECOND `verification_expectation` carrying the situational casillas at a low
 `min_coverage` (reconcile a casilla's value WHEN present, without demanding 100%
 presence). The registry fold makes this impossible. `RegistrySnapshot.verification_policy()`
-(`src/aeat/domain/calculations/registry/_schema.py:1277-1296`) folds ALL of a
+ folds ALL of a
 revision's expectations into ONE `RegistryVerificationPolicy`:
 `computed_casilla_ids` is the **union** across every expectation (a single shared
 coverage denominator) and `min_coverage = max(expectation.min_coverage for ...)`

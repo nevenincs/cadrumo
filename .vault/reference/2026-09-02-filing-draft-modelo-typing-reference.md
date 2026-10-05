@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#filing-draft-modelo-typing'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce20b788a0cc26f88aa9bd71a0b51fbb17ca9f5db3ead4baba9566d37b2c1a7f'
+body_hash: 'sha256:58a3ff8a8ae11b89dfff025d8435486160141db16a129fe53f875f21a95806f6'
 related: []
 ---
 
@@ -101,9 +101,6 @@ through the envelope serialiser.
   bottom of that file. The file registers none.
 
 ### Existing test surfaces to extend
-
-- `src/cadrumo/domain/filing/tests/test_roundtrip_anti_tautology.py`
-- `src/cadrumo/domain/filing/tests/test_secure_storage_roundtrip.py`
 
 ### What was not investigated
 

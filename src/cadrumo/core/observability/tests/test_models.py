@@ -225,8 +225,8 @@ class TestRunIdentity:
         """
         import re
 
-        from ..context import _mint_run_id
         from ..models import RUN_ID_PATTERN
+        from .run_scope import _mint_run_id
 
         pattern = re.compile(RUN_ID_PATTERN)
         for _ in range(50):
@@ -240,7 +240,7 @@ class TestTraceFingerprints:
     observed at a run, and ``cert_fingerprint`` records which credential signed
     it. A malformed value here is a claim about bytes that can never be
     reproduced. Both the persisted :class:`RunTrace` and the in-memory
-    :class:`RunContextInfo` that precedes it carry the same alias, so a bad
+    :class:`RecordedRunContextInfo` that precedes it carry the same alias, so a bad
     digest cannot be smuggled in before persistence either.
     """
 
@@ -248,7 +248,7 @@ class TestTraceFingerprints:
     _CANONICAL = "a" * 64
 
     def _make_context(self, **overrides: str) -> object:
-        from ..context import RunContextInfo
+        from .run_scope import RecordedRunContextInfo
 
         fields: dict[str, object] = {
             "run_id": _RUN_ID,
@@ -261,7 +261,7 @@ class TestTraceFingerprints:
             "initial_step_id": "step-0",
         }
         fields.update(overrides)
-        return RunContextInfo.model_validate(fields)
+        return RecordedRunContextInfo.model_validate(fields)
 
     def _trace_with_fingerprint(self, field: str, value: str) -> RunTrace:
         """Re-validate a real trace payload after changing one fingerprint field."""

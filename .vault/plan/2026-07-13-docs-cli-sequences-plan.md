@@ -3,15 +3,23 @@ tags:
   - '#plan'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:aa42e746fac180a06703aba2fa1e1a43f2ae4a60783b7a2caa0f7f7226e266b9'
 tier: L3
 related:
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-07-13-docs-cli-sequences-research]]'
+modified: '2026-10-03'
+body_hash: 'sha256:b2efda0ee76b074f072d08963bf7ddfde22886784a4701c1fae00ce96f1720a9'
 ---
 
 # `docs-cli-sequences` plan
+
+## Description
+
+Replace the ~35 static ` ```bash ` how-to fences with build-time-executed CLI sequences: an author writes a backtick-fenced `cli-sequence` MyST directive whose frame lines run hermetically at build time, are compared against committed light per-sequence goldens, and render as a server-side static transcript that a vendored framework-free widget progressively enhances into a stepped player with real-grammar token highlighting and hover help. A wrong writeup, a renamed verb, a changed output shape, or a CLI regression then reds the docs build with a named sequence, frame, and diff. This plan implements exactly the seven accepted rulings D1 through D7 of the `docs-cli-sequences` ADR, grounded in the `docs-cli-sequences` research, and reuses the already-shipped substrate: `invoke_cached_cli` and `isolated_profile_storage_root` for hermetic execution, `frozen_clock` and the `cadrumo.core.observability` golden primitives with the central `GOLDEN_MASK_FIELDS` for deterministic comparison, `dev/docs/cli_reference.py` for the CLI-surface projection, and the existing `builder-inited` docs-build hooks.
+
+Prerequisite zero (ADR D7) is a dedicated first wave: the documented-command conformance gate's invocation-token regex was swept by the package rename to match the token `cadrumo` while the docs cite the real executable `aeat` (roughly 547 times), so the gate is currently near-vacuous and scans almost no invocation. That repair lands before the executed tier stands on it, and is dispatchable independently of the rest of the plan. The engine, its two build gates (a `builder-inited` Sphinx check hook and a `dev/docs/tests` pytest gate over one execution path), the frontend widget, and the first greenfield tutorials then land wave by wave. All work is additive under `dev/docs/`, `docs/`, `docs/_sequences/`, `docs/_static/`, and the two gate test modules; the sandbox never sets `CADRUMO_LIVE_TESTS_ENABLED`, fixtures are synthetic, and the nitpicky offline `-n -W` gate stays green.
+
+## Steps
 
 ## Wave `W01` - static conformance floor
 
@@ -34,8 +42,8 @@ The one hermetic execution engine: frame-grammar parser, per-sequence sandbox ru
 
 Parse the cli-sequence body into ordered frames with capture, expect, setup, result, and placeholder semantics, enforce the one-terminal-result contract, and inline seed recipes.
 
-- [x] `W02.P02.S05` - Implement the frame-line parser for the cli-sequence grammar (visible aeat frames, @setup, @result, @capture, @expect, and {name} interpolation); `dev/docs/sequences/_parser.py`.
-- [x] `W02.P02.S06` - Enforce the sequence-result contract at parse time, refusing a sequence with zero, multiple, or non-terminal @result frames; `dev/docs/sequences/_parser.py`.
+- [x] `W02.P02.S05` - Implement the frame-line parser for the cli-sequence grammar (visible aeat frames, @setup, @result, @capture, @expect, and {name} interpolation); `dev/docs/sequences/parser.py`.
+- [x] `W02.P02.S06` - Enforce the sequence-result contract at parse time, refusing a sequence with zero, multiple, or non-terminal @result frames; `dev/docs/sequences/parser.py`.
 - [x] `W02.P02.S07` - Implement :seed: recipe inlining that prepends a shared @setup fragment from the named seed file before the sequence's own frames; `dev/docs/sequences/_seeds.py`.
 - [x] `W02.P02.S08` - Write parser unit tests covering grammar acceptance, every refusal case, capture and expect binding, and seed inlining; `dev/docs/sequences/tests/test_parser.py`.
 
@@ -43,17 +51,17 @@ Parse the cli-sequence body into ordered frames with capture, expect, setup, res
 
 Execute each frame in a fresh isolated storage root under frozen clock and injected profile id through the cached in-process Click tree, threading captured values into later frames.
 
-- [x] `W02.P03.S09` - Implement the per-sequence sandbox runner (fresh isolated_profile_storage_root, frozen_clock, injected profile_id, English output, live tests off, invoke_cached_cli per frame); `dev/docs/sequences/_runner.py`.
-- [x] `W02.P03.S10` - Implement @capture value threading that parses a frame's JSON envelope, binds the json-path, and interpolates {name} into later frames; `dev/docs/sequences/_runner.py`.
+- [x] `W02.P03.S09` - Implement the per-sequence sandbox runner (fresh isolated_profile_storage_root, frozen_clock, injected profile_id, English output, live tests off, invoke_cached_cli per frame); `dev/docs/sequences/runner.py`.
+- [x] `W02.P03.S10` - Implement @capture value threading that parses a frame's JSON envelope, binds the json-path, and interpolates {name} into later frames; `dev/docs/sequences/runner.py`.
 - [x] `W02.P03.S11` - Write runner tests driving a real create-calculate-verify chain hermetically and asserting captured values thread through subsequent frames; `dev/docs/sequences/tests/test_runner.py`.
 
 ### Phase `W02.P04` - golden store and comparison
 
 Read and write committed light per-sequence goldens, compare JSON frames via the central-mask observability primitives and text frames by declared narrow normalisation, and assert exit codes and semantic expectations.
 
-- [x] `W02.P04.S12` - Implement the golden reader and writer for committed light per-sequence JSON (resolved argv, exit code, verbatim captured envelope or text, capture bindings); `dev/docs/sequences/_golden_store.py`.
-- [x] `W02.P04.S13` - Implement JSON-frame comparison delegating to the observability primitives with exactly the central GOLDEN_MASK_FIELDS, refusing any per-sequence mask extension; `dev/docs/sequences/_compare.py`.
-- [x] `W02.P04.S14` - Implement text-frame exact comparison with declared narrow normalisation, per-frame exit-code assertion, and @expect semantic evaluation against live output; `dev/docs/sequences/_compare.py`.
+- [x] `W02.P04.S12` - Implement the golden reader and writer for committed light per-sequence JSON (resolved argv, exit code, verbatim captured envelope or text, capture bindings); `dev/docs/sequences/golden_store.py`.
+- [x] `W02.P04.S13` - Implement JSON-frame comparison delegating to the observability primitives with exactly the central GOLDEN_MASK_FIELDS, refusing any per-sequence mask extension; `dev/docs/sequences/compare.py`.
+- [x] `W02.P04.S14` - Implement text-frame exact comparison with declared narrow normalisation, per-frame exit-code assertion, and @expect semantic evaluation against live output; `dev/docs/sequences/compare.py`.
 - [x] `W02.P04.S15` - Write comparison tests covering JSON match and mismatch diagnostics, text match, exit-code failure, and @expect pass and fail; `dev/docs/sequences/tests/test_compare.py`.
 
 ### Phase `W02.P05` - refresh/check CLI and anti-tautology gate
@@ -80,7 +88,7 @@ Project the live Click tree to a gitignored cli-tree.json help catalogue reusing
 
 Tokenise command lines against the materialised Click tree, register the backtick-fenced directive rendering server-side static frames plus inline JSON payload, and teach the conformance gate the sequence grammar and enrolled-page fence tier.
 
-- [x] `W03.P07.S22` - Implement the Python tokeniser against the materialised Click tree, classifying executable, verb path, option, option value, positional value, and interpolated placeholder tokens with a command-path key on each verb token; `dev/docs/sequences/_tokeniser.py`.
+- [x] `W03.P07.S22` - Implement the Python tokeniser against the materialised Click tree, classifying executable, verb path, option, option value, positional value, and interpolated placeholder tokens with a command-path key on each verb token; `dev/docs/sequences/tokeniser.py`.
 - [x] `W03.P07.S23` - Register the backtick-fenced cli-sequence MyST directive rendering server-side static frames in document order plus one inline application/json payload per sequence; `docs/conf.py`.
 - [x] `W03.P07.S24` - Teach the conformance gate the sequence grammar (strip @setup and @result sigils, treat {name} as a positional placeholder) and add the enrolled-page no-plain-executable-fence tier; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [x] `W03.P07.S25` - Write directive and tokeniser tests asserting the payload shape, token classification, and no-JS static frame HTML; `dev/docs/tests/test_sequence_directive.py`.
@@ -129,14 +137,6 @@ Confirm the two-tier enrollment gate, bring the full docs gate suite green, and 
 - [x] `W06.P11.S36` - Confirm the two-tier enrollment gate refuses a plain executable fence on an enrolled page while non-enrolled pages keep the verb-path and option-name checks; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [x] `W06.P11.S37` - Run the full docs gate suite (nitpicky -n -W build, Pagefind, documented-command conformance, sequence goldens) and bring it green; `dev/docs/tests`.
 - [x] `W06.P11.S38` - Record the three codification candidates from the ADR as post-cycle rule-promotion notes in the feature close audit; `.vault/audit`.
-
-## Description
-
-Replace the ~35 static ` ```bash ` how-to fences with build-time-executed CLI sequences: an author writes a backtick-fenced `cli-sequence` MyST directive whose frame lines run hermetically at build time, are compared against committed light per-sequence goldens, and render as a server-side static transcript that a vendored framework-free widget progressively enhances into a stepped player with real-grammar token highlighting and hover help. A wrong writeup, a renamed verb, a changed output shape, or a CLI regression then reds the docs build with a named sequence, frame, and diff. This plan implements exactly the seven accepted rulings D1 through D7 of the `docs-cli-sequences` ADR, grounded in the `docs-cli-sequences` research, and reuses the already-shipped substrate: `invoke_cached_cli` and `isolated_profile_storage_root` for hermetic execution, `frozen_clock` and the `cadrumo.core.observability` golden primitives with the central `GOLDEN_MASK_FIELDS` for deterministic comparison, `dev/docs/cli_reference.py` for the CLI-surface projection, and the existing `builder-inited` docs-build hooks.
-
-Prerequisite zero (ADR D7) is a dedicated first wave: the documented-command conformance gate's invocation-token regex was swept by the package rename to match the token `cadrumo` while the docs cite the real executable `aeat` (roughly 547 times), so the gate is currently near-vacuous and scans almost no invocation. That repair lands before the executed tier stands on it, and is dispatchable independently of the rest of the plan. The engine, its two build gates (a `builder-inited` Sphinx check hook and a `dev/docs/tests` pytest gate over one execution path), the frontend widget, and the first greenfield tutorials then land wave by wave. All work is additive under `dev/docs/`, `docs/`, `docs/_sequences/`, `docs/_static/`, and the two gate test modules; the sandbox never sets `CADRUMO_LIVE_TESTS_ENABLED`, fixtures are synthetic, and the nitpicky offline `-n -W` gate stays green.
-
-## Steps
 
 The plan's Waves, Phases, and Steps are authored above under their headings via the vaultspec-core vault plan CLI; this heading is the canonical anchor and the rows live in their Phase blocks.
 

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-08-15'
-body_hash: 'sha256:8c6881ce31c198d37107e43ad3799cc3335d1913c9f1ab68c052634f62da7426'
+modified: '2026-10-03'
+body_hash: 'sha256:a1ccb7c50b25ba1dbfac78914fcee1fea91d29e2e26df54ebe1cec9453988926'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-07-02-arch-remediation-data-budget-adr]]'
@@ -99,9 +99,9 @@ code.claude.com/docs, support.claude.com, github.com/anthropics):
 
 ### F4 — The plugin content payload already exists in-repo
 
-- `aeat app agent --output DIR` (`src/aeat/entrypoints/cli/_app_agent_workspace.py`,
+- `aeat app agent --output DIR` (the former source file,
   profile-independent, no secret store) materialises the shipped harness into
-  the Claude-native layout via `src/aeat/agent/_workspace.py`:
+  the Claude-native layout :
   `.claude/skills/<name>/SKILL.md` (34 skills incl. reference material),
   `.claude/agents/<persona>.md` (7 personas), `.claude/rules/<rule>.md`
   (7 operator rules) aggregated by a root `CLAUDE.md`. ADR R4 keeps this as
@@ -147,11 +147,10 @@ compressed breakdowns: see F8 (measured artifact report).
 4. **Verification** — a real-client install proof (Cowork and Claude Code) as
    the campaign's acceptance gate, per the R7 live-measurement discipline;
    elicitation-support measurement rides the same harness.
-5. **Docs** — the harness userdocs initiative (paused, kickoff brief in
-   `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md`) resumes against the real install
+5. **Docs** — the harness userdocs initiative (paused, kickoff brief ) resumes against the real install
    story once this campaign lands.
 6. **A platform user-data root (BLOCKING defect for installed runs)** —
-   `PROJECT_ROOT` in `src/aeat/core/config.py` walks four parents up from the
+   `PROJECT_ROOT`  walks four parents up from the
    module file, and `Settings.aeat_local_storage_root` defaults to
    `PROJECT_ROOT / "var" / "storage"`. From an installed wheel this resolves
    INSIDE the environment (e.g. `<venv>/Lib/var/storage`); under `uvx` it
@@ -209,7 +208,7 @@ compressed breakdowns: see F8 (measured artifact report).
   `release-please@16` via `npx` from `just release` / `just release-apply` —
   LOCAL-ONLY, HUMAN-GATED (dry-run log, then a `chore(release)` commit + local
   unpushed tag). Version truth is `pyproject [project].version`, mirrored to
-  `__version__`, gated by `tests/test_release_config.py`. **Gap**: versioning
+  `__version__`, gated by the former source file. **Gap**: versioning
   + CHANGELOG + tagging only; wheel building, size grants, name claim, and
   upload are all greenfield for this campaign.
 
@@ -372,6 +371,6 @@ absent. With the companion installed, behaviour is byte-identical to today.
   `https://github.com/modelcontextprotocol/mcpb`.
 - Skills standard: `https://code.claude.com/docs/en/skills`; `https://agentskills.io`.
 - In-repo: `packaging/mcpb/build.py`, `packaging/mcpb/manifest.json`,
-  `src/aeat/agent/_workspace.py`, `src/aeat/entrypoints/cli/_app_agent_workspace.py`,
+
   `pyproject.toml`, `src/aeat/_data` tree measurement (2026-07-03).
 - Vault: the four ADRs in `related:` plus `2026-06-28-product-packaging-research`.

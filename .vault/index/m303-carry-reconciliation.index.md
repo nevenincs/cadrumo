@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#m303-carry-reconciliation'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e0c6857ea7d5b682c5cc0de28402b9c7aaf897fbef4e2c1dfd27b8f9e2c2f12'
+body_hash: 'sha256:804beec31d0c08a29925f45819e2a25357486c4728646b223d631ac9b255a08d'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
-  - '[[2026-08-07-m303-carry-reconciliation-ledger]]'
-  - '[[2026-08-07-m303-carry-reconciliation-plan]]'
   - '[[2026-08-09-m303-carry-reconciliation-did-page-s17-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-payment-election-s20-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-prior-domiciliation-s21-audit]]'
@@ -51,14 +49,6 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 - `2026-08-10-m303-carry-reconciliation-s13-measurement-closure-review-audit` - `m303-carry-reconciliation` audit: `M303 S13 measurement closure review`
 - `2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-audit` - `m303-carry-reconciliation` audit: `M303 S16 submitted-file Notice route`
 - `2026-08-10-m303-carry-reconciliation-s19-code-review-audit` - `m303-carry-reconciliation` audit: `M303 S19 Nota 3 DID export review`
-
-### exec
-
-- `2026-08-07-m303-carry-reconciliation-ledger` - `m303-carry-reconciliation` ledger
-
-### plan
-
-- `2026-08-07-m303-carry-reconciliation-plan` - `m303-carry-reconciliation` plan
 
 ### reference
 

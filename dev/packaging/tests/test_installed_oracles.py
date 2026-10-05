@@ -30,6 +30,7 @@ from typing import Any
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.product_environment import ambient_product_settings_removed, clean_product_env
 from dev.source_tree import repository_files, snapshot
 
 from .._distribution_names import normalise_distribution_name
@@ -167,10 +168,8 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
 )
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.fixed_width_codec import (
-    parse_fixed_width_export_field,
-    render_fixed_width_export_field,
-)
+from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 
 descriptor_path = Path(str(files("cadrumo").joinpath(
@@ -253,6 +252,27 @@ print(json.dumps({
     "logical_generation": selected.logical_generation,
 }, sort_keys=True))
 """
+_ORACLE_AUTHORITY_PROBE = """
+import hashlib
+import json
+
+from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+
+descriptor_path = bundled_authority_descriptor_path().resolve(strict=True)
+selected = AuthorityDescriptor.read(descriptor_path)
+database = descriptor_path.with_name(selected.database).resolve(strict=True)
+print(json.dumps({
+    "descriptor": str(descriptor_path),
+    "descriptor_sha256": hashlib.sha256(descriptor_path.read_bytes()).hexdigest(),
+    "database": database.name,
+    "database_sha256": hashlib.sha256(database.read_bytes()).hexdigest(),
+    "logical_generation": selected.logical_generation,
+}, sort_keys=True))
+"""
+#: One JSON-RPC message is one stdout line, and the tools/list answer alone is
+#: larger than asyncio's 64 KiB default line limit.
+_STDIO_LINE_LIMIT = 16 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -367,6 +387,41 @@ def _installed_authority_resource(
         database,
         str(observed["database_sha256"]),
     )
+
+
+def _oracle_authority_generation(
+    oracle: str,
+    venv: Path,
+    *,
+    environment: dict[str, str],
+    cwd: Path,
+    descriptor_sha256: str,
+    database_sha256: str,
+) -> dict[str, str]:
+    """Name the authority generation one oracle run read, and pin it to the expected pair.
+
+    The installed commands do not print the generation they consumed, so the
+    installation's own interpreter resolves it through the product's descriptor
+    selector under the exact environment the oracle ran with -- the same
+    selector, files and variables the oracle's commands resolved. The identity
+    goes to the run log and back to the caller for retained evidence, and a
+    generation other than the expected one fails with both identities named.
+    """
+    observed = json.loads(
+        run_checked(
+            [str(venv_python_path(venv)), "-I", "-c", _ORACLE_AUTHORITY_PROBE],
+            cwd=cwd,
+            env=environment,
+        ).stdout
+    )
+    generation = {"oracle": oracle, **{str(key): str(value) for key, value in observed.items()}}
+    print("installed-oracle-authority=" + json.dumps(generation, sort_keys=True))
+    assert (generation["descriptor_sha256"], generation["database_sha256"]) == (descriptor_sha256, database_sha256), (
+        f"the {oracle} oracle read authority generation {generation['logical_generation']} "
+        f"(descriptor sha256 {generation['descriptor_sha256']}, database {generation['database']}), "
+        f"not the expected pair (descriptor sha256 {descriptor_sha256}, database sha256 {database_sha256})"
+    )
+    return generation
 
 
 def _assert_no_durable_calculation_work(storage_root: Path) -> None:
@@ -706,6 +761,14 @@ def test_installed_cli_refuses_an_unusable_authority_before_durable_work(
         timeout_seconds=240.0,
     )
     assert baseline_cli.target_value == "23000.00"
+    _oracle_authority_generation(
+        "cli-baseline",
+        installation.venv,
+        environment=isolated_product_environment(installation.root / "cli-baseline-state"),
+        cwd=installation.root / "cli-baseline",
+        descriptor_sha256=installation.authority_descriptor_sha256,
+        database_sha256=installation.authority_database_sha256,
+    )
     if damage == "missing":
         installation.authority_database.unlink()
         assert not installation.authority_database.exists()
@@ -787,6 +850,15 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
         cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
         timeout_seconds=240.0,
     )
+    _oracle_authority_generation(
+        "cli-before",
+        cohort.venv,
+        environment=isolated_product_environment(cohort.work_dir / "source-isolation-cli-before-state"),
+        cwd=execution_root / "cli-before",
+        descriptor_sha256=installed_descriptor_digest,
+        database_sha256=installed_database_digest,
+    )
+
     original = authored.read_bytes()
     try:
         authored.write_bytes(original + b"\n# post-build isolation probe\n")
@@ -803,6 +875,14 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
             cohort_manifest_sha256=sha256_path(cohort.evidence_path),
             cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
             timeout_seconds=240.0,
+        )
+        _oracle_authority_generation(
+            "cli-after",
+            cohort.venv,
+            environment=isolated_product_environment(cohort.work_dir / "source-isolation-cli-after-state"),
+            cwd=execution_root / "cli-after",
+            descriptor_sha256=installed_descriptor_digest,
+            database_sha256=installed_database_digest,
         )
     finally:
         authored.write_bytes(original)
@@ -842,9 +922,8 @@ def _retired_state_environment(base: Path, venv: Path) -> dict[str, str]:
     """A per-OS platform-data root whose retired ``aeat`` state triggers the refusal.
 
     Mirrors the ``smoke_mcpb`` hostile-platform fixture: the resolver refuses on
-    the retired directory's existence alone, and refusal fires only in INSTALLED
-    run mode - which this file's wheel-installed cohort guarantees, unlike an
-    editable checkout whose resolver never inspects the platform data dir.
+    the retired directory's existence alone, whenever no explicit storage root
+    is configured, so this environment carries none of the ``CADRUMO_`` settings.
 
     The search path is the one a client of this installation has: the cohort's
     own scripts directory first, then the inherited entries with every other
@@ -852,7 +931,7 @@ def _retired_state_environment(base: Path, venv: Path) -> dict[str, str]:
     carries its own ``aeat``, and a server that reached it would serve another
     installation's command surface.
     """
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment = ambient_product_settings_removed()
     environment["PATH"] = os.pathsep.join(
         (str(venv_bin_dir(venv)), path_without_product_executables(environment.get("PATH", "")))
     )
@@ -900,6 +979,7 @@ async def _drive_mcp_server(
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        limit=_STDIO_LINE_LIMIT,
     )
     assert process.stdin is not None
     assert process.stdout is not None
@@ -946,7 +1026,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     client on an upgrader's machine provides. It pins the startup chain that
     died four separate ways during the distribution campaign: import-time
     registry settings, the schema-build config subtree, the adapter module
-    constants, and the eager telemetry-directory resolution.
+    constants, and the eager run-record-directory resolution.
     """
     cohort = installed_cohort
     environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal", cohort.venv)
@@ -979,7 +1059,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     }
     # The degradation is visible, never silent: the startup note names the
     # storage-root refusal on stderr, which the client's MCP log captures.
-    assert "serving without telemetry" in stderr_text
+    assert "serving without run records" in stderr_text
 
 
 async def _call_dev_installed_mcp_authenticate(
@@ -993,10 +1073,7 @@ async def _call_dev_installed_mcp_authenticate(
     from mcp import ClientSession
     from mcp.client.stdio import StdioServerParameters, stdio_client
 
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-    environment.pop("PYTHONPATH", None)
-    environment.pop("PYTHONHOME", None)
-    environment.pop("VIRTUAL_ENV", None)
+    environment = clean_product_env()
     environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
     server = StdioServerParameters(
         command=str(executable.resolve(strict=True)),
@@ -1043,7 +1120,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
     from cadrumo.adapters.local_runtime.installation import runtime_installation
     from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
     from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
-    from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+    from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
     from cadrumo.adapters.persistence.storage.custody.automation_store_composition import (
         installed_automation_secret_store,
     )

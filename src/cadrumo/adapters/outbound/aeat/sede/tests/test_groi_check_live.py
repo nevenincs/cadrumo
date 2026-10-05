@@ -30,7 +30,7 @@ from ...browser.factory import default_browser_session_factory
 from .._adapter_utils import extract_marker_verdict
 from ..groi_check import (
     _POSITIVE_MARKERS,
-    GroiSedeDriver,
+    collect_groi_observations,
 )
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
@@ -47,11 +47,11 @@ def test_groi_form_selectors_still_match_live_dom() -> None:
     asyncio.run(_assert_form_shape())
 
 
-def test_groi_driver_returns_valid_verdict_for_registered_telefonica_nif() -> None:
+def test_groi_collector_returns_valid_verdict_for_registered_telefonica_nif() -> None:
     """End-to-end: the live driver classifies a known ROI-registered NIF as valid."""
 
     requires_live_enabled()
-    result = GroiSedeDriver().collect(payload=b"", expected={_PROBE_NIF: "valid"}, timeout_ms=30_000)
+    result = asyncio.run(collect_groi_observations(b"", expected={_PROBE_NIF: "valid"}, timeout_ms=30_000))
     assert len(result.observations) == 1
     observation = result.observations[0]
     assert observation.nif == _PROBE_NIF

@@ -7,8 +7,10 @@ from pathlib import Path
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .posix import PosixRuntimeChannel, PosixRuntimeEndpoint, posix_owner_uid
-from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
+from .posix_channel import PosixRuntimeChannel
+from .posix_endpoint import PosixRuntimeEndpoint
+from .windows import WindowsRuntimeEndpoint
+from .windows_channel import WindowsRuntimeChannel
 
 WorkerChannel = WindowsRuntimeChannel | PosixRuntimeChannel
 WorkerEndpoint = WindowsRuntimeEndpoint | PosixRuntimeEndpoint
@@ -18,11 +20,10 @@ def worker_endpoint(*, storage_root: Path, worker_namespace: UUID) -> WorkerEndp
     """Give each worker channel an immutable owner-only native namespace."""
     if sys.platform == "win32":
         return WindowsRuntimeEndpoint(storage_root=storage_root, worker_namespace=worker_namespace)
-    if sys.platform == "linux":
-        # The endpoint itself creates and verifies an owner-only namespace
-        # under the sticky root-owned temporary directory.
+    if sys.platform in {"linux", "darwin"}:
+        # The endpoint creates and verifies the configured owner-only socket directory.
         return PosixRuntimeEndpoint(
             storage_root=storage_root,
-            namespace=Path("/tmp") / f"cdr-{posix_owner_uid()}-worker-{worker_namespace.hex}",  # noqa: S108
+            worker_namespace=worker_namespace,
         )
     raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)

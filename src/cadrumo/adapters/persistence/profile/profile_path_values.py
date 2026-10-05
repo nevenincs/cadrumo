@@ -5,14 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import override
 
-from pydantic import ValidationError
-
 from ....application.persistence_errors import PersistenceDegradationError
 from ....application.user_profile.profile_read_ports import ProfilePathValuesReadPort
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....application.user_profile.projections import record_to_path_values
 from ....domain.user_profile.errors import ProfileNotFoundError, UserProfileError
-from ..storage.errors import StorageError
+from ..storage.errors import STORED_RECORD_FAILURES
 
 
 class ProfilePathValuesPersistenceAdapter(ProfilePathValuesReadPort):
@@ -29,7 +27,7 @@ class ProfilePathValuesPersistenceAdapter(ProfilePathValuesReadPort):
             record = self._repository.load(bucket_id)
         except ProfileNotFoundError:
             return None
-        except (StorageError, OSError, UserProfileError, ValidationError, UnicodeDecodeError) as exc:
+        except (*STORED_RECORD_FAILURES, UserProfileError) as exc:
             raise PersistenceDegradationError("profile_path_values_load") from exc
         return record_to_path_values(record)
 

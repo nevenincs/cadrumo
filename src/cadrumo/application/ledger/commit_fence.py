@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable
 from datetime import date
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
@@ -114,7 +115,7 @@ class LedgerCommitAttemptTracker:
             attempt.refuse()
         if not attempt.wait_for_authority():
             attempt.finished.set()
-            raise RuntimeError("ledger writer was not authorized by its operation fence")
+            raise InternalInvariantError("ledger writer was not authorized by its operation fence")
         failure: BaseException | None = None
         try:
             write()
@@ -176,7 +177,10 @@ class TrackedLedgerTransactionRepository:
         return self._repository.partition_by_date_range(start, end)
 
     def save(self, catalogue: TransactionCatalogue) -> None:
-        """Fence the actual catalogue save behind commit authority."""
+        """Fence the actual catalogue save behind commit authority.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         self._tracker.call_writer(lambda: self._repository.save(catalogue))
 
     def save_with_secure_object_writes(
@@ -184,7 +188,10 @@ class TrackedLedgerTransactionRepository:
         catalogue: TransactionCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Fence the atomic catalogue and related-object write."""
+        """Fence the atomic catalogue and related-object write.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         self._tracker.call_writer(lambda: self._repository.save_with_secure_object_writes(catalogue, extra_writes))
 
     def replace_if_current_with_secure_object_writes(
@@ -222,7 +229,10 @@ class RevisionGuardedTrackedLedgerTransactionRepository(TrackedLedgerTransaction
         expected_revision_id: str,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Fence whole-catalogue CAS at its actual persistence call."""
+        """Fence whole-catalogue CAS at its actual persistence call.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         self._tracker.call_writer(
             lambda: self._revisioned_repository.save_if_revision_with_secure_object_writes(
                 catalogue,
@@ -230,6 +240,60 @@ class RevisionGuardedTrackedLedgerTransactionRepository(TrackedLedgerTransaction
                 extra_writes=extra_writes,
             )
         )
+
+
+def _final_attempt_effect(
+    attempt: _WriterAttempt,
+    tracker: LedgerCommitAttemptTracker,
+    *,
+    prior_commit: bool,
+) -> OperationEffect | None:
+    """Map a completed canonical writer outcome onto its honest effect axis."""
+    if attempt.succeeded:
+        return OperationEffect.UPDATED
+    if not attempt.retryable_conflict:
+        return None
+    return OperationEffect.PARTIAL if prior_commit or tracker.confirmed_write else OperationEffect.NONE
+
+
+async def _settle_writer_attempt(
+    attempt: _WriterAttempt,
+    *,
+    tracker: LedgerCommitAttemptTracker,
+    context: OperationExecutorContext,
+    task_name: str,
+    prior_commit: bool,
+) -> None:
+    """Authorize one actual persistence call, then publish its measured outcome."""
+    async with context.cancellation.irreversible_section():
+        await context.events.effect(OperationEffect.UNKNOWN)
+        attempt.authorize()
+        await await_cancellation_complete(
+            asyncio.to_thread(attempt.finished.wait),
+            task_name=f"{task_name}-writer",
+        )
+        effect = _final_attempt_effect(attempt, tracker, prior_commit=prior_commit)
+        if effect is not None:
+            await context.events.effect(effect)
+    attempt.release()
+
+
+async def _settle_failed_worker[ResultT](
+    worker: asyncio.Task[ResultT],
+    *,
+    task_name: str,
+    error: BaseException,
+) -> None:
+    """Wait for worker cleanup after refusing queued writes, preserving cancellation handling."""
+    try:
+        await await_cancellation_complete(
+            worker,
+            task_name=f"{task_name}-settle",
+            cancellation=error if isinstance(error, asyncio.CancelledError) else None,
+        )
+    except BaseException:
+        if isinstance(error, asyncio.CancelledError):
+            raise
 
 
 async def run_with_ledger_commit_fence[ResultT](
@@ -248,20 +312,13 @@ async def run_with_ledger_commit_fence[ResultT](
             attempt = tracker.next_attempt()
             if attempt is not None:
                 active_attempt = attempt
-                async with context.cancellation.irreversible_section():
-                    await context.events.effect(OperationEffect.UNKNOWN)
-                    attempt.authorize()
-                    await await_cancellation_complete(
-                        asyncio.to_thread(attempt.finished.wait),
-                        task_name=f"{task_name}-writer",
-                    )
-                    if attempt.succeeded:
-                        await context.events.effect(OperationEffect.UPDATED)
-                    elif attempt.retryable_conflict:
-                        await context.events.effect(
-                            OperationEffect.PARTIAL if prior_commit or tracker.confirmed_write else OperationEffect.NONE
-                        )
-                attempt.release()
+                await _settle_writer_attempt(
+                    attempt,
+                    tracker=tracker,
+                    context=context,
+                    task_name=task_name,
+                    prior_commit=prior_commit,
+                )
                 active_attempt = None
                 continue
             if worker.done():
@@ -272,15 +329,7 @@ async def run_with_ledger_commit_fence[ResultT](
         if active_attempt is not None:
             active_attempt.refuse()
         tracker.abort()
-        try:
-            await await_cancellation_complete(
-                worker,
-                task_name=f"{task_name}-settle",
-                cancellation=error if isinstance(error, asyncio.CancelledError) else None,
-            )
-        except BaseException:
-            if isinstance(error, asyncio.CancelledError):
-                raise
+        await _settle_failed_worker(worker, task_name=task_name, error=error)
         raise
 
 

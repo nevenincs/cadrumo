@@ -56,7 +56,8 @@ from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_
 from cadrumo.entrypoints.tests.modelo_projection_history_conformance_support import (
     prepare_modelo_projection_history_conformance_case,
 )
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [

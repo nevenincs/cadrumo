@@ -108,25 +108,14 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT
-from dev.audit.unreachable_code import (
-    ShippedModule,
-    ShippedTreeSpec,
-    is_test_path,
-    iter_python_files,
-    module_edges,
-    non_reference_nodes,
-    parse_module,
-    reachable_closure,
-    relative_to_repo,
-    resolved_symbol_uses,
-    shared_scan_memo,
-    shipped_modules,
-    string_reference_names,
-)
+from dev.audit.unreachable_graph import module_edges, reachable_closure, resolved_symbol_uses
+from dev.audit.unreachable_memo import parse_module, shared_scan_memo
+from dev.audit.unreachable_models import ShippedModule
+from dev.audit.unreachable_references import non_reference_nodes, string_reference_names
+from dev.audit.unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo, shipped_modules
+from dev.exit_codes import FAILED, OK, TOOL_BROKEN
+from dev.first_party_source import is_test_source
 from dev.quality.source_import_analysis import resolve_relative_import
-
-_EXIT_FINDINGS: Final[int] = 1
-_EXIT_ERROR: Final[int] = 1
 
 #: The repository verb that makes a method a producer. Everything else on the
 #: snapshot repository protocol is a consumer.
@@ -276,20 +265,7 @@ def _module_bindings(module: ShippedModule, known: frozenset[str]) -> _ModuleBin
     symbols: dict[str, _Symbol] = {}
     aliases: dict[str, str] = {}
     for node in ast.walk(module.tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name in known:
-                    aliases[alias.asname or alias.name.split(".")[0]] = alias.name
-        elif isinstance(node, ast.ImportFrom):
-            base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
-            if base is None:
-                continue
-            for alias in node.names:
-                target = f"{base}.{alias.name}"
-                if target in known:
-                    aliases[alias.asname or alias.name] = target
-                elif base in known:
-                    symbols[alias.asname or alias.name] = (base, alias.name)
+        _collect_module_binding(module, node, known, aliases, symbols)
     local = frozenset(child.name for child in module.tree.body if isinstance(child, ast.ClassDef))
     return _ModuleBindings(symbols=symbols, aliases=aliases, local=local)
 
@@ -602,7 +578,7 @@ def _outside_write_labels(spec: ShippedTreeSpec, surface: _SurfaceClass, verbs: 
     write_verbs = frozenset(verbs.write)
     for corpus in spec.outside:
         for path in iter_python_files(corpus.root):
-            if corpus.test_modules_only and not is_test_path(path, spec.src_root):
+            if corpus.test_modules_only and not is_test_source(path, root=spec.src_root):
                 continue
             try:
                 tree = parse_module(path)
@@ -772,24 +748,55 @@ def result_as_json(result: WritePathResult) -> str:
     )
 
 
-def main() -> int:
+def main(argv: list[str] | None = None, *, repo_root: Path = REPO_ROOT) -> int:
     """Run the blocking check; exit non-zero on findings or unavailable data."""
     parser = argparse.ArgumentParser(
         description="Audit persistence surfaces a product command reads but no production code writes.",
     )
     parser.add_argument("--json", action="store_true", help="Emit the result as JSON.")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
-        result = run_gate()
+        result = run_gate(repo_root)
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
-        return _EXIT_ERROR
+        return TOOL_BROKEN
     print(result_as_json(result) if args.json else render_console_report(result))
 
     if result.outcome is WritePathOutcome.FINDINGS:
-        return _EXIT_FINDINGS
-    return 0
+        return FAILED
+    return OK
+
+
+def _collect_module_binding(
+    module: ShippedModule, node: ast.AST, known: frozenset[str], aliases: dict[str, str], symbols: dict[str, _Symbol]
+) -> None:
+    """Collect module binding."""
+    if isinstance(node, ast.Import):
+        for alias in node.names:
+            if alias.name in known:
+                aliases[alias.asname or alias.name.split(".")[0]] = alias.name
+    elif isinstance(node, ast.ImportFrom):
+        _collect_module_from_binding(module, node, known, aliases, symbols)
+
+
+def _collect_module_from_binding(
+    module: ShippedModule,
+    node: ast.ImportFrom,
+    known: frozenset[str],
+    aliases: dict[str, str],
+    symbols: dict[str, _Symbol],
+) -> None:
+    """Collect module from binding."""
+    base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
+    if base is None:
+        return
+    for alias in node.names:
+        target = f"{base}.{alias.name}"
+        if target in known:
+            aliases[alias.asname or alias.name] = target
+        elif base in known:
+            symbols[alias.asname or alias.name] = (base, alias.name)
 
 
 if __name__ == "__main__":

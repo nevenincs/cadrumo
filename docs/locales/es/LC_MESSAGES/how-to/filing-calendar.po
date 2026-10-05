@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -27,33 +27,33 @@ msgid ""
 "This page covers the filing calendar: how to see what may be due, what is"
 " overdue, and what to prepare next for the [active profile](profile-"
 "setup.md#what-the-active-profile-means), and which `--year` and "
-"`--period` tokens address each filing window. A modelo is a Spanish tax "
+"`--period` values address each filing window. A modelo is a Spanish tax "
 "form."
 msgstr ""
 "Esta página cubre el calendario de presentaciones: cómo ver qué puede "
 "estar por vencer, qué está vencido y qué preparar a continuación para el "
 "[perfil activo](profile-setup.md#what-the-active-profile-means), y qué "
-"tokens `--year` y `--period` identifican cada ventana de presentación. Un"
-" modelo es un formulario tributario español."
+"valores de `--year` y `--period` identifican cada ventana de "
+"presentación. Un modelo es un documento tributario oficial español."
 
-#: ../../how-to/filing-calendar.md:9
+#: ../../how-to/filing-calendar.md:5
 msgid ""
 "These commands are local unless a command is under `aeat app live`. Local"
 " calendar commands read the [active profile](profile-setup.md#what-the-"
-"active-profile-means) and local registry data. They do not file, submit, "
+"active-profile-means) and local tax-rule data. They do not file, submit, "
 "or contact the Agencia Estatal de Administración Tributaria (AEAT)."
 msgstr ""
-"Estos comandos son locales salvo que un comando esté bajo `aeat app "
-"live`. Los comandos locales de calendario leen el [perfil activo"
-"](profile-setup.md#what-the-active-profile-means) y los datos locales del"
-" registro. No presentan, no envían ni contactan con la Agencia Estatal de"
+"Estas órdenes son locales salvo que una orden esté bajo `aeat app live`. "
+"Las órdenes locales de calendario leen el [perfil activo](profile-"
+"setup.md#what-the-active-profile-means) y los datos locales de las reglas"
+" fiscales. No presentan, no envían ni contactan con la Agencia Estatal de"
 " Administración Tributaria (AEAT)."
 
-#: ../../how-to/filing-calendar.md:14
+#: ../../how-to/filing-calendar.md:11
 msgid "Before you start"
 msgstr "Antes de empezar"
 
-#: ../../how-to/filing-calendar.md:16
+#: ../../how-to/filing-calendar.md:13
 msgid ""
 "You need an [active taxpayer profile](profile-setup.md#what-the-active-"
 "profile-means), and Cadrumo needs your profile passphrase (it prompts for"
@@ -65,7 +65,7 @@ msgstr ""
 "perfil (te la pide). Si no tienes ningún perfil, créalo con [Configurar "
 "tu perfil de contribuyente](profile-setup.md)."
 
-#: ../../how-to/filing-calendar.md:20
+#: ../../how-to/filing-calendar.md:17
 msgid ""
 "The profile must declare its taxpayer model: an entity type and, for a "
 "natural person, at least one IRPF income category. Without them the "
@@ -84,20 +84,20 @@ msgstr ""
 " Declara primero esos datos con [Configurar tu perfil de contribuyente"
 "](profile-setup.md)."
 
-#: ../../how-to/filing-calendar.md:28
+#: ../../how-to/filing-calendar.md:25
 msgid ""
 "Calendar results depend on profile facts: taxpayer type, activity start "
-"date, IVA regime, IRPF/Renta facts, withholding obligations, and other "
-"enrollment details. You maintain those facts manually in the profile - "
-"see [Maintain Modelo 036 census facts in your profile](censo-update.md)."
+"date, VAT regime, IRPF/Renta facts, withholding obligations, and other "
+"enrollment details. You maintain those facts manually in the profile; see"
+" [Maintain Modelo 036 census facts in your profile](censo-update.md)."
 msgstr ""
 "Los resultados del calendario dependen de los datos del perfil: tipo de "
 "contribuyente, fecha de inicio de la actividad, régimen de IVA, datos de "
-"IRPF/Renta, obligaciones de retención y otros detalles de inscripción. "
-"Esos datos los mantienes a mano en el perfil; consulta [Mantener los "
-"datos censales del Modelo 036 en tu perfil](censo-update.md)."
+"IRPF/Renta, obligaciones de retención y otros detalles de alta. Esos "
+"datos los mantienes a mano en el perfil; consulta [Mantener los datos "
+"censales del Modelo 036 en tu perfil](censo-update.md)."
 
-#: ../../how-to/filing-calendar.md:33
+#: ../../how-to/filing-calendar.md:30
 msgid ""
 "If a profile is still incomplete, a command may stop and name the missing"
 " facts. Fix the profile first. To see partial results before the profile "
@@ -110,7 +110,7 @@ msgstr ""
 "incomplete` donde el comando lo admita (`agenda`, `backlog` y "
 "`calendar`)."
 
-#: ../../how-to/filing-calendar.md:38
+#: ../../how-to/filing-calendar.md:35
 msgid ""
 "The examples in this documentation are recorded in English. `aeat` prints"
 " its messages in Spanish unless you [choose another language](profile-"
@@ -120,11 +120,11 @@ msgstr ""
 "muestra sus mensajes en español salvo que [elijas otro idioma](profile-"
 "setup.md#choose-the-output-language)."
 
-#: ../../how-to/filing-calendar.md:41
+#: ../../how-to/filing-calendar.md:38
 msgid "What are my filing obligations?"
 msgstr "¿Cuáles son mis obligaciones de presentación?"
 
-#: ../../how-to/filing-calendar.md:43
+#: ../../how-to/filing-calendar.md:40
 msgid ""
 "Start with the agenda. It ranks obligations around a reference date, "
 "showing what is due today, what is coming up in the next two weeks, and "
@@ -133,9 +133,9 @@ msgid ""
 "`--date`, and widen the upcoming window with `--horizon` (the default is "
 "14 days). The example profile is an autónomo whose income comes from an "
 "economic activity. On 1 April the next deadline is the first-quarter "
-"Modelo 130, closing on 20 April. From 15 April, the Modelo 130 and Modelo"
-" 303 for that quarter both fall inside the two-week window. Profile facts"
-" that are still unset appear as warnings that name the modelos they "
+"Modelo 130, due on 20 April. From 15 April, the Modelo 130 and Modelo 303"
+" for that quarter both fall inside the two-week window. Profile facts "
+"that are still unset appear as warnings that name the modelos they "
 "affect:"
 msgstr ""
 "Empieza con la agenda. Ordena las obligaciones en torno a una fecha de "
@@ -146,37 +146,37 @@ msgstr ""
 " (el valor predeterminado es de 14 días). El perfil de ejemplo es un "
 "autónomo cuyos ingresos proceden de una actividad económica. El 1 de "
 "abril, el próximo plazo es el del Modelo 130 del primer trimestre, que "
-"termina el 20 de abril. A partir del 15 de abril, el Modelo 130 y el "
-"Modelo 303 de ese trimestre entran ambos en la ventana de dos semanas. "
-"Los datos del perfil que aún no se han establecido aparecen como avisos "
-"que nombran los modelos a los que afectan:"
+"vence el 20 de abril. A partir del 15 de abril, el Modelo 130 y el Modelo"
+" 303 de ese trimestre entran ambos en la ventana de dos semanas. Los "
+"datos del perfil que aún no se han establecido aparecen como avisos que "
+"nombran los modelos a los que afectan:"
 
-#: ../../how-to/filing-calendar.md:58
+#: ../../how-to/filing-calendar.md:46
 msgid "To understand why one modelo appears or does not appear, use:"
 msgstr "Para entender por qué un modelo aparece o no aparece, usa:"
 
-#: ../../how-to/filing-calendar.md:64
+#: ../../how-to/filing-calendar.md:52
 msgid ""
-"`explain` reports whether that modelo applies, the registry reason, and "
-"the profile facts used for the decision. For the example profile Modelo "
-"130 applies, and the rationale names the economic activity under "
-"estimación directa. On a profile that has not declared its entity type or"
-" income categories, the verdict is `incomplete` and the rationale names "
-"the missing facts. The rationale text stays in Spanish."
+"`explain` reports whether that modelo applies, the reason from the tax "
+"rules, and the profile facts used for the decision. For the example "
+"profile Modelo 130 applies, and the rationale names the economic activity"
+" under estimación directa. On a profile that has not declared its entity "
+"type or income categories, the verdict is `incomplete` and the rationale "
+"names the missing facts. The rationale text stays in Spanish."
 msgstr ""
-"`explain` informa de si ese modelo se aplica, del motivo del registro y "
-"de los datos del perfil usados para la decisión. Para el perfil de "
-"ejemplo se aplica el Modelo 130, y la justificación nombra la actividad "
-"económica en estimación directa. En un perfil que no ha declarado su tipo"
-" de entidad ni sus categorías de renta, el veredicto es `incomplete` y la"
-" justificación nombra los datos que faltan. El texto de la justificación "
-"se mantiene en español."
+"`explain` informa de si ese modelo se aplica, del motivo según las reglas"
+" fiscales y de los datos del perfil usados para la decisión. Para el "
+"perfil de ejemplo se aplica el Modelo 130, y la justificación nombra la "
+"actividad económica en estimación directa. En un perfil que no ha "
+"declarado su tipo de entidad ni sus categorías de renta, el veredicto es "
+"`incomplete` y la justificación nombra los datos que faltan. El texto de "
+"la justificación se mantiene en español."
 
-#: ../../how-to/filing-calendar.md:71
+#: ../../how-to/filing-calendar.md:54
 msgid "What messages have I received?"
 msgstr "¿Qué mensajes he recibido?"
 
-#: ../../how-to/filing-calendar.md:73
+#: ../../how-to/filing-calendar.md:56
 msgid ""
 "Calendar commands do not read AEAT mailboxes. For DEHú (Dirección "
 "Electrónica Habilitada única) notification snapshots, use the live "
@@ -186,57 +186,58 @@ msgstr ""
 "instantáneas de notificaciones de la DEHú (Dirección Electrónica "
 "Habilitada única), usa el flujo de notificaciones en directo:"
 
-#: ../../how-to/filing-calendar.md:79
+#: ../../how-to/filing-calendar.md:62
 msgid ""
-"If you have not captured notifications yet, use [Read AEAT notifications"
-"](check-aeat-notifications.md). Live notification capture requires AEAT "
+"If you have not pulled notifications yet, use [Check AEAT notifications"
+"](check-aeat-notifications.md). Reading notifications live requires AEAT "
 "authentication and is read-only."
 msgstr ""
-"Si aún no has capturado notificaciones, usa [Leer notificaciones de la "
-"AEAT](check-aeat-notifications.md). La captura de notificaciones en "
-"directo requiere autenticación ante la AEAT y es de solo lectura."
+"Si aún no has descargado notificaciones, usa [Consultar las "
+"notificaciones de la AEAT](check-aeat-notifications.md). La lectura de "
+"notificaciones en directo requiere autenticación ante la AEAT y es de "
+"solo lectura."
 
-#: ../../how-to/filing-calendar.md:83
+#: ../../how-to/filing-calendar.md:66
 msgid "What missed modelos did I forget to file?"
 msgstr "¿Qué modelos se me olvidó presentar?"
 
-#: ../../how-to/filing-calendar.md:85
+#: ../../how-to/filing-calendar.md:68
 msgid ""
-"Use backlog for past-due obligations that are not locally marked as "
-"presented. The default window starts 365 days before today and ends "
-"today; narrow it with `--from` and `--to` when you are checking a "
-"specific period. The example profile declares an economic activity that "
-"started in 2025:"
+"Use backlog for past-due obligations that you have not recorded as filed."
+" The default window starts 365 days before today and ends today; narrow "
+"it with `--from` and `--to` when you are checking a specific period. The "
+"example profile declares an economic activity that started in 2025:"
 msgstr ""
-"Usa backlog para las obligaciones vencidas que no están marcadas "
-"localmente como presentadas. La ventana predeterminada empieza 365 días "
-"antes de hoy y termina hoy; acótala con `--from` y `--to` cuando estés "
-"comprobando un periodo concreto. El perfil de ejemplo declara una "
-"actividad económica que empezó en 2025:"
+"Usa backlog para las obligaciones vencidas que no has registrado como "
+"presentadas. La ventana predeterminada empieza 365 días antes de hoy y "
+"termina hoy; acótala con `--from` y `--to` cuando estés comprobando un "
+"periodo concreto. El perfil de ejemplo declara una actividad económica "
+"que empezó en 2025:"
 
-#: ../../how-to/filing-calendar.md:94
+#: ../../how-to/filing-calendar.md:74
 msgid ""
 "Backlog is a local planning tool. It does not prove what AEAT has or has "
 "not received. It depends on the [active profile](profile-setup.md#what-"
-"the-active-profile-means), local filing markers, and local registry "
-"rules. For the local filing lifecycle, see [The filing workflow](filing-"
-"spine.md)."
+"the-active-profile-means), the filings you recorded as filed, and local "
+"tax rules. For the local filing lifecycle, see [The filing workflow"
+"](filing-spine.md)."
 msgstr ""
 "Backlog es una herramienta de planificación local. No demuestra qué ha "
 "recibido o no la AEAT. Depende del [perfil activo](profile-setup.md#what-"
-"the-active-profile-means), de los marcadores de presentación locales y de"
-" las reglas locales del registro. Para el ciclo de vida de la "
-"presentación local, consulta [El flujo de presentación](filing-spine.md)."
+"the-active-profile-means), de las presentaciones que has registrado como "
+"presentadas y de las reglas fiscales locales. Para el ciclo de vida de la"
+" presentación local, consulta [El flujo de presentación](filing-"
+"spine.md)."
 
-#: ../../how-to/filing-calendar.md:99
+#: ../../how-to/filing-calendar.md:80
 msgid "What upcoming modelos will I have to file?"
 msgstr "¿Qué modelos próximos tendré que presentar?"
 
-#: ../../how-to/filing-calendar.md:101
+#: ../../how-to/filing-calendar.md:82
 msgid "Generate a calendar window:"
 msgstr "Genera una ventana de calendario:"
 
-#: ../../how-to/filing-calendar.md:106
+#: ../../how-to/filing-calendar.md:87
 msgid ""
 "Both dates are required in `YYYY-MM-DD` format. The calendar applies "
 "national public holidays and business-day shifts before printing "
@@ -248,35 +249,36 @@ msgstr ""
 "hábiles antes de imprimir los plazos. No comprueba los festivos "
 "regionales ni locales, así que confirma un plazo que caiga cerca de uno."
 
-#: ../../how-to/filing-calendar.md:110
+#: ../../how-to/filing-calendar.md:91
 msgid ""
 "The calendar is stricter than `agenda` and `backlog`: it also refuses "
 "while a profile check is unresolved, such as "
 "`censo.enrolment_unverified`. That check reports that your census-backed "
-"enrollment facts are operator-declared, not AEAT-verified; AEAT publishes"
-" no read-only census view the tool could confirm them against. Review the"
-" profile facts (see [Maintain Modelo 036 census facts in your profile"
-"](censo-update.md)) and add `--allow-incomplete` to print a provisional "
-"calendar. Provisional entries are marked `censo_enrolment=unverified`. "
-"Add `--all-profiles` to include every registered profile instead of only "
-"the [active profile](profile-setup.md#what-the-active-profile-means), or "
-"`--show-suppressed` to inspect obligations Cadrumo normally filters out:"
+"enrollment facts are declared by you, not confirmed by AEAT; AEAT "
+"publishes no read-only census view the tool could confirm them against. "
+"Review the profile facts (see [Maintain Modelo 036 census facts in your "
+"profile](censo-update.md)) and add `--allow-incomplete` to print a "
+"provisional calendar. Provisional entries are marked "
+"`censo_enrolment=unverified`. Add `--all-profiles` to include every "
+"registered profile instead of only the [active profile](profile-setup.md"
+"#what-the-active-profile-means), or `--show-suppressed` to inspect "
+"obligations Cadrumo normally filters out:"
 msgstr ""
 "El calendario es más estricto que `agenda` y `backlog`: también se niega "
 "mientras una comprobación del perfil esté sin resolver, como "
 "`censo.enrolment_unverified`. Esa comprobación informa de que tus datos "
-"de inscripción respaldados por el censo están declarados por el operador,"
-" no verificados por la AEAT; la AEAT no publica ninguna vista de censo de"
-" solo lectura con la que la herramienta pudiera confirmarlos. Revisa los "
-"datos del perfil (consulta [Mantener los datos censales del Modelo 036 en"
-" tu perfil](censo-update.md)) y añade `--allow-incomplete` para imprimir "
-"un calendario provisional. Las entradas provisionales se marcan como "
+"de alta respaldados por el censo están declarados por ti, no confirmados "
+"por la AEAT; la AEAT no publica ninguna vista de censo de solo lectura "
+"con la que la herramienta pudiera confirmarlos. Revisa los datos del "
+"perfil (consulta [Mantener los datos censales del Modelo 036 en tu perfil"
+"](censo-update.md)) y añade `--allow-incomplete` para imprimir un "
+"calendario provisional. Las entradas provisionales se marcan como "
 "`censo_enrolment=unverified`. Añade `--all-profiles` para incluir todos "
 "los perfiles registrados en lugar de solo el [perfil activo](profile-"
 "setup.md#what-the-active-profile-means), o `--show-suppressed` para "
 "examinar las obligaciones que Cadrumo normalmente filtra:"
 
-#: ../../how-to/filing-calendar.md:126
+#: ../../how-to/filing-calendar.md:107
 msgid ""
 "Suppressed entries include obligations that do not apply given your "
 "profile facts, or that are incomplete. Each entry shows why it was "
@@ -286,99 +288,101 @@ msgstr ""
 "tus datos de perfil, o que están incompletas. Cada entrada muestra por "
 "qué se suprimió."
 
-#: ../../how-to/filing-calendar.md:130
-msgid "Period tokens and dates"
-msgstr "Tokens de periodo y fechas"
+#: ../../how-to/filing-calendar.md:111
+msgid "Period codes and dates"
+msgstr "Códigos de periodo y fechas"
 
-#: ../../how-to/filing-calendar.md:132
+#: ../../how-to/filing-calendar.md:113
 msgid ""
-"Calendar commands use real inclusive dates in `YYYY-MM-DD` format. Modelo"
-" work commands instead separate the filing year from the registry period:"
+"Calendar commands use real inclusive dates in `YYYY-MM-DD` format, as "
+"shown above. Modelo work commands instead separate the filing year from "
+"the period:"
 msgstr ""
-"Los comandos de calendario usan fechas reales inclusivas en formato "
-"`YYYY-MM-DD`. Los comandos de trabajo de modelo, en cambio, separan el "
-"ejercicio de presentación del periodo del registro:"
+"Las órdenes de calendario usan fechas reales inclusivas en formato `YYYY-"
+"MM-DD`, como se muestra arriba. Las órdenes de trabajo de modelo, en "
+"cambio, separan el ejercicio de presentación del periodo:"
 
-#: ../../how-to/filing-calendar.md:139
-msgid "The period tokens are:"
-msgstr "Los tokens de periodo son:"
+#: ../../how-to/filing-calendar.md:120
+msgid "The period codes are:"
+msgstr "Los códigos de periodo son:"
 
-#: ../../how-to/filing-calendar.md:141
+#: ../../how-to/filing-calendar.md:122
 msgid "`1T`: first quarter, January 1 through March 31"
 msgstr "`1T`: primer trimestre, del 1 de enero al 31 de marzo"
 
-#: ../../how-to/filing-calendar.md:142
+#: ../../how-to/filing-calendar.md:123
 msgid "`2T`: second quarter, April 1 through June 30"
 msgstr "`2T`: segundo trimestre, del 1 de abril al 30 de junio"
 
-#: ../../how-to/filing-calendar.md:143
+#: ../../how-to/filing-calendar.md:124
 msgid "`3T`: third quarter, July 1 through September 30"
 msgstr "`3T`: tercer trimestre, del 1 de julio al 30 de septiembre"
 
-#: ../../how-to/filing-calendar.md:144
+#: ../../how-to/filing-calendar.md:125
 msgid "`4T`: fourth quarter, October 1 through December 31"
 msgstr "`4T`: cuarto trimestre, del 1 de octubre al 31 de diciembre"
 
-#: ../../how-to/filing-calendar.md:145
+#: ../../how-to/filing-calendar.md:126
 msgid "`0A`: annual period, January 1 through December 31"
 msgstr "`0A`: periodo anual, del 1 de enero al 31 de diciembre"
 
-#: ../../how-to/filing-calendar.md:146
+#: ../../how-to/filing-calendar.md:127
 msgid "`01` through `12`: monthly periods"
 msgstr "`01` a `12`: periodos mensuales"
 
-#: ../../how-to/filing-calendar.md:148
+#: ../../how-to/filing-calendar.md:129
 msgid ""
-"Which tokens a modelo accepts is modelo-specific, not universal. A "
+"Which period codes a modelo accepts is modelo-specific, not universal. A "
 "quarterly modelo such as 130 accepts only `1T` through `4T`; an annual "
 "modelo such as 390 accepts only `0A`; Modelo 303 accepts `1T` through "
-"`4T` and `01` through `12`, but not `0A`. A token the modelo does not "
-"accept is refused (for example, 303 with `0A` is refused and lists the "
-"valid tokens). To see the tokens one modelo accepts, run `aeat app modelo"
-" describe 303` and read its `Periods` line."
+"`4T` and `01` through `12`, but not `0A`. A period code the modelo does "
+"not accept is refused (for example, 303 with `0A` is refused and lists "
+"the valid codes). To see the period codes one modelo accepts, run `aeat "
+"app modelo describe 303` and read its `Periods` line."
 msgstr ""
-"Los tokens que acepta un modelo dependen de cada modelo; no son "
-"universales. Un modelo trimestral como el 130 acepta solo de `1T` a `4T`;"
-" un modelo anual como el 390 acepta solo `0A`; el Modelo 303 acepta de "
-"`1T` a `4T` y de `01` a `12`, pero no `0A`. Un token que el modelo no "
-"acepta se rechaza (por ejemplo, el 303 con `0A` se rechaza y muestra los "
-"tokens válidos). Para ver los tokens que acepta un modelo, ejecuta `aeat "
-"app modelo describe 303` y lee su línea `Periods`."
+"Los códigos de periodo que acepta un modelo dependen de cada modelo; no "
+"son universales. Un modelo trimestral como el 130 acepta solo de `1T` a "
+"`4T`; un modelo anual como el 390 acepta solo `0A`; el Modelo 303 acepta "
+"de `1T` a `4T` y de `01` a `12`, pero no `0A`. Un código de periodo que "
+"el modelo no acepta se rechaza (por ejemplo, el 303 con `0A` se rechaza y"
+" muestra los códigos válidos). Para ver los códigos de periodo que acepta"
+" un modelo, ejecuta `aeat app modelo describe 303` y lee su línea "
+"`Periods`."
 
-#: ../../how-to/filing-calendar.md:155
+#: ../../how-to/filing-calendar.md:131
 msgid ""
 "Every command takes the year separately with `--year` and the period as "
-"one of these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026`"
-" are not accepted; pass `--year 2026 --period 1T` instead."
+"one of these AEAT period codes. Calendar shapes such as `2026Q1` or bare "
+"`2026` are not accepted; pass `--year 2026 --period 1T` instead."
 msgstr ""
 "Todos los comandos toman el año por separado con `--year` y el periodo "
-"como uno de estos tokens de la AEAT. Formatos de calendario como `2026Q1`"
-" o `2026` a secas no se aceptan; pasa `--year 2026 --period 1T` en su "
-"lugar."
+"como uno de estos códigos de periodo de la AEAT. Formatos de calendario "
+"como `2026Q1` o `2026` a secas no se aceptan; pasa `--year 2026 --period "
+"1T` en su lugar."
 
-#: ../../how-to/filing-calendar.md:159
+#: ../../how-to/filing-calendar.md:133
 msgid ""
 "The `ledger list` and `ledger review` commands filter by period through "
-"`--filter` clauses. The period token and the year travel as two separate "
-"clauses, using the same AEAT tokens:"
+"`--filter` clauses. The period code and the year travel as two separate "
+"clauses, using the same AEAT period codes:"
 msgstr ""
 "Los comandos `ledger list` y `ledger review` filtran por periodo mediante"
-" cláusulas `--filter`. El token de periodo y el año viajan como dos "
-"cláusulas separadas, usando los mismos tokens de la AEAT:"
+" cláusulas `--filter`. El código de periodo y el año viajan como dos "
+"cláusulas separadas, usando los mismos códigos de periodo de la AEAT:"
 
-#: ../../how-to/filing-calendar.md:167
+#: ../../how-to/filing-calendar.md:139
 msgid ""
-"Pass the bare token to `period=` and the year to `year=`. The two clauses"
-" go together: `--filter period=1T` without `--filter year=2026` is "
-"refused. Combined forms such as `period=2026-1T` or `period=2026Q1` are "
+"Pass the bare period code to `period=` and the year to `year=`. The two "
+"clauses go together: `--filter period=1T` without `--filter year=2026` is"
+" refused. Combined forms such as `period=2026-1T` or `period=2026Q1` are "
 "not accepted."
 msgstr ""
-"Pasa el token a secas a `period=` y el año a `year=`. Las dos cláusulas "
-"van juntas: `--filter period=1T` sin `--filter year=2026` se rechaza. "
-"Formatos combinados como `period=2026-1T` o `period=2026Q1` no se "
-"aceptan."
+"Pasa el código de periodo a secas a `period=` y el año a `year=`. Las dos"
+" cláusulas van juntas: `--filter period=1T` sin `--filter year=2026` se "
+"rechaza. Formatos combinados como `period=2026-1T` o `period=2026Q1` no "
+"se aceptan."
 
-#: ../../how-to/filing-calendar.md:171
+#: ../../how-to/filing-calendar.md:141
 msgid ""
 "For local planning, year-end is December 31 of the filing year. Annual "
 "period `0A` covers the full calendar year. The fourth quarter `4T` also "
@@ -393,11 +397,11 @@ msgstr ""
 "comandos de calendario muestran los plazos tras los ajustes por festivos "
 "y días hábiles."
 
-#: ../../how-to/filing-calendar.md:177
+#: ../../how-to/filing-calendar.md:147
 msgid "What should I do with one modelo?"
 msgstr "¿Qué debo hacer con un modelo?"
 
-#: ../../how-to/filing-calendar.md:179
+#: ../../how-to/filing-calendar.md:149
 msgid ""
 "List the modelo catalogue, then describe one modelo before creating "
 "filing work:"
@@ -405,46 +409,46 @@ msgstr ""
 "Enumera el catálogo de modelos y luego describe un modelo antes de crear "
 "trabajo de presentación:"
 
-#: ../../how-to/filing-calendar.md:185
+#: ../../how-to/filing-calendar.md:155
 msgid "Then follow the filing workflow for the target modelo, year, and period:"
 msgstr ""
 "Después sigue el flujo de presentación para el modelo, año y periodo "
 "objetivo:"
 
-#: ../../how-to/filing-calendar.md:187 ../../how-to/filing-calendar.md:210
+#: ../../how-to/filing-calendar.md:157 ../../how-to/filing-calendar.md:180
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Guía rápida: prepara la presentación de un modelo](quickstart.md)"
 
-#: ../../how-to/filing-calendar.md:188
-msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
+#: ../../how-to/filing-calendar.md:158
+msgid "[Prepare a Modelo 303 VAT filing](modelo-303.md)"
 msgstr "[Preparar una presentación de IVA con el Modelo 303](modelo-303.md)"
 
-#: ../../how-to/filing-calendar.md:189
-msgid "[Prepare the annual Modelo 390 IVA summary](modelo-390.md)"
+#: ../../how-to/filing-calendar.md:159
+msgid "[Prepare the annual Modelo 390 VAT summary](modelo-390.md)"
 msgstr "[Preparar el resumen anual de IVA con el Modelo 390](modelo-390.md)"
 
-#: ../../how-to/filing-calendar.md:190
+#: ../../how-to/filing-calendar.md:160
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flujo de presentación](filing-spine.md)"
 
-#: ../../how-to/filing-calendar.md:192
+#: ../../how-to/filing-calendar.md:162
 msgid "If results look wrong"
 msgstr "Si los resultados parecen incorrectos"
 
-#: ../../how-to/filing-calendar.md:194
+#: ../../how-to/filing-calendar.md:164
 msgid ""
 "If a command reports missing profile facts, update the profile with [Set "
-"up your taxpayer profile](profile-setup.md). If census facts may be stale"
-" or missing, re-check them against your Modelo 036 copy with [Maintain "
-"Modelo 036 census facts in your profile](censo-update.md)."
+"up your taxpayer profile](profile-setup.md). If census facts may be out "
+"of date or missing, re-check them against your Modelo 036 copy with "
+"[Maintain Modelo 036 census facts in your profile](censo-update.md)."
 msgstr ""
-"Si un comando informa de datos del perfil que faltan, actualiza el perfil"
-" con [Configurar tu perfil de contribuyente](profile-setup.md). Si los "
+"Si una orden informa de datos del perfil que faltan, actualiza el perfil "
+"con [Configurar tu perfil de contribuyente](profile-setup.md). Si los "
 "datos censales pueden estar desactualizados o faltar, vuelve a "
 "contrastarlos con tu copia del Modelo 036 mediante [Mantener los datos "
 "censales del Modelo 036 en tu perfil](censo-update.md)."
 
-#: ../../how-to/filing-calendar.md:199
+#: ../../how-to/filing-calendar.md:169
 msgid ""
 "If a command reports an invalid date, inactive profile, or readiness "
 "problem, use [Diagnose and repair your local setup](troubleshooting.md)."
@@ -453,7 +457,7 @@ msgstr ""
 "problema de preparación, usa [Diagnosticar y reparar tu configuración "
 "local](troubleshooting.md)."
 
-#: ../../how-to/filing-calendar.md:202
+#: ../../how-to/filing-calendar.md:172
 msgid ""
 "For exact command flags and output fields, use the [CLI "
 "reference](../cli/index.rst)."
@@ -461,23 +465,23 @@ msgstr ""
 "Para las opciones exactas de los comandos y los campos de salida, usa la "
 "[referencia de la CLI](../cli/index.rst)."
 
-#: ../../how-to/filing-calendar.md:205
+#: ../../how-to/filing-calendar.md:175
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/filing-calendar.md:207
+#: ../../how-to/filing-calendar.md:177
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configurar tu perfil de contribuyente](profile-setup.md)"
 
-#: ../../how-to/filing-calendar.md:208
+#: ../../how-to/filing-calendar.md:178
 msgid "[Read AEAT notifications](check-aeat-notifications.md)"
 msgstr "[Leer notificaciones de la AEAT](check-aeat-notifications.md)"
 
-#: ../../how-to/filing-calendar.md:209
+#: ../../how-to/filing-calendar.md:179
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr "[Importar y gestionar transacciones](import-bank-statements.md)"
+msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/filing-calendar.md:211
+#: ../../how-to/filing-calendar.md:181
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
 

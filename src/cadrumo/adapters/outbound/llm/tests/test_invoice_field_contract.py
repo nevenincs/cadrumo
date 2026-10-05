@@ -37,10 +37,11 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
-from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord, require_eu_member_state
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
+from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from .....domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
 from .....domain.iva import lookup as _iva_lookup_module
 from .....domain.iva.components import registry_category_projection

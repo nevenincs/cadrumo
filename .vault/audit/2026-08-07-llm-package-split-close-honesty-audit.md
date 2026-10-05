@@ -3,14 +3,14 @@ tags:
   - '#audit'
   - '#llm-package-split'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c3273745babca6fff98e28b424d2e30a0ba000d62778329f1e2828a61f2da19'
-related:
-  - "[[2026-08-06-llm-package-split-plan]]"
+body_hash: 'sha256:3b1316ca09abbb202c36624bc2107bfc06f4f5fef90cdfeced36eef6777834fc'
+related: []
 ---
-
 # `llm-package-split` close: what the unchecked steps actually are
+
+## Scope
 
 Thirty of the plan's eighty-three Steps sit unchecked while much of the code they
 describe is at HEAD. That gap is the thing this document exists to close, because
@@ -23,7 +23,9 @@ recalling the work. Where a Step's stated file path no longer matches where the
 work landed, that is called out rather than smoothed over -- the divergence is
 information about the campaign, not noise to normalise away.
 
-## A. Delivered and verified at HEAD; the exec record is the only thing missing
+## Findings
+
+### A. Delivered and verified at HEAD; the exec record is the only thing missing
 
 Each was confirmed by locating the symbol, the gate, or the absence the Step
 demands, at HEAD, in this session.
@@ -35,7 +37,7 @@ demands, at HEAD, in this session.
 - `W04.P08.S38` -- no string owner label or error-registry qualname under
   `core/` still names a vacated `adapters.outbound.llm._*` path. Verified by
   search returning empty, which is the Step's own red condition inverted.
-- `W04.P09.S41` -- the cache, run-telemetry and usage stores remain in
+- `W04.P09.S41` -- the cache and usage stores remain in
   `adapters/outbound/llm/`, which is the Step's requirement rather than
   leftover work. Their staying put is what keeps the diagnostics consumer
   unconditional.
@@ -54,7 +56,7 @@ demands, at HEAD, in this session.
 - `W04.P12.S63` -- `SRC_CADRUMO / "llm"` is enumerated in the sensitive-surface
   list.
 
-### `W02.P04.S80` landed somewhere other than where the Step says
+#### `W02.P04.S80` landed somewhere other than where the Step says
 
 The Step names `adapters/inbound/einvoice/`. The rate-slot resolution is in
 `application/ledger/_evidence_draft.py`, and a path-scoped search of the stated
@@ -71,7 +73,7 @@ Consolidated onto one promoted resolver, with the 5% pre-2025 case the Step's re
 condition names now pinned by test, including a positive control proving the
 fixture is otherwise confirmable.
 
-## B. Delivered narrower than written
+### B. Delivered narrower than written
 
 - `W03.P06.S29` asks for a persistence roundtrip of the interchange payload.
   What exists is a strict save-load-equality roundtrip with every defaultable
@@ -87,7 +89,7 @@ fixture is otherwise confirmable.
   the enumerated gate it guards; the other four are not characterised. Partially
   delivered.
 
-## C. Not delivered
+### C. Not delivered
 
 - `W02.P03.S12` -- the read-time media-kind derivation is NOT retired.
   `DocumentShape` was added alongside it and `EvidenceInput` exposes both, but
@@ -109,7 +111,7 @@ These four are the campaign's real remaining surface. `S11` and `S12` are a pair
 the tree, because the media-kind branch is what the second walker is reached
 through.
 
-## D. Blocked across the campaign boundary, by design
+### D. Blocked across the campaign boundary, by design
 
 `W02.P05.S70`, `S81`, `S83` sequence behind the sibling `invoice-canonical-structure`
 lane's writer Step. `S83`'s red condition spans both campaigns deliberately, so
@@ -121,20 +123,7 @@ dependency rather than as an open item with no owner.
 are at HEAD; the test half was not confirmed in this pass and is left unchecked
 rather than assumed.
 
-## What this means for the campaign's completion claim
-
-The campaign is **not** structurally complete, and the honest figure is that four
-Steps are genuinely undelivered, two are delivered narrower than written, three
-are cross-campaign carry-forwards, and one pair is unverified. Everything else
-named above is delivered and needs only its record.
-
-The failure mode this document guards against is the one the close rule names:
-checking a box because the code looks present, which makes "delivered as
-specified", "delivered narrower" and "recorded but not implemented" wear the same
-mark. Three of the categories above would have been invisible under that
-treatment.
-
-## Session outcome (2026-08-07, after this audit was first written)
+### Session outcome (2026-08-07, after this audit was first written)
 
 Four of the items above were closed in the same session that classified them.
 
@@ -167,7 +156,7 @@ now pinned -- reading a payload must not soften the stripping.
 told it. That distinction is what makes a coverage claim about a new directory
 checkable, and it is invisible from the gates' names.
 
-### One assertion was written and then withdrawn
+#### One assertion was written and then withdrawn
 
 The `S11` module briefly asserted that reading an embedded payload leaves the
 input bytes unchanged. It passed. It could not have failed: the probe takes
@@ -178,7 +167,7 @@ implementation would return the right payload while spilling evidence bytes.
 Recorded here because a tautology that survives review is worse than an absent
 test, and this one survived writing.
 
-### `W02.P03.S12` remains open, and is the campaign's last coding item
+#### `W02.P03.S12` remains open, and is the campaign's last coding item
 
 The read-time media-kind derivation is still live at 39 sites across 15 files.
 It is not deferred for difficulty: `_evidence_draft.py`, `_evidence_input.py` and
@@ -192,8 +181,23 @@ campaign -- `S12` blocked behind `S11` leaving a second walker in the tree. That
 pairing dissolves with the finding above: there is no second walker, so `S12` is
 blocked only on peer contention, not on `S11`.
 
-### Standing count
+#### Standing count
 
 Seventy-six of eighty-three Steps closed. Open: `S12` (coding, contended),
 `S29` and `S69`/`S71` (verification of claims not confirmed in this pass), and
 `S70`/`S81`/`S83` (cross-campaign carry-forward with a named dependency).
+
+## Recommendations
+
+### What this means for the campaign's completion claim
+
+The campaign is **not** structurally complete, and the honest figure is that four
+Steps are genuinely undelivered, two are delivered narrower than written, three
+are cross-campaign carry-forwards, and one pair is unverified. Everything else
+named above is delivered and needs only its record.
+
+The failure mode this document guards against is the one the close rule names:
+checking a box because the code looks present, which makes "delivered as
+specified", "delivered narrower" and "recorded but not implemented" wear the same
+mark. Three of the categories above would have been invisible under that
+treatment.

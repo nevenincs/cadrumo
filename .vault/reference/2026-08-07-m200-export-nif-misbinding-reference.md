@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#m200-export-nif-misbinding'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6fd8d9596bddea5b572fcd37540b062aa697907bb28fd89e13f655f6aa2b4969'
+body_hash: 'sha256:0218178180fb6d0420ffe0ff63e07600d4850fe4a30cc48ced9b71c63957c42e'
 related: []
 ---
 
@@ -165,12 +165,6 @@ design), a different axis (per-field semantic correctness of the
 
 ## Sources
 
-- `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0002-modelo-200-page-001.part-001.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0003-modelo-200-page-001b.toml`
-- `src/cadrumo/application/filing/_export.py`
-- `src/cadrumo/application/filing/_export_parity.py`
-- `src/cadrumo/domain/calculations/registry/_export.py`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py`
 - AEAT `DR200e25.xls` ("Diseño de registro", Modelo 200, vers. 1.02, ejercicio
   2025), sheets `DP200001` and `DP200001B`, fetched from
   `https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls`

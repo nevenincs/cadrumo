@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#taxpayer-profile'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ea4f81723da6ee993e09d36ca7107b7865ceca178f960d5628cfbe9cc956b50'
+body_hash: 'sha256:69aafec383dfe15cc8e23044b79f5174d4e13eb024cf7b4c45fb4a7bd9a52042'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -50,8 +50,6 @@ related:
 - `S07` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
 - `S07` `M` `src/cadrumo/entrypoints/tui/launcher.py`
 - `S07` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
-- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_account.py`
-- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py`
 - `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
 - `S07` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_repeatable_row_race_safety.py`
 - `S07` `verify:` `targeted ruff and ty` -> `pass`
@@ -92,7 +90,6 @@ related:
 - `S10` `M` `src/cadrumo/application/user_profile/fact_write.py`
 - `S10` `M` `src/cadrumo/entrypoints/tui/account.py`
 - `S10` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
-- `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py`
 - `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
 - `S10` `M` `dev/quality/metadata/application_entrypoint_modules.json`
 - `S10` `M` `dev/quality/metadata/import_load_targets.json`

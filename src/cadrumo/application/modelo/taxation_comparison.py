@@ -74,6 +74,7 @@ from .work_selection import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..aggregation.source_mesh import CalculationSourceResolution
 
 # ---------------------------------------------------------------------------
 # Output types
@@ -206,6 +207,19 @@ def _declaration_type_binding_id(snapshot: RegistrySnapshot) -> BindingId | None
 # ---------------------------------------------------------------------------
 
 
+def _require_taxation_result_casillas(
+    conjunta_values: Mapping[CasillaId, Decimal],
+    individual_values: Mapping[CasillaId, Decimal],
+    cuota_casilla: CasillaId,
+    resultado_casilla: CasillaId,
+) -> None:
+    """Require both result casillas after both independent engine runs finish."""
+    for mode, values in (("conjunta", conjunta_values), ("individual", individual_values)):
+        missing = [casilla for casilla in (cuota_casilla, resultado_casilla) if casilla not in values]
+        if missing:
+            raise TaxationComparisonError(f"{mode} calculation did not produce required result casillas: {missing!r}")
+
+
 def compare_taxation_modes(
     snapshot: RegistrySnapshot,
     *,
@@ -295,10 +309,7 @@ def compare_taxation_modes(
     conjunta_values = _run(2)
     individual_values = _run(1)
 
-    for mode, values in (("conjunta", conjunta_values), ("individual", individual_values)):
-        missing = [casilla for casilla in (cuota_casilla, resultado_casilla) if casilla not in values]
-        if missing:
-            raise TaxationComparisonError(f"{mode} calculation did not produce required result casillas: {missing!r}")
+    _require_taxation_result_casillas(conjunta_values, individual_values, cuota_casilla, resultado_casilla)
     conjunta_cuota = conjunta_values[cuota_casilla]
     individual_cuota = individual_values[cuota_casilla]
     conjunta_resultado = conjunta_values[resultado_casilla]
@@ -359,6 +370,36 @@ class TaxationComparisonError(CoreError):
 # ---------------------------------------------------------------------------
 
 
+def _require_taxation_input_basis(snapshot: RegistrySnapshot) -> None:
+    """Refuse unresolved manual or prior-period evidence before resolving a profile."""
+    from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
+
+    if any(
+        casilla.formula is None and casilla.binding is None and not casilla.alternate_bindings
+        for casilla in snapshot.revision.casillas
+    ) or relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period):
+        # This work-unit entry receives neither manual/ledger casilla evidence nor
+        # prior-period relation evidence. Formula evaluation would silently treat
+        # those absent facts as zero and could return a false recommendation.
+        raise TaxationComparisonError("comparison requires a complete resolved tax-input basis")
+
+
+def _require_resolved_taxation_bindings(
+    snapshot: RegistrySnapshot, decl_binding: BindingId | None, resolution: CalculationSourceResolution
+) -> None:
+    """Require every declared non-injected binding on one resolved scalar channel."""
+    resolved_binding_ids = (
+        set(resolution.binding_values)
+        | set(resolution.enum_binding_values)
+        | set(resolution.date_binding_values)
+        | set(resolution.boolean_binding_values)
+    )
+    if any(
+        binding.id != decl_binding and binding.id not in resolved_binding_ids for binding in snapshot.revision.bindings
+    ):
+        raise TaxationComparisonError("comparison has unresolved registry bindings")
+
+
 def compare_taxation_for_work_unit(
     work_unit_id: str,
     *,
@@ -390,7 +431,6 @@ def compare_taxation_for_work_unit(
     """
     from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
     from ...domain.calculations.registry.errors import RegistrySnapshotError
-    from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
     from ...domain.modelos.filing_record import FilingDeclarationKind
     from ..aggregation.source_mesh import CalculationSourceContext
     from ..aggregation.source_profile import ProfileSourceResolver
@@ -426,14 +466,7 @@ def compare_taxation_for_work_unit(
         ) from exc
     if snapshot.revision.id != work_unit.revision_id:
         raise TaxationComparisonError("work unit registry revision is no longer the published revision")
-    if any(
-        casilla.formula is None and casilla.binding is None and not casilla.alternate_bindings
-        for casilla in snapshot.revision.casillas
-    ) or relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period):
-        # This work-unit entry receives neither manual/ledger casilla evidence nor
-        # prior-period relation evidence. Formula evaluation would silently treat
-        # those absent facts as zero and could return a false recommendation.
-        raise TaxationComparisonError("comparison requires a complete resolved tax-input basis")
+    _require_taxation_input_basis(snapshot)
 
     # Resolve profile bindings — exclude declaration_type so the comparison
     # engine can inject 1 or 2 independently for each run.
@@ -451,16 +484,7 @@ def compare_taxation_for_work_unit(
             revision=snapshot.revision,
         ),
     )
-    resolved_binding_ids = (
-        set(resolution.binding_values)
-        | set(resolution.enum_binding_values)
-        | set(resolution.date_binding_values)
-        | set(resolution.boolean_binding_values)
-    )
-    if any(
-        binding.id != decl_binding and binding.id not in resolved_binding_ids for binding in snapshot.revision.bindings
-    ):
-        raise TaxationComparisonError("comparison has unresolved registry bindings")
+    _require_resolved_taxation_bindings(snapshot, decl_binding, resolution)
 
     from ...domain.period import calculation_filing_date
 

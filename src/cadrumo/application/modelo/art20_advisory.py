@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.errors import ModeloError
@@ -63,8 +64,8 @@ def art20_reduccion_advisory_finding(
     if rnt_id is None or reduccion_id is None:
         return None
 
-    rnt_value = casilla_values.get(rnt_id, Decimal(0))
-    reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
+    rnt_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, rnt_id)
+    reduccion_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, reduccion_id)
     resolved_ceiling = context.resolved_decimal(_ART20_RNT_CEILING_FACT_ID)
     ceiling = resolved_ceiling.payload.value
     if not isinstance(ceiling, Decimal):

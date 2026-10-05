@@ -32,6 +32,17 @@ print("ready", flush=True)
 time.sleep(60)
 sys.exit(0)
 """
+_NATIVE_IMPORT_PROBE = """
+import sys
+
+from dev.registry.pipeline.candidate_compile_process import exit_when_parent_exits
+
+exit_when_parent_exits()
+import openpyxl  # loads numpy's native extensions, as the record-design reader does
+
+print("imported", flush=True)
+sys.exit(0)
+"""
 
 
 def _subprocess_spawns_in(source: str, function_name: str) -> int:
@@ -89,6 +100,24 @@ def test_the_compiler_process_exits_when_its_parent_lifetime_pipe_closes() -> No
             process.stdin.close()
 
             assert process.wait(timeout=10) == PARENT_EXITED_EXIT_CODE
+        finally:
+            if process.poll() is None:
+                process.kill()
+
+
+def test_a_watched_compiler_can_still_load_native_extensions() -> None:
+    """The lifetime watch must not stall a native import: a blocking read on stdin deadlocked numpy on Windows."""
+    with subprocess.Popen(
+        [sys.executable, "-s", "-c", _NATIVE_IMPORT_PROBE],
+        cwd=REPO_ROOT,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    ) as process:
+        try:
+            assert process.wait(timeout=60) == 0
+            assert process.stdout is not None
+            assert process.stdout.read().strip() == b"imported"
         finally:
             if process.poll() is None:
                 process.kill()

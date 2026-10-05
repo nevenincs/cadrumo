@@ -184,7 +184,10 @@ def test_registered_pull_owns_process_and_projects_dedup_receipt(monkeypatch: py
 
     monkeypatch.setattr(module, "pull_notification_document", pull)
     definition = build_notification_document_capture_definition(
-        lambda: cast(Any, composition), lambda: cast(Any, object()), lambda: cast(Any, resources), preflight
+        lambda *, operation: cast(Any, composition),
+        lambda: cast(Any, object()),
+        lambda: cast(Any, resources),
+        preflight,
     )
     request = OperationRequest[BaseModel](
         definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,

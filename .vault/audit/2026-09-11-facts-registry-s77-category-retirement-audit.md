@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:d67dcc1dad61b7f9758fa4cdcf435eb796b6723fd8cd67a0482cdacedfd8806a'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` audit: `S77 category adapter retirement review`
 

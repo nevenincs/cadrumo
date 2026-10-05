@@ -24,10 +24,7 @@ yourself and remain responsible for every declaration you submit. Read the
 
 ## Where to start
 
-These guides cover the whole preparation cycle: setting up a taxpayer
-profile, importing and classifying bank records, checking what is due, and
-preparing, verifying, and exporting each modelo. The two worked years - one
-for income tax, one for IVA - walk the full cycle with real commands.
+These guides cover the whole preparation cycle: setting up a taxpayer profile, importing and classifying bank records, checking what is due, and preparing each modelo, checking it, and exporting it. The two worked years - one for income tax, one for VAT - walk the full cycle with real commands.
 
 ::::{grid} 1 2 2 4
 :gutter: 3
@@ -50,7 +47,7 @@ Follow a worked year of Modelo 130 quarters closing into the annual
 Modelo 100 Renta declaration, command by command.
 :::
 
-:::{grid-item-card} Run through the IVA year
+:::{grid-item-card} Run through the VAT year
 :link: how-to/iva-lifecycle
 :link-type: doc
 :class-card: cadrumo-route-card
@@ -73,8 +70,7 @@ modelos apply.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Import bank statements, review the rows, and attach the evidence behind
-them.
+Import bank statements, review the entries, and attach the supporting documents behind them.
 :::
 
 :::{grid-item-card} Classify transactions
@@ -99,21 +95,16 @@ See which modelos are due and which period to prepare next.
 :link-type: doc
 :class-card: cadrumo-route-card
 
-Learn how work units and calculation revisions carry a filing through
-create, calculate, verify, file, and export. Each modelo has its own guide.
+Learn how a declaration and its saved calculations carry a filing through
+create, calculate, check, record filing, and export. Each modelo has its own
+guide.
 :::
 
 ::::
 
 ## Search everything
 
-Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax concepts,
-casillas, commands, and guides; exact term matches appear first. Use the
-[command-line reference](cli/index.rst) for commands and options, and
-[how it works](explanation/index.md) for how records become modelo figures and
-what checks run. Use [Import, export, and evidence](reference/import-export-and-evidence.md)
-to distinguish source data, review outputs, AEAT upload files, official filing
-proof, and audit packages.
+Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax concepts, boxes, commands, and guides; exact term matches appear first. Use the [command-line reference](cli/index.rst) for commands and options, and [how it works](explanation/index.md) for how records become modelo figures and what checks run. Use [Import, export, and supporting documents](reference/import-export-and-evidence.md) to distinguish source data, review outputs, AEAT upload files, the AEAT receipt, and audit packages.
 
 ```{toctree}
 :hidden:
@@ -125,7 +116,7 @@ Quickstart <how-to/quickstart>
 Connect an agent (MCP) <how-to/connect-an-agent>
 First quarterly filing <how-to/first-quarterly-filing>
 The income-tax year <how-to/irpf-lifecycle>
-The IVA year <how-to/iva-lifecycle>
+The VAT year <how-to/iva-lifecycle>
 ```
 
 ```{toctree}
@@ -150,15 +141,15 @@ Filing readiness <how-to/filing-readiness>
 
 ```{toctree}
 :hidden:
-:caption: Your ledger
+:caption: Your records
 
 Work with transactions <how-to/import-bank-statements>
 Classify transactions <how-to/classify-transactions>
 Classify with an LLM <how-to/classify-with-llm>
-Attach invoices and receipts <how-to/ledger-evidence>
+Attach invoices and receipts to transactions <how-to/ledger-evidence>
 Manage business invoices <how-to/manage-invoices>
-Correct mistakes <how-to/correct-ledger-entries>
-IVA prorrata deductions <how-to/prorrata>
+Correct mistakes in your records <how-to/correct-ledger-entries>
+VAT prorrata deductions <how-to/prorrata>
 ```
 
 ```{toctree}
@@ -166,18 +157,19 @@ IVA prorrata deductions <how-to/prorrata>
 :caption: Your filings
 
 The filing workflow <how-to/filing-spine>
+Fill in and record a filing on the declaration screen <how-to/fill-in-and-file-in-the-workbench>
 Modelo 036 (censo) <how-to/modelo-036>
 Modelo 100 (Renta) <how-to/modelo-100>
 Modelo 130 (IRPF instalment) <how-to/modelo-130>
-Modelo 303 (IVA) <how-to/modelo-303>
+Modelo 303 (VAT) <how-to/modelo-303>
 Modelo 349 (intra-community) <how-to/modelo-349>
-Modelo 390 (IVA summary) <how-to/modelo-390>
+Modelo 390 (VAT summary) <how-to/modelo-390>
 Calculation inputs <how-to/review-calculation-values>
 Google Sheets review <how-to/review-with-google-sheets>
-Verify a filing <how-to/verification-reports>
-Calculation summary PDF <how-to/calculation-summary>
+Check a draft declaration and act on the issues <how-to/verification-reports>
+Share and check a calculation summary <how-to/calculation-summary>
 File at AEAT <how-to/file-at-aeat>
-Reconcile a filing <how-to/reconcile>
+Reconcile a filed modelo against its AEAT receipt <how-to/reconcile>
 ```
 
 ```{toctree}
@@ -185,7 +177,7 @@ Reconcile a filing <how-to/reconcile>
 :caption: Help
 
 Troubleshooting <how-to/troubleshooting>
-Publish runtime authority <how-to/publish-runtime-authority>
+How to publish a validated runtime authority <how-to/publish-runtime-authority>
 Disclaimer <disclaimer>
 ```
 
@@ -215,4 +207,11 @@ Updates and downloads <updates>
 Architecture <architecture/index>
 Authoring guide <authoring-guide>
 API <api/index>
+```
+
+```{toctree}
+:hidden:
+:caption: Technical documentation
+
+Architecture and internals <technical/architecture>
 ```

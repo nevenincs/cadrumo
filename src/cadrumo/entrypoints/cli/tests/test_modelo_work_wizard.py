@@ -49,17 +49,20 @@ from ....application.flows.definition import FlowDefinition, FlowPage
 from ....application.flows.errors import FlowCopyResolutionError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
-from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard
+from ....application.modelo.work_wizard import (
+    ModeloWorkWizardStep,
+    discover_modelo_work_wizard_steps,
+    open_modelo_work_wizard_from_steps,
+)
 from ....application.user_profile.login_session import login_profile, resolve_login_target
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .. import _modelo_work_wizard_cli
-from .._modelo_behavior_support import resolve_work_unit_for_cli
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
-from ._modelo_work_ux_support import _create_m130_work_unit
+from ._modelo_work_ux_support import _create_m130_work_unit, load_work_unit_by_id
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -142,8 +145,10 @@ def _scripted_manual_answers(
     # runs inside a real profile storage session — the same session the CLI
     # command opens per invocation.
     with open_test_profile_session(bucket_id):
-        unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        with open_modelo_work_wizard(unit, operation=operation) as wizard:
+        unit = load_work_unit_by_id(work_unit_id)
+        with open_modelo_work_wizard_from_steps(
+            unit, steps=discover_modelo_work_wizard_steps(unit, operation=operation)
+        ) as wizard:
             definition = wizard.definition_for()
             tokens = ["0"] * len(wizard.steps)
             state, projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
@@ -534,8 +539,10 @@ def test_canonical_wizard_factory_carries_real_registry_grounding(
     bucket_id = _login_for_oracle(wizard_profile, operation=operation)
 
     with open_test_profile_session(bucket_id):
-        unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        with open_modelo_work_wizard(unit, operation=operation) as wizard:
+        unit = load_work_unit_by_id(work_unit_id)
+        with open_modelo_work_wizard_from_steps(
+            unit, steps=discover_modelo_work_wizard_steps(unit, operation=operation)
+        ) as wizard:
             steps = wizard.steps
             definition = wizard.definition_for()
             first_page = definition.sections[0].items[0]

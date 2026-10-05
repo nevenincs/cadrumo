@@ -39,6 +39,7 @@ from .coverage import ObligationCoverageReport
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .applicability_evidence import FilingYearApplicabilityEvidence
 
 _DEFAULT_LOOKBACK_DAYS = 365
 """Default lookback window when neither --from nor --to is supplied."""
@@ -99,6 +100,7 @@ def build_overview_backlog(
     engine: DeadlineEngine | None = None,
     raw_values: Mapping[str, object] | None = None,
     work_units: tuple[WorkUnit, ...] = (),
+    applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> OverviewBacklog:
     """Enumerate the operator's past-due obligations.
 
@@ -117,6 +119,8 @@ def build_overview_backlog(
             explicit ``from_date`` is supplied, the default range expands back
             to the earliest active local work unit so historical in-progress
             work is not silently excluded by the 365-day lookback.
+        applicability_evidence: Optional per-filing-year applicability
+            evidence forwarded to the composed calendar.
 
     The default window is the 365 days preceding ``as_of`` (today
     when omitted), which is wide enough to surface every backlog
@@ -148,6 +152,7 @@ def build_overview_backlog(
         engine=engine,
         raw_values=raw_values,
         work_units=work_units,
+        applicability_evidence=applicability_evidence,
     )
 
     items: list[OverviewCalendarEntry] = []

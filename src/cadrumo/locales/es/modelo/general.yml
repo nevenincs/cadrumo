@@ -1,0 +1,40 @@
+modelo:
+  form:
+    column:
+      aplicado: Aplicado en esta liquidación
+      aumentos: Aumentos
+      base_deduccion: Base de la deducción
+      base_imponible: Base imponible
+      codigo_cnae: Código CNAE
+      cuota: Cuota
+      cuota_deducible: Cuota deducible
+      cuota_soportada: Cuota soportada
+      diferencias_permanentes: Diferencias permanentes
+      diferencias_temporarias_anteriores: Diferencias temporarias con origen en ejercicios
+        anteriores
+      diferencias_temporarias_ejercicio: Diferencias temporarias con origen en el
+        ejercicio
+      disminuciones: Disminuciones
+      importe_deduccion: Importe de la deducción
+      importe_operaciones: Importe de las operaciones
+      importe_operaciones_derecho_deduccion: Importe de las operaciones con derecho
+        a deducción
+      importe_percepciones: Importe de las percepciones
+      importe_retenciones: Importe de las retenciones
+      importe_total: Importe total
+      ingresos_a_cuenta: Importe de los ingresos a cuenta
+      numero_declarados: Nº de declarados
+      numero_perceptores: Nº de perceptores
+      pendiente_futuro: Pendiente de aplicación en períodos futuros
+      pendiente_generada: Pendiente al inicio o generada en el período
+      pendiente_inicio: Pendiente al inicio del período
+      porcentaje_prorrata: '% de prorrata'
+      territorio_araba_alava: Araba/Álava
+      territorio_bizkaia: Bizkaia
+      territorio_estado: Estado
+      territorio_gipuzkoa: Gipuzkoa
+      territorio_navarra: Navarra
+      tipo: Tipo %
+      tipo_prorrata: Tipo de prorrata
+      total: Total
+      valor_percepciones_especie: Valor de las percepciones en especie

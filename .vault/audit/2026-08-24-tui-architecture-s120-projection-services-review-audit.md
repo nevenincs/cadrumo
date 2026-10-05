@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e715f86b355258bcfe59b1126f190837189f544f390407c31fc93c00171196dc'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
 ---
 # `tui-architecture` audit: `s120 projection services review`
 

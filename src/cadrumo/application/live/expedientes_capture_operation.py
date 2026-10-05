@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager
-from dataclasses import replace
 from datetime import datetime
-from typing import cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
@@ -15,51 +11,31 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
+from ...core.operations import OperationEffect, profile_operation_subject
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationResultProjector,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .expedientes import (
-    PersistedExpedientesSnapshot,
-    capture_expedientes_bulk,
-    capture_expedientes_with_outcome,
-)
+from .expedientes import PersistedExpedientesSnapshot, capture_expedientes_bulk, capture_expedientes_with_outcome
 from .expedientes_ports import ExpedientesPortsFactory
-from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
+from .filed_history_operation import (
+    FiledHistoryBrowserResources,
+    FiledHistoryBrowserResourcesFactory,
+    FiledHistoryProviderPreflight,
+)
+from .live_operation_execution import fenced_persistence_guard, own_provider_browser, publish_live_capture_report
+from .live_operation_registration import (
+    build_live_operation_definition,
+    require_live_capture_receipt,
+    resolve_whole_profile_capture_access,
+)
 from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
 from .session import LiveSessionWriteReceipt
 
@@ -140,25 +116,19 @@ def _require_profile(profile_id: UUID, subject_ref: str, definition_id: str, con
     return bucket_id
 
 
-def _require_receipt(receipt: OperationTerminalReceipt, definition_id: str, bucket_id: str, changed: bool) -> None:
-    permitted_effects = {OperationEffect.UPDATED} if changed else {OperationEffect.NONE, OperationEffect.UPDATED}
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(bucket_id)
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect not in permitted_effects
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-    ):
-        raise ValueError("expedientes capture result contradicts its terminal receipt")
+_RECEIPT_CONTRADICTION = "expedientes capture result contradicts its terminal receipt"
 
 
 def _project_single(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = ExpedientesSingleCaptureReport.model_validate(result, strict=True)
     snapshot = report.snapshot
-    _require_receipt(receipt, EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID, str(snapshot.bucket_id), report.newly_persisted)
+    require_live_capture_receipt(
+        receipt,
+        definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
+        bucket_id=str(snapshot.bucket_id),
+        stored=report.newly_persisted,
+        message=_RECEIPT_CONTRADICTION,
+    )
     return ExpedientesSingleCapturePublicResultV1(
         bucket_id=snapshot.bucket_id,
         snapshot_id=snapshot.snapshot_id,
@@ -175,7 +145,13 @@ def _project_bulk(result: BaseModel, receipt: OperationTerminalReceipt, /) -> Ba
         raise ValueError("expedientes bulk snapshot tally is inconsistent")
     if report.newly_persisted and not report.snapshot_ids:
         raise ValueError("expedientes bulk effect has no snapshot")
-    _require_receipt(receipt, EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID, str(report.bucket_id), report.newly_persisted)
+    require_live_capture_receipt(
+        receipt,
+        definition_id=EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
+        bucket_id=str(report.bucket_id),
+        stored=report.newly_persisted,
+        message=_RECEIPT_CONTRADICTION,
+    )
     return ExpedientesBulkCapturePublicResultV1(
         bucket_id=report.bucket_id,
         modelos=report.modelos,
@@ -206,31 +182,19 @@ class _CaptureExecutorBase:
         self._browser_resources_factory = browser_resources_factory
         self._provider_preflight = provider_preflight
 
-    async def _prepare(self, profile_id: UUID, context: OperationExecutorContext):
+    async def _prepare(self, profile_id: UUID, context: OperationExecutorContext) -> FiledHistoryBrowserResources:
         await context.events.phase(_PHASES[0])
         self._provider_preflight(profile_id, context.authority_operation)
-        browser_resources = self._browser_resources_factory()
-        context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
-        return browser_resources
-
-    @staticmethod
-    @asynccontextmanager
-    async def _persistence_guard(context: OperationExecutorContext) -> AsyncGenerator[None]:
-        await context.events.phase(_PHASES[2])
-        async with context.cancellation.irreversible_section():
-            await context.events.effect(OperationEffect.UNKNOWN)
-            yield
+        return await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_PHASES[1])
 
     @staticmethod
     async def _publish(
         report: BaseModel, changed: bool, context: OperationExecutorContext, session_receipt: LiveSessionWriteReceipt
     ) -> str:
-        await context.events.phase(_PHASES[3])
         effect = OperationEffect.UPDATED if changed else OperationEffect.NONE
-        await context.events.effect(session_receipt.combine(effect))
-        async with context.cancellation.irreversible_section():
-            return await context.operands.put(report, written_at=now())
+        return await publish_live_capture_report(
+            context, report, result_phase=_PHASES[3], effect=session_receipt.combine(effect)
+        )
 
 
 class ExpedientesSingleCaptureExecutor(_CaptureExecutorBase):
@@ -255,7 +219,7 @@ class ExpedientesSingleCaptureExecutor(_CaptureExecutorBase):
                 browser_session_factory=self._browser_session_factory,
                 operator_scope_ports=self._operator_scope_ports,
                 authority_operation=context.authority_operation,
-                effect_guard=lambda: self._persistence_guard(context),
+                effect_guard=fenced_persistence_guard(context, persist_phase=_PHASES[2]),
                 on_session_write=session_receipt,
             )
         if str(outcome.snapshot.bucket_id) != bucket_id:
@@ -291,46 +255,12 @@ class ExpedientesBulkCaptureExecutor(_CaptureExecutorBase):
                 browser_session_factory=self._browser_session_factory,
                 operator_scope_ports=self._operator_scope_ports,
                 authority_operation=context.authority_operation,
-                effect_guard=lambda: self._persistence_guard(context),
+                effect_guard=fenced_persistence_guard(context, persist_phase=_PHASES[2]),
                 on_session_write=session_receipt,
             )
         if str(report.bucket_id) != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         return await self._publish(report, report.newly_persisted, context, session_receipt)
-
-
-def _definition(
-    definition_id: str,
-    request_type: type[CredentialFreeOperationRequest],
-    result_type: type[BaseModel],
-    executor_type: type[_CaptureExecutorBase],
-    build: Callable[[], _CaptureExecutorBase],
-) -> OperationDefinition:
-    return OperationDefinition(
-        definition_id=definition_id,
-        request_type=request_type,
-        result_type=result_type,
-        executor_factory=OperationExecutorFactory(request_type=request_type, executor_type=executor_type, build=build),
-        phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
-    )
 
 
 def build_expedientes_single_capture_definition(
@@ -353,12 +283,14 @@ def build_expedientes_single_capture_definition(
             provider_preflight,
         )
 
-    return _definition(
-        EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
-        ExpedientesSingleCaptureRequest,
-        ExpedientesSingleCaptureReport,
-        ExpedientesSingleCaptureExecutor,
-        build,
+    return build_live_operation_definition(
+        definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
+        request_type=ExpedientesSingleCaptureRequest,
+        result_type=ExpedientesSingleCaptureReport,
+        executor_type=ExpedientesSingleCaptureExecutor,
+        build=build,
+        phase_codes=_PHASES,
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -382,60 +314,36 @@ def build_expedientes_bulk_capture_definition(
             provider_preflight,
         )
 
-    return _definition(
-        EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
-        ExpedientesBulkCaptureRequest,
-        ExpedientesBulkCaptureReport,
-        ExpedientesBulkCaptureExecutor,
-        build,
+    return build_live_operation_definition(
+        definition_id=EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
+        request_type=ExpedientesBulkCaptureRequest,
+        result_type=ExpedientesBulkCaptureReport,
+        executor_type=ExpedientesBulkCaptureExecutor,
+        build=build,
+        phase_codes=_PHASES,
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES,
     )
-
-
-def _access(
-    request: OperationRequest[BaseModel],
-    context: OperationAccessContext,
-    definition_id: str,
-    request_type: type[BaseModel],
-) -> ResolvedOperationAccess:
-    if request.definition_id != definition_id or not isinstance(request.payload, request_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = cast("ExpedientesSingleCaptureRequest | ExpedientesBulkCaptureRequest", request.payload)
-    resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
 
 
 def resolve_expedientes_single_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return _access(request, context, EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID, ExpedientesSingleCaptureRequest)
+    return resolve_whole_profile_capture_access(
+        request,
+        context,
+        definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
+        payload_type=ExpedientesSingleCaptureRequest,
+    )
 
 
 def resolve_expedientes_bulk_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return _access(request, context, EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID, ExpedientesBulkCaptureRequest)
-
-
-def _registration(
-    definition: OperationDefinition,
-    request_type: type[BaseModel],
-    public_type: type[BaseModel],
-    projector: OperationResultProjector,
-    resolver: OperationAccessResolver,
-) -> OperationPublicDefinitionRegistrationV1:
-    return OperationPublicDefinitionRegistrationV1.compose(
-        definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=request_type
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=public_type
-        ),
-        result_projector=projector,
-        access_resolver=resolver,
+    return resolve_whole_profile_capture_access(
+        request,
+        context,
+        definition_id=EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
+        payload_type=ExpedientesBulkCaptureRequest,
     )
 
 
@@ -443,12 +351,11 @@ def build_expedientes_single_capture_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the single capture's public summary and access policy."""
-    return _registration(
-        definition,
-        ExpedientesSingleCaptureRequest,
-        ExpedientesSingleCapturePublicResultV1,
-        _project_single,
-        resolve_expedientes_single_capture_access,
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
+        definition=definition,
+        public_result_type=ExpedientesSingleCapturePublicResultV1,
+        result_projector=_project_single,
+        access_resolver=resolve_expedientes_single_capture_access,
     )
 
 
@@ -456,12 +363,11 @@ def build_expedientes_bulk_capture_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the bulk capture's public summary and access policy."""
-    return _registration(
-        definition,
-        ExpedientesBulkCaptureRequest,
-        ExpedientesBulkCapturePublicResultV1,
-        _project_bulk,
-        resolve_expedientes_bulk_capture_access,
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
+        definition=definition,
+        public_result_type=ExpedientesBulkCapturePublicResultV1,
+        result_projector=_project_bulk,
+        access_resolver=resolve_expedientes_bulk_capture_access,
     )
 
 

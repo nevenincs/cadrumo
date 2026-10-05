@@ -18,6 +18,7 @@ from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
+from .lineage_totality import is_total
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -119,12 +120,12 @@ def test_a_successor_row_with_neither_lineage_nor_a_none_is_uncovered() -> None:
     modelo = _modelo(_PREDECESSOR, [_row("07")])
     report = lineage_totality([modelo], ())
     assert report.uncovered == (_key("2024", "07"),)
-    assert not report.is_total
+    assert not is_total(report)
 
 
 def test_a_successor_row_whose_id_the_predecessor_carries_resolves() -> None:
     modelo = _modelo(_PREDECESSOR, [_row("07", chain="base")])
-    assert lineage_totality([modelo], ()).is_total
+    assert is_total(lineage_totality([modelo], ()))
 
 
 def test_an_id_starting_its_chain_in_a_successor_edition_is_unresolved() -> None:
@@ -236,7 +237,7 @@ def test_an_exception_keyed_to_the_unresolved_row_covers_it() -> None:
     covered = lineage_totality([modelo], {_key("2024", "07")})
     assert covered.uncovered == (_key("2024", "08"),)
     assert covered.stale == ()
-    assert lineage_totality([modelo], {_key("2024", "07"), _key("2024", "08")}).is_total
+    assert is_total(lineage_totality([modelo], {_key("2024", "07"), _key("2024", "08")}))
 
 
 def test_an_exception_for_a_row_that_now_carries_lineage_is_stale() -> None:
@@ -244,8 +245,8 @@ def test_an_exception_for_a_row_that_now_carries_lineage_is_stale() -> None:
     resolved = lineage_totality([_modelo(_PREDECESSOR, [_row("07", chain="base")])], exception)
     still_unresolved = lineage_totality([_modelo(_PREDECESSOR, [_row("07")])], exception)
     assert resolved.stale == (_key("2024", "07"),)
-    assert not resolved.is_total
-    assert still_unresolved.is_total
+    assert not is_total(resolved)
+    assert is_total(still_unresolved)
 
 
 @pytest.mark.parametrize(

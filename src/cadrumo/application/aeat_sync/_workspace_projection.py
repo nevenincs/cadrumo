@@ -20,6 +20,7 @@ from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ..operator_actions.models import ActionReference
+from ..user_profile.censal_observation import CensalObservation
 from .workspace import (
     COMPARED_CENSUS_STATUSES,
     AeatSyncAeatObservationState,
@@ -113,8 +114,8 @@ _OVERVIEW_SOURCES: Final = {
         AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
     ),
     AeatSyncOverviewArea.RECONCILIATION: (
-        AeatSyncWorkspaceSource.LOCAL_FILINGS,
-        AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
+        AeatSyncWorkspaceSource.LOCAL_RECONCILIATION,
+        AeatSyncWorkspaceSource.LOCAL_RECONCILIATION,
     ),
 }
 
@@ -133,6 +134,7 @@ def project_aeat_sync_workspace(
     operation_contracts: OperationPublicContractSetV1,
     overview: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...] = (),
     census: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...] = (),
+    census_observation: AeatSyncWorkspaceFactV1[CensalObservation] | None = None,
     filed_declarations: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...] = (),
     notifications: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...] = (),
     evidence_comparison: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...] = (),
@@ -142,7 +144,22 @@ def project_aeat_sync_workspace(
     TypeAdapter(BucketId).validate_python(bucket_id)
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
+    if census_observation is not None and (
+        census_observation.bucket_id != bucket_id
+        or census_observation.subject_key != subject_key
+        or (census_observation.row.identity.nif or "").strip().upper() != subject_key.strip().upper()
+    ):
+        raise AeatSyncWorkspaceProjectionError("census observation belongs to another profile or taxpayer")
     obs = _observations(zone_observations)
+    if census_observation is not None:
+        for zone in (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceZone.CENSUS):
+            source = next(item for item in obs[zone].sources if item.source is AeatSyncWorkspaceSource.AEAT_CENSUS)
+            if (
+                source.availability
+                not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
+                or source.observed_at != census_observation.row.captured_at
+            ):
+                raise AeatSyncWorkspaceProjectionError("census evidence contradicts its source observation")
     _validate_action_catalogue(action_catalogue)
     groups = {
         AeatSyncWorkspaceZone.OVERVIEW: overview,
@@ -191,6 +208,7 @@ def project_aeat_sync_workspace(
         zones=zones,
         overview=out_overview,
         census=out_census,
+        census_observation=None if census_observation is None else census_observation.row,
         filed_declarations=out_filed,
         notifications=out_notifications,
         evidence_comparison=out_comparison,
@@ -238,7 +256,19 @@ def _duplicates(
         raise AeatSyncWorkspaceProjectionError("notification requires private identity")
     _unique((f.private_identity for f in notifications), "notification identities")
     _unique((_natural(f.row) for f in comparison), "comparison addresses")
-    _unique((_natural(f.row) for f in reconciliation), "reconciliation addresses")
+    _unique(
+        (
+            (
+                _natural(f.row),
+                f.row.work_unit_id,
+                f.row.evidence_kind,
+                f.row.evidence_id,
+                f.row.calculation_revision_id or f.row.comparison_id,
+            )
+            for f in reconciliation
+        ),
+        "reconciliation identities",
+    )
 
 
 def _action_row_key(zone: AeatSyncWorkspaceZone, row: BaseModel) -> str:
@@ -370,6 +400,9 @@ def _require_dual_sources(
     row: AeatSyncWorkspaceEvidenceComparisonRowV1 | AeatSyncWorkspaceReconciliationRowV1,
     sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
 ) -> None:
+    if isinstance(row, AeatSyncWorkspaceReconciliationRowV1) and row.evidence_kind is not None:
+        _require(False, sources[AeatSyncWorkspaceSource.LOCAL_RECONCILIATION], "stored comparison")
+        return
     _require(
         row.local_state is AeatSyncSourceState.NOT_OBSERVED,
         sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
@@ -518,16 +551,26 @@ def _zone_availability(
     if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states):
         return AeatSyncWorkspaceAvailability.AVAILABLE
     if seen:
-        # STALE asserts a prior capture that has since aged or been withheld.
-        # A zone whose only missing side has never been pulled has no such
-        # capture: it is NEVER_CAPTURED, while still carrying the count its
-        # observed side measured.
-        missing = tuple(item for item in states if item is not AeatSyncWorkspaceAvailability.AVAILABLE)
-        if all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in missing):
-            return AeatSyncWorkspaceAvailability.NEVER_CAPTURED
-        return AeatSyncWorkspaceAvailability.STALE
+        return _seen_zone_availability(states)
     if AeatSyncWorkspaceAvailability.LOCKED in states:
         return AeatSyncWorkspaceAvailability.LOCKED
+    return _unseen_zone_availability(states)
+
+
+def _seen_zone_availability(
+    states: tuple[AeatSyncWorkspaceAvailability, ...],
+) -> AeatSyncWorkspaceAvailability:
+    # STALE asserts a prior capture that has since aged or been withheld.
+    # A missing side that has never been pulled carries no prior capture.
+    missing = tuple(item for item in states if item is not AeatSyncWorkspaceAvailability.AVAILABLE)
+    if all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in missing):
+        return AeatSyncWorkspaceAvailability.NEVER_CAPTURED
+    return AeatSyncWorkspaceAvailability.STALE
+
+
+def _unseen_zone_availability(
+    states: tuple[AeatSyncWorkspaceAvailability, ...],
+) -> AeatSyncWorkspaceAvailability:
     if all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in states):
         return AeatSyncWorkspaceAvailability.NEVER_CAPTURED
     return AeatSyncWorkspaceAvailability.UNAVAILABLE
@@ -535,6 +578,12 @@ def _zone_availability(
 
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
     states = tuple(item.availability for item in observation.sources)
+    if observation.zone is AeatSyncWorkspaceZone.RECONCILIATION:
+        states = tuple(
+            item.availability
+            for item in observation.sources
+            if item.source is AeatSyncWorkspaceSource.LOCAL_RECONCILIATION
+        )
     seen = _zone_seen(observation.zone, states)
     availability = _zone_availability(states, seen=seen)
     return AeatSyncWorkspaceZoneStateV1(

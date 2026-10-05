@@ -25,7 +25,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
-from contextlib import nullcontext
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, ClassVar
@@ -74,7 +73,7 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .source_resolution_operations import storage_degradation_resolution
+from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 
 _LedgerId = Annotated[
     str,
@@ -503,7 +502,7 @@ def _candidate_for_invoice_line(
     destination = invoice.counterparty_eu_member_state
     if destination is None:
         return None
-    rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate)
+    rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate, devengo_date)
     if rate_kind is None:
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
@@ -686,7 +685,6 @@ class OssIossLedgerSourceResolver:
         *,
         ports: InvoiceCatalogueReadPorts,
         candidates: Sequence[OssIossLedgerCandidate] | None = None,
-        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Construct the resolver with a pre-classified ledger candidate sequence.
 
@@ -697,12 +695,9 @@ class OssIossLedgerSourceResolver:
             ports: Required application-owned catalogue read capabilities used
                 to project OSS/IOSS-tagged invoices when ``candidates`` is not
                 supplied.
-            operation: Existing pinned authority for a composed calculation.
-                Standalone resolver callers may omit it to lease locally.
         """
         self._ports = ports
         self._candidates = tuple(candidates) if candidates is not None else None
-        self._operation = operation
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Validate candidates and return the resolved OSS/IOSS binding values.
@@ -741,11 +736,7 @@ class OssIossLedgerSourceResolver:
                 more than one cent.
         """
         try:
-            with (
-                nullcontext(self._operation)
-                if self._operation is not None
-                else bundled_indexed_authority().operation() as indexed_operation
-            ):
+            with source_context_operation(context) as indexed_operation:
                 projection = (
                     project_oss_ioss_invoices_from_repositories(
                         period=context.period,

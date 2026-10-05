@@ -9,51 +9,35 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.tax_residence import parse_tax_region
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
+    terminal_receipt_matches,
+)
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..overview.status_report import build_filing_obligation_advisories
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.projections import record_to_values
@@ -125,6 +109,20 @@ class ModeloWorkCreateRefusal(BaseModel):
     reason: Annotated[str, Field(min_length=1, max_length=2048)]
 
 
+def _require_outcome_for_profile_period(
+    outcome: ModeloWorkCreateSuccess | ModeloWorkCreateRefusal,
+    *,
+    profile_id: UUID,
+    period: PublicPeriod,
+    message: str,
+) -> None:
+    """Refuse a success whose work unit belongs to another profile or period."""
+    if isinstance(outcome, ModeloWorkCreateSuccess):
+        unit = outcome.unit
+        if unit.bucket_id != str(profile_id) or unit.period != period:
+            raise ValueError(message)
+
+
 class ModeloWorkCreateResult(BaseModel):
     """Encrypted private result addressed by either terminal condition."""
 
@@ -137,10 +135,12 @@ class ModeloWorkCreateResult(BaseModel):
 
     @model_validator(mode="after")
     def _bound_outcome(self) -> Self:
-        if isinstance(self.outcome, ModeloWorkCreateSuccess):
-            unit = self.outcome.unit
-            if unit.bucket_id != str(self.profile_id) or unit.period != self.period:
-                raise ValueError("work create result belongs to another profile or period")
+        _require_outcome_for_profile_period(
+            self.outcome,
+            profile_id=self.profile_id,
+            period=self.period,
+            message="work create result belongs to another profile or period",
+        )
         return self
 
 
@@ -156,10 +156,12 @@ class ModeloWorkCreateProjection(BaseModel):
 
     @model_validator(mode="after")
     def _bound_outcome(self) -> Self:
-        if isinstance(self.outcome, ModeloWorkCreateSuccess):
-            unit = self.outcome.unit
-            if unit.bucket_id != str(self.profile_id) or unit.period != self.period:
-                raise ValueError("work create projection belongs to another profile or period")
+        _require_outcome_for_profile_period(
+            self.outcome,
+            profile_id=self.profile_id,
+            period=self.period,
+            message="work create projection belongs to another profile or period",
+        )
         return self
 
 
@@ -171,26 +173,34 @@ def project_modelo_work_create_result(result: BaseModel, receipt: OperationTermi
     ):
         raise ValueError("invalid work create result identity")
     private = ModeloWorkCreateResult.model_validate(result.model_dump(mode="python"), strict=True)
-    if receipt.identity.subject_ref != profile_operation_subject(str(private.profile_id)):
+    subject_ref = profile_operation_subject(str(private.profile_id))
+    if receipt.identity.subject_ref != subject_ref:
         raise ValueError("work create result belongs to another subject")
     outcome = private.outcome
     if isinstance(outcome, ModeloWorkCreateRefusal):
         if (
-            receipt.condition is not OperationTerminalCondition.REFUSED
+            not terminal_receipt_matches(
+                receipt,
+                definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+                subject_ref=subject_ref,
+                condition=OperationTerminalCondition.REFUSED,
+                effect=OperationEffect.NONE,
+            )
             or receipt.refusal_ref != MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
             or receipt.refusal_detail_ref is None
-            or receipt.effect is not OperationEffect.NONE
         ):
             raise ValueError("work create refusal has an incompatible terminal receipt")
-    elif (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.refusal_detail_ref is not None
-        or receipt.effect
-        is not (
-            OperationEffect.UPDATED if not outcome.reused or outcome.name_applied is not None else OperationEffect.NONE
+    else:
+        require_terminal_receipt_match(
+            receipt,
+            definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+            subject_ref=subject_ref,
+            condition=OperationTerminalCondition.SUCCEEDED,
+            effect=OperationEffect.UPDATED
+            if not outcome.reused or outcome.name_applied is not None
+            else OperationEffect.NONE,
+            message="work create success has an incompatible terminal receipt",
         )
-    ):
-        raise ValueError("work create success has an incompatible terminal receipt")
     return ModeloWorkCreateProjection(profile_id=private.profile_id, period=private.period, outcome=outcome)
 
 
@@ -214,14 +224,9 @@ class ModeloWorkCreateExecutor:
         """Store a private success or bounded applicability refusal operand."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        if (
-            request.definition_id != MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(profile_id)
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_WORK_CREATE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(MODELO_WORK_CREATE_OPERATION_DEFINITION_ID)
         operation = context.authority_operation
         period = payload.period.to_period()
@@ -350,33 +355,16 @@ class ModeloWorkCreateExecutor:
 
 def build_modelo_work_create_definition(factory: ActiveWorkLifecyclePortsFactory) -> OperationDefinition:
     """Declare secure-reference create intent and one bounded refusal detail code."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkCreateRequest,
         result_type=ModeloWorkCreateResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkCreateRequest,
-            executor_type=ModeloWorkCreateExecutor,
-            build=lambda: ModeloWorkCreateExecutor(factory),
-        ),
-        phase_codes=(MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.COOPERATIVE,
-            deadline=OperationDeadline.COOPERATIVE,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.REQUEST_BOUND,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=ModeloWorkCreateExecutor,
+        build=lambda: ModeloWorkCreateExecutor(factory),
+        capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         refusal_detail_codes=frozenset({MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE}),
+        public_error_detail=True,
     )
 
 
@@ -384,101 +372,52 @@ def build_modelo_work_create_registration(definition: OperationDefinition) -> Op
     """Authorize only the requested profile period and explicit COMMIT."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(payload, ModeloWorkCreateRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        payload = require_access_request_profile_payload(
+            request,
+            definition_id=definition.definition_id,
+            payload_type=ModeloWorkCreateRequest,
+            access_profile_id=context.profile_id,
+        )
         period = payload.period.to_period()
-        admitted = context.admitted_request
-        if (
-            admitted is not None
-            and context.action
-            in {
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-            and (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or admitted.period_independent
-                or admitted.periods != frozenset({period})
-            )
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset[DisclosurePermission]()
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=schema.schema_id,
-                        category=DisclosureCategory.TAX_VALUES,
-                    ),
-                )
-            )
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=frozenset({period}),
-                period_independent=False,
-                destination_id=context.destination_id,
-            ),
-            policy=OperationAccessPolicy(
-                definition_id=request.definition_id,
-                definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                        AccessAction.COMMIT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                    }
-                ),
-                disclosures=disclosures,
-                periods=frozenset({period}),
-                allow_period_independent=False,
-                backend=Availability.AVAILABLE,
-                published_authority=context.published_authority,
-                provider=Availability.NOT_REQUIRED,
-                transaction_authority_required=False,
-            ),
+        _require_work_create_admission(request, context, period)
+        return bind_operation_access_profile(
+            context,
+            COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            profile_id=context.profile_id,
+            definition_id=request.definition_id,
+            periods=frozenset({period}),
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=ModeloWorkCreateRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=ModeloWorkCreateProjection
-        ),
+        public_result_type=ModeloWorkCreateProjection,
         result_projector=project_modelo_work_create_result,
         access_resolver=resolve,
     )
+
+
+def _require_work_create_admission(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    period: Period,
+) -> None:
+    admitted = context.admitted_request
+    if (
+        admitted is not None
+        and context.action
+        in {
+            AccessAction.OBSERVE,
+            AccessAction.RESULT,
+            AccessAction.COMMIT,
+            AccessAction.CANCEL,
+            AccessAction.DETACH,
+        }
+        and (
+            admitted.profile_id != context.profile_id
+            or admitted.definition_id != request.definition_id
+            or admitted.action is not AccessAction.SUBMIT
+            or admitted.period_independent
+            or admitted.periods != frozenset({period})
+        )
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)

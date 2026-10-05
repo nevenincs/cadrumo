@@ -20,7 +20,7 @@ from typing import Final
 import typer
 
 from ...application.ledger.confirmation_gate import FindingResolution
-from ...application.ledger.evidence_followup_operation import (
+from ...application.ledger.evidence_followup_contracts import (
     CountryVocabularyAdvisoryProjection,
     LedgerEvidenceReviewViewProjection,
     PartyAttributionAdvisoryProjection,
@@ -443,12 +443,16 @@ def _review_view_notices(
     projection: LedgerEvidenceReviewViewProjection,
     blockers: tuple[ConfirmationBlockerProjectionV1, ...],
 ) -> tuple[list[Notice], list[str]]:
-    """Return advisory notices/lines followed by the blocking notice, if any."""
+    """Return advisory notices/lines, the stored label-reading degradation, then the blocking notice.
+
+    Without the degradation an empty field on this surface reads as a field the
+    document does not print, when the reader never looked for it.
+    """
     notices, lines = _review_view_advisories(
         projection.party_attribution_advisory,
         projection.country_vocabulary_advisory,
     )
-    fallback = projection.draft.label_reading_fallback
+    fallback = projection.label_reading_fallback
     notices.extend(label_reading_fallback_notices(None if fallback is None else fallback.to_fallback()))
     if blockers:
         notices.append(

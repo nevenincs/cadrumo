@@ -37,6 +37,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
+from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError, OwnBankAccount
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
 from .evidence import PurchaseInvoiceEvidence
@@ -728,7 +729,26 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.attachment_ids,
         transaction.notes,
         transaction.group_label,
+        transaction.own_account_id,
     )
+
+
+def require_registered_own_account(own_accounts: OwnAccountRegister, own_account_id: str) -> OwnBankAccount:
+    """Return the registered own account ``own_account_id``, or refuse the ledger write.
+
+    A transaction may only name an account the profile's own-account register
+    holds, so every ledger surface that binds a row checks it here.
+
+    Raises:
+        TransactionValidationError: When the register holds no such account.
+    """
+    try:
+        return own_accounts.account(own_account_id)
+    except OwnAccountRegisterError as exc:
+        raise TransactionValidationError(
+            translated_message="errors.transaction.own_account_unknown",
+            context={"own_account_id": own_account_id},
+        ) from exc
 
 
 def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
@@ -811,6 +831,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
         "attachment_ids": command.attachment_ids,
         "notes": command.notes,
         "group_label": command.group_label,
+        "own_account_id": command.own_account_id,
         "classified_by": _persisted_classified_by(command),
     }
 
@@ -862,6 +883,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
         "attachment_ids": current.attachment_ids,
         "notes": current.notes,
         "group_label": current.group_label,
+        "own_account_id": current.own_account_id,
         "classified_by": current.classified_by,
     }
 

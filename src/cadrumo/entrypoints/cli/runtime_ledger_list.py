@@ -12,12 +12,12 @@ from ...application.ledger.list_operation import (
     LedgerListRequest,
 )
 from ...application.review.filter import LedgerReviewFilterSpec
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_ledger_list_for_cli(
@@ -62,10 +62,5 @@ def read_ledger_list_for_cli(
         or result.by_group != by_group
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return result

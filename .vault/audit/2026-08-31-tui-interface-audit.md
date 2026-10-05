@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-interface'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:9765f41d623e4493b237ddbfa7eab72e2011743a7157c2ecb89d41c6ec2e5aed'
 related:
-  - "[[2026-08-11-tui-interface-plan]]"
   - "[[2026-08-31-tui-interface-path-keyed-evidence-classification-adr]]"
 ---
 

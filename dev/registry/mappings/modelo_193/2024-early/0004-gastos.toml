@@ -1,0 +1,158 @@
+schema_version = 1
+fragment_id = "gastos"
+modelo = "193"
+design_epoch = "2024-early"
+source_ref = "aeat-dr-193-2024"
+source_sha256 = "1eae714c75eb6be7d412e48141ced46d3dc7e6701473a54b21f81027c211461b"
+records = []
+variable_envelopes = []
+
+[[entries]]
+export_field_id = "modelo-193-gasto-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1570
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-modelo"
+kind = "literal"
+literal = "193"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1572
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1574
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-declarante-nif"
+kind = "header"
+producer_key = "presenter.tax_id"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1577
+ordinal = "4"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-nif"
+kind = "binding"
+binding = "modelo-193-gasto-row-nif"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1580
+ordinal = "5"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-nif-representante"
+kind = "binding"
+binding = "modelo-193-gasto-row-nif-representante"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1609
+ordinal = "6"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-nombre"
+kind = "binding"
+binding = "modelo-193-gasto-row-nombre"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1625
+ordinal = "7"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gastos-reservado-76"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1637
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-importe-src-195"
+kind = "binding"
+binding = "modelo-193-gasto-row-importe"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1648
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gasto-importe-src-206"
+kind = "binding"
+binding = "modelo-193-gasto-row-importe"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1656
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+
+[[entries]]
+export_field_id = "modelo-193-gastos-reserved-tail"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+source_row = 1658
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"

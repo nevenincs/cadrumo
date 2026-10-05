@@ -26,10 +26,9 @@ from .....application.operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from .....application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .....application.operations.owner import OperationExecutorContext
 from .....application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,

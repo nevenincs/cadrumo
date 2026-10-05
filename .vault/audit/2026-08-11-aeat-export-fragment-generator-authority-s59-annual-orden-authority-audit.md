@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e3f465fcdb3afed770028d3b1c138b85d2468302c178c4fca769a08fb1b8fbab'
+body_hash: 'sha256:83c3c1c04b05a96c51379fb24039f9da8d64c3cc82d0ad66dec9754161c229fa'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
 ---
+
 # `aeat-export-fragment-generator-authority` audit: `S59 annual Orden authority formal review`
 
 ## Scope
@@ -40,4 +40,4 @@ The annual-Orden loader reconstructs the Markdown sidecar from the validated JSO
 
 No S59 remediation remains. Preserve the private-selector boundary, the required explicit scope input, and the explicit S58 refusal. S55 must add profile composition and mapping atomically rather than retrofitting a default or compatibility path.
 
-Verification evidence: semantic RAG discovery reached the repaired implementation and governing ADR/plan records. The isolated candidate passed 25 annual-authority and engine tests plus 2 real `build_draft` boundary tests. `uv run --no-sync aeat app registry verify` passed with 73 modelos, 94 revisions, 798 legal references, 316 source references, 16800 casillas, and 1385 formulas. `uv run --no-sync python dev/registry/m303_orden_anual.py --check` passed. Scoped Ruff passed. A structural search found no public `select_m303_annual_orden_projection` declaration, import, export, or caller.
+Verification evidence: semantic RAG discovery reached the repaired implementation and governing ADR/plan records. The isolated candidate passed 25 annual-authority and engine tests plus 2 real `build_draft` boundary tests. `uv run --no-sync aeat app registry verify` passed with 73 modelos, 94 revisions, 798 legal references, 316 source references, 16800 casillas, and 1385 formulas. the historical check passed. Scoped Ruff passed. A structural search found no public `select_m303_annual_orden_projection` declaration, import, export, or caller.

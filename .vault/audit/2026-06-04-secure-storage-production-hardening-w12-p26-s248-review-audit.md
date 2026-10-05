@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:da15ce9724e1ecd026ef5b528c4c29daa33a22bf485893c622b963fe331f0d9c'
+modified: '2026-10-03'
+body_hash: 'sha256:314ba814fbe449409168426d30cc1b1ad1cdc626799f51cca6257598da7829dc'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The new invoice and draft load-failure tests write malformed encrypted payload b
 
 ## S248-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/review/_adapters.py src/aeat/application/review/test_adapters.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/review/test_adapters.py` passed with 24 tests.
+- the historical check passed.
+- the historical check passed with 24 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-146` as `manifest-discovery`.

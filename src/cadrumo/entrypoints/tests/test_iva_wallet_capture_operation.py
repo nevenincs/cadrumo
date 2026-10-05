@@ -194,7 +194,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             assert pinned_authority is authority
             events.append("provider-preflight")
 
-        def composition_factory():
+        def composition_factory(*, operation: PinnedAuthorityOperation):
             events.append("composition")
             return composition
 

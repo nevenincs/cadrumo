@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:873660d66b67c1b612024f2a45fd8bd97d420db92e2e174056d30819d7de5715'
+body_hash: 'sha256:1c3708455f99d4b288dd6c0880bf7304c7dd7d652f3975eb86cd41ca14bb9c0b'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]"
 ---
 
@@ -27,17 +26,7 @@ ownership, duplication, and real persistence-test integrity.
 
 ### response-intent-integrity | high | Durable intent is not bound to the persisted response digest
 
-`OperationPendingInteraction.consume` stores `intent` beside a digest of the
-original response, but `OperationConsumedInteraction` validates only timestamp
-and interaction identity. A credential-free journal document can therefore be
-changed from `reject` to `apply`, or conversely, without changing
-`response_digest`; strict model hydration accepts the contradictory pair and
-`_resume_from_checkpoint` passes it to the effect executor. The digest proves
-that some unavailable response existed but cannot prove that the separately
-stored continuation intent is the intent that response carried. This violates
-the exact single-use continuation requirement at
-`src/cadrumo/application/operations/_interactions.py:128` and
-`src/cadrumo/application/operations/_interactions.py:179`.
+`OperationPendingInteraction.consume` stores `intent` beside a digest of the original response, but `OperationConsumedInteraction` validates only timestamp and interaction identity. A credential-free journal document can therefore be changed from `reject` to `apply`, or conversely, without changing `response_digest`; strict model hydration accepts the contradictory pair and `_resume_from_checkpoint` passes it to the effect executor. The digest proves that some unavailable response existed but cannot prove that the separately stored continuation intent is the intent that response carried.
 
 ### persistence-gate-regression | high | The canonical real journal suite is red after the consumed-record schema change
 

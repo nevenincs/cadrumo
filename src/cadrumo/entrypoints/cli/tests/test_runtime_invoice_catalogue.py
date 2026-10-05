@@ -12,7 +12,10 @@ import pytest
 import typer
 
 from ....application.exchange_rate_provider import exchange_rate_provider
-from ....application.invoices.catalogue_add_operation import InvoiceAddRequest, InvoiceAddResult
+from ....application.invoices.catalogue_add_contracts import (
+    InvoiceAddRequest,
+    InvoiceAddResult,
+)
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....application.invoices.catalogue_read_operation import (
     INVOICE_VIEW_REFUSAL_CODE,
@@ -30,7 +33,7 @@ from ....domain.iva.classification import InvoiceKind
 from .. import _ledger_business_invoice_cli as handler
 from .. import runtime_invoice_catalogue as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

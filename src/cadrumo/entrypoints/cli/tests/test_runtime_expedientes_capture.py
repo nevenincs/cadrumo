@@ -26,7 +26,8 @@ from .._app_live_expedientes_payloads import ExpedientesCaptureResult
 from .._profile_authentication_gate import _uses_runtime_profile_client
 from ..command_specs import COMMAND_GRAPH
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_deadlines import provider_login_settlement_seconds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -133,6 +134,7 @@ def test_single_and_bulk_submit_the_exact_profile_and_operation_scope(monkeypatc
                 "request_version": 1,
                 "result_version": 1,
                 "timeout": 120,
+                "settlement_timeout": provider_login_settlement_seconds(after_login=120),
             },
         )
     ]
@@ -146,6 +148,7 @@ def test_single_and_bulk_submit_the_exact_profile_and_operation_scope(monkeypatc
                 "request_version": 1,
                 "result_version": 1,
                 "timeout": 120,
+                "settlement_timeout": provider_login_settlement_seconds(after_login=120),
             },
         )
     ]

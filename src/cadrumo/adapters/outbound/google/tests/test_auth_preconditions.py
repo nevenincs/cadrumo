@@ -17,14 +17,13 @@ from google.oauth2.credentials import Credentials
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .....tests.env_scope import scoped_env_var
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module
-from .. import impersonation as impersonation_module
+from .. import installation_client as installation_client_module
 from .. import oauth_flow as oauth_flow_module
+from .. import sign_in_state as sign_in_state_module
 from ..active_profile import resolve_active_profile
 from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
-from ..impersonation import GoogleAuthAdcUnavailableError, GoogleImpersonationConfig, resolve_impersonated_credentials
 from ..oauth_flow import (
     _decode_email_from_id_token,
     _raise_local_server_error,
@@ -54,8 +53,8 @@ def _contract(
     return _CarrierContract(condition, facts, provenance, outcome)
 
 
-# This is a complete, source-level contract for the 1 active-profile, 15 OAuth,
-# and 4 impersonation GoogleAuthError producers. Values are AST expressions, not
+# This is a complete, source-level contract for the 1 active-profile, 2
+# installation-client, 16 OAuth and 4 sign-in-state GoogleAuthError producers. Values are AST expressions, not
 # merely fact keys, so a polarity or dynamic-expression mutation is observable.
 _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "active_profile:resolve_active_profile:GoogleAuthProfileUnboundError:no active AEAT profile bound for Google OAuth": _contract(
@@ -63,6 +62,18 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("active_profile_resolved", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    "installation_client:load_installation_client:GoogleAuthClientMetadataUnavailableError:this installation carries no Google client metadata": _contract(
+        GoogleAuthPreconditionCondition.CLIENT_METADATA_AVAILABLE,
+        (("client_metadata_present", "False"),),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.SAFETY,
+    ),
+    "installation_client:load_installation_client:GoogleAuthClientMetadataUnavailableError:this installation's Google client metadata is not a valid Desktop client": _contract(
+        GoogleAuthPreconditionCondition.CLIENT_METADATA_AVAILABLE,
+        (("client_metadata_present", "True"), ("client_metadata_valid", "False")),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.SAFETY,
     ),
     "oauth_flow:require_interactive_terminal:GoogleAuthNonInteractiveError:google OAuth refused: interactive browser consent requires a controlling terminal": _contract(
         GoogleAuthPreconditionCondition.INTERACTIVE_TERMINAL_AVAILABLE,
@@ -106,6 +117,12 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
+    "oauth_flow:_consent_declined_refusal:GoogleAuthSignInRequiredError:the Google consent was declined": _contract(
+        GoogleAuthPreconditionCondition.CONSENT_GRANTED,
+        (("consent_granted", "False"),),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
     "oauth_flow:_raise_local_server_error:GoogleAuthBrowserOpenError:OS browser launcher refused: {value}": _contract(
         GoogleAuthPreconditionCondition.BROWSER_LAUNCHER_AVAILABLE,
         (("browser_launcher_available", "False"),),
@@ -148,36 +165,43 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:google-auth is not importable: {value}": _contract(
-        GoogleAuthPreconditionCondition.ADC_CLIENT_AVAILABLE,
-        (("adc_client_available", "False"),),
+    "oauth_flow:_oauth_loopback_records:GoogleAuthValidationError:Google completed the consent without issuing a refresh token": _contract(
+        GoogleAuthPreconditionCondition.REFRESH_CREDENTIAL_ISSUED,
+        (("refresh_token_issued", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:Application Default Credentials not found: {value}": _contract(
-        GoogleAuthPreconditionCondition.ADC_AVAILABLE,
-        (("adc_available", "False"),),
-        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.SAFETY,
+    "sign_in_state:load_token_minted_for:GoogleAuthSignInRequiredError:the stored Google sign-in does not name the client that minted it": _contract(
+        GoogleAuthPreconditionCondition.SIGN_IN_CLIENT_BOUND,
+        (("stored_token_readable", "False"),),
+        ActionEvidenceProvenance.APPLICATION_STATE,
+        NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "impersonation:resolve_impersonated_credentials:GoogleAuthImpersonationRefusedError:IAM refused to mint an impersonated token for {value}: {value}": _contract(
-        GoogleAuthPreconditionCondition.IAM_CREDENTIAL_MINTED,
-        (("iam_token_minted", "False"),),
-        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.SAFETY,
+    "sign_in_state:load_token_minted_for:GoogleAuthSignInRequiredError:the stored Google sign-in was minted for a different client": _contract(
+        GoogleAuthPreconditionCondition.SIGN_IN_CLIENT_BOUND,
+        (("stored_token_readable", "True"), ("token_client_matches", "False")),
+        ActionEvidenceProvenance.APPLICATION_STATE,
+        NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "impersonation:_ensure_source_credential_is_fresh:GoogleAuthAdcStaleError:Application Default Credentials could not be refreshed: {value}": _contract(
-        GoogleAuthPreconditionCondition.ADC_SOURCE_FRESH,
-        (("adc_source_fresh", "False"),),
+    "sign_in_state:load_sign_in_record:GoogleAuthSignInRequiredError:the stored Google sign-in record is not in a shape this version reads": _contract(
+        GoogleAuthPreconditionCondition.SIGN_IN_RECORD_READABLE,
+        (("sign_in_record_readable", "False"),),
+        ActionEvidenceProvenance.APPLICATION_STATE,
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    "sign_in_state:ended_grant_refusal:GoogleAuthSignInRequiredError:Google no longer honours the stored sign-in": _contract(
+        GoogleAuthPreconditionCondition.GRANT_ACTIVE,
+        (("grant_active", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        NoRecoveryOutcome.SAFETY,
+        NoRecoveryOutcome.OPERATOR_DECISION,
     ),
 }
 
 _AUTH_PRODUCER_MODULES: tuple[ModuleType, ...] = (
     active_profile_module,
+    installation_client_module,
     oauth_flow_module,
-    impersonation_module,
+    sign_in_state_module,
 )
 
 
@@ -367,6 +391,7 @@ def test_scope_refusal_has_an_exact_runtime_safety_verdict() -> None:
     with pytest.raises(GoogleAuthError) as raised:
         credentials_to_records(
             refresh_token="refresh-token",
+            client_id="desktop-client.apps.googleusercontent.com",
             token_uri="https://oauth2.googleapis.com/token",
             account_email="operator@example.test",
             granted_scopes=(),
@@ -424,23 +449,6 @@ def test_missing_identity_assertion_has_an_exact_runtime_safety_verdict() -> Non
         raised.value,
         condition=GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_PRESENT,
         facts={"id_token_present": False},
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=NoRecoveryOutcome.SAFETY,
-    )
-
-
-def test_unavailable_adc_has_an_exact_runtime_safety_verdict() -> None:
-    config = GoogleImpersonationConfig(target_principal="aeat-export@example-project.iam.gserviceaccount.com")
-    with (
-        scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
-        pytest.raises(GoogleAuthAdcUnavailableError) as raised,
-    ):
-        resolve_impersonated_credentials(config)
-
-    _assert_terminal_contract(
-        raised.value,
-        condition=GoogleAuthPreconditionCondition.ADC_AVAILABLE,
-        facts={"adc_available": False},
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=NoRecoveryOutcome.SAFETY,
     )

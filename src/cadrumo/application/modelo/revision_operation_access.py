@@ -1,21 +1,27 @@
-"""Resolve revision mutations against the execution profile's persisted scope."""
+"""Resolve revision mutations against the execution profile's persisted scope.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 
 from pydantic import BaseModel
 
+from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.modelos.filing_record import ModeloRecord
+from ...domain.modelos.work_unit import WorkUnit
 from ..operations.access_port import OperationAccessResolver
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.access_resolution import (
+    COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_replayed_or_fresh_single_period_access,
+)
 from ..operations.models import OperationRequest
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operation_definitions import (
@@ -23,10 +29,6 @@ from .operation_definitions import (
     MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-    ModeloExportRequest,
-    ModeloWorkAmendRequest,
-    ModeloWorkFileRequest,
-    ModeloWorkVerifyRequest,
 )
 from .review_package_operation import (
     MODELO_REVIEW_PACKAGE_BUILD_OPERATION_DEFINITION_ID,
@@ -36,150 +38,181 @@ from .revision_snapshot_operation import (
     MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionSnapshotRequest,
 )
-from .verification_repository_ports import VerificationRepositoryBundleFactory
+from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
+from .work_amend_contracts import ModeloWorkAmendRequest
+from .work_export_contracts import ModeloExportRequest
+from .work_filing_contracts import ModeloWorkFileRequest
+from .work_verification_contracts import ModeloWorkVerifyRequest
 
 
 def compose_modelo_revision_access(factory: VerificationRepositoryBundleFactory) -> OperationAccessResolver:
     """Bind exact revision and work-unit reads without inferring scope from IDs."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        filing_id = None
-        if request.definition_id == MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID and isinstance(
-            payload, ModeloWorkVerifyRequest
-        ):
-            revision_id = payload.calculation_revision_id
-        elif request.definition_id == MODELO_WORK_FILE_OPERATION_DEFINITION_ID and isinstance(
-            payload, ModeloWorkFileRequest
-        ):
-            revision_id = payload.approval.calculation_revision_id
-        elif request.definition_id == MODELO_WORK_AMEND_OPERATION_DEFINITION_ID and isinstance(
-            payload, ModeloWorkAmendRequest
-        ):
-            filing_id = payload.baseline.from_filing_record_id
-            revision_id = None
-        elif request.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and isinstance(
-            payload, ModeloExportRequest
-        ):
-            revision_id = payload.calculation_revision_id
-        elif (
-            request.definition_id == MODELO_REVIEW_PACKAGE_BUILD_OPERATION_DEFINITION_ID
-            and isinstance(payload, ModeloReviewPackageBuildRequest)
-        ) or (
-            request.definition_id == MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID
-            and isinstance(payload, ModeloWorkRevisionSnapshotRequest)
-        ):
-            if payload.profile_id != context.profile_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            revision_id = payload.calculation_revision_id
-        else:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        admitted = context.admitted_request
-        if admitted is not None and context.action in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }:
-            if (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or admitted.period_independent
-                or len(admitted.periods) != 1
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods = admitted.periods
-        else:
-            if context.authority_operation is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            repositories = factory(str(context.profile_id), operation=context.authority_operation)
-            if repositories.calculation.bucket_id != str(context.profile_id) or repositories.work_unit.bucket_id != str(
-                context.profile_id
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            filing = None
-            if filing_id is not None:
-                if repositories.filing.bucket_id != str(context.profile_id):
-                    raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-                filing = repositories.filing.load().get(filing_id)
-                if filing is None:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-                if filing.bucket_id != str(context.profile_id):
-                    raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-                revision_id = filing.calculation_revision_id
-            if revision_id is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            revision = repositories.calculation.load(operation=context.authority_operation).get(revision_id)
-            if revision is None or request.subject_ref != revision.work_unit_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            unit = repositories.work_unit.load().get(revision.work_unit_id)
-            if unit is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            if unit.bucket_id != str(context.profile_id):
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            if filing is not None and (
-                filing.work_unit_id != unit.work_unit_id
-                or filing.modelo != unit.modelo
-                or filing.filing_year != unit.filing_year
-                or filing.period != unit.period
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            periods = frozenset({unit.period})
-        disclosure = None
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosure = DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                category=DisclosureCategory.OPERATION_METADATA,
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosure = DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=schema.schema_id,
-                category=DisclosureCategory.TAX_VALUES,
-            )
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=periods,
-                period_independent=False,
-                destination_id=context.destination_id,
-            ),
-            policy=OperationAccessPolicy(
-                definition_id=request.definition_id,
-                definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.COMMIT,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                    }
-                )
-                - (
-                    frozenset({AccessAction.COMMIT})
-                    if request.definition_id == MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID
-                    else frozenset()
-                ),
-                disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-                periods=periods,
-                allow_period_independent=False,
-                backend=Availability.AVAILABLE,
-                published_authority=context.published_authority,
-                provider=Availability.NOT_REQUIRED,
-                transaction_authority_required=False,
+        filing_id, revision_id = _revision_target(request, context)
+        return bind_replayed_or_fresh_single_period_access(
+            context,
+            LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS
+            if request.definition_id == MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID
+            else COMMITTING_LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            definition_id=request.definition_id,
+            fresh_period=lambda operation: _persisted_revision_period(
+                factory, request, context, filing_id, revision_id, operation=operation
             ),
         )
 
     return resolve
+
+
+def _revision_target(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> tuple[str | None, str | None]:
+    target = _verify_revision_target(request)
+    if target is not None:
+        return target
+    target = _file_revision_target(request)
+    if target is not None:
+        return target
+    target = _amend_revision_target(request)
+    if target is not None:
+        return target
+    target = _export_revision_target(request)
+    if target is not None:
+        return target
+    target = _review_package_revision_target(request, context)
+    if target is not None:
+        return target
+    target = _revision_snapshot_target(request, context)
+    if target is not None:
+        return target
+    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+def _verify_revision_target(request: OperationRequest[BaseModel]) -> tuple[str | None, str | None] | None:
+    payload = request.payload
+    if request.definition_id == MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID and isinstance(
+        payload, ModeloWorkVerifyRequest
+    ):
+        return None, payload.calculation_revision_id
+    return None
+
+
+def _file_revision_target(request: OperationRequest[BaseModel]) -> tuple[str | None, str | None] | None:
+    payload = request.payload
+    if request.definition_id == MODELO_WORK_FILE_OPERATION_DEFINITION_ID and isinstance(payload, ModeloWorkFileRequest):
+        return None, payload.approval.calculation_revision_id
+    return None
+
+
+def _amend_revision_target(request: OperationRequest[BaseModel]) -> tuple[str | None, str | None] | None:
+    payload = request.payload
+    if request.definition_id == MODELO_WORK_AMEND_OPERATION_DEFINITION_ID and isinstance(
+        payload, ModeloWorkAmendRequest
+    ):
+        return payload.baseline.from_filing_record_id, None
+    return None
+
+
+def _export_revision_target(request: OperationRequest[BaseModel]) -> tuple[str | None, str | None] | None:
+    payload = request.payload
+    if request.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and isinstance(payload, ModeloExportRequest):
+        return None, payload.calculation_revision_id
+    return None
+
+
+def _review_package_revision_target(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> tuple[str | None, str | None] | None:
+    payload = request.payload
+    if request.definition_id == MODELO_REVIEW_PACKAGE_BUILD_OPERATION_DEFINITION_ID and isinstance(
+        payload, ModeloReviewPackageBuildRequest
+    ):
+        if payload.profile_id != context.profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        return None, payload.calculation_revision_id
+    return None
+
+
+def _revision_snapshot_target(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> tuple[str | None, str | None] | None:
+    payload = request.payload
+    if request.definition_id == MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID and isinstance(
+        payload, ModeloWorkRevisionSnapshotRequest
+    ):
+        if payload.profile_id != context.profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        return None, payload.calculation_revision_id
+    return None
+
+
+def _persisted_revision_period(
+    factory: VerificationRepositoryBundleFactory,
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    filing_id: str | None,
+    revision_id: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Period:
+    repositories = _scoped_repositories(factory, context, operation=operation)
+    filing = _scoped_filing(repositories, str(context.profile_id), filing_id) if filing_id is not None else None
+    selected_revision_id = filing.calculation_revision_id if filing is not None else revision_id
+    unit = _revision_work_unit(repositories, operation, request, context, selected_revision_id)
+    if filing is not None:
+        _require_filing_coordinates(filing, unit)
+    return unit.period
+
+
+def _scoped_repositories(
+    factory: VerificationRepositoryBundleFactory,
+    context: OperationAccessContext,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> VerificationRepositoryBundle:
+    bucket_id = str(context.profile_id)
+    repositories = factory(bucket_id, operation=operation)
+    if repositories.calculation.bucket_id != bucket_id or repositories.work_unit.bucket_id != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return repositories
+
+
+def _scoped_filing(repositories: VerificationRepositoryBundle, bucket_id: str, filing_id: str) -> ModeloRecord:
+    if repositories.filing.bucket_id != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    filing = repositories.filing.load().get(filing_id)
+    if filing is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    if filing.bucket_id != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return filing
+
+
+def _revision_work_unit(
+    repositories: VerificationRepositoryBundle,
+    operation: PinnedAuthorityOperation,
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    revision_id: str | None,
+) -> WorkUnit:
+    if revision_id is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    revision = repositories.calculation.load(operation=operation).get(revision_id)
+    if revision is None or request.subject_ref != revision.work_unit_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    unit = repositories.work_unit.load().get(revision.work_unit_id)
+    if unit is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    if unit.bucket_id != str(context.profile_id):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return unit
+
+
+def _require_filing_coordinates(filing: ModeloRecord, unit: WorkUnit) -> None:
+    if (
+        filing.work_unit_id != unit.work_unit_id
+        or filing.modelo != unit.modelo
+        or filing.filing_year != unit.filing_year
+        or filing.period != unit.period
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)

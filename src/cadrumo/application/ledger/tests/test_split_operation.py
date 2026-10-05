@@ -23,6 +23,7 @@ from ....domain.transactions.enums import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.lineage_models import SplitLineage
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -40,6 +41,7 @@ from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..models import SplitChildCommand, SplitTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
+from ..protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -226,6 +228,25 @@ def test_split_result_round_trip_and_bounded_child_ids() -> None:
         )
 
 
+def test_result_over_its_byte_bound_fails_as_validation_not_profile_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result = operation.LedgerSplitOperationResult(
+        profile_id=_PROFILE,
+        parent_transaction_id="a" * 64,
+        split_group_id="b" * 64,
+        child_transaction_ids=("c" * 64, "d" * 64),
+        bucket_event_id="e" * 64,
+        parent_business_classification=BusinessClassification.PERSONAL,
+    )
+    operation._require_result_bound(result)
+
+    monkeypatch.setattr(operation, "_MAX_SPLIT_RESULT_JSON_BYTES", len(result.model_dump_json()) - 1)
+
+    with pytest.raises(TransactionValidationError, match="registered projection bound"):
+        operation._require_result_bound(result)
+
+
 @pytest.mark.asyncio
 async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
     monkeypatch: pytest.MonkeyPatch,
@@ -332,15 +353,12 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
             return "d" * 64
 
     action_results: list[SplitTransactionResult] = []
-    monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def canonical_split(**kwargs: object) -> SplitTransactionResult:
         assert in_commit
         split_ports = cast(LedgerActionPorts, kwargs["ports"])
-        pinned = cast(
-            operation.RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
-            split_ports.transaction_repository,
-        )
+        pinned = cast(RevisionGuardedTransactionCatalogueCoCommitWriterProtocol, split_ports.transaction_repository)
         assert pinned is not repository
         pinned_catalogue, pinned_revision = pinned.load_revisioned()
         assert pinned_catalogue is catalogue

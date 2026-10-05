@@ -541,6 +541,8 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 210
+    env:
+      CADRUMO_HOMEBREW_PREFIX: ${{ matrix.prefix }}
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -552,6 +554,7 @@ jobs:
             expected_os: Darwin
             expected_arch: arm64
             brew: /opt/homebrew/bin/brew
+            prefix: /opt/homebrew
             row_id: homebrew-macos-arm64
             make_jobs: "2"
           - id: linux-x86_64
@@ -560,6 +563,7 @@ jobs:
             expected_os: Linux
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-x86-64
             make_jobs: "8"
           - id: linux-arm64
@@ -568,20 +572,10 @@ jobs:
             expected_os: Linux
             expected_arch: aarch64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            prefix: /home/linuxbrew/.linuxbrew
             row_id: homebrew-linux-arm64
             make_jobs: "2"
     steps:
-      - name: Initialize current-run evidence root
-        id: initialize
-        env:
-          MATRIX_ID: ${{ matrix.id }}
-        run: |
-          root="${RUNNER_TEMP}/cadrumo-homebrew-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
-          rm -rf "$root"
-          mkdir -p "$root"
-          echo "CADRUMO_HOMEBREW_ROOT=$root" >> "$GITHUB_ENV"
-          echo "ready=true" >> "$GITHUB_OUTPUT"
-
       - name: Verify declared Homebrew release row
         env:
           BREW_PATH: ${{ matrix.brew }}
@@ -603,6 +597,17 @@ jobs:
         uses: ./.github/actions/setup
         with:
           authority-artifact: cadrumo-registry-authority
+
+      - name: Initialize current-run evidence root
+        id: initialize
+        env:
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          root="$(uv run --no-sync python -m dev.ci.storage_path homebrew)/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
+          mkdir -p "$root"
+          echo "CADRUMO_HOMEBREW_ROOT=$root" >> "$GITHUB_ENV"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -695,19 +700,9 @@ jobs:
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
+    env:
+      CADRUMO_SCOOP_INSTALL_ROOT: ${{ vars.CADRUMO_SCOOP_INSTALL_ROOT }}
     steps:
-      - name: Initialize current-run evidence root
-        id: initialize
-        shell: powershell
-        run: |
-          $root = Join-Path $env:RUNNER_TEMP "cadrumo-scoop-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
-          if (Test-Path -LiteralPath $root) {
-            Remove-Item -LiteralPath $root -Recurse -Force
-          }
-          New-Item -ItemType Directory -Force -Path $root | Out-Null
-          "CADRUMO_SCOOP_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
-          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
-
       - name: Verify declared Windows native release row
         shell: powershell
         run: |
@@ -717,7 +712,10 @@ jobs:
           if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
             throw "scoop is unavailable to the lane user; install Scoop into this runner user's own profile"
           }
-          $scoopRoot = if ($env:SCOOP) { $env:SCOOP } else { Join-Path $env:USERPROFILE "scoop" }
+          if (-not $env:CADRUMO_SCOOP_INSTALL_ROOT) {
+            throw "declare CADRUMO_SCOOP_INSTALL_ROOT for the release lane's installed Scoop prefix"
+          }
+          $scoopRoot = [System.IO.Path]::GetFullPath($env:CADRUMO_SCOOP_INSTALL_ROOT)
           foreach ($required in @("apps", "buckets", "shims")) {
             if (-not (Test-Path -LiteralPath (Join-Path $scoopRoot $required) -PathType Container)) {
               throw "the lane user's Scoop profile is incomplete: missing '$required' under $scoopRoot"
@@ -755,6 +753,17 @@ jobs:
         with:
           authority-artifact: cadrumo-registry-authority
 
+      - name: Initialize current-run evidence root
+        id: initialize
+        shell: powershell
+        run: |
+          $base = uv run --no-sync python -m dev.ci.storage_path scoop
+          if ($LASTEXITCODE -ne 0) { throw "storage path resolution failed" }
+          $root = Join-Path $base "$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          "CADRUMO_SCOOP_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
+          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -782,6 +791,7 @@ jobs:
           Copy-Item -LiteralPath "dev/packaging/__init__.py" -Destination (Join-Path $packaging "__init__.py")
           foreach ($file in @(
             "smoke_scoop.ps1",
+            "storage_paths.ps1",
             "command_execution.py",
             "constraint_effect.py",
             "installed_tax_oracle.py"
@@ -1401,6 +1411,8 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
+    env:
+      CADRUMO_HOMEBREW_PREFIX: ${{ matrix.prefix }}
     permissions:
       actions: read
       contents: read
@@ -1411,9 +1423,11 @@ jobs:
           - os: Linux
             runner: [self-hosted, Linux, X64]
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            prefix: /home/linuxbrew/.linuxbrew
           - os: macOS
             runner: [self-hosted, macOS, ARM64]
             brew: /opt/homebrew/bin/brew
+            prefix: /opt/homebrew
     steps:
       # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
@@ -1458,6 +1472,8 @@ jobs:
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 136
+    env:
+      CADRUMO_SCOOP_INSTALL_ROOT: ${{ vars.CADRUMO_SCOOP_INSTALL_ROOT }}
     permissions:
       actions: read
       contents: read

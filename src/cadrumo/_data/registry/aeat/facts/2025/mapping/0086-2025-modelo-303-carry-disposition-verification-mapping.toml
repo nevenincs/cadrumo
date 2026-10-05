@@ -27,7 +27,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2022" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   # The 2022 record design declares C/D/G/I/N/V only; U and X arrived later.
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
@@ -73,7 +75,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2023" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
@@ -122,7 +126,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2024-hasta-08-y-2t" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
@@ -169,7 +175,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2024-desde-09-y-3t" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
@@ -217,7 +225,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2025" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   # Explicit C/D/G/I/N/V/U/X code-to-semantic projection, grounded by the
   # ResultDisposition enum/source history and the AEAT citation above.
   { key = "disposition.code.C", value = "compensacion" },
@@ -268,7 +278,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2026-y-siguientes" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },

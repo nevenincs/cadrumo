@@ -22,6 +22,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
@@ -29,14 +30,17 @@ from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from .. import catalogue_intake_operation as intake
+from .. import catalogue_intake_contracts as intake_contracts
+from .. import catalogue_intake_operation as intake_operation
 from ..catalogue_creation_ports import CatalogueInvoiceAuditCommitPort
+from ..catalogue_intake_executor import InvoiceIntakeExecutor
 from ..catalogue_intake_operation_ports import (
     InvoiceIntakeCommit,
     InvoiceIntakeCommitConflictError,
     InvoiceIntakePorts,
     InvoiceIntakeProviderAdmission,
 )
+from ..catalogue_intake_projection import project_invoice_intake_result
 from ..catalogue_intake_refusal import INVOICE_WIZARD_VALIDATION_REFUSAL_CODE
 from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
@@ -46,10 +50,11 @@ _PROFILE = UUID("29292929-2929-4292-8292-292929292929")
 
 class _Events:
     def __init__(self) -> None:
+        self.phases: list[str] = []
         self.effects: list[OperationEffect] = []
 
-    async def phase(self, _phase: str) -> None:
-        pass
+    async def phase(self, phase: str) -> None:
+        self.phases.append(phase)
 
     async def effect(self, effect: OperationEffect) -> None:
         self.effects.append(effect)
@@ -139,8 +144,8 @@ def _context(request: OperationRequest[BaseModel], operation: PinnedAuthorityOpe
     return context, events, operands, fence
 
 
-def _wizard() -> intake.InvoiceWizardRequest:
-    return intake.InvoiceWizardRequest(
+def _wizard() -> intake_contracts.InvoiceWizardRequest:
+    return intake_contracts.InvoiceWizardRequest(
         profile_id=_PROFILE,
         kind=InvoiceKind.RECEIVED,
         counterparty_nif="A58818501",
@@ -162,15 +167,18 @@ def test_both_public_contracts_compile_without_constructing_storage(
     def unused(**_kwargs: object) -> InvoiceIntakePorts:
         pytest.fail("schema compilation constructed profile capabilities")
 
-    for definition in (intake.build_invoice_import_definition(unused), intake.build_invoice_wizard_definition(unused)):
-        registration = intake.build_invoice_intake_registration(definition)
+    for definition in (
+        intake_operation.build_invoice_import_definition(unused),
+        intake_operation.build_invoice_wizard_definition(unused),
+    ):
+        registration = intake_operation.build_invoice_intake_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
         contract = registry.lookup_public_contract(definition.definition_id)
         assert contract.request_schema is not None and contract.result_schema is not None
         payload = (
             _wizard()
-            if definition.definition_id == intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID
-            else intake.InvoiceImportRequest(
+            if definition.definition_id == intake_contracts.INVOICE_WIZARD_OPERATION_DEFINITION_ID
+            else intake_contracts.InvoiceImportRequest(
                 profile_id=_PROFILE,
                 kind=InvoiceKind.RECEIVED,
                 source_path=str(tmp_path / "book.csv"),
@@ -192,7 +200,7 @@ def test_both_public_contracts_compile_without_constructing_storage(
         assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
         assert definition.refusal_detail_codes == (
             frozenset({INVOICE_WIZARD_VALIDATION_REFUSAL_CODE})
-            if isinstance(payload, intake.InvoiceWizardRequest)
+            if isinstance(payload, intake_contracts.InvoiceWizardRequest)
             else frozenset()
         )
         with pytest.raises(ProfileAccessRefusedError):
@@ -202,9 +210,9 @@ def test_both_public_contracts_compile_without_constructing_storage(
 def test_wizard_worker_preserves_noop_and_fences_only_actual_commit(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     creation = in_memory_catalogue_creation_ports()
-    request = _wire(_wizard(), intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
+    request = _wire(_wizard(), intake_contracts.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     for repeat in (False, True):
         context, events, operands, fence = _context(request, authority_operation)
 
@@ -221,9 +229,9 @@ def test_wizard_worker_preserves_noop_and_fences_only_actual_commit(
             ports = replace(creation, audit_commit=_PreparedFakeCommit(creation.audit_commit, commit, fence))
             return InvoiceIntakePorts(profile_id, operation, lambda: ports, lambda _headers: None, lambda: ())
 
-        assert asyncio.run(intake.InvoiceIntakeExecutor(factory).execute(request, context)) == "d" * 64
-        assert isinstance(operands.value, intake.InvoiceIntakeExecutionResult)
-        assert isinstance(operands.value.projection, intake.InvoiceWizardOutcome)
+        assert asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context)) == "d" * 64
+        assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
+        assert isinstance(operands.value.projection, intake_contracts.InvoiceWizardOutcome)
         assert operands.value.projection.outcome == "succeeded" and operands.value.projection.refusal is None
         result = operands.value.projection.result
         assert result is not None
@@ -239,19 +247,19 @@ def test_wizard_worker_preserves_noop_and_fences_only_actual_commit(
             settled_at=datetime.now(UTC),
             result_ref="d" * 64,
         )
-        assert intake.project_invoice_intake_result(operands.value, receipt) == operands.value.projection
+        assert project_invoice_intake_result(operands.value, receipt) == operands.value.projection
         wrong_effect = OperationEffect.UPDATED if repeat else OperationEffect.NONE
         with pytest.raises(ValueError, match="terminal receipt"):
-            intake.project_invoice_intake_result(operands.value, receipt.model_copy(update={"effect": wrong_effect}))
+            project_invoice_intake_result(operands.value, receipt.model_copy(update={"effect": wrong_effect}))
     assert len(creation.invoice_repository.load()) == 1 and len(creation.event_repository.load().events) == 1
 
 
 def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipts(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     payload = _wizard().model_copy(update={"counterparty_name": " ", "taxable_base": "invalid", "series": " "})
-    request = _wire(payload, intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
+    request = _wire(payload, intake_contracts.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     context, events, operands, fence = _context(request, authority_operation)
     creation = in_memory_catalogue_creation_ports()
 
@@ -269,14 +277,14 @@ def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipt
         ports = replace(creation, audit_commit=_PreparedFakeCommit(creation.audit_commit, unexpected_admission, fence))
         return InvoiceIntakePorts(profile_id, operation, lambda: ports, unexpected_admission, lambda: ())
 
-    evidence = asyncio.run(intake.InvoiceIntakeExecutor(factory).execute(request, context))
+    evidence = asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
     assert isinstance(evidence, OperationRefusalEvidence)
     assert evidence.refusal_code == INVOICE_WIZARD_VALIDATION_REFUSAL_CODE and evidence.detail_ref == "d" * 64
     assert events.effects and all(effect is OperationEffect.NONE for effect in events.effects)
     assert len(creation.invoice_repository.load()) == 0 and not creation.event_repository.load().events
-    assert isinstance(operands.value, intake.InvoiceIntakeExecutionResult)
+    assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
     outcome = operands.value.projection
-    assert isinstance(outcome, intake.InvoiceWizardOutcome)
+    assert isinstance(outcome, intake_contracts.InvoiceWizardOutcome)
     assert outcome.outcome == "refused" and outcome.result is None and outcome.refusal is not None
     assert tuple(row.field for row in outcome.refusal.field_errors) == ("counterparty_name", "taxable_base", "series")
     restored = outcome.refusal.to_validation_error()
@@ -291,7 +299,7 @@ def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipt
         refusal_ref=evidence.refusal_code,
         refusal_detail_ref=evidence.detail_ref,
     )
-    assert intake.project_invoice_intake_result(operands.value, receipt) == outcome
+    assert project_invoice_intake_result(operands.value, receipt) == outcome
     invalid_receipts = (
         receipt.model_copy(update={"condition": OperationTerminalCondition.SUCCEEDED}),
         receipt.model_copy(update={"effect": OperationEffect.UPDATED}),
@@ -308,34 +316,34 @@ def test_wizard_field_refusal_retains_order_and_correlates_only_prewrite_receipt
         receipt.model_copy(
             update={
                 "identity": context.identity.model_copy(
-                    update={"definition_id": intake.INVOICE_IMPORT_OPERATION_DEFINITION_ID}
+                    update={"definition_id": intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID}
                 )
             }
         ),
     )
     for invalid in invalid_receipts:
         with pytest.raises(ValueError, match="terminal receipt"):
-            intake.project_invoice_intake_result(operands.value, invalid)
+            project_invoice_intake_result(operands.value, invalid)
     with pytest.raises(ValueError, match="terminal receipt"):
-        intake.project_invoice_intake_result(operands.value.model_copy(update={"effect": "updated"}), receipt)
+        project_invoice_intake_result(operands.value.model_copy(update={"effect": "updated"}), receipt)
 
 
 def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "synthetic.csv"
     source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\nA58818501,Supplier,BOOK-1,2026-05-01,100.00,21,x\nA58818501,Supplier,BOOK-2,invalid,100.00,21,y\n"
     path.write_bytes(source)
     request = _wire(
-        intake.InvoiceImportRequest(
+        intake_contracts.InvoiceImportRequest(
             profile_id=_PROFILE,
             kind=InvoiceKind.RECEIVED,
             source_path=str(path),
             source_sha256=sha256_hex(source),
             country="ES",
         ),
-        intake.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
+        intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     )
     creation = in_memory_catalogue_creation_ports()
     for repeat in (False, True):
@@ -362,10 +370,10 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
                 lambda: ("synthetic mapping explanation",),
             )
 
-        asyncio.run(intake.InvoiceIntakeExecutor(factory).execute(request, context))
-        assert isinstance(operands.value, intake.InvoiceIntakeExecutionResult)
+        asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
+        assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
         projection = operands.value.projection
-        assert isinstance(projection, intake.InvoiceImportProjection)
+        assert isinstance(projection, intake_contracts.InvoiceImportProjection)
         assert (
             projection.rows == 2
             and projection.created == int(not repeat)
@@ -384,14 +392,14 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
 def test_source_substitution_refuses_before_mapping_provider_or_write(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, content: bytes
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "changed.csv"
     path.write_bytes(content)
     request = _wire(
-        intake.InvoiceImportRequest(
+        intake_contracts.InvoiceImportRequest(
             profile_id=_PROFILE, kind=InvoiceKind.RECEIVED, source_path=str(path), source_sha256="f" * 64, country="ES"
         ),
-        intake.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
+        intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     )
     context, events, operands, _fence = _context(request, authority_operation)
 
@@ -408,7 +416,7 @@ def test_source_substitution_refuses_before_mapping_provider_or_write(
         return InvoiceIntakePorts(profile_id, operation, unavailable, unavailable, lambda: ())
 
     with pytest.raises(InvoiceValidationError):
-        asyncio.run(intake.InvoiceIntakeExecutor(factory).execute(request, context))
+        asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
     assert events.effects[-1] is OperationEffect.NONE and operands.value is None
 
 
@@ -416,9 +424,9 @@ def test_source_substitution_refuses_before_mapping_provider_or_write(
 def test_actual_save_failure_preserves_definitive_or_uncertain_effect(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, conflict: bool
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     creation = in_memory_catalogue_creation_ports()
-    request = _wire(_wizard(), intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
+    request = _wire(_wizard(), intake_contracts.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     context, events, operands, fence = _context(request, authority_operation)
 
     def factory(
@@ -442,7 +450,7 @@ def test_actual_save_failure_preserves_definitive_or_uncertain_effect(
         )
 
     with pytest.raises(InvoiceIntakeCommitConflictError if conflict else OSError):
-        asyncio.run(intake.InvoiceIntakeExecutor(factory).execute(request, context))
+        asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
     assert events.effects[-1] is (OperationEffect.NONE if conflict else OperationEffect.UNKNOWN)
     assert operands.value is None and len(creation.invoice_repository.load()) == 0
 
@@ -450,34 +458,34 @@ def test_actual_save_failure_preserves_definitive_or_uncertain_effect(
 def test_worker_refuses_foreign_active_profile_before_any_capability(
     authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(uuid4()))
-    request = _wire(_wizard(), intake.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(uuid4()))
+    request = _wire(_wizard(), intake_contracts.INVOICE_WIZARD_OPERATION_DEFINITION_ID)
     context, events, operands, _fence = _context(request, authority_operation)
 
     def unused(**_kwargs: object) -> InvoiceIntakePorts:
         pytest.fail("foreign active profile reached canonical capabilities")
 
     with pytest.raises(ProfileAccessRefusedError):
-        asyncio.run(intake.InvoiceIntakeExecutor(unused).execute(request, context))
-    assert not events.effects and operands.value is None
+        asyncio.run(InvoiceIntakeExecutor(unused).execute(request, context))
+    assert not events.phases and not events.effects and operands.value is None
 
 
 def test_correct_digest_header_only_source_keeps_zero_rows_and_no_write(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(intake, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base\n"
     path = tmp_path / "empty-book.csv"
     path.write_bytes(source)
     request = _wire(
-        intake.InvoiceImportRequest(
+        intake_contracts.InvoiceImportRequest(
             profile_id=_PROFILE,
             kind=InvoiceKind.RECEIVED,
             source_path=str(path),
             source_sha256=sha256_hex(source),
             country="ES",
         ),
-        intake.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
+        intake_contracts.INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     )
     context, events, operands, fence = _context(request, authority_operation)
     creation = in_memory_catalogue_creation_ports()
@@ -497,9 +505,9 @@ def test_correct_digest_header_only_source_keeps_zero_rows_and_no_write(
             lambda: (),
         )
 
-    asyncio.run(intake.InvoiceIntakeExecutor(factory).execute(request, context))
-    assert isinstance(operands.value, intake.InvoiceIntakeExecutionResult)
-    assert isinstance(operands.value.projection, intake.InvoiceImportProjection)
+    asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
+    assert isinstance(operands.value, intake_contracts.InvoiceIntakeExecutionResult)
+    assert isinstance(operands.value.projection, intake_contracts.InvoiceImportProjection)
     assert operands.value.projection.rows == 0 and operands.value.projection.created == 0
     assert events.effects[-1] is OperationEffect.NONE and OperationEffect.UNKNOWN not in events.effects
     assert len(creation.invoice_repository.load()) == 0

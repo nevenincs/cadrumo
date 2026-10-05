@@ -549,8 +549,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
-            "renta-profile-descendientes-guarderia": Decimal("0"),
-            "renta-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             # Art. 81.1 follows the same derived-profile protocol: with no
             # declared descendants the resolved per-child fold is zero.

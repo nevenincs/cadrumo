@@ -32,7 +32,9 @@ class Seed(BaseModel):
 
 
 async def exercise(root: Path, seed: Seed) -> int:
-    (root / "worker.pid").write_text(str(os.getpid()), encoding="ascii")
+    pending_pid = root / "worker.pid.pending"
+    pending_pid.write_text(str(os.getpid()), encoding="ascii")
+    pending_pid.replace(root / "worker.pid")
     deadline = time.monotonic() + 10
     while not (root / "listening").exists():
         if time.monotonic() >= deadline:

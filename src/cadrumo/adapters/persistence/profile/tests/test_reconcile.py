@@ -18,9 +18,7 @@ from cadrumo.application.modelo.reconciliation import (
     ModeloReconciliationCommand,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
-    modelo_reconcile,
     prepare_modelo_reconcile,
-    reconcile_parsed_justificante,
 )
 from cadrumo.application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
@@ -34,6 +32,8 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.tests.inventory import FIXTURES_DIR
+
+from .reconciliation_persist_support import modelo_reconcile, reconcile_parsed_justificante
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 

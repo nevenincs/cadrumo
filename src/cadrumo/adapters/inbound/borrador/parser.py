@@ -16,9 +16,9 @@ projection explicitly.
 
 from __future__ import annotations
 
-from hashlib import sha256
 from pathlib import Path
 
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ..pdf.page_text_extraction import extract_pages_text_from_bytes
 from ._detect import detect_artefact_kind, detect_artefact_kind_from_pages
@@ -35,7 +35,7 @@ _logger = get_logger(__name__)
 
 
 def parse_borrador(
-    pdf_path: Path,
+    pdf_path: Path | bytes,
     *,
     artefact_kind_override: ArtefactKind | None = None,
     año_override: int | None = None,
@@ -45,7 +45,7 @@ def parse_borrador(
     """Parse an observed AEAT Modelo 100 artefact PDF.
 
     Args:
-        pdf_path: Path to the borrador / predeclaración / declaración PDF.
+        pdf_path: Path to the borrador / predeclaración / declaración PDF, or its observed bytes.
         artefact_kind_override: Skip auto-detection and force the
             :class:`~adapters.inbound.borrador.schema.ArtefactKind`.
         año_override: Select the year-keyed extractor explicitly. When omitted,
@@ -67,6 +67,14 @@ def parse_borrador(
             missing registry profile in ``REGISTRY_PROFILE`` mode, or coverage
             below the supplied profile minimum).
     """
+    if isinstance(pdf_path, bytes):
+        return _parse_borrador_bytes(
+            pdf_path,
+            artefact_kind_override=artefact_kind_override,
+            año_override=año_override,
+            extraction_profile=extraction_profile,
+            parse_mode=parse_mode,
+        )
     path = Path(pdf_path)
     if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:
         raise BorradorParseError("registry-profile parsing requires a registry extraction profile")
@@ -85,7 +93,7 @@ def parse_borrador(
     return result
 
 
-def parse_borrador_bytes(
+def _parse_borrador_bytes(
     pdf_bytes: bytes,
     *,
     artefact_kind_override: ArtefactKind | None = None,
@@ -105,9 +113,9 @@ def parse_borrador_bytes(
     return extractor.extract_pages(
         pages,
         artefact_kind,
-        source_pdf_sha256=sha256(pdf_bytes).hexdigest(),
+        source_pdf_sha256=sha256_hex(pdf_bytes),
         extraction_profile=extraction_profile,
     )
 
 
-__all__ = ["parse_borrador", "parse_borrador_bytes"]
+__all__ = ["parse_borrador"]

@@ -24,16 +24,15 @@ from textual.widgets import Button, Checkbox, Input, Select, SelectionList, Stat
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.automation_decision import run_automation_decision
 from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
+from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
@@ -53,6 +52,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AutomationGrant,
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -71,11 +71,12 @@ from cadrumo.entrypoints.tui import installed_session
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.launcher import main
 from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo.entrypoints.tui.secret.automation_requester import (
-    AutomationRequestOutcome,
-    RuntimeAutomationRequesterScreen,
-)
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -94,7 +95,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -132,7 +133,7 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(installed_session, "installed_automation_secret_store", lambda: subject.client_native)
@@ -267,33 +268,33 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                     assert submitted.profile_id == profile_id
                     approval = pool.submit(copy_context().run, approve, submitted.request_id)
                     runtime_owner.auxiliary.append(approval)
-                    await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=30)
+                    await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=30)
                     if approval.done():
                         approval_error = await await_cancellation_complete(
                             asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
                         )
                         if approval_error is not None:
-                            annotate_approval_error(approval_error, request.safe_outcome)
+                            annotate_approval_error(approval_error, request._outcome)
                             raise approval_error
-                    if request.safe_outcome is None:
-                        await _until(pilot, lambda: request.safe_outcome is not None, timeout=30)
+                    if request._outcome is None:
+                        await _until(pilot, lambda: request._outcome is not None, timeout=30)
                     try:
                         approval_error = await await_cancellation_complete(
                             asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
                         )
                     except TimeoutError as error:
-                        annotate_approval_error(error, request.safe_outcome)
+                        annotate_approval_error(error, request._outcome)
                         error.add_note(
                             f"Approval thread did not settle: stage={approval_stage[0]}, "
                             f"decision_updated={approval_updated[0]}, client_closed={approval_client_closed[0]}, "
-                            f"outcome_arrived={request.safe_outcome is not None}, "
+                            f"outcome_arrived={request._outcome is not None}, "
                             f"future_done={approval.done()}, future_cancelled={approval.cancelled()}"
                         )
                         raise
                     if approval_error is not None:
-                        annotate_approval_error(approval_error, request.safe_outcome)
+                        annotate_approval_error(approval_error, request._outcome)
                         raise approval_error
-                    outcome = request.safe_outcome
+                    outcome = request._outcome
                     assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                     assert not outcome.uncertain
                     assert outcome.request_id == submitted.request_id
@@ -376,7 +377,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(installed_session, "installed_automation_secret_store", lambda: subject.client_native)
@@ -564,12 +565,12 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                                 raise AssertionError(f"request refused before submit: {status.render()}")
                             await _until(
                                 pilot,
-                                lambda: request._submitted is not None or request.safe_outcome is not None,
+                                lambda: request._submitted is not None or request._outcome is not None,
                                 timeout=20,
                             )
                             if request._submitted is None:
                                 status = request.query_one("#automation-request-status", Static)
-                                outcome = request.safe_outcome
+                                outcome = request._outcome
                                 raise AssertionError(
                                     f"request did not submit: {status.render()}; "
                                     f"safe reason={None if outcome is None else outcome.reason}"
@@ -578,21 +579,21 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                             assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                             approval = pool.submit(copy_context().run, approve, submitted.request_id)
                             runtime_owner.auxiliary.append(approval)
-                            await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=45)
+                            await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=45)
                             if approval.done():
                                 approval_error = await await_cancellation_complete(
                                     asyncio.to_thread(approval.exception, timeout=0), task_name="tui-approval-result"
                                 )
                                 if approval_error is not None:
                                     raise approval_error
-                            if request.safe_outcome is None:
-                                await _until(pilot, lambda: request.safe_outcome is not None, timeout=45)
+                            if request._outcome is None:
+                                await _until(pilot, lambda: request._outcome is not None, timeout=45)
                             approval_error = await await_cancellation_complete(
                                 asyncio.to_thread(approval.exception, timeout=10), task_name="tui-approval-result"
                             )
                             if approval_error is not None:
                                 raise approval_error
-                            outcome = request.safe_outcome
+                            outcome = request._outcome
                             assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                             assert not outcome.uncertain and outcome.request_id == submitted.request_id
                             if selected_kind is not EnrollmentKind.ROTATE:

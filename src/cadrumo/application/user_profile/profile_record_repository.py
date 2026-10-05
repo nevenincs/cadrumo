@@ -135,13 +135,6 @@ def _active_record_session() -> ProfileRecordSession | None:
     return None if authority is None else authority.session
 
 
-@contextmanager
-def bound_profile_record_session(session: ProfileRecordSession) -> Generator[None]:
-    """Bind one authenticated record session for the duration of a command."""
-    with _ACTIVE_RECORD_AUTHORITY.override(_ProfileRecordAuthority(session=session, session_derived=False)):
-        yield
-
-
 def activate_profile_record_session(session: ProfileRecordSession) -> None:
     """Install the authenticated record authority for the active process session.
 
@@ -542,7 +535,6 @@ __all__ = [
     "activate_profile_record_session",
     "active_profile_record_session",
     "bind_active_profile_record_session",
-    "bound_profile_record_session",
     "clear_active_profile_record_session_binding",
     "close_active_profile_record_session",
     "invocation_profile_record_handoff",

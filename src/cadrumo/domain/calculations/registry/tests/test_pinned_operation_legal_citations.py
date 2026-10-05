@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ..authority import bundled_indexed_authority
+from .legal_inventory import legal_reference_ids
+from .legal_quotation import legal_quotation_is_grounded
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -13,7 +15,7 @@ _CITED_PROVISION = "ley-35-2006:art-30"
 
 def test_legal_reference_ids_enumerate_every_published_legal_declaration() -> None:
     with bundled_indexed_authority().operation() as operation:
-        identities = operation.legal_reference_ids()
+        identities = legal_reference_ids(operation)
 
         assert identities, "the published generation enumerates no legal declarations"
         assert len(identities) == len(set(identities))
@@ -23,7 +25,7 @@ def test_legal_reference_ids_enumerate_every_published_legal_declaration() -> No
 
 def test_legal_reference_ids_exclude_public_source_declarations() -> None:
     with bundled_indexed_authority().operation() as operation:
-        identities = set(operation.legal_reference_ids())
+        identities = set(legal_reference_ids(operation))
         snapshot = operation.snapshot("130", filing_year=2026, period="1T")
 
     assert snapshot.sources, "the fixture snapshot names no public source to compare against"
@@ -36,15 +38,15 @@ def test_a_verbatim_excerpt_of_the_published_evidence_is_grounded() -> None:
         excerpt = text.strip()[:80]
 
         assert excerpt
-        assert operation.legal_quotation_is_grounded(_CITED_PROVISION, excerpt) is True
+        assert legal_quotation_is_grounded(operation, _CITED_PROVISION, excerpt) is True
 
 
 def test_a_fabricated_or_empty_quotation_is_not_grounded() -> None:
     with bundled_indexed_authority().operation() as operation:
-        assert operation.legal_quotation_is_grounded(_CITED_PROVISION, "texto que ninguna ley contiene jamás") is False
-        assert operation.legal_quotation_is_grounded(_CITED_PROVISION, "   ") is False
+        assert legal_quotation_is_grounded(operation, _CITED_PROVISION, "texto que ninguna ley contiene jamás") is False
+        assert legal_quotation_is_grounded(operation, _CITED_PROVISION, "   ") is False
 
 
 def test_an_unpublished_citation_is_refused_rather_than_judged() -> None:
     with bundled_indexed_authority().operation() as operation, pytest.raises(LookupError):
-        operation.legal_quotation_is_grounded("ley-0-0000:art-0", "cualquier texto")
+        legal_quotation_is_grounded(operation, "ley-0-0000:art-0", "cualquier texto")

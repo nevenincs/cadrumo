@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-record-design-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:a7f03729ec2e37768ab952fc5e820ca408d76efddfc31e2b10e7dd92f9adedc8'
+modified: '2026-10-03'
+body_hash: 'sha256:5cac4e8b8d1ec823c800ae9c10391a481a923e7e86a6df712bc4b857f0061d9c'
 related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-record-design-boundary-audit]]"
 ---
 
@@ -16,7 +15,7 @@ related:
 
 No issue found. The slice-owned diff records the extraction assessment
 and closes P04.S22 while leaving
-`src/aeat/domain/calculations/registry/_record_design.py` untouched
+the retired module untouched
 despite active peer formatting WIP.
 
 ## RECORD-DESIGN-S22-002 | PASS | Dispatcher compatibility is preserved

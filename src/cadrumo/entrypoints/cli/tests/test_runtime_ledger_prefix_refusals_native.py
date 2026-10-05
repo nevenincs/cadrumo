@@ -244,3 +244,43 @@ def test_native_registered_ledger_reads_keep_prefix_refusal_policy_and_receipts(
 
         assert len(seen_operation_ids) == 6
         assert len(seeded_ids) >= 2
+
+
+def test_text_mode_domain_refusal_renders_for_a_human_not_as_json(tmp_path: Path) -> None:
+    """Anti-regression: without ``--format json`` the human rendering survives.
+
+    This case was asserting ``Usage:`` on a DOMAIN refusal. A malformed
+    transaction id is rejected by the ledger boundary, not by argument parsing,
+    so no click ``UsageError`` is ever raised and there is no usage block for
+    anything to print -- the assertion described a rendering this input has no
+    reason to produce.
+
+    What the case is actually guarding is that text mode stays text: the
+    operator gets the localised refusal and its structured facts rather than a
+    JSON document. That is asserted here on its own terms, and the usage block
+    is asserted below on an input that genuinely provokes one.
+    """
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label="native-ledger-text-refusal", facts=_PROFILE_FACTS)
+        assert fixture.label is not None
+        close_active_bucket_session()
+        result = invoke_cached_cli(
+            (
+                "--language",
+                "en",
+                "--profile",
+                fixture.label,
+                "--profile-secrets-stdin",
+                "app",
+                "ledger",
+                "view",
+                "not-hex!",
+            ),
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
+        assert fixture.passphrase not in result.output
+    assert result.exit_code == 2, result.output
+    assert not result.output.lstrip().startswith("{"), result.output
+    assert "not-hex!" in result.output, "the refusal must echo the value the operator typed"
+    assert "Prefix:" in result.output, "the refusal's structured facts render for a human too"
+    assert 'action.failed_condition_id: "cli.ledger.transaction_id.resolves"' in result.output

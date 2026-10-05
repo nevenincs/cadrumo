@@ -50,6 +50,8 @@ def _foreign_asset_cells(*, row_index: int = 1, country: str | None = "CH") -> t
         _RowSetCell(binding="modelo-720-asset-row-identifier", row_index=row_index, value="CH-iban-001"),
         _RowSetCell(binding="modelo-720-asset-row-acquisition-date", row_index=row_index, value="2020-01-15"),
         _RowSetCell(binding="modelo-720-asset-row-valuation", row_index=row_index, value=Decimal("120000")),
+        _RowSetCell(binding="modelo-720-asset-row-asset-ref", row_index=row_index, value="m720a_" + "d" * 32),
+        _RowSetCell(binding="modelo-720-asset-row-valuation-event", row_index=row_index, value="year_end"),
     ]
     if country is not None:
         cells.insert(1, _RowSetCell(binding="modelo-720-asset-row-country", row_index=row_index, value=country))

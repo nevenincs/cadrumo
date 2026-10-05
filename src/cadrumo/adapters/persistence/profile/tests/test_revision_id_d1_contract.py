@@ -120,6 +120,39 @@ class TestS01CreationGate:
         # Must state the binding is fixed by law
         assert "law" in msg.lower() or "fixed by" in msg.lower()
 
+    @pytest.mark.parametrize("axis", ["requested", "stored"])
+    def test_mismatch_retains_public_captured_coordinates(
+        self, *, axis: str, operation: PinnedAuthorityOperation
+    ) -> None:
+        """Both assertion axes carry finite facts through the recorded error boundary."""
+        from cadrumo.application.operations.error_detail import build_operation_error_detail
+
+        with pytest.raises(ModeloWorkRegistryYearMismatchError) as raised:
+            law_selected_revision_for_work_target(
+                modelo="303",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                requested_revision_id="2022" if axis == "requested" else None,
+                stored_revision_id="2022" if axis == "stored" else None,
+                operation=operation,
+            )
+        expected = {
+            "axis": axis,
+            "requested_revision": "2022",
+            "law_revision": "2026-y-siguientes",
+            "modelo": "303",
+            "year": 2026,
+            "period": "1T",
+        }
+        assert raised.value.context == expected
+        detail = build_operation_error_detail(raised.value)
+        assert detail is not None
+        assert detail.error_code == "REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH"
+        assert {entry.key: entry.value for entry in detail.context} == {
+            key: str(value) for key, value in expected.items()
+        }
+        assert "law-determined" not in detail.model_dump_json()
+
     def test_refusal_message_is_instructive_and_names_both_revisions(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:

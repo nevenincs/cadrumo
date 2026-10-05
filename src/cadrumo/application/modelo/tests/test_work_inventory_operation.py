@@ -26,7 +26,7 @@ from ...user_profile.access_contracts import (
     Availability,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.access_policy import operation_scope_refusal
+from ...user_profile.operation_access_policy import operation_scope_refusal
 from ..metadata_projection import ModeloWorkMetadataSnapshot
 from ..work_inventory_operation import (
     MODELO_WORK_LIST_OPERATION_DEFINITION_ID,

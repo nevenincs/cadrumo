@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from types import SimpleNamespace
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -13,8 +16,10 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.classification import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
+from ...operations.owner import OperationExecutorContext
 from ...operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -32,6 +37,7 @@ from ..catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,
     INVOICE_VIEW_OPERATION_DEFINITION_ID,
     INVOICE_VIEW_REFUSAL_CODE,
+    InvoiceCatalogueReadExecutor,
     InvoiceListProjection,
     InvoiceListRequest,
     InvoiceListResult,
@@ -246,6 +252,41 @@ def test_invoice_read_refuses_foreign_profile_and_wrong_subject(request_kind: st
     assert isinstance(request.payload, InvoiceListRequest | InvoiceViewRequest)
     assert request.payload.profile_id == _PROFILE
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_read_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+    request = OperationRequest[InvoiceListRequest | InvoiceViewRequest](
+        definition_id=INVOICE_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=InvoiceListRequest(profile_id=_PROFILE),
+    )
+    phases: list[str] = []
+
+    async def record_phase(phase: str) -> None:
+        phases.append(phase)
+
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            identity=OperationIdentity(
+                operation_id="a" * 64,
+                definition_id=request.definition_id,
+                subject_ref=request.subject_ref,
+            ),
+            events=SimpleNamespace(phase=record_phase),
+        ),
+    )
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_OTHER_PROFILE))
+
+    def unused_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> InvoiceInspectionReadPorts:
+        pytest.fail(f"foreign active profile reached invoice reader for {bucket_id} with {operation!r}")
+
+    executor = InvoiceCatalogueReadExecutor(unused_factory, INVOICE_LIST_OPERATION_DEFINITION_ID)
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(executor.execute(request, context))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert phases == []
 
 
 def test_invoice_list_projector_preserves_result_and_requires_success_none_receipt() -> None:

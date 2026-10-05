@@ -55,31 +55,11 @@ logger = get_logger(__name__)
 
 def _justificante_capture_snapshots(bucket_id: str):
     """Read persisted captures without composing live browser/capture capability."""
-    from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
+    from ..adapters.persistence.profile.justificante_capture_snapshots import justificante_capture_snapshot_repository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
-    from ..application.live.errors import LiveApplicationInputError
-    from ..application.live.justificante import (
-        JustificanteCaptureSnapshot,
-        JustificanteCaptureSnapshotNotFoundError,
-        justificante_capture_snapshot_object_key,
-    )
 
-    repository = SecureSnapshotRepository(
-        bucket_id=bucket_id,
-        payload_model=JustificanteCaptureSnapshot,
-        namespace_definition=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
-        object_key=justificante_capture_snapshot_object_key,
-        not_found_factory=lambda snapshot_id: JustificanteCaptureSnapshotNotFoundError(
-            translated_message="application.live.justificante.errors.snapshot_not_found",
-            context={"snapshot_id": snapshot_id},
-        ),
-        ambiguous_prefix_factory=lambda snapshot_id, full_ids: JustificanteCaptureSnapshotNotFoundError(
-            translated_message="application.live.justificante.errors.snapshot_prefix_ambiguous",
-            context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
-        ),
-        domain_label="justificante capture",
-        input_error_cls=LiveApplicationInputError,
+    repository = justificante_capture_snapshot_repository(
+        bucket_id,
         objects=secure_object_repository_for_bucket(bucket_id),
     )
     return repository.list_snapshots()

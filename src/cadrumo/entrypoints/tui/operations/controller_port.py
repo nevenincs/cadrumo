@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
+from ....application.operations.error_detail import OperationErrorDetailV1
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.frontend_contracts import (
     OperationCancellationResultV1,
     OperationDetachResultV1,
-    OperationObservationResultV1,
     OperationResponseControlResultV1,
     OperationResponseMutationResultV1,
     OperationReviewProjectionResultV1,
 )
-from ....application.operations.frontend_projection import OperationReviewProjectionReferenceV1
+from ....application.operations.frontend_projection import (
+    OperationPublicProjectionV1,
+    OperationReviewProjectionReferenceV1,
+)
 from ....application.operations.frontend_requests import (
+    OperationObservationResultV1,
     OperationResponseApplyRequestV1,
     OperationResponseRejectRequestV1,
 )
@@ -82,4 +86,13 @@ class OperationControllerPort(Protocol):
 
     async def detach(self, *, expected_revision: OperationRevision) -> OperationDetachResultV1:
         """Request the definition's supported detach behavior."""
+        ...
+
+
+@runtime_checkable
+class OperationErrorDetailPort(Protocol):
+    """A controller that can read a settled operation's recorded public error detail."""
+
+    async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
+        """Read a refused or failed operation's recorded detail, or ``None`` when it has none."""
         ...

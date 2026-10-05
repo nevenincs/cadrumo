@@ -59,6 +59,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.cli.errors.CliOperationStillRunningError",
+        ErrorCode(
+            code="LOCKED_CLI_OPERATION_STILL_RUNNING",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_cli_operation_still_running",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.cli.errors.CliStoredDataValidationBoundaryError",
         ErrorCode(
             code="INTEGRITY_STORED_DATA_VALIDATION_BOUNDARY",
@@ -104,6 +114,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_CLI_NON_TTY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_cli_non_tty",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.runtime.supervised_protocol.SupervisorLineError",
+        ErrorCode(
+            code="REFUSED_RUNTIME_SUPERVISOR_LINE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
             retryable=False,
             runbook_id=None,
         ),

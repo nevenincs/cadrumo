@@ -150,7 +150,7 @@ RENTA_REGIMEN_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/regi
 RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/renta"
 AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE = "sede.agenciatributaria.gob.es/auth"
 #: Sibling-application-path comparison canaries for
-#: ``_same_aeat_application_path`` (the ``wlpl``/``inwinvoc`` root pairing
+#: ``same_aeat_application_path`` (the ``wlpl``/``inwinvoc`` root pairing
 #: shape, not a specific captured AEAT landing).
 INWINVOC_LANDING_PATH_CANARY = "/wlpl/inwinvoc/es.aeat.dit.adu.eeca.catalogo.vis.VisorCatalogo"
 INWINVOC_SIBLING_PATH_CANARY = "/wlpl/inwinvoc/other/page"

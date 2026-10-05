@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2250b411b9eac77044f5572a897ff87b36651c2a55e1310d57ff32d186ac01dc'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:104788ce51073345dcd56d684484beae6912b3673380f655192666bce2b60f10'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `modelo 220 2024 producer vocabulary and design authority`
 
 ## Summary
@@ -136,9 +136,6 @@ or reuse of the later 2025 design.
 - `src/cadrumo/_data/registry/aeat/legal/is.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/`
-- `src/cadrumo/core/_filing_producer_key.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_record_design.py`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-22-source-casilla-integration-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

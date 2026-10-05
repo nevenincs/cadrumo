@@ -4,7 +4,7 @@
 function directly, with all three observations hand-constructed. This module
 proves the advisory reaches an operator: it drives
 :func:`calculate_modelo_revision` (real registry engine, real persistence) and
-then :func:`verify_modelo_revision` (real gate assembly) and asserts the finding
+then :func:`verify_modelo_revision_with_preconditions` (real gate assembly) and asserts the finding
 appears in the persisted :class:`VerificationReport`.
 
 Scenario, grounded in RD 1065/2007 arts. 42-bis.5 / 42-ter.5 (€20,000
@@ -75,7 +75,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.foreign_asset_redeclaration import modelo_720_prior_baseline_observation
 from ....application.modelo.calculation_actions import calculate_modelo_revision, resolve_bucket_source_mesh
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
@@ -259,7 +259,7 @@ def _calculate_and_verify(
                 clock=_CLOCK_N_PLUS_1,
             )
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -268,7 +268,7 @@ def _calculate_and_verify(
                 clock=_CLOCK_N_PLUS_1,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         return revision, report
 
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:63c2ef446c8d836045614154c957d06c4673000c9e7d6ddf6268750d57de5813'
+modified: '2026-10-03'
+body_hash: 'sha256:ba1492943b5830ae29f78960a3795057f535ff742572f1e4d54c6f2b6f147817'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S339-001 | PASS | Filing drafts use the shared secure-bound abstraction
 
-`src/aeat/domain/filing/_repository.py` defines `ModeloDraftRepository` as a
+The retired module defined `ModeloDraftRepository` as a
 `SecureBoundRepository[ModeloDraft]` subclass. The repository owns a stable namespace,
 FINANCIAL sensitivity, schema version, typed payload model, and natural id extractor.
 CRUD and iteration therefore inherit the shared envelope, classification, version, and
@@ -34,8 +34,8 @@ The migrated repository slice also verifies filing-draft bucket isolation.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/domain/filing/_repository.py src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py src/aeat/application/filing/test_repository.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py`
-- `uv run --no-sync pytest -q src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py src/aeat/application/filing/test_repository.py -q`
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "filing_drafts or ModeloDraftRepository"`
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "ModeloDraftRepository SecureBoundRepository filing drafts runtime-default secure_object_repository_for_bucket encrypted FINANCIAL" --type code --port 8766 --max-results 8`

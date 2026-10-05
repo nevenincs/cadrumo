@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:89f561e573a8ac106d6267de7119e00f00f1085ba0440ee05fc02bbc0c3d33ff'
+modified: '2026-10-03'
+body_hash: 'sha256:d41a648e725c7ed9ae5ed5369f07e908d0ca3283f6264ffd42a49a1cc8d0c8f4'
 related: []
 ---
 
@@ -33,9 +33,9 @@ and currency handling without fakes or monkeypatches.
 
 ## S368-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/transactions/_raw_transaction.py src/aeat/domain/transactions/test_models.py src/aeat/domain/transactions/test_catalogue.py src/aeat/domain/transactions/test_gross_invariant.py` passed.
-- `uv run --no-sync pytest -q src/aeat/adapters/inbound/financial/providers/test_base.py` passed with 22 tests and 4 upstream `ofxparse` deprecation warnings.
-- `uv run --no-sync pytest -q src/aeat/domain/transactions/test_models.py src/aeat/domain/transactions/test_gross_invariant.py` passed with 26 tests.
+- the historical check passed.
+- the historical check passed with 22 tests and 4 upstream `ofxparse` deprecation warnings.
+- the historical check passed with 26 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "RawTransaction RawProvenance plaintext exception no storage no secure object transaction ingest model validation" --type code --port 8766 --max-results 8` returned the raw transaction model and inbound provider evidence.
 - `uv run --no-sync vaultspec-rag search "transactions raw transaction provenance source_sha256 UTC validation MappingProxyType pydantic model tests" --type code --port 8766 --max-results 8` returned the provenance model and test coverage evidence.

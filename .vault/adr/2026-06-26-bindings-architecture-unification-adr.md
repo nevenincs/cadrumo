@@ -3,37 +3,44 @@ tags:
   - '#adr'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-08-15'
-body_hash: 'sha256:745760bc17e6211f9dc1d711dd57d251b6d76716d837898d7a235b3656bd946e'
+modified: '2026-10-03'
+body_hash: 'sha256:31a562164829f71e879fd003636d814627b6148597d743d1e5343024209a7b48'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-26-bindings-architecture-unification-research]]'
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
+  - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
+  - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'
 ---
 
 # `bindings-architecture-unification` adr: `central bindings architecture: one canonical cross-source data-sourcing interface reconciling the source-kind, resolver-contract, fold-in, and carry decisions` | (**status:** `rejected`)
 
-> DEMOTED — the apex approach was declined by the operator ("an apex won't fix it";
-> rework the corpus individually). This document is NOT an adopted governing ADR and
-> is NOT the canonical home. The canonical direction is the reworked corpus: the PHASE
-> ADRs (the phase-2.1 `binding-source-kind-taxonomy-unification` ADR and the future
-> phase-2.2/2.3/2.4 ADRs) plus the genuinely FOUNDATIONAL ADRs.
+> REJECTED as an apex — the operator declined this central record ("an apex won't fix
+> it"; rework the corpus individually). It is not an adopted governing ADR or canonical
+> home. The accepted phase decisions are separate records: `binding-source-kind-taxonomy-unification`
+> (phase 2.1), `binding-resolver-contract-unification` (phase 2.2),
+> `binding-fold-in-carry-unification` (phase 2.3), and `binding-vocabulary-cli-cohesion`
+> (phase 2.4), alongside the genuinely foundational ADRs. This record links to those
+> phases only as provenance; it does not govern or reinstate their earlier apex framing.
 >
-> Its analytical content is KEPT as reconciliation ANALYSIS feeding the per-ADR corpus
-> rework (`2026-06-26-binding-adr-corpus-reconciliation-plan`): the five axes, the
-> C1-C6 adjudications, and the reconciliation ledger below remain valid INPUT, not
-> adopted decisions. (The C6 `RowSetGroupingKind` adjudication recorded here as
-> "keep-but-derive" was refined at coordinator review to KEEP, NO bridge — see the
-> phase-2.1 ADR, which is the canonical record.) The same analysis also lives in
+> The sections below preserve the 2026-06-26 proposal and reconciliation analysis as
+> historical input, not adopted decision text. Where that analysis states future phase
+> work or conflicts with the accepted phase decisions, their amendments, or current
+> implementation, those records govern. The analytical content remains useful for
+> reconciliation (`2026-06-26-binding-adr-corpus-reconciliation-plan`): the five axes,
+> C1-C6 adjudications, and reconciliation ledger are retained as input. (The C6
+> `RowSetGroupingKind` proposal to "keep-but-derive" was refined at coordinator review
+> to KEEP, NO bridge; see the accepted phase-2.1 ADR.) The same analysis also lives in
 > `2026-06-26-bindings-architecture-unification-research`.
 >
-> Status note: an earlier revision of this document was self-accepted under a
-> `/goal`-as-acceptance-authority reading; that was over-authorization — the operator's
-> explicit "no apex" directive governs — and the acceptance is reverted here.
+> Status history: an earlier revision of this document was self-accepted under a
+> `/goal`-as-acceptance-authority reading. The operator's explicit "no apex" directive
+> rejected that over-authorization, and the self-acceptance was reverted.
 
-## Problem Statement
+## Historical proposal statement (2026-06-26)
 
 This is the APEX / central ADR of the bindings-architecture-unification sweep — the
 single canonical home the operator's standing goal calls for: "reconcile all ADRs,

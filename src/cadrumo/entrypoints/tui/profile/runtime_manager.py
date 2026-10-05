@@ -2,19 +2,29 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.local_runtime.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
     run_profile_mutation,
 )
+from ....application.auth.operation_definitions import AuthConfigureOperationRequest
+from ....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
+from ....application.live.filed_history_operation import FILED_HISTORY_OPERATION_DEFINITION_ID
 from ....application.operations.registry import OperationFrontendProjection
+from ....application.operator_actions.models import ActionReference
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode
-from ....application.user_profile.operations import (
+from ....application.user_profile.acquisition_sources import ProfileAcquisitionSourceKey, ProfileAcquisitionSourceV1
+from ....application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
+from ....application.user_profile.completeness import AUTH_PROVIDER_PATH, CLAVE_MOVIL_ROUTE_PATH
+from ....application.user_profile.overview import ProfileOverview
+from ....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileFieldMutationOperationRequest,
@@ -30,21 +40,74 @@ from ....application.user_profile.operations import (
     ProfileRepeatableRowUpdateOperationRequest,
     ProfileRepeatableRowValue,
 )
-from ....application.user_profile.overview import ProfileOverview
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
+from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from ....core.config import load_settings
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
+from ....core.operations import OperationTerminalCondition
 from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
+from ..aeat_sync.models import AeatSyncOperationRequestV1
+from ..aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
+from ..operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
 from .overview import ProfileManagerScreen
+from .runtime_auth_configuration import configure_runtime_auth
 from .runtime_errors import ProfileManagerCompletedViewUnavailableError
 from .runtime_overview import read_runtime_profile_overview
 
 type _MutationRunner = Callable[[RuntimeFrontendClient, ProfileMutationRequest], ProfileMutationCompletion]
 type _OverviewReader = Callable[[RuntimeFrontendClient, str, OutputLanguage], ProfileOverview]
+type _AuthConfigurer = Callable[[RuntimeFrontendClient, AuthConfigureOperationRequest], AuthConfigurePublicResultV2]
 
 
 def _read_overview(client: RuntimeFrontendClient, label: str, language: OutputLanguage) -> ProfileOverview:
     return read_runtime_profile_overview(client, profile_label=label, output_language=language)
+
+
+def _require_projection_identity(
+    projection: ProfileMutationOperationProjection,
+    projection_type: type[ProfileMutationOperationProjection],
+    profile_id: object,
+    request: ProfileMutationRequest,
+) -> None:
+    if (
+        type(projection) is not projection_type
+        or projection.profile_id != profile_id
+        or projection.record_revision < request.expected_revision
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+
+def _require_section_key(
+    projection: ProfileMutationOperationProjection,
+    section_key: str | None,
+) -> None:
+    row_projections = (ProfileRepeatableRowMutationOperationProjection, ProfileRepeatableRowChangeOperationProjection)
+    if section_key is not None and (
+        not isinstance(projection, row_projections) or projection.section_key != section_key
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+
+def _require_row_key(
+    projection: ProfileMutationOperationProjection,
+    row_key: str | None,
+) -> None:
+    if row_key is not None and (
+        not isinstance(projection, ProfileRepeatableRowChangeOperationProjection) or projection.row_key != row_key
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+
+def _require_media_year(
+    projection: ProfileMutationOperationProjection,
+    year: int | None,
+) -> None:
+    if year is not None and (
+        not isinstance(projection, ProfilePlantillaMediaOperationProjection) or projection.year != year
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
 
 class RuntimeProfileManagerComposition:
@@ -58,6 +121,7 @@ class RuntimeProfileManagerComposition:
         output_language: OutputLanguage,
         mutation_runner: _MutationRunner = run_profile_mutation,
         overview_reader: _OverviewReader = _read_overview,
+        auth_configurer: _AuthConfigurer = configure_runtime_auth,
     ) -> None:
         """Bind exact client coordinates and the supplied runtime doors."""
         if client.frontend is not OperationFrontendProjection.TUI:
@@ -69,6 +133,7 @@ class RuntimeProfileManagerComposition:
         self.output_language = output_language
         self._mutation_runner = mutation_runner
         self._overview_reader = overview_reader
+        self._auth_configurer = auth_configurer
         self.screen: ProfileManagerScreen | None = None
 
     def _pin(self) -> None:
@@ -106,29 +171,10 @@ class RuntimeProfileManagerComposition:
         completed = self._mutation_runner(self.client, request)
         try:
             projection = completed.projection
-            if (
-                type(projection) is not projection_type
-                or projection.profile_id != self.profile_id
-                or projection.record_revision < request.expected_revision
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            if section_key is not None and (
-                not isinstance(
-                    projection,
-                    (ProfileRepeatableRowMutationOperationProjection, ProfileRepeatableRowChangeOperationProjection),
-                )
-                or projection.section_key != section_key
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            if row_key is not None and (
-                not isinstance(projection, ProfileRepeatableRowChangeOperationProjection)
-                or projection.row_key != row_key
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            if year is not None and (
-                not isinstance(projection, ProfilePlantillaMediaOperationProjection) or projection.year != year
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            _require_projection_identity(projection, projection_type, self.profile_id, request)
+            _require_section_key(projection, section_key)
+            _require_row_key(projection, row_key)
+            _require_media_year(projection, year)
             current = self._overview()
             if current.record_revision < projection.record_revision:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -137,6 +183,10 @@ class RuntimeProfileManagerComposition:
             raise ProfileManagerCompletedViewUnavailableError(completed) from error
 
     def _field(self, path: str, value: str, revision: int, digest: str) -> ProfileOverview:
+        if path in {AUTH_PROVIDER_PATH, CLAVE_MOVIL_ROUTE_PATH}:
+            configured = self._configure_auth(path, value, revision, digest)
+            if configured is not None:
+                return configured
         return self._mutate(
             ProfileFieldMutationOperationRequest(
                 profile_id=self.profile_id,
@@ -147,6 +197,37 @@ class RuntimeProfileManagerComposition:
             ),
             ProfileMutationOperationProjection,
         )
+
+    def _configure_auth(self, path: str, value: str, revision: int, digest: str) -> ProfileOverview | None:
+        """Save the provider or Cl@ve Móvil route through the shared authentication configuration.
+
+        ``None`` leaves an ordinary field save: no provider is chosen yet, or a
+        route is set while another provider is configured.
+        """
+        current = self._overview()
+        stored = next(
+            (
+                field.value
+                for section in current.sections
+                for field in section.fields
+                if field.path == AUTH_PROVIDER_PATH
+            ),
+            None,
+        )
+        provider = value if path == AUTH_PROVIDER_PATH else (stored or "")
+        if not provider or (path == CLAVE_MOVIL_ROUTE_PATH and provider != AuthProviderKind.CLAVE_MOVIL.value):
+            return None
+        self._pin()
+        self._auth_configurer(
+            self.client,
+            AuthConfigureOperationRequest(
+                provider=AuthProviderKind(provider),
+                clave_movil_route=ClaveMovilRoute(value) if path == CLAVE_MOVIL_ROUTE_PATH else None,
+                expected_profile_revision=revision,
+                expected_profile_digest=digest,
+            ),
+        )
+        return self._overview()
 
     def _add_row(self, section: str, values: Mapping[str, str], revision: int, digest: str) -> ProfileOverview:
         return self._mutate(
@@ -263,6 +344,57 @@ class RuntimeProfileManagerComposition:
         """Read the first overview before the screen enters Textual's event loop."""
         return self.compose_from_overview(self._overview())
 
+    async def _launch_source(self, source: ProfileAcquisitionSourceV1) -> None:
+        """Run onboarding acquisition through the same admitted workbench doors."""
+        self._pin()
+        screen = self.screen
+        if screen is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if source.key is ProfileAcquisitionSourceKey.CENSAL_REVIEW:
+            request = AeatSyncOperationRequestV1(
+                action=ActionReference(action_id="operator.profile.edit"),
+                operation=CENSAL_OPERATION_DEFINITION_ID,
+            )
+        else:
+            request = AeatSyncOperationRequestV1(
+                action=ActionReference(action_id="operator.live.filed.pull_all"),
+                operation=FILED_HISTORY_OPERATION_DEFINITION_ID,
+            )
+        screen.disabled = True
+        try:
+            handoff, _ = await asyncio.to_thread(
+                compose_runtime_aeat_sync_handoff,
+                self.client,
+                output_root=load_settings().cadrumo_filed_declarations_dir,
+            )
+            self._pin()
+            if handoff is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            controller = await handoff(request)
+            screen.app.push_screen(OperationModal(controller), self._source_settled)
+        except Exception:
+            # Runtime diagnostics can carry private provider evidence.
+            screen.notify(tr("tui.aeat_sync.operation.failed"), severity="error")
+        finally:
+            screen.disabled = False
+
+    async def _source_settled(self, outcome: OperationModalOutcomeV1 | None) -> None:
+        """Read persisted profile facts again after a successful acquisition."""
+        if not isinstance(outcome, OperationModalSettledOutcomeV1):
+            return
+        screen = self.screen
+        if screen is None:
+            return
+        if outcome.view_model.projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+            screen.notify(outcome.error_explanation or tr("tui.aeat_sync.operation.failed"), severity="error")
+            return
+        try:
+            updated = await asyncio.to_thread(self._overview)
+            self._pin()
+            await screen._apply_overview(updated)
+        except Exception:
+            screen.notify(tr("tui.aeat_sync.operation.failed"), severity="error")
+
     def compose_from_overview(self, overview: ProfileOverview) -> ProfileManagerScreen:
         """Bind an already read exact-profile overview without blocking the UI."""
         self._pin()
@@ -278,21 +410,12 @@ class RuntimeProfileManagerComposition:
             list_plantilla_media=self._list_plantilla_media,
             set_plantilla_media=self._set_plantilla_media,
             remove_plantilla_media=self._remove_plantilla_media,
+            launch_source=self._launch_source,
         )
         self.screen = screen
         return screen
 
 
-def compose_runtime_profile_manager(
-    client: RuntimeFrontendClient, *, profile_label: str, output_language: OutputLanguage
-) -> ProfileManagerScreen:
-    """Compose an exact-session manager before entering the Textual loop."""
-    return RuntimeProfileManagerComposition(
-        client, profile_label=profile_label, output_language=output_language
-    ).compose()
-
-
 __all__ = [
     "RuntimeProfileManagerComposition",
-    "compose_runtime_profile_manager",
 ]

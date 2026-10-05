@@ -49,6 +49,7 @@ from ._app_live_notifications_payloads import (
     SancionReadingPayload,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
+from .registered_operation_errors import invalid_completion_error
 from .runtime_notification_document_capture import capture_notification_document_for_cli
 from .runtime_notification_document_read import (
     read_notification_document_history_for_cli,
@@ -86,17 +87,8 @@ def notifications_pull(ctx: typer.Context) -> None:
             source_url=projection.source_url,
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{projection.snapshot_id}",
@@ -397,17 +389,8 @@ def notifications_document_pull(
             **_document_projection_fields(bucket_id, projection),
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     leaf_notices: list[Notice] = [_comparecencia_notice(result)]
     if result.already_in_custody:
         leaf_notices.append(_already_in_custody_notice(result))
@@ -449,17 +432,8 @@ def notifications_document_view(
             raise ValueError("notification-document view result does not match its active profile and certificado")
         result = NotificationDocumentViewResult(**_document_projection_fields(bucket_id, projection))
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     notices = _document_notices(result, notices=())
     lines = [*_document_lines(result), *notice_lines(notices)]
     emit_envelope(
@@ -506,17 +480,8 @@ def notifications_document_history(ctx: typer.Context) -> None:
             documents=documents,
         )
     except Exception:
-        from ...application.runtime.contracts import RuntimeRefusalCode
-        from .runtime_registered_operation import submitted_operation_error
-
         completed = read.completion
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     notices = [_history_notice(count=len(documents))]
     lines = [f"bucket\t{bucket_id}", f"count\t{len(documents)}"]
     for document in documents:

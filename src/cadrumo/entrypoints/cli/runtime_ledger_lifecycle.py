@@ -1,12 +1,18 @@
-"""Registered worker bridge for the ledger archive, stash, restore, and exclude verbs."""
+"""Registered worker bridge for the ledger archive, stash, restore, and exclude verbs.
+
+Core types: :class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
+
+from typing import Never
+from uuid import UUID
 
 import typer
 from pydantic import ValidationError
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.lifecycle_mutation_operation import (
+from ...application.ledger.lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
     LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
@@ -16,18 +22,21 @@ from ...application.ledger.lifecycle_mutation_operation import (
     LedgerLifecycleMutationRequest,
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
+)
+from ...application.ledger.lifecycle_mutation_operation import (
     LedgerLifecycleValidationRefusedError,
 )
 from ...application.review.filter import LedgerReviewStatus
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.i18n.render import tr
 from ...core.json_contract import OutputSchema
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._ledger_payloads import TransactionPayload
 from ._ledger_support import ledger_validation_bad
 from .common import emit_envelope
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 _SUCCESS_STATES: dict[LedgerLifecycleOperationId, str] = {
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID: "ARCHIVED",
@@ -145,60 +154,16 @@ def _submit(
     )
     result = completed.projection
     if result.outcome == "validation_error":
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.refusal_code != LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE
-            or completed.effect is not OperationEffect.NONE
-            or result.profile_id != client.profile_id
-            or result.operation_id != operation_id
-            or result.validation is None
-        ):
-            raise submitted_operation_error(
-                completed.operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=completed.terminal_condition,
-                effect=completed.effect,
-                refusal_code=completed.refusal_code,
-            )
-        raise LedgerLifecycleValidationRefusedError(result.validation) from None
+        _raise_lifecycle_validation(completed, result, client.profile_id, operation_id)
 
     projection = result.result
     if projection is None:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
-    transaction = projection.transaction
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.UPDATED
-        or result.profile_id != client.profile_id
-        or result.operation_id != operation_id
-        or projection.profile_id != client.profile_id
-        or projection.operation_id != operation_id
-        or not transaction.transaction_id.startswith(request.transaction_id.strip().lower())
-        or transaction.lifecycle_state != _SUCCESS_STATES[operation_id]
-        or len(projection.bucket_event_ids) != 1
-        or (
-            operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID
-            and (
-                transaction.business_classification != "REVIEWED_EXCLUDED"
-                or projection.review_status is not LedgerReviewStatus.EXCLUDED
-            )
-        )
-    )
+        raise invalid_completion_error(completed)
+    invalid = _lifecycle_receipt_identity_invalid(
+        completed, result, projection, client.profile_id, operation_id
+    ) or _lifecycle_transaction_invalid(projection, request, operation_id)
     if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -241,3 +206,62 @@ __all__ = [
     "run_ledger_restore",
     "run_ledger_stash",
 ]
+
+
+def _raise_lifecycle_validation(
+    completed: RegisteredOperationCompletion[LedgerLifecycleOperationResult],
+    result: LedgerLifecycleOperationResult,
+    profile_id: UUID,
+    operation_id: LedgerLifecycleOperationId,
+) -> Never:
+    """Translate only the exact unchanged registered lifecycle refusal."""
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.refusal_code != LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE
+        or completed.effect is not OperationEffect.NONE
+        or result.profile_id != profile_id
+        or result.operation_id != operation_id
+        or result.validation is None
+    ):
+        raise invalid_completion_error(completed)
+    raise LedgerLifecycleValidationRefusedError(result.validation) from None
+
+
+def _lifecycle_receipt_identity_invalid(
+    completed: RegisteredOperationCompletion[LedgerLifecycleOperationResult],
+    result: LedgerLifecycleOperationResult,
+    projection: LedgerLifecycleMutationProjection,
+    profile_id: UUID,
+    operation_id: LedgerLifecycleOperationId,
+) -> bool:
+    """Correlate successful lifecycle receipts with exact profile and operation identity."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.UPDATED
+        or (result.profile_id != profile_id)
+        or (result.operation_id != operation_id)
+        or (projection.profile_id != profile_id)
+        or (projection.operation_id != operation_id)
+    )
+
+
+def _lifecycle_transaction_invalid(
+    projection: LedgerLifecycleMutationProjection,
+    request: LedgerLifecycleMutationRequest,
+    operation_id: LedgerLifecycleOperationId,
+) -> bool:
+    """Require the requested transaction, lifecycle state, event, and exclusion status."""
+    transaction = projection.transaction
+    return (
+        not transaction.transaction_id.startswith(request.transaction_id.strip().lower())
+        or transaction.lifecycle_state != _SUCCESS_STATES[operation_id]
+        or len(projection.bucket_event_ids) != 1
+        or (
+            operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID
+            and (
+                transaction.business_classification != "REVIEWED_EXCLUDED"
+                or projection.review_status is not LedgerReviewStatus.EXCLUDED
+            )
+        )
+    )

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-18'
-modified: '2026-08-24'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2d9623cb2d2d76ba254dc8388a2a7727b92ba03b06c7aca50058c94aec93822b'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+body_hash: 'sha256:4e19a5049dc39ecba7d22e14e20cbedcfc77017780893e204d8eaa478e3cbfeb'
+related: []
 ---
 
 # `profile-password-custody` audit: `storage and custody green sweep`
@@ -341,9 +340,9 @@ another's capsule through the real unlock and restore authorities.
 What remains is coverage-shaped rather than security-shaped, and should not be
 described as a hole. A table of runtime repositories asserts each refuses both
 an absent session and a route mismatch, and that table is hand-maintained with
-no completeness gate: two profile-scoped stores, the LLM run telemetry and the
-LLM consent ledger, do not appear in it. They are protected anyway, because
-protection is structural -- they are untested, not unguarded. A completeness
+no completeness gate: one profile-scoped store, the
+LLM consent ledger, does not appear in it. It is protected anyway, because
+protection is structural -- it is untested, not unguarded. A completeness
 gate deriving the expected set from the resolver's consumers would close the
 difference between "we tested the ones we listed" and "we tested every one that
 exists".
@@ -1565,7 +1564,7 @@ because the error is more instructive than the finding was.
 
 I reported that nothing checked whether live commands carry a risk assessment,
 and froze the 26 undeclared commands as an accepted debt register. The gate
-exists: `src/cadrumo-harness/.../mcp/tests/test_risk_table_parity.py`. It
+exists: the retired test. It
 covers exactly the same surface -- the MCP-exposed and CLI-exposable command
 sets are identical, 291 each, verified rather than assumed -- and `testpaths`
 in pyproject includes `src/cadrumo-harness`, so a bare pytest run collects it.
@@ -4254,9 +4253,9 @@ handler for free.
 ### A gate outside the domain lanes caught a defect this campaign introduced
 
 Found by following a stale path, which is the useful part: the always-on architecture rule
-states the import boundary is "Enforced by `dev/import_hygiene_scan.py` and
-`src/cadrumo/tests/test_import_hygiene_gate.py`". **Neither path exists.** The scanner is
-at `dev/quality/import_hygiene_scan.py` and the gate at `dev/tests/test_import_hygiene_gate.py`.
+states the import boundary is "Enforced by the retired module and
+The retired test". **Neither path exists.** The scanner is
+at the retired module and the gate at the retired test.
 An agent checking whether the boundary is enforced finds nothing at the cited locations and
 can reasonably conclude it is not — which is nearly what happened here. Corrected on the
 rule source and propagated with `vaultspec-core sync`, with the note that the gate sits
@@ -5521,7 +5520,7 @@ the real gate was green. Asking whether the shape repeats found that it is syste
 
 **The shape is identical to the stub case, one layer along.** `dev/quality/tests` IS
 per-push -- and its tests drive the scanners over `tmp_path` and synthetic path strings
-like `"src/cadrumo/provider.py"`. So the per-push lane proves the TOOL works; the gate that
+like `"the retired module"`. So the per-push lane proves the TOOL works; the gate that
 asks whether the TREE is clean is the one nobody runs. Twice now the enrolled thing has
 been the tool's own unit tests, which are green by construction, sitting where a tree
 verdict was assumed to be.
@@ -5612,7 +5611,7 @@ dev modules found FOUR, all `conftest.py` — which is how pytest shares fixture
 bridge. Nothing to do there.
 
 **The substitution shape was present, and both offenders were this campaign's own.**
-`dev/tests/test_monkeypatch_inventory.py` names exactly two files tree-wide, and `git log`
+The retired test names exactly two files tree-wide, and `git log`
 attributes both to commits from this work. The ratchet is absolute — no allowlist, because
 the resolution is meant to be removal — and it lives in `dev/tests`, the per-push blind spot
 recorded two entries above. So the violations were introduced and never reported, which is
@@ -5654,7 +5653,7 @@ Lanes 314 integration / 1587 unit (+1, the probe's anti-tautology case).
 
 ### A facade gate that could not read half the facades it judged
 
-`dev/tests/test_facade_export_gate.py` was red with nineteen breaks under a serious
+The retired test was red with nineteen breaks under a serious
 headline: *"facade(s) name a symbol that does not exist at HEAD -- a clean checkout will
 fail to import these packages even though every working tree resolves them."* That claim, if
 true, is a shipping defect. It is false.
@@ -5723,7 +5722,7 @@ campaign keeps writing down and, here, failed to apply to its own probe.
 
 With the module named, the same run answers in one line:
 
-    src/cadrumo/tests/seeded_isolated_backend_fixture.py:87: fixture name is dynamic
+    The retired test: fixture name is dynamic
 
 **The refusal turns out to be right, which is worth stating.** That factory derives its
 fixture name from its own parameter -- `origin_name = f"{name}_origin"` -- so the effective
@@ -5749,7 +5748,7 @@ the ones attributed in the previous entry and are unchanged by this work.
 ### Deciding a deferral question rather than widening to make a gate green
 
 The located refusal from the previous entry named
-`src/cadrumo/tests/seeded_isolated_backend_fixture.py:87`: a factory deriving its second
+The retired test: a factory deriving its second
 pytest fixture name from its first, `origin_name = f"{name}_origin"`. The census defers a
 BARE parameter -- the call site supplies that -- and refuses a derived expression. The open
 question was whether a derived-from-parameter name is equally "not-yet-known" and should
@@ -6568,7 +6567,7 @@ errors** across 25 items.
 
     dev/ci/tests/test_overview_verbs.py                   7
     dev/packaging/tests/ (eight modules)                  11
-    dev/quality/tests/test_fixture_census.py               1
+    The retired test 1
     dev/quality/tests/test_doc_privacy.py                  1
     dev/docs/tests/test_api_stubs.py                       1
 
@@ -6820,7 +6819,7 @@ this domain remains 361 integration and 1,644 unit.
 The lanes failed again, this time with 45 collection errors and a different signature:
 `ImportError: cannot import name 'ModeloCalculationRouteId' from 'cadrumo.core'`, with the
 source parsing clean. Following it produced what looked like a serious committed defect.
-`src/cadrumo/core/_calculation_route.py`, which defines the symbol, is UNTRACKED;
+The retired module, which defines the symbol, is UNTRACKED;
 `core/__init__.py` is modified; and `git ls-files --error-unmatch` reported the consuming
 module `application/modelo/_calculation_route.py` as TRACKED. Consumer committed, definition
 never added: a `git add` omission that would break every fresh clone and CI.
@@ -7291,12 +7290,12 @@ while these runs were in progress.
 
 Last iteration fixed a `from ..__init__ import app` that re-executed a package body. Nothing in
 the tree refused that spelling, so it could return. Worse, the one gate that knows the form --
-`dev/tests/test_facade_export_gate.py` -- deliberately NORMALISES it, treating it as addressing
+The retired test -- deliberately NORMALISES it, treating it as addressing
 the package so its missing-module scan does not false-positive. That normalisation is right for
 that gate and it means the spelling passes review looking sanctioned. Its docstring says the
 form "addresses the package", which is true of static analysis and false of the interpreter.
 
-`dev/quality/tests/test_no_dunder_init_module_imports.py` now refuses it outright, across `src`
+The retired test now refuses it outright, across `src`
 and `dev`. The spelling is never necessary -- `from .. import app` binds the same object from
 the one canonical module -- so the gate forbids the form rather than trying to judge which
 package bodies survive running twice.
@@ -7312,7 +7311,7 @@ campaign's file and it breaks nothing, so it is reported here and not touched, a
 does not flag it: widening a gate to a second concern is how a sharp rule becomes vague.
 
 Proven in both directions from outside the repo. Against a scratchpad tree holding the exact
-shipped spelling the scanner returns `src/pkg/offender.py:1`; against the real tree it parses
+shipped spelling the scanner returns the retired module; against the real tree it parses
 5,843 modules and returns nothing -- green because the tree is clean, not because the scan is
 blind. That distinction is asserted in the gate itself, which refuses to pass if it reached
 fewer than a thousand modules; the first break attempt tripped exactly that guard, which is how
@@ -7463,7 +7462,7 @@ about), not a defect to patch from here, and not this campaign's to decide.
 
 ### Re-checking a deferred attribution turned it into a finding
 
-Last iteration deferred three `dev/ci/tests/test_lazy_command_tree.py` failures as "peer
+Last iteration deferred three the retired test failures as "peer
 mid-edit, re-check later" -- `_app_lazy_registration.py` was modified with an 18-minute-old
 mtime. The re-check is what matters, and it changed the answer: the file is now COMMITTED and
 the three still fail. Deferred-because-dirty is not the same as benign, and without the
@@ -7702,8 +7701,8 @@ the previous entry said could not be assumed during churn. Re-probed against tha
 
 Two committed defects, both fallout from the machine-secret landing, and the second is
 confirmed against HEAD rather than the working tree:
-`src/cadrumo/entrypoints/cli/_config/_passphrase_command_specs.py` is DELETED at HEAD while
-`src/cadrumo/application/operator_surface/_contract.py:48` and `:120` still declare the
+The retired module was DELETED at HEAD while
+The retired module and `:120` still declare the
 `passphrase` family. The first is a leaf colliding with a group at
 `config.profile.descendiente`.
 
@@ -7810,7 +7809,7 @@ empty stdout of a refused `show`.
 So the whole red state in this domain -- and the peer's own last failure, which is what has
 been holding the sharpened defer criterion open -- reduces to a single cause.
 
-The cause is a deleted file. `src/cadrumo/entrypoints/cli/_config/_passphrase.py` is ABSENT at
+The cause is a deleted file. the retired module was ABSENT at
 HEAD, removed 83 minutes ago by `75ab8f3ef1 "src: retire the schema-surface normaliser onto the
 command spec kernel"`, a 36-file consolidation with 1,500 deletions. Not just its command-spec
 registration -- the command module itself. Meanwhile the governing ADR
@@ -7829,7 +7828,7 @@ reshaping, to ADR channel constraints (exactly one `--secrets-stdin` and one `--
 identical naming and ordering, refusal preceding any source read) that are theirs to satisfy.
 
 Handover, with the recovery path: the deleted module is retrievable at
-`git show 75ab8f3ef1^:src/cadrumo/entrypoints/cli/_config/_passphrase.py`, though it will need
+Historical command omitted; its target was retired.
 reshaping onto the new spec kernel rather than a straight revert. Restoring
 `config passphrase change` clears the contract refusal, `config profile show`, roughly twenty
 domain failures, and the peer's own outstanding case, in one change.
@@ -8369,7 +8368,7 @@ It looks like a one-line fixture fix. It is not, and the attempt is worth record
 the next person does not spend the same hour.
 
 Adding `contact.postcode` to `_REQUIRED_PLACEHOLDERS` -- the canonical seeding door in
-`tests/user_profile.py` -- fixes none of the six. Every one of them seeds its profile
+The retired module -- fixes none of the six. Every one of them seeds its profile
 DIRECTLY through `seed_test_profile_record` rather than through that door, so the default
 never reaches them. Seeding a full `register_minimal_profile` per module does clear the
 postcode refusal, and then nine of the ten cases in `test_evidence_draft` fail on

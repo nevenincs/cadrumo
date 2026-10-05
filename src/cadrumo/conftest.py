@@ -1,7 +1,7 @@
 """Package-level pytest fixtures for every test under ``src/cadrumo/``.
 
-Hosts the ``source_tree_ast`` session-scoped fixture that ratchet
-inventories consume to amortise the AST parse cost across the suite.
+Hosts the ``source_tree_ast`` module-scoped fixture that ratchet
+inventories consume to share AST parsing within each structural gate.
 The fixture lives at the package root because pytest's conftest discovery
 walks up from each test file. Tests are distributed across domain-local
 ``tests/`` subtrees throughout ``src/cadrumo/``; a conftest inside
@@ -23,6 +23,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+
+from .core.storage_environment import TOOL_STORAGE_LOCATIONS, prepare_temporary_directory, tool_storage_environment
+
+if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
+    _tool_environment = tool_storage_environment()
+    for _native_variable, (_refinement_variable, _default_location) in TOOL_STORAGE_LOCATIONS.items():
+        os.environ[_refinement_variable] = _tool_environment[_native_variable]
+    os.environ.update(_tool_environment)
+    sys.pycache_prefix = _tool_environment["PYTHONPYCACHEPREFIX"]
 
 if TYPE_CHECKING:
     from .domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -50,6 +59,14 @@ if TYPE_CHECKING:
 # here (mirroring `_collection_storage_root.collection_storage_root`'s own
 # `<gettempdir()>/cadrumo-pytest-<pid>`) removes the dependency on either
 # package staying import-light for this one safety-critical line.
+if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
+    # Standalone/installed pytest consumers may not load the repository conftest.
+    # In that case establish the canonical temp root before child conftests import
+    # application modules. Repository runs already have a narrower run scratch.
+    _temporary_root = prepare_temporary_directory()
+    os.environ.update({"TEMP": str(_temporary_root), "TMP": str(_temporary_root), "TMPDIR": str(_temporary_root)})
+    tempfile.tempdir = str(_temporary_root)
+
 _COLLECTION_STORAGE_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 """Process-private local-storage root set before child conftests import Cadrumo."""
@@ -118,9 +135,9 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def source_tree_ast() -> Mapping[Path, ast.AST]:
-    """Return a session mapping of every ``src/cadrumo/`` ``.py`` file to its parsed AST.
+    """Return a module-lifetime mapping of ``src/cadrumo/`` files to their ASTs.
 
     Covers the package files outside ``__pycache__`` and the ``_data/`` payload
     tree, each read as UTF-8 with ``errors='replace'`` (so a stray encoding
@@ -133,6 +150,10 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     that never threads this fixture through its helpers still shares the parse.
     Parsing lazily is what lets a package-scoped gate run without first paying
     for every other module in the tree.
+
+    Candidate discovery shares the source caches' module lifetime, so the next
+    gate discovers additions and removals instead of reusing a stale session
+    list. Sources must remain stable during each gate's own module.
 
     Consumers retain their own filter predicates (e.g. ``test_*.py``
     only, or exclude certain subdirs). The fixture is the AST cache;
@@ -227,7 +248,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.persistence.profile.justificante import JustificanteRepository
     from .adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
     from .adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
-    from .adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from .adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from .adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from .adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
@@ -261,6 +281,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
+    from .entrypoints.adapter_composition import calculation_revision_catalogue_repository
 
     with (
         bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
@@ -273,7 +294,7 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
         bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios),
         bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard),
-        bind_calculation_revision_catalogue_repository_factory(CalculationRevisionCatalogueRepository),
+        bind_calculation_revision_catalogue_repository_factory(calculation_revision_catalogue_repository),
         bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository),
         bind_justificante_repository_factory(JustificanteRepository),
         bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository),
@@ -425,3 +446,22 @@ def _release_settings_storage_directories() -> Iterator[None]:
     from .tests.env_scope import release_settings_storage_directories
 
     release_settings_storage_directories()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _keep_the_installation_google_client_out_of_tests(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Make the installation carry no Google client unless a test supplies one.
+
+    The application ships its publisher's Google OAuth client. A test that
+    read it could hand a stored or synthetic token to Google under the real
+    client, so every test starts from an installation without one; a test
+    that needs a client binds a synthetic file through
+    ``adapters.outbound.google.tests.installation_client_support``, and the
+    one test that checks the shipped file names its location itself.
+    """
+    from .adapters.outbound.google import installation_client
+
+    absent = tmp_path_factory.mktemp("installation-google-client") / "oauth_client.json"
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(installation_client, "installation_client_source", lambda: absent)
+        yield

@@ -1,0 +1,1386 @@
+# Source-pinned numeric representation for the exact AEAT 2022 record design.
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 19
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-19-offset-1"
+decision_statement = "Render source row 19 at 1+1 as enumeration."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 19, positions 1-1; printed TIPO DE REGISTRO.. The source states an exact record/model constant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 19
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["181"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 21
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-21-offset-2"
+decision_statement = "Render source row 21 at 2+3 as enumeration."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 21, positions 2-4; printed MODELO DECLARACIÓN.. The source states an exact record/model constant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 21
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 50
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "7"
+semantic_part_offset = 59
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-50-offset-59"
+decision_statement = "Render source row 50 at 59+9 as digit_string."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 50, positions 59-67; printed PERSONA CON QUIÉN RELACIONARSE. The source subdivides its contact parent: 59-67 TELÉFONO is a nine-position numeric telephone."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 50
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "7"
+semantic_part_offset = 59
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 57
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-57-offset-108"
+decision_statement = "Render source row 57 at 108+13 as identifier_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 57, positions 108-120; printed NUMERO IDENTIFICATIVO DE LA DECLARACIÓN.. The source calls this a thirteen-digit declaration identifier, whose leading zeroes are retained."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 57
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 91
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-91-offset-123"
+decision_statement = "Render source row 91 at 123+13 as identifier_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 91, positions 123-135; printed NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR.. The source calls this a thirteen-digit declaration identifier, whose leading zeroes are retained."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 91
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 100
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-100-offset-136"
+decision_statement = "Render source row 100 at 136+9 as integer."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 100, positions 136-144; printed NUMERO TOTAL DE REGISTROS DECLARADOS.. The source defines this as the count of emitted Type 2 detail records."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 100
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 114
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-114-offset-145"
+decision_statement = "Render source row 114 at 145+13 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 114, positions 145-157; printed Parte entera del importe total del capital. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 114
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 116
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-116-offset-158"
+decision_statement = "Render source row 116 at 158+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 116, positions 158-159; printed Parte decimal del importe total del capital. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 116
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 133
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-133-offset-160"
+decision_statement = "Render source row 133 at 160+13 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 133, positions 160-172; printed Parte entera del importe total de los intereses, si. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 133
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 135
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-135-offset-173"
+decision_statement = "Render source row 135 at 173+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 135, positions 173-174; printed Parte decimal del importe total de los intereses, si. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 135
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 146
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-146-offset-175"
+decision_statement = "Render source row 146 at 175+13 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 146, positions 175-187; printed Parte entera del importe total de los gastos. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 146
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 149
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-149-offset-188"
+decision_statement = "Render source row 149 at 188+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 149, positions 188-189; printed Parte decimal del importe total de los gastos. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 149
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 12
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 160
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-160-offset-190"
+decision_statement = "Render source row 160 at 190+12 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 160, positions 190-201; printed Parte entera del importe total de los saldos. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 160
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 163
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-163-offset-202"
+decision_statement = "Render source row 163 at 202+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 163, positions 202-203; printed Parte decimal del importe total de los saldos. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 163
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 190
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-190-offset-1"
+decision_statement = "Render source row 190 at 1+1 as enumeration."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 190, positions 1-1; printed TIPO DE REGISTRO.. The source states an exact record/model constant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 190
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["181"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 192
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-192-offset-2"
+decision_statement = "Render source row 192 at 2+3 as enumeration."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 192, positions 2-4; printed MODELO DECLARACIÓN.. The source states an exact record/model constant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 192
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 249
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-249-offset-76"
+decision_statement = "Render source row 249 at 76+2 as identifier_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 249, positions 76-77; printed CÓDIGO PROVINCIA.. The source identifies this as a fixed-width numeric geographic or IBAN control code; leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 249
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 303
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-303-offset-81"
+decision_statement = "Render source row 303 at 81+2 as identifier_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 303, positions 81-82; printed DÍGITO DE CONTROL.. The source identifies this as a fixed-width numeric geographic or IBAN control code; leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 303
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_year"
+value_policy = "yyyymmdd-text-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 334
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-334-offset-103"
+decision_statement = "Render source row 334 at 103+4 as date_text_year."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 334, positions 103-106; printed Año. The source prints this as the year, month or day component of the same eight-byte operation date."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 334
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_month"
+value_policy = "yyyymmdd-text-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 335
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "14"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-335-offset-107"
+decision_statement = "Render source row 335 at 107+2 as date_text_month."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 335, positions 107-108; printed Mes. The source prints this as the year, month or day component of the same eight-byte operation date."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 335
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "14"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_day"
+value_policy = "yyyymmdd-text-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 336
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "15"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-336-offset-109"
+decision_statement = "Render source row 336 at 109+2 as date_text_day."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 336, positions 109-110; printed Día. The source prints this as the year, month or day component of the same eight-byte operation date."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 336
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "15"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 356
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "16"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-356-offset-111"
+decision_statement = "Render source row 356 at 111+3 as integer."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 356, positions 111-113; printed DURACIÓN DE LA OPERACIÓN.. The source states that operation duration is expressed in months."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 356
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "16"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 371
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-371-offset-114"
+decision_statement = "Render source row 371 at 114+11 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 371, positions 114-124; printed Parte entera del importe del préstamo, crédito u otra. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 371
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 374
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-374-offset-125"
+decision_statement = "Render source row 374 at 125+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 374, positions 125-126; printed Parte decimal del importe del préstamo, crédito u. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 374
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 412
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-412-offset-127"
+decision_statement = "Render source row 412 at 127+11 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 412, positions 127-137; printed Parte entera del importe abonado en el ejercicio. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 412
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 415
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-415-offset-138"
+decision_statement = "Render source row 415 at 138+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 415, positions 138-139; printed Parte decimal del importe abonado en el ejercicio. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 415
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 479
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-479-offset-140"
+decision_statement = "Render source row 479 at 140+11 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 479, positions 140-150; printed Parte entera del importe abonado en el ejercicio. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 479
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 482
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-482-offset-151"
+decision_statement = "Render source row 482 at 151+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 482, positions 151-152; printed Parte decimal del importe abonado en el ejercicio. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 482
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 540
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-540-offset-153"
+decision_statement = "Render source row 540 at 153+11 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 540, positions 153-163; printed Parte entera del importe abonado en el ejercicio. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 540
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 549
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-549-offset-164"
+decision_statement = "Render source row 549 at 164+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 549, positions 164-165; printed Parte decimal del importe abonado en el. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 549
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 605
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "22"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-605-offset-166"
+decision_statement = "Render source row 605 at 166+3 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 605, positions 166-168; printed Parte entera. The source prints this as the whole part of one participation percentage."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 605
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "22"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 3
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 608
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "23"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-608-offset-169"
+decision_statement = "Render source row 608 at 169+3 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 608, positions 169-171; printed Parte decimal. The source prints this as the separate fractional digits of the same percentage."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 608
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "23"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3", "4", "5"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 748
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "26"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-748-offset-174"
+decision_statement = "Render source row 748 at 174+1 as enumeration."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 748, positions 174-174; printed SUBCLAVE OPERACIÓN.. The source enumerates subclaves 1 through 5 for the stated operation classes."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 748
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "26"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3", "4"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 782
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "27"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-782-offset-175"
+decision_statement = "Render source row 782 at 175+1 as enumeration."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 782, positions 175-175; printed SITUACIÓN DEL INMUEBLE.. The source enumerates property situations 1 through 4."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 782
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "27"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 832
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-832-offset-196"
+decision_statement = "Render source row 832 at 196+10 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 832, positions 196-205; printed Parte entera del valor de tasación del inmueble. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 832
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 835
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-835-offset-206"
+decision_statement = "Render source row 835 at 206+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 835, positions 206-207; printed Parte decimal del valor de tasación del. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 835
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 858
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-858-offset-208"
+decision_statement = "Render source row 858 at 208+10 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 858, positions 208-217; printed Parte entera del saldo a 31 de diciembre.. The source prints this as the integer part of one unsigned euro amount with a separate two-byte decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 858
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 859
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-859-offset-218"
+decision_statement = "Render source row 859 at 218+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 859, positions 218-219; printed Parte decimal del saldo a 31 de diciembre.. The source prints this as the two-digit decimal part of the same unsigned euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 859
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 889
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "35"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-889-offset-278"
+decision_statement = "Render source row 889 at 278+5 as digit_string."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 889, positions 278-282; printed NÚMERO DE CASA. The source gives five numeric bytes for house number or kilometre point, with no stated decimal scale."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 889
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "35"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 920
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "45"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-920-offset-401"
+decision_statement = "Render source row 920 at 401+5 as identifier_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 920, positions 401-405; printed CÓDIGO DE MUNICIPIO. The source identifies this as a fixed-width numeric geographic or IBAN control code; leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 920
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "45"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 923
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "46"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-923-offset-406"
+decision_statement = "Render source row 923 at 406+2 as identifier_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 923, positions 406-407; printed CÓDIGO PROVINCIA. The source identifies this as a fixed-width numeric geographic or IBAN control code; leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 923
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "46"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 962
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "47"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-962-offset-408"
+decision_statement = "Render source row 962 at 408+5 as identifier_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 962, positions 408-412; printed CÓDIGO POSTAL. The source identifies this as a fixed-width numeric geographic or IBAN control code; leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 962
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "47"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 966
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "48"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-966-offset-413"
+decision_statement = "Render source row 966 at 413+1 as enumeration."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 966, positions 413-413; printed CLAVE DE INTERVENCIÓN EN LA OPERACIÓN. The source enumerates intervention roles 1, 2 and 3."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 966
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "48"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1026
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "52"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-1026-offset-458"
+decision_statement = "Render source row 1026 at 458+3 as amount_integer_part."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 1026, positions 458-460; printed entera: Se consignará la parte. The source prints this as the whole part of one participation percentage."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1026
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "52"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1028
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "53"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-1028-offset-461"
+decision_statement = "Render source row 1028 at 461+2 as amount_fractional_digits."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 1028, positions 461-462; printed decimal: Se consignará la parte. The source prints this as the separate fractional digits of the same percentage."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1028
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "53"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 8
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1054
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "54"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-1054-offset-463"
+decision_statement = "Render source row 1054 at 463+10 as decimal."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 1054, positions 463-472; printed IMPORTE DEVENGADO EN EL EJERCICIO EN CONCEPTO DE REINTEGRO DE GASTOS DERIVADOS DE LA FINANCIACIÓN AJENA. The source says euros without a comma and explicitly splits this field into the stated whole-byte span plus two decimal bytes."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1054
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "54"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 7
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1108
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "55"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-1108-offset-473"
+decision_statement = "Render source row 1108 at 473+9 as decimal."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 1108, positions 473-481; printed INTERESES INDEMNIZATORIOS DE IMPORTES DEVENGADOS POR GASTOS DERIVADOS DE LA FINANCIACIÓN AJENA. The source says euros without a comma and explicitly splits this field into the stated whole-byte span plus two decimal bytes."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1108
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "55"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 7
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1136
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "56"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-1136-offset-482"
+decision_statement = "Render source row 1136 at 482+9 as decimal."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 1136, positions 482-490; printed OTRAS CANTIDADES INDEMNIZATORIAS DE IMPORTES DEVENGADOS POR GASTOS DERIVADOS DE LA FINANCIACIÓN AJENA. The source says euros without a comma and explicitly splits this field into the stated whole-byte span plus two decimal bytes."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1136
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "56"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 8
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1175
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "57"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m181-2022-row-1175-offset-491"
+decision_statement = "Render source row 1175 at 491+10 as decimal."
+justification = "Exact aeat-dr-181-2022 SHA 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b, PDF row 1175, positions 491-500; printed CANTIDADES DESTINADAS POR LA ENTIDAD FINANCIERA A MINORAR EL PRINCIPAL DEL PRÉSTAMO.. The source says euros without a comma and explicitly splits this field into the stated whole-byte span plus two decimal bytes."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro Del Declarado"
+source_row = 1175
+record_identity = "Tipo 2 - Registro Del Declarado"
+ordinal = "57"
+
+[design_identity]
+modelo = "181"
+design_epoch = "2022"
+source_ref = "aeat-dr-181-2022"
+source_sha256 = "4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b"

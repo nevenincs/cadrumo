@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal
@@ -16,43 +15,36 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.codes import ModeloCode
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .action_errors import CalculationRevisionNotFoundError
 from .reconciliation import (
     ModeloReconciliationCommand,
     ModeloReconciliationReport,
@@ -66,6 +58,7 @@ from .reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
+from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 from .work_addressing import ModeloWorkAddressNotFoundError
 from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .work_unit_repository import work_unit_catalogue_repository
@@ -106,6 +99,7 @@ class ModeloReconciliationImportRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     work_unit_id: _WorkUnitLookupId | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
     modelo: _ModeloSelector | None = None
     filing_year: FilingYear | None = None
     period: _PeriodToken | None = None
@@ -155,9 +149,11 @@ class ModeloReconciliationImportProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     bucket_id: BucketId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    registry_snapshot_ref: ModeloVerificationRegistrySnapshotProjection | None = None
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationImportAdvisoryProjection, ...] = ()
@@ -169,6 +165,12 @@ class ModeloReconciliationImportProjection(BaseModel):
         """Copy the canonical report without dropping diff or advisory data."""
         return cls(
             work_unit_id=report.work_unit_id,
+            calculation_revision_id=report.calculation_revision_id,
+            registry_snapshot_ref=(
+                ModeloVerificationRegistrySnapshotProjection.from_snapshot(report.registry_snapshot_ref)
+                if report.registry_snapshot_ref
+                else None
+            ),
             bucket_id=report.bucket_id,
             source_kind=report.source_kind,
             source_path=report.source_path,
@@ -190,6 +192,10 @@ class ModeloReconciliationImportProjection(BaseModel):
         """Reconstruct the original advisory mappings for existing renderers."""
         return ModeloReconciliationReport(
             work_unit_id=self.work_unit_id,
+            calculation_revision_id=self.calculation_revision_id,
+            registry_snapshot_ref=(
+                RegistrySnapshotRef(**self.registry_snapshot_ref.model_dump()) if self.registry_snapshot_ref else None
+            ),
             bucket_id=self.bucket_id,
             source_kind=self.source_kind,
             source_path=self.source_path,
@@ -225,19 +231,36 @@ def _project_reconciliation_import(
     """Release the complete report only when its settled receipt proves the write."""
     report = ModeloReconciliationImportOperationReport.model_validate(result, strict=True)
     projection = report.projection
-    if (
-        receipt.identity.definition_id != MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.bucket_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("modelo reconciliation import result contradicts its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        message="modelo reconciliation import result contradicts its terminal receipt",
+    )
     return projection
+
+
+def _reconciliation_import_work_selector(payload: ModeloReconciliationImportRequest) -> ModeloWorkSelectorRequest:
+    """Preserve the full and abbreviated operator addresses and optional period scope."""
+    work_unit_lookup = payload.work_unit_id.lower() if payload.work_unit_id is not None else None
+    typed_period = (
+        Period.from_year_and_code(payload.filing_year, payload.period.strip())
+        if payload.period is not None and payload.filing_year is not None
+        else None
+    )
+    return ModeloWorkSelectorRequest(
+        work_unit_id=(work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 64 else None),
+        operator_work_unit_id=(
+            work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 12 else None
+        ),
+        modelo=ModeloCode(payload.modelo) if payload.modelo is not None else None,
+        filing_year=payload.filing_year,
+        period=typed_period,
+        revision_id=payload.revision_id,
+        bucket_id=payload.bucket_id,
+    )
 
 
 class ModeloReconciliationImportExecutor:
@@ -251,15 +274,9 @@ class ModeloReconciliationImportExecutor:
         """Reconcile one local PDF while keeping work scoped to its profile."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject_ref = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject_ref
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject_ref
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
 
@@ -267,25 +284,7 @@ class ModeloReconciliationImportExecutor:
             if require_active_bucket_id() != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             catalogue = work_unit_catalogue_repository(bucket_id=profile_id).load()
-            work_unit_lookup = payload.work_unit_id.lower() if payload.work_unit_id is not None else None
-            typed_period = (
-                Period.from_year_and_code(payload.filing_year, payload.period.strip())
-                if payload.period is not None and payload.filing_year is not None
-                else None
-            )
-            selector = ModeloWorkSelectorRequest(
-                work_unit_id=(
-                    work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 64 else None
-                ),
-                operator_work_unit_id=(
-                    work_unit_lookup if work_unit_lookup is not None and len(work_unit_lookup) == 12 else None
-                ),
-                modelo=ModeloCode(payload.modelo) if payload.modelo is not None else None,
-                filing_year=payload.filing_year,
-                period=typed_period,
-                revision_id=payload.revision_id,
-                bucket_id=payload.bucket_id,
-            )
+            selector = _reconciliation_import_work_selector(payload)
             resolution = select_modelo_work_resolution(
                 selector,
                 catalogue=catalogue,
@@ -304,19 +303,27 @@ class ModeloReconciliationImportExecutor:
                 source_kind=payload.source_kind,
                 source_path=Path(payload.source_path),
                 actor=payload.actor,
+                calculation_revision_id=payload.calculation_revision_id,
             )
             with validating_governed_facts(context.authority_operation):
                 prepared = prepare_modelo_reconcile(command, operation=context.authority_operation)
             return command, prepared
 
-        command, prepared = await await_cancellation_complete(
-            asyncio.to_thread(prepare),
-            task_name="modelo-reconciliation-import-prepare",
-        )
+        try:
+            command, prepared = await await_cancellation_complete(
+                asyncio.to_thread(prepare),
+                task_name="modelo-reconciliation-import-prepare",
+            )
+        except CalculationRevisionNotFoundError as exc:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
         report = ModeloReconciliationImportProjection.from_report(prepared.report)
         if (
             report.bucket_id != profile_id
             or report.work_unit_id != command.work_unit_id
+            or (
+                payload.calculation_revision_id is not None
+                and report.calculation_revision_id != payload.calculation_revision_id
+            )
             or report.source_kind is not payload.source_kind
             or report.source_path != str(command.source_path)
         ):
@@ -354,23 +361,9 @@ def build_modelo_reconciliation_import_definition() -> OperationDefinition:
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -380,39 +373,22 @@ def resolve_modelo_reconciliation_import_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax disclosure and authorize the local commit."""
-    if request.definition_id != MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        ModeloReconciliationImportRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
+    payload = require_access_request_profile_payload(
         request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
+        payload_type=ModeloReconciliationImportRequest,
+        access_profile_id=context.profile_id,
     )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_reconciliation_import_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the complete grounded report to exact whole-profile access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloReconciliationImportRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloReconciliationImportProjection,
-        ),
+        public_result_type=ModeloReconciliationImportProjection,
         result_projector=_project_reconciliation_import,
         access_resolver=resolve_modelo_reconciliation_import_access,
     )

@@ -5,14 +5,27 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
+from ....core.errors.hierarchy import CoreValidationError
+from ....core.modelo import Modelo
 from ....core.time.clock import today_madrid
 from ...iva.schema import IvaCategory
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from .governed_fact_scope import (
+    GovernedFactSource,
+    cache_governed_projection,
+    governed_facts_in_scope,
+    require_governed_fact_authority,
+)
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA category catalogue"
@@ -22,6 +35,20 @@ _ORDER_KEY = "category.order"
 _VALUE_PREFIX = "category."
 _PROJECTION_PREFIX = "category_projection."
 _REASON_PREFIX = "category_reason."
+_EXCLUSION_PREFIX = "category_exclusion."
+
+
+class IvaCategoryExclusion(StrEnum):
+    """How one declaration treats the operations of one IVA category.
+
+    ``EXCLUDED`` is an exclusion the governing text settles: the operations are
+    not declared. ``UNSETTLED`` marks a category whose exclusion is arguable
+    from the text: its operations stay declared and the declaring resolver
+    discloses the reading rather than dropping them.
+    """
+
+    EXCLUDED = "excluded"
+    UNSETTLED = "unsettled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +70,7 @@ class IvaCategoryCatalogue:
     operation_types: Mapping[str, str]
     operation_type_categories: Mapping[str, str]
     untdid_categories: Mapping[str, str]
+    exclusions: Mapping[tuple[Modelo, IvaCategory], IvaCategoryExclusion]
 
     @property
     def all_categories(self) -> tuple[IvaCategory, ...]:
@@ -111,42 +139,20 @@ class IvaCategoryCatalogue:
         token = self.untdid_categories.get(code)
         return None if not token else self.require(token)
 
-
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IVA category entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IVA category key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+    def exclusion(self, modelo: Modelo, token: object) -> IvaCategoryExclusion | None:
+        """Return how ``modelo`` treats operations of one category, or ``None`` when it declares them."""
+        return self.exclusions.get((modelo, self.require(token)))
 
 
-def _resolve_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("IVA category catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("IVA category catalogue requires an explicit authority operation or scope")
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
-def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
+def _category_definitions(
+    entries: Mapping[str, str],
+) -> tuple[list[IvaCategoryDefinition], frozenset[IvaCategory]]:
     definitions: list[IvaCategoryDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IvaCategory(raw_token)
@@ -161,6 +167,14 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
             ),
         )
     declared = frozenset(definition.token for definition in definitions)
+
+    return definitions, declared
+
+
+def _category_projections(
+    entries: Mapping[str, str],
+    declared: frozenset[IvaCategory],
+) -> dict[str, frozenset[IvaCategory]]:
     projections: dict[str, frozenset[IvaCategory]] = {}
     for key, _raw_value in entries.items():
         if not key.startswith(_PROJECTION_PREFIX):
@@ -170,20 +184,30 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
         if not members.issubset(declared):
             raise RegistryValidationError(f"IVA category projection {name!r} names an undeclared category")
         projections[name] = members
-    reasons: dict[str, str] = {}
+
+    return projections
+
+
+def _category_metadata(
+    entries: Mapping[str, str],
+    *,
+    prefix: str,
+    label: str,
+    declared: frozenset[IvaCategory],
+) -> dict[str, str]:
+    declared_tokens = {str(item) for item in declared}
+    metadata: dict[str, str] = {}
     for key, value in entries.items():
-        if key.startswith(_REASON_PREFIX):
-            token = key.removeprefix(_REASON_PREFIX)
-            if token not in {str(item) for item in declared}:
-                raise RegistryValidationError(f"IVA category reason names an undeclared category {token!r}")
-            reasons[token] = value.strip()
-    hints: dict[str, str] = {}
-    for key, value in entries.items():
-        if key.startswith("category_hint."):
-            token = key.removeprefix("category_hint.")
-            if token not in {str(item) for item in declared}:
-                raise RegistryValidationError(f"IVA category hint names an undeclared category {token!r}")
-            hints[token] = value.strip()
+        if not key.startswith(prefix):
+            continue
+        token = key.removeprefix(prefix)
+        if token not in declared_tokens:
+            raise RegistryValidationError(f"IVA category {label} names an undeclared category {token!r}")
+        metadata[token] = value.strip()
+    return metadata
+
+
+def _category_operation_types(entries: Mapping[str, str]) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
     operation_types = {
         key.removeprefix("category_operation_type."): value.strip()
         for key, value in entries.items()
@@ -199,6 +223,53 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
         for key, value in entries.items()
         if key.startswith("category_for_untdid.")
     }
+    return operation_types, operation_type_categories, untdid_categories
+
+
+def _exclusion_modelo(key: str, raw_modelo: str) -> Modelo:
+    """Read an exclusion key's modelo segment as the canonical three-digit :class:`Modelo`."""
+    if not raw_modelo:
+        raise RegistryValidationError(f"IVA category exclusion {key!r} names no modelo")
+    try:
+        return Modelo(raw_modelo)
+    except CoreValidationError as exc:
+        raise RegistryValidationError(
+            f"IVA category exclusion {key!r} names {raw_modelo!r}, which is not a canonical modelo code",
+        ) from exc
+
+
+def _category_exclusions(
+    entries: Mapping[str, str],
+    declared: frozenset[IvaCategory],
+) -> dict[tuple[Modelo, IvaCategory], IvaCategoryExclusion]:
+    """Read ``category_exclusion.<modelo>.<category>`` entries into typed verdicts.
+
+    Refuses an entry that names no modelo or one that is not a canonical
+    :class:`Modelo` code, names a category the catalogue does not declare, or
+    carries a verdict outside :class:`IvaCategoryExclusion`.
+    """
+    exclusions: dict[tuple[Modelo, IvaCategory], IvaCategoryExclusion] = {}
+    for key, value in entries.items():
+        if not key.startswith(_EXCLUSION_PREFIX):
+            continue
+        raw_modelo, _, raw_token = key.removeprefix(_EXCLUSION_PREFIX).partition(".")
+        modelo = _exclusion_modelo(key, raw_modelo)
+        token = IvaCategory(raw_token)
+        if token not in declared:
+            raise RegistryValidationError(f"IVA category exclusion {key!r} names an undeclared category")
+        try:
+            exclusions[(modelo, token)] = IvaCategoryExclusion(value.strip())
+        except ValueError as exc:
+            raise RegistryValidationError(f"IVA category exclusion {key!r} declares unknown verdict {value!r}") from exc
+    return exclusions
+
+
+def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
+    definitions, declared = _category_definitions(entries)
+    projections = _category_projections(entries, declared)
+    reasons = _category_metadata(entries, prefix=_REASON_PREFIX, label="reason", declared=declared)
+    hints = _category_metadata(entries, prefix="category_hint.", label="hint", declared=declared)
+    operation_types, operation_type_categories, untdid_categories = _category_operation_types(entries)
     return IvaCategoryCatalogue(
         definitions=tuple(definitions),
         projections=MappingProxyType(projections),
@@ -207,6 +278,7 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
         operation_types=MappingProxyType(operation_types),
         operation_type_categories=MappingProxyType(operation_type_categories),
         untdid_categories=MappingProxyType(untdid_categories),
+        exclusions=MappingProxyType(_category_exclusions(entries, declared)),
     )
 
 
@@ -221,12 +293,7 @@ def _scoped_catalogue(effective_date: date) -> IvaCategoryCatalogue:
     isolation: a different operation (including a candidate authority) gets
     a different cache owner.
     """
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "IVA category catalogue requires an explicit authority operation or scope",
-        )
-    return _catalogue_from_entries(_resolve_entries(effective_date=effective_date, authority=authority))
+    return _catalogue_from_entries(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None))
 
 
 def resolve_iva_category_catalogue(
@@ -236,12 +303,10 @@ def resolve_iva_category_catalogue(
 ) -> IvaCategoryCatalogue:
     """Resolve the complete IVA category vocabulary through fact 0084."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _catalogue_from_entries(_bundled_entries(coordinate))
+    selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     if selected is governed_facts_in_scope():
         return _scoped_catalogue(coordinate)
-    return _catalogue_from_entries(_resolve_entries(effective_date=coordinate, authority=selected))
+    return _catalogue_from_entries(_ENTRIES_FACT.resolve_entries(selected, effective_date=coordinate))
 
 
 def require_iva_category(
@@ -273,6 +338,7 @@ def registry_category_projection(
 __all__ = [
     "IvaCategoryCatalogue",
     "IvaCategoryDefinition",
+    "IvaCategoryExclusion",
     "registry_category_projection",
     "require_iva_category",
     "resolve_iva_category_catalogue",

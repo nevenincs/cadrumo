@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#config-reset-recovery'
 date: '2026-08-22'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b424894ceef1f577e452396a1b930ad31ca8c7a47971b0128e296650905c1708'
+body_hash: 'sha256:d0b5be339aea812b61c0a99798172e8acdc53adf6857c717dfacf91835c457f1'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
 ---
@@ -18,6 +18,14 @@ Why a crashed all-profile reset cannot resume at the post-erase boundary, and wh
 three successive designs to fix it were each refused. Every claim below was read
 at source and the decisive ones were executed. Two defects found on the way are
 fixed and shipped; the third is recorded here unfixed, deliberately.
+
+## Findings
+
+The reset now honors recorded retention overrides, resumes safely after a completed erase, and releases database handles before bucket removal; a custody lockfile remains after successful reset.
+
+## Recommendations
+
+Defer lockfile cleanup until it has a clear owner and runs under root-level transaction serialization; run authoritative subprocess checks from a quiet or commit-pinned tree.
 
 ## Delivered
 

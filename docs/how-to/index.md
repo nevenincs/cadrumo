@@ -1,13 +1,6 @@
 # Getting started
 
-This page routes you to the right guide. The guides are grouped the way a
-filing year actually runs: set up who the taxpayer is, see what is due and
-when, keep the ledger of what happened, and prepare each filing. Cadrumo is
-the product; the Agencia Estatal de Administración Tributaria (AEAT) is the
-external tax authority, and Cadrumo never submits a return or acts as AEAT -
-read
-[how records become filing-ready figures](../explanation/from-records-to-figures.md)
-for that boundary.
+This page routes you to the right guide. The guides are grouped the way a filing year actually runs: set up who the taxpayer is, see what is due and when, keep your records of what happened, and prepare each filing. Cadrumo is the product; the Agencia Estatal de Administración Tributaria (AEAT) is the external tax authority, and Cadrumo never submits a return or acts as AEAT - read [how records become filing-ready figures](../explanation/from-records-to-figures.md) for that boundary.
 
 Start with the [installation guide](../workstation-setup.md) if the `aeat`
 command does not run. For a map of the whole journey from bank records to a
@@ -37,28 +30,25 @@ Four quarterly Modelo 130 instalments, each building on the ones before it,
 closing with the annual Modelo 100 Renta declaration.
 :::
 
-:::{grid-item-card} The IVA year: Modelo 303 → 349 → 390
+:::{grid-item-card} The VAT year: Modelo 303 → 349 → 390
 :link: iva-lifecycle
 :link-type: doc
 
-Four quarterly Modelo 303 returns with the IVA credit carrying between them,
-a Modelo 349 branch, and the annual Modelo 390 summary.
+Four quarterly Modelo 303 returns with the VAT credit carrying between them, a Modelo 349 branch, and the annual Modelo 390 summary.
 :::
 
 :::{grid-item-card} Quickstart
 :link: quickstart
 :link-type: doc
 
-Shortest path from profile and ledger to an exported modelo file: one
-modelo, one period, copy-paste commands.
+Shortest path from profile and records to an exported modelo file: one modelo, one period, copy-paste commands.
 :::
 
 :::{grid-item-card} Your first quarterly filing
 :link: first-quarterly-filing
 :link-type: doc
 
-First-time walk-through of one Modelo 130 quarter: import a statement,
-classify the rows, prepare the draft, and confirm it verifies.
+First-time walk-through of one Modelo 130 quarter: import a statement, classify the entries, prepare the draft, and confirm it passes the check.
 :::
 
 ::::
@@ -119,8 +109,7 @@ What is due, and when.
 :link: filing-calendar
 :link-type: doc
 
-See what may be due, when filing windows open and close, and which period
-tokens address them.
+See what may be due, when filing windows open, their deadlines, and which period codes identify them.
 :::
 
 :::{grid-item-card} Read AEAT notifications
@@ -140,10 +129,10 @@ year-over-year changes.
 
 ::::
 
-## Your ledger
+(your-ledger)=
+## Your records
 
-The record of what happened: bring transactions in, classify them, and keep
-the evidence.
+The record of what happened: bring transactions in, classify them, and keep the supporting documents.
 
 ::::{grid} 1 2 2 3
 :gutter: 3
@@ -152,14 +141,14 @@ the evidence.
 :link: import-bank-statements
 :link-type: doc
 
-Import, add, edit, remove, and review ledger rows.
+Import, add, edit, remove, and review entries.
 :::
 
 :::{grid-item-card} Classify transactions
 :link: classify-transactions
 :link-type: doc
 
-Classify rows manually, in bulk, with allocation, or through the review queue.
+Classify entries manually, in bulk, with allocation, or through the review queue.
 :::
 
 :::{grid-item-card} Classify with an LLM
@@ -170,11 +159,11 @@ Set up the local reader, preview and apply suggestions, and classify from an
 attached invoice.
 :::
 
-:::{grid-item-card} Attach invoices and receipts
+:::{grid-item-card} Attach invoices and receipts to transactions
 :link: ledger-evidence
 :link-type: doc
 
-Store invoices and receipts and link them to the transactions they support.
+Store invoices and receipts as supporting documents and link them to the entries they support.
 :::
 
 :::{grid-item-card} Manage business invoices
@@ -184,25 +173,25 @@ Store invoices and receipts and link them to the transactions they support.
 Record issued and received invoices and feed intra-community operations to Modelo 349.
 :::
 
-:::{grid-item-card} Correct mistakes in your ledger
+:::{grid-item-card} Correct mistakes in your records
 :link: correct-ledger-entries
 :link-type: doc
 
 Update, remove, split, merge, stash, or archive transactions safely.
 :::
 
-:::{grid-item-card} Apply IVA prorrata deductions
+:::{grid-item-card} Apply VAT prorrata deductions
 :link: prorrata
 :link-type: doc
 
-Deduct input IVA under general or especial prorrata and declare differentiated sectors.
+Deduct input VAT under general or especial prorrata and declare differentiated sectors.
 :::
 
 ::::
 
 ## Your filings
 
-The per-modelo work: prepare, review, verify, export, file, and reconcile.
+The per-modelo work: prepare, review, check, export, file, and reconcile.
 
 ::::{grid} 1 2 2 3
 :gutter: 3
@@ -211,8 +200,14 @@ The per-modelo work: prepare, review, verify, export, file, and reconcile.
 :link: filing-spine
 :link-type: doc
 
-Learn how work units and calculation revisions carry a filing through create,
-calculate, verify, file, and export.
+Learn how declarations and saved calculations carry a filing through create, calculate, check, file, and export.
+:::
+
+:::{grid-item-card} Fill in and record a filing on the declaration screen
+:link: fill-in-and-file-in-the-workbench
+:link-type: doc
+
+Fill in a declaration box by box in the full-screen interface, then calculate, review, record the filing, and export it.
 :::
 
 :::{grid-item-card} Modelo 036
@@ -240,7 +235,7 @@ Prepare the quarterly IRPF instalment, cumulative across the year.
 :link: modelo-303
 :link-type: doc
 
-Prepare, verify, and export a quarterly IVA return.
+Prepare, check, and export a quarterly VAT return.
 :::
 
 :::{grid-item-card} Modelo 349
@@ -254,7 +249,7 @@ Declare intra-community operations from your invoice records.
 :link: modelo-390
 :link-type: doc
 
-Prepare the annual IVA summary.
+Prepare the annual VAT summary.
 :::
 
 :::{grid-item-card} Review calculation inputs
@@ -271,18 +266,18 @@ Review which form boxes were filled, supply missing values, and handle offsets.
 Export, edit, and pull back modelo calculations using a Google Sheets spreadsheet.
 :::
 
-:::{grid-item-card} Verify a filing
+:::{grid-item-card} Check a draft declaration and act on the issues
 :link: verification-reports
 :link-type: doc
 
-Run verification, read the report findings, and fix what blocks export.
+Run the check, read the issues in the report, and fix what blocks export.
 :::
 
-:::{grid-item-card} Share a calculation summary
+:::{grid-item-card} Share and check a calculation summary
 :link: calculation-summary
 :link-type: doc
 
-Write a signed PDF of a verified calculation, and check a copy against your data.
+Write a signed PDF of a calculation that passed the check, and check a copy against your data.
 :::
 
 :::{grid-item-card} File at AEAT
@@ -292,12 +287,11 @@ Write a signed PDF of a verified calculation, and check a copy against your data
 Present the modelo at the AEAT portal yourself, record the filing locally, and reconcile.
 :::
 
-:::{grid-item-card} Reconcile a filing
+:::{grid-item-card} Reconcile a filed modelo against its AEAT receipt
 :link: reconcile
 :link-type: doc
 
-Pull and store the AEAT justificante, then compare it with your local filing
-record.
+Pull and store the AEAT receipt, then compare it with your local record of the filing.
 :::
 
 ::::
@@ -318,14 +312,14 @@ Expose the toolset to Claude or any MCP client, with the safety boundary intact.
 :link: troubleshooting
 :link-type: doc
 
-Fix active-profile, storage, registry, and authentication problems.
+Fix active-profile, storage, tax-rules, and authentication problems.
 :::
 
-:::{grid-item-card} Publish runtime authority
+:::{grid-item-card} How to publish a validated runtime authority
 :link: publish-runtime-authority
 :link-type: doc
 
-Publish and verify a signed registry authority as a release operator.
+Publish and check the signed tax rules that Cadrumo reads, as a release maintainer.
 :::
 
 ::::

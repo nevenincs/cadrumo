@@ -92,9 +92,17 @@ from typing import Final
 
 from packaging.version import InvalidVersion, Version
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT, UTF_8
 
 from .burned_versions import BurnedVersionLedgerError, burn_reason, canonical_version, is_burned
+from .package_index_probe import (
+    EndpointQueryPolicy,
+    ResponseReadPolicy,
+    package_index_connection,
+    package_version_request_target,
+    request_package_version,
+)
 
 _UTF_8: Final[str] = UTF_8
 _PROBE_TIMEOUT_S: Final[int] = 20
@@ -116,11 +124,6 @@ _OBJECT_NAME: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{40}")
 #: The three projects one cohort publishes together, and so the set the index
 #: question is asked about: a version is owned there when every one of them
 #: carries it, and part-way is a release still being delivered.
-PYPI_PROJECTS: Final[tuple[str, ...]] = (
-    "cadrumo",
-    "cadrumo-data-manuals",
-    "cadrumo-data-official",
-)
 
 #: The release-please manifest, whose recorded version is the monotonic floor.
 MANIFEST_PATH: Final[Path] = REPO_ROOT / ".release-please-manifest.json"
@@ -246,7 +249,7 @@ def version_conflicts(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,
@@ -315,7 +318,7 @@ def index_convergence_notice(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
 ) -> str | None:
     """Return what a permitted partial index state must say, or ``None``.
 
@@ -346,7 +349,7 @@ def gate_conflicts(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,
@@ -372,7 +375,7 @@ def gate_conflicts(
 def pypi_projects_owning(
     version: str,
     *,
-    projects: Iterable[str] = PYPI_PROJECTS,
+    projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     index_url: str = _PYPI_JSON_INDEX,
 ) -> tuple[str, ...]:
     """Return the projects whose index already carries ``version``.
@@ -398,7 +401,8 @@ def pypi_projects_owning(
     scheme = endpoint.scheme
     if scheme not in _INDEX_SCHEMES:
         raise VersionIdentityError(f"index endpoint {index_url!r} is not an HTTP endpoint")
-    if endpoint.hostname is None:
+    hostname = endpoint.hostname
+    if hostname is None:
         raise VersionIdentityError(f"index endpoint {index_url!r} has no host")
     try:
         port = endpoint.port
@@ -409,19 +413,22 @@ def pypi_projects_owning(
         raise VersionIdentityError(f"candidate version {version!r} is not a valid version")
     owning: list[str] = []
     for project in projects:
-        path = f"{endpoint.path.rstrip('/')}/{project}/{number}/json"
-        if endpoint.query:
-            path = f"{path}?{endpoint.query}"
-        connection_type = http.client.HTTPSConnection if scheme == "https" else http.client.HTTPConnection
-        connection = connection_type(endpoint.hostname, port, timeout=_PROBE_TIMEOUT_S)
+        request_target = package_version_request_target(
+            endpoint.path,
+            endpoint.query,
+            project,
+            number,
+            query_policy=EndpointQueryPolicy.PRESERVE,
+        )
+        connection = package_index_connection(scheme, hostname, port, timeout_s=_PROBE_TIMEOUT_S)
         try:
-            connection.request("GET", path, headers={"Accept": "application/json"})
-            response = connection.getresponse()
-            response.read(1)
+            response = request_package_version(
+                connection,
+                request_target,
+                read_policy=ResponseReadPolicy.FIRST_BYTE,
+            )
         except (OSError, http.client.HTTPException, ValueError) as exc:
             raise VersionIdentityError(f"index check failed for {project}: {exc}") from exc
-        finally:
-            connection.close()
         if response.status == 404:
             continue
         if not 200 <= response.status < 300:
@@ -570,7 +577,7 @@ def assert_gate_permits(
     version: str,
     *,
     owning_projects: Iterable[str] = (),
-    target_projects: Iterable[str] = PYPI_PROJECTS,
+    target_projects: Iterable[str] = PRODUCT_IDENTITY.cohort_distributions,
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     floor: str | None = None,

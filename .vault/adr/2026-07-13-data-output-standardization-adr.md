@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-07-17'
-body_hash: 'sha256:6e073096cc7933c76025e4c121f037310b969840126d034981afa1dec1f0a121'
+modified: '2026-10-05'
+body_hash: 'sha256:f152f3c4cd19ca045ebf5922ab85e91a335edca674604f29783213970551b674'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
 ---
@@ -44,8 +44,8 @@ temp dir, and the repo root with unmanaged, inconsistently-named artifacts.
 - `sensitive-financial-data-secure-storage-only` already governs sensitive
   bytes; this ADR governs everything that legitimately lives OUTSIDE the
   encrypted store (caches, logs, staging, exports, scratch).
-- Managed-lifecycle exemplars already in-tree: LLM run-telemetry
-  (retention-days prune), status cache (TTL), workflow-runs (rotation).
+- Managed-lifecycle exemplars already in-tree: status cache (TTL),
+  workflow-runs (rotation).
 - The atomic-write pattern exists in four dialects of varying strength; the
   master-key variant (`O_EXCL`, 0o600, fsync, pid+token tempname) is the
   strongest.
@@ -112,7 +112,7 @@ context-managed, self-cleaning staging (`TemporaryDirectory`/`mkstemp` inside
 **R3 — Declared lifecycle per artifact family.** Every durable generated
 family declares exactly one lifecycle: rotation (logs — `cadrumo.log` moves
 to a size-capped rotating handler), TTL (status cache, unchanged),
-retention-days prune (run-telemetry precedent extended to LLM cache, LLM
+retention-days prune (for the LLM cache, LLM
 usage JSONL, run traces, wallet diagnostic dumps), or explicitly
 unbounded-by-design (audit/evidence surfaces, documented). A structural test
 enumerates settings dir fields and asserts each maps to a declared lifecycle

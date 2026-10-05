@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-especial'
 date: '2026-07-07'
-modified: '2026-08-15'
-body_hash: 'sha256:846088a6795d831eaeb0d2c8478356a7ebed7f4045b8d5415b9c6c7d76f230f7'
+modified: '2026-10-03'
+body_hash: 'sha256:9e77626f2e03a41a178fcd481b22ff34d54e6b5a2af3e4777883fea0270c236b'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -231,18 +231,18 @@ posture the parent and scope ADRs took for casilla 44.
 Files the implementation will touch (for wave-clustering; see the ADR-vs-ADR overlap
 report):
 
-- `src/cadrumo/domain/transactions/_models.py` — add the typed `input_classification`
+- the former source file — add the typed `input_classification`
   axis to the ledger transaction. **SHARED with `prorrata-sectores-diferenciados`
   (sector reference) and `prorrata-art104-tres-exclusions` (exclusion tag).**
-- `src/cadrumo/application/aggregation/_iva_ledger.py` — make
+- the former source file — make
   `_active_general_prorrata_apportionment` regime-aware (especial 100/0/general
   routing). **SHARED with `prorrata-sectores-diferenciados` (per-sector routing) and
   `prorrata-art104-tres-exclusions` (annual-rollup exclusion filtering) — hottest
   shared surface.**
-- `src/cadrumo/application/calculations/_prorrata_regularizacion.py` — the settlement +10%
+- the former source file — the settlement +10%
   mandatory-especial advisory builder. **SHARED with `prorrata-art104-tres-exclusions`
   (divergence/rollup advisories live here).**
-- `src/cadrumo/domain/iva/_prorrata.py` — consume existing `classify_input_deduction` /
+- the former source file — consume existing `classify_input_deduction` /
   `_deductible_percentage_for` / `is_especial_mandatory` (read-mostly; maybe an especial
   per-input apportionment helper). **SHARED (additive) with all three sibling ADRs.**
 - `src/cadrumo/domain/prorrata_register/__init__.py` — possibly an especial

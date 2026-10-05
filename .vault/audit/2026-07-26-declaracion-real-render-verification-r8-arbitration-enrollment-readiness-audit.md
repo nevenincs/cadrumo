@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-10-03'
 body_hash: 'sha256:30be5f9695d946f9fe6f8dd9b57fce2994eea1ac56f76ff74479befcd1ac9cf3'
 related:
-  - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
   - "[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]"
 ---

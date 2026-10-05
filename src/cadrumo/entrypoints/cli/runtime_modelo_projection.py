@@ -5,7 +5,6 @@ from __future__ import annotations
 from uuid import UUID
 
 import typer
-from pydantic import BaseModel
 
 from ...application.modelo.projection_operation import (
     MODELO_COMPARE_OPERATION_DEFINITION_ID,
@@ -18,22 +17,9 @@ from ...application.modelo.projection_operation import (
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> None:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_modelo_project(ctx: typer.Context, request: ModeloProjectOperationRequest) -> ModeloProjectOperationProjection:
@@ -61,7 +47,7 @@ def run_modelo_project(ctx: typer.Context, request: ModeloProjectOperationReques
         or result.year != request.year
         or result.ccaa != request.ccaa
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -90,7 +76,7 @@ def run_modelo_compare(ctx: typer.Context, request: ModeloCompareOperationReques
         or result.modelo != request.modelo
         or (result.year_a, result.year_b) != tuple(sorted(request.years))
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 

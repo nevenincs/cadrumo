@@ -192,39 +192,93 @@ def _render_table(
     header: bool,
     array_element: bool = False,
 ) -> None:
+    plain, nested = _partition_table(table)
+    comment = comments.get(path)
+    _append_table_comment(comment, lines)
+    _append_table_header(keys, plain, nested, lines, header=header, array_element=array_element, comment=comment)
+    lines.extend(f"{_render_key(key)} = {_render_inline(value)}" for key, value in plain)
+    _render_nested_tables(nested, keys, path, comments, lines)
+
+
+def _partition_table(table: Mapping[str, object]) -> tuple[list[tuple[str, object]], list[tuple[str, object]]]:
     plain: list[tuple[str, object]] = []
     nested: list[tuple[str, object]] = []
     for raw_key, value in table.items():
         key = _table_key(raw_key)
         (nested if is_object_mapping(value) or _is_table_array(value) else plain).append((key, value))
-    comment = comments.get(path)
+    return plain, nested
+
+
+def _append_table_comment(comment: str | None, lines: list[str]) -> None:
     if comment is not None:
         if lines and lines[-1]:
             lines.append("")
         lines.extend(f"# {line}".rstrip() for line in comment.splitlines())
+
+
+def _append_table_header(
+    keys: tuple[str, ...],
+    plain: list[tuple[str, object]],
+    nested: list[tuple[str, object]],
+    lines: list[str],
+    *,
+    header: bool,
+    array_element: bool,
+    comment: str | None,
+) -> None:
     # A table holding only sub-tables is created implicitly by their headers,
     # which is how the source files declare it.
-    if header and (array_element or plain or not nested or comment is not None):
+    if _should_write_table_header(header, array_element, plain, nested, comment):
         if lines and lines[-1] and not lines[-1].startswith("#"):
             lines.append("")
         dotted = ".".join(_render_key(key) for key in keys)
         lines.append(f"[[{dotted}]]" if array_element else f"[{dotted}]")
-    lines.extend(f"{_render_key(key)} = {_render_inline(value)}" for key, value in plain)
+
+
+def _should_write_table_header(
+    header: bool,
+    array_element: bool,
+    plain: list[tuple[str, object]],
+    nested: list[tuple[str, object]],
+    comment: str | None,
+) -> bool:
+    return header and (array_element or bool(plain) or not nested or comment is not None)
+
+
+def _render_nested_tables(
+    nested: list[tuple[str, object]],
+    keys: tuple[str, ...],
+    path: TomlTablePath,
+    comments: Mapping[TomlTablePath, str],
+    lines: list[str],
+) -> None:
     for key, value in nested:
         if is_object_mapping(value):
             _render_table(_str_keyed_mapping(value), (*keys, key), (*path, key), comments, lines, header=True)
             continue
-        for index, element in enumerate(_as_sequence(value)):
-            if is_object_mapping(element):
-                _render_table(
-                    _str_keyed_mapping(element),
-                    (*keys, key),
-                    (*path, key, index),
-                    comments,
-                    lines,
-                    header=True,
-                    array_element=True,
-                )
+        _render_table_array(key, value, keys, path, comments, lines)
+
+
+def _render_table_array(
+    key: str,
+    value: object,
+    keys: tuple[str, ...],
+    path: TomlTablePath,
+    comments: Mapping[TomlTablePath, str],
+    lines: list[str],
+) -> None:
+    for index, element in enumerate(_as_sequence(value)):
+        if not is_object_mapping(element):
+            continue
+        _render_table(
+            _str_keyed_mapping(element),
+            (*keys, key),
+            (*path, key, index),
+            comments,
+            lines,
+            header=True,
+            array_element=True,
+        )
 
 
 def _is_table_array(value: object) -> bool:
@@ -269,18 +323,30 @@ def _render_inline(value: object) -> str:
     if isinstance(value, int):
         return str(value)
     if isinstance(value, float):
-        if math.isnan(value):
-            return "nan"
-        if math.isinf(value):
-            return "inf" if value > 0 else "-inf"
-        return repr(value)
+        return _render_float(value)
     if isinstance(value, str):
         return _render_string(value)
     if isinstance(value, datetime | date | time):
         return value.isoformat()
     if is_object_mapping(value):
-        items = ", ".join(f"{_render_key(_table_key(key))} = {_render_inline(item)}" for key, item in value.items())
-        return f"{{ {items} }}" if items else "{}"
+        return _render_inline_mapping(value)
     if is_object_list_or_tuple(value):
-        return "[" + ", ".join(_render_inline(item) for item in value) + "]"
+        return _render_inline_sequence(value)
     raise TypeError(f"value of type {type(value).__name__} has no TOML form")
+
+
+def _render_float(value: float) -> str:
+    if math.isnan(value):
+        return "nan"
+    if math.isinf(value):
+        return "inf" if value > 0 else "-inf"
+    return repr(value)
+
+
+def _render_inline_mapping(value: Mapping[object, object]) -> str:
+    items = ", ".join(f"{_render_key(_table_key(key))} = {_render_inline(item)}" for key, item in value.items())
+    return f"{{ {items} }}" if items else "{}"
+
+
+def _render_inline_sequence(value: Sequence[object]) -> str:
+    return "[" + ", ".join(_render_inline(item) for item in value) + "]"

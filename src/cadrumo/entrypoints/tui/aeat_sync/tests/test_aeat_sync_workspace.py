@@ -73,16 +73,18 @@ from .....core.operations import OperationTerminalCondition
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from ...components.host import ScreenHostApp
+from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1
 from ...operations.controller_port import OperationControllerPort
 from ...operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from ..controller import AeatSyncWorkspaceController
 from ..models import (
+    AeatSyncDestinationIdV1,
     AeatSyncNotificationDocumentHandoffV1,
     AeatSyncOperationHandoffV1,
     AeatSyncOperationRequestV1,
 )
-from ..routes import AEAT_SYNC_ROUTES, declared_aeat_sync_destination_ids, resolve_aeat_sync_screen
+from ..routes import AEAT_SYNC_ROUTES, resolve_aeat_sync_screen
 from ..screens import (
     AeatSyncCensusScreen,
     AeatSyncEvidenceComparisonScreen,
@@ -108,6 +110,7 @@ _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU = frozenset(
         "sources.entry",
         "sources.joined",
         "value.none",
+        "address.declaration",
     }
 )
 
@@ -336,6 +339,7 @@ def _contracts(
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=build_censal_fetch_port(),
+        provider_preflight=lambda _profile_id, _operation: None,
     ).model_copy(
         update={
             "action_reference": ActionReference(action_id=action_id),
@@ -378,8 +382,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.overview.title",
         {
             "en": "AEAT Sync overview",
-            "es": "Resumen de sincronización AEAT",
-            "ca": "Resum de sincronització de l'AEAT",
+            "es": "Resumen de Sincronización AEAT",
+            "ca": "Resum de Sincronització AEAT",
             "hu": "Az AEAT-szinkron áttekintése",
         },
         ("overview:census",),
@@ -389,9 +393,9 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.census.title",
         {
             "en": "AEAT Sync census",
-            "es": "Censo de sincronización AEAT",
-            "ca": "Cens de sincronització de l'AEAT",
-            "hu": "AEAT-szinkronizálási nyilvántartás",
+            "es": "Censo de Sincronización AEAT",
+            "ca": "Cens de Sincronització AEAT",
+            "hu": "AEAT-szinkron: törzsadatok",
         },
         ("census:tax address",),
     ),
@@ -400,8 +404,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.filed_declarations.title",
         {
             "en": "AEAT Sync filed declarations",
-            "es": "Declaraciones presentadas en sincronización AEAT",
-            "ca": "Declaracions presentades a l'AEAT",
+            "es": "Declaraciones presentadas en Sincronización AEAT",
+            "ca": "Declaracions presentades a Sincronització AEAT",
             "hu": "Az AEAT-szinkron benyújtott bevallásai",
         },
         ("filed:130|2026|1T",),
@@ -411,8 +415,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.notifications.title",
         {
             "en": "AEAT Sync notifications",
-            "es": "Notificaciones de sincronización AEAT",
-            "ca": "Notificacions de l'AEAT",
+            "es": "Notificaciones de Sincronización AEAT",
+            "ca": "Notificacions de Sincronització AEAT",
             "hu": "Az AEAT-szinkron értesítései",
         },
         (),
@@ -421,10 +425,10 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         AeatSyncEvidenceComparisonScreen,
         "tui.aeat_sync.evidence_comparison.title",
         {
-            "en": "AEAT Sync evidence comparison",
-            "es": "Comparación de evidencias de sincronización AEAT",
-            "ca": "Comparació d'evidències de l'AEAT",
-            "hu": "Az AEAT-szinkron bizonyítékainak összehasonlítása",
+            "en": "AEAT Sync: comparison with AEAT",
+            "es": "Sincronización AEAT: comparación con la AEAT",
+            "ca": "Sincronització AEAT: comparació amb l'AEAT",
+            "hu": "AEAT-szinkron: összehasonlítás az AEAT-tal",
         },
         ("comparison:130|2026|1T",),
     ),
@@ -433,8 +437,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.reconciliation.title",
         {
             "en": "AEAT Sync reconciliation",
-            "es": "Conciliación de sincronización AEAT",
-            "ca": "Conciliació de l'AEAT",
+            "es": "Conciliación de Sincronización AEAT",
+            "ca": "Conciliació de Sincronització AEAT",
             "hu": "Az AEAT-szinkron egyeztetése",
         },
         ("reconciliation:130|2026|1T",),
@@ -534,7 +538,7 @@ def test_aeat_sync_namespace_matches_all_locales_and_hu_has_only_explicit_invari
 def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
     controller = _controller()
     assert tuple(route.zone for route in AEAT_SYNC_ROUTES) == tuple(AeatSyncWorkspaceZone)
-    assert {route.destination for route in AEAT_SYNC_ROUTES} == declared_aeat_sync_destination_ids()
+    assert {route.destination for route in AEAT_SYNC_ROUTES} == closed_destination_ids(AeatSyncDestinationIdV1)
     assert isinstance(
         resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
         AeatSyncOverviewScreen,
@@ -543,6 +547,22 @@ def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
     assert not locked.can_open(AeatSyncWorkspaceZone.CENSUS)
     with pytest.raises(ValueError, match="not observable"):
         resolve_aeat_sync_screen(locked, locked.target(AeatSyncWorkspaceZone.CENSUS))
+
+
+@pytest.mark.parametrize(
+    "availability",
+    (AeatSyncWorkspaceAvailability.NEVER_CAPTURED, AeatSyncWorkspaceAvailability.UNAVAILABLE),
+)
+def test_overview_remains_reachable_when_sources_are_unobservable(
+    availability: AeatSyncWorkspaceAvailability,
+) -> None:
+    controller = _controller(availability)
+    assert isinstance(
+        resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
+        AeatSyncOverviewScreen,
+    )
+    assert controller.state_for(AeatSyncWorkspaceZone.OVERVIEW).availability is availability
+    assert not controller.can_open(AeatSyncWorkspaceZone.CENSUS)
 
 
 @pytest.mark.asyncio
@@ -1350,3 +1370,264 @@ async def test_every_comparison_surface_shows_both_values_or_neither(screen_type
     assert ("local_value" in keys) == ("aeat_value" in keys), (
         f"{type(screen).__name__} at {width} columns shows half a comparison: {sorted(keys)}"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 120])
+async def test_complete_census_evidence_survives_reopen_and_selected_value_is_readable(width: int) -> None:
+    """Operate the real evidence table after serialized workspace readback."""
+    from .....application.user_profile.censal_observation import (
+        CensalCell,
+        CensalConsultation,
+        CensalObservation,
+        CensalObservationAddress,
+        CensalObservationIdentity,
+        CensalRow,
+        CensalSection,
+    )
+
+    long_value = "Valor censal completo " * 20
+    observation = CensalObservation(
+        identity=CensalObservationIdentity(nif="00000001R", apellidos_y_nombre="Persona Sintética"),
+        domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
+        domicilio_notificacion=CensalObservationAddress(),
+        captured_at=_T2,
+        source_url="https://sede.agenciatributaria.gob.es/censo",
+        consultations=(
+            CensalConsultation(
+                kind="obligaciones",
+                source_url="https://sede.agenciatributaria.gob.es/obligaciones",
+                sections=(
+                    CensalSection(
+                        title="Mis Obligaciones",
+                        rows=(
+                            CensalRow(
+                                label="Obligación sintética",
+                                cells=(CensalCell(role="value", column="Nueva columna AEAT", text=long_value),),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+    serialized = _projection().model_copy(update={"census_observation": observation}).model_dump_json()
+    for _ in range(2):
+        restored = AeatSyncWorkspaceProjectionV1.model_validate_json(serialized)
+        screen = AeatSyncCensusScreen(
+            AeatSyncWorkspaceController(
+                TuiScreenContextV1(destination="workbench.aeat_sync"),
+                restored,
+            )
+        )
+        async with ScreenHostApp[None](screen).run_test(size=(width, 30)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-census-evidence", DataTable)
+            assert table.row_count > 1
+            table.focus()
+            table.move_cursor(row=table.row_count - 1)
+            await pilot.press("enter")
+            await pilot.pause()
+            detail = str(screen.query_one("#aeat-sync-census-value", Static).render())
+            assert long_value in detail
+            assert "Nueva columna AEAT" in detail
+            assert "Mis Obligaciones" in detail
+            assert table.max_scroll_x == 0
+            assert restored.census_observation == observation
+
+
+def test_controller_pairs_the_single_operation_with_its_contract_joined_action() -> None:
+    """A row's catalogue-only actions do not hide the operation its contract joins."""
+    controller = _controller(
+        overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+        action_id="operator.live.filed.pull_all",
+        operation_id="live.filed-history.pull",
+    )
+    pull = ActionReference(action_id="operator.live.filed.pull_all")
+    listing = ActionReference(action_id="operator.modelo.filing_record.list")
+    operation: OperationDefinitionId = "live.filed-history.pull"
+
+    assert controller.admitted_operation((listing, pull), (operation,)) == AeatSyncOperationRequestV1(
+        action=pull, operation=operation
+    )
+    assert controller.admitted_operation((listing,), (operation,)) is None
+    assert controller.admitted_operation((listing, pull), (operation, "user-profile.censo-review")) is None
+
+
+@pytest.mark.asyncio
+async def test_reader_projected_filed_history_door_renders_and_hands_off_before_any_local_filing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The real overview row pairs the pull with the local filing-record listing.
+
+    A first-run profile holds no local filing, yet both the overview and the
+    filed-declarations zone must offer one filed-history door, hand off its
+    exact request, and state no refusal beside it.
+    """
+    from .....application.aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
+
+    contracts = OperationPublicContractSetV1.build(
+        (*_contracts().definitions, *_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions)
+    )
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id=_BUCKET_ID,
+        subject_key=_SUBJECT_KEY,
+        observed_at=_T2,
+        filings=(),
+        operation_contracts=contracts,
+        censo_values={},
+    )
+    filed_row = next(row for row in projection.overview if row.area is AeatSyncOverviewArea.FILED_DECLARATIONS)
+    assert {str(action.action_id) for action in filed_row.supported_actions} == {
+        "operator.live.filed.pull_all",
+        "operator.modelo.filing_record.list",
+    }
+    calls: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        calls.append(request)
+        return _started_operation_controller()
+
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_handoff=handoff,
+        operation_contracts=contracts,
+    )
+    pull_label = tr("tui.aeat_sync.action.pull_filed_all")
+    for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
+        monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
+        async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            doors = [button for button in screen.query(Button) if str(button.label) == pull_label]
+            assert len(doors) == 1
+            status = str(screen.query_one("#aeat-sync-status", Static).render())
+            assert tr("tui.aeat_sync.refusal.operation_handoff") not in status
+            doors[0].scroll_visible(animate=False)
+            await pilot.pause()
+            await pilot.click(doors[0])
+            await pilot.pause()
+            assert doors[0].disabled
+
+    expected = AeatSyncOperationRequestV1(
+        action=ActionReference(action_id="operator.live.filed.pull_all"),
+        operation="live.filed-history.pull",
+    )
+    assert calls == [expected, expected]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", (80, 120))
+async def test_persisted_drift_renders_each_diff_values_and_grounding_without_overflow(width: int) -> None:
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from .....application.modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
+
+    diff = ModeloReconciliationDiff(
+        field_name="iva.resultado",
+        work_unit_value="0.00",
+        evidence_value="125.50",
+        kind="value_mismatch",
+        diff_kind=ModeloReconciliationDiffKind.CASILLA,
+        legal_refs=("ley-37-1992:art-99",),
+        source_refs=("aeat-test",),
+    )
+    record = _record().model_copy(update={"diffs": (_record().diffs[0], diff)})
+    projection = AeatSyncWorkspaceProjectionV1.model_validate_json(persisted_projection((record,)).model_dump_json())
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(width, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert table.row_count == 2
+            table.move_cursor(row=1)
+            await pilot.pause()
+            detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+            assert all(
+                value in detail
+                for value in (
+                    "0.00",
+                    "125.50",
+                    "iva.resultado",
+                    "ley-37-1992:art-99",
+                    "aeat-test",
+                    "casilla",
+                    "1 advisories",
+                )
+            )
+            assert not any(table.max_scroll_x for table in screen.query(DataTable))
+
+
+@pytest.mark.asyncio
+async def test_stored_match_with_advisories_shows_incomplete_comparison() -> None:
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+
+    projection = persisted_projection((_record(mismatches=False),))
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert "Not fully compared" in table.get_row_at(0)
+            detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+            assert "Not fully compared" in detail
+            assert "1 advisories" in detail
+            assert "No differences in compared fields" not in detail
+
+
+@pytest.mark.asyncio
+async def test_distinct_comparisons_at_same_address_have_unique_rows_and_historical_identity() -> None:
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+
+    first = _record().model_copy(
+        update={
+            "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
+            "calculation_revision_id": "d" * 64,
+        }
+    )
+    second = _record(mismatches=False).model_copy(update={"bucket_event_id": "c" * 64})
+    projection = persisted_projection((first, second))
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert table.row_count == 2
+            assert len(set(table.rows)) == 2
+            for index in range(2):
+                table.move_cursor(row=index)
+                await pilot.pause()
+                detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+                assert "Stored comparison; current calculation has not been rechecked." in detail
+                assert first.work_unit_id in detail
+                row_key = str(table.ordered_rows[index].key.value)
+                if first.bucket_event_id in row_key:
+                    assert "Compared calculation:" in detail
+                    assert first.calculation_revision_id is not None
+                    assert first.calculation_revision_id in detail
+                else:
+                    assert "Compared calculation revision was not recorded." in detail

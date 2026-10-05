@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:72aeae3570ae273d3ed1dc405d99b4946ca35016d8d91aa1155ea9d8b249169c'
+modified: '2026-10-03'
+body_hash: 'sha256:64124aadbb3e20452bf07a369d2b9c05b81972bc20523adb012e702956a42071'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-04-registry-reviewability-gate-code-review-audit]]'
 ---
 
@@ -55,4 +54,4 @@ without changing validator semantics and without raising the baseline.
 
 Failure reproduced with:
 
-`uv run --no-sync pytest src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_validator_modules_stay_below_p05_reviewability_baseline -q`
+the historical check

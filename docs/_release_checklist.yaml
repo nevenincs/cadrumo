@@ -51,7 +51,7 @@ rollback:
   triggers:
     - "data loss or corruption reported against the release"
     - "security vulnerability disclosed in the release"
-    - "5%+ of active installs report a regression (best-effort estimate; no telemetry exists yet — inferred from issue volume/severity)"
+    - "5%+ of active installs report a regression (best-effort estimate inferred from issue volume/severity)"
     - "compatibility mis-computation (a supported Python/OS/dependency combination fails after the release)"
   procedure_ref: "RELEASING.md#rollback-procedure"
   mechanism: "revert the release commit + tag on main, publish a corrected patch release; PyPI yank marks the bad version so pip/uv skip it by default"

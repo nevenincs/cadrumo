@@ -1,0 +1,2062 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-05 11:34+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/catalogue.md:1
+msgid "Detailed technical articles"
+msgstr "Articles tècnics detallats"
+
+#: ../../technical/articles/catalogue.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Visió tècnica general](../architecture.md) · [Índex "
+"d’articles](catalogue.md) · [Instantània i guia de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/catalogue.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Aquesta pàgina descriu la instantània analitzada del codi font. Les "
+"conclusions i limitacions no constitueixen una certificació de la branca "
+"actual."
+
+#: ../../technical/articles/catalogue.md:7
+msgid ""
+"The 206 articles are grouped by their original topic assignments. Each "
+"article retains its scope, mechanisms, findings, qualifications, and "
+"coverage appendix. Report identifiers preserve correspondence with the "
+"original analysis."
+msgstr ""
+"Els 206 articles s'agrupen segons les assignacions temàtiques originals. "
+"Cada article conserva el seu abast, mecanismes, troballes, matisos i "
+"apèndix de cobertura. Els identificadors d'informe preserven la "
+"correspondència amb l'anàlisi original."
+
+#: ../../technical/articles/catalogue.md:9
+msgid "Operator interfaces, part 1: command graph and principal workflows"
+msgstr ""
+"Interfícies de l’operador, part 1: graf d’ordres i fluxos principals de "
+"treball"
+
+#: ../../technical/articles/catalogue.md:11
+msgid "[Read the topic overview](../topics/operator-interfaces-part-1.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/operator-interfaces-"
+"part-1.md)."
+
+#: ../../technical/articles/catalogue.md:13
+msgid ""
+"[Entrypoint adapter composition](154-entrypoint-adapter-composition.md) —"
+" `STAGE-2-154`"
+msgstr ""
+"[Composició d’adaptadors dels punts d’entrada](154-entrypoint-adapter-"
+"composition.md) — `STAGE-2-154`"
+
+#: ../../technical/articles/catalogue.md:14
+msgid ""
+"[Entrypoint operation and read composition](155-entrypoint-operation-and-"
+"read-composition.md) — `STAGE-2-155`"
+msgstr ""
+"[Composició d’operacions i lectures dels punts d’entrada](155-entrypoint-"
+"operation-and-read-composition.md) — `STAGE-2-155`"
+
+#: ../../technical/articles/catalogue.md:15
+msgid ""
+"[CLI command contracts and operator surfaces](156-cli-command-contracts-"
+"and-operator-surfaces.md) — `STAGE-2-156`"
+msgstr ""
+"[Contractes d’ordres CLI i superfícies de l’operador](156-cli-command-"
+"contracts-and-operator-surfaces.md) — `STAGE-2-156`"
+
+#: ../../technical/articles/catalogue.md:16
+msgid ""
+"[Live AEAT CLI capture and snapshot surfaces](157-live-aeat-cli-capture-"
+"and-snapshot-surfaces.md) — `STAGE-2-157`"
+msgstr ""
+"[Captura CLI de l’AEAT en directe i superfícies d’instantànies](157-live-"
+"aeat-cli-capture-and-snapshot-surfaces.md) — `STAGE-2-157`"
+
+#: ../../technical/articles/catalogue.md:17
+msgid ""
+"[CLI contracts, execution projection, diagnostics and evidence "
+"notices](158-cli-contracts-execution-projection-diagnostics-and-evidence-"
+"notices.md) — `STAGE-2-158`"
+msgstr ""
+"[Contractes CLI, projecció d’execució, diagnòstics i avisos "
+"d’evidències](158-cli-contracts-execution-projection-diagnostics-and-"
+"evidence-notices.md) — `STAGE-2-158`"
+
+#: ../../technical/articles/catalogue.md:18
+msgid ""
+"[Ledger, invoice and document-evidence operator flows](159-ledger-"
+"invoice-and-document-evidence-operator-flows.md) — `STAGE-2-159`"
+msgstr ""
+"[Fluxos de l’operador de llibre major, factures i evidències "
+"documentals](159-ledger-invoice-and-document-evidence-operator-flows.md) "
+"— `STAGE-2-159`"
+
+#: ../../technical/articles/catalogue.md:19
+msgid ""
+"[Ledger review, imports, rules, inventory and read surfaces](160-ledger-"
+"review-imports-rules-inventory-and-read-surfaces.md) — `STAGE-2-160`"
+msgstr ""
+"[Revisió del llibre major, importacions, regles, inventari i superfícies "
+"de lectura](160-ledger-review-imports-rules-inventory-and-read-"
+"surfaces.md) — `STAGE-2-160`"
+
+#: ../../technical/articles/catalogue.md:20
+msgid ""
+"[Modelo command support, discovery, amendment and export surfaces](161"
+"-modelo-command-support-discovery-amendment-and-export-surfaces.md) — "
+"`STAGE-2-161`"
+msgstr ""
+"[Suport d’ordres Modelo, descoberta, rectificació i superfícies "
+"d’exportació](161-modelo-command-support-discovery-amendment-and-export-"
+"surfaces.md) — `STAGE-2-161`"
+
+#: ../../technical/articles/catalogue.md:21
+msgid ""
+"[Modelo local records, wallet, preview, and non-work command "
+"contracts](162-modelo-local-records-wallet-preview-and-non-work-command-"
+"contracts.md) — `STAGE-2-162`"
+msgstr ""
+"[Registres locals de Modelo, cartera, previsualització i contractes "
+"d’ordres sense treball](162-modelo-local-records-wallet-preview-and-non-"
+"work-command-contracts.md) — `STAGE-2-162`"
+
+#: ../../technical/articles/catalogue.md:22
+msgid ""
+"[Modelo projection, readiness, filing evidence and sharing surfaces](163"
+"-modelo-projection-readiness-filing-evidence-and-sharing-surfaces.md) — "
+"`STAGE-2-163`"
+msgstr ""
+"[Projecció de Modelo, preparació, evidències de presentació i superfícies"
+" de compartició](163-modelo-projection-readiness-filing-evidence-and-"
+"sharing-surfaces.md) — `STAGE-2-163`"
+
+#: ../../technical/articles/catalogue.md:23
+msgid ""
+"[Work inspection, overview, verification and profile authentication](164"
+"-work-inspection-overview-verification-and-profile-authentication.md) — "
+"`STAGE-2-164`"
+msgstr ""
+"[Inspecció de treball, visió general, verificació i autenticació de "
+"perfils](164-work-inspection-overview-verification-and-profile-"
+"authentication.md) — `STAGE-2-164`"
+
+#: ../../technical/articles/catalogue.md:24
+msgid ""
+"[Prorrata, review, root CLI and command authority](165-prorrata-review-"
+"root-cli-and-command-authority.md) — `STAGE-2-165`"
+msgstr ""
+"[Prorrata, revisió, CLI arrel i autoritat d’ordres](165-prorrata-review-"
+"root-cli-and-command-authority.md) — `STAGE-2-165`"
+
+#: ../../technical/articles/catalogue.md:25
+msgid ""
+"[Shared CLI transport and profile configuration surfaces](166-shared-cli-"
+"transport-and-profile-configuration-surfaces.md) — `STAGE-2-166`"
+msgstr ""
+"[Transport CLI compartit i superfícies de configuració de perfils](166"
+"-shared-cli-transport-and-profile-configuration-surfaces.md) — "
+"`STAGE-2-166`"
+
+#: ../../technical/articles/catalogue.md:26
+msgid ""
+"[Profile maintenance, repair, and Google operations](167-profile-"
+"maintenance-repair-and-google-operations.md) — `STAGE-2-167`"
+msgstr ""
+"[Manteniment de perfils, reparació i operacions Google](167-profile-"
+"maintenance-repair-and-google-operations.md) — `STAGE-2-167`"
+
+#: ../../technical/articles/catalogue.md:27
+msgid ""
+"[Profile custody, provisioning, and runtime configuration](168-profile-"
+"custody-provisioning-and-runtime-configuration.md) — `STAGE-2-168`"
+msgstr ""
+"[Custòdia de perfils, aprovisionament i configuració de l’entorn "
+"d’execució](168-profile-custody-provisioning-and-runtime-"
+"configuration.md) — `STAGE-2-168`"
+
+#: ../../technical/articles/catalogue.md:29
+msgid "Operator interfaces, part 2: secure transport and operation bridges"
+msgstr "Interfícies de l’operador, part 2: transport segur i ponts d’operacions"
+
+#: ../../technical/articles/catalogue.md:31
+msgid "[Read the topic overview](../topics/operator-interfaces-part-2.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/operator-interfaces-"
+"part-2.md)."
+
+#: ../../technical/articles/catalogue.md:33
+msgid ""
+"[Secure CLI input, profile bridges, and storage controls](169-secure-cli-"
+"input-profile-bridges-and-storage-controls.md) — `STAGE-2-169`"
+msgstr ""
+"[Entrada segura de la CLI, ponts de perfils i controls "
+"d’emmagatzematge](169-secure-cli-input-profile-bridges-and-storage-"
+"controls.md) — `STAGE-2-169`"
+
+#: ../../technical/articles/catalogue.md:34
+msgid ""
+"[CLI error handling, ledger actions, and Modelo work](170-cli-error-"
+"handling-ledger-actions-and-modelo-work.md) — `STAGE-2-170`"
+msgstr ""
+"[Gestió d’errors de la CLI, accions del llibre major i treball de "
+"Modelo](170-cli-error-handling-ledger-actions-and-modelo-work.md) — "
+"`STAGE-2-170`"
+
+#: ../../technical/articles/catalogue.md:35
+msgid ""
+"[CLI period, registered-operation, and ledger bridges](171-cli-period-"
+"registered-operation-and-ledger-bridges.md) — `STAGE-2-171`"
+msgstr ""
+"[Ponts de períodes, operacions registrades i llibre major de la CLI](171"
+"-cli-period-registered-operation-and-ledger-bridges.md) — `STAGE-2-171`"
+
+#: ../../technical/articles/catalogue.md:36
+msgid ""
+"[Ledger and Modelo CLI operations](172-ledger-and-modelo-cli-"
+"operations.md) — `STAGE-2-172`"
+msgstr ""
+"[Operacions CLI del llibre major i de Modelo](172-ledger-and-modelo-cli-"
+"operations.md) — `STAGE-2-172`"
+
+#: ../../technical/articles/catalogue.md:37
+msgid ""
+"[Modelo discovery, review exchange, profile admission, and workflow "
+"reads](173-modelo-discovery-review-exchange-profile-admission-and-"
+"workflow-reads.md) — `STAGE-2-173`"
+msgstr ""
+"[Descoberta de Modelo, intercanvi de revisió, admissió de perfils i "
+"lectures de fluxos de treball](173-modelo-discovery-review-exchange-"
+"profile-admission-and-workflow-reads.md) — `STAGE-2-173`"
+
+#: ../../technical/articles/catalogue.md:39
+msgid "Installed runtime, terminal workbench, and agent harness"
+msgstr ""
+"Entorn d’execució instal·lat, banc de treball de terminal i entorn "
+"d’agents"
+
+#: ../../technical/articles/catalogue.md:41
+msgid "[Read the topic overview](../topics/runtime-tui-and-agent-harness.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/runtime-tui-and-agent-"
+"harness.md)."
+
+#: ../../technical/articles/catalogue.md:43
+msgid ""
+"[Installed runtime, profile host, and worker authority](174-installed-"
+"runtime-profile-host-and-worker-authority.md) — `STAGE-2-174`"
+msgstr ""
+"[Entorn d’execució instal·lat, amfitrió de perfils i autoritat dels "
+"processos de treball](174-installed-runtime-profile-host-and-worker-"
+"authority.md) — `STAGE-2-174`"
+
+#: ../../technical/articles/catalogue.md:44
+msgid ""
+"[Profile-worker request staging](175-profile-worker-request-staging.md) —"
+" `STAGE-2-175`"
+msgstr ""
+"[Preparació de sol·licituds del procés de treball de perfil](175-profile-"
+"worker-request-staging.md) — `STAGE-2-175`"
+
+#: ../../technical/articles/catalogue.md:45
+msgid ""
+"[Textual terminal workbench and Declarations calendar](176-textual-"
+"terminal-workbench-and-declarations-calendar.md) — `STAGE-2-176`"
+msgstr ""
+"[Banc de treball de terminal Textual i calendari de Declaracions](176"
+"-textual-terminal-workbench-and-declarations-calendar.md) — `STAGE-2-176`"
+
+#: ../../technical/articles/catalogue.md:46
+msgid ""
+"[Home, Declarations portfolio, and Ledger TUI flows](177-home-"
+"declarations-portfolio-and-ledger-tui-flows.md) — `STAGE-2-177`"
+msgstr ""
+"[Inici, cartera de Declaracions i fluxos TUI del llibre major](177-home-"
+"declarations-portfolio-and-ledger-tui-flows.md) — `STAGE-2-177`"
+
+#: ../../technical/articles/catalogue.md:47
+msgid ""
+"[Ledger operations and Modelo lifecycle TUI doors](178-ledger-operations-"
+"and-modelo-lifecycle-tui-doors.md) — `STAGE-2-178`"
+msgstr ""
+"[Operacions del llibre major i punts d’entrada TUI del cicle de vida de "
+"Modelo](178-ledger-operations-and-modelo-lifecycle-tui-doors.md) — "
+"`STAGE-2-178`"
+
+#: ../../technical/articles/catalogue.md:48
+msgid ""
+"[Modelo workbench, casilla editing, and lifecycle screens](179-modelo-"
+"workbench-casilla-editing-and-lifecycle-screens.md) — `STAGE-2-179`"
+msgstr ""
+"[Banc de treball de Modelo, edició de caselles i pantalles del cicle de "
+"vida](179-modelo-workbench-casilla-editing-and-lifecycle-screens.md) — "
+"`STAGE-2-179`"
+
+#: ../../technical/articles/catalogue.md:49
+msgid ""
+"[Modelo workbench issue review, progress and navigation](180-modelo-"
+"workbench-issue-review-progress-and-navigation.md) — `STAGE-2-180`"
+msgstr ""
+"[Revisió d’incidències, progrés i navegació del banc de treball de "
+"Modelo](180-modelo-workbench-issue-review-progress-and-navigation.md) — "
+"`STAGE-2-180`"
+
+#: ../../technical/articles/catalogue.md:50
+msgid ""
+"[Modelo workbench editing, source map, and operation flow](181-modelo-"
+"workbench-editing-source-map-and-operation-flow.md) — `STAGE-2-181`"
+msgstr ""
+"[Edició, mapa de fonts i flux d’operacions del banc de treball de "
+"Modelo](181-modelo-workbench-editing-source-map-and-operation-flow.md) — "
+"`STAGE-2-181`"
+
+#: ../../technical/articles/catalogue.md:51
+msgid ""
+"[Supervised operation modal and profile manager](182-supervised-"
+"operation-modal-and-profile-manager.md) — `STAGE-2-182`"
+msgstr ""
+"[Diàleg modal d’operacions supervisades i gestor de perfils](182"
+"-supervised-operation-modal-and-profile-manager.md) — `STAGE-2-182`"
+
+#: ../../technical/articles/catalogue.md:52
+msgid ""
+"[Runtime TUI access, workbench and secret-entry flows](183-runtime-tui-"
+"access-workbench-and-secret-entry-flows.md) — `STAGE-2-183`"
+msgstr ""
+"[Accés TUI a l’entorn d’execució, banc de treball i fluxos d’entrada "
+"secreta](183-runtime-tui-access-workbench-and-secret-entry-flows.md) — "
+"`STAGE-2-183`"
+
+#: ../../technical/articles/catalogue.md:53
+msgid ""
+"[Profile registration, recovery and runtime login](184-profile-"
+"registration-recovery-and-runtime-login.md) — `STAGE-2-184`"
+msgstr ""
+"[Registre de perfils, recuperació i inici de sessió a l’entorn "
+"d’execució](184-profile-registration-recovery-and-runtime-login.md) — "
+"`STAGE-2-184`"
+
+#: ../../technical/articles/catalogue.md:54
+msgid ""
+"[Python typing package marker](185-python-typing-package-marker.md) — "
+"`STAGE-2-185`"
+msgstr ""
+"[Marcador de paquet de tipatge Python](185-python-typing-package-"
+"marker.md) — `STAGE-2-185`"
+
+#: ../../technical/articles/catalogue.md:55
+msgid ""
+"[Agent personas, operator rules and workflow skills](186-agent-personas-"
+"operator-rules-and-workflow-skills.md) — `STAGE-2-186`"
+msgstr ""
+"[Persones d’agent, regles d’operador i habilitats de flux de treball](186"
+"-agent-personas-operator-rules-and-workflow-skills.md) — `STAGE-2-186`"
+
+#: ../../technical/articles/catalogue.md:56
+msgid ""
+"[Filing skills and the MCP operator harness](187-filing-skills-and-the-"
+"mcp-operator-harness.md) — `STAGE-2-187`"
+msgstr ""
+"[Habilitats de presentació i entorn d’operador MCP](187-filing-skills-"
+"and-the-mcp-operator-harness.md) — `STAGE-2-187`"
+
+#: ../../technical/articles/catalogue.md:58
+msgid "Document and financial imports"
+msgstr "Importacions documentals i financeres"
+
+#: ../../technical/articles/catalogue.md:60
+msgid "[Read the topic overview](../topics/document-and-financial-imports.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/document-and-financial-"
+"imports.md)."
+
+#: ../../technical/articles/catalogue.md:62
+msgid "[Package namespaces](001-package-namespaces.md) — `STAGE-2-001`"
+msgstr "[Espais de noms dels paquets](001-package-namespaces.md) — `STAGE-2-001`"
+
+#: ../../technical/articles/catalogue.md:63
+msgid ""
+"[Inbound document and financial adapters](002-inbound-document-and-"
+"financial-adapters.md) — `STAGE-2-002`"
+msgstr ""
+"[Adaptadors d’entrada documentals i financers](002-inbound-document-and-"
+"financial-adapters.md) — `STAGE-2-002`"
+
+#: ../../technical/articles/catalogue.md:64
+msgid ""
+"[Financial providers, receipts, and notification PDFs](003-financial-"
+"providers-receipts-and-notification-pdfs.md) — `STAGE-2-003`"
+msgstr ""
+"[Proveïdors financers, rebuts i PDF de notificacions](003-financial-"
+"providers-receipts-and-notification-pdfs.md) — `STAGE-2-003`"
+
+#: ../../technical/articles/catalogue.md:65
+msgid ""
+"[Shared PDF text and provenance boundary](004-shared-pdf-text-and-"
+"provenance-boundary.md) — `STAGE-2-004`"
+msgstr ""
+"[Text PDF compartit i límit de procedència](004-shared-pdf-text-and-"
+"provenance-boundary.md) — `STAGE-2-004`"
+
+#: ../../technical/articles/catalogue.md:67
+msgid "External integrations and local runtime"
+msgstr "Integracions externes i entorn d’execució local"
+
+#: ../../technical/articles/catalogue.md:69
+msgid ""
+"[Read the topic overview](../topics/external-integrations-and-local-"
+"runtime.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/external-integrations-and-"
+"local-runtime.md)."
+
+#: ../../technical/articles/catalogue.md:71
+msgid ""
+"[Local runtime clients and native OS bindings](005-local-runtime-clients-"
+"and-native-os-bindings.md) — `STAGE-2-005`"
+msgstr ""
+"[Clients de l’entorn d’execució local i vinculacions natives del sistema "
+"operatiu](005-local-runtime-clients-and-native-os-bindings.md) — "
+"`STAGE-2-005`"
+
+#: ../../technical/articles/catalogue.md:72
+msgid ""
+"[Local runtime transport, worker custody, and lifecycle](006-local-"
+"runtime-transport-worker-custody-and-lifecycle.md) — `STAGE-2-006`"
+msgstr ""
+"[Transport de l’entorn d’execució local, custòdia de processos de treball"
+" i cicle de vida](006-local-runtime-transport-worker-custody-and-"
+"lifecycle.md) — `STAGE-2-006`"
+
+#: ../../technical/articles/catalogue.md:73
+msgid ""
+"[Windows login, task control, and worker authority](007-windows-login-"
+"task-control-and-worker-authority.md) — `STAGE-2-007`"
+msgstr ""
+"[Inici de sessió Windows, control de tasques i autoritat dels processos "
+"de treball](007-windows-login-task-control-and-worker-authority.md) — "
+"`STAGE-2-007`"
+
+#: ../../technical/articles/catalogue.md:74
+msgid ""
+"[AEAT certificate and Cl@ve browser authentication](008-aeat-certificate-"
+"and-cl-ve-browser-authentication.md) — `STAGE-2-008`"
+msgstr ""
+"[Autenticació de navegador de l’AEAT amb certificat i Cl@ve](008-aeat-"
+"certificate-and-cl-ve-browser-authentication.md) — `STAGE-2-008`"
+
+#: ../../technical/articles/catalogue.md:75
+msgid ""
+"[Cl@ve Permanente, browser support, and Sede read primitives](009-cl-ve-"
+"permanente-browser-support-and-sede-read-primitives.md) — `STAGE-2-009`"
+msgstr ""
+"[Cl@ve Permanente, suport de navegador i primitives de lectura de la "
+"Seu](009-cl-ve-permanente-browser-support-and-sede-read-primitives.md) — "
+"`STAGE-2-009`"
+
+#: ../../technical/articles/catalogue.md:76
+msgid ""
+"[Censal reads, filed-declaration capture, and GROI checks](010-censal-"
+"reads-filed-declaration-capture-and-groi-checks.md) — `STAGE-2-010`"
+msgstr ""
+"[Lectures censals, captura de declaracions presentades i comprovacions "
+"GROI](010-censal-reads-filed-declaration-capture-and-groi-checks.md) — "
+"`STAGE-2-010`"
+
+#: ../../technical/articles/catalogue.md:77
+msgid ""
+"[IVA wallet, notifications, VIES checks, and expediente reads](011-iva-"
+"wallet-notifications-vies-checks-and-expediente-reads.md) — `STAGE-2-011`"
+msgstr ""
+"[Cartera d’IVA, notificacions, comprovacions VIES i lectures "
+"d’expedients](011-iva-wallet-notifications-vies-checks-and-expediente-"
+"reads.md) — `STAGE-2-011`"
+
+#: ../../technical/articles/catalogue.md:78
+msgid ""
+"[PDF summaries, ECB rates, and Google Sheets exports](012-pdf-summaries-"
+"ecb-rates-and-google-sheets-exports.md) — `STAGE-2-012`"
+msgstr ""
+"[Resums PDF, tipus del BCE i exportacions a Google Sheets](012-pdf-"
+"summaries-ecb-rates-and-google-sheets-exports.md) — `STAGE-2-012`"
+
+#: ../../technical/articles/catalogue.md:79
+msgid ""
+"[Google Sheets readback, Drive ownership, and Google sign-in](013-google-"
+"sheets-readback-drive-ownership-and-google-sign-in.md) — `STAGE-2-013`"
+msgstr ""
+"[Relectura de Google Sheets, propietat de Drive i inici de sessió de "
+"Google](013-google-sheets-readback-drive-ownership-and-google-sign-in.md)"
+" — `STAGE-2-013`"
+
+#: ../../technical/articles/catalogue.md:80
+msgid ""
+"[LLM dispatch, consent, and invoice-reading pipeline](014-llm-dispatch-"
+"consent-and-invoice-reading-pipeline.md) — `STAGE-2-014`"
+msgstr ""
+"[Enviament LLM, consentiment i circuit de lectura de factures](014-llm-"
+"dispatch-consent-and-invoice-reading-pipeline.md) — `STAGE-2-014`"
+
+#: ../../technical/articles/catalogue.md:81
+msgid ""
+"[LLM provider adapters and Google Drive storage](015-llm-provider-"
+"adapters-and-google-drive-storage.md) — `STAGE-2-015`"
+msgstr ""
+"[Adaptadors de proveïdors LLM i emmagatzematge de Google Drive](015-llm-"
+"provider-adapters-and-google-drive-storage.md) — `STAGE-2-015`"
+
+#: ../../technical/articles/catalogue.md:82
+msgid ""
+"[Local storage, remote ciphertext mirroring, and offline workbooks](016"
+"-local-storage-remote-ciphertext-mirroring-and-offline-workbooks.md) — "
+"`STAGE-2-016`"
+msgstr ""
+"[Emmagatzematge local, rèplica remota de text xifrat i llibres de càlcul "
+"fora de línia](016-local-storage-remote-ciphertext-mirroring-and-offline-"
+"workbooks.md) — `STAGE-2-016`"
+
+#: ../../technical/articles/catalogue.md:84
+msgid "Persistence and secure storage"
+msgstr "Persistència i emmagatzematge segur"
+
+#: ../../technical/articles/catalogue.md:86
+msgid "[Read the topic overview](../topics/persistence-and-secure-storage.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/persistence-and-secure-"
+"storage.md)."
+
+#: ../../technical/articles/catalogue.md:88
+msgid ""
+"[Persistence for LLM records, durable operations, and profile state](017"
+"-persistence-for-llm-records-durable-operations-and-profile-state.md) — "
+"`STAGE-2-017`"
+msgstr ""
+"[Persistència de registres LLM, operacions duradores i estat de "
+"perfils](017-persistence-for-llm-records-durable-operations-and-profile-"
+"state.md) — `STAGE-2-017`"
+
+#: ../../technical/articles/catalogue.md:89
+msgid ""
+"[Profile persistence for invoices, filings, and calculation evidence](018"
+"-profile-persistence-for-invoices-filings-and-calculation-evidence.md) — "
+"`STAGE-2-018`"
+msgstr ""
+"[Persistència de perfils per a factures, presentacions i evidències de "
+"càlcul](018-profile-persistence-for-invoices-filings-and-calculation-"
+"evidence.md) — `STAGE-2-018`"
+
+#: ../../technical/articles/catalogue.md:90
+msgid ""
+"[Profile persistence for transactions, review exchange, and "
+"workflows](019-profile-persistence-for-transactions-review-exchange-and-"
+"workflows.md) — `STAGE-2-019`"
+msgstr ""
+"[Persistència de perfils per a transaccions, intercanvi de revisió i "
+"fluxos de treball](019-profile-persistence-for-transactions-review-"
+"exchange-and-workflows.md) — `STAGE-2-019`"
+
+#: ../../technical/articles/catalogue.md:91
+msgid ""
+"[Encrypted blobs, bucket archives, and custody filesystem](020-encrypted-"
+"blobs-bucket-archives-and-custody-filesystem.md) — `STAGE-2-020`"
+msgstr ""
+"[Blocs binaris xifrats, arxius de contenidors i sistema de fitxers de "
+"custòdia](020-encrypted-blobs-bucket-archives-and-custody-filesystem.md) "
+"— `STAGE-2-020`"
+
+#: ../../technical/articles/catalogue.md:92
+msgid ""
+"[Supervised key derivation and automation custody](021-supervised-key-"
+"derivation-and-automation-custody.md) — `STAGE-2-021`"
+msgstr ""
+"[Derivació supervisada de claus i custòdia d’automatització](021"
+"-supervised-key-derivation-and-automation-custody.md) — `STAGE-2-021`"
+
+#: ../../technical/articles/catalogue.md:93
+msgid ""
+"[Profile capsule lifecycle and custody proof](022-profile-capsule-"
+"lifecycle-and-custody-proof.md) — `STAGE-2-022`"
+msgstr ""
+"[Cicle de vida de càpsules de perfil i prova de custòdia](022-profile-"
+"capsule-lifecycle-and-custody-proof.md) — `STAGE-2-022`"
+
+#: ../../technical/articles/catalogue.md:94
+msgid ""
+"[Profile custody primitives, session state, and secure envelopes](023"
+"-profile-custody-primitives-session-state-and-secure-envelopes.md) — "
+"`STAGE-2-023`"
+msgstr ""
+"[Primitives de custòdia de perfils, estat de sessió i embolcalls "
+"segurs](023-profile-custody-primitives-session-state-and-secure-"
+"envelopes.md) — `STAGE-2-023`"
+
+#: ../../technical/articles/catalogue.md:95
+msgid ""
+"[Profile custody adapter, storage routing, and secure-object "
+"contracts](024-profile-custody-adapter-storage-routing-and-secure-object-"
+"contracts.md) — `STAGE-2-024`"
+msgstr ""
+"[Adaptador de custòdia de perfils, encaminament d’emmagatzematge i "
+"contractes d’objectes segurs](024-profile-custody-adapter-storage-"
+"routing-and-secure-object-contracts.md) — `STAGE-2-024`"
+
+#: ../../technical/articles/catalogue.md:96
+msgid ""
+"[Encrypted SQL repository, revision writes, and workflow storage](025"
+"-encrypted-sql-repository-revision-writes-and-workflow-storage.md) — "
+"`STAGE-2-025`"
+msgstr ""
+"[Repositori SQL xifrat, escriptures de revisions i emmagatzematge de "
+"fluxos de treball](025-encrypted-sql-repository-revision-writes-and-"
+"workflow-storage.md) — `STAGE-2-025`"
+
+#: ../../technical/articles/catalogue.md:98
+msgid "Application orchestration and diagnostics"
+msgstr "Orquestració de l’aplicació i diagnòstics"
+
+#: ../../technical/articles/catalogue.md:100
+msgid ""
+"[Read the topic overview](../topics/application-orchestration-and-"
+"diagnostics.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/application-orchestration-"
+"and-diagnostics.md)."
+
+#: ../../technical/articles/catalogue.md:102
+msgid ""
+"[Configuration reset and diagnostics](026-configuration-reset-and-"
+"diagnostics.md) — `STAGE-2-026`"
+msgstr ""
+"[Restabliment de configuració i diagnòstics](026-configuration-reset-and-"
+"diagnostics.md) — `STAGE-2-026`"
+
+#: ../../technical/articles/catalogue.md:103
+msgid ""
+"[Local reader provisioning, workstation health, and application "
+"contracts](027-local-reader-provisioning-workstation-health-and-"
+"application-contracts.md) — `STAGE-2-027`"
+msgstr ""
+"[Aprovisionament del lector local, salut de l’estació de treball i "
+"contractes d’aplicació](027-local-reader-provisioning-workstation-health-"
+"and-application-contracts.md) — `STAGE-2-027`"
+
+#: ../../technical/articles/catalogue.md:104
+msgid ""
+"[Runtime admission, canonical state, and storage-route policy](028"
+"-runtime-admission-canonical-state-and-storage-route-policy.md) — "
+"`STAGE-2-028`"
+msgstr ""
+"[Admissió de l’entorn d’execució, estat canònic i política de rutes "
+"d’emmagatzematge](028-runtime-admission-canonical-state-and-storage-"
+"route-policy.md) — `STAGE-2-028`"
+
+#: ../../technical/articles/catalogue.md:105
+msgid ""
+"[Installed workbench generations and workstation checks](029-installed-"
+"workbench-generations-and-workstation-checks.md) — `STAGE-2-029`"
+msgstr ""
+"[Generacions del banc de treball instal·lat i comprovacions de l’estació "
+"de treball](029-installed-workbench-generations-and-workstation-"
+"checks.md) — `STAGE-2-029`"
+
+#: ../../technical/articles/catalogue.md:106
+msgid ""
+"[Activity-asset claims and AEAT Sync workspace projection](030-activity-"
+"asset-claims-and-aeat-sync-workspace-projection.md) — `STAGE-2-030`"
+msgstr ""
+"[Sol·licituds d’actius d’activitat i projecció de l’espai de treball de "
+"Sincronització amb l’AEAT](030-activity-asset-claims-and-aeat-sync-"
+"workspace-projection.md) — `STAGE-2-030`"
+
+#: ../../technical/articles/catalogue.md:107
+msgid ""
+"[Offline search, evidence bundles, and export boundaries](044-offline-"
+"search-evidence-bundles-and-export-boundaries.md) — `STAGE-2-044`"
+msgstr ""
+"[Cerca fora de línia, paquets d’evidències i límits d’exportació](044"
+"-offline-search-evidence-bundles-and-export-boundaries.md) — "
+"`STAGE-2-044`"
+
+#: ../../technical/articles/catalogue.md:108
+msgid ""
+"[Interactive flows and profile-bound inventory operations](048"
+"-interactive-flows-and-profile-bound-inventory-operations.md) — "
+"`STAGE-2-048`"
+msgstr ""
+"[Fluxos interactius i operacions d’inventari vinculades al perfil](048"
+"-interactive-flows-and-profile-bound-inventory-operations.md) — "
+"`STAGE-2-048`"
+
+#: ../../technical/articles/catalogue.md:110
+msgid "Aggregation and calculation services"
+msgstr "Serveis d’agregació i càlcul"
+
+#: ../../technical/articles/catalogue.md:112
+msgid ""
+"[Read the topic overview](../topics/aggregation-and-calculation-"
+"services.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/aggregation-and-"
+"calculation-services.md)."
+
+#: ../../technical/articles/catalogue.md:114
+msgid ""
+"[Aggregation, IVA screening, and fiscal evidence](031-aggregation-iva-"
+"screening-and-fiscal-evidence.md) — `STAGE-2-031`"
+msgstr ""
+"[Agregació, filtratge d’IVA i evidència fiscal](031-aggregation-iva-"
+"screening-and-fiscal-evidence.md) — `STAGE-2-031`"
+
+#: ../../technical/articles/catalogue.md:115
+msgid ""
+"[Aggregation sources, evidence, and withholding projections](032"
+"-aggregation-sources-evidence-and-withholding-projections.md) — "
+"`STAGE-2-032`"
+msgstr ""
+"[Fonts d’agregació, evidències i projeccions de retencions](032"
+"-aggregation-sources-evidence-and-withholding-projections.md) — "
+"`STAGE-2-032`"
+
+#: ../../technical/articles/catalogue.md:116
+msgid ""
+"[IVA ledger, filing drift, and withholding arrivals](033-iva-ledger-"
+"filing-drift-and-withholding-arrivals.md) — `STAGE-2-033`"
+msgstr ""
+"[Llibre d’IVA, desviació de presentacions i arribades de retencions](033"
+"-iva-ledger-filing-drift-and-withholding-arrivals.md) — `STAGE-2-033`"
+
+#: ../../technical/articles/catalogue.md:117
+msgid ""
+"[Model bindings, OSS/IOSS, and Renta expenses](034-model-bindings-oss-"
+"ioss-and-renta-expenses.md) — `STAGE-2-034`"
+msgstr ""
+"[Vinculacions de models, OSS/IOSS i despeses de renda](034-model-"
+"bindings-oss-ioss-and-renta-expenses.md) — `STAGE-2-034`"
+
+#: ../../technical/articles/catalogue.md:118
+msgid ""
+"[Renta ledgers, withholding rollups, and aggregation service](035-renta-"
+"ledgers-withholding-rollups-and-aggregation-service.md) — `STAGE-2-035`"
+msgstr ""
+"[Llibres de renda, acumulacions de retencions i servei d’agregació](035"
+"-renta-ledgers-withholding-rollups-and-aggregation-service.md) — "
+"`STAGE-2-035`"
+
+#: ../../technical/articles/catalogue.md:119
+msgid ""
+"[Source resolution contracts and withholding capture](036-source-"
+"resolution-contracts-and-withholding-capture.md) — `STAGE-2-036`"
+msgstr ""
+"[Contractes de resolució de fonts i captura de retencions](036-source-"
+"resolution-contracts-and-withholding-capture.md) — `STAGE-2-036`"
+
+#: ../../technical/articles/catalogue.md:120
+msgid ""
+"[Filing carries, cross-period clean state, and calculation "
+"advisories](041-filing-carries-cross-period-clean-state-and-calculation-"
+"advisories.md) — `STAGE-2-041`"
+msgstr ""
+"[Arrossegaments de presentació, estat net entre períodes i avisos de "
+"càlcul](041-filing-carries-cross-period-clean-state-and-calculation-"
+"advisories.md) — `STAGE-2-041`"
+
+#: ../../technical/articles/catalogue.md:121
+msgid ""
+"[IVA compensation, M303 evidence, and annual handoffs](042-iva-"
+"compensation-m303-evidence-and-annual-handoffs.md) — `STAGE-2-042`"
+msgstr ""
+"[Compensació d’IVA, evidències de M303 i traspassos anuals](042-iva-"
+"compensation-m303-evidence-and-annual-handoffs.md) — `STAGE-2-042`"
+
+#: ../../technical/articles/catalogue.md:122
+msgid ""
+"[Prorrata settlement, relation prefill, and row-set reconstruction](043"
+"-prorrata-settlement-relation-prefill-and-row-set-reconstruction.md) — "
+"`STAGE-2-043`"
+msgstr ""
+"[Liquidació de prorrata, emplenament previ de relacions i reconstrucció "
+"de conjunts de files](043-prorrata-settlement-relation-prefill-and-row-"
+"set-reconstruction.md) — `STAGE-2-043`"
+
+#: ../../technical/articles/catalogue.md:124
+msgid "Authentication and storage management"
+msgstr "Autenticació i gestió de l’emmagatzematge"
+
+#: ../../technical/articles/catalogue.md:126
+msgid ""
+"[Read the topic overview](../topics/authentication-and-storage-"
+"management.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/authentication-and-storage-"
+"management.md)."
+
+#: ../../technical/articles/catalogue.md:128
+msgid ""
+"[Authentication, certificate sources, and diagnostic privacy](037"
+"-authentication-certificate-sources-and-diagnostic-privacy.md) — "
+"`STAGE-2-037`"
+msgstr ""
+"[Autenticació, fonts de certificats i privadesa dels diagnòstics](037"
+"-authentication-certificate-sources-and-diagnostic-privacy.md) — "
+"`STAGE-2-037`"
+
+#: ../../technical/articles/catalogue.md:129
+msgid ""
+"[Operator authentication, session custody, and access contracts](038"
+"-operator-authentication-session-custody-and-access-contracts.md) — "
+"`STAGE-2-038`"
+msgstr ""
+"[Autenticació de l’operador, custòdia de sessions i contractes "
+"d’accés](038-operator-authentication-session-custody-and-access-"
+"contracts.md) — `STAGE-2-038`"
+
+#: ../../technical/articles/catalogue.md:130
+msgid ""
+"[Authenticated session lifecycle and identity binding](039-authenticated-"
+"session-lifecycle-and-identity-binding.md) — `STAGE-2-039`"
+msgstr ""
+"[Cicle de vida de sessions autenticades i vinculació d’identitat](039"
+"-authenticated-session-lifecycle-and-identity-binding.md) — `STAGE-2-039`"
+
+#: ../../technical/articles/catalogue.md:131
+msgid ""
+"[Capital-goods register and bucket deletion assessment](040-capital-"
+"goods-register-and-bucket-deletion-assessment.md) — `STAGE-2-040`"
+msgstr ""
+"[Registre de béns d’inversió i avaluació d’eliminació de contenidors](040"
+"-capital-goods-register-and-bucket-deletion-assessment.md) — "
+"`STAGE-2-040`"
+
+#: ../../technical/articles/catalogue.md:132
+msgid ""
+"[Registry-backed calculation workbook plans and parity](098-registry-"
+"backed-calculation-workbook-plans-and-parity.md) — `STAGE-2-098`"
+msgstr ""
+"[Plans de llibres de càlcul basats en el registre i paritat](098"
+"-registry-backed-calculation-workbook-plans-and-parity.md) — "
+"`STAGE-2-098`"
+
+#: ../../technical/articles/catalogue.md:133
+msgid ""
+"[Workbook materialization and sync-run provenance](099-workbook-"
+"materialization-and-sync-run-provenance.md) — `STAGE-2-099`"
+msgstr ""
+"[Materialització de llibres de càlcul i procedència de les execucions de "
+"sincronització](099-workbook-materialization-and-sync-run-provenance.md) "
+"— `STAGE-2-099`"
+
+#: ../../technical/articles/catalogue.md:134
+msgid ""
+"[Storage lifecycle management and ledger-import diagnostics](100-storage-"
+"lifecycle-management-and-ledger-import-diagnostics.md) — `STAGE-2-100`"
+msgstr ""
+"[Gestió del cicle de vida de l’emmagatzematge i diagnòstics d’importació "
+"del llibre major](100-storage-lifecycle-management-and-ledger-import-"
+"diagnostics.md) — `STAGE-2-100`"
+
+#: ../../technical/articles/catalogue.md:136
+msgid "Filing exports and live state"
+msgstr "Exportacions de presentació i estat en directe"
+
+#: ../../technical/articles/catalogue.md:138
+msgid "[Read the topic overview](../topics/filing-and-live-state.md)."
+msgstr "[Llegeix la visió general del tema](../topics/filing-and-live-state.md)."
+
+#: ../../technical/articles/catalogue.md:140
+msgid ""
+"[Filing draft, approval, and local export pipeline](045-filing-draft-"
+"approval-and-local-export-pipeline.md) — `STAGE-2-045`"
+msgstr ""
+"[Esborrany de presentació, aprovació i circuit d’exportació local](045"
+"-filing-draft-approval-and-local-export-pipeline.md) — `STAGE-2-045`"
+
+#: ../../technical/articles/catalogue.md:141
+msgid ""
+"[Filing-envelope integrity, export parity, and producer values](046"
+"-filing-envelope-integrity-export-parity-and-producer-values.md) — "
+"`STAGE-2-046`"
+msgstr ""
+"[Integritat de l’embolcall de presentació, paritat d’exportació i valors "
+"del productor](046-filing-envelope-integrity-export-parity-and-producer-"
+"values.md) — `STAGE-2-046`"
+
+#: ../../technical/articles/catalogue.md:142
+msgid ""
+"[Filing producer facts, repeated-record projection, and runtime "
+"schema](047-filing-producer-facts-repeated-record-projection-and-runtime-"
+"schema.md) — `STAGE-2-047`"
+msgstr ""
+"[Dades del productor de presentació, projecció de registres repetits i "
+"esquema d’execució](047-filing-producer-facts-repeated-record-projection-"
+"and-runtime-schema.md) — `STAGE-2-047`"
+
+#: ../../technical/articles/catalogue.md:143
+msgid ""
+"[Live snapshots and filed-data capture operations](063-live-snapshots-"
+"and-filed-data-capture-operations.md) — `STAGE-2-063`"
+msgstr ""
+"[Instantànies en directe i operacions de captura de dades "
+"presentades](063-live-snapshots-and-filed-data-capture-operations.md) — "
+"`STAGE-2-063`"
+
+#: ../../technical/articles/catalogue.md:144
+msgid ""
+"[Filed declaration capture, evidence enrollment, and history sweep](064"
+"-filed-declaration-capture-evidence-enrollment-and-history-sweep.md) — "
+"`STAGE-2-064`"
+msgstr ""
+"[Captura de declaracions presentades, inscripció d’evidències i "
+"recorregut d’historial](064-filed-declaration-capture-evidence-"
+"enrollment-and-history-sweep.md) — `STAGE-2-064`"
+
+#: ../../technical/articles/catalogue.md:145
+msgid ""
+"[IVA, receipt, and notification evidence surfaces](065-iva-receipt-and-"
+"notification-evidence-surfaces.md) — `STAGE-2-065`"
+msgstr ""
+"[Superfícies d’evidències d’IVA, rebuts i notificacions](065-iva-receipt-"
+"and-notification-evidence-surfaces.md) — `STAGE-2-065`"
+
+#: ../../technical/articles/catalogue.md:146
+msgid ""
+"[Notifications, verification, and shared live-state contracts](066"
+"-notifications-verification-and-shared-live-state-contracts.md) — "
+"`STAGE-2-066`"
+msgstr ""
+"[Notificacions, verificació i contractes compartits d’estat en "
+"directe](066-notifications-verification-and-shared-live-state-"
+"contracts.md) — `STAGE-2-066`"
+
+#: ../../technical/articles/catalogue.md:148
+msgid "Ledger, invoices, evidence, and registers"
+msgstr "Llibre major, factures, evidències i registres"
+
+#: ../../technical/articles/catalogue.md:150
+msgid "[Read the topic overview](../topics/ledger-invoices-and-registers.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/ledger-invoices-and-"
+"registers.md)."
+
+#: ../../technical/articles/catalogue.md:152
+msgid ""
+"[Invoice intake, catalogue lifecycle, and operation boundaries](049"
+"-invoice-intake-catalogue-lifecycle-and-operation-boundaries.md) — "
+"`STAGE-2-049`"
+msgstr ""
+"[Incorporació de factures, cicle de vida del catàleg i límits "
+"d’operacions](049-invoice-intake-catalogue-lifecycle-and-operation-"
+"boundaries.md) — `STAGE-2-049`"
+
+#: ../../technical/articles/catalogue.md:153
+msgid ""
+"[Invoice profile advisories, source-mesh resolution, and linking](050"
+"-invoice-profile-advisories-source-mesh-resolution-and-linking.md) — "
+"`STAGE-2-050`"
+msgstr ""
+"[Avisos de perfil de factures, resolució de la xarxa de fonts i "
+"vinculació](050-invoice-profile-advisories-source-mesh-resolution-and-"
+"linking.md) — `STAGE-2-050`"
+
+#: ../../technical/articles/catalogue.md:154
+msgid ""
+"[Ledger classification, import/export, and lifecycle services](051"
+"-ledger-classification-import-export-and-lifecycle-services.md) — "
+"`STAGE-2-051`"
+msgstr ""
+"[Classificació del llibre major, importació i exportació i serveis del "
+"cicle de vida](051-ledger-classification-import-export-and-lifecycle-"
+"services.md) — `STAGE-2-051`"
+
+#: ../../technical/articles/catalogue.md:155
+msgid ""
+"[Manual ledger services, evidence operations, and batch ingestion](052"
+"-manual-ledger-services-evidence-operations-and-batch-ingestion.md) — "
+"`STAGE-2-052`"
+msgstr ""
+"[Serveis manuals del llibre major, operacions d’evidències i incorporació"
+" per lots](052-manual-ledger-services-evidence-operations-and-batch-"
+"ingestion.md) — `STAGE-2-052`"
+
+#: ../../technical/articles/catalogue.md:156
+msgid ""
+"[IVA classification assembly, confirmation checks, and readiness](053"
+"-iva-classification-assembly-confirmation-checks-and-readiness.md) — "
+"`STAGE-2-053`"
+msgstr ""
+"[Muntatge de classificació d’IVA, comprovacions de confirmació i "
+"preparació](053-iva-classification-assembly-confirmation-checks-and-"
+"readiness.md) — `STAGE-2-053`"
+
+#: ../../technical/articles/catalogue.md:157
+msgid ""
+"[Confirmation gate, counterparty establishment, and evidence "
+"provenance](054-confirmation-gate-counterparty-establishment-and-"
+"evidence-provenance.md) — `STAGE-2-054`"
+msgstr ""
+"[Control de confirmació, establiment de contraparts i procedència "
+"d’evidències](054-confirmation-gate-counterparty-establishment-and-"
+"evidence-provenance.md) — `STAGE-2-054`"
+
+#: ../../technical/articles/catalogue.md:158
+msgid ""
+"[Evidence custody, review, and ingestion operations](055-evidence-"
+"custody-review-and-ingestion-operations.md) — `STAGE-2-055`"
+msgstr ""
+"[Custòdia d’evidències, revisió i operacions d’incorporació](055"
+"-evidence-custody-review-and-ingestion-operations.md) — `STAGE-2-055`"
+
+#: ../../technical/articles/catalogue.md:159
+msgid ""
+"[Document grounding, evidence routing, history, and import/export](056"
+"-document-grounding-evidence-routing-history-and-import-export.md) — "
+"`STAGE-2-056`"
+msgstr ""
+"[Fonamentació documental, encaminament d’evidències, historial i "
+"importació i exportació](056-document-grounding-evidence-routing-history-"
+"and-import-export.md) — `STAGE-2-056`"
+
+#: ../../technical/articles/catalogue.md:160
+msgid ""
+"[Invoice evidence extraction and reviewed confirmation](057-invoice-"
+"evidence-extraction-and-reviewed-confirmation.md) — `STAGE-2-057`"
+msgstr ""
+"[Extracció d’evidències de factures i confirmació revisada](057-invoice-"
+"evidence-extraction-and-reviewed-confirmation.md) — `STAGE-2-057`"
+
+#: ../../technical/articles/catalogue.md:161
+msgid ""
+"[Deterministic invoice labels and core ledger surfaces](058"
+"-deterministic-invoice-labels-and-core-ledger-surfaces.md) — "
+"`STAGE-2-058`"
+msgstr ""
+"[Etiquetes deterministes de factures i superfícies centrals del llibre "
+"major](058-deterministic-invoice-labels-and-core-ledger-surfaces.md) — "
+"`STAGE-2-058`"
+
+#: ../../technical/articles/catalogue.md:162
+msgid ""
+"[LLM ledger review, diagnostics, and merge](059-llm-ledger-review-"
+"diagnostics-and-merge.md) — `STAGE-2-059`"
+msgstr ""
+"[Revisió LLM del llibre major, diagnòstics i fusió](059-llm-ledger-"
+"review-diagnostics-and-merge.md) — `STAGE-2-059`"
+
+#: ../../technical/articles/catalogue.md:163
+msgid ""
+"[Ledger contracts, attribution, readiness, and ratios](060-ledger-"
+"contracts-attribution-readiness-and-ratios.md) — `STAGE-2-060`"
+msgstr ""
+"[Contractes del llibre major, atribució, preparació i proporcions](060"
+"-ledger-contracts-attribution-readiness-and-ratios.md) — `STAGE-2-060`"
+
+#: ../../technical/articles/catalogue.md:164
+msgid ""
+"[Ledger operations, rule application, and filing readiness](061-ledger-"
+"operations-rule-application-and-filing-readiness.md) — `STAGE-2-061`"
+msgstr ""
+"[Operacions del llibre major, aplicació de regles i preparació de "
+"presentació](061-ledger-operations-rule-application-and-filing-"
+"readiness.md) — `STAGE-2-061`"
+
+#: ../../technical/articles/catalogue.md:165
+msgid ""
+"[Ledger workspace projection and read boundaries](062-ledger-workspace-"
+"projection-and-read-boundaries.md) — `STAGE-2-062`"
+msgstr ""
+"[Projecció de l’espai de treball del llibre major i límits de "
+"lectura](062-ledger-workspace-projection-and-read-boundaries.md) — "
+"`STAGE-2-062`"
+
+#: ../../technical/articles/catalogue.md:166
+msgid ""
+"[Profile-scoped IVA prorrata register operations](095-profile-scoped-iva-"
+"prorrata-register-operations.md) — `STAGE-2-095`"
+msgstr ""
+"[Operacions del registre de prorrata d’IVA delimitades al perfil](095"
+"-profile-scoped-iva-prorrata-register-operations.md) — `STAGE-2-095`"
+
+#: ../../technical/articles/catalogue.md:168
+msgid "Modelo work and revision lifecycle, part 1"
+msgstr "Treball de Modelo i cicle de vida de revisions, part 1"
+
+#: ../../technical/articles/catalogue.md:170
+msgid ""
+"[Read the topic overview](../topics/modelo-work-and-revision-lifecycle-"
+"part-1.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/modelo-work-and-revision-"
+"lifecycle-part-1.md)."
+
+#: ../../technical/articles/catalogue.md:172
+msgid ""
+"[Modelo calculation preparation, edits, and evidence gates](067-modelo-"
+"calculation-preparation-edits-and-evidence-gates.md) — `STAGE-2-067`"
+msgstr ""
+"[Preparació de càlcul de Modelo, edicions i controls d’evidències](067"
+"-modelo-calculation-preparation-edits-and-evidence-gates.md) — "
+"`STAGE-2-067`"
+
+#: ../../technical/articles/catalogue.md:173
+msgid ""
+"[Modelo reconciliation, advisories, and work projections](068-modelo-"
+"reconciliation-advisories-and-work-projections.md) — `STAGE-2-068`"
+msgstr ""
+"[Conciliació de Modelo, avisos i projeccions de treball](068-modelo-"
+"reconciliation-advisories-and-work-projections.md) — `STAGE-2-068`"
+
+#: ../../technical/articles/catalogue.md:174
+msgid ""
+"[Aggregation operations, amendments, and profile bindings](069"
+"-aggregation-operations-amendments-and-profile-bindings.md) — "
+"`STAGE-2-069`"
+msgstr ""
+"[Operacions d’agregació, rectificacions i vinculacions de perfil](069"
+"-aggregation-operations-amendments-and-profile-bindings.md) — "
+"`STAGE-2-069`"
+
+#: ../../technical/articles/catalogue.md:175
+msgid ""
+"[Modelo calculation input and persistence orchestration](070-modelo-"
+"calculation-input-and-persistence-orchestration.md) — `STAGE-2-070`"
+msgstr ""
+"[Entrades de càlcul de Modelo i orquestració de persistència](070-modelo-"
+"calculation-input-and-persistence-orchestration.md) — `STAGE-2-070`"
+
+#: ../../technical/articles/catalogue.md:176
+msgid ""
+"[Calculation findings, reports, and PDF verification](071-calculation-"
+"findings-reports-and-pdf-verification.md) — `STAGE-2-071`"
+msgstr ""
+"[Conclusions de càlcul, informes i verificació PDF](071-calculation-"
+"findings-reports-and-pdf-verification.md) — `STAGE-2-071`"
+
+#: ../../technical/articles/catalogue.md:177
+msgid ""
+"[Declaration projections, help, dependencies, and edit admission](072"
+"-declaration-projections-help-dependencies-and-edit-admission.md) — "
+"`STAGE-2-072`"
+msgstr ""
+"[Projeccions de declaracions, ajuda, dependències i admissió "
+"d’edicions](072-declaration-projections-help-dependencies-and-edit-"
+"admission.md) — `STAGE-2-072`"
+
+#: ../../technical/articles/catalogue.md:178
+msgid ""
+"[Edit value contracts and Modelo export](073-edit-value-contracts-and-"
+"modelo-export.md) — `STAGE-2-073`"
+msgstr ""
+"[Contractes de valors d’edició i exportació de Modelo](073-edit-value-"
+"contracts-and-modelo-export.md) — `STAGE-2-073`"
+
+#: ../../technical/articles/catalogue.md:179
+msgid ""
+"[External filing evidence, local filing and filing views](074-external-"
+"filing-evidence-local-filing-and-filing-views.md) — `STAGE-2-074`"
+msgstr ""
+"[Evidències externes de presentació, presentació local i vistes de "
+"presentació](074-external-filing-evidence-local-filing-and-filing-"
+"views.md) — `STAGE-2-074`"
+
+#: ../../technical/articles/catalogue.md:180
+msgid ""
+"[Modelo history, invoice withholding capture, and IVA wallet](075-modelo-"
+"history-invoice-withholding-capture-and-iva-wallet.md) — `STAGE-2-075`"
+msgstr ""
+"[Historial de Modelo, captura de retencions de factures i cartera "
+"d’IVA](075-modelo-history-invoice-withholding-capture-and-iva-wallet.md) "
+"— `STAGE-2-075`"
+
+#: ../../technical/articles/catalogue.md:181
+msgid ""
+"[Local observations, M036 records, and M145 communications](076-local-"
+"observations-m036-records-and-m145-communications.md) — `STAGE-2-076`"
+msgstr ""
+"[Observacions locals, registres M036 i comunicacions M145](076-local-"
+"observations-m036-records-and-m145-communications.md) — `STAGE-2-076`"
+
+#: ../../technical/articles/catalogue.md:182
+msgid ""
+"[Tax evidence, private previews, and spreadsheet operations](077-tax-"
+"evidence-private-previews-and-spreadsheet-operations.md) — `STAGE-2-077`"
+msgstr ""
+"[Evidències tributàries, previsualitzacions privades i operacions de "
+"fulls de càlcul](077-tax-evidence-private-previews-and-spreadsheet-"
+"operations.md) — `STAGE-2-077`"
+
+#: ../../technical/articles/catalogue.md:183
+msgid ""
+"[Supervised filing lifecycle and operation contracts](078-supervised-"
+"filing-lifecycle-and-operation-contracts.md) — `STAGE-2-078`"
+msgstr ""
+"[Cicle de vida supervisat de presentació i contractes d’operacions](078"
+"-supervised-filing-lifecycle-and-operation-contracts.md) — `STAGE-2-078`"
+
+#: ../../technical/articles/catalogue.md:184
+msgid ""
+"[Profile-derived bindings and filing readiness](079-profile-derived-"
+"bindings-and-filing-readiness.md) — `STAGE-2-079`"
+msgstr ""
+"[Vinculacions derivades del perfil i preparació de presentació](079"
+"-profile-derived-bindings-and-filing-readiness.md) — `STAGE-2-079`"
+
+#: ../../technical/articles/catalogue.md:185
+msgid ""
+"[Modelo projections, queries, quickfile, and recipient encryption](080"
+"-modelo-projections-queries-quickfile-and-recipient-encryption.md) — "
+"`STAGE-2-080`"
+msgstr ""
+"[Projeccions de Modelo, consultes, quickfile i xifratge de "
+"destinataris](080-modelo-projections-queries-quickfile-and-recipient-"
+"encryption.md) — `STAGE-2-080`"
+
+#: ../../technical/articles/catalogue.md:186
+msgid ""
+"[Reconciliation, filing disposition, and accountant review packages](081"
+"-reconciliation-filing-disposition-and-accountant-review-packages.md) — "
+"`STAGE-2-081`"
+msgstr ""
+"[Conciliació, disposició de presentació i paquets de revisió per al "
+"comptable](081-reconciliation-filing-disposition-and-accountant-review-"
+"packages.md) — `STAGE-2-081`"
+
+#: ../../technical/articles/catalogue.md:187
+msgid ""
+"[Review-package exchange and Modelo revision persistence](082-review-"
+"package-exchange-and-modelo-revision-persistence.md) — `STAGE-2-082`"
+msgstr ""
+"[Intercanvi de paquets de revisió i persistència de revisions de "
+"Modelo](082-review-package-exchange-and-modelo-revision-persistence.md) —"
+" `STAGE-2-082`"
+
+#: ../../technical/articles/catalogue.md:188
+msgid ""
+"[Revision selection, settlement presentation, and verification](083"
+"-revision-selection-settlement-presentation-and-verification.md) — "
+"`STAGE-2-083`"
+msgstr ""
+"[Selecció de revisions, presentació de liquidació i verificació](083"
+"-revision-selection-settlement-presentation-and-verification.md) — "
+"`STAGE-2-083`"
+
+#: ../../technical/articles/catalogue.md:190
+msgid ""
+"Modelo work and revision lifecycle, part 2: verification, workbench and "
+"workspace"
+msgstr ""
+"Treball de Modelo i cicle de vida de revisions, part 2: verificació, banc"
+" de treball i espai de treball"
+
+#: ../../technical/articles/catalogue.md:192
+msgid ""
+"[Read the topic overview](../topics/modelo-work-and-revision-lifecycle-"
+"part-2.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/modelo-work-and-revision-"
+"lifecycle-part-2.md)."
+
+#: ../../technical/articles/catalogue.md:194
+msgid ""
+"[Cross-period checks, verification reports, and work addressing](084"
+"-cross-period-checks-verification-reports-and-work-addressing.md) — "
+"`STAGE-2-084`"
+msgstr ""
+"[Comprovacions entre períodes, informes de verificació i adreçament del "
+"treball](084-cross-period-checks-verification-reports-and-work-"
+"addressing.md) — `STAGE-2-084`"
+
+#: ../../technical/articles/catalogue.md:195
+msgid ""
+"[Work creation, form editing, and inventory](085-work-creation-form-"
+"editing-and-inventory.md) — `STAGE-2-085`"
+msgstr ""
+"[Creació de treball, edició de formularis i inventari](085-work-creation-"
+"form-editing-and-inventory.md) — `STAGE-2-085`"
+
+#: ../../technical/articles/catalogue.md:196
+msgid ""
+"[Work lifecycle, review, wizard, and workflow gate](086-work-lifecycle-"
+"review-wizard-and-workflow-gate.md) — `STAGE-2-086`"
+msgstr ""
+"[Cicle de vida del treball, revisió, assistent i control de flux de "
+"treball](086-work-lifecycle-review-wizard-and-workflow-gate.md) — "
+"`STAGE-2-086`"
+
+#: ../../technical/articles/catalogue.md:197
+msgid ""
+"[Modelo workspace read projection](087-modelo-workspace-read-"
+"projection.md) — `STAGE-2-087`"
+msgstr ""
+"[Projecció de lectura de l’espai de treball de Modelo](087-modelo-"
+"workspace-read-projection.md) — `STAGE-2-087`"
+
+#: ../../technical/articles/catalogue.md:198
+msgid ""
+"[Workspace producer contracts and capture ports](088-workspace-producer-"
+"contracts-and-capture-ports.md) — `STAGE-2-088`"
+msgstr ""
+"[Contractes dels productors de l’espai de treball i ports de captura](088"
+"-workspace-producer-contracts-and-capture-ports.md) — `STAGE-2-088`"
+
+#: ../../technical/articles/catalogue.md:200
+msgid "Operations, profiles and workflows"
+msgstr "Operacions, perfils i fluxos de treball"
+
+#: ../../technical/articles/catalogue.md:202
+msgid "[Read the topic overview](../topics/operations-profiles-and-workflows.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/operations-profiles-and-"
+"workflows.md)."
+
+#: ../../technical/articles/catalogue.md:204
+msgid ""
+"[Durable operation execution, access and public projections](089-durable-"
+"operation-execution-access-and-public-projections.md) — `STAGE-2-089`"
+msgstr ""
+"[Execució duradora d’operacions, accés i projeccions públiques](089"
+"-durable-operation-execution-access-and-public-projections.md) — "
+"`STAGE-2-089`"
+
+#: ../../technical/articles/catalogue.md:205
+msgid ""
+"[Operation contracts, observation and transient operands](090-operation-"
+"contracts-observation-and-transient-operands.md) — `STAGE-2-090`"
+msgstr ""
+"[Contractes d’operacions, observació i operands transitoris](090"
+"-operation-contracts-observation-and-transient-operands.md) — "
+"`STAGE-2-090`"
+
+#: ../../technical/articles/catalogue.md:206
+msgid ""
+"[Operation authority, registry and private input custody](091-operation-"
+"authority-registry-and-private-input-custody.md) — `STAGE-2-091`"
+msgstr ""
+"[Autoritat d’operacions, registre i custòdia d’entrades privades](091"
+"-operation-authority-registry-and-private-input-custody.md) — "
+"`STAGE-2-091`"
+
+#: ../../technical/articles/catalogue.md:207
+msgid ""
+"[Operator action and command-surface contracts](092-operator-action-and-"
+"command-surface-contracts.md) — `STAGE-2-092`"
+msgstr ""
+"[Contractes d’accions de l’operador i superfície d’ordres](092-operator-"
+"action-and-command-surface-contracts.md) — `STAGE-2-092`"
+
+#: ../../technical/articles/catalogue.md:208
+msgid ""
+"[Overview calendar, filing evidence, and readiness views](093-overview-"
+"calendar-filing-evidence-and-readiness-views.md) — `STAGE-2-093`"
+msgstr ""
+"[Calendari de visió general, evidències de presentació i vistes de "
+"preparació](093-overview-calendar-filing-evidence-and-readiness-views.md)"
+" — `STAGE-2-093`"
+
+#: ../../technical/articles/catalogue.md:209
+msgid ""
+"[Overview explain, Home, pipeline, and registered read projections](094"
+"-overview-explain-home-pipeline-and-registered-read-projections.md) — "
+"`STAGE-2-094`"
+msgstr ""
+"[Explicació de visió general, Inici, circuit i projeccions registrades de"
+" lectura](094-overview-explain-home-pipeline-and-registered-read-"
+"projections.md) — `STAGE-2-094`"
+
+#: ../../technical/articles/catalogue.md:210
+msgid ""
+"[Unified review queue and local runtime contracts](096-unified-review-"
+"queue-and-local-runtime-contracts.md) — `STAGE-2-096`"
+msgstr ""
+"[Cua unificada de revisió i contractes de l’entorn d’execució local](096"
+"-unified-review-queue-and-local-runtime-contracts.md) — `STAGE-2-096`"
+
+#: ../../technical/articles/catalogue.md:211
+msgid ""
+"[Ephemeral cross-workbench search](097-ephemeral-cross-workbench-"
+"search.md) — `STAGE-2-097`"
+msgstr ""
+"[Cerca efímera entre bancs de treball](097-ephemeral-cross-workbench-"
+"search.md) — `STAGE-2-097`"
+
+#: ../../technical/articles/catalogue.md:212
+msgid ""
+"[Profile access, automation custody, and portable exports](101-profile-"
+"access-automation-custody-and-portable-exports.md) — `STAGE-2-101`"
+msgstr ""
+"[Accés a perfils, custòdia d’automatització i exportacions portables](101"
+"-profile-access-automation-custody-and-portable-exports.md) — "
+"`STAGE-2-101`"
+
+#: ../../technical/articles/catalogue.md:213
+msgid ""
+"[Encrypted profile custody and censal workflows](102-encrypted-profile-"
+"custody-and-censal-workflows.md) — `STAGE-2-102`"
+msgstr ""
+"[Custòdia xifrada de perfils i fluxos censals](102-encrypted-profile-"
+"custody-and-censal-workflows.md) — `STAGE-2-102`"
+
+#: ../../technical/articles/catalogue.md:214
+msgid ""
+"[Profile custody transactions and connected configuration](103-profile-"
+"custody-transactions-and-connected-configuration.md) — `STAGE-2-103`"
+msgstr ""
+"[Transaccions de custòdia de perfils i configuració connectada](103"
+"-profile-custody-transactions-and-connected-configuration.md) — "
+"`STAGE-2-103`"
+
+#: ../../technical/articles/catalogue.md:215
+msgid ""
+"[Profile login, maintenance operations, and history](104-profile-login-"
+"maintenance-operations-and-history.md) — `STAGE-2-104`"
+msgstr ""
+"[Inici de sessió de perfils, operacions de manteniment i historial](104"
+"-profile-login-maintenance-operations-and-history.md) — `STAGE-2-104`"
+
+#: ../../technical/articles/catalogue.md:216
+msgid ""
+"[Profile facts, registration, recovery, and session selection](105"
+"-profile-facts-registration-recovery-and-session-selection.md) — "
+"`STAGE-2-105`"
+msgstr ""
+"[Dades de perfil, registre, recuperació i selecció de sessió](105"
+"-profile-facts-registration-recovery-and-session-selection.md) — "
+"`STAGE-2-105`"
+
+#: ../../technical/articles/catalogue.md:217
+msgid ""
+"[Profile session authority, access leases, and delegation](106-profile-"
+"session-authority-access-leases-and-delegation.md) — `STAGE-2-106`"
+msgstr ""
+"[Autoritat de sessions de perfil, arrendaments d’accés i delegació](106"
+"-profile-session-authority-access-leases-and-delegation.md) — "
+"`STAGE-2-106`"
+
+#: ../../technical/articles/catalogue.md:218
+msgid ""
+"[Setup wizard, profile editing, and command construction](107-setup-"
+"wizard-profile-editing-and-command-construction.md) — `STAGE-2-107`"
+msgstr ""
+"[Assistent de configuració, edició de perfils i construcció d’ordres](107"
+"-setup-wizard-profile-editing-and-command-construction.md) — "
+"`STAGE-2-107`"
+
+#: ../../technical/articles/catalogue.md:219
+msgid ""
+"[Wizard contracts and validation](108-wizard-contracts-and-validation.md)"
+" — `STAGE-2-108`"
+msgstr ""
+"[Contractes de l’assistent i validació](108-wizard-contracts-and-"
+"validation.md) — `STAGE-2-108`"
+
+#: ../../technical/articles/catalogue.md:220
+msgid ""
+"[Workflow execution and local filing orchestration](109-workflow-"
+"execution-and-local-filing-orchestration.md) — `STAGE-2-109`"
+msgstr ""
+"[Execució de fluxos de treball i orquestració de presentació local](109"
+"-workflow-execution-and-local-filing-orchestration.md) — `STAGE-2-109`"
+
+#: ../../technical/articles/catalogue.md:221
+msgid ""
+"[Workflow results, snapshots, and history disclosure](110-workflow-"
+"results-snapshots-and-history-disclosure.md) — `STAGE-2-110`"
+msgstr ""
+"[Resultats de fluxos de treball, instantànies i divulgació "
+"d’historial](110-workflow-results-snapshots-and-history-disclosure.md) — "
+"`STAGE-2-110`"
+
+#: ../../technical/articles/catalogue.md:223
+msgid "Core authority and shared controls"
+msgstr "Autoritat central i controls compartits"
+
+#: ../../technical/articles/catalogue.md:225
+msgid ""
+"[Read the topic overview](../topics/core-authority-and-shared-"
+"controls.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/core-authority-and-shared-"
+"controls.md)."
+
+#: ../../technical/articles/catalogue.md:227
+msgid ""
+"[Core configuration, profile selection, and durable writes](111-core-"
+"configuration-profile-selection-and-durable-writes.md) — `STAGE-2-111`"
+msgstr ""
+"[Configuració central, selecció de perfils i escriptures duradores](111"
+"-core-configuration-profile-selection-and-durable-writes.md) — "
+"`STAGE-2-111`"
+
+#: ../../technical/articles/catalogue.md:228
+msgid ""
+"[Settings, storage routing, corpus citations, and credentials](112"
+"-settings-storage-routing-corpus-citations-and-credentials.md) — "
+"`STAGE-2-112`"
+msgstr ""
+"[Configuració, encaminament d’emmagatzematge, citacions del corpus i "
+"credencials](112-settings-storage-routing-corpus-citations-and-"
+"credentials.md) — `STAGE-2-112`"
+
+#: ../../technical/articles/catalogue.md:229
+msgid ""
+"[External-service constants, field provenance, and filing producers](113"
+"-external-service-constants-field-provenance-and-filing-producers.md) — "
+"`STAGE-2-113`"
+msgstr ""
+"[Constants de serveis externs, procedència de camps i productors de "
+"presentació](113-external-service-constants-field-provenance-and-filing-"
+"producers.md) — `STAGE-2-113`"
+
+#: ../../technical/articles/catalogue.md:230
+msgid ""
+"[Filing projections, workflow state, and JSON output contracts](114"
+"-filing-projections-workflow-state-and-json-output-contracts.md) — "
+"`STAGE-2-114`"
+msgstr ""
+"[Projeccions de presentació, estat de fluxos de treball i contractes de "
+"sortida JSON](114-filing-projections-workflow-state-and-json-output-"
+"contracts.md) — `STAGE-2-114`"
+
+#: ../../technical/articles/catalogue.md:231
+msgid ""
+"[Logging, output privacy, model selection, and periods](115-logging-"
+"output-privacy-model-selection-and-periods.md) — `STAGE-2-115`"
+msgstr ""
+"[Registre de logs, privadesa de sortida, selecció de models i "
+"períodes](115-logging-output-privacy-model-selection-and-periods.md) — "
+"`STAGE-2-115`"
+
+#: ../../technical/articles/catalogue.md:232
+msgid ""
+"[Identity, profile sessions, result disposition, and storage "
+"taxonomy](116-identity-profile-sessions-result-disposition-and-storage-"
+"taxonomy.md) — `STAGE-2-116`"
+msgstr ""
+"[Identitat, sessions de perfil, disposició del resultat i taxonomia "
+"d’emmagatzematge](116-identity-profile-sessions-result-disposition-and-"
+"storage-taxonomy.md) — `STAGE-2-116`"
+
+#: ../../technical/articles/catalogue.md:233
+msgid ""
+"[Text normalization, legal categories, and validity contracts](117-text-"
+"normalization-legal-categories-and-validity-contracts.md) — `STAGE-2-117`"
+msgstr ""
+"[Normalització de text, categories legals i contractes de validesa](117"
+"-text-normalization-legal-categories-and-validity-contracts.md) — "
+"`STAGE-2-117`"
+
+#: ../../technical/articles/catalogue.md:234
+msgid ""
+"[Live access policy, corpus integrity, and decimal contracts](118-live-"
+"access-policy-corpus-integrity-and-decimal-contracts.md) — `STAGE-2-118`"
+msgstr ""
+"[Política d’accés en directe, integritat del corpus i contractes "
+"decimals](118-live-access-policy-corpus-integrity-and-decimal-"
+"contracts.md) — `STAGE-2-118`"
+
+#: ../../technical/articles/catalogue.md:235
+msgid ""
+"[Error contracts, renderers, and record-fault projection](119-error-"
+"contracts-renderers-and-record-fault-projection.md) — `STAGE-2-119`"
+msgstr ""
+"[Contractes d’errors, generadors de sortida i projecció de fallades de "
+"registres](119-error-contracts-renderers-and-record-fault-projection.md) "
+"— `STAGE-2-119`"
+
+#: ../../technical/articles/catalogue.md:236
+msgid ""
+"[Error registry catalogues and severity](120-error-registry-catalogues-"
+"and-severity.md) — `STAGE-2-120`"
+msgstr ""
+"[Catàlegs del registre d’errors i severitat](120-error-registry-"
+"catalogues-and-severity.md) — `STAGE-2-120`"
+
+#: ../../technical/articles/catalogue.md:237
+msgid ""
+"[Localization, identity validation, run traces, and date parsing](121"
+"-localization-identity-validation-run-traces-and-date-parsing.md) — "
+"`STAGE-2-121`"
+msgstr ""
+"[Localització, validació d’identitat, traces d’execució i anàlisi de "
+"dates](121-localization-identity-validation-run-traces-and-date-"
+"parsing.md) — `STAGE-2-121`"
+
+#: ../../technical/articles/catalogue.md:238
+msgid ""
+"[Redaction, bundled resources, and time contracts](122-redaction-bundled-"
+"resources-and-time-contracts.md) — `STAGE-2-122`"
+msgstr ""
+"[Ocultació de dades, recursos inclosos i contractes de temps](122"
+"-redaction-bundled-resources-and-time-contracts.md) — `STAGE-2-122`"
+
+#: ../../technical/articles/catalogue.md:240
+msgid "Tax calculation domain"
+msgstr "Domini del càlcul tributari"
+
+#: ../../technical/articles/catalogue.md:242
+msgid "[Read the topic overview](../topics/tax-calculation-domain.md)."
+msgstr "[Llegeix la visió general del tema](../topics/tax-calculation-domain.md)."
+
+#: ../../technical/articles/catalogue.md:244
+msgid ""
+"[Registry formulas and filing-row materialization](124-registry-formulas-"
+"and-filing-row-materialization.md) — `STAGE-2-124`"
+msgstr ""
+"[Fórmules del registre i materialització de files de presentació](124"
+"-registry-formulas-and-filing-row-materialization.md) — `STAGE-2-124`"
+
+#: ../../technical/articles/catalogue.md:245
+msgid ""
+"[Taxpayer applicability and indexed registry authority](125-taxpayer-"
+"applicability-and-indexed-registry-authority.md) — `STAGE-2-125`"
+msgstr ""
+"[Aplicabilitat al contribuent i autoritat indexada del registre](125"
+"-taxpayer-applicability-and-indexed-registry-authority.md) — "
+"`STAGE-2-125`"
+
+#: ../../technical/articles/catalogue.md:246
+msgid ""
+"[Binding enrollment, prior filings, deadlines, and lineage](126-binding-"
+"enrollment-prior-filings-deadlines-and-lineage.md) — `STAGE-2-126`"
+msgstr ""
+"[Inscripció de vinculacions, presentacions anteriors, terminis i "
+"llinatge](126-binding-enrollment-prior-filings-deadlines-and-lineage.md) "
+"— `STAGE-2-126`"
+
+#: ../../technical/articles/catalogue.md:247
+msgid ""
+"[Casilla identity, legal vocabularies, and fixed-width exports](127"
+"-casilla-identity-legal-vocabularies-and-fixed-width-exports.md) — "
+"`STAGE-2-127`"
+msgstr ""
+"[Identitat de caselles, vocabularis legals i exportacions d’amplada "
+"fixa](127-casilla-identity-legal-vocabularies-and-fixed-width-exports.md)"
+" — `STAGE-2-127`"
+
+#: ../../technical/articles/catalogue.md:248
+msgid ""
+"[Governed facts and export conversion](128-governed-facts-and-export-"
+"conversion.md) — `STAGE-2-128`"
+msgstr ""
+"[Dades governades i conversió d’exportació](128-governed-facts-and-"
+"export-conversion.md) — `STAGE-2-128`"
+
+#: ../../technical/articles/catalogue.md:249
+msgid ""
+"[Formula evaluation, traceability, and row-source bindings](129-formula-"
+"evaluation-traceability-and-row-source-bindings.md) — `STAGE-2-129`"
+msgstr ""
+"[Avaluació de fórmules, traçabilitat i vinculacions de fonts de "
+"files](129-formula-evaluation-traceability-and-row-source-bindings.md) — "
+"`STAGE-2-129`"
+
+#: ../../technical/articles/catalogue.md:250
+msgid ""
+"[Dated tax vocabularies, inheritance, and IVA carries](130-dated-tax-"
+"vocabularies-inheritance-and-iva-carries.md) — `STAGE-2-130`"
+msgstr ""
+"[Vocabularis tributaris datats, herència i arrossegaments d’IVA](130"
+"-dated-tax-vocabularies-inheritance-and-iva-carries.md) — `STAGE-2-130`"
+
+#: ../../technical/articles/catalogue.md:251
+msgid ""
+"[Ledger binding families and Modelo 303 evidence projections](131-ledger-"
+"binding-families-and-modelo-303-evidence-projections.md) — `STAGE-2-131`"
+msgstr ""
+"[Famílies de vinculacions del llibre major i projeccions d’evidències de "
+"Modelo 303](131-ledger-binding-families-and-modelo-303-evidence-"
+"projections.md) — `STAGE-2-131`"
+
+#: ../../technical/articles/catalogue.md:252
+msgid ""
+"[Modelo 303 projections, profile bindings, and registry "
+"scope](132-modelo-303-projections-profile-bindings-and-registry-scope.md)"
+" — `STAGE-2-132`"
+msgstr ""
+"[Projeccions de Modelo 303, vinculacions de perfil i àmbit del "
+"registre](132-modelo-303-projections-profile-bindings-and-registry-"
+"scope.md) — `STAGE-2-132`"
+
+#: ../../technical/articles/catalogue.md:253
+msgid ""
+"[Registry reporting, cross-filing relations, and coverage checks](133"
+"-registry-reporting-cross-filing-relations-and-coverage-checks.md) — "
+"`STAGE-2-133`"
+msgstr ""
+"[Informes del registre, relacions entre presentacions i comprovacions de "
+"cobertura](133-registry-reporting-cross-filing-relations-and-coverage-"
+"checks.md) — `STAGE-2-133`"
+
+#: ../../technical/articles/catalogue.md:254
+msgid ""
+"[Withholding bindings, revision validation, and registry schema](134"
+"-withholding-bindings-revision-validation-and-registry-schema.md) — "
+"`STAGE-2-134`"
+msgstr ""
+"[Vinculacions de retencions, validació de revisions i esquema del "
+"registre](134-withholding-bindings-revision-validation-and-registry-"
+"schema.md) — `STAGE-2-134`"
+
+#: ../../technical/articles/catalogue.md:255
+msgid ""
+"[Registry schemas for exports, extraction, forms, and governance](135"
+"-registry-schemas-for-exports-extraction-forms-and-governance.md) — "
+"`STAGE-2-135`"
+msgstr ""
+"[Esquemes del registre per a exportacions, extracció, formularis i "
+"governança](135-registry-schemas-for-exports-extraction-forms-and-"
+"governance.md) — `STAGE-2-135`"
+
+#: ../../technical/articles/catalogue.md:256
+msgid ""
+"[Casilla verification contracts and filing snapshots](136-casilla-"
+"verification-contracts-and-filing-snapshots.md) — `STAGE-2-136`"
+msgstr ""
+"[Contractes de verificació de caselles i instantànies de presentació](136"
+"-casilla-verification-contracts-and-filing-snapshots.md) — `STAGE-2-136`"
+
+#: ../../technical/articles/catalogue.md:257
+msgid ""
+"[Revision selection, withholding aggregation, and row provenance](137"
+"-revision-selection-withholding-aggregation-and-row-provenance.md) — "
+"`STAGE-2-137`"
+msgstr ""
+"[Selecció de revisions, agregació de retencions i procedència de "
+"files](137-revision-selection-withholding-aggregation-and-row-"
+"provenance.md) — `STAGE-2-137`"
+
+#: ../../technical/articles/catalogue.md:259
+msgid "Business and taxpayer domain"
+msgstr "Domini empresarial i del contribuent"
+
+#: ../../technical/articles/catalogue.md:261
+msgid "[Read the topic overview](../topics/business-and-taxpayer-domain.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/business-and-taxpayer-"
+"domain.md)."
+
+#: ../../technical/articles/catalogue.md:263
+msgid ""
+"[Domain evidence, filing periods, and capital-goods registers](123"
+"-domain-evidence-filing-periods-and-capital-goods-registers.md) — "
+"`STAGE-2-123`"
+msgstr ""
+"[Evidències del domini, períodes de presentació i registres de béns "
+"d’inversió](123-domain-evidence-filing-periods-and-capital-goods-"
+"registers.md) — `STAGE-2-123`"
+
+#: ../../technical/articles/catalogue.md:264
+msgid ""
+"[Spending categories, proportionality, and census projections](138"
+"-spending-categories-proportionality-and-census-projections.md) — "
+"`STAGE-2-138`"
+msgstr ""
+"[Categories de despesa, proporcionalitat i projeccions censals](138"
+"-spending-categories-proportionality-and-census-projections.md) — "
+"`STAGE-2-138`"
+
+#: ../../technical/articles/catalogue.md:265
+msgid ""
+"[taxpayer and family domain records](139-taxpayer-and-family-domain-"
+"records.md) — `STAGE-2-139`"
+msgstr ""
+"[registres del domini del contribuent i la família](139-taxpayer-and-"
+"family-domain-records.md) — `STAGE-2-139`"
+
+#: ../../technical/articles/catalogue.md:266
+msgid ""
+"[inventory valuation and taxpayer-profile mechanics](140-inventory-"
+"valuation-and-taxpayer-profile-mechanics.md) — `STAGE-2-140`"
+msgstr ""
+"[valoració d’inventari i mecànica del perfil del contribuent](140"
+"-inventory-valuation-and-taxpayer-profile-mechanics.md) — `STAGE-2-140`"
+
+#: ../../technical/articles/catalogue.md:267
+msgid ""
+"[deadline, currency, and evidence-consent domain](141-deadline-currency-"
+"and-evidence-consent-domain.md) — `STAGE-2-141`"
+msgstr ""
+"[domini de terminis, divises i consentiment d’evidències](141-deadline-"
+"currency-and-evidence-consent-domain.md) — `STAGE-2-141`"
+
+#: ../../technical/articles/catalogue.md:268
+msgid ""
+"[filing drafts and invoice records](142-filing-drafts-and-invoice-"
+"records.md) — `STAGE-2-142`"
+msgstr ""
+"[esborranys de presentació i registres de factures](142-filing-drafts-"
+"and-invoice-records.md) — `STAGE-2-142`"
+
+#: ../../technical/articles/catalogue.md:269
+msgid ""
+"[IVA classification and evidence substrate](143-iva-classification-and-"
+"evidence-substrate.md) — `STAGE-2-143`"
+msgstr ""
+"[Classificació d’IVA i base d’evidències](143-iva-classification-and-"
+"evidence-substrate.md) — `STAGE-2-143`"
+
+#: ../../technical/articles/catalogue.md:270
+msgid ""
+"[IVA rates, settlement and statutory projections](144-iva-rates-"
+"settlement-and-statutory-projections.md) — `STAGE-2-144`"
+msgstr ""
+"[Tipus d’IVA, liquidació i projeccions legals](144-iva-rates-settlement-"
+"and-statutory-projections.md) — `STAGE-2-144`"
+
+#: ../../technical/articles/catalogue.md:271
+msgid ""
+"[IVA compensation carry-forward and filing receipts](145-iva-"
+"compensation-carry-forward-and-filing-receipts.md) — `STAGE-2-145`"
+msgstr ""
+"[Arrossegament de compensació d’IVA i rebuts de presentació](145-iva-"
+"compensation-carry-forward-and-filing-receipts.md) — `STAGE-2-145`"
+
+#: ../../technical/articles/catalogue.md:272
+msgid ""
+"[modelo calculation, evidence and filing lifecycle](146-modelo-"
+"calculation-evidence-and-filing-lifecycle.md) — `STAGE-2-146`"
+msgstr ""
+"[càlcul de modelo, evidències i cicle de vida de presentació](146-modelo-"
+"calculation-evidence-and-filing-lifecycle.md) — `STAGE-2-146`"
+
+#: ../../technical/articles/catalogue.md:273
+msgid ""
+"[ledger evidence, detail rows and modelo verification](147-ledger-"
+"evidence-detail-rows-and-modelo-verification.md) — `STAGE-2-147`"
+msgstr ""
+"[evidències del llibre major, files de detall i verificació de "
+"modelo](147-ledger-evidence-detail-rows-and-modelo-verification.md) — "
+"`STAGE-2-147`"
+
+#: ../../technical/articles/catalogue.md:274
+msgid ""
+"[portal catalogue and annual prorrata register](148-portal-catalogue-and-"
+"annual-prorrata-register.md) — `STAGE-2-148`"
+msgstr ""
+"[catàleg de portals i registre anual de prorrata](148-portal-catalogue-"
+"and-annual-prorrata-register.md) — `STAGE-2-148`"
+
+#: ../../technical/articles/catalogue.md:275
+msgid ""
+"[Renta expense rules and activity-asset amortization](149-renta-expense-"
+"rules-and-activity-asset-amortization.md) — `STAGE-2-149`"
+msgstr ""
+"[Regles de despeses de renda i amortització d’actius d’activitat](149"
+"-renta-expense-rules-and-activity-asset-amortization.md) — `STAGE-2-149`"
+
+#: ../../technical/articles/catalogue.md:276
+msgid ""
+"[Local submission preflight and audit records](150-local-submission-"
+"preflight-and-audit-records.md) — `STAGE-2-150`"
+msgstr ""
+"[Comprovació prèvia de presentació local i registres d’auditoria](150"
+"-local-submission-preflight-and-audit-records.md) — `STAGE-2-150`"
+
+#: ../../technical/articles/catalogue.md:277
+msgid ""
+"[Transaction ledger domain and classifier contracts](151-transaction-"
+"ledger-domain-and-classifier-contracts.md) — `STAGE-2-151`"
+msgstr ""
+"[Domini del llibre de transaccions i contractes de classificadors](151"
+"-transaction-ledger-domain-and-classifier-contracts.md) — `STAGE-2-151`"
+
+#: ../../technical/articles/catalogue.md:278
+msgid ""
+"[Transaction mutations and registry-backed income predicates](152"
+"-transaction-mutations-and-registry-backed-income-predicates.md) — "
+"`STAGE-2-152`"
+msgstr ""
+"[Mutacions de transaccions i predicats de renda basats en el "
+"registre](152-transaction-mutations-and-registry-backed-income-"
+"predicates.md) — `STAGE-2-152`"
+
+#: ../../technical/articles/catalogue.md:279
+msgid ""
+"[Usage ratios and user-profile domain](153-usage-ratios-and-user-profile-"
+"domain.md) — `STAGE-2-153`"
+msgstr ""
+"[Proporcions d’ús i domini del perfil d’usuari](153-usage-ratios-and-"
+"user-profile-domain.md) — `STAGE-2-153`"
+
+#: ../../technical/articles/catalogue.md:281
+msgid "Bundled knowledge and localization"
+msgstr "Coneixement inclòs i localització"
+
+#: ../../technical/articles/catalogue.md:283
+msgid ""
+"[Read the topic overview](../topics/bundled-knowledge-and-"
+"localization.md)."
+msgstr ""
+"[Llegeix la visió general del tema](../topics/bundled-knowledge-and-"
+"localization.md)."
+
+#: ../../technical/articles/catalogue.md:285
+msgid ""
+"[Bundled data package marker](188-bundled-data-package-marker.md) — "
+"`STAGE-2-188`"
+msgstr ""
+"[Marcador del paquet de dades incloses](188-bundled-data-package-"
+"marker.md) — `STAGE-2-188`"
+
+#: ../../technical/articles/catalogue.md:286
+msgid ""
+"[PDF color profile resource](189-pdf-color-profile-resource.md) — "
+"`STAGE-2-189`"
+msgstr ""
+"[Recurs de perfil de color PDF](189-pdf-color-profile-resource.md) — "
+"`STAGE-2-189`"
+
+#: ../../technical/articles/catalogue.md:287
+msgid ""
+"[PDF summary typography assets](190-pdf-summary-typography-assets.md) — "
+"`STAGE-2-190`"
+msgstr ""
+"[Recursos tipogràfics del resum PDF](190-pdf-summary-typography-"
+"assets.md) — `STAGE-2-190`"
+
+#: ../../technical/articles/catalogue.md:288
+msgid "[Corpus package marker](191-corpus-package-marker.md) — `STAGE-2-191`"
+msgstr ""
+"[Marcador del paquet del corpus](191-corpus-package-marker.md) — "
+"`STAGE-2-191`"
+
+#: ../../technical/articles/catalogue.md:289
+msgid ""
+"[AEAT official reference corpus](192-aeat-official-reference-corpus.md) —"
+" `STAGE-2-192`"
+msgstr ""
+"[Corpus de referència oficial de l’AEAT](192-aeat-official-reference-"
+"corpus.md) — `STAGE-2-192`"
+
+#: ../../technical/articles/catalogue.md:290
+msgid ""
+"[EU VAT-rate reference sources](193-eu-vat-rate-reference-sources.md) — "
+"`STAGE-2-193`"
+msgstr ""
+"[Fonts de referència dels tipus d’IVA de la UE](193-eu-vat-rate-"
+"reference-sources.md) — `STAGE-2-193`"
+
+#: ../../technical/articles/catalogue.md:291
+msgid ""
+"[Facturae 3.2.2 enumerations and total composition](194-facturae-3-2-2"
+"-enumerations-and-total-composition.md) — `STAGE-2-194`"
+msgstr ""
+"[Enumeracions de Facturae 3.2.2 i composició del "
+"total](194-facturae-3-2-2-enumerations-and-total-composition.md) — "
+"`STAGE-2-194`"
+
+#: ../../technical/articles/catalogue.md:292
+msgid ""
+"[Worked-example reference oracles](195-worked-example-reference-"
+"oracles.md) — `STAGE-2-195`"
+msgstr ""
+"[Oracles de referència d’exemples resolts](195-worked-example-reference-"
+"oracles.md) — `STAGE-2-195`"
+
+#: ../../technical/articles/catalogue.md:293
+msgid ""
+"[AEAT practical-manual corpus](196-aeat-practical-manual-corpus.md) — "
+"`STAGE-2-196`"
+msgstr ""
+"[Corpus de manuals pràctics de l’AEAT](196-aeat-practical-manual-"
+"corpus.md) — `STAGE-2-196`"
+
+#: ../../technical/articles/catalogue.md:294
+msgid ""
+"[Normative reference corpus](197-normative-reference-corpus.md) — "
+"`STAGE-2-197`"
+msgstr ""
+"[Corpus de referència normativa](197-normative-reference-corpus.md) — "
+"`STAGE-2-197`"
+
+#: ../../technical/articles/catalogue.md:295
+msgid ""
+"[GNOME native login observation](198-gnome-native-login-observation.md) —"
+" `STAGE-2-198`"
+msgstr ""
+"[Observació nativa d’inici de sessió de GNOME](198-gnome-native-login-"
+"observation.md) — `STAGE-2-198`"
+
+#: ../../technical/articles/catalogue.md:296
+msgid ""
+"[AEAT official manual corpus text](199-aeat-official-manual-corpus-"
+"text.md) — `STAGE-2-199`"
+msgstr ""
+"[Text del corpus de manuals oficials de l’AEAT](199-aeat-official-manual-"
+"corpus-text.md) — `STAGE-2-199`"
+
+#: ../../technical/articles/catalogue.md:297
+msgid "[EU VAT reference text](200-eu-vat-reference-text.md) — `STAGE-2-200`"
+msgstr ""
+"[Text de referència d’IVA de la UE](200-eu-vat-reference-text.md) — "
+"`STAGE-2-200`"
+
+#: ../../technical/articles/catalogue.md:298
+msgid ""
+"[AEAT manuals, extracted text](201-aeat-manuals-extracted-text.md) — "
+"`STAGE-2-201`"
+msgstr ""
+"[Manuals de l’AEAT, text extret](201-aeat-manuals-extracted-text.md) — "
+"`STAGE-2-201`"
+
+#: ../../technical/articles/catalogue.md:299
+msgid ""
+"[Normative PDF text corpus](202-normative-pdf-text-corpus.md) — "
+"`STAGE-2-202`"
+msgstr ""
+"[Corpus de text de PDF normatius](202-normative-pdf-text-corpus.md) — "
+"`STAGE-2-202`"
+
+#: ../../technical/articles/catalogue.md:300
+msgid ""
+"[AEAT registry and model declarations](203-aeat-registry-and-model-"
+"declarations.md) — `STAGE-2-203`"
+msgstr ""
+"[Registre de l’AEAT i declaracions de models](203-aeat-registry-and-"
+"model-declarations.md) — `STAGE-2-203`"
+
+#: ../../technical/articles/catalogue.md:301
+msgid ""
+"[Cadrumo user-profile schema](204-cadrumo-user-profile-schema.md) — "
+"`STAGE-2-204`"
+msgstr ""
+"[Esquema del perfil d’usuari de Cadrumo](204-cadrumo-user-profile-"
+"schema.md) — `STAGE-2-204`"
+
+#: ../../technical/articles/catalogue.md:302
+msgid ""
+"[Terminology concept corpus](205-terminology-concept-corpus.md) — "
+"`STAGE-2-205`"
+msgstr ""
+"[Corpus de conceptes terminològics](205-terminology-concept-corpus.md) — "
+"`STAGE-2-205`"
+
+#: ../../technical/articles/catalogue.md:303
+msgid ""
+"[Localized interface and model-schema labels](206-localized-interface-"
+"and-model-schema-labels.md) — `STAGE-2-206`"
+msgstr ""
+"[Etiquetes localitzades d’interfície i esquemes de models](206-localized-"
+"interface-and-model-schema-labels.md) — `STAGE-2-206`"

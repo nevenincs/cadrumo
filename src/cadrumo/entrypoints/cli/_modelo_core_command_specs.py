@@ -7,23 +7,20 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from .command_spec import (
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    ArgumentSpec,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from .command_spec import translation_key as _key
+from .command_shared_contracts import translation_key as _key
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _CALCULATION_READ = ExecutionPolicySpec(

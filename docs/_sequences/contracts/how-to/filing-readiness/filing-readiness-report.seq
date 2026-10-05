@@ -1,7 +1,7 @@
-@step Describe the modelo to read its resolved revision id.
+@step Describe the modelo to see the version of the official form.
 aeat --format json app modelo describe 303 --year 2026 --period 1T
 @capture revision_id result.revision
-@step Report whether the active profile is ready for that revision.
+@step Report whether the active profile is ready for that version of the official form.
 @result aeat --format json app modelo readiness --modelo 303 --year 2026 --period 1T --revision-id {revision_id}
 @expect result.modelo == "303"
 @expect result.ready == false

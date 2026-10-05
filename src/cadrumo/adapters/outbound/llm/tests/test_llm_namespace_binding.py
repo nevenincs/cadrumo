@@ -1,16 +1,16 @@
 """Registry-definition binding proof for the LLM secure-object write paths.
 
-The LLM cache, usage sink, and run-telemetry sink each persist an encrypted
+The LLM cache, usage sink, and run-record sink each persist an encrypted
 secure object. Their ``classification`` and envelope ``schema_version`` MUST be
 single-sourced from the owning
 :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
 (``LLM_CACHE_NAMESPACE`` / ``LLM_USAGE_NAMESPACE`` /
-``LLM_RUN_TELEMETRY_NAMESPACE``) rather than restated as ``SensitivityClass``
+``LLM_RUN_RECORD_NAMESPACE``) rather than restated as ``SensitivityClass``
 literals and integer versions in the adapter modules.
 
 This is a write-path proof, not a bare constant-equality assertion: it drives
 the exact production recorder each caller uses (``LLMCache.write``,
-``UsageRecorder.record``, ``LLMRunTelemetryRecorder.record``), then reads the
+``UsageRecorder.record``, ``LLMRunRecorder.record``), then reads the
 raw :class:`SecureObjectRow` back from the encrypted SQL backend and asserts the
 persisted classification and schema_version equal exactly what the registry def
 declares. If any LLM consumer re-hardcoded a metadata value that diverged from
@@ -29,11 +29,11 @@ from sqlalchemy import select
 
 from .....core.config_support import LLMProvider
 from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.secure_object_namespaces import (
     LLM_CACHE_NAMESPACE,
-    LLM_RUN_TELEMETRY_NAMESPACE,
+    LLM_RUN_RECORD_NAMESPACE,
     LLM_USAGE_NAMESPACE,
 )
 from ....persistence.storage.sql.orm import SecureObjectRow
@@ -113,13 +113,13 @@ def test_llm_usage_row_carries_registry_declared_metadata(
     assert rows[0].schema_version == LLM_USAGE_NAMESPACE.schema_version
 
 
-def test_llm_run_telemetry_row_carries_registry_declared_metadata(
+def test_llm_run_record_row_carries_registry_declared_metadata(
     tmp_path: Path,
     secure_object_test_profile: TestRuntimeProfile,
 ) -> None:
-    """A telemetry row written by ``LLMRunTelemetryRecorder.record`` persists the def's metadata."""
+    """A run-record row written by ``LLMRunRecorder.record`` persists the def's metadata."""
 
-    LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry").record(
+    LLMRunRecorder(root_dir=tmp_path / "llm-run-record").record(
         LLMRunRecord(
             run_id="run-binding-proof",
             caller="cadrumo.application.ledger.llm_classification",
@@ -132,7 +132,7 @@ def test_llm_run_telemetry_row_carries_registry_declared_metadata(
         ),
     )
 
-    rows = _rows_for(secure_object_test_profile, LLM_RUN_TELEMETRY_NAMESPACE.namespace)
-    assert len(rows) == 1, f"expected one telemetry row, saw {len(rows)}"
-    assert rows[0].classification == LLM_RUN_TELEMETRY_NAMESPACE.sensitivity.value
-    assert rows[0].schema_version == LLM_RUN_TELEMETRY_NAMESPACE.schema_version
+    rows = _rows_for(secure_object_test_profile, LLM_RUN_RECORD_NAMESPACE.namespace)
+    assert len(rows) == 1, f"expected one run-record row, saw {len(rows)}"
+    assert rows[0].classification == LLM_RUN_RECORD_NAMESPACE.sensitivity.value
+    assert rows[0].schema_version == LLM_RUN_RECORD_NAMESPACE.schema_version

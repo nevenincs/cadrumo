@@ -366,3 +366,45 @@ def test_correction_allowed_when_only_a_draft_303_exists(*, operation: PinnedAut
     )
 
     assert state.available_end_amount == Decimal("1200.50")
+
+
+def test_corrected_seed_refreshes_previously_accepted_zero(*, operation: PinnedAuthorityOperation) -> None:
+    from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
+
+    _seed(Decimal("0"), operation=operation)
+    _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation)
+    ports = _seed_ports()
+    unit = next(iter(ports.work_unit_repository.load().work_units.values()))
+    snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+    taxpayer = taxpayer_nif_for_bucket(_BUCKET_ID)
+    assert taxpayer is not None
+
+    def resolve():
+        return resolve_iva_compensation_decision_for_calculation(
+            unit,
+            snapshot=snapshot,
+            operation=operation,
+            supplied_decision=None,
+            repository=ports.calculation_observation_ports.iva_wallet_decision_repository,
+            observation_repository=ports.calculation_observation_ports.observation_repository,
+            history_repository=ports.iva_compensation_history_repository,
+            binding_values=None,
+            backend_binding_values=None,
+            casilla_inputs=None,
+            backend_casilla_inputs=None,
+            profile_values={"identity.tax_id": taxpayer},
+        )
+
+    original = resolve()
+    assert original is not None and original.selected_amount == Decimal("0") and not original.blocked
+    correct_iva_compensation_period_for_bucket(
+        bucket_id=_BUCKET_ID,
+        period=_SEED_FILING_PERIOD,
+        amount=Decimal("125"),
+        reason="correct opening balance",
+        ports=ports,
+        operation=operation,
+    )
+    updated = resolve()
+    assert updated is not None and updated.blocked
+    assert updated.local_recurrence_amount == Decimal("125")

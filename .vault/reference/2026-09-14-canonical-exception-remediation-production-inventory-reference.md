@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-exception-remediation'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a6b9139a2042aa7ddea52cfb03cbc3e5c18bd519063c5f87db7d76a47f5a63b'
+body_hash: 'sha256:0052e7a022a50ee299252ae6e8bfe73896d864bae7abf80889e94dda04f15665'
 related:
   - "[[2026-09-14-ast-exception-gate-remediation-closeout-review-audit]]"
 ---
@@ -45,7 +45,3 @@ exceptions. The optional Playwright fallback at
 `src/cadrumo/adapters/outbound/aeat/_playwright.py:46` is the only discovered external
 exception-type boundary; installed Playwright supplies the third-party class and the
 absent-extra fallback only keeps typed catch sites importable.
-
-Enrollment tests follow `src/cadrumo/adapters/persistence/storage/tests/test_errors.py:24`
-and `src/cadrumo/core/bucket/tests/test_bucket_errors.py:38`: assert canonical ancestry,
-unique registration, safe context, and envelope round trips.

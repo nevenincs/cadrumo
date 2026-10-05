@@ -24,16 +24,18 @@ from .authority_artifact import (
     AuthorityGenerationPin,
     authority_component_identity,
     authority_query_from_identity,
-    decode_authority_component,
 )
 from .authority_cache import (
     AccountedAuthorityCache,
-    AuthorityCacheTelemetry,
+    AuthorityCacheStats,
     RetainedAuthorityValue,
 )
+from .authority_component_codec import decode_authority_component
 
 AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v4"
 AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
+#: The one file in an authority directory that selects its current database.
+AUTHORITY_DESCRIPTOR_FILENAME: Final = "authority.current.json"
 _DESCRIPTOR_MEMBERS: Final = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
 _DATABASE_NAME = re.compile(r"authority-([0-9a-f]{64})\.sqlite3")
 
@@ -67,36 +69,8 @@ class AuthorityDescriptor:
     @classmethod
     def read(cls, path: Path) -> AuthorityDescriptor:
         """Read a closed canonical descriptor and confine its target to one directory."""
-        try:
-            raw = path.read_bytes()
-            document = json.loads(
-                raw,
-                object_pairs_hook=reject_duplicate_json_members,
-                parse_constant=reject_json_constant,
-            )
-        except (OSError, UnicodeDecodeError, ValueError) as exc:
-            raise AuthorityStoreError(f"authority descriptor is unavailable or malformed at {path}") from exc
-        if not is_str_keyed_dict(document) or frozenset(document) != _DESCRIPTOR_MEMBERS:
-            raise AuthorityStoreError("authority descriptor has unexpected or missing members")
-        try:
-            format_name = document["format"]
-            database = document["database"]
-            database_size = document["database_size"]
-            database_sha256 = document["database_sha256"]
-            logical_generation = document["logical_generation"]
-            if not isinstance(format_name, str):
-                raise TypeError
-            if not isinstance(database, str):
-                raise TypeError
-            if not isinstance(database_sha256, str):
-                raise TypeError
-            if not isinstance(logical_generation, str):
-                raise TypeError
-            if not isinstance(database_size, int) or isinstance(database_size, bool):
-                raise TypeError
-            descriptor = cls(database, database_size, database_sha256, logical_generation, format_name)
-        except (KeyError, TypeError, ValueError) as exc:
-            raise AuthorityStoreError("authority descriptor has invalid typed members") from exc
+        raw, document = _read_descriptor_document(path)
+        descriptor = _descriptor_from_document(document, descriptor_type=cls)
         descriptor._validate(path.parent)
         if descriptor.to_bytes() != raw:
             raise AuthorityStoreError("authority descriptor is not canonical JSON")
@@ -113,10 +87,7 @@ class AuthorityDescriptor:
             raise AuthorityStoreError("authority descriptor database size must be positive")
         if _DATABASE_NAME.fullmatch(Path(self.database).name) is None or Path(self.database).name != self.database:
             raise AuthorityStoreError("authority descriptor database must be a confined basename")
-        if len(self.logical_generation) != 64 or any(
-            char not in "0123456789abcdef" for char in self.logical_generation
-        ):
-            raise AuthorityStoreError("authority descriptor logical generation must be a lowercase SHA-256 digest")
+        _require_logical_generation_digest(self.logical_generation)
         target = (directory / self.database).resolve()
         if target.parent != directory.resolve():
             raise AuthorityStoreError("authority descriptor database escapes its resource directory")
@@ -134,6 +105,52 @@ class AuthorityDescriptor:
                 "logical_generation": self.logical_generation,
             }
         )
+
+
+def _read_descriptor_document(path: Path) -> tuple[bytes, object]:
+    try:
+        raw = path.read_bytes()
+        document = json.loads(
+            raw,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
+        )
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        raise AuthorityStoreError(f"authority descriptor is unavailable or malformed at {path}") from exc
+    return raw, document
+
+
+def _descriptor_from_document(
+    document: object,
+    *,
+    descriptor_type: type[AuthorityDescriptor],
+) -> AuthorityDescriptor:
+    if not is_str_keyed_dict(document) or frozenset(document) != _DESCRIPTOR_MEMBERS:
+        raise AuthorityStoreError("authority descriptor has unexpected or missing members")
+    try:
+        format_name = document["format"]
+        database = document["database"]
+        database_size = document["database_size"]
+        database_sha256 = document["database_sha256"]
+        logical_generation = document["logical_generation"]
+        if not isinstance(format_name, str):
+            raise TypeError
+        if not isinstance(database, str):
+            raise TypeError
+        if not isinstance(database_sha256, str):
+            raise TypeError
+        if not isinstance(logical_generation, str):
+            raise TypeError
+        if not isinstance(database_size, int) or isinstance(database_size, bool):
+            raise TypeError
+        return descriptor_type(database, database_size, database_sha256, logical_generation, format_name)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise AuthorityStoreError("authority descriptor has invalid typed members") from exc
+
+
+def _require_logical_generation_digest(value: str) -> None:
+    if len(value) != 64 or any(char not in "0123456789abcdef" for char in value):
+        raise AuthorityStoreError("authority descriptor logical generation must be a lowercase SHA-256 digest")
 
 
 def require_authority_store_available(descriptor_path: Path) -> None:
@@ -228,9 +245,9 @@ class SQLiteAuthorityReader:
             lambda: self._load_uncached(query, pin=pin),
         )
 
-    def telemetry(self) -> AuthorityCacheTelemetry:
+    def stats(self) -> AuthorityCacheStats:
         """Return retained component accounting, excluding connections and leases."""
-        return self._cache.telemetry()
+        return self._cache.stats()
 
     def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
         """Iterate the complete component directory without hydrating payloads.

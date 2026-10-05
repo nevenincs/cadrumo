@@ -45,6 +45,7 @@ from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.rescate_type import RescateType
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
@@ -89,13 +90,10 @@ from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
-    Modelo347ContraparteRow,
-    Modelo347ThresholdError,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
     validate_m184_member_share_sum,
-    validate_m347_threshold,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
@@ -235,7 +233,7 @@ class WorkCalculateInputBundle:
     detail_rows: tuple[ModeloDetailRow, ...]
     borrador_snapshot_id: str | None
     filing_instance_evidence: FilingInstanceEvidence | None = None
-    m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = M210GrossIncomeSourceMode.MANUAL
     shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """Non-blocking advisories raised while resolving shortcut inputs.
 
@@ -244,6 +242,14 @@ class WorkCalculateInputBundle:
     them into its ``source_diagnostics`` / ``source_advisories`` channel. The
     shortcut path is the only site with the contingencia/rescate year facts, so
     the advisory originates here and rides the bundle to the operator surface.
+    """
+    cleared_casilla_ids: tuple[CasillaId, ...] = ()
+    """Casillas the operator explicitly cleared, replayed from the calculation head."""
+    record_operator_layer: bool = False
+    """Whether the revision records these inputs as the operator's own layer.
+
+    Only a replay of a head whose layer is known sets it, so explicit
+    full-specification inputs are never mistaken for the operator's typed values.
     """
 
     @classmethod
@@ -259,8 +265,10 @@ class WorkCalculateInputBundle:
         filing_instance_evidence: FilingInstanceEvidence | None = None,
         text_casilla_inputs: Mapping[CasillaId, str] | None = None,
         m210_official_tipo_renta_code: str | None = None,
-        m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
+        m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = M210GrossIncomeSourceMode.MANUAL,
         shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = (),
+        cleared_casilla_ids: tuple[CasillaId, ...] = (),
+        record_operator_layer: bool = False,
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -281,6 +289,8 @@ class WorkCalculateInputBundle:
             filing_instance_evidence=filing_instance_evidence,
             m210_gross_income_source_mode=m210_gross_income_source_mode,
             shortcut_diagnostics=shortcut_diagnostics,
+            cleared_casilla_ids=cleared_casilla_ids,
+            record_operator_layer=record_operator_layer,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -375,6 +385,8 @@ def calculate_modelo_work_revision(
         actor=actor,
         casilla_inputs=inputs.casilla_inputs,
         text_casilla_inputs=inputs.optional_text_casilla_inputs(),
+        cleared_casilla_ids=inputs.cleared_casilla_ids,
+        record_operator_layer=inputs.record_operator_layer,
         m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,
         binding_values=inputs.optional_binding_values(),
@@ -506,7 +518,7 @@ def resolve_binding_overrides(
     if not binding_overrides:
         return binding_values, enum_binding_values
 
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     known_binding_ids = set(bindings_by_id)
     enum_channel_ids = enum_consumed_binding_ids(revision)
     date_channel_ids = revision_date_binding_ids(revision)
@@ -648,30 +660,10 @@ def build_work_calculate_input_bundle(
     )
 
 
-def _validate_detail_rows(
+def _validate_m349_detail_rows(
     rows: tuple[ModeloDetailRow, ...], *, work_unit: WorkUnit, operation: PinnedAuthorityOperation
 ) -> None:
-    member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
-    try:
-        validate_m184_member_share_sum(member_rows)
-    except Modelo184ShareSumError as exc:
-        raise ModeloCalculateDetailRowsError(
-            context={"total": str(exc.total), "count": str(exc.count)},
-            translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
-        ) from exc
-
-    contraparte_rows = [row for row in rows if isinstance(row, Modelo347ContraparteRow)]
-    try:
-        with validating_governed_facts(operation):
-            validate_m347_threshold(contraparte_rows, effective_date=date(work_unit.filing_year, 12, 31))
-    except Modelo347ThresholdError as exc:
-        raise ModeloCalculateDetailRowsError(
-            context={"nif": exc.nif, "total": str(exc.total), "threshold": str(exc.threshold.payload.value)},
-            translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
-        ) from exc
-
-    if str(work_unit.modelo) != "349":
-        return
+    """Validate NIF and country context inside the original governed-facts scope."""
     with validating_governed_facts(operation):
         for row in rows:
             if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)) and not validate_m349_nif_format(
@@ -698,6 +690,23 @@ def _validate_detail_rows(
                     rectified_year=int(row.ejercicio),
                     rectified_period=row.periodo,
                 )
+
+
+def _validate_detail_rows(
+    rows: tuple[ModeloDetailRow, ...], *, work_unit: WorkUnit, operation: PinnedAuthorityOperation
+) -> None:
+    member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
+    try:
+        validate_m184_member_share_sum(member_rows)
+    except Modelo184ShareSumError as exc:
+        raise ModeloCalculateDetailRowsError(
+            context={"total": str(exc.total), "count": str(exc.count)},
+            translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
+        ) from exc
+
+    if str(work_unit.modelo) != "349":
+        return
+    _validate_m349_detail_rows(rows, work_unit=work_unit, operation=operation)
 
 
 def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
@@ -798,8 +807,11 @@ def _typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinitio
             tax_id_format=runtime_tax_id_format() if casilla_def.data_type == "nif" else None,
         )
     except RegistryValidationError as exc:
+        context = {"key": key, "data_type": casilla_def.data_type}
+        if casilla_def.data_type != "iban":
+            context["value"] = raw_value
         raise ModeloCalculateTextInputError(
-            context={"key": key, "value": raw_value, "data_type": casilla_def.data_type},
+            context=context,
             translated_message="application.modelo.errors.calculate_typed_text_input_invalid",
         ) from exc
 
@@ -1303,21 +1315,6 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision, *, work_
     )
 
 
-def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalitySummary | None:
-    """Return a :class:`Modelo202ModalitySummary` for ``work_unit`` when applicable.
-
-    Non-Modelo-202 work units return ``None``. For Modelo 202, the active
-    profile projection is passed to the registry applicability helper so the
-    calculate payload can disclose whether Art. 40.2 or Art. 40.3 was selected.
-    """
-    if str(work_unit.modelo) != Modelo("202"):
-        return None
-
-    from ..workflow.persistence import workflow_state_repository
-
-    return modelo_202_modality_for_record(work_unit, workflow_state_repository().load().active_profile_record())
-
-
 def modelo_202_modality_for_record(
     work_unit: WorkUnit,
     record: UserProfileRecord | None,
@@ -1783,6 +1780,5 @@ __all__ = [
     "apply_calculation_shortcut_inputs",
     "build_work_calculate_input_bundle",
     "calculate_modelo_work_revision",
-    "modelo_202_modality_for_work_unit",
     "resolve_binding_overrides",
 ]

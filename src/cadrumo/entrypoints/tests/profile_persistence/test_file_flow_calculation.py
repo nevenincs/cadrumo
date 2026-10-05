@@ -537,7 +537,7 @@ def test_local_filing_commits_state_pointer_and_filed_event_together(
             actor="operator-A",
             workflow_profile=gate.profile,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             workflow_engine=gate.engine,
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,

@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
@@ -28,14 +27,8 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ._execution_context import DefinitionBoundContext
     from .authorization import OperationExecutionAuthority
-    from .financial_operand import (
-        OperationTransientFinancialOperandDelivery,
-        OperationTransientFinancialOperandRequirement,
-    )
-    from .financial_operand_submission import (
-        BoundTransientFinancialOperandAccess,
-        OperationTransientFinancialOperandBroker,
-    )
+    from .capabilities import OperationRequestStoragePolicy
+    from .drain import OperationDrainResult
     from .interactions import (
         OperationApplyResponse,
         OperationConsumedInteraction,
@@ -48,6 +41,7 @@ if TYPE_CHECKING:
         OperationRequest,
         OperationTerminalReceipt,
     )
+    from .operation_definition import OperationDefinition
     from .persistence.events import OperationEvent
     from .persistence.idempotency import OperationIdempotencyClaim
     from .persistence.journal import (
@@ -60,8 +54,9 @@ if TYPE_CHECKING:
     from .projection_services import OperationResponseAuthorityIssuer
     from .provenance import OperationAdmissionProvenance
     from .refusal_evidence import OperationExecutorResult
-    from .registry import OperationDefinition, OperationRegistry
+    from .registry import OperationPublicDefinitionContractV1, OperationRegistry
     from .secret_submission import EphemeralSecretBroker, OperationSecretRequirement
+    from .typed_financial_operand_submission import OperationTypedFinancialOperandBroker
 
 
 class SupervisorHost:
@@ -84,17 +79,20 @@ class SupervisorHost:
         _executor_tasks: dict[OperationId, asyncio.Task[OperationExecutorResult]]
         _continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
         _settlement_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
+        _accepting_admissions: bool
+        _admissions: dict[asyncio.Task[object], OperationId]
+        _drain_tasks: dict[OperationId, set[asyncio.Task[object]]]
+        _drain_close_tasks: dict[OperationId, asyncio.Task[None]]
+        _drain_settlements: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
         _durable_change_events: dict[OperationId, asyncio.Event]
         _durable_revisions: dict[OperationId, int]
         _ephemeral_secrets: EphemeralSecretBroker
-        _financial_operands: OperationTransientFinancialOperandBroker | None
+        _typed_financial_operands: OperationTypedFinancialOperandBroker | None
         _resources: dict[OperationId, list[AsyncCloseable]]
         _cleanup_tasks: dict[OperationId, asyncio.Task[None]]
 
         @staticmethod
-        def _validate_request_payload[RequestPayloadT: BaseModel](
-            request: OperationRequest[RequestPayloadT], request_type: type[BaseModel]
-        ) -> None: ...
+        def _validate_request_payload(payload: BaseModel, request_type: type[BaseModel]) -> None: ...
 
         def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease: ...
 
@@ -131,12 +129,6 @@ class SupervisorHost:
         def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
 
         def _build_context(self, snapshot: OperationPersistedSnapshot) -> DefinitionBoundContext: ...
-
-        def _bound_financial_operand(
-            self,
-            identity: OperationIdentity,
-            definition: OperationDefinition,
-        ) -> BoundTransientFinancialOperandAccess: ...
 
         async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None: ...
 
@@ -198,17 +190,75 @@ class SupervisorHost:
             provenance: OperationAdmissionProvenance | None = None,
         ) -> OperationId: ...
 
+        async def _authorize_submission[RequestPayloadT: BaseModel](
+            self,
+            request: OperationRequest[RequestPayloadT],
+            *,
+            operation_id: OperationId | None,
+            provenance: OperationAdmissionProvenance | None,
+        ) -> tuple[OperationDefinition, OperationPublicDefinitionContractV1, OperationIdentity, datetime]: ...
+
+        async def _store_submission_request[RequestPayloadT: BaseModel](
+            self,
+            request: OperationRequest[RequestPayloadT],
+            definition: OperationDefinition,
+            now: datetime,
+        ) -> tuple[OperationRequestStoragePolicy, str, str | None]: ...
+
+        @staticmethod
+        def _submission_secret_requirement(
+            definition: OperationDefinition,
+            identity: OperationIdentity,
+            now: datetime,
+        ) -> OperationSecretRequirement | None: ...
+
+        async def _persist_submission[RequestPayloadT: BaseModel](
+            self,
+            *,
+            request: OperationRequest[RequestPayloadT],
+            definition_contract: OperationPublicDefinitionContractV1,
+            identity: OperationIdentity,
+            now: datetime,
+            request_storage: OperationRequestStoragePolicy,
+            request_reference: str,
+            credential_free_request_json: str | None,
+            secret_requirement: OperationSecretRequirement | None,
+            provenance: OperationAdmissionProvenance | None,
+        ) -> OperationId: ...
+
+        async def drain(self, timeout: timedelta) -> OperationDrainResult: ...
+
+        async def shutdown(self) -> OperationDrainResult: ...
+
+        def _schedule_drain_settlement_closes(self, deadline: float) -> None: ...
+
+        async def _await_pending_drain_tasks(self, deadline: float) -> None: ...
+
+        async def _cancel_pending_drain_tasks(self, deadline: float) -> None: ...
+
+        def _drain_operation_ids(self) -> tuple[tuple[OperationId, ...], tuple[OperationId, ...]]: ...
+
+        def _capture_drain_tasks(self) -> None: ...
+
+        def _pending_drain_tasks(self) -> set[asyncio.Task[object]]: ...
+
+        def _requires_recovery(self, operation_id: OperationId, tasks: set[asyncio.Task[object]]) -> bool: ...
+
+        @staticmethod
+        def _drain_close_completed(task: asyncio.Task[None]) -> None: ...
+
+        async def _close_unsettled(
+            self,
+            operation_id: OperationId,
+            settlement: asyncio.Task[OperationPersistedSnapshot],
+            deadline: float,
+        ) -> None: ...
+
         def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition: ...
 
         async def _load_pinned_snapshot(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
 
         async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
-
-        async def submit_transient_financial_operand(
-            self,
-            requirement: OperationTransientFinancialOperandRequirement,
-            amount: Decimal,
-        ) -> OperationTransientFinancialOperandDelivery: ...
 
         async def submit_ephemeral_secret(
             self,
@@ -267,6 +317,29 @@ class SupervisorHost:
             context: DefinitionBoundContext,
             executor: Coroutine[None, None, OperationExecutorResult],
         ) -> OperationExecutorResult: ...
+
+        async def _request_expired_entry_cancellation(
+            self,
+            identity: OperationIdentity,
+            entry: OperationPersistedSnapshot,
+        ) -> None: ...
+
+        async def _watch_execution_deadline(
+            self,
+            identity: OperationIdentity,
+            snapshot: OperationPersistedSnapshot,
+            executor_task: asyncio.Task[OperationExecutorResult],
+            now: datetime,
+        ) -> bool: ...
+
+        async def _watch_cleanup_deadline(
+            self,
+            identity: OperationIdentity,
+            context: DefinitionBoundContext,
+            snapshot: OperationPersistedSnapshot,
+            executor_task: asyncio.Task[OperationExecutorResult],
+            now: datetime,
+        ) -> bool: ...
 
         async def _settle_returned_result(
             self,

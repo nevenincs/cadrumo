@@ -84,9 +84,6 @@ class _UnusedWalletDecisionRepository:
     def list_decisions(self) -> Never:
         raise AssertionError("the correction seam does not list wallet decisions")
 
-    def load_decision_history(self, taxpayer_nif: str, target_period: Period) -> Never:
-        raise AssertionError("the correction seam does not read wallet history")
-
     def save_decision(self, decision: object) -> Never:
         raise AssertionError("the correction seam owns wallet decision writes")
 
@@ -146,9 +143,11 @@ class _Factory:
         self.history = history
         self.bucket_id = bucket_id
         self.requested: list[str] = []
+        self.operations: list[object] = []
 
-    def __call__(self, *, bucket_id: str) -> ModeloIvaWalletSeedPorts:
+    def __call__(self, *, bucket_id: str, operation: object) -> ModeloIvaWalletSeedPorts:
         self.requested.append(bucket_id)
+        self.operations.append(operation)
         selected = self.bucket_id if self.bucket_id is not None else bucket_id
         return ModeloIvaWalletSeedPorts(
             work_unit_repository=ProfileOnlyCatalogueRepository[WorkUnitCatalogue](selected),
@@ -271,6 +270,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_correction_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def correct(**kwargs: object):
         seen.append(kwargs)
@@ -286,6 +286,7 @@ def test_executor_uses_exact_bucket_pinned_authority_and_commit_receipt(
 
     assert result_ref == "result-reference"
     assert factory.requested == [str(_PROFILE)]
+    assert factory.operations == [_AUTHORITY]
     assert seen[0]["bucket_id"] == str(_PROFILE)
     assert seen[0]["operation"] is _AUTHORITY
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
@@ -322,6 +323,7 @@ def test_known_seed_refusal_is_settled_with_no_effect(monkeypatch: pytest.Monkey
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_correction_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def refuse(**_kwargs: object):
         raise ModeloIvaWalletCorrectionNoRecordError(

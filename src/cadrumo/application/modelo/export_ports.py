@@ -19,6 +19,7 @@ from cadrumo.application.calculations.observations_repository import (
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
@@ -28,10 +29,29 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.transactions.own_accounts import OwnAccountRegister
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
+from ..filing.producer_snapshot_m360 import Modelo360SolicitudRegister
+
+
+class Modelo360SolicitudRegisterReaderProtocol(Protocol):
+    """Read the encrypted register of declared modelo 360 solicitudes."""
+
+    def load(self) -> Modelo360SolicitudRegister:
+        """Return the register, empty when no solicitud was ever declared."""
+        ...
+
+
+class OwnAccountRegisterReaderProtocol(Protocol):
+    """Read the encrypted register of the taxpayer's own bank accounts."""
+
+    def load(self) -> OwnAccountRegister:
+        """Return the register, empty when no own account was ever entered."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,10 +70,14 @@ class ModeloExportPorts:
     verification: VerificationReportCatalogueRepositoryProtocol
     bucket_event: BucketEventHistoryRepositoryProtocol
     observation: CalculationObservationRepositoryProtocol
+    iva_compensation_history: IvaCompensationHistoryRepositoryProtocol
     iva_compensation_decision: IvaWalletDecisionRepositoryProtocol
     justificante: JustificanteRepositoryProtocol
     prorrata_register: ProrrataRegisterRepositoryProtocol
     bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
+    m360_solicitud: Modelo360SolicitudRegisterReaderProtocol
+    own_accounts: OwnAccountRegisterReaderProtocol
+    """The own-account register every charge and refund account is resolved from."""
     transaction: TransactionCatalogueRepositoryProtocol
     draft_review_ports: DraftReviewPorts
     retencion_observation_ports: RetencionObservationPorts
@@ -73,12 +97,15 @@ class ModeloExportPortsFactory(Protocol):
         *,
         bucket_id: str,
         m303_rectificativa_taxpayer_tax_id: SubjectTaxId,
+        operation: PinnedAuthorityOperation,
     ) -> ModeloExportPorts:
-        """Return all authorities required by one export invocation."""
+        """Return all authorities for one invocation and its held operation."""
         ...
 
 
 __all__ = [
+    "Modelo360SolicitudRegisterReaderProtocol",
     "ModeloExportPorts",
     "ModeloExportPortsFactory",
+    "OwnAccountRegisterReaderProtocol",
 ]

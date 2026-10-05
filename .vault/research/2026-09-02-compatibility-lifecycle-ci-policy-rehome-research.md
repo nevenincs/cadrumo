@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#compatibility-lifecycle'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:73c88a6335684d696b93b2646856a009979521a390f59f129f296fb2df164131'
+body_hash: 'sha256:4a753a8ddd0f584280c2780b08fe9ce99cf301eb9bea5dbb2e1a0574265df17d'
 related: []
 ---
 
@@ -21,7 +21,7 @@ The compatibility-lifecycle decision requires dormant regime-aware gates while c
 
 ### The module is shipped despite being CI-only
 
-Hatch includes `src/cadrumo/core/compatibility_lifecycle.py` in the wheel and API-doc generation publishes it. The graph scanner therefore correctly reports it unreachable. Four direct test modules become orphan findings with it, and three other gate modules consume it alongside live production subjects. This is placement debt, not dead policy.
+Hatch includes the former source file in the wheel and API-doc generation publishes it. The graph scanner therefore correctly reports it unreachable. Four direct test modules become orphan findings with it, and three other gate modules consume it alongside live production subjects. This is placement debt, not dead policy.
 
 ### A dev quality-gate home preserves the single authority
 
@@ -33,10 +33,5 @@ The focused suite passed 31 tests and failed one real binding check: `SUPPORTED_
 
 ## Sources
 
-- `src/cadrumo/core/compatibility_lifecycle.py`
-- `src/cadrumo/core/tests/test_compatibility_lifecycle.py`
-- `src/cadrumo/core/tests/test_compatibility_lifecycle_gate.py`
-- `src/cadrumo/core/tests/test_persisted_format_enrolment_binding.py`
-- `src/cadrumo/core/tests/test_regenerable_persisted_format_floors.py`
 - `src/cadrumo/domain/contribuyente/constants.py`
 - `pyproject.toml`

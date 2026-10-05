@@ -38,7 +38,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ..calculations.registry.formula_runtime_ops import resolve_dated_value
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import ThresholdComparison
-from ..calculations.registry.schema_formula import DatedValue
+from ..calculations.registry.schema_formula import DatedValue, ParameterDefinition
 
 
 class BienesInversionParameterResolutionError(_CadrumoError):
@@ -167,6 +167,32 @@ def resolve_bienes_inversion_regularizacion_parameters(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
+    declared = _declared_regularization_parameters(revision, modelo_id=modelo_id)
+    _require_regularization_revision_window(
+        revision,
+        modelo_id=modelo_id,
+        filing_period_date=filing_period_date,
+    )
+    resolved = _resolve_regularization_parameter_values(
+        revision,
+        declared,
+        modelo_id=modelo_id,
+        filing_period_date=filing_period_date,
+    )
+    return _regularization_bundle(
+        revision,
+        declared,
+        resolved,
+        modelo_id=modelo_id,
+        filing_period_date=filing_period_date,
+    )
+
+
+def _declared_regularization_parameters(
+    revision: ModeloRevision,
+    *,
+    modelo_id: str,
+) -> dict[str, ParameterDefinition]:
     declared = {
         parameter.id.split(_ID_STEM, 1)[1]: parameter for parameter in revision.parameters if _ID_STEM in parameter.id
     }
@@ -177,7 +203,15 @@ def resolve_bienes_inversion_regularizacion_parameters(
             f"regularisation figure for {', '.join(missing)}; the LIVA art-107/109 "
             "arithmetic has no grounded source for this filing context",
         )
+    return declared
 
+
+def _require_regularization_revision_window(
+    revision: ModeloRevision,
+    *,
+    modelo_id: str,
+    filing_period_date: date,
+) -> None:
     # A row in force across several editions carries the whole run's window, so
     # the revision's own window, not the row's, bounds what this revision grounds.
     if filing_period_date < revision.valid_from or (
@@ -187,6 +221,15 @@ def resolve_bienes_inversion_regularizacion_parameters(
             f"modelo {modelo_id} revision {revision.id} does not resolve for filing-period date "
             f"{filing_period_date.isoformat()}: the date lies outside the revision's window",
         )
+
+
+def _resolve_regularization_parameter_values(
+    revision: ModeloRevision,
+    declared: Mapping[str, ParameterDefinition],
+    *,
+    modelo_id: str,
+    filing_period_date: date,
+) -> dict[str, DatedValue]:
     date_context: Mapping[str, date] = {"filing_period": filing_period_date}
     resolved: dict[str, DatedValue] = {}
     for slug in _REQUIRED_SLUGS:
@@ -198,7 +241,17 @@ def resolve_bienes_inversion_regularizacion_parameters(
                 f"modelo {modelo_id} revision {revision.id} parameter {parameter.id} "
                 f"does not resolve for filing-period date {filing_period_date.isoformat()}: {exc}",
             ) from exc
+    return resolved
 
+
+def _regularization_bundle(
+    revision: ModeloRevision,
+    declared: Mapping[str, ParameterDefinition],
+    resolved: Mapping[str, DatedValue],
+    *,
+    modelo_id: str,
+    filing_period_date: date,
+) -> BienesInversionRegularizacionParameters:
     return BienesInversionRegularizacionParameters(
         ventana_anos_mueble=int(resolved[_VENTANA_MUEBLE].value),
         ventana_anos_inmueble=int(resolved[_VENTANA_INMUEBLE].value),

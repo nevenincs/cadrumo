@@ -19,7 +19,7 @@ from dev.source_tree import repository_files, snapshot
 
 from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
-from ..python_cohort import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+from ..command_spec_attestation import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 

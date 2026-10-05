@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-12'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:c914d1f5a7fd8c2bf345e6cf3bc5c482f889686c1d62e14943192beacde87e00'
 related:
-  - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-research]]"
 ---

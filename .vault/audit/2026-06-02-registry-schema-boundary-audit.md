@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#registry-schema-boundary'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:2b48a55dc96a5cbc8afd169d2f4b014da2c5256919679d4f6b71f25af861e400'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:ee6441ce178575be52d2e30a5095fdbd3d9d59a597d84425531c4928a8e1480a'
+related: []
 ---
 
 # `registry-schema-boundary` audit: `schema model extraction boundary audit`
 
 ## Scope
 
-Audited `src/aeat/domain/calculations/registry/_schema.py` as the
+Audited the retired module as the
 registry package's generic schema authority and the next P04 monolith
 target. The audit assessed internal extraction boundaries, public API
 compatibility, and whether the extraction requires an ADR.
@@ -35,7 +34,7 @@ compatibility, and whether the extraction requires an ADR.
   `_schema.py`. This slice must not edit production schema code. A later
   extraction commit should begin from a clean diff or explicitly preserve
   the peer formatting changes if they have landed.
-- `src/aeat/domain/calculations/registry/__init__.py` re-exports schema
+- the retired module re-exports schema
   classes as public API, and `test_public_api_boundaries.py` already
   treats `_schema` as a private registry module. Extraction must preserve
   imports from `aeat.domain.calculations.registry` and should keep
@@ -80,11 +79,11 @@ compatibility, and whether the extraction requires an ADR.
 3. Move source/legal/extraction/workbook/cross-reference metadata models
    next as a generic metadata family.
 4. Move calculation definition models next: `FormulaExpression`,
-   `FormulaDefinition`, parameter rows/tables, and
+   `FormulaDefinition`, parameter rows/tables,
    `DataBindingDefinition`.
 5. Move casilla/completeness definitions after calculation definitions:
    `CasillaConstraints`, `CasillaDefinition`,
-   `CalculationCompletenessCasilla`, and
+   `CalculationCompletenessCasilla`,
    `CalculationCompletenessManifest`.
 6. Move export/record verification models after casillas and before the
    revision aggregate.

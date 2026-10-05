@@ -353,7 +353,7 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
         def provider_preflight(profile: UUID, pinned_authority: PinnedAuthorityOperation) -> None:
             provider_preflights.append((profile, pinned_authority))
 
-        def composition_factory(_output_root: Path) -> FiledHistoryComposition:
+        def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
             return cast(FiledHistoryComposition, composition)
 
         definition = build_filed_single_capture_definition(

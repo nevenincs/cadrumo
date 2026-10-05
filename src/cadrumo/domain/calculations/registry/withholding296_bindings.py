@@ -149,22 +149,9 @@ class Withholding296Provider(BaseModel):
     data_type: ExportFieldDataType | None = None
 
 
-def _withholding296_selector(binding: BindingDefinition) -> Withholding296Provider:
-    try:
-        return provider_member(binding, Withholding296Provider)
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed withholding296 selector") from exc
-
-
 def validate_withholding296_binding_selector_shape(binding: BindingDefinition) -> list[str]:
     """Validate a ``withholding296`` binding's selector shape and fact/aggregation invariants."""
-    try:
-        selector = _withholding296_selector(binding)
-    except ValueError as exc:
-        return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates "
-            f"{Withholding296Provider.__name__}: {exc}",
-        ]
+    selector = provider_member(binding, Withholding296Provider)
     try:
         op = binding_aggregation_op(binding)
         fact = _runtime_object(selector.fact)

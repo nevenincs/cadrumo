@@ -35,6 +35,7 @@ from ...storage.sql.secure_objects import SecureObjectRepository
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..retencion_observations import RetencionObservationRepositoryAdapter
 from ..withholding_observation_workflow import WithholdingObservationWorkflowAdapter
+from .percepcion_observation_authoring import replace_percepcion_observations
 
 
 def _last_closed_exercise() -> int:
@@ -183,7 +184,8 @@ def seed_manual_percepcion_window(
     belong to :func:`withholding_producer`, never here.
     """
     assert isinstance(objects, SecureObjectRepository)
-    PercepcionObservationRepositoryAdapter(objects=objects).replace_observations(
+    replace_percepcion_observations(
+        PercepcionObservationRepositoryAdapter(objects=objects),
         modelo="193",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, "0A"),

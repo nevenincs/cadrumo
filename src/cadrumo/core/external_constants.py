@@ -55,6 +55,9 @@ JSONL_MIME_TYPE: Final[str] = "application/x-ndjson"
 #: MIME type for Office Open XML spreadsheet workbooks.
 XLSX_MIME_TYPE: Final[str] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
+#: MIME type Google Drive assigns to a folder; Drive v3 lists and creates folders as files of this type.
+GOOGLE_DRIVE_FOLDER_MIME_TYPE: Final[str] = "application/vnd.google-apps.folder"
+
 #: Sentinel written to ``classified_by`` when the operator provides a classification directly
 #: (no rule engine involved).  The field also accepts ``"rule:<id>"`` payloads; this named
 #: constant prevents the literal from drifting across the application and domain layers.
@@ -125,6 +128,11 @@ class AeatSedePathSection(_Frozen):
     notificaciones: str
     iva_compensation_wallet: str
     censal_datos: str
+    censal_actividades_entry: str
+    censal_actividades: str
+    censal_locales: str
+    censal_situacion_tributaria: str
+    censal_obligaciones: str
 
 
 class AeatClaveMovilSurface(_Frozen):
@@ -407,7 +415,6 @@ class GoogleOAuthScopeSection(_Frozen):
     openid: str
     email: str
     drive_file: str
-    spreadsheets: str
 
 
 class GoogleServiceSection(_Frozen):

@@ -11,23 +11,26 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
-import cadrumo.application.bienes_inversion.registered_operation as registered_operation_module
+import cadrumo.application.bienes_inversion.registered_executor as registered_executor_module
 from cadrumo.application.bienes_inversion.declare_command import (
     BienInversionDeclarationCommand,
     build_bien_inversion_record,
 )
-from cadrumo.application.bienes_inversion.registered_operation import (
+from cadrumo.application.bienes_inversion.registered_contracts import (
     BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_DUPLICATE_REFUSAL_CODE,
     BIENES_INVERSION_VALIDATION_REFUSAL_CODE,
-    BienesInversionDeclareRequest,
-    BienesInversionOperationExecutionResult,
-    BienesInversionOperationExecutor,
 )
+from cadrumo.application.bienes_inversion.registered_execution_result import BienesInversionOperationExecutionResult
+from cadrumo.application.bienes_inversion.registered_executor import BienesInversionOperationExecutor
+from cadrumo.application.bienes_inversion.registered_requests import BienesInversionDeclareRequest
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
@@ -87,10 +90,16 @@ class _Context:
             definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
         )
-        self.authority_operation = authority_operation
+        self._authority_operation = authority_operation
+        self.authority_operation_reads = 0
         self.events = _Events()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation)
+
+    @property
+    def authority_operation(self) -> PinnedAuthorityOperation:
+        self.authority_operation_reads += 1
+        return self._authority_operation
 
 
 class _Repository:
@@ -174,12 +183,10 @@ def _existing_record(authority_operation: PinnedAuthorityOperation) -> BienInver
     ],
 )
 def test_known_declaration_refusal_has_no_repository_write(
-    monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
     overrides: dict[str, object],
     expected_reason: str,
 ) -> None:
-    monkeypatch.setattr(registered_operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
     repository = _Repository()
     factory = _RepositoryFactory(repository)
     context = _Context(operation)
@@ -188,9 +195,10 @@ def test_known_declaration_refusal_has_no_repository_write(
         definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     )
 
-    result = asyncio.run(
-        executor.execute(_request(**overrides), cast(OperationExecutorContext, context)),
-    )
+    with override_settings(cadrumo_active_profile=str(_PROFILE)):
+        result = asyncio.run(
+            executor.execute(_request(**overrides), cast(OperationExecutorContext, context)),
+        )
 
     assert isinstance(result, OperationRefusalEvidence)
     assert result.refusal_code == BIENES_INVERSION_VALIDATION_REFUSAL_CODE
@@ -203,11 +211,52 @@ def test_known_declaration_refusal_has_no_repository_write(
     assert context.operands.value.refusal.reason == expected_reason
 
 
+@pytest.mark.parametrize("mismatch", ["request_subject", "context_definition", "context_subject", "active_profile"])
+def test_profile_mismatch_refuses_before_phase_or_repository_access(
+    operation: PinnedAuthorityOperation,
+    mismatch: str,
+) -> None:
+    other_profile = UUID("5aa00000-0000-4000-8000-0000000000bb")
+    request = _request()
+    if mismatch == "request_subject":
+        request = request.model_copy(update={"subject_ref": profile_operation_subject(str(other_profile))})
+    context = _Context(operation)
+    if mismatch == "context_definition":
+        context.identity = OperationIdentity(
+            operation_id="c" * 64,
+            definition_id="ledger.bienes_inversion.other",
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+        )
+    elif mismatch == "context_subject":
+        context.identity = OperationIdentity(
+            operation_id="c" * 64,
+            definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(other_profile)),
+        )
+
+    repository = _Repository()
+    factory = _RepositoryFactory(repository)
+    executor = BienesInversionOperationExecutor(
+        factory,
+        definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
+    )
+    active_profile = str(other_profile) if mismatch == "active_profile" else str(_PROFILE)
+
+    with override_settings(cadrumo_active_profile=active_profile), pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert context.events.phases == []
+    assert context.events.effects == []
+    assert context.authority_operation_reads == 0
+    assert factory.bucket_ids == []
+    assert repository.add_attempts == 0
+    assert repository.writes == 0
+
+
 def test_duplicate_from_repository_add_settles_as_none_without_write(
-    monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    monkeypatch.setattr(registered_operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
     repository = _Repository(records=(_existing_record(operation),))
     factory = _RepositoryFactory(repository)
     context = _Context(operation)
@@ -216,9 +265,10 @@ def test_duplicate_from_repository_add_settles_as_none_without_write(
         definition_id=BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     )
 
-    result = asyncio.run(
-        executor.execute(_request(), cast(OperationExecutorContext, context)),
-    )
+    with override_settings(cadrumo_active_profile=str(_PROFILE)):
+        result = asyncio.run(
+            executor.execute(_request(), cast(OperationExecutorContext, context)),
+        )
 
     assert isinstance(result, OperationRefusalEvidence)
     assert result.refusal_code == BIENES_INVERSION_DUPLICATE_REFUSAL_CODE
@@ -237,7 +287,6 @@ def test_validation_error_after_repository_write_remains_unknown(
     monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    monkeypatch.setattr(registered_operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
     repository = _Repository()
     factory = _RepositoryFactory(repository)
     context = _Context(operation)
@@ -253,15 +302,13 @@ def test_validation_error_after_repository_write_remains_unknown(
         raise construction_error
 
     monkeypatch.setattr(
-        registered_operation_module,
+        registered_executor_module,
         "BienesInversionOperationExecutionResult",
         fail_result_construction,
     )
 
-    with pytest.raises(ValidationError) as raised:
-        asyncio.run(
-            executor.execute(_request(), cast(OperationExecutorContext, context)),
-        )
+    with override_settings(cadrumo_active_profile=str(_PROFILE)), pytest.raises(ValidationError) as raised:
+        asyncio.run(executor.execute(_request(), cast(OperationExecutorContext, context)))
 
     assert raised.value is construction_error
     assert context.events.effects == [OperationEffect.UNKNOWN]

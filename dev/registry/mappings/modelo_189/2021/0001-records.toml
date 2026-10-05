@@ -1,0 +1,638 @@
+schema_version = 1
+fragment_id = 'records'
+modelo = '189'
+design_epoch = '2021'
+source_ref = 'aeat-dr-189-2021-2022'
+source_sha256 = '9cfcec402edf965492be9c0d2aed91eed5e2b58e0f37e52bbc9c24af47f26421'
+
+[[records]]
+sheet = 'Tipo 1 - Registro De Declarante'
+record_identity = 'Tipo 1 - Registro De Declarante'
+export_record_id = 'modelo-189-declarante'
+record_type = 'declarante'
+
+[[records]]
+sheet = 'Tipo 2 - Registro De Declarado'
+record_identity = 'Tipo 2 - Registro De Declarado'
+export_record_id = 'modelo-189-declarado'
+record_type = 'declarado'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-record-type'
+kind = 'literal'
+literal = '1'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 14
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-modelo'
+kind = 'literal'
+literal = '189'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 16
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-ejercicio'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 18
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-nif-declarante'
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 21
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-razon-social'
+kind = 'casilla'
+casilla_id = 'declarante-razon-social'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 32
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-tipo-soporte'
+kind = 'casilla'
+casilla_id = 'tipo-soporte'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 39
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-contact-phone'
+kind = 'header'
+producer_key = 'contact_person.phone'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 46
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t1-contact-name'
+kind = 'header'
+producer_key = 'contact_person.full_name'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 47
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t1-numero-justificante'
+kind = 'casilla'
+casilla_id = 'numero-justificante'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 51
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-complementaria-sustitutiva'
+kind = 'casilla'
+casilla_id = 'declaracion-complementaria-sustitutiva'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 58
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-numero-identificativo-anterior'
+kind = 'casilla'
+casilla_id = 'numero-identificativo-anterior'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 86
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-numero-total-declarados'
+kind = 'casilla'
+casilla_id = 'numero-total-declarados'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 94
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '11'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-valoracion-total'
+kind = 'casilla'
+casilla_id = 'valoracion-total'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 103
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '12'
+
+[[entries]]
+export_field_id = 'modelo-189-t1-blancos'
+kind = 'filler'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante'
+source_row = 134
+record_identity = 'Tipo 1 - Registro De Declarante'
+ordinal = '13'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-record-type'
+kind = 'literal'
+literal = '2'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 149
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-modelo'
+kind = 'literal'
+literal = '189'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 151
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-ejercicio'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 153
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-nif-declarante'
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 156
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-nif-declarado'
+kind = 'casilla'
+casilla_id = 'declarado-nif'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 159
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-nif-representante-legal'
+kind = 'casilla'
+casilla_id = 'representante-legal-nif'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 186
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-nombre-declarado'
+kind = 'casilla'
+casilla_id = 'declarado-nombre'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 195
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '7'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-codigo-provincia'
+kind = 'casilla'
+casilla_id = 'codigo-provincia'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 210
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-codigo-pais'
+kind = 'casilla'
+casilla_id = 'codigo-pais'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 247
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-clave-mercado'
+kind = 'casilla'
+casilla_id = 'clave-mercado'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 259
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-clave-valor'
+kind = 'casilla'
+casilla_id = 'clave-valor'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 269
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '11'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-clave-identificacion'
+kind = 'casilla'
+casilla_id = 'clave-identificacion'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 313
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '12'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-identificacion-valores'
+kind = 'casilla'
+casilla_id = 'identificacion-valores'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 321
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '13'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-clave-representacion'
+kind = 'casilla'
+casilla_id = 'clave-representacion'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 350
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '14'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-blancos-96'
+kind = 'filler'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 356
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '15'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-valoracion'
+kind = 'casilla'
+casilla_id = 'valoracion'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 357
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '16'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-porcentaje-participacion-integer-part'
+kind = 'casilla'
+casilla_id = 'porcentaje-participacion'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 414
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t2-porcentaje-participacion-fractional-digits'
+kind = 'casilla'
+casilla_id = 'porcentaje-participacion'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 416
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t2-clave-titularidad'
+kind = 'casilla'
+casilla_id = 'clave-titularidad'
+legal_refs = ['orden-eha-3481-2008:art-1']
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 422
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '18'
+
+[[entries]]
+export_field_id = 'modelo-189-t2-numero-valores-integer-part'
+kind = 'casilla'
+casilla_id = 'numero-valores'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-1351-2021:art-sexto',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 442
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t2-numero-valores-fractional-digits'
+kind = 'casilla'
+casilla_id = 'numero-valores'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-1351-2021:art-sexto',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 444
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t2-nominal-unitario-integer-part'
+kind = 'casilla'
+casilla_id = 'nominal-unitario-valores'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-115-2022:df-primera',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 457
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t2-nominal-unitario-fractional-digits'
+kind = 'casilla'
+casilla_id = 'nominal-unitario-valores'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-115-2022:df-primera',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 459
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-189-t2-blancos-164'
+kind = 'filler'
+legal_refs = [
+    'orden-eha-3481-2008:art-1',
+    'orden-hfp-115-2022:df-primera',
+]
+source_refs = [
+    'boe-modelo-189-base-order',
+    'aeat-dr-189-2021-2022',
+]
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Declarado'
+source_row = 461
+record_identity = 'Tipo 2 - Registro De Declarado'
+ordinal = '21'

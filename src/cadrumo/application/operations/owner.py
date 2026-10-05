@@ -17,9 +17,9 @@ from pydantic import BaseModel
 from ...core.async_cleanup import AsyncCloseable, async_cleanup_failures
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
+from ...core.operator_progress import OperatorDisplayCode
 from .capabilities import OperationOwnedResource
 from .events import OperationEventCode, OperationLogSeverity
-from .financial_operand_submission import OperationFinancialOperandContextAccess
 from .interactions import OperationResponseIntentValue
 from .models import (
     OperationDiagnosticReference,
@@ -29,6 +29,7 @@ from .models import (
     OperationRevision,
 )
 from .secret_submission import OperationEphemeralSecretAccess
+from .typed_financial_operand_context import BoundTypedFinancialOperandAccess
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -100,8 +101,13 @@ class OperationEventEmitter(Protocol):
         """Publish the executor's current truthful effect fact."""
         ...
 
-    async def notice(self, notice_code: OperationEventCode) -> None:
-        """Publish a stable notice identity for frontend projection."""
+    async def notice(
+        self,
+        notice_code: OperationEventCode,
+        *,
+        display_code: OperatorDisplayCode | None = None,
+    ) -> None:
+        """Publish a stable notice identity, with an optional operator comparison code, for frontend projection."""
         ...
 
     async def diagnostic(self, diagnostic_ref: OperationDiagnosticReference) -> None:
@@ -122,7 +128,11 @@ class OperationSecureOperandLookup(Protocol):
         reference: ContentDigest,
         operand_type: type[OperandT],
     ) -> OperandT:
-        """Return the validated operand of the requested application model type."""
+        """Return the operand at ``reference`` as an instance of exactly ``operand_type``.
+
+        Stored content that does not validate as ``operand_type`` is refused;
+        content written from a subclass is never returned as that subclass.
+        """
         del operand_type
         raise NotImplementedError
 
@@ -240,8 +250,8 @@ class OperationExecutorContext(Protocol):
         ...
 
     @property
-    def financial_operand(self) -> OperationFinancialOperandContextAccess:
-        """Runtime-only transient financial operand surface for this operation."""
+    def typed_financial_operand(self) -> BoundTypedFinancialOperandAccess:
+        """Consume the one exact in-memory batch registered for this invocation."""
         ...
 
     @property

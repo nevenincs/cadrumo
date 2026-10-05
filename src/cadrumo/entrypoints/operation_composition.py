@@ -1,10 +1,14 @@
-"""Sole production composition seam for the supervised operation platform."""
+"""Sole production composition seam for the supervised operation platform.
+
+Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 
 import secrets
 from collections.abc import Callable
 from datetime import timedelta
+from functools import partial
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -14,16 +18,21 @@ from ..adapters.outbound.aeat.sede.groi_check import collect_groi_observations
 from ..adapters.outbound.aeat.sede.nif_iva_check import collect_nif_iva_check_observations
 from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
+from ..adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
-from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
-from ..adapters.persistence.operations.financial_operand_custody import (
-    OperationFinancialOperandCustodyFilesystemRepository,
+from ..adapters.outbound.storage.factory import (
+    build_google_credentials,
+    require_application_drive_root,
+    resolve_drive_root_folder_id,
 )
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ..adapters.persistence.operations.typed_financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyFilesystemRepository,
+)
 from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
 from ..adapters.persistence.profile.calculation_revision_override_migration import GuardedCalculationRevisionMigration
 from ..adapters.persistence.profile.catalogue_creation import (
@@ -65,8 +74,8 @@ from ..application.auth.certificate_secret_operation import (
     build_certificate_secret_operation_definitions,
     build_certificate_secret_operation_registrations,
 )
+from ..application.auth.certificate_source_execution import CertificateSourceOperationPorts
 from ..application.auth.certificate_source_operation import (
-    CertificateSourceOperationPorts,
     build_certificate_source_check_definition,
     build_certificate_source_check_registration,
     build_certificate_source_list_definition,
@@ -100,8 +109,6 @@ from ..application.bucket_event_repository import BucketEventHistoryRepositoryFa
 from ..application.diagnostics_operation import (
     build_diagnostics_read_definition,
     build_diagnostics_read_registration,
-    build_diagnostics_telemetry_flush_definition,
-    build_diagnostics_telemetry_flush_registration,
 )
 from ..application.exchange_rate_provider import exchange_rate_provider
 from ..application.export.google_operation import (
@@ -166,8 +173,6 @@ from ..application.ledger.check_operation import build_ledger_check_definition, 
 from ..application.ledger.classify_operation import (
     build_ledger_classify_definition,
     build_ledger_classify_registration,
-    build_ledger_operator_iva_definition,
-    build_ledger_operator_iva_registration,
 )
 from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
 from ..application.ledger.counterparty_operation import (
@@ -178,8 +183,10 @@ from ..application.ledger.evidence_add_operation import (
     build_ledger_evidence_add_definition,
     build_ledger_evidence_add_registration,
 )
-from ..application.ledger.evidence_followup_operation import (
+from ..application.ledger.evidence_followup_contracts import (
     LedgerEvidenceFollowupOperationPorts,
+)
+from ..application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_definitions,
     build_ledger_evidence_followup_registrations,
 )
@@ -209,11 +216,15 @@ from ..application.ledger.import_operation import (
     build_ledger_import_definition,
     build_ledger_import_registration,
 )
-from ..application.ledger.invoice_evidence_operation import (
+from ..application.ledger.invoice_evidence_confirm_operation import (
     build_ledger_evidence_confirm_definition,
     build_ledger_evidence_confirm_registration,
+)
+from ..application.ledger.invoice_evidence_extract_operation import (
     build_ledger_evidence_extract_definition,
     build_ledger_evidence_extract_registration,
+)
+from ..application.ledger.invoice_evidence_readiness_operation import (
     build_ledger_evidence_reader_readiness_definition,
     build_ledger_evidence_reader_readiness_registration,
 )
@@ -233,14 +244,25 @@ from ..application.ledger.llm_diagnostics_operation import (
     build_ledger_llm_diagnostics_definition,
     build_ledger_llm_diagnostics_registration,
 )
-from ..application.ledger.llm_review_operation import (
+from ..application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
-    LedgerLlmOperationPorts,
+)
+from ..application.ledger.llm_review_execution import LedgerLlmOperationPorts
+from ..application.ledger.llm_review_operation import (
     build_ledger_llm_review_definition,
     build_ledger_llm_review_registration,
 )
 from ..application.ledger.merge_operation import build_ledger_merge_definition, build_ledger_merge_registration
+from ..application.ledger.operator_iva_operation import (
+    build_ledger_operator_iva_definition,
+    build_ledger_operator_iva_registration,
+)
+from ..application.ledger.own_account_operation import (
+    build_ledger_own_account_definition,
+    build_ledger_own_account_registration,
+)
+from ..application.ledger.own_account_ports import OwnAccountRepositoryFactory
 from ..application.ledger.participation_operation import (
     build_ledger_participation_definition,
     build_ledger_participation_registration,
@@ -398,11 +420,10 @@ from ..application.local_reader_operation import (
     build_local_reader_operation_registration,
 )
 from ..application.modelo.aggregate_operation import (
-    ModeloAggregateOperationPorts,
-    ModeloAggregateOperationPortsFactory,
     build_modelo_aggregate_operation_definition,
     build_modelo_aggregate_operation_registration,
 )
+from ..application.modelo.aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
 from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
 from ..application.modelo.amendment_context_operation import (
     build_modelo_work_amendment_context_definition,
@@ -423,6 +444,7 @@ from ..application.modelo.dependency_operation import (
 )
 from ..application.modelo.dependency_read_ports import DependencyReadPortsFactory
 from ..application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from ..application.modelo.edit_refusal_projection import ModeloEditRefusalProjectionStore
 from ..application.modelo.export_ports import ModeloExportPortsFactory
 from ..application.modelo.filing_action_ports import FilingActionPortsFactory
 from ..application.modelo.filing_record_import_operation import (
@@ -450,9 +472,11 @@ from ..application.modelo.history_timeline_operation import (
     build_modelo_history_timeline_definition,
     build_modelo_history_timeline_registration,
 )
-from ..application.modelo.invoice_withholding_capture_operation import (
+from ..application.modelo.invoice_withholding_capture_contracts import (
     ModeloInvoiceWithholdingCapturePorts,
     ModeloInvoiceWithholdingCapturePortsFactory,
+)
+from ..application.modelo.invoice_withholding_capture_operation import (
     build_modelo_invoice_withholding_capture_definition,
     build_modelo_invoice_withholding_capture_registration,
 )
@@ -492,6 +516,10 @@ from ..application.modelo.m303_attestation_operation import (
     build_modelo_work_m303_attestation_definition,
     build_modelo_work_m303_attestation_registration,
 )
+from ..application.modelo.m360_solicitud_operation import (
+    build_modelo_360_solicitud_definition,
+    build_modelo_360_solicitud_registration,
+)
 from ..application.modelo.maritime_preview_operation import (
     build_modelo_maritime_preview_definition,
     build_modelo_maritime_preview_registration,
@@ -509,6 +537,8 @@ from ..application.modelo.metadata_read_operation import (
 )
 from ..application.modelo.modelo_spreadsheet_operation import (
     build_modelo_spreadsheet_definitions,
+)
+from ..application.modelo.modelo_spreadsheet_registration import (
     build_modelo_spreadsheet_registration,
 )
 from ..application.modelo.operation_definitions import (
@@ -524,8 +554,8 @@ from ..application.modelo.projection_operation import (
     build_modelo_project_definition,
     build_modelo_project_registration,
 )
+from ..application.modelo.query_read_contracts import ModeloQueryReadPortsFactory
 from ..application.modelo.query_read_operation import (
-    ModeloQueryReadPortsFactory,
     build_modelo_bindings_list_definition,
     build_modelo_bindings_list_registration,
     build_modelo_bindings_resolve_definition,
@@ -610,15 +640,19 @@ from ..application.modelo.work_review_operation import (
     build_modelo_work_review_definition,
     build_modelo_work_review_registration,
 )
+from ..application.modelo.workbench_operations import (
+    build_modelo_workbench_operation_definitions,
+    build_modelo_workbench_operation_registrations,
+    compose_modelo_workbench_access,
+)
+from ..application.modelo.workbench_read import ModeloWorkbenchReadPorts, ModeloWorkbenchReadPortsFactory
 from ..application.operations.authorization import OperationExecutionAuthority
 from ..application.operations.composition import (
     OperationComposedServices,
     compose_operation_services,
 )
-from ..application.operations.registry import (
-    OperationDefinition,
-    OperationRegistry,
-)
+from ..application.operations.operation_definition import OperationDefinition
+from ..application.operations.registry import OperationPublicContractSetV1, OperationRegistry
 from ..application.operations.registry_schema_validation import operation_schema_compilation_scope
 from ..application.overview.pipeline_operation import (
     build_overview_pipeline_definition,
@@ -626,11 +660,11 @@ from ..application.overview.pipeline_operation import (
 )
 from ..application.overview.pipeline_read_ports import PipelineReadPortsFactory
 from ..application.overview.read_operation import (
-    OverviewReadKind,
     build_overview_read_definition,
     build_overview_read_registration,
 )
 from ..application.overview.read_ports import OverviewReadPortsFactory
+from ..application.overview.read_request import OverviewReadKind
 from ..application.prorrata_register.registered_operations import (
     build_prorrata_declare_sector_definition,
     build_prorrata_elect_especial_definition,
@@ -643,8 +677,10 @@ from ..application.prorrata_register.registered_operations import (
     build_prorrata_seed_sector_definition,
     build_prorrata_settle_sector_definition,
 )
-from ..application.review.read_operation import (
+from ..application.review.read_contracts import (
     ReviewReadOperationPorts,
+)
+from ..application.review.read_registration import (
     build_review_read_definitions,
     build_review_read_registrations,
 )
@@ -712,6 +748,7 @@ from ..application.workstation_check_operation import (
 )
 from ..core.access_gate.gate import AeatAccessGate
 from ..core.config import Settings, load_settings
+from ..core.errors.hierarchy import InternalInvariantError
 from ..core.identity.tax_id import tax_id_identity_token
 from ..core.identity_check_verdict import IdentityCheckVerdictValue
 from ..core.paths import effective_storage_root
@@ -736,6 +773,7 @@ from .adapter_composition import (
     build_modelo_iva_wallet_seed_ports,
     build_operator_probe_ports,
     build_participation_index_rebuild_ports,
+    build_percepcion_observation_ports,
     build_prorrata_register_repository,
     build_retencion_observation_ports,
     build_verification_repository_bundle,
@@ -744,10 +782,7 @@ from .adapter_composition import (
 from .auth_apoderado_composition import build_apoderado_operation_ports, build_auth_diagnostic_report_ports
 from .auth_read_composition import compose_auth_read_ports
 from .calculation_report_verification_operation_composition import build_modelo_calculation_report_verification_ports
-from .diagnostics_operation_composition import (
-    build_diagnostics_read_ports,
-    build_diagnostics_telemetry_flush_ports,
-)
+from .diagnostics_operation_composition import build_diagnostics_read_ports
 from .evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from .google_configuration_operation_composition import build_google_configuration_operation_ports
 from .invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
@@ -758,6 +793,7 @@ from .justificante_composition import (
     build_justificante_capture_service,
     build_justificante_live_read_port,
     build_justificante_registration_ports,
+    load_reconciliation_filed_observation,
 )
 from .ledger_action_composition import compose_ledger_action_ports, compose_ledger_import_ports
 from .ledger_evidence_ingestion_operation_composition import build_ledger_evidence_ingestion_operation_ports
@@ -812,39 +848,75 @@ def _build_modelo_invoice_withholding_capture_ports(*, profile_id: str) -> Model
     )
 
 
+def _build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloWorkbenchReadPorts:
+    """Bind the repositories one declaration's workbench reads from to the worker's profile."""
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from .adapter_composition import build_borrador_100_snapshot_repository
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    objects = secure_object_repository_for_bucket(bucket_id)
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=bucket_id,
+        objects=objects,
+        operation=operation,
+    )
+    ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation, objects=objects)
+    return ModeloWorkbenchReadPorts(
+        work_units=ports.work_unit_repository,
+        calculations=ports.calculation_repository,
+        verifications=calculation_binding.verification_repository(),
+        borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
+        holiday_territory=partial(_profile_holiday_territory, bucket_id, operation),
+        bucket_events=ports.bucket_event_repository,
+    )
+
+
+def _profile_holiday_territory(bucket_id: str, operation: PinnedAuthorityOperation) -> CalendarCCAA | None:
+    """Read the profile's holiday territory, or ``None`` while the profile cannot say.
+
+    An absent or incomplete profile leaves the deadline on the national
+    holidays, which the form discloses, rather than keeping the workbench shut.
+    """
+    from ..application.modelo.action_errors import ModeloProfileReadinessError
+    from ..application.modelo.m303_regimen_simplificado_scope import taxpayer_profile_for_work
+    from ..application.modelo.profile_readiness_gate import load_modelo_work_profile
+
+    profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
+    try:
+        return taxpayer_profile_for_work(profile).holiday_territory
+    except ModeloProfileReadinessError:
+        return None
+
+
 def _build_modelo_aggregate_operation_ports(*, profile_id: str) -> ModeloAggregateOperationPorts:
     """Bind the existing aggregate and ledger-payment services to one profile."""
-    from .adapter_composition import build_percepcion_observation_ports
-
     return ModeloAggregateOperationPorts(
         profile_id=profile_id,
         transaction_catalogue_repository=TransactionCatalogueRepository(bucket_id=profile_id),
         retencion_observation_repository=build_retencion_observation_ports(bucket_id=profile_id).repository,
+        percepcion_observation_repository=build_percepcion_observation_ports(bucket_id=profile_id).repository,
         withholding_observation_service=build_withholding_observation_service(bucket_id=profile_id),
-        percepcion_observation_ports=build_percepcion_observation_ports(bucket_id=profile_id),
     )
 
 
 if TYPE_CHECKING:
     from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..domain.deadlines.festivos import CalendarCCAA
 
 
-def _google_sheets_export_prepare_port(
-    *,
-    settings: Settings,
-):
+def _google_sheets_export_prepare_port():
     """Compose the sole Google transport and mandatory sync-run provenance handoff."""
 
     def prepare(profile_id: str) -> GoogleSheetsExportPreparedPort:
-        root_folder_id = resolve_drive_root_folder_id(profile=profile_id, settings=settings)
+        root_folder_id = resolve_drive_root_folder_id(profile=profile_id)
         if not root_folder_id:
             raise GoogleSheetsExportRootFolderRequiredError("Google Drive root folder is required")
         try:
             credentials = build_google_credentials(profile=profile_id)
+        except GoogleAuthClientMetadataUnavailableError as exc:
+            raise GoogleSheetsExportClientMissingError(str(exc)) from exc
         except OutboundStorageValidationError as exc:
-            if exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing":
-                raise GoogleSheetsExportClientMissingError(str(exc)) from exc
             if exc.translated_message == "adapters.outbound.storage._factory.errors.google_token_missing":
                 raise GoogleSheetsExportTokenMissingError(str(exc)) from exc
             raise
@@ -855,6 +927,8 @@ def _google_sheets_export_prepare_port(
 
         class PreparedGoogleSheetsExport:
             def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+                # The stored root is read back before anything is listed or written beneath it.
+                require_application_drive_root(credentials, root_folder_id=root_folder_id)
                 if dry_run:
                     preview = preview_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
                     return GoogleSheetsExportRemoteResult(
@@ -947,6 +1021,7 @@ def build_production_operation_registry(
     ledger_action_ports_factory: LedgerActionPortsFactory = compose_ledger_action_ports,
     ledger_rule_repository_factory: LedgerClassificationRuleRepositoryFactory = LedgerClassificationRuleRepository,
     counterparty_repository_factory: CounterpartyEstablishmentRepositoryFactory | None = None,
+    own_account_repository_factory: OwnAccountRepositoryFactory | None = None,
     ledger_participation_repository_factory: TransactionParticipationIndexRepositoryFactory = (
         TransactionParticipationIndexRepository
     ),
@@ -959,14 +1034,27 @@ def build_production_operation_registry(
     workbench_generation_reader: WorkbenchGenerationReader | None = None,
     profile_rotation_finalizer: ProfileRotationFinalizer | None = None,
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
+    modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory = _build_modelo_workbench_read_ports,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
-    resolved_settings = settings or load_settings()
+    resolved_settings = _production_registry_settings(settings)
+    # A refused Apply's named prerequisite stays in this registry's worker
+    # memory until the workbench reads it once; the journal never holds it.
+    edit_prerequisites = ModeloEditRefusalProjectionStore()
+    # Edit admission is judged against the contracts of the very registry
+    # being composed, which exist only once it is built.
+    composed_contracts: list[OperationPublicContractSetV1] = []
+
+    def registry_contracts() -> OperationPublicContractSetV1:
+        if not composed_contracts:
+            raise InternalInvariantError("the operation registry's contracts are read before it is composed")
+        return composed_contracts[0]
+
     review_read_definitions = build_review_read_definitions(
         ReviewReadOperationPorts(settings=resolved_settings, draft_review_ports_factory=build_draft_review_ports)
     )
     evidence_followup_definitions = build_ledger_evidence_followup_definitions(
-        evidence_followup_ports or build_ledger_evidence_followup_operation_ports(settings=resolved_settings)
+        _production_registry_evidence_followup_ports(evidence_followup_ports, resolved_settings)
     )
     modelo_bindings_list_definition = build_modelo_bindings_list_definition()
     modelo_bindings_resolve_definition = build_modelo_bindings_resolve_definition()
@@ -984,7 +1072,7 @@ def build_production_operation_registry(
     recipient_remove_definition = build_review_package_recipient_remove_definition(
         recipient_registry_ports_factory, recipient_event_repository_factory
     )
-    resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
+    resolved_operator_scope_ports = _production_registry_operator_scope(operator_scope_ports)
     resolved_auth_ports = build_auth_operation_ports(resolved_operator_scope_ports)
     resolved_auth_definitions = (
         auth_definitions
@@ -1056,9 +1144,6 @@ def build_production_operation_registry(
     evidence_ingestion_definitions = build_ledger_evidence_ingestion_definitions(
         build_ledger_evidence_ingestion_operation_ports
     )
-    diagnostics_telemetry_flush_definition = build_diagnostics_telemetry_flush_definition(
-        build_diagnostics_telemetry_flush_ports
-    )
     ledger_llm_diagnostics_definition = build_ledger_llm_diagnostics_definition(
         build_ledger_llm_diagnostics_operation_ports
     )
@@ -1099,14 +1184,14 @@ def build_production_operation_registry(
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
         receipt_repository_factory=modelo_edit_receipt_repository_factory,
         verification_repository_bundle_factory=verification_repository_bundle_factory,
+        edit_prerequisite_observer=edit_prerequisites.retain,
     )
-    resolved_google_export_definition = (
-        google_export_definition
-        if google_export_definition is not None
-        else build_google_sheets_export_operation_definition(
-            prepare_port=_google_sheets_export_prepare_port(settings=resolved_settings)
-        )
+    workbench_definitions = build_modelo_workbench_operation_definitions(
+        ports_factory=modelo_workbench_read_ports_factory,
+        contracts=registry_contracts,
+        prerequisites=edit_prerequisites,
     )
+    resolved_google_export_definition = _production_registry_google_export(google_export_definition, resolved_settings)
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
         composition_factory=compose_live_state,
@@ -1130,7 +1215,7 @@ def build_production_operation_registry(
         compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider
     )
     iva_wallet_history_definition = build_iva_wallet_history_definition(
-        lambda: compose_live_state().iva_remote_state_port
+        lambda operation: compose_live_state(operation=operation).iva_remote_state_port
     )
     iva_wallet_history_capture_definition = build_iva_wallet_history_capture_definition(
         compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider
@@ -1193,15 +1278,9 @@ def build_production_operation_registry(
         expected: IdentityCheckVerdictValue | None,
         operation: PinnedAuthorityOperation,
     ) -> VerifyLiveObservation:
-        del operation
-        expected_by_nif = {tax_id_identity_token(nif): expected or "unknown"}
-        if surface is VerifySurface.NIF_IVA:
-            result = await collect_nif_iva_check_observations(b"", expected=expected_by_nif, settings=resolved_settings)
-        else:
-            result = await collect_groi_observations(b"", expected=expected_by_nif, settings=resolved_settings)
-        if len(result.observations) != 1:
-            raise ValueError("verify acquisition must return exactly one observation")
-        return VerifyLiveObservation.model_validate(result.observations[0], from_attributes=True)
+        return await _acquire_registry_verify_observation(
+            surface, nif, expected, operation, resolved_settings=resolved_settings
+        )
 
     def verify_live_preflight(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
         del profile_id, operation
@@ -1234,7 +1313,7 @@ def build_production_operation_registry(
             read_port=build_justificante_live_read_port(
                 build_certificate_secret_backend, resolved_operator_scope_ports, operation
             ),
-            registration_ports=build_justificante_registration_ports(),
+            registration_ports=build_justificante_registration_ports(operation),
             verifier=build_justificante_authenticity_verifier(),
         )
 
@@ -1248,17 +1327,10 @@ def build_production_operation_registry(
         run_installer=run_runtime_installer,
         text_probe=probe_text_extraction_fitness,
     )
-    resolved_censal_definition = (
-        censal_definition
-        if censal_definition is not None
-        else build_censal_operation_definition(
-            certificate_secret_backend_factory=build_certificate_secret_backend,
-            browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=resolved_operator_scope_ports,
-            censal_fetch_port=build_censal_fetch_port(),
-        )
-    )
-    censal_prepare_definition = build_censal_prepare_operation_definition()
+    resolved_censal_definition = _production_registry_censal(censal_definition, resolved_operator_scope_ports)
+    from .censal_readback_composition import read_stored_censal_observation
+
+    censal_prepare_definition = build_censal_prepare_operation_definition(read_stored_censal_observation)
     censal_file_import_definition = build_censal_file_import_operation_definition()
     censal_preview_definition = build_censal_preview_operation_definition(
         certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -1281,7 +1353,9 @@ def build_production_operation_registry(
         factory=calculation_action_ports_factory, migration=projection_migration
     )
     reconciliation_import_definition = build_modelo_reconciliation_import_definition()
-    reconciliation_pull_definition = build_modelo_reconciliation_pull_definition(build_justificante_capture_service)
+    reconciliation_pull_definition = build_modelo_reconciliation_pull_definition(
+        build_justificante_capture_service, load_reconciliation_filed_observation
+    )
     reconciliation_list_definition = build_modelo_reconciliation_list_definition()
     work_list_definition = build_modelo_work_list_definition(work_lifecycle_ports_factory)
     work_create_definition = build_modelo_work_create_definition(work_lifecycle_ports_factory)
@@ -1321,6 +1395,11 @@ def build_production_operation_registry(
     ledger_export_definition = build_ledger_export_definition(build_ledger_export_link_operation_ports)
     ledger_link_definition = build_ledger_link_definition(build_ledger_export_link_operation_ports)
 
+    if own_account_repository_factory is None:
+        from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
+
+        own_account_repository_factory = OwnAccountRepository
+
     def ledger_import_ports_factory(
         *, bucket_id: str, operation: PinnedAuthorityOperation
     ) -> LedgerImportOperationPorts:
@@ -1331,12 +1410,14 @@ def build_production_operation_registry(
             bucket_event_repository=ledger_ports.bucket_event_repository,
             currency_normalizer=CurrencyNormalizationService(rate_provider=exchange_rate_provider()),
             operation=operation,
+            own_accounts=own_account_repository_factory(bucket_id=bucket_id),
         )
 
     ledger_import_definition = build_ledger_import_definition(ledger_import_ports_factory)
     ledger_add_definition = build_ledger_add_definition(
         ledger_action_ports_factory,
         build_prorrata_register_repository,
+        own_account_repository_factory,
     )
     ledger_allocate_definition = build_ledger_allocate_definition(ledger_action_ports_factory)
     ledger_classify_definition = build_ledger_classify_definition(ledger_action_ports_factory)
@@ -1379,7 +1460,9 @@ def build_production_operation_registry(
     )
     ledger_split_definition = build_ledger_split_definition(ledger_action_ports_factory)
     ledger_merge_definition = build_ledger_merge_definition(ledger_action_ports_factory)
-    ledger_update_definition = build_ledger_update_definition(ledger_action_ports_factory)
+    ledger_update_definition = build_ledger_update_definition(
+        ledger_action_ports_factory, own_account_repository_factory
+    )
     ledger_attach_definition = build_ledger_attach_definition(ledger_action_ports_factory)
     ledger_detach_definition = build_ledger_detach_definition(ledger_action_ports_factory)
     ledger_archive_definition = build_ledger_archive_definition(ledger_action_ports_factory)
@@ -1395,6 +1478,12 @@ def build_production_operation_registry(
 
         counterparty_repository_factory = build_counterparty_establishment_repository
     ledger_counterparty_definition = build_ledger_counterparty_definition(counterparty_repository_factory)
+    ledger_own_account_definition = build_ledger_own_account_definition(own_account_repository_factory)
+    from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
+
+    modelo_360_solicitud_definition = build_modelo_360_solicitud_definition(
+        Modelo360SolicitudRepository, own_account_repository_factory
+    )
     ledger_check_definition = build_ledger_check_definition(ledger_action_ports_factory)
     ledger_preflight_definition = build_ledger_preflight_definition(ledger_action_ports_factory)
     ledger_review_definition = build_ledger_review_definition(ledger_action_ports_factory)
@@ -1490,7 +1579,6 @@ def build_production_operation_registry(
                 *apoderado_definitions,
                 auth_diagnostic_report_definition,
                 diagnostics_read_definition,
-                diagnostics_telemetry_flush_definition,
                 ledger_llm_diagnostics_definition,
                 *borrador_100_definitions,
                 *m036_definitions,
@@ -1608,6 +1696,8 @@ def build_production_operation_registry(
                 ledger_remove_definition,
                 ledger_reset_definition,
                 ledger_counterparty_definition,
+                ledger_own_account_definition,
+                modelo_360_solicitud_definition,
                 ledger_check_definition,
                 ledger_preflight_definition,
                 ledger_review_definition,
@@ -1632,6 +1722,7 @@ def build_production_operation_registry(
                 iva_wallet_seed_definition,
                 iva_wallet_override_definition,
                 review_package_definition,
+                *workbench_definitions,
             ),
             key=lambda item: item.definition_id,
         )
@@ -1689,7 +1780,6 @@ def build_production_operation_registry(
                 *build_apoderado_operation_registrations(apoderado_definitions),
                 build_auth_diagnostic_report_registration(auth_diagnostic_report_definition),
                 build_diagnostics_read_registration(diagnostics_read_definition),
-                build_diagnostics_telemetry_flush_registration(diagnostics_telemetry_flush_definition),
                 build_ledger_llm_diagnostics_registration(ledger_llm_diagnostics_definition),
                 *build_borrador_100_operation_registrations(borrador_100_definitions),
                 *build_m036_operation_registrations(m036_definitions),
@@ -1811,6 +1901,8 @@ def build_production_operation_registry(
                 build_ledger_remove_registration(ledger_remove_definition),
                 build_ledger_reset_registration(ledger_reset_definition),
                 build_ledger_counterparty_registration(ledger_counterparty_definition),
+                build_ledger_own_account_registration(ledger_own_account_definition),
+                build_modelo_360_solicitud_registration(modelo_360_solicitud_definition),
                 build_ledger_check_registration(ledger_check_definition),
                 build_ledger_preflight_registration(ledger_preflight_definition),
                 build_ledger_review_registration(ledger_review_definition),
@@ -1858,11 +1950,17 @@ def build_production_operation_registry(
                     review_package_definition,
                     access_resolver=compose_modelo_revision_access(verification_repository_bundle_factory),
                 ),
+                *build_modelo_workbench_operation_registrations(
+                    workbench_definitions,
+                    access_resolver=compose_modelo_workbench_access(work_lifecycle_ports_factory),
+                ),
             ),
             key=lambda item: item.contract.definition_id,
         )
     )
-    return OperationRegistry(definitions=definitions, public_registrations=registrations)
+    registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
+    composed_contracts.append(registry.public_contract_set)
+    return registry
 
 
 def compose_operation_dependencies(
@@ -1970,7 +2068,9 @@ def compose_operation_dependencies(
         lease_duration=_LEASE_DURATION,
         execution_timeout=_EXECUTION_TIMEOUT,
         cleanup_timeout=_CLEANUP_TIMEOUT,
-        financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(settings=resolved_settings),
+        typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
+            settings=resolved_settings
+        ),
         execution_authority=execution_authority,
     )
 
@@ -1979,3 +2079,68 @@ __all__ = [
     "build_production_operation_registry",
     "compose_operation_dependencies",
 ]
+
+
+def _production_registry_settings(settings: Settings | None) -> Settings:
+    """Retain the supplied settings or load the original production default."""
+    return settings or load_settings()
+
+
+def _production_registry_operator_scope(operator_scope_ports: OperatorScopePorts | None) -> OperatorScopePorts:
+    """Retain an injected scope or compose the same native operator authority."""
+    return operator_scope_ports or build_operator_scope_ports()
+
+
+async def _acquire_registry_verify_observation(
+    surface: VerifySurface,
+    nif: str,
+    expected: IdentityCheckVerdictValue | None,
+    operation: PinnedAuthorityOperation,
+    *,
+    resolved_settings: Settings,
+) -> VerifyLiveObservation:
+    """Acquire exactly one canonical verdict observation under the same resolved settings."""
+    del operation
+    expected_by_nif = {tax_id_identity_token(nif): expected or "unknown"}
+    if surface is VerifySurface.NIF_IVA:
+        result = await collect_nif_iva_check_observations(b"", expected=expected_by_nif, settings=resolved_settings)
+    else:
+        result = await collect_groi_observations(b"", expected=expected_by_nif, settings=resolved_settings)
+    if len(result.observations) != 1:
+        raise ValueError("verify acquisition must return exactly one observation")
+    return VerifyLiveObservation.model_validate(result.observations[0], from_attributes=True)
+
+
+def _production_registry_google_export(
+    google_export_definition: OperationDefinition | None, resolved_settings: Settings
+) -> OperationDefinition:
+    """Resolve the supplied definition before constructing its production capabilities."""
+    return (
+        google_export_definition
+        if google_export_definition is not None
+        else build_google_sheets_export_operation_definition(prepare_port=_google_sheets_export_prepare_port())
+    )
+
+
+def _production_registry_censal(
+    censal_definition: OperationDefinition | None, resolved_operator_scope_ports: OperatorScopePorts
+) -> OperationDefinition:
+    """Resolve the supplied definition before constructing its production capabilities."""
+    return (
+        censal_definition
+        if censal_definition is not None
+        else build_censal_operation_definition(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            browser_session_factory=default_browser_session_factory,
+            operator_scope_ports=resolved_operator_scope_ports,
+            censal_fetch_port=build_censal_fetch_port(),
+            provider_preflight=preflight_filed_history_provider,
+        )
+    )
+
+
+def _production_registry_evidence_followup_ports(
+    evidence_followup_ports: LedgerEvidenceFollowupOperationPorts | None, resolved_settings: Settings
+) -> LedgerEvidenceFollowupOperationPorts:
+    """Retain supplied evidence custody or construct the same production ports."""
+    return evidence_followup_ports or build_ledger_evidence_followup_operation_ports(settings=resolved_settings)

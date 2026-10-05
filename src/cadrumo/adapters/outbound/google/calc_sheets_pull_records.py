@@ -96,22 +96,6 @@ class RelationEdit(BaseModel):
     resolved_at: datetime | None = None
 
 
-def relation_edit_payload(edit: RelationEdit) -> dict[str, object]:
-    """Project one relation edit into its operator-facing payload row."""
-    return {
-        "relation": edit.relation,
-        "value": str(edit.value) if edit.value is not None else None,
-        "provenance": edit.provenance,
-        "source_modelo": edit.source_modelo,
-        "source_filing_year": edit.source_filing_year,
-        "source_periods": list(edit.source_periods),
-        "source_casilla_ids": list(edit.source_casilla_ids),
-        "legal_refs": list(edit.legal_refs),
-        "source_refs": list(edit.source_refs),
-        "resolved_at": edit.resolved_at.isoformat() if edit.resolved_at is not None else None,
-    }
-
-
 class RowSetCellEdit(BaseModel):
     """One operator-edited cell from a Detalle tab row-set."""
 

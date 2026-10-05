@@ -1,0 +1,275 @@
+[[revisions.2013-y-siguientes.export_layouts]]
+id = 'modelo-720-fichero-aeat'
+
+[[revisions.2013-y-siguientes.export_layouts.records]]
+id = 'modelo-720-type-1'
+record_type = 'type_1'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'crlf'
+required = true
+binding_record = 'type_1'
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-tipo-de-registro'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '1'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-modelo-declaracion'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '720'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-ejercicio'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-n-i-f-del-declarante'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-apellidos-y-nombre-o-razon-social-del-declarante'
+offset = 18
+length = 40
+kind = 'header'
+producer_key = 'taxpayer.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-tipo-de-soporte'
+offset = 58
+length = 1
+kind = 'binding'
+binding = 'modelo-720.type_1.tipo-de-soporte'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-telefono-contacto'
+offset = 59
+length = 9
+kind = 'binding'
+binding = 'modelo-720.type_1.telefono-contacto'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-nombre-contacto'
+offset = 68
+length = 40
+kind = 'binding'
+binding = 'modelo-720.type_1.nombre-contacto'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+value_policy = 'mistyped-alphanumeric-text'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-numero-identificativo-de-la-declaracion'
+offset = 108
+length = 13
+kind = 'binding'
+binding = 'modelo-720.type_1.numero-identificativo-de-la-declaracion'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-declaracion-complementaria-o-sustitutiva'
+offset = 121
+length = 2
+kind = 'binding'
+binding = 'modelo-720.type_1.declaracion-complementaria-o-sustitutiva'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-numero-identificativo-de-la-declaracion-anterior'
+offset = 123
+length = 13
+kind = 'binding'
+binding = 'modelo-720.type_1.numero-identificativo-de-la-declaracion-anterior'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-numero-total-de-registros-declarados'
+offset = 136
+length = 9
+kind = 'binding'
+binding = 'modelo-720.type_1.numero-total-de-registros-declarados'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s'
+offset = 145
+length = 18
+kind = 'binding'
+binding = 'modelo-720.type_1.suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type_1-suma-total-de-valoracion-2-importe-o-valor-de-la-transmision'
+offset = 163
+length = 18
+kind = 'binding'
+binding = 'modelo-720.type_1.suma-total-de-valoracion-2-importe-o-valor-de-la-transmision'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[[revisions.2013-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-720-type-1-reserved-tail'
+offset = 181
+length = 320
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-72-2013:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-720']
+
+[revisions.2013-y-siguientes.export_layouts.records.row_field_casilla_ids]

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-07-17'
-body_hash: 'sha256:acfceec1c556809586b72c7337223ef6413222b5f14cb0a9a12d43caec4eb868'
+modified: '2026-10-03'
+body_hash: 'sha256:d06c917faad229b2cc0de7fc2b6d01d95597731e300e233af9a377a9782ff6c8'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
@@ -13,14 +13,16 @@ related:
   - '[[2026-06-24-retenciones-perceptor-count-adr]]'
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-reference]]'
   - '[[2026-06-26-bindings-architecture-unification-research]]'
+  - '[[2026-06-26-bindings-architecture-unification-adr]]'
 ---
 
 # `binding-source-kind-taxonomy-unification` adr: `source-kind taxonomy unification: one canonical core BindingSourceKind owning the registry+mesh union` | (**status:** `accepted`)
 
-> Accepted on the operator's standing directive (the `/goal`). Phase 2.1 of the
-> accepted central bindings architecture. Execution proceeds per the phase plan under
-> the report-before-land gate; Steps touching files under active peer WIP
-> (`_modelo_bindings.py`, `core/__init__.py`) are sweep-sequenced.
+> Accepted on the operator's standing directive (the `/goal`) as an independent
+> phase 2.1 decision. Its phase number is campaign provenance; the central apex ADR
+> was rejected and provides no authority. Historical execution sequencing (2026-06-26):
+> the report-before-land gate and peer-WIP sequencing for `_modelo_bindings.py` and
+> `core/__init__.py` followed the phase plan.
 
 ## Problem Statement
 

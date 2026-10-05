@@ -19,10 +19,12 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.descendant_rows import ProfileDescendantFact, ProfileDescendantRow
 from cadrumo.application.user_profile.operations import (
-    PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
     USER_PROFILE_OPERATION_DEFINITIONS,
-    ProfileDescendantsOperationRequest,
     build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
+    PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+    ProfileDescendantsOperationRequest,
 )
 from cadrumo.core.operations import profile_operation_subject
 

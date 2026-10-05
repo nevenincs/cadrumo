@@ -34,17 +34,26 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.directory_scan import scan_directory
+from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.invoices import enums as invoice_enums
+from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role, resolve_iva_rate_slot
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind, TransactionKind
+from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaRateKind
+from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ....tests.inventory import REPO_ROOT
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .. import oss_ioss as oss_ioss_module
 from ..errors import AggregationValidationError
 from ..oss_ioss import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,
+    project_oss_ioss_invoices_from_repositories,
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
@@ -92,6 +101,98 @@ def _candidate(
         base_amount=base,
         iva_amount=iva,
     )
+
+
+class _OneInvoiceReader:
+    def __init__(self, invoice: Invoice) -> None:
+        self._catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
+
+    def load(self) -> InvoiceCatalogue:
+        return self._catalogue
+
+
+class _EmptyTransactionReader:
+    def load(self) -> TransactionCatalogue:
+        return TransactionCatalogue()
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
+
+
+def _historical_two_percent_oss_invoice(*, devengo_date: date) -> tuple[Invoice, IvaRate]:
+    rate = resolve_iva_rate_slot(Decimal("2"), devengo_date)
+    line = InvoiceLine(
+        description="Bien OSS de tasa temporal",
+        quantity=Decimal("1"),
+        unit_price=Decimal("100"),
+        subtotal=Decimal("100"),
+        iva_rate=rate,
+        iva_amount=Decimal("2"),
+    )
+    invoice = Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "OSS-HISTORIC-2-PCT",
+            "issued_at": date(2025, 6, 15),
+            "operation_date": devengo_date,
+            "operation_date_role": operation_performed_role(effective_date=devengo_date),
+            "counterparty_name": "Cliente alemán",
+            "counterparty_tax_id": "DE345678901",
+            "counterparty_country": "DE",
+            "base_total": Decimal("100"),
+            "iva_total": Decimal("2"),
+            "grand_total": Decimal("102"),
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
+            "oss_ioss_regime": OssIossRegime("union_scheme"),
+            "oss_transaction_kind": TransactionKind("oss_union_goods_distance_sale"),
+        },
+    )
+    return invoice, rate
+
+
+@pytest.mark.parametrize("observation_date", [date(2024, 9, 30), date(2025, 1, 1)])
+def test_repository_projection_passes_invoice_devengo_to_rate_tier_classifier(
+    monkeypatch: pytest.MonkeyPatch,
+    observation_date: date,
+) -> None:
+    """Pass the invoice devengo to the real tier classifier as the observation clock changes."""
+    devengo_date = date(2024, 10, 1)
+    invoice, rate = _historical_two_percent_oss_invoice(devengo_date=devengo_date)
+
+    # The invoice is valid at devengo, while the same published slot is not
+    # numerically in force on either observation date. The real repository
+    # projection must keep its date axis on the invoice, not today's clock.
+    assert invoice_enums.iva_rate_percentage(rate, devengo_date) == Decimal("0.02")
+    with pytest.raises(IvaRateNotFoundError):
+        invoice_enums.iva_rate_percentage(rate, observation_date)
+    monkeypatch.setattr(invoice_enums, "today_madrid", lambda: observation_date)
+    classified_dates: list[date | None] = []
+    real_iva_rate_kind = invoice_enums.iva_rate_kind
+
+    def classify_at_date(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | None:
+        classified_dates.append(on_date)
+        return real_iva_rate_kind(rate, on_date)
+
+    # Observe the boundary while preserving the actual published resolver.
+    # Dropping the devengo argument makes this assertion fail, even though the
+    # current substrate kind happens to be stable across these three dates.
+    monkeypatch.setattr(oss_ioss_module, "iva_rate_kind", classify_at_date)
+
+    projection = project_oss_ioss_invoices_from_repositories(
+        period=Period.from_year_and_code(2024, "4T"),
+        ports=InvoiceCatalogueReadPorts(
+            invoice_reader=_OneInvoiceReader(invoice),
+            transaction_reader=_EmptyTransactionReader(),
+        ),
+    )
+
+    (candidate,) = projection.candidates
+    assert projection.contributing_invoices == (invoice,)
+    assert candidate.transaction_date == devengo_date
+    assert candidate.rate_kind == IvaRateKind("super_reduced")
+    assert classified_dates == [devengo_date]
 
 
 # ---------------------------------------------------------------------------

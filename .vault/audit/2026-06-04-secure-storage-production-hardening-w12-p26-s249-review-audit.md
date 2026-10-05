@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:e6747f3c26761142738abf63744435605975b12cb98f396c1553528d5f06f519'
+modified: '2026-10-03'
+body_hash: 'sha256:ff7de69f5e2e18d4bf25c28906597d285dd77970e7c34fe2e5eaca192c7c2001'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Transaction, invoice, and draft storage loading is delegated to adapter function
 
 ## S249-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/review/_aggregator.py src/aeat/application/review/test_aggregator.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/review/test_aggregator.py` passed with 6 tests.
+- the historical check passed.
+- the historical check passed with 6 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-147` as `manifest-discovery`.

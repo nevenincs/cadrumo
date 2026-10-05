@@ -29,8 +29,10 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
 )
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.export_parse import parse_export_payload
-from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity

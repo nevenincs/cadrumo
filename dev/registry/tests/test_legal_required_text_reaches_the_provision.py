@@ -33,10 +33,11 @@ from typing import Final
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.core.toml import parse_toml
+from dev.corpus.text import resolve_anchored_extracted_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

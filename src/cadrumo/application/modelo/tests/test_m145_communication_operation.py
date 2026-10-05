@@ -25,17 +25,17 @@ from ...operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ...operations.models import OperationIdentity, OperationRequest
+from ...operations.operation_definition import OperationDefinition
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import (
-    OperationDefinition,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
 from ...user_profile.access_contracts import AccessAction, Availability
-from .. import m145_communication_operation as m145_operation
+from .. import m145_communication_execution as m145_operation
 from .._ports import FicheroBoeRecordRenderer
-from ..m145_communication_operation import (
+from ..m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID,
@@ -43,7 +43,6 @@ from ..m145_communication_operation import (
     M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID,
     M145CommunicationCreateRequest,
     M145CommunicationExecutionResult,
-    M145CommunicationExecutor,
     M145CommunicationExportProjection,
     M145CommunicationExportRequest,
     M145CommunicationFieldValueProjection,
@@ -53,6 +52,9 @@ from ..m145_communication_operation import (
     M145CommunicationRecordProjection,
     M145CommunicationValidateRequest,
     M145CommunicationValidationProjection,
+)
+from ..m145_communication_execution import M145CommunicationExecutor
+from ..m145_communication_operation import (
     build_m145_communication_operation_definitions,
     build_m145_communication_operation_registrations,
 )

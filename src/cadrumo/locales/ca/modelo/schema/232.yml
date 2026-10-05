@@ -1,6 +1,341 @@
 modelo:
   schema:
     '232':
+      binding:
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjdc5q74qbq5ln6ipg:
+          label: 'Entitat matriu: número d''identificació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjdc5q74qbq5lp62ujfdomn6rr3d5gmo:
+          label: 'Entitat matriu: raó social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqpjads:
+          label: 'Operació vinculada 1: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqqbde1nn4t35:
+          label: 'Operació vinculada 1: import de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqrj9co:
+          label: 'Operació vinculada 1: NIF de la persona o entitat vinculada'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqs3idtr6irj3d5giqs31d5pg:
+          label: 'Operació vinculada 1: codi de província o país'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqsj1f9nmsbbjdthmiobc:
+          label: 'Operació vinculada 1: cognoms i nom o raó social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5koiqt39e1niqtj9dphnar31cdkmurg:
+          help: 'Fila 1: indica la clau de la taula oficial de tipus de vinculació
+            (de l''A a la H), per exemple D per a dues entitats d''un mateix grup.'
+          label: 'Operació vinculada 1: tipus de vinculació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qpjads:
+          label: 'Operació vinculada 2: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qqbde1nn4t35:
+          label: 'Operació vinculada 2: import de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qrj9co:
+          label: 'Operació vinculada 2: NIF de la persona o entitat vinculada'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qs3idtr6irj3d5giqs31d5pg:
+          label: 'Operació vinculada 2: codi de província o país'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qsj1f9nmsbbjdthmiobc:
+          label: 'Operació vinculada 2: cognoms i nom o raó social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kp2qt39e1niqtj9dphnar31cdkmurg:
+          help: 'Fila 2: indica la clau de la taula oficial de tipus de vinculació
+            (de l''A a la H), per exemple D per a dues entitats d''un mateix grup.'
+          label: 'Operació vinculada 2: tipus de vinculació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqpjads:
+          label: 'Operació vinculada 3: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqqbde1nn4t35:
+          label: 'Operació vinculada 3: import de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqrj9co:
+          label: 'Operació vinculada 3: NIF de la persona o entitat vinculada'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqs3idtr6irj3d5giqs31d5pg:
+          label: 'Operació vinculada 3: codi de província o país'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqsj1f9nmsbbjdthmiobc:
+          label: 'Operació vinculada 3: cognoms i nom o raó social'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso32bjmd5n66tbcc5i62bbdclq6up3f5kpiqt39e1niqtj9dphnar31cdkmurg:
+          help: 'Fila 3: indica la clau de la taula oficial de tipus de vinculació
+            (de l''A a la H), per exemple D per a dues entitats d''un mateix grup.'
+          label: 'Operació vinculada 3: tipus de vinculació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 1: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 1: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb6d9ng:
+          label: 'Operació amb paradís fiscal 1: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 1: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2bbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 1: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dcdm62tj55lo62qbj:
+          label: 'Operació amb paradís fiscal 10: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dchin6orid5o66qbfdo:
+          label: 'Operació amb paradís fiscal 10: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dcpl6u:
+          label: 'Operació amb paradís fiscal 10: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1dd5mn0rriehig:
+          label: 'Operació amb paradís fiscal 10: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c1de1in4srfdpgg:
+          label: 'Operació amb paradís fiscal 10: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dcdm62tj55lo62qbj:
+          label: 'Operació amb paradís fiscal 11: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dchin6orid5o66qbfdo:
+          label: 'Operació amb paradís fiscal 11: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dcpl6u:
+          label: 'Operació amb paradís fiscal 11: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9dd5mn0rriehig:
+          label: 'Operació amb paradís fiscal 11: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2c9de1in4srfdpgg:
+          label: 'Operació amb paradís fiscal 11: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdcdm62tj55lo62qbj:
+          label: 'Operació amb paradís fiscal 12: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdchin6orid5o66qbfdo:
+          label: 'Operació amb paradís fiscal 12: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdcpl6u:
+          label: 'Operació amb paradís fiscal 12: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chdd5mn0rriehig:
+          label: 'Operació amb paradís fiscal 12: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj2chde1in4srfdpgg:
+          label: 'Operació amb paradís fiscal 12: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 2: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 2: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb6d9ng:
+          label: 'Operació amb paradís fiscal 2: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 2: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj4bbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 2: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 3: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 3: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb6d9ng:
+          label: 'Operació amb paradís fiscal 3: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 3: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj6bbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 3: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 4: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 4: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb6d9ng:
+          label: 'Operació amb paradís fiscal 4: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 4: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomj8bbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 4: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 5: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 5: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb6d9ng:
+          label: 'Operació amb paradís fiscal 5: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 5: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjabbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 5: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 6: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 6: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb6d9ng:
+          label: 'Operació amb paradís fiscal 6: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 6: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjcbbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 6: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 7: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 7: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb6d9ng:
+          label: 'Operació amb paradís fiscal 7: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 7: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjebbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 7: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 8: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 8: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb6d9ng:
+          label: 'Operació amb paradís fiscal 8: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 8: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjgbbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 8: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb3dhgncp9de1gmiso:
+          label: 'Operació amb paradís fiscal 9: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb4clpm6sj9e1hmirre:
+          label: 'Operació amb paradís fiscal 9: descripció de l''operació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb6d9ng:
+          label: 'Operació amb paradís fiscal 9: tipus de persona (F/J/O)'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibb9dlo6usjkck:
+          label: 'Operació amb paradís fiscal 9: import'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmmus35e9gm6qbfdomjibbgclp76rrec4:
+          label: 'Operació amb paradís fiscal 9: persona o entitat resident'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 1: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 1: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 1: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9dehkn0ro:
+          help: 'Fila 1: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 1: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 1: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lhmoobmckmn0ob9ec:
+          label: 'Valors en paradís fiscal 10: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5limst39chgm8:
+          label: 'Valors en paradís fiscal 10: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Valors en paradís fiscal 10: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lq6is3f:
+          help: 'Fila 10: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 10: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9g5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Valors en paradís fiscal 10: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lhmoobmckmn0ob9ec:
+          label: 'Valors en paradís fiscal 11: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5limst39chgm8:
+          label: 'Valors en paradís fiscal 11: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Valors en paradís fiscal 11: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lq6is3f:
+          help: 'Fila 11: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 11: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9h5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Valors en paradís fiscal 11: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lhmoobmckmn0ob9ec:
+          label: 'Valors en paradís fiscal 12: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5limst39chgm8:
+          label: 'Valors en paradís fiscal 12: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lo6usj3cln78obackmn0obiehkm6qbgc5hmirre:
+          label: 'Valors en paradís fiscal 12: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lq6is3f:
+          help: 'Fila 12: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 12: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qc9i5lr62r3fe8mm2p3helkn6qb3d5nms:
+          label: 'Valors en paradís fiscal 12: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 2: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 2: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 2: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdehkn0ro:
+          help: 'Fila 2: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 2: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qchdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 2: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 3: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 3: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 3: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdehkn0ro:
+          help: 'Fila 3: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 3: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qcpdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 3: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 4: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 4: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 4: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1dehkn0ro:
+          help: 'Fila 4: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 4: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd1depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 4: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 5: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 5: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 5: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9dehkn0ro:
+          help: 'Fila 5: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 5: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qd9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 5: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 6: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 6: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 6: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdehkn0ro:
+          help: 'Fila 6: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 6: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdhdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 6: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 7: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 7: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpde1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 7: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdehkn0ro:
+          help: 'Fila 7: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 7: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qdpdepgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 7: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 8: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 8: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 8: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1dehkn0ro:
+          help: 'Fila 8: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 8: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe1depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 8: valor d''adquisició'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dcdm62tj55lo62qbj:
+          label: 'Valors en paradís fiscal 9: clau de país o territori'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dcln78qb4c5i0:
+          label: 'Valors en paradís fiscal 9: entitat participada o emissora'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9de1nn4or5dpq62qj55lo62sjkd5hmis31cdkmurg:
+          label: 'Valors en paradís fiscal 9: percentatge de participació'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9dehkn0ro:
+          help: 'Fila 9: indica la clau de la taula oficial: A valors de fons propis
+            d''entitats residents en aquests territoris, B valors d''institucions
+            d''inversió col·lectiva constituïdes allà, C valors de renda fixa admesos
+            a cotització als seus mercats secundaris.'
+          label: 'Valors en paradís fiscal 9: tipus'
+        x-dlnm8pbcdsmj4cpi5po62pr5bso34bjgc5p62qbjdsmncobcdtp2qe9depgmorri5lgm8sbld5pmior9dtn0:
+          label: 'Valors en paradís fiscal 9: valor d''adquisició'
       casilla:
         continuidad:
           actividad-cnae:

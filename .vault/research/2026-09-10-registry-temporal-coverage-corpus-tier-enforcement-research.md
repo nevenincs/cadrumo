@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-temporal-coverage'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3af689e5eeffc2f524311d04e031d9cad84e213b209a111f6e5bb4bf893dc3f9'
+body_hash: 'sha256:5c94924d40985248363ad4098013e238d0a88ec2e0ea06f9e9cfa21f3683b3e2'
 related:
   - '[[2026-09-10-corpus-evidence-integrity-hand-shaped-corpus-text-research]]'
 ---
@@ -25,17 +25,17 @@ The original recommendation to mandate `corpus_tier` for normative citations is 
 
 ### Completeness and provenance are independent authority properties
 
-The existing two-valued contract remains useful and is checked when declared (`src/cadrumo/domain/calculations/registry/corpus_catalogue.py:80-123`; `src/cadrumo/domain/calculations/registry/legal.py:182-220`). It must not be overloaded with a third state: an author-declared status cannot prove the provenance of author-written text. The evidence-favoured alternative derives provenance once from each normative corpus file's bytes, then binds filing-grade evidence to that derived result. The related research records the measured attribution bands and the unresolved presumptive band.
+The existing two-valued contract remains useful and is checked when declared (the former source file; `src/cadrumo/domain/calculations/registry/legal.py:182-220`). It must not be overloaded with a third state: an author-declared status cannot prove the provenance of author-written text. The evidence-favoured alternative derives provenance once from each normative corpus file's bytes, then binds filing-grade evidence to that derived result. The related research records the measured attribution bands and the unresolved presumptive band.
 
 ### The stale coverage statement remains a documentation defect
 
-`legal.py` says no committed `LegalReference` declares `corpus_tier`, although the registry contains 19 declarations (`src/cadrumo/domain/calculations/registry/legal.py:183-190`; `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml:84-374`; `src/cadrumo/_data/registry/aeat/legal/modelo-185.toml:14-34`; `src/cadrumo/_data/registry/aeat/legal/patrimonio.toml:323-494`). The equivalent statement for `SourceReference` remains accurate (`src/cadrumo/domain/calculations/registry/corpus_catalogue.py:81-87`).
+`legal.py` says no committed `LegalReference` declares `corpus_tier`, although the registry contains 19 declarations (`src/cadrumo/domain/calculations/registry/legal.py:183-190`; `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml:84-374`; `src/cadrumo/_data/registry/aeat/legal/modelo-185.toml:14-34`; `src/cadrumo/_data/registry/aeat/legal/patrimonio.toml:323-494`). The equivalent statement for `SourceReference` remains accurate .
 
 ## Sources
 
 - `src/cadrumo/domain/calculations/registry/legal.py:139-220`
 - `src/cadrumo/domain/calculations/registry/schema_references.py:518-533`
-- `src/cadrumo/domain/calculations/registry/corpus_catalogue.py:80-123`
+
 - `src/cadrumo/_data/registry/aeat/legal/irpf-impatriados.toml:84-374`
 - `src/cadrumo/_data/registry/aeat/legal/modelo-185.toml:14-34`
 - `src/cadrumo/_data/registry/aeat/legal/patrimonio.toml:323-494`

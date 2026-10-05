@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:06df6ff3b3bd476480d3f63daaf1f0b262056162d45eb34f8bdfdf3e8beb10c4'
+body_hash: 'sha256:2a2de61e4070e66e86a8ecac0bb991e1a622f4bb4ebc3b2c6cbce92a3ad5ee08'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research]]'
@@ -122,3 +122,7 @@ non-negotiable rather than an implementation detail.
 This does not resolve whether a given committed tree should be reproducible at all.
 One tree is known to contain a subdivision of a design slot that no semantic map can
 express, and a surface to publish it does not make that expressible.
+
+## Current code status (2026-10-03)
+
+This ADR remains proposed. Its original claim that no operator invocation surface exists no longer matches the code: `dev/registry/pipeline/cli.py` exposes per-target `check`, `publish`, and digest-bound `republish` commands, alongside `target-current`, `publish-target`, and `republish-target`. The command docstrings route check through the canonical validation path and publish/republish through the existing transaction path. This implementation evidence records current state; it does not accept this proposal or expand the accepted authority. The linked 2026-08-10 parent ADR remains the governing export-tree authority.

@@ -13,7 +13,7 @@ import pytest
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.tipos_actividad import TipoActividad
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...calculations.registry.facts.schema import EntitySetFactPayload
+from ...calculations.registry.facts.payloads import EntitySetFactPayload
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..tipo_actividad_partitions import tipo_actividad_code_set

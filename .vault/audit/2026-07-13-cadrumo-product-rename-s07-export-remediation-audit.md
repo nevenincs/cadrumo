@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s07-export-remediation'
 date: '2026-07-13'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:8de09543a3e4cc7204394a9550aaed758482ba705f7010edcc4189377a380c79'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s07-export-remediation` audit: `Cadrumo product rename S07 export remediation audit`

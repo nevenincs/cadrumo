@@ -10,14 +10,16 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.modelo.verification_report_read_operation import (
+from ....application.modelo.verification_report_public_facts import ModeloVerificationReportProjection
+from ....application.modelo.verification_report_read_contracts import (
     MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID,
     MODELO_VERIFICATION_REPORT_VIEW_OPERATION_DEFINITION_ID,
-    ModeloVerificationReportListProjection,
     ModeloVerificationReportListRequest,
-    ModeloVerificationReportProjection,
-    ModeloVerificationReportViewProjection,
     ModeloVerificationReportViewRequest,
+)
+from ....application.modelo.verification_report_read_projection import (
+    ModeloVerificationReportListProjection,
+    ModeloVerificationReportViewProjection,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -33,7 +35,7 @@ from .. import runtime_modelo_verification_report_read as bridge
 from .._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
 from .._modelo_rendering import verification_report_lines, verification_report_payload
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

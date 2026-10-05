@@ -128,19 +128,19 @@ def test_a_deferred_provider_kind_cannot_feed_a_bound_casilla(tmp_path: Path) ->
     _rewrite_m151_binding(
         tree,
         _M151_PROVIDER_LINE,
-        'provider = { kind = "donativo_donor", fact = "row_field", row_field = "donor_tax_id", '
-        'grouping = "per_donativo_donor", record = "donante", data_type = "text" }',
+        'provider = { kind = "gasto193_contributor", fact = "row_field", row_field = "contributor_tax_id", '
+        'grouping = "per_gasto193_contribuyente", record = "gastos", data_type = "text" }',
     )
     _rewrite_m151_binding(
         tree,
         _M151_VALUE_LINE,
-        'value = { data_type = "text", channel = "row_set", row_grouping = "donativo" }',
+        'value = { data_type = "text", channel = "row_set", row_grouping = "gasto193" }',
     )
     _rewrite_m151_binding(tree, _M151_AGGREGATION_LINE, 'aggregation = { op = "rows" }')
 
     failures = _failures(tree, _M151_REVISION)
 
-    assert [f for f in failures if "deferred provider kind 'donativo_donor'" in f and _M151_BINDING_ID in f]
+    assert [f for f in failures if "deferred provider kind 'gasto193_contributor'" in f and _M151_BINDING_ID in f]
     assert all("modelo 151 revision 2025-y-siguientes" in failure for failure in failures)
 
 

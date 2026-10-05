@@ -102,7 +102,7 @@ from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueR
 from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
+from cadrumo.application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex

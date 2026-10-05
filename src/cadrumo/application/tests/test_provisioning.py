@@ -128,11 +128,11 @@ def test_require_optional_extra_absent_raises_instructive_import_error() -> None
     with pytest.raises(MissingOptionalExtraError) as raised:
         require_optional_extra(extra)
     assert raised.value.extra is extra
-    # The refusal carries machine identity only: no install command, and no
-    # human feature label that would read as operator-facing prose.
+    # The refusal names the missing capability for the catalogue-rendered fix.
     assert "pip install" not in str(raised.value)
     assert raised.value.context == {
         "extra": "ghost",
+        "feature": "a ghost feature",
         "import_name": "aeat_definitely_not_installed_xyz",
         "importable": False,
     }
@@ -222,8 +222,8 @@ def test_a_side_effect_free_command_is_provisioned_only_its_derived_caches(tmp_p
 
     reading = _created_directories(reading_root)
     assert caches, "the taxonomy must declare caches for this to measure anything"
-    assert caches <= reading
-    assert all(path == "cache" or path.startswith("cache/") for path in reading), sorted(reading)
+    expected = caches | {parent.as_posix() for cache in caches for parent in Path(cache).parents if parent != Path(".")}
+    assert reading == expected
     assert _created_directories(writing_root) > reading
 
 

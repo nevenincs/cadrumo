@@ -13,8 +13,9 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Select, Static
 
-from ....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
+from ....application.modelo.work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from ....core.i18n.render import tr
+from ....core.time.utc import parse_iso_datetime
 from ..components.theme import tokenised
 
 _M303_EVIDENCE_CSS = tokenised("""
@@ -133,6 +134,11 @@ class OrdinaryM303FilingEvidenceScreen(ModalScreen[OrdinaryM303FilingEvidenceSub
                     joint_return_elected=joint_return_elected
                 ),
             )
+
+        return self._attestation_submission(joint_return_elected)
+
+    def _attestation_submission(self, joint_return_elected: bool) -> OrdinaryM303FilingEvidenceSubmission | None:
+        """Accept one complete stored-evidence pair or one explicit observation instant."""
         attachment_id = self.query_one("#m303-evidence-attachment-id", Input).value.strip()
         sha256 = self.query_one("#m303-evidence-sha256", Input).value.strip()
         observed_at = self.query_one("#m303-evidence-observed-at", Input).value.strip()
@@ -181,7 +187,7 @@ def _parse_observed_at(value: str) -> datetime:
     """Parse the operator's explicit ISO-8601 instant; a local time without an offset is ambiguous."""
     if not value:
         raise ValueError("an attestation observation instant is required")
-    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    parsed = parse_iso_datetime(value)
     if parsed.tzinfo is None:
         raise ValueError("an attestation observation instant requires a UTC offset")
     return parsed

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1b8c8bab647cbfaa4cbd32de00966d8b23519b38bbfc5a0b51637954769b9e46'
+body_hash: 'sha256:15fd12152097d5b50f84692803846173d4b8caf945472f7e1f9bf0706f32b62f'
 related:
   - "[[2026-08-28-corpus-evidence-integrity-m210-pension-scale-corpus-row-audit]]"
 ---
@@ -14,12 +14,9 @@ related:
 
 ## Scope
 
+Recheck the Murcia 2022 accumulated-quota schedule at the upper band transition against the official scale.
+
 ## Findings
-
-## Recommendations
-
-## Finding
-
 `renta-2022-escala-autonomica-murcia-base-general` over-states its accumulated
 cuota at the top rung by **90,83 €**. The runtime computes
 
@@ -40,6 +37,25 @@ filer with base liquidable general above 60.000 € receives an autonomic cuota
 | 60.000,00 | 0,227 | **8.716,67** | **8.625,84** | **+90,83** |
 
 Rows one to four are mutually exact. Only the top rung breaks.
+
+## Recommendations
+Two repairs are each internally self-consistent, and choosing between them needs
+the official Murcia 2022 scale, which I did not have and did not invent:
+
+1. the deflated table is correct → `fixed_addition` becomes `8.625,84`;
+2. the top bound should also have been inflated → `60.000,00` becomes
+   `62.460,00` (= 60.000 × 1,041), with its `fixed_addition` recomputed.
+
+Many autonomic deflactaciones deliberately leave the top threshold at 60.000, so
+(1) is the more likely reading — but that is a tax review against the Región de
+Murcia's published scale, not an inference to be made here.
+
+Whichever bound is correct, `8.716,67` is not consistent with the rows beneath it
+and cannot be right as it stands.
+
+A fix should land with a grounded citation and a regression pinning the
+accumulated column, so the next such break is caught by more than an invariant
+sweep.
 
 ## The cause is provable from the table itself
 
@@ -87,26 +103,6 @@ Those were carried as reviewability findings. This one shows the gap is not
 cosmetic: an ungrounded scale concealed a real arithmetic error that
 over-charges taxpayers, and the error survived because neither a citation nor a
 test nor a comment stood between it and the engine.
-
-## Remediation — owner's decision, not taken here
-
-Two repairs are each internally self-consistent, and choosing between them needs
-the official Murcia 2022 scale, which I did not have and did not invent:
-
-1. the deflated table is correct → `fixed_addition` becomes `8.625,84`;
-2. the top bound should also have been inflated → `60.000,00` becomes
-   `62.460,00` (= 60.000 × 1,041), with its `fixed_addition` recomputed.
-
-Many autonomic deflactaciones deliberately leave the top threshold at 60.000, so
-(1) is the more likely reading — but that is a tax review against the Región de
-Murcia's published scale, not an inference to be made here.
-
-Whichever bound is correct, `8.716,67` is not consistent with the rows beneath it
-and cannot be right as it stands.
-
-A fix should land with a grounded citation and a regression pinning the
-accumulated column, so the next such break is caught by more than an invariant
-sweep.
 
 ## How it was found
 

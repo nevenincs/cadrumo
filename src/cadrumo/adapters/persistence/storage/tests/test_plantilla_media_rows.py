@@ -16,7 +16,7 @@ from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.plantilla_media_rows import (
     PlantillaMediaMutation,
     PlantillaMediaWriteSurface,
-    list_plantilla_media_years,
+    plantilla_media_years_of,
     remove_plantilla_media_year,
     set_plantilla_media_year,
 )
@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError, UserProfileValidationError
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
+from cadrumo.domain.user_profile.values import UserProfileRecord
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -65,8 +66,12 @@ def profile(tmp_path: Path) -> Iterator[tuple[str, ProfileDecodeContext]]:
         yield outcome.profile_id, operation.profile_decode_context()
 
 
+def _record(profile_id: str, context: ProfileDecodeContext) -> UserProfileRecord:
+    return ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=context).load(profile_id)
+
+
 def _indices(profile_id: str, context: ProfileDecodeContext) -> set[str]:
-    record = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=context).load(profile_id)
+    record = _record(profile_id, context)
     return {
         fact.path.split(".")[2]
         for fact in record.facts
@@ -90,7 +95,7 @@ def test_years_are_set_replaced_and_listed_in_year_order(profile: tuple[str, Pro
     ]
     # Replacing 2025 rewrote its own instance; no third instance appeared.
     assert _indices(profile_id, context) == {"0", "1"}
-    assert list_plantilla_media_years(profile_id=profile_id, profile_decode_context=context) == replaced.years
+    assert plantilla_media_years_of(_record(profile_id, context)) == replaced.years
 
 
 def test_removing_a_year_renumbers_nothing_and_a_new_year_takes_a_fresh_index(
@@ -125,7 +130,7 @@ def test_an_undeclared_year_and_an_invalid_value_refuse(profile: tuple[str, Prof
         remove_plantilla_media_year(year=2030, **common)
     with pytest.raises(ProfileSchemaValidationError):
         set_plantilla_media_year(year=2025, average_workforce=Decimal("12.505"), state=_OBSERVED, **common)
-    assert list_plantilla_media_years(profile_id=profile_id, profile_decode_context=context) == ()
+    assert plantilla_media_years_of(_record(profile_id, context)) == ()
 
 
 def test_same_value_is_a_noop_with_the_original_commit_witness(profile: tuple[str, ProfileDecodeContext]) -> None:

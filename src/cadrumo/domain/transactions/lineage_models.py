@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -10,21 +9,19 @@ from typing import Literal, Self
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
-    TypeAdapter,
     ValidationError,
     field_validator,
     model_validator,
 )
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant, parse_iso_datetime
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STRICT_STR_KEYED_MAPPING_ADAPTER
 from ...core.type_guards import is_object_mapping
 from ..identifiers import canonical_decimal_string
 from .enums import BusinessClassification, SplitRole, TransactionLifecycleState
@@ -38,16 +35,11 @@ from .model_validation import (
     validate_confidence_range,
 )
 
-_STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
-    dict[str, object],
-    config=ConfigDict(strict=True),
-)
-
 
 def _string_keyed_mapping(data: object) -> dict[str, object]:
     """Materialize an untrusted mapping after enforcing JSON-object keys."""
     try:
-        return _STRING_KEYED_MAPPING_ADAPTER.validate_python(data)
+        return STRICT_STR_KEYED_MAPPING_ADAPTER.validate_python(data)
     except ValidationError as exc:
         raise TransactionValidationError("transaction payload keys must be strings") from exc
 
@@ -372,17 +364,13 @@ def derive_split_group_id(
     child_narratives: tuple[str, ...],
 ) -> str:
     """Deterministically derive the ``split_group_id`` for a split cohort."""
-    payload = json.dumps(
+    return content_hash_hex(
         {
             "parent_transaction_id": parent_transaction_id,
             "child_amounts": sorted(canonical_decimal_string(amount) for amount in child_amounts),
             "child_narratives": sorted(child_narratives),
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
+        }
     )
-    return sha256_hex(payload.encode("utf-8"))
 
 
 __all__ = [

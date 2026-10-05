@@ -10,10 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
-from ...application.actividad_asset.history import ActivityAssetHistory
-from ...application.actividad_asset.operations import ActivityAssetFilingHandoff
-from ...application.actividad_asset.ports import ActivityAssetHistoryRepository as ActivityAssetHistoryPort
-from ...application.actividad_asset.registered_operations import (
+from ...application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
@@ -21,19 +18,24 @@ from ...application.actividad_asset.registered_operations import (
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
-    ActivityAssetClaimProjection,
     ActivityAssetClaimRequest,
-    ActivityAssetCorrectProjection,
     ActivityAssetCorrectRequest,
-    ActivityAssetCreateProjection,
     ActivityAssetCreateRequest,
-    ActivityAssetFilingHandoffProjection,
     ActivityAssetFilingHandoffRequest,
-    ActivityAssetForecastProjection,
     ActivityAssetForecastRequest,
-    ActivityAssetInspectProjection,
     ActivityAssetInspectRequest,
 )
+from ...application.actividad_asset.activity_asset_projections import (
+    ActivityAssetClaimProjection,
+    ActivityAssetCorrectProjection,
+    ActivityAssetCreateProjection,
+    ActivityAssetFilingHandoffProjection,
+    ActivityAssetForecastProjection,
+    ActivityAssetInspectProjection,
+)
+from ...application.actividad_asset.history import ActivityAssetHistory
+from ...application.actividad_asset.operations import ActivityAssetFilingHandoff
+from ...application.actividad_asset.ports import ActivityAssetHistoryRepository as ActivityAssetHistoryPort
 from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation

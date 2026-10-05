@@ -13,10 +13,11 @@ related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"
   - "[[2026-06-03-modelo-export-workbook-parity-adr]]"
   - "[[2026-07-04-google-sa-impersonation-adr]]"
+  - '[[2026-10-04-google-app-identity-adr]]'
 supersedes:
   - '2026-06-04-ledger-google-live-export-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:5b7bc6c874b88b838fed87a77edd851036cc5c452da85a728cf7e62cb91b29c7'
+modified: '2026-10-04'
+body_hash: 'sha256:d5a209ab256a2561842c0e3673069070dbf48dff7c623ab5e2bcf00ceacbfdbd'
 ---
 # `google-optional-adapter-boundary` adr: `Google integration authority boundary and legacy-scope reconciliation` | (**status:** `accepted`)
 
@@ -80,21 +81,22 @@ the constrained adapter role established here.
 
 ## Constraints
 
-- Google integrations are opt-in interoperability adapters. Each profile uses
-  its approved credential source: OAuth Desktop or service-account
-  impersonation. The local encrypted bucket, calculation registry,
+- Google integrations are opt-in interoperability adapters. Each profile signs
+  in through OAuth Desktop; service-account impersonation is removed by
+  `2026-10-04-google-app-identity-adr`. The local encrypted bucket, calculation registry,
   provider-neutral sealed full-custody archive, and canonical application
   services remain authoritative under this decision unless a later ADR
   explicitly supersedes it.
 - A Google command may persist data only by delegating to the existing canonical
-  owner. This permits the secure OAuth store and explicit evidence acquisition;
-  it prohibits an independent Google domain writer.
+  owner. This permits the secure OAuth store; it prohibits an independent
+  Google domain writer.
 - Remote manifest reads, ciphertext inspection, conflict detection, and
   integrity comparison remain permitted. The remote mirror does not own
   restoration, key custody, or local writes.
-- `doclink` and `pull-folder` remain explicit, byte-bearing evidence acquisition
-  paths. This ADR does not mandate a watched Drive inbox, automatic filename
-  router, plaintext staging pipeline, or rejection-sidecar subsystem.
+- Google evidence acquisition is withdrawn by
+  `2026-10-04-google-app-identity-adr`. This ADR does not mandate a watched
+  Drive inbox, automatic filename router, plaintext staging pipeline, or
+  rejection-sidecar subsystem.
 - Calculation `pull` remains typed readback, and `compute` remains
   non-persistent computation through the shared engine. Persisting pulled Sheet
   input requires a separate ADR and delegation to the canonical calculation
@@ -116,19 +118,16 @@ the constrained adapter role established here.
 ## Implementation
 
 This ADR reconciles the architecture corpus and Google plan to one boundary.
-Google may use the approved per-profile credential source, export ciphertext
-and typed projections, inspect remote integrity state, acquire
-operator-selected evidence bytes, and return typed worksheet input. Domain
+Google may use the profile's OAuth Desktop sign-in, export ciphertext
+and typed projections, inspect remote integrity state, and return typed
+worksheet input. Domain
 persistence must pass through the canonical service that owns that data.
 
 The following implemented behavior remains in scope:
 
 - existing OAuth Desktop with secure client, token, and session storage;
-- persisted per-profile credential-source selection, ephemeral service-account
-  impersonation, and provider composition;
+- provider composition;
 - ciphertext push plus remote manifest and object integrity reads;
-- explicit `doclink` and `pull-folder` acquisition through canonical attachment
-  custody, with `doclink` also using the ledger evidence linker;
 - calculation export, verification, typed pull, and non-persistent shared-engine
   compute; and
 - canonical `ledger update` for transaction correction.

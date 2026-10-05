@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#adjacent-domain-deduplication'
 date: '2026-08-02'
-modified: '2026-08-04'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:83743dcc23395f1effa58a32dc16c97256a4f3603626e0b825a9edb6b0730593'
+body_hash: 'sha256:d4f375c1dd075fdb92e9d13bd6e5d5c6db5d8d916f269382e9399977bb1baa66'
 ---
 
 # `adjacent-domain-deduplication` triage register
@@ -95,7 +95,7 @@ tracking document.
 074 | P3 | CONSOLIDATE | review | Modelo binding list and preview payloads duplicate provenance contracts [medium]
 075 | P2 | REVIEW | unverified | Modelo import evidence references bypass the domain length contract [high]
 076 | P2 | CONSOLIDATE | review | registry casilla list reports weaken legal/source reference typing [high]
-077 | P3 | REVIEW | unverified | LLM retention selection is duplicated across cache, usage, and telemetry [medium]
+077 | P3 | REVIEW | unverified | LLM retention selection is duplicated across cache and usage [medium]
 078 | P2 | CONSOLIDATE | review | PDF fixture generators use banker's rounding instead of AEAT half-up [high]
 079 | P2 | CONSOLIDATE | review | category proportionality citations bypass canonical legal identity [high]
 080 | P3 | CONSOLIDATE | review | manual section and rule source pointers duplicate URL/page validation [medium]
@@ -213,7 +213,6 @@ tracking document.
 192 | P2 | CONSOLIDATE | review | live IVA auth payloads drop the redacted diagnostic reference [high]
 193 | P2 | CONSOLIDATE | review | Google sync probe payloads bypass the storage provider-kind enum [high]
 194 | P2 | CONSOLIDATE | review | IVA filed-history capture payloads drop partial-failure and evidence fidelity fields [high]
-195 | P2 | CONSOLIDATE | review | telemetry-status payloads bypass the closed telemetry-tier enum [high]
 196 | P2 | CONSOLIDATE | review | Google credential-source payloads bypass dispatch kind and impersonation configuration contracts [high]
 197 | P2 | CONSOLIDATE | review | root status transport is an untyped extra-allow shell over three canonical branches [high]
 198 | P2 | CONSOLIDATE | review | local storage probe reports writable after sentinel cleanup failure [high]
@@ -508,7 +507,7 @@ tracking document.
 487 | P2 | REVIEW | RAG | purchase-invoice evidence repository accepts foreign bucket payloads [high]
 488 | P2 | REVIEW | RAG | business-operation invoice repository accepts foreign bucket/source-kind payloads [high]
 489 | P1 | REMEDIATE | RAG+probe+gate | ledger review CLI envelope accepts malformed and branch-incomplete results [high]
-490 | P1 | REMEDIATE | RAG+probe+gate | LLM usage and run-telemetry recorders do not bind decoded payloads to stored keys [high]
+490 | P1 | REMEDIATE | RAG+probe+gate | LLM usage recorders do not bind decoded payloads to stored keys [high]
 491 | P1 | REMEDIATE | RAG+probe+gate | IVA compensation history repository accepts period states under foreign keys [high]
 492 | P2 | REVIEW | RAG | IVA remote acquisition manifest repository returns foreign acquisition payloads [high]
 493 | P2 | REVIEW | RAG | ModeloHistoryRepository returns foreign modelo histories under natural keys [high]
@@ -564,7 +563,6 @@ tracking document.
 543 | P2 | CONSOLIDATE | RAG+review | flywheel failure signatures collide across distinct evidence [high]
 544 | P2 | CONSOLIDATE | RAG+review | config auth status widens the canonical readiness contract [high]
 545 | P3 | CONSOLIDATE | RAG+review | invoice match projection permits contradictory partition identities [medium]
-546 | P3 | CONSOLIDATE | RAG+review | off-host gestor safety floors diverge between evidence and telemetry [medium]
 547 | P2 | CONSOLIDATE | RAG+review | CLI casilla-value projections accept noncanonical numeric wire strings [high]
 548 | P2 | CONSOLIDATE | RAG+review | master-key BucketSession constructors accept naive and non-UTC deadlines [high]
 549 | P2 | CONSOLIDATE | RAG+review | live auth session gates accept checksum-invalid taxpayer identities [high]
@@ -591,9 +589,7 @@ tracking document.
 570 | P3 | CONSOLIDATE | RAG+review | registry source catalogue accepts key/payload identity drift [medium]
 571 | P3 | REVIEW | RAG | Justificante PDF path and bytes extraction disagree on empty text [medium]
 572 | P2 | REVIEW | RAG | run-trace loading and listing accept an embedded trace from another run directory [high]
-573 | P2 | REVIEW | RAG | LLM telemetry accepts naive run timestamps then leaks a raw validation error [high]
 574 | P2 | CONSOLIDATE | RAG+review | Google OAuth persists whitespace-only refresh tokens into invalid runtime credentials [high]
-575 | P2 | REVIEW | RAG | MCP telemetry session IDs escape the configured diagnostic directory [high]
 576 | P2 | CONSOLIDATE | RAG+review | RegistrySnapshot nested maps accept key/payload identifier drift [high]
 577 | P2 | REVIEW | RAG | financial XLSX import silently selects hidden worksheets [high]
 578 | P1 | REMEDIATE | RAG+probe+gate | financial XLSX import trusts stale formula cached values [high]

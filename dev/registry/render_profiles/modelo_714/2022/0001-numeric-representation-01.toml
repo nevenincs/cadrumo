@@ -1,0 +1,649 @@
+schema_version = 1
+fragment_id = "numeric-representation-01"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3", "4"]
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-17"
+decision_statement = "The civil-status slot admits only its four printed codes."
+justification = "The description explicitly enumerates 1 Soltero, 2 Casado, 3 Viudo and 4 Divorciado o Separado. Exact source meaning: Sujeto pasivo - Estado Civil. \"1\" Soltero/a, \"2\" Casado/a, \"3\" Viudo/a, \"4\" Divorciado/a o Separado/a"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-18"
+decision_statement = "The birth date carries day, month and four year digits in DDMMAAAA order."
+justification = "The exact source description states DDMMAAAA. The wire-format choice makes no claim about the separate age restriction or old year text. Exact source meaning: Sujeto pasivo  - Fecha de nacimiento. (DDMMAAAA) Año < 2022 (50)"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-19"
+decision_statement = "The two-position disability percentage is an unsigned whole percentage."
+justification = "Reviewed zero-scale for this exact two-position percentage; it is distinct from the five-position participation percentages. Exact source meaning: Sujeto pasivo - Discapacidad  - % discapacidad (09)"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2"]
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-20"
+decision_statement = "The disability-class slot admits only 0, 1 and 2."
+justification = "The exact description explicitly names 0, 1 fisica and 2 psiquica. Exact source meaning: Sujeto pasivo - Discapacidad  - Clase discapacidad física o psíquica  (11) (\"0, 1 física o 2 psíquica\")"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-25"
+decision_statement = "The numeric house-number slot carries an unsigned whole number."
+justification = "The source names Numero de Casa and types this five-position slot Num; its separate adjacent qualifier carries non-numeric suffixes. Exact source meaning: Sujeto Pasivo - Domicilio habitual - Número de Casa [18]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-34"
+decision_statement = "The postal code retains all five digits, including leading zeroes."
+justification = "The source names Codigo Postal and types the five positions Num. The value is an identity code rather than an arithmetic quantity. Exact source meaning: Sujeto Pasivo - Domicilio habitual - Código Postal [27]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2"]
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-48"
+decision_statement = "The nationality slot admits only its printed 0, 1 and 2 codes."
+justification = "The exact description explicitly states 0 No consta, 1 Espanola and 2 Otra. Exact source meaning: Sujeto Pasivo - Nacionalidad \"0\" No consta; \"1\" Española; \"2\" Otra (43)"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-61"
+decision_statement = "The declaration date's day component retains two digits."
+justification = "The source separately declares Dia, a text month component and Ano; this exact numeric Dia is not a complete date. Exact source meaning: Fecha de la declaración - Día"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-63"
+decision_statement = "The declaration date's year component retains four digits."
+justification = "The source names Fecha de la declaracion - Ano and declares Num length four. Exact source meaning: Fecha de la declaración - Año"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-01 Patrimonio"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-01-row-67"
+decision_statement = "Prior assessed quotas carry eleven whole digits and two fractional digits without a sign."
+justification = "Reviewed cent-scale for this exact unsigned quota slot. Preserve its printed Num nature; the source leaves the scale unstated. Exact source meaning: Declaración complementaria - Cuotas a ingresar de anteriores autoliquidaciones o liquidaciones administrativas ejercicio 2022"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-01 Patrimonio"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+ordinal_absent = false
+record_identity = "714-01 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-13"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 1"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-18"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 1"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-20"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 2"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-25"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 2"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-27"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 3"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-32"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 3"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-34"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - % Titularidad/usufructo 4"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-39"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Vivienda habitual - Valoración 4"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-40"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Valor total vivienda habitual susceptible exención [60]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-02 Patrimonio"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-02-row-41"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -  Valor exento [61]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-02 Patrimonio"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+ordinal_absent = false
+record_identity = "714-02 Patrimonio"
+
+[design_identity]
+modelo = "714"
+source_ref = "aeat-dr-714-2022"
+source_sha256 = "b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925"
+design_epoch = "2022"

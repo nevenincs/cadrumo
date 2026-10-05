@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#modelo-303-extraction-profile'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a3e85e2e8a4900f4230b7e20045a81d94d25b81bad15a04eb1da57191ee56f3a'
+body_hash: 'sha256:c7d386e4e4f5c2fbc09f692d053ab518c9292184529fcb0463db9bb6c4c38c77'
 related:
-  - '[[2026-06-04-modelo-303-extraction-profile-adr]]'
   - '[[2026-06-04-modelo-303-extraction-profile-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#modelo-303-extraction-profile`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-modelo-303-extraction-profile-adr` - `modelo-303-extraction-profile` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

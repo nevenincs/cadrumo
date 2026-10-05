@@ -36,7 +36,6 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.schema import IvaCategory
 from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
-from .catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
 
 
@@ -80,19 +79,6 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
             candidate_ids=tuple(invoice.invoice_id for invoice in matches),
         )
     return next(iter(matches))
-
-
-def resolve_catalogue_invoice_from_repository(
-    *,
-    invoice_id: str,
-    ports: InvoiceCatalogueReadPorts,
-) -> Invoice:
-    """Load the catalogue and resolve one invoice by id or unambiguous prefix.
-
-    Returns:
-        The resolved :class:`Invoice`.
-    """
-    return resolve_catalogue_invoice(ports.invoice_reader.load(), invoice_id)
 
 
 def remove_catalogue_invoice(
@@ -298,6 +284,5 @@ __all__ = [
     "CatalogueInvoiceUpdateResult",
     "remove_catalogue_invoice",
     "resolve_catalogue_invoice",
-    "resolve_catalogue_invoice_from_repository",
     "update_catalogue_invoice",
 ]

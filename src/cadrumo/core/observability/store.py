@@ -59,8 +59,8 @@ constants into their grammar rather than re-typing the names)."""
 EVENTS_APPEND_LOCK = threading.Lock()
 
 
-# Run ids are minted by :func:`core.observability.context._mint_run_id`
-# as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
+# Run ids follow the canonical shape declared by the observability models
+# (16 lowercase hex characters). Validate every run_id reaching the filesystem
 # layer against the same shape so a crafted id (e.g. ``..`` or
 # ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the
 # configured runs directory.
@@ -72,9 +72,7 @@ def _raise_persistence_error(operation: str, target: Path, exc: OSError) -> Neve
 def validate_run_id(run_id: str) -> str:
     """Return ``run_id`` if it matches the canonical shape, else raise.
 
-    The canonical shape is 16 lowercase hex characters — the form
-    minted by
-    :func:`core.observability.context._mint_run_id`. Validating
+    The observability models declare 16 lowercase hex characters. Validating
     every id reaching this layer prevents path-traversal escapes
     through ``runs_dir / run_id``.
 
@@ -252,7 +250,7 @@ def save_envelope(
 
     The document is the verbatim, already-CLI-redacted
     :class:`~core.json_contract.SchemaEnvelope` mapping captured by
-    :func:`core.observability.capture.capture_envelopes` during the run. It
+    the context-local envelope sink during the run. It
     is stored key-sorted so the on-disk artifact is byte-stable, and it
     is durable evidence for the recorded run. Re-validation into a typed
     envelope happens on load via
@@ -344,8 +342,7 @@ def save_events_append(
     r"""Append a single :class:`RunEvent` line to the per-run ``events.jsonl``.
 
     ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
-    platform — mirroring
-    :class:`core.observability.sink.JsonlRunSink` — so
+    platform, so
     ``events.jsonl`` is byte-stable across Windows and POSIX writers.
     Every string leaf in the event is redacted at DIAGNOSTIC class
     before serialisation so the on-disk record stays free of plaintext

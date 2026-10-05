@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-12'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:dcd21e85c000bd59977d75180fd1ddfd544478ce54261f3f011fddd97fcd3254'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 # `registry-authority-artifact-boundary` audit: `Runtime temporal admission and cache identity`
 

@@ -42,40 +42,24 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CREATED_PATHS_ADAPTER: TypeAdapter[list[str]] = TypeAdapter(list[str])
 
-#: Commands that open the cold-bootstrap secure-object store and so create the
-#: encrypted database on first access. Each entry states WHY, because this is
-#: where the judgement lives -- a bare list of paths would record only that
-#: someone once found these inconvenient.
-#:
-#: Creating a fresh store on first access is sanctioned: `no-legacy-compatibility`
-#: is explicit that bootstrap-on-first-access is forward-functional, unlike a
-#: migration. What is unresolved is whether a command that only READS should
-#: open the store in a mode that declines to create it. That is a storage-engine
-#: decision rather than a CLI one, and it is recorded in the campaign audit.
-#:
-#: Entries are proven live below: if a command stops creating the database, its
-#: entry MUST be deleted rather than left behind to excuse a future regression.
-_BOOTSTRAP_STORE_COMMANDS: dict[tuple[str, ...], str] = {
-    ("config", "auth", "apoderado", "check"): "reads apoderado state through the cold-bootstrap workflow store",
-    ("config", "auth", "certificate", "list"): "lists certificate sources recorded in the workflow store",
-    ("config", "repair", "integrity", "objects"): "inspects secure-object integrity, which requires the store",
-}
-
 #: Side-effect-free leaves this headless probe cannot run, keyed with why. The
 #: probe has no terminal to give them, so they would wait for input forever.
 _INTERACTIVE_ONLY_LEAVES: dict[tuple[str, ...], str] = {
     ("app", "tui"): "hands the console to the full-screen root process, which waits for an interactive terminal",
 }
 
-_DATABASE_PATHS = ("cadrumo.db", "cadrumo.db-shm", "cadrumo.db-wal")
-
-
-#: The leaf that is also run alone in its own interpreter. It creates state, so
-#: a batched run that lost track of where state goes disagrees with it, and it
-#: runs last in its batch, after the other store-opening leaves, where
+#: The leaf that is also run alone in its own interpreter. It declares a
+#: local-state write and its whole job is to create state in a fresh root with
+#: no profile, so a batched run that lost track of where state goes disagrees
+#: with it. It runs last in its batch, after the other leaves, where
 #: process-lifetime state carried over from earlier leaves is most likely to
 #: hide a write.
-_CONTROL_LEAF: tuple[str, ...] = ("config", "auth", "certificate", "list")
+#:
+#: No side-effect-free leaf may create a database at all, so a cached engine
+#: that sends one leaf's database to another root is caught by the stray-write
+#: scan below as well as by the leaf's own assertion; the control therefore
+#: proves the settings-routed storage tree, which is the path every leaf shares.
+_CONTROL_LEAF: tuple[str, ...] = ("config", "storage", "init")
 
 _BATCH_COUNT = 2
 
@@ -180,11 +164,9 @@ def _run_probe(leaves: list[tuple[str, ...]]) -> list[_LeafReport]:
 
 
 def _batches() -> list[list[tuple[str, ...]]]:
-    leaves = sorted(set(_side_effect_free_leaves()) | set(_BOOTSTRAP_STORE_COMMANDS))
-    store_leaves = sorted(set(_BOOTSTRAP_STORE_COMMANDS) - {_CONTROL_LEAF})
-    rest = [argv for argv in leaves if argv not in _BOOTSTRAP_STORE_COMMANDS]
-    batches = [rest[index::_BATCH_COUNT] for index in range(_BATCH_COUNT)]
-    batches[0].extend([*store_leaves, _CONTROL_LEAF])
+    leaves = sorted(_side_effect_free_leaves())
+    batches = [leaves[index::_BATCH_COUNT] for index in range(_BATCH_COUNT)]
+    batches[0].append(_CONTROL_LEAF)
     return batches
 
 
@@ -207,8 +189,8 @@ def created_paths_by_leaf() -> dict[tuple[str, ...], list[str]]:
         f"interpreter, so batching is hiding or inventing writes.\n"
         f"  batched:  {batched_control}\n  isolated: {isolated_control}"
     )
-    assert any(path in _DATABASE_PATHS for path in isolated_control), (
-        f"control leaf `aeat {' '.join(_CONTROL_LEAF)}` creates no database, so it cannot tell "
+    assert isolated_control, (
+        f"control leaf `aeat {' '.join(_CONTROL_LEAF)}` created no state, so it cannot tell "
         "a batched run that lost its writes from one that had none; choose a control that writes"
     )
     return created
@@ -233,8 +215,6 @@ def test_a_side_effect_free_leaf_writes_no_storage_state(
 ) -> None:
     """DISCRIMINATING: running the leaf leaves the storage root free of state."""
     created = [path for path in _created_paths(created_paths_by_leaf, argv) if not is_non_authoritative_artifact(path)]
-    if argv in _BOOTSTRAP_STORE_COMMANDS:
-        created = [path for path in created if path not in _DATABASE_PATHS]
 
     assert created == [], (
         f"`aeat {' '.join(argv)}` declares side_effects=none but created:\n  "
@@ -253,22 +233,20 @@ def test_every_interactive_only_exclusion_still_names_a_probed_leaf(argv: tuple[
     )
 
 
-@pytest.mark.parametrize("argv", sorted(_BOOTSTRAP_STORE_COMMANDS), ids=lambda argv: "/".join(argv))
-def test_every_bootstrap_store_exception_still_earns_its_place(
-    argv: tuple[str, ...], created_paths_by_leaf: dict[tuple[str, ...], list[str]]
-) -> None:
-    """STALE-ENTRY: an exception that no longer applies must be deleted.
+def test_the_control_leaf_declares_the_write_it_makes() -> None:
+    """STALE-CONTROL: the control must stay a runnable leaf that declares local state.
 
-    An allowlist nobody prunes stops describing the tree and starts excusing
-    whatever drifts into it. This requires each entry to still create the
-    database it was granted for.
+    A control that stopped declaring its write would fall into the population it
+    calibrates, and one with a required parameter would stop at a usage error
+    before it wrote anything.
     """
-    created = _created_paths(created_paths_by_leaf, argv)
+    leaves = {node.path[1:]: node.spec for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf"}
+    spec = leaves.get(_CONTROL_LEAF)
 
-    assert any(path in _DATABASE_PATHS for path in created), (
-        f"`aeat {' '.join(argv)}` no longer creates the database, so its entry in "
-        f"_BOOTSTRAP_STORE_COMMANDS ({_BOOTSTRAP_STORE_COMMANDS[argv]}) is stale and must be removed."
-    )
+    assert spec is not None, f"control leaf `aeat {' '.join(_CONTROL_LEAF)}` is not in the live command tree"
+    assert "local-state" in spec.policy.side_effects, spec.policy.side_effects
+    assert _has_only_optional_parameters(spec)
+    assert _CONTROL_LEAF not in _declared_side_effect_free_leaves()
 
 
 def test_the_probe_sees_state_a_writing_command_creates() -> None:

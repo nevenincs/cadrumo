@@ -18,7 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from ..repository_sources import SOURCE_ROOT, production_sources, repository_sources
+from dev.first_party_source import PRODUCT_PACKAGE
+
+from ..repository_sources import production_sources, repository_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -32,20 +34,20 @@ def _write(root: Path, relative: str, content: str) -> None:
 @pytest.fixture
 def tree(tmp_path: Path) -> Path:
     """A scratch tree with a source module, a test module, and a non-source file."""
-    _write(tmp_path, f"{SOURCE_ROOT}/domain/thing.py", "VALUE = 1\n")
-    _write(tmp_path, f"{SOURCE_ROOT}/domain/tests/test_thing.py", "VALUE = 2\n")
-    _write(tmp_path, f"{SOURCE_ROOT}/domain/notes.txt", "not a source suffix\n")
+    _write(tmp_path, f"{PRODUCT_PACKAGE}/domain/thing.py", "VALUE = 1\n")
+    _write(tmp_path, f"{PRODUCT_PACKAGE}/domain/tests/test_thing.py", "VALUE = 2\n")
+    _write(tmp_path, f"{PRODUCT_PACKAGE}/domain/notes.txt", "not a source suffix\n")
     _write(tmp_path, "dev/outside_source_root.py", "VALUE = 3\n")
     return tmp_path
 
 
 def test_the_universe_is_scoped_to_source_root(tree: Path) -> None:
-    """A file outside ``SOURCE_ROOT`` is not this census's business."""
+    """A file outside ``PRODUCT_PACKAGE`` is not this census's business."""
     paths = {path for path, _ in repository_sources(tree)}
 
     assert paths == {
-        f"{SOURCE_ROOT}/domain/thing.py",
-        f"{SOURCE_ROOT}/domain/tests/test_thing.py",
+        f"{PRODUCT_PACKAGE}/domain/thing.py",
+        f"{PRODUCT_PACKAGE}/domain/tests/test_thing.py",
     }
 
 
@@ -53,7 +55,7 @@ def test_a_non_matching_suffix_is_excluded(tree: Path) -> None:
     """The consumers parse each member as a module or a document, never free text."""
     paths = {path for path, _ in repository_sources(tree)}
 
-    assert f"{SOURCE_ROOT}/domain/notes.txt" not in paths
+    assert f"{PRODUCT_PACKAGE}/domain/notes.txt" not in paths
 
 
 def test_every_source_is_returned_as_decoded_text(tree: Path) -> None:
@@ -63,7 +65,7 @@ def test_every_source_is_returned_as_decoded_text(tree: Path) -> None:
 
 def test_an_undecodable_file_is_skipped_not_raised(tmp_path: Path) -> None:
     """A binary file under the source root must not crash the census."""
-    binary = tmp_path / SOURCE_ROOT / "domain"
+    binary = tmp_path / PRODUCT_PACKAGE / "domain"
     binary.mkdir(parents=True)
     (binary / "blob.py").write_bytes(b"\xff\xfe\x00\x01")
 
@@ -81,7 +83,7 @@ def test_the_production_universe_excludes_test_modules(tree: Path) -> None:
     """A census counting its own fixtures reports findings nobody can act on."""
     paths = [path for path, _ in production_sources(tree)]
 
-    assert paths == [f"{SOURCE_ROOT}/domain/thing.py"]
+    assert paths == [f"{PRODUCT_PACKAGE}/domain/thing.py"]
     assert not [path for path in paths if "/tests/" in path]
     assert not [path for path in paths if Path(path).name.startswith("test_")]
 
@@ -105,14 +107,14 @@ def test_the_production_universe_is_a_subset_of_the_source_universe(tree: Path) 
 
 def test_an_ignored_file_under_source_root_is_excluded(tmp_path: Path) -> None:
     """The repository's own ignore rules apply here as everywhere else in the tree."""
-    _write(tmp_path, f"{SOURCE_ROOT}/.gitignore", "generated/\n")
-    _write(tmp_path, f"{SOURCE_ROOT}/generated/emitted.py", "VALUE = 4\n")
-    _write(tmp_path, f"{SOURCE_ROOT}/kept.py", "VALUE = 5\n")
+    _write(tmp_path, f"{PRODUCT_PACKAGE}/.gitignore", "generated/\n")
+    _write(tmp_path, f"{PRODUCT_PACKAGE}/generated/emitted.py", "VALUE = 4\n")
+    _write(tmp_path, f"{PRODUCT_PACKAGE}/kept.py", "VALUE = 5\n")
 
     paths = {path for path, _ in repository_sources(tmp_path)}
 
-    assert f"{SOURCE_ROOT}/generated/emitted.py" not in paths
-    assert f"{SOURCE_ROOT}/kept.py" in paths
+    assert f"{PRODUCT_PACKAGE}/generated/emitted.py" not in paths
+    assert f"{PRODUCT_PACKAGE}/kept.py" in paths
 
 
 def test_an_empty_tree_is_the_honest_empty_universe(tmp_path: Path) -> None:

@@ -28,8 +28,6 @@ See Also:
     :class:`~core.config.Settings`
         Carries the deployment half of the posture (the gestor bar and the
         opt-in flag) that this gate reads.
-    :func:`~core.telemetry.consent.telemetry_emit_permitted`
-        The sibling off-host consent gate, deliberately the same shape.
 """
 
 from __future__ import annotations

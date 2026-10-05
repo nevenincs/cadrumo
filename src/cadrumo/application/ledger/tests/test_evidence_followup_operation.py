@@ -3,23 +3,27 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta, timezone
 from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.consent_withdrawal import ConsentedDispatch
-from ....application.ledger.evidence_followup_operation import (
+from ....application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
     AttachmentStoreFactory,
+    CloudDerivedArtefactProjection,
+    ConsentedDispatchProjection,
     ConsentWithdrawalSurveyProjection,
     EvidenceConsentEntriesFactory,
+    EvidenceReviewQueueRowProjection,
     LedgerEvidenceAttachmentQueueExecutionResult,
     LedgerEvidenceAttachmentQueueProjection,
     LedgerEvidenceAttachmentQueueRequest,
@@ -36,13 +40,25 @@ from ....application.ledger.evidence_followup_operation import (
     LedgerEvidenceReviewViewExecutionResult,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
-    _project_attachment_queue,
-    _project_attachment_view,
-    _project_consent_list,
-    _project_review_list,
-    _project_review_view,
+)
+from ....application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_definitions,
     build_ledger_evidence_followup_registrations,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_attachment_queue_result as _project_attachment_queue,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_attachment_view_result as _project_attachment_view,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_consent_list_result as _project_consent_list,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_review_list_result as _project_review_list,
+)
+from ....application.ledger.evidence_followup_registration import (
+    project_review_view_result as _project_review_view,
 )
 from ....application.ledger.extraction_draft_store import ExtractionDraftRepositoryFactory
 from ....application.ledger.invoice_draft_records import InvoiceDraft
@@ -72,6 +88,9 @@ _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _ATTACHMENT_ID = "a" * 64
 _EVIDENCE_REFERENCE = "evidence-followup-reference"
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
+_VALID_RECORDED_AT = datetime(2026, 10, 3, 12, 30, tzinfo=UTC)
+_NAIVE_RECORDED_AT = datetime(2026, 10, 3, 12, 30)
+_OFFSET_RECORDED_AT = datetime(2026, 10, 3, 14, 30, tzinfo=timezone(timedelta(hours=2)))
 
 _DEFINITION_IDS = (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
@@ -80,6 +99,110 @@ _DEFINITION_IDS = (
     LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
 )
+
+
+def _consented_dispatch_projection(instant: datetime) -> BaseModel:
+    return ConsentedDispatchProjection(
+        profile_bucket_id=str(_PROFILE),
+        evidence_content_address="a" * 64,
+        provider="fixture-provider",
+        model="fixture-model",
+        surface="evidence-extraction",
+        recorded_at=instant,
+    )
+
+
+def _cloud_derived_artefact_projection(instant: datetime) -> BaseModel:
+    return CloudDerivedArtefactProjection(
+        evidence_reference=_EVIDENCE_REFERENCE,
+        provenance_stamp="fixture-provenance",
+        drafted_at=instant,
+    )
+
+
+def _evidence_review_queue_row_projection(instant: datetime) -> BaseModel:
+    return EvidenceReviewQueueRowProjection(
+        evidence_reference=_EVIDENCE_REFERENCE,
+        extractor="fixture-reader",
+        drafted_at=instant,
+        blocking_count=0,
+        advisory_count=0,
+    )
+
+
+def _ledger_evidence_review_view_projection(instant: datetime) -> BaseModel:
+    return LedgerEvidenceReviewViewProjection(
+        profile_id=_PROFILE,
+        evidence_reference=_EVIDENCE_REFERENCE,
+        extractor="fixture-reader",
+        drafted_at=instant,
+        draft=InvoiceDraftProjectionV1.from_draft(InvoiceDraft()),
+    )
+
+
+_UTC_INSTANT_PROJECTION_CASES: tuple[tuple[str, str, Callable[[datetime], BaseModel]], ...] = (
+    ("consented-dispatch", "recorded_at", _consented_dispatch_projection),
+    ("cloud-derived-artefact", "drafted_at", _cloud_derived_artefact_projection),
+    ("review-queue-row", "drafted_at", _evidence_review_queue_row_projection),
+    ("review-view", "drafted_at", _ledger_evidence_review_view_projection),
+)
+
+
+@pytest.mark.parametrize(
+    ("_case_name", "field_name", "build_projection"),
+    _UTC_INSTANT_PROJECTION_CASES,
+    ids=tuple(case[0] for case in _UTC_INSTANT_PROJECTION_CASES),
+)
+def test_evidence_followup_instants_are_required_utc_datetime_json_fields(
+    _case_name: str,
+    field_name: str,
+    build_projection: Callable[[datetime], BaseModel],
+) -> None:
+    projection = build_projection(_VALID_RECORDED_AT)
+    projection_type = type(projection)
+    value = getattr(projection, field_name)
+
+    assert value is _VALID_RECORDED_AT
+    assert value == _VALID_RECORDED_AT
+    assert value.utcoffset() == timedelta(0)
+    assert projection_type.model_fields[field_name].is_required()
+    schema = projection_type.model_json_schema()
+    assert field_name in schema["required"]
+    assert schema["properties"][field_name]["format"] == "date-time"
+
+    restored = projection_type.model_validate_json(projection.model_dump_json())
+    assert getattr(restored, field_name) == _VALID_RECORDED_AT
+
+    missing_value = projection.model_dump()
+    del missing_value[field_name]
+    with pytest.raises(ValidationError) as error:
+        projection_type.model_validate(missing_value)
+    assert error.value.errors()[0]["loc"] == (field_name,)
+    assert error.value.errors()[0]["type"] == "missing"
+
+
+@pytest.mark.parametrize(
+    ("_case_name", "field_name", "build_projection"),
+    _UTC_INSTANT_PROJECTION_CASES,
+    ids=tuple(case[0] for case in _UTC_INSTANT_PROJECTION_CASES),
+)
+@pytest.mark.parametrize(
+    "instant",
+    (
+        pytest.param(_NAIVE_RECORDED_AT, id="naive"),
+        pytest.param(_OFFSET_RECORDED_AT, id="nonzero-offset"),
+    ),
+)
+def test_evidence_followup_instants_reject_naive_and_non_utc_values(
+    _case_name: str,
+    field_name: str,
+    build_projection: Callable[[datetime], BaseModel],
+    instant: datetime,
+) -> None:
+    with pytest.raises(ValidationError) as error:
+        build_projection(instant)
+    assert error.value.errors()[0]["loc"] == (field_name,)
+    assert error.value.errors()[0]["type"] == "value_error"
 
 
 def _unused_attachment_store(bucket_id: str, /):

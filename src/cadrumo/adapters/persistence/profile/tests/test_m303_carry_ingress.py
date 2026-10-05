@@ -38,7 +38,7 @@ _NEGATIVE_RESULT = Decimal("-20.00")
 
 def _observed_header(code: str) -> ObservedHeaderFact:
     return ObservedHeaderFact(
-        header_key="declaration_type",
+        header_key="filing.result_disposition",
         value=code,
         source_artefact_kind="submitted_file",
         source_locator=f"modelo-303-fichero-boe:declaration-type:{code}",
@@ -158,3 +158,40 @@ def test_current_dispositions_and_normalized_pair_round_trip_through_real_reposi
         assert loaded.m303_compensation_basis == expected_basis
         assert loaded.observation.casilla_values[M303_COMPENSATION_AVAILABLE_CASILLA] == expected_available
         assert loaded.observation.casilla_values[M303_COMPENSATION_GENERADA_CASILLA] == expected_generated
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_official_disposition_preserves_canonical_and_legacy_header_evidence(tmp_path: Path, legacy: bool) -> None:
+    """Producer-key migration does not orphan previously captured official evidence."""
+    header = _observed_header("C")
+    if legacy:
+        header = header.model_copy(update={"header_key": "declaration_type"})
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        payload = repository.prepare_observation_envelope(
+            _carry_observation(),
+            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+            captured_at=_CAPTURED_AT,
+            source_headers=(header,),
+            stamped_revision_id=revision_id_for_observation(_carry_observation()),
+        )
+        assert payload.result_disposition is not None
+        assert payload.result_disposition.disposition is ResultDisposition.COMPENSACION
+        assert payload.source_headers == (header,)
+        assert payload.result_disposition.provenance_locator == header.source_locator
+
+
+def test_canonical_and_legacy_disposition_facts_are_ambiguous(tmp_path: Path) -> None:
+    """Alias support cannot silently choose one of two claimed official facts."""
+    header = _observed_header("C")
+    legacy = header.model_copy(update={"header_key": "declaration_type"})
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        with pytest.raises(M303CarryIngressError, match="duplicate_header_facts"):
+            repository.prepare_observation_envelope(
+                _carry_observation(),
+                source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+                captured_at=_CAPTURED_AT,
+                source_headers=(header, legacy),
+                stamped_revision_id=revision_id_for_observation(_carry_observation()),
+            )

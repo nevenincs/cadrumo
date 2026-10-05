@@ -5,10 +5,9 @@ tags:
 date: '2026-07-25'
 related:
   - "[[2026-07-25-auth-cert-recovery-custody-p04-door-safety-review-audit]]"
-  - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
   - "[[2026-07-17-auth-cert-recovery-custody-adr]]"
 superseded_by: '2026-08-13-auth-certificate-lifecycle-successor-adr'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_hash: 'sha256:15025e383f45846149c38a82ea002492ad807fc66471465ad91093a614bf165f'
 ---
 # `auth-cert-recovery-custody` adr: `custody door secret channels and throttle posture` | (**status:** `superseded`)

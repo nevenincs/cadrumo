@@ -21,9 +21,10 @@ from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
+from ...operations.operation_definition import OperationDefinition
 from ...operations.public_period import PublicPeriod
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import (
     AccessAction,
     AccessAllowed,

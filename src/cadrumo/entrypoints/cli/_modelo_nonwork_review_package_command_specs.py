@@ -15,13 +15,10 @@ from ._modelo_nonwork_common_command_parameters import (
     CALCULATION_REVISION_SELECTOR_OPTIONS,
     FILING_ELECTION_OPTIONS,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -29,6 +26,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 _REVIEW_PACKAGE_INPUT: Final[ArgumentSpec] = ArgumentSpec(
     name="package",

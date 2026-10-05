@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 8,
+  "artefact_count": 9,
   "artefacts": [
     {
       "modelo": "131",
@@ -111,6 +111,18 @@
       "bytes": 26903,
       "sha256": "d55417b8efc679085b26c0f5215ea76e10072b8ef06ed29fee7ccaa0892df31c",
       "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "131",
+      "title": "131 - Ejercicio 2026 (actualizado 28/09/26) (179 KB - xlsx)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_26/DR131_2026.xlsx",
+      "stored_path": "files/09-131-ejercicio-2026-actualizado-28-09-26.xlsx",
+      "original_filename": "DR131_2026.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 183581,
+      "sha256": "b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f",
+      "retrieved_at": "2026-10-02"
     }
   ]
 }

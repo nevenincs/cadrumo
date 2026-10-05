@@ -45,19 +45,8 @@ def exchange_rate_provider() -> ExchangeRateProvider:
     return factory()
 
 
-def exchange_rate_provider_is_composed() -> bool:
-    """Report whether a host has bound a provider factory in the current context.
-
-    A frontend running inside a host that already chose its rate source -- a
-    server built in-process under a test host -- keeps that choice rather than
-    replacing it with its own.
-    """
-    return _BOUND_EXCHANGE_RATE_PROVIDER_FACTORY.get(None) is not None
-
-
 __all__ = [
     "ExchangeRateProviderFactory",
     "bind_exchange_rate_provider_factory",
     "exchange_rate_provider",
-    "exchange_rate_provider_is_composed",
 ]

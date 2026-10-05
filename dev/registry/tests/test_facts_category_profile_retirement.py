@@ -18,7 +18,8 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ScalarFactQuery,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactOwnership, FactSelector, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.variants import FactOwnership, FactSelector
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.categories.registry import CATEGORY_PROFILE_FACT_ID, CATEGORY_STATUTORY_CAP_FACT_ID

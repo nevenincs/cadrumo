@@ -9,10 +9,12 @@ from pathlib import Path
 import pytest
 
 from ....core.modelo import Modelo
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.filing.errors import FilingExportError
+from ....domain.filing.software_identity import development_mock_software_identity
 from ..export import export_draft
 from ..export_verification import (
     DeclaracionExportResult,
@@ -53,6 +55,8 @@ def _export_modelo_131(output_path: Path) -> tuple[DeclaracionExportResult, Regi
         _approved_modelo_131_historical_registry_draft(),
         output_path=output_path,
         producer_snapshot=_modelo_131_snapshot(),
+        product_software_identity=development_mock_software_identity(),
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         schema_provider=provider,
     )
     return receipt, provider
@@ -115,7 +119,10 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
             raise AssertionError(message)
         return max(extents)
 
-    record_start = sum(_record_extent(earlier) for earlier in layout.records if earlier.order < record.order)
+    assert layout.filing_envelope is not None
+    record_start = layout.filing_envelope.prefix_extent + sum(
+        _record_extent(earlier) for earlier in layout.records if earlier.order < record.order
+    )
     start = record_start + field.offset - 1
     end = start + field.length
     original = payload[start:end]
@@ -172,7 +179,7 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
         },
     )
     incompatible_layout = original_layout.model_copy(
-        update={"id": "post-write-incompatible-layout", "records": (incompatible_record,)},
+        update={"id": "post-write-incompatible-layout", "records": (incompatible_record,), "filing_envelope": None},
     )
     # export_draft selects its layout from the SNAPSHOT and render_filing_layout
     # asserts snapshot ownership by identity, so the doctored layout has to be

@@ -1,0 +1,1397 @@
+[[revisions.2021.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2021.export_layouts.records]]
+id = 'modelo-714-page-03'
+record_type = '714-03'
+order = 2
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '714'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-page'
+offset = 6
+length = 5
+kind = 'literal'
+literal = '03000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-close'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-complementaria-slot'
+offset = 12
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.indicador-de-pagina-complementaria-714-03'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-reserved-1'
+offset = 13
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-14'
+offset = 14
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-1'
+offset = 19
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-20'
+offset = 20
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-1'
+offset = 25
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-26'
+offset = 26
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-1'
+offset = 46
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-1'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-47'
+offset = 47
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-48'
+offset = 48
+length = 28
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-1'
+offset = 76
+length = 26
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-1'
+offset = 102
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-1'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-115'
+offset = 115
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-2'
+offset = 120
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-121'
+offset = 121
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-2'
+offset = 126
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-127'
+offset = 127
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-2'
+offset = 147
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-148'
+offset = 148
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-149'
+offset = 149
+length = 28
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-2'
+offset = 177
+length = 26
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-2'
+offset = 203
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-2'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-216'
+offset = 216
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-3'
+offset = 221
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-222'
+offset = 222
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-3'
+offset = 227
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-228'
+offset = 228
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-3'
+offset = 248
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-3'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-249'
+offset = 249
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-250'
+offset = 250
+length = 28
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-3'
+offset = 278
+length = 26
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-3'
+offset = 304
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-3'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-317'
+offset = 317
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-4'
+offset = 322
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-323'
+offset = 323
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-4'
+offset = 328
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-329'
+offset = 329
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-4'
+offset = 349
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-4'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-350'
+offset = 350
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-351'
+offset = 351
+length = 28
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-4'
+offset = 379
+length = 26
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-4'
+offset = 405
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-4'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-418'
+offset = 418
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-5'
+offset = 423
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-424'
+offset = 424
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-5'
+offset = 429
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-430'
+offset = 430
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-5'
+offset = 450
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-5'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-451'
+offset = 451
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-452'
+offset = 452
+length = 28
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-5'
+offset = 480
+length = 26
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-5'
+offset = 506
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-5'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-519'
+offset = 519
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-6'
+offset = 524
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-clave-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-525'
+offset = 525
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-6'
+offset = 530
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-naturaleza-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-531'
+offset = 531
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-6'
+offset = 551
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-situacion-6'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-552'
+offset = 552
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-553'
+offset = 553
+length = 28
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-6'
+offset = 581
+length = 26
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-descripcion-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-6'
+offset = 607
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-inm-valoracion-6'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-bienes-c1-total'
+offset = 620
+length = 13
+kind = 'casilla'
+casilla_id = 'bienes.c1-total'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-epigrafe-iae-1'
+offset = 633
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-epigrafe-iae-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-638'
+offset = 638
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-porcentaje-titularidad-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-naturaleza-1'
+offset = 643
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-naturaleza-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-644'
+offset = 644
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-situacion-1'
+offset = 664
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-situacion-1'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valor-utilizado-1'
+offset = 665
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valor-utilizado-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-666'
+offset = 666
+length = 29
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-73'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valoracion-1'
+offset = 695
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valoracion-1'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-epigrafe-iae-2'
+offset = 708
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-epigrafe-iae-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-no-exentos-afectos-activ-empresariales-y-profesionales-no-713'
+offset = 713
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-titularidad-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-naturaleza-2'
+offset = 718
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-naturaleza-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-719'
+offset = 719
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-situacion-2'
+offset = 739
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-situacion-2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valor-utilizado-2'
+offset = 740
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valor-utilizado-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-741'
+offset = 741
+length = 29
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-81'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valoracion-2'
+offset = 770
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valoracion-2'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-epigrafe-iae-3'
+offset = 783
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-epigrafe-iae-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-788'
+offset = 788
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-porcentaje-titularidad-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-naturaleza-3'
+offset = 793
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-naturaleza-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-794'
+offset = 794
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-situacion-3'
+offset = 814
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-situacion-3'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valor-utilizado-3'
+offset = 815
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-valor-utilizado-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-03-declared-bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-816'
+offset = 816
+length = 29
+kind = 'binding'
+binding = 'modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-89'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[revisions.2021.export_layouts.records.row_field_casilla_ids]

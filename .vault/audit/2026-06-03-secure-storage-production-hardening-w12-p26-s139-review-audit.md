@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:2979725383499d29458fdea2cdfac069e54034c399405c372e62231fc04af5b3'
+modified: '2026-10-03'
+body_hash: 'sha256:0ef8e4fff198cb4de55f6614bedae04acb03f37e90e50ac457f6d18258ea0d5c'
 related: []
 ---
 
@@ -20,12 +20,12 @@ The storage failure message no longer embeds the logical path. The path remains 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/llm/test_usage.py src/aeat/adapters/outbound/llm/test_usage_roundtrip.py` passed with 3 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/llm/test_usage.py src/aeat/adapters/outbound/llm/test_usage_roundtrip.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "llm_usage or usage_default_root or usage_recorder"` passed with 5 selected tests.
-- `uv run --no-sync pytest -q src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/test_locale_coverage_hardened_errors.py` passed with 81 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/llm/_usage.py src/aeat/adapters/outbound/llm/test_usage.py src/aeat/adapters/outbound/llm/test_usage_roundtrip.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
+- the historical check passed with 3 tests.
+- the historical check passed with 5 selected tests.
+- the historical check passed with 81 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
-- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
+- `uv run --no-sync vaultspec-core vault plan check.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with only the existing `PLAN022` warning.
 - Source scan found no direct `PROJECT_ROOT`, direct `Settings()`, hard-coded `var/llm-usage`, `logical path` failure text, `# noqa`, pragma, `type: ignore`, `except Exception`, or `except BaseException` in the S139 code/test slice.
 
 Disposition: close `AFR-037` as `runtime-default`.
@@ -38,8 +38,8 @@ Resolution: `workflow._errors` now explicitly re-exports the relocated core `NoA
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/test_locale_coverage_hardened_errors.py` passed with 81 tests.
-- `uv run --no-sync ruff check src/aeat/application/workflow/_errors.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/core/errors/registry/_application.py` passed as part of the scoped ruff gate.
+- the historical check passed with 81 tests.
+- the historical check passed as part of the scoped ruff gate.
 
 ## S139-003 | LOW | RESOLVED | Workflow package docstring still described NoActiveProfileError as workflow-owned
 

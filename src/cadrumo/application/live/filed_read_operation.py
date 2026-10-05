@@ -1,4 +1,7 @@
-"""Registered exact-profile Sede register listing and discovery reads."""
+"""Registered exact-profile Sede register listing and discovery reads.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 
@@ -9,58 +12,38 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
-from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.register_scoping_signal import RegisterScopingSignal
-from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
-from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
+    RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_data import FiledDataListingRow
-from .filed_data_capture import (
-    FiledHistoryDiscoveryReport,
-    discover_filed_history,
-    list_filed_data,
-    list_filed_data_bulk,
-)
+from .filed_data_capture import list_filed_data, list_filed_data_bulk
 from .filed_data_ports import FiledDataCapturePort
+from .filed_history_discovery import FiledHistoryDiscoveryReport, discover_filed_history
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
+from .live_operation_execution import (
+    own_provider_browser,
+    publish_live_read_report,
+    require_exact_profile_worker,
+    track_capture_session,
+)
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .remote_state_models import FiledDataCaptureFailureRow
-from .session import LiveSessionWriteReceipt
 
 FILED_LIST_DEFINITION_ID = "live.filed-list"
 FILED_DISCOVER_DEFINITION_ID = "live.filed-discover"
@@ -185,7 +168,14 @@ class FiledReadComposition(Protocol):
         ...
 
 
-FiledReadCompositionFactory = Callable[[], FiledReadComposition]
+class FiledReadCompositionFactory(Protocol):
+    """Compose filed-register readers under the operation's held authority pin."""
+
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> FiledReadComposition:
+        """Return the authenticated Sede reader bundle for this operation."""
+        ...
+
+
 FiledReadProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
 
 
@@ -198,13 +188,6 @@ def _resolve_active_profile(operation: PinnedAuthorityOperation) -> TaxpayerProf
         return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
     except CadrumoError:
         return None
-
-
-def _require_exact_profile(profile_id: UUID, subject_ref: str) -> None:
-    """Refuse a payload or subject that differs from this immutable worker."""
-    canonical_id = canonical_profile_bucket_id(profile_id)
-    if require_active_bucket_id() != canonical_id or subject_ref != profile_operation_subject(canonical_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def _list_row_in_scope(row: FiledDataListingRow, payload: FiledListRequest) -> bool:
@@ -239,15 +222,15 @@ class FiledListExecutor:
 
     async def execute(self, request: OperationRequest[FiledListRequest], context: OperationExecutorContext) -> str:
         """List remote rows and publish a scope-checked encrypted report."""
-        _require_exact_profile(request.payload.profile_id, request.subject_ref)
+        require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         payload = request.payload
         await context.events.phase(_LIST_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory()
-        resources = self._browser_resources_factory()
-        context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_LIST_PHASES[1])
-        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        composition = self._composition_factory(operation=context.authority_operation)
+        resources = await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_LIST_PHASES[1])
+        session_receipt = await track_capture_session(context, may_write=False)
         with (
             retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
             resources.activate(),
@@ -286,10 +269,12 @@ class FiledListExecutor:
             rows=rows,
             failures=failures,
         )
-        await context.events.phase(_LIST_PHASES[2])
-        await context.events.effect(session_receipt.combine(OperationEffect.NONE))
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="filed-list-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_LIST_PHASES[2],
+            effect=session_receipt.combine(OperationEffect.NONE),
+            task_name="filed-list-result",
         )
 
 
@@ -311,15 +296,17 @@ class FiledDiscoverExecutor:
 
     async def execute(self, request: OperationRequest[FiledDiscoverRequest], context: OperationExecutorContext) -> str:
         """Discover both signals and publish their canonical union report."""
-        _require_exact_profile(request.payload.profile_id, request.subject_ref)
+        require_exact_profile_worker(
+            request.payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         await context.events.phase(_DISCOVER_PHASES[0])
         self._provider_preflight(request.payload.profile_id, context.authority_operation)
         profile = self._profile_resolver(context.authority_operation)
-        composition = self._composition_factory()
-        resources = self._browser_resources_factory()
-        context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_DISCOVER_PHASES[1])
-        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        composition = self._composition_factory(operation=context.authority_operation)
+        resources = await own_provider_browser(
+            context, self._browser_resources_factory, acquire_phase=_DISCOVER_PHASES[1]
+        )
+        session_receipt = await track_capture_session(context, may_write=False)
         with (
             retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
             resources.activate(),
@@ -331,10 +318,12 @@ class FiledDiscoverExecutor:
                 effect_guard=context.cancellation.irreversible_section,
                 on_session_write=session_receipt,
             )
-        await context.events.phase(_DISCOVER_PHASES[2])
-        await context.events.effect(session_receipt.combine(OperationEffect.NONE))
-        return await await_cancellation_complete(
-            context.operands.put(report, written_at=now()), task_name="filed-discover-result"
+        return await publish_live_read_report(
+            context,
+            report,
+            result_phase=_DISCOVER_PHASES[2],
+            effect=session_receipt.combine(OperationEffect.NONE),
+            task_name="filed-discover-result",
         )
 
 
@@ -348,20 +337,14 @@ def build_filed_list_definition(
     def build() -> FiledListExecutor:
         return FiledListExecutor(composition_factory, browser_resources_factory, provider_preflight)
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=FILED_LIST_DEFINITION_ID,
         request_type=FiledListRequest,
         result_type=FiledListOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=FiledListRequest, executor_type=FiledListExecutor, build=build
-        ),
+        executor_type=FiledListExecutor,
+        build=build,
         phase_codes=_LIST_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_read_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -378,36 +361,14 @@ def build_filed_discover_definition(
             composition_factory, browser_resources_factory, provider_preflight, profile_resolver
         )
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=FILED_DISCOVER_DEFINITION_ID,
         request_type=FiledDiscoverRequest,
         result_type=FiledHistoryDiscoveryReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=FiledDiscoverRequest, executor_type=FiledDiscoverExecutor, build=build
-        ),
+        executor_type=FiledDiscoverExecutor,
+        build=build,
         phase_codes=_DISCOVER_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=_read_capabilities(),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
-    )
-
-
-def _read_capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -462,39 +423,29 @@ def _project_discover(result: BaseModel, receipt: OperationTerminalReceipt) -> B
     )
 
 
-def _resolve_read_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, definition_id: str
-) -> ResolvedOperationAccess:
-    expected_type = FiledListRequest if definition_id == FILED_LIST_DEFINITION_ID else FiledDiscoverRequest
-    if request.definition_id != definition_id or not isinstance(request.payload, expected_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-
-
 def resolve_filed_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require whole-profile authority for the register row range."""
-    return _resolve_read_access(request, context, FILED_LIST_DEFINITION_ID)
+    """Require whole-profile authority for the register row range, plus COMMIT for a provider-session save."""
+    return resolve_whole_profile_capture_access(
+        request, context, definition_id=FILED_LIST_DEFINITION_ID, payload_type=FiledListRequest
+    )
 
 
 def resolve_filed_discover_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require whole-profile authority for profile expectation disclosure."""
-    return _resolve_read_access(request, context, FILED_DISCOVER_DEFINITION_ID)
+    """Require whole-profile authority for expectation disclosure, plus COMMIT for a provider-session save."""
+    return resolve_whole_profile_capture_access(
+        request, context, definition_id=FILED_DISCOVER_DEFINITION_ID, payload_type=FiledDiscoverRequest
+    )
 
 
 def build_filed_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind closed list schemas to whole-profile disclosure access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=FiledListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=FiledListPublicResultV1
-        ),
+        public_result_type=FiledListPublicResultV1,
         result_projector=_project_list,
         access_resolver=resolve_filed_list_access,
     )
@@ -502,16 +453,9 @@ def build_filed_list_registration(definition: OperationDefinition) -> OperationP
 
 def build_filed_discover_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind closed discovery schemas to whole-profile disclosure access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=FiledDiscoverRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=FiledDiscoverPublicResultV1,
-        ),
+        public_result_type=FiledDiscoverPublicResultV1,
         result_projector=_project_discover,
         access_resolver=resolve_filed_discover_access,
     )

@@ -20,11 +20,9 @@ from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ......domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ......domain.calculations.registry.ids import BindingId, RelationId
-from ......domain.calculations.registry.relations import (
-    resolve_relation_values_from_observations,
-)
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ......domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 from ......tests.inventory import FIXTURES_DIR
 from ..declarations_capture import _select_authoritative_declaration as _select_authoritative_declaration_production
 from ..declarations_observations import (
@@ -241,7 +239,17 @@ def _modelo_snapshot_ref(*, modelo: str, filing_year: int, period: str) -> Regis
 
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
-    return path.read_bytes()
+    """Remove the editor newline from the two compact fixed-width text fixtures.
+
+    Their published filing envelopes have no record terminator. The redacted
+    repository text files each add one display newline outside that envelope;
+    preserve all field padding and leave XML fixture bytes untouched.
+    """
+    body = path.read_bytes()
+    if path.name in {"modelo-130-2026-1T-redacted.txt", "modelo-111-2025-1T-redacted.txt"}:
+        body = body.removesuffix(b"\r\n") if body.endswith(b"\r\n") else body.removesuffix(b"\n")
+        assert b"\r" not in body and b"\n" not in body, "compact fixture has an unexpected embedded newline"
+    return body
 
 
 # The redacted Modelo 100 submission keeps AEAT's structure but not its values:

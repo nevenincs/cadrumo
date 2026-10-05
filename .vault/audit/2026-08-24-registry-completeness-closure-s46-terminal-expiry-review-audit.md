@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2b2e447bcc2f5c5e4671ba354411b9659891f8d680f4ce7986c67debeb40310'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:04bf75a2cca286efc1f06b3f6241f23b04e21ee31090464538a62e5c516e836b'
+related: []
 ---
+
 # `registry-completeness-closure` audit: `S46 terminal expiry review`
 
 ## Scope
@@ -32,10 +32,7 @@ explicit boundary and would fail if the terminal-expiry guard were removed.
 
 ### source-coverage-trailing-whitespace | low | The committed module fails whitespace checking
 
-`git show --check 2cf4175917` reports trailing whitespace at
-`src/cadrumo/application/registry/_source_connectivity_coverage.py:256`. The
-blank line has no runtime effect, but it leaves the committed diff short of the
-repository's source-hygiene standard.
+The blank line has no runtime effect, but it leaves the committed diff short of the repository's source-hygiene standard.
 
 ## Recommendations
 

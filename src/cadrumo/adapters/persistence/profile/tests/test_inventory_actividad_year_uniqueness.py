@@ -21,12 +21,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....domain.contribuyente.inventory.records import (
-    InventoryLedger,
-    InventoryLedgerDocument,
-    InventoryLedgerError,
-    ValuationMethod,
-)
+from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository
 

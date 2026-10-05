@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s43-mcp-server-identity'
 date: '2026-07-13'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:5e2e9c09c54db5ba905af2818bc38d9adfa95169ce8886f18d03d4fe2406c5f1'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s43-mcp-server-identity` audit: `Cadrumo product rename S43 MCP server identity audit`

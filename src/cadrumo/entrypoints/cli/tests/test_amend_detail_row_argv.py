@@ -1,10 +1,10 @@
 """The amend command gives the operator a way to state three answers, not two.
 
-For M184, M232, M347 and M349 the per-counterpart rows ARE the declaration, and
+For M184, M232 and M349 the per-counterpart rows ARE the declaration, and
 the authority refuses an amendment that says nothing about them: a
 complementaria COMPLETES the return it corrects while a sustitutiva REPLACES it
 (LGT art. 122.2 para. 2), so silence would be read differently by each. The
-command had no way to break that silence, so amending any of those four was
+command had no way to break that silence, so amending any of those three was
 refused outright.
 
 An argv surface can express absence naturally -- an option simply not passed --
@@ -28,10 +28,11 @@ import pytest
 import typer
 import yaml
 
-from ....domain.modelos.row_models import Modelo347ContraparteRow
+from ....application.modelo.edit_apply_row_contracts import Modelo232VinculadaRowWireV1
 from .._modelo import _resolve_amendment_detail_rows
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
-from ..command_spec import CommandSpec, OptionSpec
+from ..command_parameter_contracts import OptionSpec
+from ..command_spec import CommandSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -42,7 +43,7 @@ _AMEND_ROW_KEYS = (
     "amend_no_detail_rows_help",
     "amend_rows_contradiction",
 )
-_ROW_SPEC = "contraparte nif=B12345674 nombre=Acme importe_Q1=1000.00 clave_operacion=B pais_codigo=ES"
+_ROW_SPEC = "vinculada nif=B12345674 nombre=Acme pais=ES importe=1000.00"
 
 
 def _amend_spec() -> CommandSpec:
@@ -56,7 +57,7 @@ def _amend_options() -> tuple[OptionSpec, ...]:
 
 
 def test_no_row_flags_at_all_says_nothing_rather_than_declaring_none() -> None:
-    """The state the authority refuses for the four, and the ordinary one elsewhere.
+    """The state the authority refuses for the three, and the ordinary one elsewhere.
 
     This is the default an operator reaches by not thinking about rows, so it
     must be the state that gets refused rather than the one that files a nil
@@ -78,13 +79,21 @@ def test_the_nil_flag_declares_an_empty_set_rather_than_silence() -> None:
 
 
 def test_a_row_spec_is_parsed_into_the_typed_domain_row() -> None:
-    """The positive control: the refusals above must not be a resolver that refuses everything."""
+    """The positive control: the refusals above must not be a resolver that refuses everything.
+
+    The resolved row is the payload-safe wire mirror rather than the domain
+    ``ModeloDetailRow``, matching ``ModeloWorkAmendRequest.detail_rows`` (see
+    its docstring): two of the six row families hydrate registry codes through
+    before-validators that the payload-graph gate refuses on a published
+    schema, so the operation crosses the wire mirror and re-validates into the
+    domain row on the authority side.
+    """
     resolved = _resolve_amendment_detail_rows((_ROW_SPEC,), declared_none=False)
 
     assert resolved is not None
     assert len(resolved) == 1
     row = resolved[0]
-    assert isinstance(row, Modelo347ContraparteRow)
+    assert isinstance(row, Modelo232VinculadaRowWireV1)
     assert row.nif == "B12345674"
 
 
@@ -95,8 +104,8 @@ def test_several_rows_are_carried_in_the_order_given() -> None:
     resolved = _resolve_amendment_detail_rows((_ROW_SPEC, other), declared_none=False)
 
     assert resolved is not None
-    contrapartes = [row for row in resolved if isinstance(row, Modelo347ContraparteRow)]
-    assert [row.nif for row in contrapartes] == ["B12345674", "B12345675"]
+    vinculadas = [row for row in resolved if isinstance(row, Modelo232VinculadaRowWireV1)]
+    assert [row.nif for row in vinculadas] == ["B12345674", "B12345675"]
 
 
 def test_declaring_none_while_also_giving_rows_is_refused() -> None:

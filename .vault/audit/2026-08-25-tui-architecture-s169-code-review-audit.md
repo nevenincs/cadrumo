@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:384a6d959b385ada382847ea0b5f6d2360c7350fbdc4a2785f6d2e57430a05d2'
+body_hash: 'sha256:b52032f15a64147798c0c8f17470f78d9d256a69156aacd3d22d8c85b67c3323'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s169-plan-review-audit]]"
 ---
 
@@ -37,19 +36,7 @@ those changes are outside the frozen evidence and are not attributed to S169.
 
 ### one-select-proof | medium | The four new query-count tests count repository calls, not SQL SELECT statements
 
-`src/cadrumo/adapters/persistence/profile/tests/test_secure_model_document.py:58`,
-`src/cadrumo/adapters/persistence/profile/tests/test_secure_model_document.py:100`,
-`src/cadrumo/domain/modelos/tests/test_secure_storage_roundtrip.py:141`, and
-`src/cadrumo/domain/modelos/tests/test_secure_storage_roundtrip.py:180` replace
-`SecureObjectRepository.load` with a `pytest.MonkeyPatch` wrapper and assert that
-the wrapper was called once. That proves one public repository invocation, but
-not the plan's exact one-`SELECT` contract: a future implementation could issue
-two SQL queries inside one `load` call and every test would remain green. The
-same construction conflicts with the repository quality rule forbidding mocks,
-fakes, and monkeypatches in real-behaviour gates. The payload/revision
-interleaving assertions are useful and do demonstrate that the kernel consumes
-one returned `SecureObjectRecord`; the defect is the narrower claim that these
-tests prove the number of database reads.
+That proves one public repository invocation, but not the plan's exact one-`SELECT` contract: a future implementation could issue two SQL queries inside one `load` call and every test would remain green. The same construction conflicts with the repository quality rule forbidding mocks, fakes, and monkeypatches in real-behaviour gates. The payload/revision interleaving assertions are useful and do demonstrate that the kernel consumes one returned `SecureObjectRecord`; the defect is the narrower claim that these tests prove the number of database reads.
 
 No critical or high implementation defect was found. Both singleton kernels
 make `load` project `load_revisioned`; each present path decodes `record.payload`

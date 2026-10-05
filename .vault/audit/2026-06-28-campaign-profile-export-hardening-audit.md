@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#campaign-profile-export-hardening'
 date: '2026-06-28'
-modified: '2026-07-17'
-body_hash: 'sha256:af5cc1366548d9b57f8c919cf93a95692c0e6c88967f2aaa7d20c3d15554316f'
+modified: '2026-10-03'
+body_hash: 'sha256:d94333c7bfd6d9ff6913febe34e92444de812d22589ac671d0a305eeb66c59a7'
 related:
   - "[[2026-06-27-campaign-profile-export-hardening-audit]]"
 ---
@@ -55,7 +55,7 @@ complete or correct.
 
 Multiple personas hit `wallet_missing` in later Modelo 303 periods despite a
 local zero compensation posture. Read-only triage found that
-`src/aeat/application/modelo/_iva_wallet_gate.py` short-circuited local
+The retired module short-circuited local
 reconciliation when the caller supplied `modelo-303-compensacion-pendiente-anteriores=0`,
 then later raised `iva_wallet_not_seeded`. The hardening now reconciles supplied
 prior-compensation inputs against local wallet/history authority, accepts explicit
@@ -70,7 +70,7 @@ Marta's S.L. persona calculated Modelo 202 with `modality incomplete`, then stil
 verified, locally filed, and exported the revision. Triage confirmed that
 incomplete modality is the correct diagnostic when `taxpayer_type.incn_prior_12_months`
 is absent, but a filing-grade revision must not be granted without the Art. 40.2
-vs Art. 40.3 modality. `src/aeat/application/modelo/_verification_actions.py`
+vs Art. 40.3 modality. The retired module
 now emits a blocking finding for incomplete Modelo 202 modality and names the
 missing profile fact. New real-behavior lifecycle coverage proves incomplete
 M202 remains draft and cannot file or become export-selectable, while declared
@@ -82,8 +82,8 @@ remaining issues.
 Claire, Diego, and Marta all found readiness overstatements: M210 `AD-HOC`
 and M130 wrong revision targets reported ready or were accepted; M200 readiness
 reported ready before calculation failed on missing bindings; M303 readiness did
-not predict the wallet gate. Stage-1 hardening in `src/aeat/application/state_projection.py`
-and `src/aeat/entrypoints/cli/_modelo_readiness_cli.py` now resolves readiness
+not predict the wallet gate. Stage-1 hardening in the retired module
+and the retired module now resolves readiness
 against the requested revision and period, fails closed with `registry_ready=false`
 and an actionable `registry_refusal` when no registry snapshot exists, and reports
 formula-consumed profile/manual binding gaps with `binding_ready=false` and
@@ -110,7 +110,7 @@ blank persona scratch roots. They saw missing passphrase refusals first, then
 passphrase. Their repair logs showed master-key locking under workspace
 `var/secrets`, not their scratch roots. Code triage classified the missing
 passphrase as intended but under-guided, and the workspace `var/secrets`
-fallback as a storage-root isolation defect. `src/aeat/core/config.py` now
+fallback as a storage-root isolation defect. The retired module now
 derives unset secret, blob, and audit directories under
 `AEAT_LOCAL_STORAGE_ROOT`, preserving explicit `AEAT_SECRET_STORE_DIR`
 overrides. A corrected direct CLI smoke, with no `AEAT_DATABASE_URL`, created a
@@ -124,11 +124,11 @@ or calculate a Modelo 303 quarter before the declared activity-start date. A
 read-only triage pass confirmed this as a defect: the deadline engine suppresses
 obligations whose period closes before `censo.activity_start_date`, while modelo
 work creation and calculation only used activity-start to scope prior-period
-dependencies. `src/aeat/application/modelo/_profile_readiness_gate.py` now
+dependencies. The retired module now
 refuses complete profiles when the target Modelo 303 period end is before the
 activity-start date. The guard runs before work-unit persistence, before stale
 calculation/wallet work, and on the visible-target reuse path in
-`src/aeat/application/modelo/_work_addressing.py`. A corrected CLI smoke proved
+The retired module. A corrected CLI smoke proved
 Modelo 303 2026 1T is refused for activity start 2026-05-01, while 2T creates a
 work unit.
 
@@ -380,11 +380,8 @@ validation, preflight, profile status, and quiet CLI profile creation all use
 the same rule, so broken profiles fail before a user is dragged into modelo
 work.
 
-The implementation is in `src/aeat/application/user_profile/_completeness.py`,
-`src/aeat/application/user_profile/_keys_validation.py`,
-`src/aeat/application/user_profile/_validation.py`,
-`src/aeat/application/user_profile/_preflight.py`,
-`src/aeat/domain/deadlines/_models.py`, and the profile create/status bridges.
+The implementation is in the retired module,
+The retired module, and the profile create/status bridges.
 Coverage proves missing IRNR country and missing GB representative facts refuse
 before profile registration, while EU/EEA IRNR without representative remains
 accepted.
@@ -410,7 +407,7 @@ Read-only applicability triage found that M130's rule had entity type, income
 category, and estimation-regime axes but no fiscal-residency axis. Bundled
 profile and deadline evidence routes `NON_RESIDENT_IRNR` taxpayers to IRNR and
 suppresses IRPF-resident deadlines, so M130 must not be available to a declared
-IRNR natural person. `src/aeat/domain/calculations/registry/_applicability.py`
+IRNR natural person. The retired module
 now gates M130 to `FiscalResidency.RESIDENT_IRPF` while preserving the existing
 resident-default behavior when fiscal residency is undeclared.
 
@@ -986,214 +983,157 @@ member. That remains legal/workflow backlog before implementation.
 Implemented and reviewed in this wave:
 
 - IVA wallet explicit-zero reconciliation and first-period-zero grounding in
-  `src/aeat/application/modelo/_iva_wallet_gate.py`, with regression coverage in
-  `src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py` and
-  `src/aeat/entrypoints/cli/tests/test_iva_wallet_inspector.py`.
+  The retired module, with regression coverage in
+  The retired test and
 - Modelo 202 incomplete-modality blocking verification in
-  `src/aeat/application/modelo/_verification_actions.py`, with lifecycle coverage
-  in `src/aeat/application/modelo/tests/test_modelo_202_modality_lifecycle.py`
+  The retired module, with lifecycle coverage
+  in the retired test
   plus adjacent test setup hardening.
 - Stage-1 readiness fail-closed registry and missing-binding reporting in
-  `src/aeat/application/state_projection.py`,
-  `src/aeat/entrypoints/cli/_modelo_readiness_cli.py`, and
-  `src/aeat/entrypoints/cli/_modelo_payloads.py`, with CLI and projection
-  coverage in `src/aeat/entrypoints/cli/tests/test_modelo_discovery_defects.py`
-  and `src/aeat/application/tests/test_state_projection.py`.
-- Wave-three blank-state storage-root isolation in `src/aeat/core/config.py`,
+  The retired module, and
+  The retired module, with CLI and projection
+  coverage in the retired test
+  and the retired test.
+- Wave-three blank-state storage-root isolation in the retired module,
   with regression coverage in
-  `src/aeat/core/tests/test_storage_substrate_state_root.py` and
-  `src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py`.
+  The retired test and
 - Modelo 303 pre-activity target-period refusal in
-  `src/aeat/application/modelo/_profile_readiness_gate.py` and
-  `src/aeat/application/modelo/_work_addressing.py`, with coverage in
-  `src/aeat/application/modelo/tests/test_profile_readiness_gate.py` and
-  `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
+  The retired module and
+  The retired module, with coverage in
+  The retired test and
 - Modelo 390 unsupported fichero-BOE export wording in
-  `src/aeat/application/filing/_export.py`, with no-layout coverage in
-  `src/aeat/application/filing/tests/test_export.py` and
-  `src/aeat/application/filing/tests/test_modelo_303_390.py`.
+  The retired module, with no-layout coverage in
+  The retired test and
 - Local filed Modelo 303 compensation-history projection in
-  `src/aeat/application/modelo/_filed_revision_observation.py`,
-  `src/aeat/application/modelo/_revision_persistence.py`,
-  `src/aeat/application/modelo/_filing_actions.py`, and
-  `src/aeat/application/calculations/_iva_compensation_history.py`, with
+  The retired module, and
+  The retired module, with
   regression coverage in
-  `src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py`
   and adjacent IVA history/refund tests.
 - Modelo 721 BOE source grounding repair for the cross-model registry blocker:
-  `src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml`, the bundled
+  The retired data file, the bundled
   BOE PDFs under `src/aeat/_data/corpus/normatives/pdf/`, and
-  `src/aeat/domain/calculations/registry/tests/test_modelo_721_registry.py`.
 - M210 unsupported local work-create overview guidance in
-  `src/aeat/application/overview/__init__.py`,
-  `src/aeat/application/overview/_calendar_models.py`, and
-  `src/aeat/entrypoints/cli/_overview_rendering.py`, with real CLI coverage in
-  `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py` and renderer coverage
-  in `src/aeat/entrypoints/cli/tests/test_overview_rendering.py`.
+  The retired module, and
+  The retired module, with real CLI coverage in
+  The retired test and renderer coverage
+  in the retired test.
 - Modelo 130 pre-activity target-period refusal in
-  `src/aeat/application/modelo/_profile_readiness_gate.py`, with application and
-  CLI coverage in `src/aeat/application/modelo/tests/test_profile_readiness_gate.py`
-  and `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
+  The retired module, with application and
+  CLI coverage in the retired test
+  and the retired test.
 - IRNR profile conditional completeness hard gate in
-  `src/aeat/application/user_profile/_completeness.py` and connected profile
+  The retired module and connected profile
   validation/preflight/create/status paths, with coverage in
-  `src/aeat/application/user_profile/tests/test_irnr_profile_completeness.py`
-  and `src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`.
+  and the retired test.
 - Ledger source-jurisdiction add/import/export persistence and all-failed bulk
-  classify nonzero exit in `src/aeat/application/ledger/_actions_import.py`,
-  `src/aeat/application/ledger/_actions_export.py`, and
-  `src/aeat/entrypoints/cli/_ledger_classify_cli.py`, with CLI coverage in
-  `src/aeat/entrypoints/cli/tests/test_ledger_source_jurisdiction_export.py`
-  and `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
+  classify nonzero exit in the retired module,
+  The retired module, and
+  The retired module, with CLI coverage in
+  and the retired test.
 - Ledger explicit `direction` import precedence in
-  `src/aeat/adapters/inbound/financial/providers/_csv.py` and
-  `src/aeat/adapters/inbound/financial/providers/_xlsx.py`, with provider and
+  The retired module and
+  The retired module, with provider and
   application coverage in
-  `src/aeat/adapters/inbound/financial/providers/tests/test_csv.py` and
-  `src/aeat/application/ledger/tests/test_actions_import_export.py`.
+  The retired test and
 - M130 IRNR applicability refusal in
-  `src/aeat/domain/calculations/registry/_applicability.py`, with registry and
+  The retired module, with registry and
   CLI coverage in
-  `src/aeat/domain/calculations/registry/tests/test_modelo_applicability.py`
-  and `src/aeat/entrypoints/cli/tests/test_modelo_work_applicability_guard.py`.
-- Overview status instalment-period parsing in `src/aeat/entrypoints/cli/_overview.py`,
+  and the retired test.
+- Overview status instalment-period parsing in the retired module,
   with draft-filter coverage in
-  `src/aeat/entrypoints/cli/tests/test_overview_verbs.py`.
 - M349 operador row summary/replay/integrity hardening across
-  `src/aeat/application/modelo/_calculation_actions.py`,
-  `src/aeat/application/modelo/_registry_helpers.py`,
-  `src/aeat/application/modelo/_revision_replay_inputs.py`,
-  `src/aeat/application/filing/__init__.py`,
-  `src/aeat/domain/filing/_validator.py`, and
-  `src/aeat/application/modelo/_verification_actions.py`, with CLI coverage in
-  `src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py`.
+  The retired module, and
+  The retired module, with CLI coverage in
 - M202 legal-entity export identity mapping in
-  `src/aeat/application/modelo/_export.py`,
-  `src/aeat/application/filing/_export.py`, and
-  `src/aeat/application/user_profile/_preflight.py`, with regression coverage in
-  `src/aeat/application/modelo/tests/test_export.py` and
-  `src/aeat/application/user_profile/tests/test_services.py`.
+  The retired module, and
+  The retired module, with regression coverage in
+  The retired test and
 - M200/M202 payment-relation guidance in
-  `src/aeat/entrypoints/cli/_modelo.py`,
-  `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`, and
-  `src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py`, with CLI coverage in
-  `src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py`.
+  The retired module, and
+  The retired module, with CLI coverage in
 - Locale scaffold repair for `cli.ledger.classify.bulk_all_failed` in
   `src/aeat/locales/{ca,en,es,hu}.yml`, preserving the all-failed bulk-classify
   warning across translated output.
 - Blank-state overview profile-key registration in
-  `src/aeat/application/state_projection.py`, with a fresh-process CLI
+  The retired module, with a fresh-process CLI
   regression in
-  `src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py`.
 - Legal-entity `identity.legal_name` profile entry and preflight alignment in
-  `src/aeat/core/setup_answers.py`,
-  `src/aeat/application/wizard/_catalogue.py`,
-  `src/aeat/application/wizard/_commands.py`, and
-  `src/aeat/entrypoints/cli/_config/__init__.py`, with CLI coverage in
-  `src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`
-  and `src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py`.
+  The retired module, and
+  The retired module, with CLI coverage in
+  and the retired test.
 - Bulk `ledger classify --from-csv` parity for `iva_category` and unambiguous
-  display-id prefixes in `src/aeat/application/ledger/_models.py` and
-  `src/aeat/application/ledger/_actions_classification.py`, with real CLI
-  coverage in `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
+  display-id prefixes in the retired module and
+  The retired module, with real CLI
+  coverage in the retired test.
 - Ledger IVA-category correction visibility and mutation detection in
-  `src/aeat/application/ledger/_actions_common.py`,
-  `src/aeat/application/ledger/_actions_manual.py`,
-  `src/aeat/application/ledger/_models.py`,
-  `src/aeat/entrypoints/cli/_ledger_payloads.py`, and
-  `src/aeat/entrypoints/cli/_ledger_read_cli.py`, with CLI coverage in
-  `src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`.
+  The retired module, and
+  The retired module, with CLI coverage in
 - Bulk `ledger classify --from-csv` parity for `irpf_category` in
-  `src/aeat/application/ledger/_models.py`,
-  `src/aeat/application/ledger/_actions_classification.py`,
-  `src/aeat/entrypoints/cli/_ledger.py`, and
+  The retired module, and
   `src/aeat/locales/{ca,en,es,hu}.yml`, with real CLI persistence coverage in
-  `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
 - Bulk `ledger classify --from-csv` mixed-use proportionality parity in
-  `src/aeat/application/ledger/_models.py`,
-  `src/aeat/application/ledger/_actions_classification.py`,
-  `src/aeat/entrypoints/cli/_ledger_classify_cli.py`, and
+  The retired module, and
   `src/aeat/locales/{ca,en,es,hu}.yml`, with positive and negative real CLI
-  coverage in `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+  coverage in the retired test
   and guide updates in `docs/how-to/classify-transactions.md` and
   `docs/how-to/classify-with-llm.md`.
 - Recargo-equivalence ledger preflight wording/direction hardening in
-  `src/aeat/application/ledger/_preflight.py`, with focused coverage in
-  `src/aeat/application/ledger/tests/test_preflight_anomaly.py`.
+  The retired module, with focused coverage in
 - Non-span ledger-preflight fail-closed handling for AD-HOC/readiness surfaces
-  in `src/aeat/application/ledger/_preflight.py`, with service coverage in
-  `src/aeat/application/ledger/tests/test_preflight.py` and projection coverage
-  in `src/aeat/application/tests/test_state_projection.py`.
+  in the retired module, with service coverage in
+  The retired test and projection coverage
+  in the retired test.
 - M349 unsupported intra-community VAT prefix refusal in
-  `src/aeat/domain/modelos/_row_models.py`, with row-model and CLI row-entry
-  coverage in `src/aeat/domain/modelos/tests/test_row_models.py` and
-  `src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py`.
+  The retired module, with row-model and CLI row-entry
+  coverage in the retired test and
 - Profile-create filing-baseline refusal in
-  `src/aeat/application/wizard/_commands.py` and
+  The retired module and
   `src/aeat/locales/{ca,en,es,hu}.yml`, with wizard and CLI coverage in
-  `src/aeat/application/wizard/tests/test_create_pointer_atomicity.py`,
-  `src/aeat/application/wizard/tests/test_commands_helpers.py`,
-  `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`, and
-  `src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`.
+  The retired test, and
 - M200 micro-company display-rate alignment in the 2024-y-siguientes registry
   records for Modelo 200, with grounding and dispatch coverage in
-  `src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py`,
   adjacent cuota-lane coverage in
-  `src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`,
   and CLI calculation fixture hardening in
-  `src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py`.
 - M349 fichero-BOE VAT-number subfield stripping in
-  `src/aeat/domain/modelos/_row_models.py`,
-  `src/aeat/application/modelo/_revision_replay_inputs.py`,
-  `src/aeat/application/modelo/_export.py`, and
-  `src/aeat/domain/calculations/registry/_invoice_bindings.py`, with row-model,
+  The retired module, and
+  The retired module, with row-model,
   replay, invoice-binding, registry, and CLI export coverage.
 - Ledger bare-year filter guidance in
-  `src/aeat/entrypoints/cli/_ledger_list.py`, with real CLI filter coverage in
-  `src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py`.
+  The retired module, with real CLI filter coverage in
 - Profile bundle import tax-id hard gate in
-  `src/aeat/entrypoints/cli/_config/_profile_bundle.py`, with real bundle
+  The retired module, with real bundle
   tamper coverage in
-  `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py`.
 - Filing-record list `--modelo` filtering in
-  `src/aeat/application/modelo/_filing_actions.py`,
-  `src/aeat/entrypoints/cli/_modelo_records_cli.py`, and
-  `src/aeat/entrypoints/cli/_modelo_payloads.py`, with service and CLI coverage
-  in `src/aeat/application/modelo/tests/test_file_flow_filing.py` and
-  `src/aeat/entrypoints/cli/tests/test_cli_surface.py`.
+  The retired module, and
+  The retired module, with service and CLI coverage
+  in the retired test and
 - Localized ledger period/year pairing guidance in
-  `src/aeat/entrypoints/cli/_ledger_list.py`,
-  `src/aeat/entrypoints/cli/_ledger_read_cli.py`, and
+  The retired module, and
   `src/aeat/locales/{ca,en,es,hu}.yml`, with `--year` and `--filter year=...`
   CLI coverage.
 - Profile filing-baseline hard-stop shared across create/edit/import in
-  `src/aeat/application/user_profile/_filing_baseline.py`,
-  `src/aeat/application/wizard/_commands.py`,
-  `src/aeat/application/wizard/_persistence.py`, and
-  `src/aeat/entrypoints/cli/_config/_profile_bundle.py`, with localized
+  The retired module, and
+  The retired module, with localized
   operator refusals and real CLI/import tamper coverage in
-  `src/aeat/application/wizard/tests/test_create_pointer_atomicity.py`,
-  `src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`,
-  `src/aeat/entrypoints/cli/tests/test_profile_output_language.py`, and
-  `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py`.
+  The retired test, and
 
 Verification passed:
 
-- `uv run --no-sync pytest -m "" -q src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py src/aeat/application/modelo/tests/test_iva_wallet_decision_binding.py src/aeat/entrypoints/cli/tests/test_iva_wallet_inspector.py::test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag src/aeat/entrypoints/cli/tests/test_iva_wallet_inspector.py::test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wallet_error`
-- `uv run --no-sync pytest -m "" -q src/aeat/application/modelo/tests/test_modelo_202_modality_lifecycle.py src/aeat/application/modelo/tests/test_verificado_completo_regression.py`
-- `uv run --no-sync pytest -m integration -q src/aeat/entrypoints/cli/tests/test_modelo_202_modality.py src/aeat/entrypoints/cli/tests/test_modelo_discovery_defects.py`
-- `uv run --no-sync pytest -m "" -q src/aeat/application/tests/test_state_projection.py src/aeat/application/modelo/tests/test_profile_readiness_gate.py`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync ruff check` on the touched implementation and test files.
-- `uv run --no-sync pytest src/aeat/core/tests/test_storage_substrate_state_root.py -q`
-- `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py -m integration -k profile_create_uses_local_storage_secret_store -q`
-- `uv run --no-sync pytest -m "" -q src/aeat/application/modelo/tests/test_profile_readiness_gate.py src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_pre_activity_m303_and_creates_no_unit src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_incomplete_profile_with_actionable_readiness_error`
-- `uv run --no-sync pytest src/aeat/application/filing/tests/test_export.py src/aeat/application/filing/tests/test_modelo_303_390.py -k "without_registry_layout or without_registry_export_layout or modelo_390_export_refuses_missing_boe_layout_from_real_registry"`
-- `uv run --no-sync pytest -q src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py`
-- `uv run --no-sync pytest -q src/aeat/application/calculations/tests/test_iva_compensation_history.py src/aeat/application/calculations/tests/test_modelo_303_refunded_period_carry.py`
-- `uv run --no-sync ruff check src/aeat/application/calculations/_iva_compensation_history.py src/aeat/application/calculations/__init__.py src/aeat/application/modelo/_filed_revision_observation.py src/aeat/application/modelo/_revision_persistence.py src/aeat/application/modelo/_filing_actions.py src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py`
-- `git diff --check -- src/aeat/application/calculations/_iva_compensation_history.py src/aeat/application/calculations/__init__.py src/aeat/application/modelo/_filed_revision_observation.py src/aeat/application/modelo/_revision_persistence.py src/aeat/application/modelo/_filing_actions.py src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py`
-- `uv run --no-sync pytest -q src/aeat/domain/calculations/registry/tests/test_modelo_721_registry.py`
-- `uv run --no-sync pytest -q src/aeat/domain/calculations/registry/tests/test_catalogue_verification.py src/aeat/domain/calculations/registry/tests/test_committed_registry.py -k "source or corpus or required_model_law_coverage or committed_registry_tree"`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync aeat app registry inspect`
 - Corrected direct CLI smoke: with `AEAT_LOCAL_STORAGE_ROOT` and
   `AEAT_SECRET_PASSPHRASE`, and without `AEAT_DATABASE_URL`, profile creation
@@ -1206,97 +1146,97 @@ Verification passed:
 - CLI-only Marta rerun: M202 incomplete profile blocked from filing/export; M202
   complete profile calculate/verify/local-file/export passed; after the M721
   corpus repair, M200 calculate/verify/export passed.
-- `uv run --no-sync pytest -m integration -q src/aeat/entrypoints/cli/tests/test_overview_rendering.py::test_next_step_does_not_suggest_unsupported_m210_work_create src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident src/aeat/entrypoints/cli/tests/test_modelo_210_stub_refusal.py src/aeat/entrypoints/cli/tests/test_modelo_discovery_defects.py::test_modelo_readiness_refuses_period_without_registry_coverage`
-- `uv run --no-sync pytest -m "" -q src/aeat/application/modelo/tests/test_profile_readiness_gate.py src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_pre_activity_m303_and_creates_no_unit src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_pre_activity_m130_and_creates_no_unit`
+- the historical check
+- the historical check
 - `uv run --no-sync python -m aeat.locales scaffold --check`
 - `uv run --no-sync python -m aeat.locales audit`
-- `uv run --no-sync pytest -q src/aeat/tests/test_locale_coverage_inventory.py src/aeat/tests/test_locale_coverage_hardened_errors.py`
-- `uv run --no-sync pytest -q src/aeat/core/tests/test_modelo_string_usage.py`
-- `uv run --no-sync ruff check src/aeat/application/overview/__init__.py src/aeat/application/overview/_calendar_models.py src/aeat/entrypoints/cli/_overview_rendering.py src/aeat/entrypoints/cli/tests/test_overview_rendering.py src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py src/aeat/application/modelo/_profile_readiness_gate.py src/aeat/application/modelo/tests/test_profile_readiness_gate.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/tests/test_irnr_profile_completeness.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/domain/calculations/registry/tests/test_modelo_applicability.py src/aeat/entrypoints/cli/tests/test_modelo_work_applicability_guard.py src/aeat/entrypoints/cli/tests/test_overview_verbs.py::test_overview_status_period_filter_accepts_instalment_period src/aeat/entrypoints/cli/tests/test_overview_verbs.py::test_overview_status_period_filter_matches_typed_draft_period`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_non_resident_irnr_quiet_create_requires_country_before_registration src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registration src/aeat/entrypoints/cli/tests/test_modelo_work_applicability_guard.py::test_work_create_refuses_modelo_130_for_non_resident_irnr src/aeat/entrypoints/cli/tests/test_overview_verbs.py::test_overview_status_period_filter_accepts_instalment_period src/aeat/entrypoints/cli/tests/test_overview_verbs.py::test_overview_status_period_filter_matches_typed_draft_period`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_source_jurisdiction_export.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_partial_failure_applies_valid_rows src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_all_failed_exits_nonzero`
-- `uv run --no-sync pytest -q src/aeat/domain/deadlines/tests/test_taxpayer_model.py src/aeat/application/workflow/tests/test_profile_health.py src/aeat/application/wizard/tests/test_status.py src/aeat/application/user_profile/tests/test_profile_repository.py`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py::TestRevisionViewSurfacesDetailRows::test_m349_operador_rows_feed_summary_and_verify src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py`
-- `uv run --no-sync pytest -q src/aeat/adapters/inbound/financial/providers/tests/test_csv.py src/aeat/adapters/inbound/financial/providers/tests/test_xlsx.py src/aeat/application/ledger/tests/test_actions_import_export.py::test_import_ledger_source_owns_provider_validation_ingest_and_persistence src/aeat/application/ledger/tests/test_actions_import_export.py::test_import_ledger_source_honors_explicit_direction_column_on_positive_amount_in_exports`
-- `uv run --no-sync ruff check src/aeat/adapters/inbound/financial/providers/_csv.py src/aeat/adapters/inbound/financial/providers/_xlsx.py src/aeat/adapters/inbound/financial/providers/tests/test_csv.py src/aeat/application/ledger/tests/test_actions_import_export.py`
-- `git diff --check -- src/aeat/adapters/inbound/financial/providers/_csv.py src/aeat/adapters/inbound/financial/providers/_xlsx.py src/aeat/adapters/inbound/financial/providers/tests/test_csv.py src/aeat/application/ledger/tests/test_actions_import_export.py`; only Git CRLF normalization warnings were reported.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/tests/test_export.py::test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot src/aeat/application/modelo/tests/test_export.py::test_export_headers_use_typed_instalment_period_dates src/aeat/application/modelo/tests/test_export.py::test_compose_export_headers_emits_devolucion_for_redeme_negative_303 src/aeat/application/filing/tests/test_export.py::test_export_requires_declared_header_values src/aeat/application/user_profile/tests/test_services.py::test_preflight_accepts_legal_entity_legal_name_for_export_headers`
-- `uv run --no-sync pytest -q src/aeat/application/filing/tests/test_export.py::test_export_requires_declared_header_values src/aeat/application/filing/tests/test_export.py::test_export_rejects_blank_required_header_values src/aeat/application/modelo/tests/test_export.py::test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot src/aeat/application/modelo/tests/test_export.py::test_modelo_202_legal_entity_export_requires_legal_name src/aeat/application/user_profile/tests/test_services.py::test_preflight_accepts_legal_entity_legal_name_for_export_headers src/aeat/application/user_profile/tests/test_services.py::test_preflight_rejects_legal_entity_export_identity_fragments`
-- `uv run --no-sync pytest -q src/aeat/application/filing/tests/test_export.py`
-- `uv run --no-sync pytest -q src/aeat/application/user_profile/tests/test_services.py`
-- `uv run --no-sync pytest -q src/aeat/application/modelo/tests/test_export.py::test_modelo_202_legal_entity_exports_company_name_in_razon_social_slot src/aeat/application/modelo/tests/test_export.py::test_modelo_202_legal_entity_export_requires_legal_name src/aeat/application/modelo/tests/test_export.py::test_export_headers_use_typed_instalment_period_dates src/aeat/application/modelo/tests/test_export.py::test_compose_export_headers_emits_devolucion_for_redeme_negative_303 src/aeat/application/modelo/tests/test_export.py::test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py::test_cold_process_overview_status_without_profile_registers_profile_keys src/aeat/application/tests/test_state_projection.py::test_projection_without_active_profile_is_empty`; the state-projection unit test was deselected by the integration marker and was also run separately without `-m`.
-- `uv run --no-sync pytest -q src/aeat/application/tests/test_state_projection.py::test_projection_without_active_profile_is_empty`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check; only Git CRLF normalization warnings were reported.
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check; the state-projection unit test was deselected by the integration marker and was also run separately without `-m`.
+- the historical check
 - Direct blank-root smoke: with a fresh `AEAT_LOCAL_STORAGE_ROOT`, no `AEAT_DATABASE_URL`, and a fake passphrase, `uv run --no-sync aeat app overview status` rendered a normal no-profile overview instead of the internal profile-key registry error.
-- `uv run --no-sync ruff check src/aeat/application/modelo/_export.py src/aeat/application/filing/_export.py src/aeat/application/user_profile/_preflight.py src/aeat/application/modelo/tests/test_export.py src/aeat/application/user_profile/tests/test_services.py src/aeat/application/state_projection.py src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py`
-- `uv run --no-sync ruff check src/aeat/application/filing/_export.py src/aeat/application/modelo/_export.py src/aeat/application/user_profile/_preflight.py src/aeat/application/filing/tests/test_export.py src/aeat/application/modelo/tests/test_export.py src/aeat/application/user_profile/tests/test_services.py src/aeat/entrypoints/cli/_modelo.py src/aeat/entrypoints/cli/_modelo_discovery_cli.py src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py::test_bindings_list_missing_m200_surfaces_m202_relation_inputs src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py::test_bindings_list_without_missing_does_not_append_m200_relation_guidance src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py::test_work_calculate_missing_m200_m202_relation_prefill_is_advisory src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py::test_missing_relation_guidance_helper_routes_m200_m202_to_relation_flag`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_all_failed_exits_nonzero`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync python -m aeat.locales scaffold --check`
-- `git diff --check -- src/aeat/application/modelo/_export.py src/aeat/application/filing/_export.py src/aeat/application/user_profile/_preflight.py src/aeat/application/modelo/tests/test_export.py src/aeat/application/user_profile/tests/test_services.py src/aeat/application/state_projection.py src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py`; only Git CRLF normalization warnings were reported.
+- the historical check; only Git CRLF normalization warnings were reported.
 - `git diff --check --` on the M202 export, M200 guidance, locale, and audit files; only Git CRLF normalization warnings were reported.
 - `uv run --no-sync ruff check` on the wave-six touched implementation and test files.
 - `git diff --check --` on the wave-six touched implementation and test files; only Git CRLF normalization warnings were reported.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_legal_entity_profile_create_and_edit_exposes_legal_name src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py::test_preflight_reports_legal_entity_export_legal_name_requirement`
+- the historical check
 - Direct blank-root legal-entity smoke: with `--legal-name`, `config profile
   preflight --modelo 202 --filing-year 2026 --period 1P` returned
   `readiness ready missing=0`, and `app modelo work create --modelo 202 --year
   2026 --period 1P` created a work unit.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py::test_classify_can_correct_and_view_iva_category src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_iva_category_column src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_display_id_prefix src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_ambiguous_prefix_is_row_failure`
+- the historical check
 - Direct blank-root IVA-category correction smoke: `ledger view` showed
   `erroneous_invoice`, the `--reaffirm --iva-category domestic_general_21`
   correction succeeded, and `ledger view` then showed `domestic_general_21`.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`
-- `uv run --no-sync ruff check src/aeat/core/setup_answers.py src/aeat/application/wizard/_catalogue.py src/aeat/application/wizard/_commands.py src/aeat/entrypoints/cli/_config/__init__.py src/aeat/application/ledger/_actions_common.py src/aeat/application/ledger/_models.py src/aeat/application/ledger/_actions_manual.py src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_payloads.py src/aeat/entrypoints/cli/_ledger_read_cli.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`
+- the historical check
+- the historical check
 - `uv run --no-sync python -m aeat.locales scaffold --check`
 - `uv run --no-sync python -m aeat.locales audit`
-- Wave-nine focused bulk IRPF-category fix: `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_irpf_category_column`
-- Wave-nine affected bulk-classify set: `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_iva_category_column src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_irpf_category_column src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_display_id_prefix src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_ambiguous_prefix_is_row_failure src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_rejects_unknown_column`
-- Wave-nine focused ruff: `uv run --no-sync ruff check src/aeat/application/ledger/_models.py src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+- Wave-nine focused bulk IRPF-category fix: the historical check
+- Wave-nine affected bulk-classify set: the historical check
+- Wave-nine focused ruff: the historical check
 - Wave-nine locale scaffold: `uv run --no-sync python -m aeat.locales scaffold --check`
-- Wave-ten recargo preflight focused tests: `uv run --no-sync pytest src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/ledger/tests/test_preflight.py -q`
-- Wave-ten recargo preflight ruff: `uv run --no-sync ruff check src/aeat/application/ledger/_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py`
-- Wave-ten bulk-classify regression suite: `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
-- Wave-eleven AD-HOC ledger-preflight regression: `uv run --no-sync pytest src/aeat/application/ledger/tests/test_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/tests/test_state_projection.py::test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period -q`
-- Wave-eleven AD-HOC/recargo preflight ruff: `uv run --no-sync ruff check src/aeat/application/ledger/_preflight.py src/aeat/application/ledger/tests/test_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/tests/test_state_projection.py`
-- Wave-twelve M349 row validation: `uv run --no-sync pytest src/aeat/domain/modelos/tests/test_row_models.py src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py -q`
-- Wave-twelve M349 row validation ruff: `uv run --no-sync ruff check src/aeat/domain/modelos/_row_models.py src/aeat/domain/modelos/tests/test_row_models.py src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py`
-- Wave-twelve profile-create hard stop: `uv run --no-sync pytest src/aeat/application/wizard/tests/test_create_pointer_atomicity.py src/aeat/application/wizard/tests/test_commands_helpers.py -q`
-- Wave-twelve profile-create CLI regression: `uv run --no-sync pytest -m "integration or unit" src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_profile_create_refuses_incomplete_profile_before_modelo_work src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_pre_activity_m303_and_creates_no_unit src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_pre_activity_m130_and_creates_no_unit src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py -q`
-- Wave-twelve profile-create ruff/YAML: `uv run --no-sync ruff check src/aeat/application/wizard/_commands.py src/aeat/application/wizard/tests/test_create_pointer_atomicity.py src/aeat/entrypoints/cli/tests/_profile_cli_support.py src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`, plus a PyYAML parse over `src/aeat/locales/{ca,en,es,hu}.yml`.
+- Wave-ten recargo preflight focused tests: the historical check
+- Wave-ten recargo preflight ruff: the historical check
+- Wave-ten bulk-classify regression suite: the historical check
+- Wave-eleven AD-HOC ledger-preflight regression: the historical check
+- Wave-eleven AD-HOC/recargo preflight ruff: the historical check
+- Wave-twelve M349 row validation: the historical check
+- Wave-twelve M349 row validation ruff: the historical check
+- Wave-twelve profile-create hard stop: the historical check
+- Wave-twelve profile-create CLI regression: the historical check
+- Wave-twelve profile-create ruff/YAML: the historical check, plus a PyYAML parse over `src/aeat/locales/{ca,en,es,hu}.yml`.
 - Wave-twelve profile-create direct smokes: an incomplete blank-root profile create refused with `REFUSED_WIZARD_MISSING_FLAG`, and a matching create with `--entity-type natural_person --name ... --surnames ...` succeeded.
-- Wave-twelve M200 display-rate grounding: `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py -q`
-- Wave-twelve M200 CLI calculation regression: `uv run --no-sync pytest -m "integration or unit" src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py -q --tb=short`
-- Wave-twelve M200 ruff/diff check: `uv run --no-sync ruff check src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`; `git diff --check` on the scoped M200 registry/test files and the CLI calculation test reported only Git CRLF normalization warnings before staging, and cached diff check was clean before commit.
-- Wave-thirteen M349 export-prefix regression: `uv run --no-sync pytest src/aeat/domain/modelos/tests/test_row_models.py src/aeat/application/modelo/tests/test_revision_replay_inputs.py src/aeat/domain/calculations/registry/tests/test_invoice_bindings.py src/aeat/domain/calculations/registry/tests/test_modelo_349_registry.py src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py -q --tb=short -m "unit or integration"`.
-- Wave-thirteen ledger annual-filter guidance: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py -q --tb=short -m integration` and `uv run --no-sync pytest src/aeat/application/review/tests/test_filter.py -q --tb=short`.
-- Wave-thirteen profile bundle tax-id import gate: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py -q --tb=short -m integration`.
+- Wave-twelve M200 display-rate grounding: the historical check
+- Wave-twelve M200 CLI calculation regression: the historical check
+- Wave-twelve M200 ruff/diff check: the historical check; `git diff --check` on the scoped M200 registry/test files and the CLI calculation test reported only Git CRLF normalization warnings before staging, and cached diff check was clean before commit.
+- Wave-thirteen M349 export-prefix regression: the historical check.
+- Wave-thirteen ledger annual-filter guidance: the historical check and the historical check.
+- Wave-thirteen profile bundle tax-id import gate: the historical check.
 - Wave-thirteen focused ruff checks passed for the touched M349, ledger-list,
   and profile-bundle implementation and test files.
-- Wave-thirteen filing-record modelo filter: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_cli_surface.py::test_app_modelo_filing_record_list_text_header_is_well_formed src/aeat/entrypoints/cli/tests/test_cli_surface.py::test_app_modelo_filing_record_list_accepts_modelo_filter src/aeat/entrypoints/cli/tests/test_cli_surface.py::test_app_ledger_create_manual_transaction_persists_in_active_bucket -q --tb=short -m integration` and `uv run --no-sync pytest src/aeat/application/modelo/tests/test_file_flow_filing.py -q --tb=short -k list_filing_records`.
-- Wave-thirteen ledger guidance and locale closure: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py -q --tb=short -m integration`, `uv run --no-sync python -m aeat.locales scaffold --check`, and `uv run --no-sync python -m aeat.locales audit`.
+- Wave-thirteen filing-record modelo filter: the historical check and the historical check.
+- Wave-thirteen ledger guidance and locale closure: the historical check, `uv run --no-sync python -m aeat.locales scaffold --check`, and `uv run --no-sync python -m aeat.locales audit`.
 - Wave-thirteen filing-record/ledger guidance ruff and diff checks passed for
   the touched implementation, test, and locale files. A read-only code review
   found one medium issue in the `--filter year=...` guidance path; the helper now
   derives a digit-only filter year and the regression is covered.
 - Wave-fourteen profile filing-baseline hard stop:
-  `uv run --no-sync pytest src/aeat/application/wizard/tests/test_create_pointer_atomicity.py src/aeat/application/wizard/tests/test_persistence_canonical.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/entrypoints/cli/tests/test_profile_output_language.py src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py src/aeat/application/user_profile/tests/test_bundle_reexports.py -q --tb=short -m "not e2e"`.
+  the historical check.
 - Wave-fourteen focused profile regression slice:
-  `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_edit_refuses_natural_person_branch_change_without_legal_name src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_edit_refuses_legal_entity_branch_change_without_surnames src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py::test_import_refuses_missing_filing_identity_baseline -q --tb=short -m integration`.
+  the historical check.
 - Wave-fourteen profile-baseline ruff and locale checks:
   `uv run --no-sync ruff check` on the touched profile/wizard/import/test files,
   `uv run --no-sync python -m aeat.locales scaffold --check`, and
   `uv run --no-sync python -m aeat.locales audit`.
 - Wave-fifteen bulk mixed-use CSV classify regression:
-  `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
+  the historical check.
 - Wave-fifteen bulk classify scale regression:
-  `uv run --no-sync pytest -q src/aeat/application/ledger/tests/test_bulk_classify_scale.py`.
+  the historical check.
 - Wave-fifteen docs conformance:
-  `uv run --no-sync pytest -q -m "integration or hex_entrypoint or not integration" src/aeat/entrypoints/cli/tests/test_educational_docs_conformance.py src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
+  the historical check.
 - Wave-fifteen ledger ruff, locale, and diff checks:
-  `uv run --no-sync ruff check src/aeat/application/ledger/_models.py src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/_ledger_classify_cli.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`,
+  the historical check,
   `uv run --no-sync python -m aeat.locales scaffold --check`,
   `uv run --no-sync python -m aeat.locales audit`, and `git diff --check`
   over the touched ledger/doc/locale files.
@@ -1369,8 +1309,8 @@ Wave-sixteen hardening changes:
 Wave-sixteen verification:
 
 - `vaultspec-rag search "wave sixteen persona audit local filing evidence registry legal refs modelo 303 modelo 100" --type code --json --timeout 30`
-- `uv run --no-sync pytest -q src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py src/aeat/application/modelo/tests/test_revision_stamp_advisory_finding.py src/aeat/domain/calculations/registry/tests/test_modelo_303_registry.py -m "unit or integration"`
-- `uv run --no-sync ruff check src/aeat/application/modelo/_verification_actions.py src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py src/aeat/entrypoints/cli/tests/test_modelo_work_natural_key.py src/aeat/domain/calculations/registry/tests/test_modelo_303_registry.py`
+- the historical check
+- the historical check
 - `uv run --no-sync python -m aeat.locales scaffold --check`
 - `uv run --no-sync python -m aeat.locales audit`
 - `vaultspec-core spec rules status`
@@ -1388,9 +1328,9 @@ while populated cells still use the shared single-row classify write path.
 Verification:
 
 - `vaultspec-rag search "bulk classify CSV omitted columns clearing taxable base iva irpf facts preserve existing transaction classification" --type code --json --timeout 30`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values`
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
-- `uv run --no-sync ruff check src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+- the historical check
+- the historical check
+- the historical check
 
 Marina and Taller Nube both then blocked before profile creation because the
 public CLI help did not expose the isolated encrypted-storage recipe. Their
@@ -1406,9 +1346,9 @@ regression pins profile creation plus log-root isolation. Verification:
 
 - `vaultspec-rag search "AEAT local storage root environment variable config profile create passphrase encrypted store logs storage isolation" --type code --json --timeout 30`
 - Manual isolated CLI smoke with `AEAT_LOCAL_STORAGE_ROOT=.campaign-runs/wave17-storage-smoke/storage`, `AEAT_SECRET_STORE_DIR=.campaign-runs/wave17-storage-smoke/secrets`, `AEAT_SECRET_STORE_BACKEND=file`, and `AEAT_SECRET_PASSPHRASE=...`
-- `uv run --no-sync pytest -q src/aeat/application/operator_surface/tests/test_contract.py::test_help_documents_are_backend_owned_and_current_surface_only src/aeat/entrypoints/cli/tests/test_root_help_shape.py::test_root_help_uses_curated_two_root_shape src/aeat/entrypoints/cli/tests/test_root_help_shape.py::test_config_and_app_help_use_curated_subtree_shape src/aeat/entrypoints/cli/tests/test_root_help_shape.py::test_installed_console_profile_create_honors_isolated_storage_env -m "unit or integration"`
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/tests/test_root_help_shape.py src/aeat/application/operator_surface/tests/test_contract.py -m "unit or integration"`
-- `uv run --no-sync ruff check src/aeat/application/operator_surface/_help.py src/aeat/application/operator_surface/tests/test_contract.py src/aeat/entrypoints/cli/tests/test_root_help_shape.py`
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync python -m aeat.locales scaffold --check`
 - `uv run --no-sync python -m aeat.locales audit`
 

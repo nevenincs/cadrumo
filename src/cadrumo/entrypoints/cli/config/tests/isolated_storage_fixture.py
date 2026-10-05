@@ -15,14 +15,14 @@ from click.testing import Result
 from pydantic import TypeAdapter
 
 from .....adapters.local_runtime.installation import runtime_installation
-from .....adapters.local_runtime.server import RuntimeTransportServer
 from .....adapters.local_runtime.tests.profile_worker_support import owner_id
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from .....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .....application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from .....application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from .....application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
     active_profile_record_session,
@@ -120,7 +120,7 @@ class _NativeLogin:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -142,7 +142,8 @@ def native_profile_view_server(storage_root: Path, *, allow_unavailable_shutdown
         capture_login=lambda _channel: _NativeLogin(),
         secret_store=lambda: native,
     )
-    server = RuntimeTransportServer(
+    profiles.prepare_registry()
+    server = RetainedRuntimeTransportServer(
         endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
     )
     with ThreadPoolExecutor(max_workers=1) as pool:

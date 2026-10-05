@@ -4,24 +4,24 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
+from pathlib import Path
 from typing import override
 from uuid import UUID, uuid4
 
 import pytest
+from textual.widgets import Button
 
-from .....adapters.local_runtime.frontend_client import (
-    ProfileViewCollection,
-    RuntimeFrontendClient,
-    RuntimeFrontendRefusedError,
-)
+from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from .....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection, RuntimeFrontendRefusedError
 from .....adapters.local_runtime.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
     ProfileMutationRunError,
 )
-from .....application.operations.registry import OperationFrontendProjection
+from .....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from .....application.user_profile.operations import (
+from .....application.user_profile.overview import ProfileOverview, ProfileSectionView
+from .....application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileFieldMutationOperationRequest,
@@ -35,7 +35,6 @@ from .....application.user_profile.operations import (
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
 )
-from .....application.user_profile.overview import ProfileOverview, ProfileSectionView
 from .....application.user_profile.view_operation import ProfileViewOperationProjection, ProfileViewPageKind
 from .....core.errors.error_codes import get_registered_error_code
 from .....core.errors.hierarchy import CadrumoError
@@ -45,8 +44,11 @@ from .....core.identity.digest import ContentDigest
 from .....core.operations import OperationEffect
 from .....domain.user_profile.plantilla_media import PlantillaMediaState
 from .....domain.user_profile.values import ProfileSetupState
+from ...aeat_sync.models import AeatSyncOperationHandoffV1, AeatSyncOperationRequestV1
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
+from ...operations.controller_port import OperationControllerPort
+from .. import runtime_manager
 from ..runtime_errors import ProfileManagerCompletedViewUnavailableError
 from ..runtime_manager import (
     RuntimeProfileManagerComposition,
@@ -147,6 +149,50 @@ def _composition(
         mutation_runner=runner,
         overview_reader=reader,
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("source", "definition"),
+    [("censal_review", "user-profile.censo-review"), ("filed_history", "live.filed-history.pull")],
+)
+async def test_onboarding_source_buttons_reach_the_runtime_handoff(
+    source: str, definition: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client = _Client(uuid4())
+    requests: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
+        requests.append(request)
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+    def compose(
+        subject: RuntimeFrontendClient, *, output_root: Path
+    ) -> tuple[AeatSyncOperationHandoffV1, OperationPublicContractSetV1 | None]:
+        assert subject is client
+        assert output_root
+        return handoff, None
+
+    def refuse_mutation(subject: RuntimeFrontendClient, request: ProfileMutationRequest) -> ProfileMutationCompletion:
+        raise AssertionError("acquisition must use its own registered operation")
+
+    monkeypatch.setattr(runtime_manager, "compose_runtime_aeat_sync_handoff", compose)
+    composition = _composition(
+        client, runner=refuse_mutation, reader=lambda _client, _label, _language: _overview(client.profile_id, 1)
+    )
+    screen = composition.compose()
+    async with ScreenHostApp(screen).run_test(size=(120, 45)) as pilot:
+        await pilot.pause()
+        await pilot.click("#setup-stage-get_data")
+        await pilot.pause()
+        button = screen.query_one(f"#source-{source} Button", Button)
+        button.scroll_visible(immediate=True)
+        await pilot.pause()
+        assert button.display and not button.disabled
+        await pilot.click(button)
+        await pilot.pause()
+        assert [str(request.operation) for request in requests] == [definition]
+        assert not screen.disabled
 
 
 def test_every_write_door_carries_exact_dialog_cas_and_reads_authorized_overview() -> None:

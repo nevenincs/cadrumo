@@ -6,8 +6,7 @@ import asyncio
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
-from datetime import UTC, datetime, timedelta
-from pathlib import Path
+from datetime import UTC, datetime
 from threading import Event
 from types import SimpleNamespace
 from typing import cast
@@ -16,7 +15,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
     OperationInteractionKind,
@@ -24,21 +22,19 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.interactions import OperationApplyResponse, OperationInteractionRequest, OperationPendingInteraction
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...operations.secret_submission import (
-    BoundEphemeralSecretAccess,
-    EphemeralSecretBroker,
-    OperationSecretRequirement,
-)
 from .. import google_configuration_operation as worker
 from .. import google_configuration_operation_contracts as contracts
 from ..access_contracts import AccessAction, Availability, DisclosureCategory
 from ..access_errors import ProfileAccessRefusedError
+from ..google_configuration_executor import GoogleConfigurationExecutor
+from ..google_configuration_operation_contracts import GoogleConfigurationExecutionResult
 from ..google_configuration_operation_ports import (
     GoogleConfigurationAcknowledgement,
     GoogleConfigurationCommit,
@@ -53,10 +49,16 @@ from ..google_configuration_operation_refusal import (
     GoogleConfigurationRefusalProjection,
     GoogleConfigurationRefusedError,
 )
+from ..google_configuration_result_projection import project_google_configuration_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("38383838-3838-4383-8383-383838383838")
 _NOW = datetime.now(UTC)
+
+
+def _set_active_profile(monkeypatch: pytest.MonkeyPatch, resolver: Callable[[], str]) -> None:
+    """Drive the canonical guard's active-pointer seam without bypassing the guard."""
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", resolver)
 
 
 class _Events:
@@ -176,36 +178,27 @@ def _factory(
 def _refusal() -> GoogleConfigurationRefusalProjection:
     return GoogleConfigurationRefusalProjection(
         profile_id=_PROFILE,
-        provider_code="AUTH_GOOGLE_EXPIRED",
-        message_key="cli.config.google.detail.no_metadata_for_refresh",
+        provider_code="REFUSED_GOOGLE_SIGN_IN_REQUIRED",
+        message_key="errors.refused.refused_google_sign_in_required",
         facts=GoogleConfigurationPresentationFacts(profile=_PROFILE),
     )
 
 
-def test_all_nine_public_contracts_compile_and_require_human_dual_whole_profile_access(
+def test_all_five_public_contracts_compile_and_require_human_dual_whole_profile_access(
     authority_operation: PinnedAuthorityOperation,
-    tmp_path: Path,
 ) -> None:
     def unused(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> GoogleConfigurationOperationPorts:
         pytest.fail("compiling Google contracts constructed credential capabilities")
 
     payloads: tuple[contracts.GoogleConfigurationRequest, ...] = (
-        contracts.GoogleCredentialSourceSetRequest(
-            profile_id=_PROFILE, kind=contracts.GoogleCredentialSourceKind.OAUTH_DESKTOP
-        ),
-        contracts.GoogleCredentialSourceViewRequest(profile_id=_PROFILE),
-        contracts.GoogleFolderSetRequest(profile_id=_PROFILE, folder_id="folder"),
         contracts.GoogleFolderViewRequest(profile_id=_PROFILE),
         contracts.GoogleLoginRequest(profile_id=_PROFILE),
         contracts.GoogleLogoutRequest(profile_id=_PROFILE),
         contracts.GoogleProbeRequest(profile_id=_PROFILE),
-        contracts.GoogleRegisterRequest(
-            profile_id=_PROFILE, client_json_path=str(tmp_path / "client.json"), client_json_sha256="f" * 64
-        ),
         contracts.GoogleStatusRequest(profile_id=_PROFILE),
     )
     definitions = worker.build_google_configuration_definitions(unused)
-    assert len(definitions) == 9
+    assert len(definitions) == 5
     for definition, payload in zip(definitions, payloads, strict=True):
         registration = worker.build_google_configuration_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -227,7 +220,8 @@ def test_all_nine_public_contracts_compile_and_require_human_dual_whole_profile_
         }
         assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
         assert definition.refusal_detail_codes == frozenset({GOOGLE_CONFIGURATION_REFUSAL_CODE})
-        assert (definition.ephemeral_secret is not None) is isinstance(payload, contracts.GoogleRegisterRequest)
+        # No Google configuration leaf accepts operator-supplied secret input.
+        assert definition.ephemeral_secret is None
         assert (registration.contract.review_projection_schema is not None) is isinstance(
             payload, contracts.GoogleLoginRequest
         )
@@ -243,7 +237,7 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(worker, "require_active_bucket_id", lambda: str(_PROFILE))
+    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
     request = _request(
         contracts.GoogleLogoutRequest(profile_id=_PROFILE), contracts.GOOGLE_LOGOUT_OPERATION_DEFINITION_ID
     )
@@ -252,13 +246,12 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
         terminal_admission: Callable[[], None] | None,
     ) -> contracts.GoogleConfigurationProjection:
-        assert request.profile_id == _PROFILE and secret is None
+        assert request.profile_id == _PROFILE
 
         def save():
             assert fence.inside
@@ -268,8 +261,8 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
         assert not fence.inside
         return contracts.GoogleLogoutProjection(profile_id=_PROFILE, token_removed=flags[0], metadata_removed=flags[1])
 
-    assert asyncio.run(worker.GoogleConfigurationExecutor(_factory(run)).execute(request, context)) == "d" * 64
-    assert isinstance(operands.value, worker.GoogleConfigurationExecutionResult)
+    assert asyncio.run(GoogleConfigurationExecutor(_factory(run)).execute(request, context)) == "d" * 64
+    assert isinstance(operands.value, GoogleConfigurationExecutionResult)
     effect = OperationEffect.UPDATED if removed else OperationEffect.NONE
     assert events.effects[-1] is effect
     receipt = OperationTerminalReceipt(
@@ -280,9 +273,9 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
         settled_at=_NOW,
         result_ref="d" * 64,
     )
-    assert worker.project_google_configuration_result(operands.value, receipt) == operands.value.projection
+    assert project_google_configuration_result(operands.value, receipt) == operands.value.projection
     with pytest.raises(ValueError, match="receipt"):
-        worker.project_google_configuration_result(
+        project_google_configuration_result(
             operands.value,
             receipt.model_copy(update={"identity": context.identity.model_copy(update={"operation_id": "b" * 64})}),
         )
@@ -293,7 +286,23 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
     [
         ("prewrite", OperationEffect.NONE),
         ("partial", OperationEffect.PARTIAL),
+        # A write was admitted and nothing proves what became of it.
         ("uncertain", OperationEffect.UNKNOWN),
+        # A boundary admitted without a write is not thereby harmless: a consent
+        # whose answer is lost can leave a grant behind, so it stays unknown too.
+        ("read-uncertain", OperationEffect.UNKNOWN),
+        # The same boundary, refused in a way that proves nothing was applied,
+        # as a declined consent does.
+        ("read-not-applied", OperationEffect.NONE),
+        # A write was admitted and the provider answered that it refused it.
+        ("write-not-applied", OperationEffect.NONE),
+        # The same, after an earlier change in this operation had already landed.
+        ("partial-write-not-applied", OperationEffect.PARTIAL),
+        # An ambiguous write stays unknown even after an earlier change landed.
+        ("partial-uncertain", OperationEffect.UNKNOWN),
+        # Google issued a grant, then the sign-in was refused for a reason that
+        # proves nothing further was applied: the grant is still there.
+        ("granted-not-applied", OperationEffect.PARTIAL),
         ("acknowledged", OperationEffect.UPDATED),
     ],
 )
@@ -303,7 +312,7 @@ def test_provider_boundaries_leave_no_commit_held_and_settle_honest_effects(
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(worker, "require_active_bucket_id", lambda: str(_PROFILE))
+    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
     request = _request(
         contracts.GoogleProbeRequest(profile_id=_PROFILE), contracts.GOOGLE_PROBE_OPERATION_DEFINITION_ID
     )
@@ -312,28 +321,32 @@ def test_provider_boundaries_leave_no_commit_held_and_settle_honest_effects(
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
         terminal_admission: Callable[[], None] | None,
     ) -> contracts.GoogleConfigurationProjection:
-        if mode == "partial":
+        if mode.startswith("partial"):
             commit(lambda: True, changed=lambda value: value)
-        if mode in {"uncertain", "acknowledged"}:
+        if mode.startswith("read"):
+            before_handoff("oauth.browser-consent")
+        elif mode.startswith("granted"):
+            before_handoff("oauth.token-exchange", writes=True)
+            acknowledged("oauth.token-exchange", writes=True)
+        elif mode.endswith(("uncertain", "write-not-applied")) or mode == "acknowledged":
             before_handoff("files.create", writes=True)
             assert not fence.inside  # actual provider call belongs here
             if mode == "acknowledged":
                 acknowledged("files.create", writes=True)
         if mode != "acknowledged":
-            raise GoogleConfigurationRefusedError(_refusal())
+            raise GoogleConfigurationRefusedError(_refusal(), provider_write_not_applied=mode.endswith("not-applied"))
         return contracts.GoogleProbeProjection(
             profile_id=_PROFILE, reachable=True, writable=True, read_only=False, root_folder_id="root"
         )
 
-    result = asyncio.run(worker.GoogleConfigurationExecutor(_factory(run)).execute(request, context))
+    result = asyncio.run(GoogleConfigurationExecutor(_factory(run)).execute(request, context))
     assert events.effects[-1] is expected
-    assert isinstance(operands.value, worker.GoogleConfigurationExecutionResult)
+    assert isinstance(operands.value, GoogleConfigurationExecutionResult)
     if mode == "acknowledged":
         assert result == "d" * 64
     else:
@@ -347,10 +360,10 @@ def test_provider_boundaries_leave_no_commit_held_and_settle_honest_effects(
             refusal_ref=result.refusal_code,
             refusal_detail_ref=result.detail_ref,
         )
-        projected = worker.project_google_configuration_result(operands.value, receipt)
+        projected = project_google_configuration_result(operands.value, receipt)
         assert isinstance(projected, contracts.GoogleConfigurationOutcome) and projected.refusal == _refusal()
         with pytest.raises(ValueError, match="receipt"):
-            worker.project_google_configuration_result(
+            project_google_configuration_result(
                 operands.value, receipt.model_copy(update={"refusal_ref": "REFUSED_GOOGLE_NON_INTERACTIVE"})
             )
 
@@ -360,7 +373,7 @@ def test_owner_loss_after_first_save_refuses_second_physical_write_and_private_r
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     active = [_PROFILE]
-    monkeypatch.setattr(worker, "require_active_bucket_id", lambda: str(active[0]))
+    _set_active_profile(monkeypatch, lambda: str(active[0]))
     request = _request(
         contracts.GoogleLogoutRequest(profile_id=_PROFILE), contracts.GOOGLE_LOGOUT_OPERATION_DEFINITION_ID
     )
@@ -370,7 +383,6 @@ def test_owner_loss_after_first_save_refuses_second_physical_write_and_private_r
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
@@ -387,66 +399,15 @@ def test_owner_loss_after_first_save_refuses_second_physical_write_and_private_r
         pytest.fail("second write crossed lost profile authority")
 
     with pytest.raises(ProfileAccessRefusedError):
-        asyncio.run(worker.GoogleConfigurationExecutor(_factory(run)).execute(request, context))
+        asyncio.run(GoogleConfigurationExecutor(_factory(run)).execute(request, context))
     assert writes == [1] and operands.value is None and events.effects[-1] is OperationEffect.PARTIAL
-
-
-def test_registration_consumes_exact_secret_once_and_excludes_secret_from_private_projection(
-    authority_operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    monkeypatch.setattr(worker, "require_active_bucket_id", lambda: str(_PROFILE))
-    secret = bytearray(b"synthetic-secret-client-json")
-    request = _request(
-        contracts.GoogleRegisterRequest(
-            profile_id=_PROFILE,
-            client_json_path=str(tmp_path / "client.json"),
-            client_json_sha256=sha256_hex(bytes(secret)),
-        ),
-        contracts.GOOGLE_REGISTER_OPERATION_DEFINITION_ID,
-    )
-    raw, context, _, operands, _, _ = _context(request, authority_operation)
-    requirement = OperationSecretRequirement(
-        identity=context.identity,
-        interaction_id="f" * 64,
-        revision=1,
-        secret_kind=contracts.GOOGLE_REGISTER_INPUT_KIND,
-        expires_at=_NOW + timedelta(minutes=5),
-    )
-    broker = EphemeralSecretBroker()
-    broker.submit(requirement, secret, observed_at=_NOW)
-    assert secret == bytearray(len(secret))
-    raw.ephemeral_secret = BoundEphemeralSecretAccess(requirement=requirement, broker=broker, clock=lambda: _NOW)
-
-    def run(
-        request: contracts.GoogleConfigurationRequest,
-        *,
-        secret: memoryview | None,
-        commit: GoogleConfigurationCommit,
-        before_handoff: GoogleConfigurationHandoff,
-        acknowledged: GoogleConfigurationAcknowledgement,
-        terminal_admission: Callable[[], None] | None,
-    ) -> contracts.GoogleConfigurationProjection:
-        assert secret is not None and bytes(secret) == b"synthetic-secret-client-json"
-        commit(lambda: None, changed=lambda _value: True)
-        return contracts.GoogleRegisterProjection(
-            profile_id=_PROFILE, client_id="synthetic-client", project_id="synthetic-project"
-        )
-
-    executor = worker.GoogleConfigurationExecutor(_factory(run))
-    assert asyncio.run(executor.execute(request, context)) == "d" * 64
-    assert operands.value is not None and "synthetic-secret-client-json" not in operands.value.model_dump_json()
-    with pytest.raises(ValueError, match="already consumed"):
-        asyncio.run(executor.execute(request, context))
-    broker.close()
 
 
 def test_consent_requires_actual_consumed_exact_revision_proposal_before_canonical_flow(
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(worker, "require_active_bucket_id", lambda: str(_PROFILE))
+    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
     request = _request(
         contracts.GoogleLoginRequest(profile_id=_PROFILE), contracts.GOOGLE_LOGIN_OPERATION_DEFINITION_ID
     )
@@ -456,7 +417,6 @@ def test_consent_requires_actual_consumed_exact_revision_proposal_before_canonic
     def run(
         request: contracts.GoogleConfigurationRequest,
         *,
-        secret: memoryview | None,
         commit: GoogleConfigurationCommit,
         before_handoff: GoogleConfigurationHandoff,
         acknowledged: GoogleConfigurationAcknowledgement,
@@ -469,10 +429,10 @@ def test_consent_requires_actual_consumed_exact_revision_proposal_before_canonic
         flows.append("consent")
         acknowledged("oauth.browser-consent")
         return contracts.GoogleLoginProjection(
-            profile_id=_PROFILE, mode="consent", account_email="synthetic@example.invalid"
+            profile_id=_PROFILE, account_email="synthetic@example.invalid", root_folder_id="synthetic-root"
         )
 
-    executor = worker.GoogleConfigurationExecutor(_factory(run))
+    executor = GoogleConfigurationExecutor(_factory(run))
     assert asyncio.run(executor.execute(request, context)) is None
     pending = interactions.pending
     assert pending is not None and pending.baseline_digest is not None and pending.proposed_effect_digest is not None
@@ -505,7 +465,7 @@ def test_caller_cancellation_waits_for_owned_provider_work_and_acknowledgement(
     authority_operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(worker, "require_active_bucket_id", lambda: str(_PROFILE))
+    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
     request = _request(
         contracts.GoogleProbeRequest(profile_id=_PROFILE), contracts.GOOGLE_PROBE_OPERATION_DEFINITION_ID
     )
@@ -519,7 +479,6 @@ def test_caller_cancellation_waits_for_owned_provider_work_and_acknowledgement(
         def run(
             request: contracts.GoogleConfigurationRequest,
             *,
-            secret: memoryview | None,
             commit: GoogleConfigurationCommit,
             before_handoff: GoogleConfigurationHandoff,
             acknowledged: GoogleConfigurationAcknowledgement,
@@ -534,7 +493,7 @@ def test_caller_cancellation_waits_for_owned_provider_work_and_acknowledgement(
                 profile_id=_PROFILE, reachable=True, writable=True, read_only=False, root_folder_id="root"
             )
 
-        task = asyncio.create_task(worker.GoogleConfigurationExecutor(_factory(run)).execute(request, context))
+        task = asyncio.create_task(GoogleConfigurationExecutor(_factory(run)).execute(request, context))
         try:
             await asyncio.wait_for(entered.wait(), timeout=5)
             task.cancel()
@@ -546,6 +505,6 @@ def test_caller_cancellation_waits_for_owned_provider_work_and_acknowledgement(
         finally:
             release.set()
         assert events.effects[-1] is OperationEffect.UPDATED
-        assert isinstance(operands.value, worker.GoogleConfigurationExecutionResult)
+        assert isinstance(operands.value, GoogleConfigurationExecutionResult)
 
     asyncio.run(scenario())

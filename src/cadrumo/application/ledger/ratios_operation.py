@@ -5,16 +5,14 @@ from __future__ import annotations
 import asyncio
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Any, Literal, Protocol, cast
+from typing import Any, Protocol, cast
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -25,7 +23,6 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...core.time.clock import now
-from ...core.unit_proportion import is_unit_proportion
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.usage_ratios.errors import CensoRatioMismatchError
@@ -39,280 +36,53 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.read_capture import capture_read_result
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationResultProjector,
-    OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .read_access import resolve_ledger_read_access
+from .ratios_contracts import (
+    LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
+    LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
+    LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
+    LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE,
+    LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
+    LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
+    LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,
+    LedgerRatiosEligibleProjection,
+    LedgerRatiosEligibleRequest,
+    LedgerRatiosEligibleResult,
+    LedgerRatiosEligibleRow,
+    LedgerRatiosListProjection,
+    LedgerRatiosListRequest,
+    LedgerRatiosListResult,
+    LedgerRatiosListRow,
+    LedgerRatiosSetProjection,
+    LedgerRatiosSetRequest,
+    LedgerRatiosSetResult,
+    LedgerRatiosUnsetProjection,
+    LedgerRatiosUnsetRequest,
+    LedgerRatiosUnsetResult,
+    LedgerRatiosValidateProjection,
+    LedgerRatiosValidateRequest,
+    LedgerRatiosValidateResult,
+    LedgerRatiosValidationFinding,
+)
+from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 from .usage_ratio_repository import load_usage_ratio_profile, usage_ratio_profile_with_censo_guard
-
-LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID = "ledger.ratios.list"
-LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID = "ledger.ratios.set"
-LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID = "ledger.ratios.unset"
-LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID = "ledger.ratios.eligible"
-LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID = "ledger.ratios.validate"
-LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE = "REFUSED_FINANCIAL_USAGE_RATIOS_CENSO_MISMATCH"
-LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
-
-_Year = Annotated[int, Field(ge=1900, le=9999)]
-_CategoryToken = Annotated[str, Field(min_length=1, max_length=96)]
-_RatioText = Annotated[str, Field(min_length=1, max_length=128)]
 
 
 class _ProfileScopedRequest(Protocol):
     profile_id: UUID
-
-
-def _validate_ratio_text(value: str, *, require_unit: bool) -> str:
-    parsed = try_parse_canonical_decimal(value)
-    if parsed is None:
-        raise ValueError("ratio must be a canonical decimal string")
-    if require_unit and not is_unit_proportion(parsed):
-        raise ValueError("ratio must be within [0, 1]")
-    return value
-
-
-class LedgerRatiosListRequest(CredentialFreeOperationRequest):
-    """Read the exact profile's persisted overrides under one filing year."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    year: _Year
-
-
-class LedgerRatiosSetRequest(BaseModel):
-    """Set one exact-profile override without journaling its numeric input."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    category: _CategoryToken
-    ratio: _RatioText
-    year: _Year
-
-    @field_validator("ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _canonical_ratio(cls, value: str) -> str:
-        return _validate_ratio_text(value, require_unit=True)
-
-
-class LedgerRatiosUnsetRequest(BaseModel):
-    """Clear one exact-profile category override."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    category: _CategoryToken
-
-
-class LedgerRatiosEligibleRequest(CredentialFreeOperationRequest):
-    """Read eligible ratio categories and defaults for one filing year."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    year: _Year
-
-
-class LedgerRatiosValidateRequest(CredentialFreeOperationRequest):
-    """Validate the exact profile's stored ratio overrides."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-
-
-class LedgerRatiosListRow(BaseModel):
-    """One bounded per-category override returned by the application."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    category: _CategoryToken
-    ratio: _RatioText
-
-    @field_validator("ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _unit_ratio(cls, value: str) -> str:
-        return _validate_ratio_text(value, require_unit=True)
-
-
-class _LedgerRatiosListFacts(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    year: _Year
-    outcome: Literal["available", "censo_mismatch"]
-    rows: tuple[LedgerRatiosListRow, ...] = ()
-    count: NonNegativeInt
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _rows_match_outcome(self) -> _LedgerRatiosListFacts:
-        if self.outcome == "available" and self.count != len(self.rows):
-            raise ValueError("ratio-list count differs from its rows")
-        if self.outcome == "censo_mismatch" and (self.count != 0 or self.rows):
-            raise ValueError("censo-mismatch result cannot disclose stale ratio rows")
-        categories = tuple(row.category for row in self.rows)
-        if len(set(categories)) != self.count or categories != tuple(sorted(categories)):
-            raise ValueError("ratio-list rows are duplicated or not canonically ordered")
-        return self
-
-
-class LedgerRatiosListResult(_LedgerRatiosListFacts):
-    """Encrypted list result retained by the operation supervisor."""
-
-
-class LedgerRatiosListProjection(_LedgerRatiosListFacts):
-    """Independent, bounded frontend projection for the ratio list."""
-
-
-class LedgerRatiosEligibleRow(BaseModel):
-    """Bounded statutory category details shown by ``ratios eligible``."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    category: _CategoryToken
-    proportionality_kind: _CategoryToken
-    default_ratio: _RatioText | None = None
-    override_present: bool
-
-    @field_validator("default_ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _default_is_unit_ratio(cls, value: str | None) -> str | None:
-        return None if value is None else _validate_ratio_text(value, require_unit=True)
-
-
-class _LedgerRatiosEligibleFacts(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    year: _Year
-    rows: tuple[LedgerRatiosEligibleRow, ...]
-    count: NonNegativeInt
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _rows_match_count(self) -> _LedgerRatiosEligibleFacts:
-        if self.count != len(self.rows) or len({row.category for row in self.rows}) != self.count:
-            raise ValueError("eligible ratio rows differ from their count or contain duplicate categories")
-        if tuple(row.category for row in self.rows) != tuple(sorted(row.category for row in self.rows)):
-            raise ValueError("eligible ratio rows are not canonically ordered")
-        return self
-
-
-class LedgerRatiosEligibleResult(_LedgerRatiosEligibleFacts):
-    """Encrypted eligible-category result."""
-
-
-class LedgerRatiosEligibleProjection(_LedgerRatiosEligibleFacts):
-    """Independent, bounded eligible-category frontend projection."""
-
-
-class LedgerRatiosValidationFinding(BaseModel):
-    """One bounded finding from the existing validation service."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    category: _CategoryToken
-    kind: Annotated[str, Field(min_length=1, max_length=96)]
-    detail: Annotated[str, Field(max_length=300)] = ""
-
-
-class _LedgerRatiosValidateFacts(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    profile_present: bool
-    eligible_count: NonNegativeInt
-    overrides_count: NonNegativeInt
-    missing_overrides: tuple[_CategoryToken, ...] = ()
-    findings: tuple[LedgerRatiosValidationFinding, ...] = ()
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _counts_are_coherent(self) -> _LedgerRatiosValidateFacts:
-        if self.overrides_count and not self.profile_present:
-            raise ValueError("ratio validation count contradicts profile presence")
-        if len(set(self.missing_overrides)) != len(self.missing_overrides):
-            raise ValueError("ratio validation repeats a missing override")
-        return self
-
-
-class LedgerRatiosValidateResult(_LedgerRatiosValidateFacts):
-    """Encrypted validation report."""
-
-
-class LedgerRatiosValidateProjection(_LedgerRatiosValidateFacts):
-    """Independent, bounded validation frontend projection."""
-
-
-class _LedgerRatiosSetFacts(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    requested_category: _CategoryToken
-    category: _CategoryToken
-    ratio: _RatioText
-    prior_ratio: _RatioText | None = None
-
-    @field_validator("ratio", "prior_ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _unit_ratio(cls, value: str | None) -> str | None:
-        return None if value is None else _validate_ratio_text(value, require_unit=True)
-
-
-class LedgerRatiosSetResult(_LedgerRatiosSetFacts):
-    """Encrypted exact-profile set result."""
-
-
-class LedgerRatiosSetProjection(_LedgerRatiosSetFacts):
-    """Independent set projection correlated to the submitted category and value."""
-
-
-class _LedgerRatiosUnsetFacts(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    requested_category: _CategoryToken
-    category: _CategoryToken
-    outcome: Literal["cleared", "no_override"]
-    prior_ratio: _RatioText | None = None
-
-    @field_validator("prior_ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _unit_ratio(cls, value: str | None) -> str | None:
-        return None if value is None else _validate_ratio_text(value, require_unit=True)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _outcome_matches_prior(self) -> _LedgerRatiosUnsetFacts:
-        if (self.outcome == "cleared") != (self.prior_ratio is not None):
-            raise ValueError("ratio-unset outcome differs from its prior value")
-        return self
-
-
-class LedgerRatiosUnsetResult(_LedgerRatiosUnsetFacts):
-    """Encrypted exact-profile unset result."""
-
-
-class LedgerRatiosUnsetProjection(_LedgerRatiosUnsetFacts):
-    """Independent unset projection, including the explicit no-override outcome."""
 
 
 def _require_worker_profile(
@@ -574,13 +344,7 @@ class LedgerRatiosEligibleExecutor:
                 count=len(projected),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="ledger-ratios-eligible")
+        return await capture_read_result(context, read, task_name="ledger-ratios-eligible")
 
 
 class LedgerRatiosValidateExecutor:
@@ -618,13 +382,7 @@ class LedgerRatiosValidateExecutor:
                 ),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="ledger-ratios-validate")
+        return await capture_read_result(context, read, task_name="ledger-ratios-validate")
 
 
 def _definition(
@@ -646,17 +404,12 @@ def _definition(
         if sensitive_input
         else OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
     )
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=executor_type,
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=executor_type,
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -674,7 +427,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=refusal_detail_codes,
     )
@@ -683,25 +435,15 @@ def _definition(
 def _registration(
     definition: OperationDefinition,
     *,
-    request_type: type[BaseModel],
     projection_type: type[BaseModel],
     access_resolver: OperationAccessResolver,
     result_projector: OperationResultProjector,
 ) -> OperationPublicDefinitionRegistrationV1:
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=projection_type,
-        ),
-        access_resolver=access_resolver,
+        public_result_type=projection_type,
         result_projector=result_projector,
+        access_resolver=access_resolver,
     )
 
 
@@ -715,18 +457,12 @@ def _whole_profile_access(
     if request.definition_id != definition_id or not isinstance(request.payload, request_type):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     payload = cast(_ProfileScopedRequest, request.payload)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=payload.profile_id,
-        periods=frozenset(),
-    )
-    if definition_id not in {LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID, LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID}:
-        return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    committing = definition_id in {
+        LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
+        LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
+    }
+    resolve = resolve_ledger_commit_access if committing else resolve_ledger_read_access
+    return resolve(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def _receipt_matches(
@@ -867,7 +603,6 @@ def build_ledger_ratios_list_registration(definition: OperationDefinition) -> Op
     """Bind the list schemas, whole-profile access scope, and receipt projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosListRequest,
         projection_type=LedgerRatiosListProjection,
         access_resolver=_read_access,
         result_projector=_project_list_result,
@@ -890,7 +625,6 @@ def build_ledger_ratios_set_registration(definition: OperationDefinition) -> Ope
     """Bind the set schemas, commit access scope, and receipt projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosSetRequest,
         projection_type=LedgerRatiosSetProjection,
         access_resolver=_set_access,
         result_projector=_project_set_result,
@@ -916,7 +650,6 @@ def build_ledger_ratios_unset_registration(
     """Bind the unset schemas, commit access scope, and refusal projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosUnsetRequest,
         projection_type=LedgerRatiosUnsetProjection,
         access_resolver=_unset_access,
         result_projector=_project_unset_result,
@@ -941,7 +674,6 @@ def build_ledger_ratios_eligible_registration(
     """Bind the eligibility schemas, whole-profile access scope, and projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosEligibleRequest,
         projection_type=LedgerRatiosEligibleProjection,
         access_resolver=_read_access,
         result_projector=_project_eligible_result,
@@ -966,7 +698,6 @@ def build_ledger_ratios_validate_registration(
     """Bind the validation schemas, whole-profile access scope, and projector."""
     return _registration(
         definition,
-        request_type=LedgerRatiosValidateRequest,
         projection_type=LedgerRatiosValidateProjection,
         access_resolver=_read_access,
         result_projector=_project_validate_result,
@@ -974,23 +705,6 @@ def build_ledger_ratios_validate_registration(
 
 
 __all__ = [
-    "LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE",
-    "LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID",
-    "LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID",
-    "LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE",
-    "LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID",
-    "LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID",
-    "LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID",
-    "LedgerRatiosEligibleProjection",
-    "LedgerRatiosEligibleRequest",
-    "LedgerRatiosListProjection",
-    "LedgerRatiosListRequest",
-    "LedgerRatiosSetProjection",
-    "LedgerRatiosSetRequest",
-    "LedgerRatiosUnsetProjection",
-    "LedgerRatiosUnsetRequest",
-    "LedgerRatiosValidateProjection",
-    "LedgerRatiosValidateRequest",
     "build_ledger_ratios_eligible_definition",
     "build_ledger_ratios_eligible_registration",
     "build_ledger_ratios_list_definition",

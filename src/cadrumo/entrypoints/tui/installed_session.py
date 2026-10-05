@@ -12,11 +12,11 @@ import sys
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
-
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.runtime_client import open_installed_runtime_client
+from ...adapters.local_runtime.runtime_credentials import open_installed_credential_client
+from ...adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ...application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from ...application.runtime.contracts import RuntimeRefusalError
@@ -32,12 +32,11 @@ from ...core.i18n.render import output_language
 from ..adapter_composition import profile_adapter_composition
 from ..operation_composition import build_production_operation_registry
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from .launcher import run_precomposed_runtime_root_session, run_runtime_managed_application
+from .launcher import run_precomposed_runtime_root_session
 from .runtime_admission import runtime_login_session
-from .runtime_management import RuntimeManagementCleanup
 from .runtime_workbench import RuntimeWorkbenchRoot
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
-from .secret.runtime_login import RuntimeLoginMethod
+from .secret.runtime_login_contracts import RuntimeLoginMethod
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -148,14 +147,12 @@ async def _run_runtime_session(
                     fresh_credential_client=fresh_credential_client,
                 )
 
-            cleanup = RuntimeManagementCleanup()
             app = RuntimeRestrictedSessionApp(
                 handoff.client,
                 profile_label=handoff.profile_label,
                 requester_factory=requester_for_api,
-                runtime_management_cleanup=cleanup,
             )
-            return await run_runtime_managed_application(app, cleanup=cleanup, headless=headless, auto_pilot=auto_pilot)
+            return await app.run_async(headless=headless, auto_pilot=auto_pilot)
 
         async def open_recovery_client() -> RuntimeFrontendClient:
             return await _open_client(handoff.profile_id)
@@ -181,6 +178,50 @@ async def _run_runtime_session(
         return await run_precomposed_runtime_root_session(load_root=root.load, headless=headless, auto_pilot=auto_pilot)
 
 
+def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
+    if inventory.state not in {ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED}:
+        return None
+    sys.stderr.write(f"{inventory.reason_code}\n")
+    return SESSION_INVENTORY_UNAVAILABLE
+
+
+def _registration_completed(headless: bool) -> bool:
+    return False if headless else _run_registration_screen()
+
+
+def _runtime_session_refusal(error: RuntimeFrontendRefusedError | RuntimeRefusalError) -> int:
+    if any(
+        isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
+        for name in ("async_cleanup_error", "cleanup_error")
+    ):
+        # A numeric refusal cannot retain an unsettled native owner.
+        raise error
+    reason = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
+    sys.stderr.write(f"{reason}\n")
+    return SESSION_INVENTORY_UNAVAILABLE
+
+
+def _attempt_runtime_session(
+    inventory: ProfileLoginInventoryV1,
+    operation_contracts: OperationPublicContractSetV1,
+    choose_profile: bool,
+    headless: bool,
+    auto_pilot: AutopilotCallbackType | None,
+) -> AccountRecomposeRequiredV1 | int | None:
+    try:
+        return asyncio.run(
+            _run_runtime_session(
+                inventory,
+                operation_contracts=operation_contracts,
+                choose_profile=choose_profile,
+                headless=headless,
+                auto_pilot=auto_pilot,
+            )
+        )
+    except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
+        return _runtime_session_refusal(error)
+
+
 def run_installed_workbench_session(
     *,
     headless: bool = False,
@@ -198,35 +239,24 @@ def run_installed_workbench_session(
         operation_contracts = build_production_operation_registry().public_contract_set
         while True:
             inventory = observe_profile_login_inventory()
-            if inventory.state in {ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED}:
-                sys.stderr.write(f"{inventory.reason_code}\n")
-                return SESSION_INVENTORY_UNAVAILABLE
+            unavailable = _unavailable_inventory(inventory)
+            if unavailable is not None:
+                return unavailable
             if inventory.state is ProfileLoginInventoryState.EMPTY:
-                if headless or not _run_registration_screen():
+                if not _registration_completed(headless):
                     return SESSION_COMPLETED
                 continue
             if headless and auto_pilot is None:
                 return SESSION_COMPLETED
-            try:
-                recompose = asyncio.run(
-                    _run_runtime_session(
-                        inventory,
-                        operation_contracts=operation_contracts,
-                        choose_profile=choose_profile,
-                        headless=headless,
-                        auto_pilot=auto_pilot,
-                    )
-                )
-            except (RuntimeFrontendRefusedError, RuntimeRefusalError) as error:
-                if any(
-                    isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
-                    for name in ("async_cleanup_error", "cleanup_error")
-                ):
-                    # A numeric refusal cannot retain an unsettled native owner.
-                    raise
-                reason = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
-                sys.stderr.write(f"{reason}\n")
-                return SESSION_INVENTORY_UNAVAILABLE
+            recompose = _attempt_runtime_session(
+                inventory,
+                operation_contracts,
+                choose_profile,
+                headless,
+                auto_pilot,
+            )
+            if isinstance(recompose, int):
+                return recompose
             if recompose is None:
                 return SESSION_COMPLETED
             choose_profile = recompose.reason is AccountRecomposeReasonV1.CHANGE_USER

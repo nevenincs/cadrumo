@@ -1,6 +1,6 @@
 @step Record when the activity started so the quarter is a valid obligation.
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
-@step Register the supplier's purchase invoice, and take its evidence id from the output.
+@step Register the supplier's purchase invoice, and take its supporting document reference from the output.
 aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 21 --iva-amount 105
 @capture evidence_id result.evidence_id
 @step Record the quarter's sale.
@@ -13,10 +13,10 @@ aeat app modelo work create --modelo 130 --year 2026 --period 1T
 aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @expect result.casilla_values.03 == "500.00"
 @expect result.casilla_values.04 == "100.00"
-@step Verify the instalment before exporting it.
+@step Check the instalment before exporting it.
 aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
-@step Export the verified instalment to the registry-backed fichero-BOE layout.
+@step Export the checked instalment to the official record layout.
 @result aeat --format json app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
 @expect exit_code == 0
 @expect result.modelo == "130"

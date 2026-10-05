@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#mcp-console-review'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:15cf8a58ac1a3fba2105d8f96dd19503999fa9fcf125bbed5d92128890c92e09'
+modified: '2026-10-03'
+body_hash: 'sha256:bb80fd6eef52f0a27d8895e56983d85f329f74ea2af78eaccaf359b58248c78e'
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
@@ -44,10 +44,10 @@ envelope change) requiring a new ADR.
 
 The MCP risk classification matches destructive / idempotent / handoff /
 live-write on the command key's trailing WORD against hand-listed frozensets in
-`src/aeat/application/operator_surface/_classification.py` (lines 30-47). That
+The retired module (lines 30-47). That
 classification drives the MCP `destructiveHint`, the human-in-the-loop
-confirm/block/auto-approve gate in `src/aeat/entrypoints/mcp/_hitl.py`, and the
-per-persona handoff denial in `src/aeat/entrypoints/mcp/_persona_scope.py`. The
+confirm/block/auto-approve gate in the retired module, and the
+per-persona handoff denial in the retired module. The
 tests assert only internal COHERENCE (never both read-only and destructive), never
 CORRECTNESS. A new verb whose leaf is `purge`, `wipe`, `terminate`, or `finalize`
 falls through every set, classifies non-destructive, receives `AUTO_APPROVE`
@@ -61,14 +61,14 @@ quarantine, config reset, ledger stash, and the composite quickfile.
 ### manifest-has-no-per-command-risk-or-concept-field | high | The self-description carries per-family mutability only; the risk and grouping data the MCP layer needs is re-encoded downstream by hand
 
 The operator-surface manifest (`MOUNTED_COMMAND_FAMILIES` in
-`src/aeat/application/operator_surface/_contract.py`) is hand-authored Python whose
+The retired module) is hand-authored Python whose
 per-family `mutability` is checked for EXISTENCE against the live command tree by a
 CI drift gate but never for factual correctness, and it carries NO per-command
 risk field and NO per-verb concept tag. Because the single self-describing
 authority is missing exactly the two things the MCP layer needs, both got
 re-encoded downstream: the risk classification (above) and the toolset grouping.
 An independent second declaration of "which verbs write" already exists in
-`src/aeat/application/storage_write_policy.py` (`PROFILE_BOUND_WRITE_VERB_PATHS`),
+The retired module (`PROFILE_BOUND_WRITE_VERB_PATHS`),
 which a parity gate can cross-check against the declared mutability in both
 directions.
 
@@ -77,7 +77,7 @@ directions.
 Driving the real server, a cold agent searching "import a bank statement" got
 `modelo.review_package.import_feedback` ranked ABOVE the correct `ledger.import`,
 purely on the shared token "import". The command index in
-`src/aeat/application/command_search/_index.py` is FTS5/BM25 lexical-only; the
+The retired module was FTS5/BM25 lexical-only; the
 model2vec semantic side was wired for the legal-corpus index but not the command
 index. This is conformance debt against `mcp-progressive-discovery` P2 ("FTS5 +
 model2vec, RRF fusion"). Related: CLI-verb phrasing ("file my quarterly VAT")
@@ -94,12 +94,12 @@ carries `active_profile.label` — but the command the docs and the golden-eval
 treat as the canonical identity check (`config profile status`) is NOT in the
 core surface, so an agent must `search` for it, i.e. already suspect it needs an
 identity check to find the tool that performs one. The live confirmation gate
-(`confirmation_for_tool` in `src/aeat/entrypoints/mcp/_hitl.py`) keys purely on
+(`confirmation_for_tool` in the retired module) keys purely on
 mutability with ZERO identity dimension; identity confirmation is only scored
 offline by a golden eval, never enforced live. Concrete failure: a session with
 Erik active, told "now do Erika's Modelo 130", runs `modelo work create/calculate`
 against Erik's bucket if the agent forgets `config switch` — and the mutating
-result cannot flag it because redaction (`src/aeat/core/redaction/__init__.py`)
+result cannot flag it because redaction
 collapses raw profile/bucket UUIDs to the CONSTANT literal `<profile-id>` /
 `<bucket-id>` (not a per-value hash), so every mutation against every profile
 echoes identical text.
@@ -117,7 +117,7 @@ to the reader.
 
 ### discovery-schema-and-overflow-gaps | medium | Search silently truncates, no describe-by-key path exists, and some schema fidelity is prose-only
 
-`search` hard-caps at 20 results (`src/aeat/entrypoints/mcp/_meta_tools.py`) with
+`search` hard-caps at 20 results  with
 no `total_matches` or overflow signal, so a broad query silently hides commands.
 There is no `describe_command(command_key)` tool, so the only way to re-fetch a
 known command's schema is to re-run `search` and hope it re-surfaces in the top
@@ -131,9 +131,9 @@ use enums.
 ### toolset-and-orientation-token-coupling | low | Toolset grouping and the orientation core key on hand-listed CLI tokens
 
 Toolset membership keys on hardcoded tokens (`m036`, `censo`, `iva_wallet`,
-`app.live.borrador.100`) in `src/aeat/entrypoints/mcp/_toolsets.py`, and the
+`app.live.borrador.100`) in the retired module, and the
 orientation core is a hardcoded prefix/key pair in
-`src/aeat/entrypoints/mcp/_surface.py`. Membership WITHIN a recognised token is
+The retired module. Membership WITHIN a recognised token is
 derived from the live surface; only the choice of tokens is hand-listed, so a
 rename or a sixth tax-concept surface degrades discoverability (not safety, since
 `search`/`execute` still reach everything). The adjudication ruled these

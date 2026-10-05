@@ -14,13 +14,60 @@ Examples:
 src/cadrumo/domain/modelos/tests/test_work_unit.py
 src/cadrumo/application/modelo/tests/test_work_addressing.py
 src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py
-src/cadrumo/tests/test_marker_integrity.py
+src/cadrumo/tests/test_marker_contract_enforcement.py
 ```
 
 Test module filenames must start with `test_`. `_test_*.py` and
 `*_test.py` modules are invalid. A single small test file still gets a
 local `tests` directory; naked colocated tests beside production modules
 are not allowed.
+
+## Runtime test lifetimes
+
+Do not start a shared runtime before running pytest. Unit tests exercise contracts
+and isolated behavior without a background runtime. Integration fixtures that need
+native IPC or profile workers start their own runtime/server in a temporary
+synthetic storage root, wait for verified transport readiness, and stop and reap
+their resources during teardown, including failures and cancellation. Test-owned
+startup and cleanup are permitted; they do not install a service or introduce
+product autostart or health management. Never point fixtures at a developer's
+existing runtime or private profile root.
+
+The native launch-door tests own finite child processes through `_fixture`;
+installed-entrypoint tests use `launch` with an `ExitStack`; authenticated CLI/MCP
+tests use `native_api_cli_session` and `NativeRuntimeFixtureOwner`. Preserve these
+owners when adding tests so teardown also runs when setup or assertions fail.
+Installed-entrypoint checks must use the installed executable and real bootstrap.
+Tests that bind `ProfileWorkerCustody` directly must run that body in a disposable
+child process: its immutable profile binding deliberately survives custody close.
+Do not reset that production binding to make a later test pass. Publish file-based
+readiness payloads atomically so existence also means the full payload is readable.
+
+Run both runtime test scopes explicitly; the default pytest selection is unit-only:
+
+```powershell
+uv run pytest -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/entrypoints/runtime/tests --durations=20
+```
+
+Native platform skips are coverage limits, not successful cross-platform checks.
+OS-keychain cases require the interactive session capability described below.
+Measure cold startup separately from request execution. Registry preparation
+must finish before a fixture exposes transport readiness. Installed-runtime
+fixtures allow 60 seconds for cold bootstrap; request deadlines stay independent.
+Diagnose and record startup phases before changing a setup budget, and never
+substitute a fixture server to conceal an installed-runtime startup failure.
+
+For manual CLI/TUI/MCP testing, explicitly run `cadrumo-runtime` in a separate
+development terminal with the same absolute storage root, native endpoint storage
+identity and installed product version as the client. Its required arguments are
+`--storage-root`, `--storage-identity` and `--expected-version`. Stop that owned
+runtime when the development session ends. Clients only connect; they do not
+start or repair it. Application provisioning will define the eventual launch policy.
+Load local development environment values explicitly, for example with
+`uv run --env-file env/.env cadrumo-runtime ...`; product settings do not read
+dotenv files themselves. Session-admission overrides belong to the runtime owner,
+and tests must select their intended policy explicitly rather than inherit a
+developer's local override.
 
 ## Marker taxonomy
 
@@ -75,12 +122,16 @@ per function, so a module can hold both labelled and unlabelled cases.
 | `perf` | Performance acceptance gates. | the dispatch-only ci-full lane |
 | `external_tool` | Tests needing a tool or data the dependency set does not install (LibreOffice; the npm Hunspell dictionaries; a real PowerShell on POSIX; a stock OpenSSL). | `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal`, `just test-calculation-summary-pdf` |
 | `os_keychain` | Tests whose assertion subject is the OS credential store itself. | `just test-os-keychain` |
-| `windows_only` | Tests whose subject is a Windows console launcher stub. | `just test-windows` |
+| `windows_only` | Tests whose subject exists only on Windows (console launcher stubs, the native runtime, process and login surfaces). | `just test-windows` |
 | `resident_service` | Tests that query the running resident search service. | `just test-resident-service` |
 | `private_ingest_corpus` | Tests that score the ingestion harness against the external measurement corpus named by `CADRUMO_INGEST_CORPUS_ROOT`; they fail, never skip, without it. | `just test-ingest-corpus` |
 
 Ordinary lanes exclude the capability labels, so the label—not a path
 `--ignore`—is what holds those tests out.
+
+`just test-native-host` selects the explicit Unix runtime and custody cohort
+for native-host verification, using the existing `unit` and `integration`
+markers and excluding `os_keychain` tests.
 
 Read `os_keychain` as a capability of the **logon session**, not of the
 dependency set. A headless continuous-integration runner, and an agent
@@ -88,8 +139,12 @@ reaching the host over SSH, each hold a network logon that carries no
 credentials: a real credential backend is selected and then refuses
 every call, so no session key can be custodied there at all. Run these
 tests from an interactive desktop session. Selected on a host that
-cannot custody one, they fail at an explicit precondition naming the
-missing capability - a true report of the host, never a defect.
+cannot custody one, each case that needs the store is skipped at an
+explicit precondition, `require_os_credential_store()`, under an
+`OsCredentialStoreRefusedWarning` naming the measured refusal - a true
+report of the host, never a defect and never coverage. The precondition
+is called per case, not keyed on the label, so a labelled case that
+asserts the refusal path itself still runs there.
 
 Label only what is irreducibly capability-bound. A case provable
 *without* the capability must stay unlabelled, or it silently leaves
@@ -115,17 +170,23 @@ sign-off: every change to login, logout, session resume, or session-key
 custody re-opens the hole, and only a desktop run closes it again. A
 green run once does not vouch for the code as it stands now.
 
-The pinned membership set in `test_marker_integrity.py` keeps the hole
-from growing quietly - a test cannot take the label without being
-enrolled there - but it cannot make an unrun test pass. It bounds the
-hole; it does not fill it.
+Two gates keep the hole from going unnoticed.
+`dev/ci/tests/test_os_keychain_lane_scope.py` refuses a labelled case
+that sits outside the paths `just test-os-keychain` names, and
+`dev/tests/test_lane_reachability.py` requires every test no automated
+lane can run to carry a label naming why. Neither pins which cases may
+take the label, so keeping it to what is irreducibly capability-bound
+stays with the author. They bound the hole; they do not fill it.
 
 ## Enforcement
 
-`src/cadrumo/tests/test_marker_integrity.py` walks `test_*.py` modules under
-`src/cadrumo` via `ast` and fails if any module violates placement,
-filename, module-level marker, execution-scope, hex-layer, or retired
-marker rules.
+`--strict-markers` in `pyproject.toml` refuses any marker the registry
+there does not declare, so a retired or misspelt marker fails collection
+instead of selecting nothing.
+
+`src/cadrumo/tests/test_every_test_module_is_lane_reachable.py` and
+`dev/tests/test_lane_reachability.py` fail when a test is selected by no
+lane.
 
 The repo-root `conftest.py` invokes the collection policy in
 `cadrumo.tests.marker_hook` once for every collected subtree. It raises
@@ -220,6 +281,10 @@ Checklist:
 ## Cross-References
 
 - `src/cadrumo/tests/marker_hook.py` - shared collection hook body.
-- `src/cadrumo/tests/test_marker_integrity.py` - AST-backed drift detector.
+- `src/cadrumo/tests/test_marker_contract_enforcement.py` - proves the
+  hook reports a violation both at `-n0` and under xdist workers.
+- `src/cadrumo/tests/os_keychain_hook.py` - shared credential-store
+  precondition for `os_keychain` cases.
+- `dev/tests/test_lane_reachability.py` - per-test lane reachability gate.
 - `pyproject.toml` - pytest discovery, marker registry, and coverage
   omit settings.

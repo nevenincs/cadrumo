@@ -8,12 +8,6 @@ consumed in the body:
   ``execute()`` keyword contract on the ``_ExecutableRequest`` Protocol stub
   (:mod:`cadrumo.adapters.outbound.google.api`). The stub body is ``...``; the
   names match the wire client's keyword arguments and cannot be renamed.
-* ``fileId`` — the Drive ``get_media`` keyword on the ``_DriveFilesResource``
-  Protocol stub (:mod:`cadrumo.adapters.outbound.google.document_link_resolver`).
-  The name is the google API's keyword and is part of the structural type.
-* ``q`` / ``pageSize`` / ``pageToken`` — the Drive ``files().list`` keyword
-  contract on the same ``_DriveFilesResource`` Protocol stub. The names are the
-  google API's keywords and are part of the structural type.
 * ``protocol`` — the positional argument of the ``__reduce_ex__`` dunder
   override on the decrypted-evidence tripwire
   (:mod:`cadrumo.application.ledger.evidence_input`). The signature is fixed by
@@ -25,6 +19,9 @@ consumed in the body:
   contract on the ``_SheetsDiscoveryBuilder`` Protocol stub
   (:mod:`cadrumo.application.storage.calc_sheets.parity_harness`). The name is
   the google API client's keyword and is part of the structural type.
+* ``prop`` — the parameter of ``append`` on the ``_CustomDocumentProperties``
+  Protocol stub (:mod:`cadrumo.adapters.outbound.workbook.calc_sheets_xlsx`).
+  The stub body is ``...``; the parameter is part of the structural type.
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears the false positive while leaving every other
 occurrence of an unused name still subject to detection — this file lists
@@ -54,3 +51,8 @@ def _set_language_field(source_citation: object) -> object:
 def _sheets_discovery_build(cache_discovery: object) -> object:
     """Mirror ``_SheetsDiscoveryBuilder.__call__`` keyword contract."""
     return cache_discovery
+
+
+def _custom_document_properties_append(prop: object) -> object:
+    """Mirror ``_CustomDocumentProperties.append`` structural signature."""
+    return prop

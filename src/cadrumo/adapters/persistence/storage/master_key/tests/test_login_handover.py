@@ -37,6 +37,7 @@ from cadrumo.adapters.persistence.storage.custody.filesystem import (
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import persist_signed_in_receipt
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
@@ -474,9 +475,14 @@ def _login_in_separate_process_child(
     profile: str,
     password: str,
     now: datetime | None,
+    persist_receipt: bool,
     result_queue: Queue[_ChildLoginResult],
 ) -> None:
-    """Authenticate one profile the way an operator invocation does: a fresh process."""
+    """Authenticate one profile the way an operator invocation does: a fresh process.
+
+    An in-process login mints no receipt, so ``persist_receipt`` publishes one
+    afterwards through the runtime worker's own step, as a persisted sign-in does.
+    """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     settings, token, composition = _child_settings(storage_root)
     _ = settings
@@ -487,6 +493,13 @@ def _login_in_separate_process_child(
             passphrase_callback=lambda: password,
             profile_decode_context=_profile_decode_context_for_test,
         )
+        if persist_receipt:
+            persist_signed_in_receipt(
+                storage_root,
+                UUID(outcome.bucket_id),
+                password,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         result_queue.put(
             {
                 "bucket_id": outcome.bucket_id,
@@ -532,13 +545,14 @@ def _login_in_separate_process(
     password: str,
     *,
     now: datetime | None = None,
+    persist_receipt: bool = True,
 ) -> _ChildLoginResult:
     """Run one login in its own interpreter, which is what every ``aeat`` call is."""
     context = get_context("spawn")
     result_queue: Queue[_ChildLoginResult] = Queue(ctx=context)
     child = context.Process(
         target=_login_in_separate_process_child,
-        args=(storage_root, profile, password, now, result_queue),
+        args=(storage_root, profile, password, now, persist_receipt, result_queue),
     )
     child.start()
     try:
@@ -618,6 +632,13 @@ def _crash_at_handover_phase_child(
         login_profile(
             name=profile_a,
             passphrase_callback=lambda: _CREDENTIAL_A,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        # A's sign-in receipt, which the handover to B must retire.
+        persist_signed_in_receipt(
+            storage_root,
+            UUID(profile_a),
+            _CREDENTIAL_A,
             profile_decode_context=_profile_decode_context_for_test,
         )
         if phase is HandoverPhase.A_RETIRED:
@@ -1204,7 +1225,9 @@ def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tm
 
     The second login is deliberately placed past the first session's idle
     window so it is a real authentication that reaches the retirement step,
-    rather than the idempotent no-op that returns before it.
+    rather than the idempotent no-op that returns before it. It persists no
+    receipt of its own, so the probe can only resume the first login's receipt,
+    which a retirement that failed to exclude the entering profile would delete.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     require_os_credential_store()
@@ -1224,6 +1247,7 @@ def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tm
             profile,
             _CREDENTIAL_A,
             now=_now() + timedelta(days=1),
+            persist_receipt=False,
         )
         assert second["bucket_id"] == profile
         # Placed past the idle window so this is a real authentication that

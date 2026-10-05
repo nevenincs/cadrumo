@@ -353,3 +353,34 @@ async def test_activity_asset_screen_clears_old_result_while_action_runs() -> No
         assert str(screen.query_one("#asset-result", Static).render()).strip() == (
             "created\tpending-public-result\trevisions=1"
         )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("covered_from", "free_amount"),
+    (
+        ("20250101", ""),
+        ("2025-W01-3", ""),
+        ("2025-01-01", "NaN"),
+        ("2025-01-01", "1e3"),
+        ("2025-01-01", "+5"),
+        ("2025-01-01", "1_000"),
+    ),
+)
+async def test_activity_asset_forecast_refuses_the_shapes_the_command_line_refuses(
+    covered_from: str, free_amount: str
+) -> None:
+    revision = _revision("tui-runtime-shape")
+    actions = _ActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-covered-from", Input).value = covered_from
+        screen.query_one("#asset-covered-until", Input).value = "2026-01-01"
+        screen.query_one("#asset-free-amount", Input).value = free_amount
+        await _activate(pilot=pilot, screen=screen, selector="#asset-forecast")
+        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
+
+    assert actions.requests == []

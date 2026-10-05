@@ -11,10 +11,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.profile_mutations import ProfileMutationRunError, run_profile_mutation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
@@ -26,9 +26,14 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.operations import (
+from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaRemove,
@@ -39,6 +44,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import UserProfileRecord
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -59,7 +65,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -122,7 +128,10 @@ def test_native_plantilla_media_set_noop_replace_remove_and_tombstone_index(tmp_
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         launch = RuntimeLaunchDoor(
             endpoint,
             expected=RuntimeClientHello(product_version="test", storage_identity=endpoint.storage_identity),

@@ -22,18 +22,17 @@ from __future__ import annotations
 from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
-from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.utc import validate_utc_aware
+from ...core.time.utc import UtcInstant
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.ids import (
     LegalRefId,
@@ -41,7 +40,6 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.filing_text import ModeloActorLabel
-from .action_errors import WorkUnitRevisionDivergenceError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -196,6 +194,7 @@ class ModeloReconciliationRecord(BaseModel):
     bucket_event_id: Hex64Str
     bucket_id: BucketId
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     registry_snapshot_ref: RegistrySnapshotRef
     source_kind: ModeloReconciliationEvidenceKind
     source_ref: str = ""
@@ -203,26 +202,13 @@ class ModeloReconciliationRecord(BaseModel):
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
     actor: ModeloActorLabel
-    reconciled_at: datetime
-
-    @field_validator("reconciled_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
-        """Hold the persisted instant to the canonical UTC-aware contract.
-
-        The record documents a canonical UTC history, but a bare ``datetime``
-        accepted a naive or ``+01:00`` value, so two reconciliations of the same
-        work unit could not be ordered against each other and a Madrid-local
-        instant read back as if it were UTC.
-        """
-        return validate_utc_aware(value)
+    reconciled_at: UtcInstant
 
 
 class ModeloReconciliationHistoryEntry(BaseModel):
     """One past reconciliation read back from the reconciliation record store.
 
-    ``modelo_reconcile`` DOES persist a stored record. Each run writes a
+    A reconciliation run DOES persist a stored record. Each run writes a
     :class:`ModeloReconciliationRecord` into the encrypted profile-scoped
     reconciliation store selected by :class:`ModeloReconciliationPersistencePort`,
     in the same unit of work as the slim ``MODELO_RECONCILED``
@@ -249,20 +235,16 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     event_id: Hex64Str
     bucket_id: BucketId
     work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
+    registry_snapshot_ref: RegistrySnapshotRef | None = None
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
+    advisory_count: NonNegativeInt = 0
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     actor: ModeloActorLabel
-    reconciled_at: datetime
-
-    @field_validator("reconciled_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
-        """Project the record's UTC instant under the same canonical contract."""
-        return validate_utc_aware(value)
+    reconciled_at: UtcInstant
 
 
 class ModeloReconciliationPersistencePort(Protocol):
@@ -337,28 +319,10 @@ def list_modelo_reconciliations(
     none for the requested work unit) returns an empty tuple — the clean "no
     reconciliations recorded yet" signal, not an error.
     """
-    # The carry gate loads the registry authority; binding the persistence port
-    # at host start must not pay for it.
-    from ..calculations.revision_carry_gate import revision_carry_outcome
-
     records: list[ModeloReconciliationRecord] = []
     for record in modelo_reconciliation_persistence().iter_records():
         if record.bucket_id != bucket_id or (work_unit_id is not None and record.work_unit_id != work_unit_id):
             continue
-        outcome = revision_carry_outcome(record.registry_snapshot_ref, operation=operation)
-        if outcome.refused:
-            ref = record.registry_snapshot_ref
-            raise WorkUnitRevisionDivergenceError(
-                translated_message="application.modelo.errors.work_unit_revision_divergence",
-                context={
-                    "work_unit_id": record.work_unit_id,
-                    "modelo": str(ref.modelo),
-                    "filing_year": str(ref.modelo_year),
-                    "period": str(ref.period),
-                    "work_unit_revision": str(ref.revision_id),
-                    "law_revision": str(outcome.selected_revision_id or "unresolvable"),
-                },
-            )
         records.append(record)
     # Storage order is the object-key digest order, not the reconciliation
     # order; the event id breaks a tie between two runs sharing an instant so
@@ -367,12 +331,15 @@ def list_modelo_reconciliations(
     return tuple(
         ModeloReconciliationHistoryEntry(
             event_id=record.bucket_event_id,
+            calculation_revision_id=record.calculation_revision_id,
+            registry_snapshot_ref=record.registry_snapshot_ref,
             bucket_id=record.bucket_id,
             work_unit_id=record.work_unit_id,
             source_kind=record.source_kind,
             source_path=record.source_ref,
             verdict=record.verdict,
             diff_count=len(record.diffs),
+            advisory_count=len(record.advisories),
             diffs=record.diffs,
             actor=record.actor,
             reconciled_at=record.reconciled_at,

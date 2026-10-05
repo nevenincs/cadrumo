@@ -22,7 +22,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -229,54 +229,77 @@ class RegistryValidator:
             self._catalogue_failures = cached[4]
             return self._catalogue_failures
 
-        failures: list[str] = []
-        failures.extend(
-            _missing_refs(
-                "runtime catalogues",
-                "published authority",
-                runtime_legal_reference_ids(self._runtime),
-                self._legal,
-                "legal",
-            )
-        )
+        failures = self._runtime_catalogue_failures()
         if self._source_root is not None:
-            for category, regulation in self._runtime.iva_regulations.items():
-                for citation in regulation.citations:
-                    if citation.grounding != "verified":
-                        continue
-                    reference = self._legal.get(citation.legal_reference)
-                    if reference is None:
-                        continue
-                    if not legal_reference_quotes_corpus(
-                        reference,
-                        citation.quoted_text,
-                        source_root=self._source_root,
-                    ):
-                        failures.append(
-                            f"runtime IVA regulation {category!r} citation {citation.legal_reference!r} "
-                            "claims verified grounding, but its quotation does not occur in the anchored corpus text"
-                        )
-            try:
-                verify_legal_catalogue_grounding(self._legal, source_root=self._source_root)
-            except RegistryValidationError as exc:
-                failures.append(str(exc))
-            try:
-                manifest_catalogue = compile_record_design_manifest_catalogue(self._source_root, self._sources)
-                if manifest_catalogue is not None:
-                    catalogue, record_design_sources = manifest_catalogue
-                    verify_catalogue_identity_bindings(catalogue, record_design_sources)
-                verify_source_catalogue(
-                    self._source_root,
-                    self._sources,
-                )
-                verify_manual_annotation_catalogue(self._source_root, self._sources)
-            except RegistryValidationError as exc:
-                failures.append(str(exc))
+            failures.extend(self._source_root_catalogue_failures())
         # Deliberately NOT behind the source-root guard above: epoch uniqueness is a
         # property of the declarations themselves, so it holds whether or not the
         # bundled files are reachable for hashing. Gating it on the root would make
         # the check disappear in exactly the configurations that skip file
         # verification.
+        failures.extend(self._declared_catalogue_failures())
+        self._catalogue_failures = tuple(failures)
+        CATALOGUE_FAILURE_CACHE[cache_key] = (
+            self._legal,
+            self._sources,
+            self._facts,
+            self._runtime,
+            self._catalogue_failures,
+        )
+        return self._catalogue_failures
+
+    def _runtime_catalogue_failures(self) -> list[str]:
+        return _missing_refs(
+            "runtime catalogues",
+            "published authority",
+            runtime_legal_reference_ids(self._runtime),
+            self._legal,
+            "legal",
+        )
+
+    def _source_root_catalogue_failures(self) -> list[str]:
+        source_root = self._source_root
+        if source_root is None:
+            return []
+        failures: list[str] = []
+        failures.extend(self._runtime_citation_grounding_failures(source_root))
+        try:
+            verify_legal_catalogue_grounding(self._legal, source_root=source_root)
+        except RegistryValidationError as exc:
+            failures.append(str(exc))
+        try:
+            manifest_catalogue = compile_record_design_manifest_catalogue(source_root, self._sources)
+            if manifest_catalogue is not None:
+                catalogue, record_design_sources = manifest_catalogue
+                verify_catalogue_identity_bindings(catalogue, record_design_sources)
+            verify_source_catalogue(source_root, self._sources)
+            verify_manual_annotation_catalogue(source_root, self._sources)
+        except RegistryValidationError as exc:
+            failures.append(str(exc))
+        return failures
+
+    def _runtime_citation_grounding_failures(self, source_root: Path) -> list[str]:
+        failures: list[str] = []
+        for category, regulation in self._runtime.iva_regulations.items():
+            for citation in regulation.citations:
+                if citation.grounding != "verified":
+                    continue
+                reference = self._legal.get(citation.legal_reference)
+                if reference is None:
+                    continue
+                if not legal_reference_quotes_corpus(
+                    reference,
+                    citation.quoted_text,
+                    source_root=source_root,
+                ):
+                    failures.append(
+                        f"runtime IVA regulation {category!r} citation {citation.legal_reference!r} "
+                        "claims verified grounding, but its quotation does not occur in the anchored corpus text"
+                    )
+        return failures
+
+    def _declared_catalogue_failures(self) -> list[str]:
+        failures: list[str] = []
         failures.extend(validate_record_design_epoch_uniqueness(self._sources))
         failures.extend(validate_record_design_epoch_window(self._sources))
         # Accumulating rather than raising through verify_source_catalogue: that
@@ -296,15 +319,7 @@ class RegistryValidator:
             ),
         )
         failures.extend(retired_fact_provider_closure_failures(self._facts, source_refs=self._sources))
-        self._catalogue_failures = tuple(failures)
-        CATALOGUE_FAILURE_CACHE[cache_key] = (
-            self._legal,
-            self._sources,
-            self._facts,
-            self._runtime,
-            self._catalogue_failures,
-        )
-        return self._catalogue_failures
+        return failures
 
     def _validate_modelo(self, modelo: ModeloDefinition, *, validate_catalogues: bool) -> list[str]:
         failures: list[str] = []
@@ -474,18 +489,36 @@ class RegistryValidator:
 
 def runtime_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> frozenset[str]:
     """Return every legal identity carried by a published runtime table."""
-    return frozenset(
-        ref
-        for refs in (
-            (
-                citation.legal_reference
-                for regulation in runtime.iva_regulations.values()
-                for citation in regulation.citations
-            ),
-            (ref for rule in runtime.iva_place_of_supply.values() for ref in rule.legal_references),
-            (ref for territory in runtime.spanish_postal_territories.values() for ref in territory.legal_refs),
-            (ref for carve_out in runtime.territory_carve_outs.values() for ref in carve_out.legal_refs),
-            (band.legal_ref for band in runtime.recargo_bands.values()),
-        )
-        for ref in refs
+    return frozenset(ref for refs in _runtime_legal_reference_groups(runtime) for ref in refs)
+
+
+def _runtime_legal_reference_groups(runtime: RuntimeRegistryCatalogues) -> tuple[Iterator[str], ...]:
+    return (
+        _iva_regulation_legal_reference_ids(runtime),
+        _place_of_supply_legal_reference_ids(runtime),
+        _postal_territory_legal_reference_ids(runtime),
+        _territory_carve_out_legal_reference_ids(runtime),
+        _recargo_band_legal_reference_ids(runtime),
     )
+
+
+def _iva_regulation_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> Iterator[str]:
+    return (
+        citation.legal_reference for regulation in runtime.iva_regulations.values() for citation in regulation.citations
+    )
+
+
+def _place_of_supply_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> Iterator[str]:
+    return (ref for rule in runtime.iva_place_of_supply.values() for ref in rule.legal_references)
+
+
+def _postal_territory_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> Iterator[str]:
+    return (ref for territory in runtime.spanish_postal_territories.values() for ref in territory.legal_refs)
+
+
+def _territory_carve_out_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> Iterator[str]:
+    return (ref for carve_out in runtime.territory_carve_outs.values() for ref in carve_out.legal_refs)
+
+
+def _recargo_band_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> Iterator[str]:
+    return (band.legal_ref for band in runtime.recargo_bands.values())

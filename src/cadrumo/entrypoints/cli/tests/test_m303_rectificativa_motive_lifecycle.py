@@ -18,6 +18,10 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+    seed_test_profile_record,
+)
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot
 from ....application.filing.export_producer import m303_rectificativa_motive_producer_values
@@ -34,6 +38,8 @@ from ....application.modelo.action_errors import AmendmentM303RectificativaMotiv
 from ....application.modelo.amendment_actions import amend_modelo_revision
 from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
 from ....application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
+from ....application.user_profile.access_contracts import AccessDenialCode
+from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
@@ -42,9 +48,11 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
@@ -81,11 +89,19 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ...adapter_composition import (
     build_amendment_action_ports,
     build_modelo_export_ports,
 )
+from ...calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+from ...ledger_action_composition import compose_ledger_action_ports
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -463,6 +479,103 @@ def test_encrypted_persistence_reloads_and_revalidates_joined_authority(
             without_taxpayer_authority.load()
 
 
+def _taxpayer_profile_record(*, operation: PinnedAuthorityOperation, tax_id: str) -> UserProfileRecord:
+    return create_user_profile_record(
+        context=operation.profile_create_context(),
+        profile_id=_BUCKET_ID,
+        setup_state=ProfileSetupState.INCOMPLETE,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value=tax_id),
+            UserProfileFact(path="identity.name", value="Synthetic"),
+            UserProfileFact(path="identity.surnames", value="Taxpayer"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        ),
+    )
+
+
+def test_ledger_action_composition_revalidates_persisted_identity_from_profile(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The ledger bundle binds the profile tax ID independently of the bucket UUID."""
+    work_unit, baseline_revision, target, receipt, context, revision = _authorities(operation=operation)
+    assert _BUCKET_ID != _TAX_ID
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
+        seed_test_profile_record(_taxpayer_profile_record(operation=operation, tax_id=_TAX_ID))
+        work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
+        filing_repository = ModeloRecordCatalogueRepository(objects=runtime.repository)
+        justificante_repository = JustificanteRepository(objects=runtime.repository)
+        work_repository.save(build_work_unit_catalogue((work_unit,)))
+        filing_repository.save(ModeloRecordCatalogue(records={target.filing_record_id: target}))
+        justificante_repository.save(receipt)
+
+        with open_test_profile_session(_BUCKET_ID):
+            ports = compose_ledger_action_ports(bucket_id=_BUCKET_ID, operation=operation)
+            assert ports.operation is operation
+            assert ports.calculation_repository.bucket_id == _BUCKET_ID
+            ports.calculation_repository.save(
+                CalculationRevisionCatalogue.model_validate(
+                    {
+                        "revisions": {
+                            baseline_revision.calculation_revision_id: baseline_revision,
+                            revision.calculation_revision_id: revision,
+                        }
+                    },
+                    context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: context},
+                )
+            )
+            loaded = ports.calculation_repository.load(operation=operation).get(revision.calculation_revision_id)
+            assert loaded is not None
+            assert loaded.amendment_identity == revision.amendment_identity
+
+        seed_test_profile_record(_taxpayer_profile_record(operation=operation, tax_id="12345678Z"))
+        with open_test_profile_session(_BUCKET_ID):
+            mismatched_ports = compose_ledger_action_ports(bucket_id=_BUCKET_ID, operation=operation)
+            with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid"):
+                mismatched_ports.calculation_repository.load(operation=operation)
+
+
+def test_calculation_binding_refuses_profile_record_from_another_bucket(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    wrong_profile = _taxpayer_profile_record(operation=operation, tax_id=_TAX_ID).model_copy(
+        update={"profile_id": "0479178a-6678-4c43-8b7d-46fba6483f12"}
+    )
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime,
+        pytest.raises(ProfileAccessRefusedError) as refused,
+    ):
+        bind_calculation_revision_persistence_from_profile(
+            bucket_id=_BUCKET_ID,
+            objects=runtime.repository,
+            operation=operation,
+            profile_record=wrong_profile,
+        )
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_explicit_unbound_persistence_binding_does_not_resolve_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from ... import calculation_revision_composition
+
+    def fail_if_profile_is_resolved(**_kwargs: object) -> None:
+        pytest.fail("an unbound advisory read must not select or resolve a profile")
+
+    monkeypatch.setattr(calculation_revision_composition, "resolve_export_identity", fail_if_profile_is_resolved)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
+        binding = bind_calculation_revision_persistence_from_profile(
+            bucket_id=_BUCKET_ID,
+            objects=runtime.repository,
+            operation=None,
+        )
+
+    assert binding.bucket_id == _BUCKET_ID
+    assert binding.objects is runtime.repository
+    assert binding.operation is None
+    assert binding.taxpayer_tax_id is None
+
+
 def test_public_amend_service_refuses_missing_motive_before_identity_with_real_persistence(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -736,6 +849,7 @@ def test_public_export_requires_injected_persisted_justificante_authority(
                     build_modelo_export_ports(
                         bucket_id=_BUCKET_ID,
                         m303_rectificativa_taxpayer_tax_id=_TAX_ID,
+                        operation=operation,
                     ),
                     justificante=None,
                 ),

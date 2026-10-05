@@ -17,12 +17,12 @@ from uuid import UUID
 import typer
 
 from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
+from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
 from ...application.modelo.filing_selection_operation import (
     ModeloWorkFilingRecordProjection,
     ModeloWorkFilingRecordRequest,
 )
-from ...application.modelo.operation_definitions import (
-    ModeloDetailRowWireV1,
+from ...application.modelo.work_amend_contracts import (
     ModeloWorkAmendBaseline,
     ModeloWorkAmendOverride,
     ModeloWorkAmendRequest,

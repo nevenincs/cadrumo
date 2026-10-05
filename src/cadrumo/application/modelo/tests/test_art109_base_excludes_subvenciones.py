@@ -31,7 +31,7 @@ from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.facts.schema import EntitySetFactPayload
+from ....domain.calculations.registry.facts.payloads import EntitySetFactPayload
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction, TransactionCatalogue

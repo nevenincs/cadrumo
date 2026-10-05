@@ -8,30 +8,26 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_shared_catalogues
-from .._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from .._export_tree import render_complete_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
-from ..candidate_staging import (
-    generated_export_bootstrap_target,
-    stage_continuity_metadata,
-    stage_generated_export_candidate,
-)
+from ..bootstrap_targets import generated_export_bootstrap_target
+from ..candidate_staging import stage_generated_export_candidate
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
+from ..export_tree_models import ExportTreeTransportProfile, RenderedExportTree
+from ..generated_export_inheritance import select_generated_export_inheritance
+from ..generated_export_inheritance_model import GeneratedExportInheritanceContext
 from ..generated_tree_inventory import GeneratedExportTree
-from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
-from ..record_design_intermediate import load_record_design_intermediate
-from ..render_profile import (
-    RenderProfile,
-    RenderProfileSourceEvidence,
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
-from ..semantic_map import SemanticMap, load_semantic_map
+from ..joined_record_design import JoinedRecordDesign
+from ..render_check import revision_render_inputs
+from ..render_profile_evidence import RenderProfileSourceEvidence
+from ..render_profile_model import RenderProfile
+from ..semantic_map import SemanticMap
 
 #: The enrolled generated tree the isolated fixtures materialise.
 #:
@@ -43,9 +39,6 @@ from ..semantic_map import SemanticMap, load_semantic_map
 ISOLATED_TREE: Final[GeneratedExportTree] = GeneratedExportTree(
     "184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
 )
-
-#: The repository root, so authoring inputs resolve independently of the working directory.
-_REPOSITORY_ROOT: Final[Path] = Path(__file__).resolve().parents[4]
 
 
 def isolated_authority(tree: GeneratedExportTree, root: Path) -> Path:
@@ -68,6 +61,7 @@ def isolated_authority(tree: GeneratedExportTree, root: Path) -> Path:
         revision=tree.revision,
         supporting_modelos=supporting_modelos(tree),
         bootstrap_target=bootstrap_target,
+        inheritance=tree_inheritance(tree),
     )
     if (modelo_root / "revisions" / tree.revision / "export").exists():
         raise AssertionError("the isolated candidate copied its generated export")
@@ -132,6 +126,17 @@ def bundled_revision_inspection(modelo: str, revision: str) -> RegistryRevisionI
 
 
 @cache
+def tree_inheritance(tree: GeneratedExportTree) -> GeneratedExportInheritanceContext | None:
+    """Use the publication pipeline's verified baseline for an inherited tree."""
+    return select_generated_export_inheritance(
+        compiled_bundled_authority(),
+        bundled_path("registry", "aeat"),
+        modelo=tree.modelo,
+        revision=tree.revision,
+    )
+
+
+@cache
 def isolated_authorities(
     tree: GeneratedExportTree,
 ) -> tuple[JoinedRecordDesign, SemanticMap, ExportTreeTransportProfile, RenderProfile, RenderProfileSourceEvidence]:
@@ -142,55 +147,21 @@ def isolated_authorities(
     inputs are checked-in authoring sources that a test session never mutates.
     Tests derive defects with ``model_copy`` and stage their own on-disk trees.
     """
-    semantic_map = load_semantic_map(
-        _REPOSITORY_ROOT / "dev" / "registry" / "mappings" / f"modelo_{tree.modelo}" / tree.epoch
-    )
-    render_profile = load_render_profile(
-        _REPOSITORY_ROOT / "dev" / "registry" / "render_profiles" / f"modelo_{tree.modelo}" / tree.epoch
-    )
-    modelos, catalogues = _bundled_registry()
-    inspection = bundled_revision_inspection(tree.modelo, tree.revision)
-    # The transport's line ending is the committed layout's own, read the way the
-    # publisher reads it; a design that declares no terminator must not be rendered
-    # with one.
-    definition = next(item for item in modelos if str(item.id) == tree.modelo)
-    layouts = definition.revisions[tree.revision].export_layouts
-    if len(layouts) != 1:
-        raise AssertionError(f"{tree}: expected exactly one committed export layout, found {len(layouts)}")
-    line_ending = layouts[0].records[0].line_ending.value
-    intermediate = load_record_design_intermediate(
-        bundled_path(),
-        catalogues.sources,
+    inputs = revision_render_inputs(
+        compiled_bundled_authority(),
+        modelo=tree.modelo,
+        revision=tree.revision,
         source_ref=tree.source_ref,
         filing_year=tree.filing_year,
-        design_epoch=tree.epoch,
+        period=tree.period,
     )
-    joined = join_record_design_semantics(semantic_map, intermediate, inspection)
-    semantic_map = joined.compiled_semantic_map or semantic_map
-    transport = ExportTreeTransportProfile(
-        modelo=tree.modelo,
-        design_epoch=tree.epoch,
-        source_ref=tree.source_ref,
-        source_sha256=intermediate.source.source_sha256,
-        layout_id=tree.layout_id,
-        format="fixed_width",
-        encoding=ExportEncoding.ISO_8859_1,
-        line_ending=line_ending,
-        serializer_convention="rtoml-pretty-v1",
+    return (
+        inputs.joined,
+        inputs.semantic_map,
+        inputs.transport_profile,
+        inputs.render_profile,
+        inputs.render_profile_source_evidence,
     )
-    claims_official = any(
-        rule.evidence.authority_kind != "reviewed_policy"
-        for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)
-    )
-    evidence = (
-        load_render_profile_source_evidence(
-            bundled_path() / catalogues.sources[tree.source_ref].corpus_path,
-            render_profile,
-        )
-        if claims_official
-        else RenderProfileSourceEvidence(design_identity=render_profile.design_identity, entries=())
-    )
-    return joined, semantic_map, transport, render_profile, evidence
 
 
 def isolated_render_profile() -> tuple[RenderProfile, RenderProfileSourceEvidence]:

@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...application.modelo.modelo_spreadsheet_operation_contracts import (
+from ...application.modelo.modelo_spreadsheet_operation_projections import (
     ModeloSpreadsheetCalculateProjection,
     ModeloSpreadsheetPullProjection,
     ModeloSpreadsheetVerifyProjection,

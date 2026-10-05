@@ -16,6 +16,7 @@ from ....core.config_support import LLMProvider
 from ....core.operations import OperationEffect, profile_operation_subject
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
+from .. import invoice_evidence_extract_operation as extract_operation
 from .. import invoice_evidence_operation as operation
 from ..invoice_draft_extraction_ports import EvidenceConsentProof, InvoiceDraftExtractionPorts
 from ..invoice_draft_records import InvoiceDraft
@@ -59,7 +60,7 @@ def _context(recorder: _Recorder) -> OperationExecutorContext:
         OperationExecutorContext,
         SimpleNamespace(
             identity=SimpleNamespace(
-                definition_id=operation.LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
+                definition_id=extract_operation.LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             events=recorder,
@@ -104,16 +105,16 @@ def _factory(
     return make
 
 
-def _request(*, off_host: bool) -> OperationRequest[operation.LedgerEvidenceExtractRequest]:
-    payload = operation.LedgerEvidenceExtractRequest(
+def _request(*, off_host: bool) -> OperationRequest[extract_operation.LedgerEvidenceExtractRequest]:
+    payload = extract_operation.LedgerEvidenceExtractRequest(
         profile_id=_PROFILE,
         evidence_id="e" * 16 if off_host else None,
         attachment_id=None if off_host else _SOURCE,
         off_host_provider=LLMProvider.ANTHROPIC if off_host else None,
         acknowledge_off_host=off_host,
     )
-    return OperationRequest[operation.LedgerEvidenceExtractRequest](
-        definition_id=operation.LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
+    return OperationRequest[extract_operation.LedgerEvidenceExtractRequest](
+        definition_id=extract_operation.LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=payload,
     )
@@ -123,8 +124,9 @@ def _request(*, off_host: bool) -> OperationRequest[operation.LedgerEvidenceExtr
 async def test_on_host_executor_captures_full_draft_with_no_consent_write(monkeypatch: pytest.MonkeyPatch) -> None:
     recorder = _Recorder()
     hooks: list[tuple[Callable[[], None] | None, Callable[[bool], None] | None]] = []
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation, "_authority_legends", lambda _context: ())
+    monkeypatch.setattr(extract_operation, "resolve_invoice_evidence_authority_legends", lambda _context: ())
 
     def read(**kwargs: object) -> InvoiceDraft:
         assert kwargs["off_host_provider"] is None
@@ -133,8 +135,8 @@ async def test_on_host_executor_captures_full_draft_with_no_consent_write(monkey
         recorder.timeline.append(("reader", "on-host"))
         return InvoiceDraft(invoice_number="A-1")
 
-    monkeypatch.setattr(operation, "extract_invoice_draft_from_evidence", read)
-    reference = await operation.LedgerEvidenceExtractExecutor(_factory(recorder, hooks)).execute(
+    monkeypatch.setattr(extract_operation, "extract_invoice_draft_from_evidence", read)
+    reference = await extract_operation.LedgerEvidenceExtractExecutor(_factory(recorder, hooks)).execute(
         _request(off_host=False), _context(recorder)
     )
     assert reference == "b" * 64
@@ -142,7 +144,7 @@ async def test_on_host_executor_captures_full_draft_with_no_consent_write(monkey
     assert [(kind, value) for kind, value in recorder.timeline if kind == "effect"] == [
         ("effect", OperationEffect.NONE)
     ]
-    assert isinstance(recorder.result, operation.LedgerEvidenceExtractExecutionResult)
+    assert isinstance(recorder.result, extract_operation.LedgerEvidenceExtractExecutionResult)
     assert recorder.result.result.consent_audit_effect is OperationEffect.NONE
     assert recorder.result.result.draft.invoice_number == "A-1"
 
@@ -157,10 +159,11 @@ async def test_off_host_executor_reports_the_actual_append_effect(
 ) -> None:
     recorder = _Recorder()
     hooks: list[tuple[Callable[[], None] | None, Callable[[bool], None] | None]] = []
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(operation, "_authority_legends", lambda _context: ())
+    monkeypatch.setattr(extract_operation, "resolve_invoice_evidence_authority_legends", lambda _context: ())
     monkeypatch.setattr(
-        operation.PurchaseInvoiceEvidenceService,
+        extract_operation.PurchaseInvoiceEvidenceService,
         "view",
         lambda _self, *, bucket_id, evidence_id: SimpleNamespace(
             bucket_id=bucket_id, evidence_id=evidence_id, attachment_id=_SOURCE, source_sha256=_SOURCE
@@ -186,8 +189,8 @@ async def test_off_host_executor_reports_the_actual_append_effect(
         recorder.timeline.append(("reader", "off-host"))
         return InvoiceDraft(invoice_number="A-2")
 
-    monkeypatch.setattr(operation, "extract_invoice_draft_from_evidence", read)
-    executor = operation.LedgerEvidenceExtractExecutor(_factory(recorder, hooks))
+    monkeypatch.setattr(extract_operation, "extract_invoice_draft_from_evidence", read)
+    executor = extract_operation.LedgerEvidenceExtractExecutor(_factory(recorder, hooks))
     if later_refusal or not save_succeeded:
         with pytest.raises(RuntimeError, match=r"reader refused|consent append failed"):
             await executor.execute(_request(off_host=True), _context(recorder))
@@ -210,6 +213,6 @@ async def test_off_host_executor_reports_the_actual_append_effect(
     if later_refusal or not save_succeeded:
         assert recorder.result is None
     else:
-        assert isinstance(recorder.result, operation.LedgerEvidenceExtractExecutionResult)
+        assert isinstance(recorder.result, extract_operation.LedgerEvidenceExtractExecutionResult)
         assert recorder.result.result.consent_audit_effect is OperationEffect.UPDATED
         assert recorder.result.result.draft.invoice_number == "A-2"

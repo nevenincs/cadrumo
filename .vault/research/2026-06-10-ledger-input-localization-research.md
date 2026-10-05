@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:9680ee3af1a7350677c8ca6df173b49b8b7fea74767bccb827dd1023e980e355'
+modified: '2026-10-03'
+body_hash: 'sha256:a24b2a162864d987f9d74bf9995f021232fe3667ea3939a2afd60613e3c472a0'
 related: []
 ---
 
@@ -28,7 +28,7 @@ operator's first instructive surface.
 ### F1 — CRITICAL: silent thousands-separator misparse on the amount boundary
 
 The manual amount parser `_parse_decimal` (and its required-value wrapper
-`_parse_required_decimal`) in `src/aeat/entrypoints/cli/_ledger.py:122` does a
+`_parse_required_decimal`)  does a
 bare `Decimal(raw.strip())` with no format validation:
 
 ```
@@ -53,8 +53,7 @@ successfully. Because `_parse_decimal` has no `is_finite()` guard and no regex,
 the strings `NaN`, `Infinity`, `-Infinity`, and scientific notation `1e3` are
 all accepted and flow into the ledger. `NaN` in particular poisons every
 downstream comparison and aggregation. This is the same class of defect the
-financial CSV adapter already defends against: `parse_amount_value` in
-`src/aeat/adapters/inbound/financial/providers/_base.py:495` raises
+financial CSV adapter already defends against: `parse_amount_value`  raises
 `FinancialValidationError` on `not amount.is_finite()`, with an inline comment
 calling it defence-in-depth against non-finite values entering the ledger. The
 manual CLI boundary — the one a human drives directly — has no equivalent guard.
@@ -62,7 +61,7 @@ manual CLI boundary — the one a human drives directly — has no equivalent gu
 ### F3 — the canonical enforcement pattern already exists, on a different path
 
 The `--set KEY=VALUE` declaration-edit path already enforces a canonical decimal
-shape: `src/aeat/application/review/_edit.py:51` defines
+shape: the former source file defines
 `_DECIMAL_RE = re.compile(r"^-?\d+(\.\d+)?$")` and rejects malformed decimals
 before the constructor. This regex is exactly the canonical form the amount
 boundary should adopt: dot decimal separator, no thousands grouping, no
@@ -74,23 +73,15 @@ have drifted: one enforces, six do not.
 
 The identical unguarded helper pair is copy-pasted across six CLI modules:
 
-- `src/aeat/entrypoints/cli/_ledger.py:122`
-- `src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py:50`
-- `src/aeat/entrypoints/cli/_ledger_evidence_cli.py:258`
-- `src/aeat/entrypoints/cli/_ledger_inventory_cli.py:39`
-- `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py:66`
-- `src/aeat/entrypoints/cli/_ledger_ratios_cli.py:34`
-
 Every copy is the same bare `Decimal(raw.strip())`. A fix applied to one site
 leaves the other five unguarded, so the defect cannot be closed without a
 consolidation. There is no single owning helper; the shared CLI helper module
-`src/aeat/entrypoints/cli/_common.py` is the natural home (it already owns the
+the former source file is the natural home (it already owns the
 date helper, see F6).
 
 ### F5 — date input: the ISO helper is safe, but `invoice_date` bypasses it
 
-The shared date helper `_parse_iso_date` in
-`src/aeat/entrypoints/cli/_common.py:319` delegates to `date.fromisoformat()`.
+The shared date helper `_parse_iso_date`  delegates to `date.fromisoformat()`.
 This is *safe by construction*: `fromisoformat` accepts only `YYYY-MM-DD`, so it
 rejects `15/01/2026`, `01-15-2026`, and `2026/01/15`, and the DD/MM-vs-MM/DD
 ambiguity can never arise — an ISO date has an unambiguous field order. The
@@ -100,12 +91,8 @@ The defect is that `invoice_date` does **not** route through it. On the business
 invoice and evidence commands, `invoice_date` is a raw `str` Typer option passed
 straight to the service:
 
-- `src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py:180, 281, 398, 503`
-- `src/aeat/entrypoints/cli/_ledger_evidence_cli.py:98, 197`
-
 The domain model does not validate the *format* — the invoice model normalises
-dates through `_normalise_invoice_dates` in
-`src/aeat/domain/invoices/_models.py:144` only for an `issued_at` field, and the
+dates through `_normalise_invoice_dates`  only for an `issued_at` field, and the
 raw `invoice_date` string is accepted as-is subject only to a length bound.
 Consequently `15/01/2026` (exactly ten characters) persists verbatim as a
 non-ISO string. The operator gets no refusal and a downstream consumer that
@@ -113,7 +100,7 @@ expects ISO will misparse or fail later, far from the input site.
 
 ### F6 — shared ISO date infra exists at the core layer, unused by the CLI
 
-`src/aeat/core/parsing/_dates.py` exposes `parse_iso8601_date` (public alias
+the former source file exposes `parse_iso8601_date` (public alias
 `parse_date`, `fmt="iso8601"`), a no-I/O core-layer parser that raises
 `ValueError` with an actionable `expected YYYY-MM-DD` message. The CLI does not
 consume it; it has its own `_parse_iso_date`. Either is acceptable as the

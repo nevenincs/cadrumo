@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.modelos.row_models import Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow
+from ....domain.modelos.row_models import Modelo232VinculadaRow, Modelo349OperadorRow, Modelo349RectificacionRow
 from .._edit_execution import _reconstruct_detail_rows
 from ..edit_models import (
     ModeloDetailRowEditIntentV1,
@@ -27,8 +27,8 @@ from ..edit_models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-def _contraparte(nif: str, importe: str) -> Modelo347ContraparteRow:
-    return Modelo347ContraparteRow(nif=nif, importe_Q1=Decimal(importe))
+def _vinculada(nif: str, importe: str) -> Modelo232VinculadaRow:
+    return Modelo232VinculadaRow(pais="ES", nif=nif, importe=Decimal(importe))
 
 
 def _operador(nif_comunitario: str, importe: str) -> Modelo349OperadorRow:
@@ -55,11 +55,11 @@ def _rectificacion(nif_comunitario: str) -> Modelo349RectificacionRow:
 
 
 def _address(natural_key: str) -> ModeloEditDetailRowAddressV1:
-    return ModeloEditDetailRowAddressV1(detail_row_kind="contraparte", natural_key=natural_key)
+    return ModeloEditDetailRowAddressV1(detail_row_kind="vinculada", natural_key=natural_key)
 
 
 def test_add_row_appends_to_an_empty_set() -> None:
-    row = _contraparte("11111111H", "5000")
+    row = _vinculada("11111111H", "5000")
     intent = ModeloDetailRowEditIntentV1(
         address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.ADD_ROW, row=row
     )
@@ -70,9 +70,9 @@ def test_add_row_appends_to_an_empty_set() -> None:
 
 
 def test_update_row_replaces_content_in_place_preserving_position() -> None:
-    first = _contraparte("11111111H", "5000")
-    second = _contraparte("22222222J", "1000")
-    updated_first = _contraparte("11111111H", "9999")
+    first = _vinculada("11111111H", "5000")
+    second = _vinculada("22222222J", "1000")
+    updated_first = _vinculada("11111111H", "9999")
     intent = ModeloDetailRowEditIntentV1(
         address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.UPDATE_ROW, row=updated_first
     )
@@ -83,8 +83,8 @@ def test_update_row_replaces_content_in_place_preserving_position() -> None:
 
 
 def test_update_row_refuses_an_unknown_natural_key() -> None:
-    existing = _contraparte("11111111H", "5000")
-    ghost = _contraparte("99999999Z", "1")
+    existing = _vinculada("11111111H", "5000")
+    ghost = _vinculada("99999999Z", "1")
     intent = ModeloDetailRowEditIntentV1(
         address=_address("99999999Z"), kind=ModeloEditDetailRowIntentKind.UPDATE_ROW, row=ghost
     )
@@ -95,8 +95,8 @@ def test_update_row_refuses_an_unknown_natural_key() -> None:
 
 
 def test_delete_row_removes_by_key_leaving_the_rest_untouched() -> None:
-    first = _contraparte("11111111H", "5000")
-    second = _contraparte("22222222J", "1000")
+    first = _vinculada("11111111H", "5000")
+    second = _vinculada("22222222J", "1000")
     intent = ModeloDetailRowEditIntentV1(address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW)
 
     result = _reconstruct_detail_rows(current_detail_rows=(first, second), detail_row_intents=(intent,))
@@ -105,7 +105,7 @@ def test_delete_row_removes_by_key_leaving_the_rest_untouched() -> None:
 
 
 def test_delete_row_refuses_an_unknown_natural_key() -> None:
-    existing = _contraparte("11111111H", "5000")
+    existing = _vinculada("11111111H", "5000")
     intent = ModeloDetailRowEditIntentV1(address=_address("99999999Z"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW)
 
     result = _reconstruct_detail_rows(current_detail_rows=(existing,), detail_row_intents=(intent,))
@@ -145,7 +145,7 @@ def test_editing_one_m349_row_kind_never_touches_the_sibling_kind() -> None:
 
 
 def test_no_intents_returns_the_current_set_unchanged() -> None:
-    existing = (_contraparte("11111111H", "5000"),)
+    existing = (_vinculada("11111111H", "5000"),)
 
     result = _reconstruct_detail_rows(current_detail_rows=existing, detail_row_intents=())
 

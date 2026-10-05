@@ -16,7 +16,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.period import Period
-from ....domain.deadlines.plazo import resolve_filing_closes_on
+from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.deadlines.recargo import build_recovery_for_overdue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -56,8 +56,9 @@ def _work_unit(period: Period) -> WorkUnit:
 def _overdue_context() -> tuple[WorkUnit, Period, date, date]:
     """Return (work_unit, period, closes_on, reference_on) for late M130 1T."""
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
-    closes_on = resolve_filing_closes_on(_MODELO, _FILING_YEAR, period)
-    assert closes_on is not None, "registry must carry an M130 1T 2026 deadline window"
+    window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    assert window is not None, "registry must carry an M130 1T 2026 deadline window"
+    closes_on = window.closes_on
     reference_on = closes_on + timedelta(days=40)
     return _work_unit(period), period, closes_on, reference_on
 
@@ -132,8 +133,9 @@ def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment()
 def test_in_time_deadline_posture_has_no_conditional_rate_preview() -> None:
     """An open voluntary window has only days remaining, with no rate guidance."""
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
-    closes_on = resolve_filing_closes_on(_MODELO, _FILING_YEAR, period)
-    assert closes_on is not None
+    window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
+    assert window is not None
+    closes_on = window.closes_on
     reference_on = closes_on - timedelta(days=5)
 
     posture = modelo_work_deadline_posture(_work_unit(period), reference_on=reference_on)

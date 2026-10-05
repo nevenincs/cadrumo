@@ -1,0 +1,98 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:1
+msgid "Bundled data package marker"
+msgstr "Marcador del paquete de datos incluidos"
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:7
+msgid ""
+"**Report:** `STAGE-2-188` · **Topic:** [Bundled knowledge and "
+"localization](../topics/bundled-knowledge-and-localization.md)"
+msgstr ""
+"**Informe:** `STAGE-2-188` · **Tema:** [Conocimiento incluido y "
+"localización](../topics/bundled-knowledge-and-localization.md)"
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:10
+msgid "Scope and assessment"
+msgstr "Alcance y evaluación"
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:12
+msgid ""
+"This reference-data chunk contains one file: the zero-byte "
+"`src/cadrumo/_data/__init__.py`. It has no executable statements, "
+"declarations, metadata, or bundled-data behavior to analyze. Its presence"
+" marks `_data` as an importable package directory for Python "
+"packaging/resource traversal; the file itself grants no capabilities and "
+"enforces no validation or trust policy. This is a static conclusion from "
+"the complete one-file inventory, not a package build/runtime test."
+msgstr ""
+"Este fragmento de datos de referencia contiene un archivo: "
+"`src/cadrumo/_data/__init__.py`, de cero bytes. No tiene instrucciones "
+"ejecutables, declaraciones, metadatos ni comportamiento de datos "
+"incluidos que analizar. Su presencia marca `_data` como un directorio de "
+"paquete importable para el empaquetado de Python y el recorrido de "
+"recursos; el archivo por sí mismo no concede capacidades ni impone "
+"políticas de validación o confianza. Esta es una conclusión estática del "
+"inventario completo de un archivo, no una prueba de construcción ni de "
+"ejecución del paquete."
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:14
+msgid ""
+"The package's actual data-access mechanism is implemented elsewhere (for "
+"example, the harness and product resource accessors), so no claims about "
+"inclusion of every data subtree or importlib behavior are inferred from "
+"this empty marker alone. There are no substantive implementation or "
+"security findings in this chunk."
+msgstr ""
+"El mecanismo real de acceso a datos del paquete se implementa en otro "
+"lugar (por ejemplo, los accesores de recursos del arnés y del producto), "
+"por lo que no se infieren afirmaciones sobre la inclusión de todos los "
+"subárboles de datos ni sobre el comportamiento de importlib a partir de "
+"este marcador vacío por sí solo. Este fragmento no presenta hallazgos "
+"sustanciales de implementación ni de seguridad."
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:16
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/188-bundled-data-package-marker.md:18
+msgid "`src/cadrumo/_data/__init__.py` — 0 bytes, 0 lines; fully inspected."
+msgstr ""
+"`src/cadrumo/_data/__init__.py` — 0 bytes, 0 líneas; inspeccionado por "
+"completo."

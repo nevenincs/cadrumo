@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 from uuid import UUID
 
@@ -11,7 +12,7 @@ from pydantic import BaseModel, Field, RootModel
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.registry import OperationFrontendProjection
-from ..user_profile.access_contracts import AccessDenialCode, AccessScope, ProfileAccessStatus
+from ..user_profile.access_contracts import AccessDenialCode, AccessScope, AuthorityState, ProfileAccessStatus
 from ..user_profile.automation_custody_port import AutomationCustodyCode
 from ..user_profile.login_session import ProfileHumanLoginReceipt
 from .access_management import (
@@ -29,8 +30,7 @@ from .enrollment_access import (
     RuntimeEnrollmentRequest,
 )
 from .operation_access import RuntimeOperationReply, RuntimeOperationRequest
-from .owner_control import RuntimeStopAccepted, RuntimeStopConfirm, RuntimeStopPreview, RuntimeStopPreviewRequest
-from .transport import RuntimeConnectionContext, RuntimeStatusRequest, RuntimeTransportStatus
+from .transport import RuntimeConnectionContext
 
 if TYPE_CHECKING:
     from .profile_worker import ProfileWorkerDrained
@@ -80,10 +80,7 @@ class RuntimeSessionRequest(BaseModel):
 class RuntimeRequest(
     RootModel[
         Annotated[
-            RuntimeStatusRequest
-            | RuntimeStopPreviewRequest
-            | RuntimeStopConfirm
-            | RuntimeProfileLogin
+            RuntimeProfileLogin
             | RuntimeSessionRequest
             | RuntimeOperationRequest
             | RuntimeEnrollmentRequest
@@ -115,6 +112,49 @@ class RuntimeProfileStatus(BaseModel):
     connection_id: UUID
     status: ProfileAccessStatus
     human_login: ProfileHumanLoginReceipt | None = None
+
+
+def status_admits_session(
+    status: ProfileAccessStatus,
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+    at: datetime,
+    requires_automation_grant: bool,
+) -> bool:
+    """Whether ``status`` reports this exact lease as live and undenied at ``at``.
+
+    Only API-key sessions carry an automation grant; a human session has none,
+    so callers holding an API-key lease ask for the grant to be active too.
+    """
+    admitted = _session_is_live_for_profile(status, profile_id=profile_id, session_id=session_id, at=at)
+    if not admitted or not requires_automation_grant:
+        return admitted
+    return _automation_grant_is_live(status, at=at)
+
+
+def _session_is_live_for_profile(
+    status: ProfileAccessStatus, *, profile_id: UUID, session_id: UUID, at: datetime
+) -> bool:
+    return (
+        status.connected
+        and status.credential_authenticated
+        and status.profile_bound
+        and status.profile_id == profile_id
+        and status.session_id == session_id
+        and status.session_expires_at is not None
+        and status.session_expires_at > at
+        and status.denial is None
+    )
+
+
+def _automation_grant_is_live(status: ProfileAccessStatus, *, at: datetime) -> bool:
+    return (
+        status.grant_valid
+        and status.grant_state is AuthorityState.ACTIVE
+        and status.grant_expires_at is not None
+        and status.grant_expires_at > at
+    )
 
 
 class RuntimeProfileStatusTransfer(BaseModel):
@@ -154,10 +194,7 @@ class RuntimeAccessRefusal(BaseModel):
 class RuntimeReply(
     RootModel[
         Annotated[
-            RuntimeTransportStatus
-            | RuntimeStopPreview
-            | RuntimeStopAccepted
-            | RuntimeSecretReady
+            RuntimeSecretReady
             | RuntimeProfileStatus
             | RuntimeProfileStatusTransfer
             | RuntimeSessionInventoryTransfer

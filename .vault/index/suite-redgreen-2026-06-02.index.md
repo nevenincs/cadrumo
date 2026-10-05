@@ -4,14 +4,11 @@ tags:
   - '#index'
   - '#suite-redgreen-2026-06-02'
 date: '2026-08-16'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e5066985ad03d677a0c23880eddc351cc1300a88a0c1af073799ad31a0b9cbad'
+body_hash: 'sha256:2188b2207272ff2ab337a96e115836cd2b9a8365379e36ddd713fb6bc7caf6b5'
 related:
-  - '[[2026-06-02-suite-redgreen-2026-06-02-ledger]]'
-  - '[[2026-06-02-suite-redgreen-2026-06-02-plan]]'
   - '[[2026-06-03-suite-redgreen-2026-06-02-code-review-audit]]'
-  - '[[2026-06-04-suite-redgreen-2026-06-02-adr]]'
   - '[[2026-06-04-suite-redgreen-2026-06-02-research]]'
 ---
 
@@ -21,21 +18,9 @@ Auto-generated index of all documents tagged with `#suite-redgreen-2026-06-02`.
 
 ## Documents
 
-### adr
-
-- `2026-06-04-suite-redgreen-2026-06-02-adr` - `suite-redgreen-2026-06-02` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
 ### audit
 
 - `2026-06-03-suite-redgreen-2026-06-02-code-review-audit` - Suite Redgreen 2026 06 02 Code Review
-
-### exec
-
-- `2026-06-02-suite-redgreen-2026-06-02-ledger` - `suite-redgreen-2026-06-02` ledger
-
-### plan
-
-- `2026-06-02-suite-redgreen-2026-06-02-plan` - `suite-redgreen-2026-06-02` `Suite red-green burndown 2026-06-02` plan
 
 ### research
 

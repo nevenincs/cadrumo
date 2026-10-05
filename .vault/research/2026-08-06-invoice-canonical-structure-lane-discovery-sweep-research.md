@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#invoice-canonical-structure'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:500a288ec8bea7d0aa0ac93481cace5b76f85388f1d233123206aacc36ea662d'
+body_hash: 'sha256:e0cfde0a8f9132f22e2bdbce0b853c21b072db244c80ecb21eb6a72077269123'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
   - "[[2026-08-06-invoice-canonical-structure-audit]]"
@@ -95,16 +95,16 @@ declared **advisory, not a refusal**.
 
 #### Entities
 
-- **`PurchaseInvoiceEvidence`** — `src/cadrumo/application/ledger/_evidence.py:123`.
+- **`PurchaseInvoiceEvidence`** — the former source file.
   Fields: `evidence_id`, `bucket_id`, `source_path`, `attachment_id` (64-hex,
   content-addressed), `media_kind`, `supplier`, `invoice_number`, `invoice_date`,
   `taxable_base`, `iva_rate`, `iva_amount`, `notes`, timestamps
   (`_evidence.py:128-147`). Patch model at `:216`.
-- **`InvoiceDraft`** — `src/cadrumo/application/ledger/_evidence_draft.py:194`,
+- **`InvoiceDraft`** — the former source file,
   fields `:231-239`. The extraction output: `supplier_tax_id`, `invoice_number`,
   `invoice_date`, `taxable_base`, `iva_rate`, `iva_amount`, `grand_total`,
   `currency`, `raw_text_length`.
-- **`Transaction`** — `src/cadrumo/domain/transactions/_models.py:600`. This is
+- **`Transaction`** — the former source file. This is
   where the *deductibility* actually lives: `business_classification`,
   `category` (`SpendingCategory`), `iva_category` (`:792`), `exemption_article`
   (`:793`), `counterparty_eu_member_state` (`:794`), `source_jurisdiction`
@@ -113,18 +113,18 @@ declared **advisory, not a refusal**.
 
 #### Categorization taxonomy (the LLM allow-list)
 
-- `SpendingCategory` — `src/cadrumo/domain/categories/_spending_category.py:15`,
+- `SpendingCategory` — the former source file,
   **42 members** (`:23-64`), grouped by `SpendingCategoryFamily` (`:67`, 14
   families).
 - Deductibility rule per category:
-  `src/cadrumo/domain/categories/_proportionality.py:170-176` —
+  the former source file —
   `FULL_DEDUCTIBLE`, `FIXED_PERCENTAGE`, `USAGE_RATIO_PERSONAL`,
   `USAGE_RATIO_HOME_AREA`, `STATUTORY_CAP`, `NON_DEDUCTIBLE`,
   `REQUIRES_EXCLUSIVE_USE`; grounding provenance enum at `:82-86`.
 - LLM containment: the classifier's allow-list guard lives in the engine
-  (`src/cadrumo/domain/transactions/_llm.py:307` `allowed_classifications`), so an
+  (the former source file `allowed_classifications`), so an
   out-of-allow-list value never reaches the application layer
-  (`src/cadrumo/application/ledger/_llm_classification.py:24-27`).
+
 - Staging is explicit
   (`_llm_classification.py:29-39`): **stage 1** persists only
   `business_classification` + `category`; **stage 2 saturation** additionally
@@ -134,7 +134,7 @@ declared **advisory, not a refusal**.
 
 **This taxonomy is consumed by LANE 1 only.** Neither the slim nor the rich
 invoice record carries a `SpendingCategory`. The rich `InvoiceLine` has a free
-`category_id: str | None` (`src/cadrumo/domain/invoices/_models.py:397`) which is
+`category_id: str | None`  which is
 *not* typed to `SpendingCategory`.
 
 #### CLI surface
@@ -158,14 +158,14 @@ hole**: `_evidence_draft.py:488-508` records that a printed
 
 #### Downstream modelo consumers
 
-- M100 / M130 gastos: `src/cadrumo/application/aggregation/_renta_ledger.py`
+- M100 / M130 gastos: the former source file
   (`ledger_renta_gastos_estimacion_directa_aggregation`,
   `ledger_renta_gastos_pago_fraccionado_aggregation`). Evidence is consumed as a
   *linkage gate*, with typed refusals at `_renta_ledger.py:127-131`.
 - M303 soportado: via the `Transaction` row through `ledger_iva_aggregation`
-  (`src/cadrumo/application/aggregation/_iva_ledger.py`).
+
 - Deduction-grade evidence advisory:
-  `src/cadrumo/application/aggregation/_evidence_advisory.py:85`
+
   `_row_has_deduction_grade_evidence` (LIVA art. 97 enumerative).
 
 ---
@@ -177,14 +177,14 @@ they are documented together with the per-kind divergences called out.
 
 #### The direction axis
 
-- `InvoiceKind(StrEnum)` — `src/cadrumo/domain/iva/_classification.py:102`,
+- `InvoiceKind(StrEnum)` — the former source file,
   `ISSUED = "issued"` (`:118`) / `RECEIVED = "received"` (`:119`).
 - `BusinessOperationInvoiceDirection(StrEnum)` —
-  `src/cadrumo/application/ledger/_business_operation_invoice.py:67`,
+
   `PAYABLE_INVOICE` (`:76`) / `COLLECTIBLE_INVOICE` (`:77`).
 - Single contractual bridge:
   `invoice_direction_to_source_kind(kind) -> BusinessOperationInvoiceDirection`
-  — `src/cadrumo/application/invoices/_source_resolver.py:109-122`. Totality is
+  — the former source file. Totality is
   locked by an anti-collapse test:
   `src/cadrumo/application/invoices/tests/test_source_resolver.py:50-53`
   ("must resolve every InvoiceKind member to a distinct source kind, never
@@ -193,7 +193,7 @@ they are documented together with the per-kind divergences called out.
 #### Entity A — the SLIM record (operator CRUD)
 
 `BusinessOperationInvoice` —
-`src/cadrumo/application/ledger/_business_operation_invoice.py:154`, fields
+the former source file, fields
 `:171-196`: `invoice_id`, `source_kind`, `bucket_id`, `counterparty_nif`,
 `counterparty_name`, `invoice_number`, `invoice_date`, `currency`,
 `taxable_base`, `iva_rate`, `iva_amount`, `total_amount`, `fx_rate`,
@@ -217,7 +217,7 @@ CLI: `aeat app ledger invoice {add|view|list|update|remove}` —
 
 #### Entity B — the RICH record (calculation / reconciliation authority)
 
-`Invoice` — `src/cadrumo/domain/invoices/_models.py:469`, fields `:474-505`.
+`Invoice` — the former source file, fields `:474-505`.
 Carries everything the slim record lacks: `invoice_class`, `series`,
 `operation_date` + `operation_date_role`, `counterparty_country`, `lines`
 (`InvoiceLine`, `:386`), `payment_status`, `linked_transaction_ids`,
@@ -233,7 +233,7 @@ different invoice.
 
 Container: `InvoiceCatalogue` (`:1002`) — a **single mixed-kind store**;
 `list_invoices(..., kind=None)` treats kind as an optional filter
-(`src/cadrumo/domain/invoices/_service.py:100-118`). Lane separation here is
+. Lane separation here is
 enforced *at the consumers*, not at the container.
 
 CLI: `aeat app ledger invoice catalogue {create|wizard|import|list|view|remove}`
@@ -244,13 +244,13 @@ CLI: `aeat app ledger invoice catalogue {create|wizard|import|list|view|remove}`
 
 There is **no `IssuerStatus` entity**. The one place RD 1619/2012's
 "obligado a la expedición de la factura" is modelled:
-`src/cadrumo/application/invoices/_issuer_establishment.py` (norm quoted `:6-8`).
+the former source file (norm quoted `:6-8`).
 
 - `issuer_established_in_tai(profile) -> bool` (`:86`), implemented at `:103` as
   `profile.fiscal_residency is not FiscalResidency.NON_RESIDENT_IRNR` — an
   approximation off the IRPF residency axis, deliberately over-strict (`:43-66`),
   with the Canarias / Ceuta-Melilla limitation pinned by test
-  (`tests/test_issuer_establishment.py:160`).
+
 - `simplificada_requires_tax_id_for_domestic_issuer(invoice, profile)` (`:106`),
   first guard `if invoice.kind is not InvoiceKind.ISSUED: return False` (`:150-158`).
 - **Weight: advisory.** `:133-140` — "This is an ADVISORY-weight fact, not a
@@ -263,12 +263,12 @@ Where the `ISSUED`/`RECEIVED` lane **is** hard-enforced:
    tax-id relief is ISSUED-only; on RECEIVED the counterparty tax id "names the
    issuer's own identity, which stays mandatory". Rationale `:819-828`.
 2. OSS/IOSS projection is ISSUED-only — `_models.py:934-935`.
-3. Evidence-reference classifier — `src/cadrumo/application/ledger/_evidence_reference.py:175-180`,
+3. Evidence-reference classifier — the former source file,
    `EvidenceReferenceOutcome.INVOICE_WRONG_KIND` (`:77`), excluded from
    `ACCEPTABLE_EVIDENCE_REFERENCE_OUTCOMES` (`:81`). An ISSUED invoice cannot
    stand as purchase evidence.
 4. The write gate over it —
-   `src/cadrumo/application/ledger/_actions_common.py:477-527`, terminal refusal
+   the former source file, terminal refusal
    at `:521-527`.
 5. Aggregation refusals (soft — row withheld, not raised):
    `_renta_ledger.py:742-749` (`UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND`),
@@ -278,7 +278,7 @@ Where the `ISSUED`/`RECEIVED` lane **is** hard-enforced:
 Locking tests: `application/ledger/tests/test_evidence_reference.py:165`;
 `domain/invoices/tests/test_invoice_simplificada.py:148, :168`;
 `application/invoices/tests/test_source_resolver.py:39, :45, :50`;
-`application/invoices/tests/test_issuer_establishment.py:125, :133, :160`.
+`application/invoices/the former source file:133, :160`.
 
 **Verdict on the operator's claim:** the *direction* axis is stringently mandated
 — structurally in the slim store (two files, immutable lane, lane in the id hash)
@@ -290,7 +290,7 @@ advisory only.
 
 Modelled almost entirely as **`IvaCategory` membership**, not as flags.
 
-- `IvaCategory` — `src/cadrumo/domain/iva/_schema.py:40`, 20 members `:49-88`,
+- `IvaCategory` — the former source file, 20 members `:49-88`,
   covering domestic tiers, `DOMESTIC_REVERSE_CHARGE`, four intracomunitario
   members (goods supply / acquisition-ISP / triangulation) plus two service
   members (`INTRA_COMMUNITY_SERVICE_SUPPLY` `:59`,
@@ -298,7 +298,7 @@ Modelled almost entirely as **`IvaCategory` membership**, not as flags.
   `:81-83`, `RECARGO_EQUIVALENCIA` `:84`, `REGIMEN_SIMPLIFICADO` `:85`,
   `OPERACION_NO_SUJETA` `:86`.
 - Reverse charge: no boolean. `_REVERSE_CHARGE_CATEGORIES` frozenset —
-  `src/cadrumo/domain/iva/_flow.py:121`; direction derived once by
+  the former source file; direction derived once by
   `derive_flow_for_classification` (`_flow.py:133`) into `IvaFlowDirection`
   (`:95`, includes `INVERSION_SUJETO_PASIVO`).
 - Intracomunitario also carries `IntracomOperationType` (the M349 clave axis) on
@@ -321,7 +321,7 @@ retención is held *outside* the totals, non-negative, and a rate alone is
 rejected ("a rate alone declares no withheld figure", `:709`). Base is the base
 imponible, never the grand total (test `domain/invoices/tests/test_retencion_consistency.py:143`).
 
-Routing (`src/cadrumo/application/aggregation/_invoice_retencion.py`, module
+Routing (the former source file, module
 docstring `:1-46` is the authoritative explanation):
 
 - ISSUED → the taxpayer is *retenido*, the amount is a **credit** against the
@@ -421,7 +421,6 @@ time of writing.** Treat as high-confidence-unconfirmed until that returns.
 
 #### T2 — Lane is decided by bank-money direction, not by user intent
 
-`src/cadrumo/application/aggregation/_iva_ledger.py:1518-1547`:
 `_invoice_kind_for(direction: TransactionDirection)` maps `INCOMING → ISSUED`,
 `OUTGOING → RECEIVED`, and `_iva_ledger.py:1230-1234` asserts it is non-`None`
 before deriving `IvaFlowDirection` (repercutido vs soportado). The entire M303
@@ -495,7 +494,6 @@ number without an operator error; G2–G3 block correct filing outright.
 #### G1 — Catalogue invoice IVA is not an M303 filing source; the guard is
 one-directional and country-scoped
 
-`src/cadrumo/application/aggregation/_modelo_bindings.py:1005-1069`
 (`_raise_if_m303_invoice_domestic_iva_would_be_silent`) states it plainly in its
 own docstring (`:1013-1022`): *"there is no domestic-IVA invoice binding family
 for M303 … the transaction ledger is the filing authority."*
@@ -529,14 +527,13 @@ highest-consequence finding in the sweep.
 
 #### G2 — No CLI route to record retención on a single invoice
 
-`create_catalogue_invoice` — `src/cadrumo/application/invoices/_creation.py:217-236`
+`create_catalogue_invoice` — the former source file
 — has **no retention parameter**. Neither does `build_catalogue_invoice` as
 called at `:246-262`. `catalogue create` (`:562`) and `catalogue wizard` (`:638`)
 expose no `--retention-rate` / `--retention-amount`.
 
 The only write route to `Invoice.retention_rate` / `retention_amount` is the bulk
 CSV/XLSX importer, whose TypedDict declares them `NotRequired`
-(`src/cadrumo/application/invoices/_importing.py:57-58`).
 
 So a taxpayer who issues one invoice to a Spanish company with a 15% IRPF
 retención, or receives one from a professional, **cannot record it through
@@ -578,7 +575,7 @@ rank that HEAD `0b1e3f040b` was written to distinguish from a declared one.
 Raised by the INGEST agent during cross-verification and confirmed here at HEAD,
 with one correction to the framing.
 
-`build_catalogue_invoice` — `src/cadrumo/application/invoices/_creation.py:113-137`
+`build_catalogue_invoice` — the former source file
 — docstring `:116-119`: *"A single line item is synthesised from `taxable_base`
 and the resolved IVA rate slot; the invoice totals are derived from that line so
 the `Invoice` arithmetic invariants hold."* It resolves exactly one
@@ -588,7 +585,7 @@ and the evidence-confirm bridge route through it, so **no operator path can
 produce a two-line invoice today.**
 
 **Correction to the framing:** the *model* is not the constraint.
-`Invoice._require_lines` (`src/cadrumo/domain/invoices/_models.py:605-610`)
+`Invoice._require_lines`
 raises only on an *empty* tuple — "invoice must carry at least one line". It
 imposes no upper bound, and the M303 comparison screen already iterates
 `invoice.lines` per line (`application/aggregation/_modelo_bindings.py:1093-1105`),

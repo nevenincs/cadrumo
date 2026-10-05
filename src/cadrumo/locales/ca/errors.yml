@@ -32,15 +32,8 @@ errors:
     auth_former_product_session_state: Cadrumo ha detectat estat de sessió d'un producte
       retirat i es nega a llegir-lo, moure'l, re-xifrar-lo, eliminar-lo o adoptar-lo.
     auth_google: S'ha produït un error en l'autenticació amb Google.
-    auth_google_client_not_registered: No hi ha cap client OAuth d'escriptori de Google
-      registrat per al perfil actiu. Registra un client per fer servir les funcions
-      de Google.
-    auth_google_client_revoked: El client OAuth d'escriptori de Google registrat ha
-      estat revocat. Registra un client nou.
-    auth_google_expired: El testimoni d'actualització de Google ha caducat pel límit
-      de 7 dies dels projectes en proves. Torna a autoritzar l'accés a Google.
-    auth_google_revoked: El testimoni d'actualització de Google ha estat revocat.
-      Torna a autoritzar l'accés a Google.
+    auth_google_client_revoked: Google ja no accepta el client OAuth d'escriptori
+      d'aquesta instal·lació. Actualitza l'aplicació a una versió actual.
     auth_google_scope_insufficient: Els permisos concedits a Google no inclouen tots
       els necessaris per a aquesta operació. Torna a autoritzar concedint tots els
       permisos sol·licitats.
@@ -49,7 +42,7 @@ errors:
     auth_session_corrupt: Les metadades de la sessió desada no es poden llegir. Torna
       a autenticar-te per crear una sessió nova.
     auth_session_deserialization: Les dades de sessió d'autenticació emmagatzemades
-      no s'han pogut deserialitzar. Torneu a autenticar-vos per crear una sessió nova.
+      no s'han pogut deserialitzar. Torna a autenticar-te per crear una sessió nova.
     auth_session_unavailable: No hi ha cap sessió activa verificada amb l'AEAT disponible.
       Autentica't abans de continuar.
     auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
@@ -62,11 +55,11 @@ errors:
       lletra del document i torna-ho a provar.
   authority:
     descriptor_absent: No hi ha cap autoritat del registre publicada a %{searched_path}.
-      Publiqueu-la amb `%{publish_command}` o definiu CADRUMO_AUTHORITY_ROOT amb un
+      Publica-la amb `%{publish_command}` o defineix CADRUMO_AUTHORITY_ROOT amb un
       arbre d'autoritat publicat.
     descriptor_missing_under_configured_root: CADRUMO_AUTHORITY_ROOT apunta a un directori
-      sense descriptor d'autoritat del registre a %{searched_path}. Publiqueu l'autoritat
-      amb `%{publish_command}` o feu que la variable apunti a un arbre d'autoritat
+      sense descriptor d'autoritat del registre a %{searched_path}. Publica l'autoritat
+      amb `%{publish_command}` o fes que la variable apunti a un arbre d'autoritat
       publicat.
   calc:
     age_at_year_end_no_filing_year: 'Error intern: el càlcul de l''edat a final d''exercici
@@ -143,7 +136,7 @@ errors:
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     row_field_template_supplied_as_input: Les caselles {casilla_ids} prenen un valor
       per cada fila de detall de {record_ids}, de manera que no es poden subministrar
-      com un únic valor d'entrada. Indiqueu-les com a files de detall.
+      com un únic valor d'entrada. Indica-les com a files de detall.
     text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no
       textuals: %{casilla_ids}.'
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
@@ -176,15 +169,16 @@ errors:
       Consulta l'operació abans de tornar-ho a provar.
     error_automation_inventory_read: No s'ha pogut confirmar l'inventari d'automatització.
     error_automation_requester_uncertain: No s'ha pogut confirmar el resultat de la
-      sol·licitud d'autorització. Consulteu la sol·licitud existent abans de tornar-ho
+      sol·licitud d'autorització. Consulta la sol·licitud existent abans de tornar-ho
       a provar.
     error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
       del Model 100 conegut.
     error_cadrumo_async_resource_cleanup: Ha fallat la neteja asíncrona de recursos;
-      torneu a intentar la neteja abans de continuar.
+      torna a intentar la neteja abans de continuar.
     error_cadrumo_core: S'ha produït un error intern en l'aplicació.
     error_cadrumo_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
-    error_cadrumo_observability: S'ha produït un error en la telemetria de l'aplicació.
+    error_cadrumo_observability: S'ha produït un error en el registre de diagnòstic
+      de l'aplicació.
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
     error_calc_sheets_parity: L'escenari del bastiment de paritat fa referència a
@@ -268,6 +262,8 @@ errors:
     error_iva_validation: Un valor de l'IVA no és vàlid.
     error_justificante: S'ha produït un error relacionat amb el justificant.
     error_justificante_csv_not_found: El PDF no conté un Codi Segur de Verificació.
+    error_ledger_own_account_register_record: Un registre de comptes bancaris propis
+      no és estructuralment vàlid.
     error_llm: S'ha produït un error en el model de llenguatge.
     error_modelo_aggregation_binding: Els bindings d'agregació derivats del bucket
       entren en conflicte amb les dades indicades.
@@ -284,6 +280,9 @@ errors:
       és compatible amb l'estat actual de la revisió de càlcul.
     error_modelo_casilla_provenance_missing: Una casella del resultat del motor no
       té definició al registre.
+    error_modelo_cleared_casilla_source_fed: La casella {casilla_ids} no es pot buidar
+      perquè una de les seves fonts continua aportant-hi un valor. Restaura el valor
+      de la font en lloc de buidar-la.
     error_modelo_external_filing_import: No s'ha pogut desar la declaració externa
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
@@ -304,8 +303,8 @@ errors:
     error_observation_key: Un component de la clau d'observació no compleix el contracte
       del repositori.
     error_optional_extra_missing: Aquesta instal·lació no té el complement opcional
-      «{extra}», necessari per a {feature}. Instal·leu-lo amb pip install cadrumo[{extra}]
-      i torneu a executar la comanda.
+      «{extra}», necessari per a {feature}. Instal·la'l amb pip install cadrumo[{extra}]
+      i torna a executar la comanda.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
       sol·licitat.
     error_outbound_storage_path_too_long: El camí d'emmagatzematge resolt supera el
@@ -322,6 +321,8 @@ errors:
       perfil no és vàlida.
     error_profile_bienes_inversion_record: Un registre de regularització d'IVA per
       béns d'inversió no és estructuralment vàlid.
+    error_profile_foreign_asset_register_record: Un registre de béns a l'estranger
+      del model 720 no és estructuralment vàlid.
     error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
       no és vàlida.
     error_profile_mutation_run: L'operació de canvi del perfil ha acabat sense un
@@ -350,12 +351,10 @@ errors:
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
     error_storage_bucket_path_too_long: El camí del directori del bucket supera el
       límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més
-      curt o activa LongPathsEnabled (vegeu `aeat config check`).
+      curt o activa LongPathsEnabled (consulta `aeat config check`).
     error_storage_management: No s'ha pogut llegir ni alliberar l'arbre d'emmagatzematge
       local.
     error_submission_validation: Un model d'enviament no ha superat la validació.
-    error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a
-      l'esquema tancat de mètriques de la seva ordre.
     error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
     error_transaction_classification_rule: Una regla de classificació del llibre major
       no és vàlida.
@@ -394,6 +393,8 @@ errors:
     modelo_work_selector: El selector de treball de model ha fallat.
     modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de model
       seleccionada.
+    windows_credential_api: L'Administrador de credencials de Windows no ha pogut
+      completar l'operació amb la credencial.
   fail:
     canonical_auth_diagnostic_persistence: No s'han pogut desar els diagnòstics d'autenticació.
     canonical_catalogue_invoice_persistence: No s'ha pogut desar el catàleg de factures.
@@ -401,7 +402,7 @@ errors:
       catàleg de factures.
     canonical_counterparty_establishment_persistence: No s'ha pogut desar el registre
       d'establiment de la contrapart.
-    canonical_diagnostic_run_telemetry: No s'ha pogut llegir la telemetria de l'execució
+    canonical_diagnostic_run_record: No s'han pogut llegir els registres de l'execució
       diagnòstica.
     canonical_evidence_bundle_persistence: No s'ha pogut desar el paquet d'evidències.
     canonical_invoice_catalogue_read_persistence: No s'ha pogut carregar el catàleg
@@ -435,7 +436,7 @@ errors:
     canonical_taxation_comparison_persistence: No s'han pogut carregar les unitats
       de treball per comparar la tributació.
     canonical_tui_account_session_expired: La sessió del compte del TUI ha caducat;
-      torneu a iniciar sessió per continuar.
+      torna a iniciar sessió per continuar.
     canonical_workflow_gate_persistence: No s'ha pogut desar el control d'accés del
       flux de treball.
     censo_sync: La sincronització del cens del Model 036 ha fallat.
@@ -465,10 +466,6 @@ errors:
       del llibre del bucket.
     fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
       el perfil de percentatges d'ús.
-    fail_google_adc_stale: No s'han pogut renovar les credencials predeterminades
-      d'aplicació (ADC). Executeu gcloud auth application-default login.
-    fail_google_adc_unavailable: No s'han trobat credencials predeterminades d'aplicació
-      (ADC) en aquest equip. Executeu gcloud auth application-default login.
     fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina
       de consentiment de Google. Obre l'enllaç manualment.
     fail_google_loopback_bind: El receptor HTTP local no ha pogut obrir un port. Tanca
@@ -528,8 +525,8 @@ errors:
       de secrets.
     fail_storage_secure_object_revision_conflict: L'objecte segur ha canviat per una
       altra escriptura; torna'l a carregar i reintenta-ho amb la revisió actual.
-    fail_storage_secure_object_upsert: No s'ha pogut persistir l'objecte segur. Reviseu
-      la ruta d'emmagatzematge i torneu-ho a provar.
+    fail_storage_secure_object_upsert: No s'ha pogut persistir l'objecte segur. Revisa
+      la ruta d'emmagatzematge i torna-ho a provar.
     fail_user_profile_not_found: No s'ha trobat la secció o el camp sol·licitat del
       perfil d'usuari.
     fail_user_profile_schema_load: No s'ha pogut carregar l'esquema del perfil d'usuari.
@@ -564,7 +561,8 @@ errors:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
     source_file_too_large: 'El fitxer origen és massa gran: {path} ({size_bytes} bytes;
       màxim {max_bytes} bytes)'
-    unsupported_date_format: 'Format de data no vàlid a {label}: {raw}. Useu {expected_format}.'
+    unsupported_date_format: 'Format de data no vàlid a {label}: {raw}. Fes servir
+      {expected_format}.'
   identity:
     cif_check_char_mismatch_mixed: 'El caràcter de control del CIF és incorrecte (tipus
       {kind}): s''esperava {expected} o {alt}, s''ha obtingut {got}.'
@@ -721,6 +719,8 @@ errors:
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
+    windows_credential_record: La credencial de Windows no compleix el format requerit
+      per a l'emmagatzematge de secrets.
   internal:
     canonical_authority_cache_cycle: El carregador de components d'autoritat ha detectat
       un cicle de càrrega recursiu.
@@ -746,24 +746,34 @@ errors:
     internal_active_profile_pointer_transaction: 'Error intern: la propietat de la
       transacció del punter de perfil actiu no és vàlida.'
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
-      no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic
+      no per un problema de dades emmagatzemades. Consulta els registres de diagnòstic
       per veure què ha fallat.
     internal_flow_copy_resolution: 'Error intern: el flux guiat no ha pogut resoldre
       els seus textos de presentació.'
     internal_flow_validator_registry: 'Error intern: el registre de validadors del
       flux guiat ha rebutjat l''operació.'
+    internal_modelo_help_catalogue_gap: Falta al catàleg un text d'ajuda d'aquesta
+      casella.
+    internal_modelo_source_kind_unclassified: Un origen de valors no té família declarada,
+      així que no es pot explicar.
+    internal_modelo_value_presentation_catalogue_gap: Falta al catàleg una paraula
+      per mostrar un valor.
+    internal_modelo_value_presentation_unknown: El tipus de valor d'una casella no
+      té regla de presentació.
+    internal_modelo_work_form_layout: La distribució de l'imprès d'aquest model no
+      coincideix amb la seva revisió.
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
-      un esdeveniment de telemetria fora d''un context d''execució actiu.'
+      un esdeveniment de diagnòstic fora d''un context d''execució actiu.'
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
       ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
       no declara.'
     internal_operation_executor_returned_no_result: 'Error intern: l''operació s''ha
       aturat sense resultat i sense quedar a l''espera de res, de manera que s''ha
-      tancat com a fallida. No s''hi farà res més; consulteu els registres de diagnòstic
+      tancat com a fallida. No s''hi farà res més; consulta els registres de diagnòstic
       per conèixer-ne la causa.'
     internal_operation_unsettled: 'Error intern: l''operació s''ha aturat abans de
       poder registrar-ne el resultat. Queda oberta i es tancarà automàticament quan
-      caduqui el seu bloqueig de propietari; consulteu els registres de diagnòstic
+      caduqui el seu bloqueig de propietari; consulta els registres de diagnòstic
       per veure''n la causa.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
@@ -783,14 +793,16 @@ errors:
       a Espanya en la data de l'operació.
   locked:
     canonical_ledger_persistence_conflict: Un altre procés ha modificat el llibre
-      mentre es desava aquesta actualització; torneu-ho a provar.
+      mentre es desava aquesta actualització; torna-ho a provar.
     canonical_operation_financial_operand_custody_conflict: Un altre procés ha avançat
-      l'estat de custòdia de l'operand financer; torneu-ho a provar.
+      l'estat de custòdia de l'operand financer; torna-ho a provar.
     locked_access_gate_live_submit_forbidden: L'enviament en viu a l'AEAT està permanentment
       prohibit. Aquesta aplicació construeix, valida i exporta declaracions; la presentació
       s'ha de fer fora de l'aplicació.
     locked_auth_acquisition: Un altre procés està adquirint l'autenticació amb l'AEAT
       en aquest moment. Espera que acabi i torna-ho a provar.
+    locked_cli_operation_still_running: L'operació {operation_id} encara s'està executant.
+      Encara no se'n coneix el resultat. Comprova'l abans de tornar-ho a provar.
     locked_google_keychain: L'anell de claus del sistema operatiu que desa les credencials
       de Google està bloquejat o no és accessible. Desbloqueja l'anell de claus i
       torna-ho a provar.
@@ -806,7 +818,7 @@ errors:
       provar.
     locked_storage_profile_custody_capsule_generation: La càpsula de custòdia del
       perfil ha canviat mentre es llegia. Un altre procés l'està publicant o eliminant.
-      Torneu a provar l'operació.
+      Torna a provar l'operació.
   prefix:
     auth: Autenticació.
     error: Error.
@@ -828,21 +840,17 @@ errors:
       resultat final.
     canonical_bien_inversion_disposal_incomplete: L'alienació d'un bé d'inversió requereix
       tant l'exercici com el règim d'alienació.
-    canonical_evidence_sweep_file_not_reachable: El proveïdor d'evidències ha rebutjat
-      un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
-    canonical_invoice_draft_reader_busy_refused: No s'ha executat el model del lector
-      d'esborranys de factures perquè una altra lectura local ja ocupava la inferència
-      d'aquest equip.
-    canonical_invoice_draft_reader_headroom_refused: No s'ha carregat el model del
-      lector d'esborranys de factures perquè aquest equip no ha mostrat marge de memòria
-      mesurat per a ell.
-    canonical_invoice_withholding_defects: L'evidència de la factura no permet registrar
-      la retenció fins que es corregeixin a la factura tots els defectes indicats.
+    canonical_invoice_draft_reader_busy_refused: El lector automàtic de factures no
+      s'ha executat perquè una altra lectura ja feia servir aquest equip.
+    canonical_invoice_draft_reader_headroom_refused: El lector automàtic de factures
+      no s'ha executat perquè aquest equip no té prou memòria lliure.
     canonical_invoice_evidence_review_changed: El justificant o l'esborrany de la
-      factura ha canviat des de la revisió. Torni a llegir i revisar el document actual
+      factura ha canviat des de la revisió. Torna a llegir i revisar el document actual
       abans de confirmar-lo.
+    canonical_invoice_withholding_defects: La factura no es pot fer servir per registrar
+      la retenció fins que es corregeixin a la factura tots els defectes indicats.
     canonical_invoice_withholding_evidence: L'evidència de la factura no permet registrar
       la retenció.
     canonical_ledger_payment_withholding_evidence: El pagament del llibre no permet
@@ -866,18 +874,19 @@ errors:
     canonical_modelo_binding_value_invalid: El valor indicat no compleix el format
       oficial de la vinculació.
     canonical_modelo_lifecycle_clock_precedes: El rellotge de l'acció és anterior
-      a un registre que actualitzaria, així que no s'ha desat res. Torneu-ho a provar
+      a un registre que actualitzaria, així que no s'ha desat res. Torna-ho a provar
       amb l'hora actual.
     canonical_modelo_workspace_stale_cursor: El cursor fixat ja no coincideix amb
-      la referència actual; reinicieu la consulta.
+      la referència actual; reinicia la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura de l'espai de treball ha
       trobat una selecció de treball no resolta.
+    canonical_operation_financial_operand: No s’han pogut acceptar les dades financeres.
     canonical_operation_observation_cursor_ahead: El cursor d'observació sol·licitat
       supera l'àncora autoritativa.
     canonical_operation_observation_unknown_operation: No existeix cap diari d'observacions
       per a l'operació sol·licitada.
     canonical_operation_subject_busy: Una altra operació sobre aquesta declaració
-      encara està en curs. Espereu que acabi i torneu-ho a provar.
+      encara està en curs. Espera que acabi i torna-ho a provar.
     canonical_previous_filing_observation_absent: No s'ha observat la presentació
       anterior requerida.
     canonical_prorrata_election: L'elecció de prorrata no compleix l'article 105 de
@@ -891,8 +900,6 @@ errors:
     canonical_tui_modelo_workspace_declaration_admission: La declaració de l'espai
       de treball del Model no es pot admetre en la generació actual de l'espai de
       treball.
-    canonical_tui_modelo_workspace_session_admission: La sessió de l'espai de treball
-      del Model no es pot admetre a partir de la projecció proporcionada.
     canonical_tui_module_argument: El mòdul TUI només admet els arguments compatibles.
     canonical_tui_navigation_contract: La petició de navegació del TUI infringeix
       el seu contracte.
@@ -916,8 +923,13 @@ errors:
     censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
     clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
       una credencial que necessita.
+    financial_edit_journal_purge: No s’ha pogut depurar de manera segura aquest diari
+      antic d’edició financera. L’operació no està disponible. No s’ha carregat cap
+      valor d’edició.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
+    ledger_source_jurisdiction_required: Indica la jurisdicció fiscal del contribuent
+      abans d'afegir aquest moviment al llibre.
     locale_catalogue_capture_not_current: Aquesta captura del catàleg d'idiomes ja
       no és vigent.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
@@ -937,8 +949,6 @@ errors:
     modelo_210_agrupacion_renta_rows: Les rendes agrupades anuals del Model 210 han
       de formar una agrupació única i vàlida (un codi, un tipus, un bé identificat
       i un pagador, excepte l'excepció de múltiples pagadors).
-    modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
-      requereixen cobertura declarativa explícita.
     modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de país {country_code}
       per a la clau d''operació {clave_operacion} en {filing_year}/{period}: {reason}.
       Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'
@@ -963,19 +973,19 @@ errors:
     modelo_calculate_text_input: El valor de sobreescriptura de --casilla indicat
       no és vàlid per a una casella de text.
     modelo_calculation_revision_selector_ambiguous: El selector de revisió de càlcul
-      coincideix amb més d'una revisió; refineu el selector.
+      coincideix amb més d'una revisió; refina el selector.
     modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada
       no està en un estat utilitzable per a aquesta operació.
     modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
     modelo_edit_baseline_stale: La declaració ha canviat des que es va obrir, de manera
-      que no s'ha aplicat l'edició. Torneu-la a obrir i editeu-la de nou.
+      que no s'ha aplicat l'edició. Torna-la a obrir i edita-la de nou.
     modelo_edit_contract_incompatible: L'edició es va preparar en un format que aquesta
-      versió no accepta, de manera que no s'ha canviat res. Torneu a obrir la declaració
-      i editeu-la de nou.
+      versió no accepta, de manera que no s'ha canviat res. Torna a obrir la declaració
+      i edita-la de nou.
     modelo_edit_intent_unsupported: Aquest tipus d'edició encara no està disponible,
       de manera que no s'ha canviat res.
-    modelo_edit_refused: S'ha rebutjat l'edició i no s'ha canviat res. Reviseu els
-      valors i torneu-ho a provar.
+    modelo_edit_refused: S'ha rebutjat l'edició i no s'ha canviat res. Revisa els
+      valors i torna-ho a provar.
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
@@ -983,10 +993,10 @@ errors:
     modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
       un import decimal vàlid.
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
-    modelo_work_capture_not_current: La selecció de treball ja no es actual. Torneu
-      a llegir l'objectiu de treball i proveu-ho de nou.
+    modelo_work_capture_not_current: La selecció de treball ja no es actual. Torna
+      a llegir l'objectiu de treball i prova-ho de nou.
     modelo_work_discard_approval_stale: La unitat de treball ha canviat després d'aprovar-se
-      el descart; reviseu-la i aproveu-la de nou.
+      el descart; revisa-la i aprova-la de nou.
     modelo_work_period_token: Període de model no vàlid.
     modelo_work_registry_year_mismatch: La revisió de registre seleccionada no cobreix
       l'exercici fiscal sol·licitat.
@@ -996,14 +1006,14 @@ errors:
       amb el selector.
     modelo_work_selector_contradiction: Els arguments del selector de treball de model
       es contradiuen.
-    modelo_work_selector_no_active_bucket: Seleccioneu un perfil actiu abans de resoldre
+    modelo_work_selector_no_active_bucket: Selecciona un perfil actiu abans de resoldre
       una unitat de treball de model.
     modelo_work_selector_revision_conflict: La unitat de treball de model seleccionada
       pertany a una altra revisió.
     modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
-      mentre es llegia; torneu a capturar-lo.
+      mentre es llegia; torna a capturar-lo.
     producer_capture_not_current: Una projecció de productor ha canviat mentre es
-      llegia; torneu a capturar-la.
+      llegia; torna a capturar-la.
     profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
       perfil
     profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible
@@ -1016,13 +1026,18 @@ errors:
     profile_passphrase_rotation: No s'ha pogut canviar la contrasenya del perfil.
     profile_recovery: No s'ha pogut completar la sol·licitud de recuperació.
     profile_registration: No s'ha pogut registrar el perfil.
+    prorrata_preflight: El canvi de prorrata no ha superat la validació prèvia. Corregeix
+      els valors indicats abans de continuar.
+    purchase_invoice_evidence_snapshot_changed: L'evidència de la factura de compra
+      ha canviat després de la revisió. Revisa el registre actual abans de tornar-ho
+      a intentar.
     reconciliation_declaration_source_unsupported: La conciliació a partir d'una declaració
       encara no està disponible.
     reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
       d'identitat entre declaracions. Revisa els imports abans de continuar.
-    reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comproveu que el
+    reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comprova que el
       fitxer és el justificant de l'AEAT i no un altre document, i que no està malmès.
-      Torneu a executar `aeat app modelo reconcile import WORK_UNIT_ID --file PATH`
+      Torna a executar `aeat app modelo reconcile import WORK_UNIT_ID --file PATH`
       amb el fitxer correcte.
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
@@ -1031,10 +1046,10 @@ errors:
       no es pot llegir, així que no es pot esborrar sense perdre'n la revisió; cal
       recuperar-lo manualment.
     refused_actividad_asset_accelerated_da18_depreciation_not_computed: En aquest
-      període impositiu, la DA 18 LIS concedeix als vehicles elèctrics nous i als
+      període impositiu, la LIS DA 18 concedeix als vehicles elèctrics nous i als
       punts de recàrrega amortització accelerada al doble del coeficient lineal màxim,
       no llibertat d'amortització. Aquest règim no es calcula, per la qual cosa no
-      s'ha calculat cap amortització.
+      s'ha calculat cap càrrec.
     refused_actividad_asset_claim_conflict: L'amortització registrada entra en conflicte
       amb les ja registrades per a l'actiu.
     refused_actividad_asset_incomplete: Al quadre d'amortització de l'actiu li falta
@@ -1053,6 +1068,10 @@ errors:
       disponible.
     refused_application_live_input: La sol·licitud de lectura en viu a l'AEAT no es
       pot executar amb les dades indicades.
+    refused_application_live_nif_iva_certificate_required: 'L''AEAT només respon la
+      comprovació de NIF-IVA si hi accedeixes amb certificat electrònic, i Cadrumo
+      encara no hi pot accedir amb certificat per a aquesta comprovació. Comprova
+      el NIF-IVA al servei VIES de la Comissió Europea: https://ec.europa.eu/taxation_customs/vies/'
     refused_auth_certificate_source_not_found: L'origen de certificat indicat no està
       registrat.
     refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
@@ -1060,7 +1079,7 @@ errors:
     refused_auth_diagnostic_payload: 'Refusat: la càrrega de diagnòstic d''autenticació
       no és vàlida.'
     refused_auth_diagnostic_phone_state: El valor d’estat del telèfon proporcionat
-      no es reconeix. Utilitzeu un dels valors vàlids d’estat de telèfon de l’operador.
+      no es reconeix. Utilitza un dels valors vàlids d’estat de telèfon de l’operador.
     refused_auth_login_live_tests_disabled: Les proves d'inici de sessió en viu estan
       deshabilitades.
     refused_auth_login_precondition: La precondició per a l'inici de sessió d'autenticació
@@ -1074,7 +1093,7 @@ errors:
     refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
       estàndard està redirigida. Executa-la en una terminal interactiva.
     refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
-      Comproveu els arguments o executeu `aeat --help`.
+      Comprova els arguments o executa `aeat --help`.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
     refused_corpus_search_input: No s'ha pogut satisfer la sol·licitud de cerca al
@@ -1125,12 +1144,21 @@ errors:
     refused_flow_submit: El flux guiat ha rebutjat l'enviament.
     refused_flow_unsupported_console: El flux guiat no es pot executar perquè aquesta
       consola no pot mostrar preguntes interactives.
-    refused_google_impersonation: IAM ha rebutjat emetre un testimoni de suplantació
-      per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.
+    refused_foreign_asset_record_join: Un bé del model 720 no està registrat, no coincideix
+      amb la seva entrada del registre o no té declarada la teva condició i participació.
+      Registra i declara el bé abans de calcular.
+    refused_foreign_asset_valuation: No s'ha pogut convertir a euros una valoració
+      del model 720 en la seva data de canvi legal. Revisa la divisa i la data de
+      valoració del bé.
+    refused_google_client_metadata_unavailable: Aquesta instal·lació no inclou el
+      client de Google que necessita per iniciar la sessió. Les funcions de Google
+      no estaran disponibles fins que instal·lis una versió que l'inclogui.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
+    refused_google_sign_in_required: L'accés a Google d'aquest perfil ha caducat o
+      s'ha retirat. Torna a iniciar la sessió amb `aeat config google login`.
     refused_google_validation: Els paràmetres de Google indicats no han superat la
       validació.
     refused_inventory_actividad_conflict: Ja existeix un inventari per a aquesta activitat
@@ -1146,13 +1174,13 @@ errors:
     refused_iva_prorrata_especial_margin_ungrounded: El marge de prorrata especial
       obligatòria no es pot fonamentar per a aquest exercici.
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
-      cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
-      d'antiguitat de la cartera i torneu-ho a intentar.
+      cartera IVA incompleixen un invariant obligatori. Comprova la configuració d'antiguitat
+      de la cartera i torna-ho a intentar.
     refused_ledger_confirmation_blocked: Aquest document té troballes que una persona
       ha de resoldre abans de poder-lo confirmar.
     refused_ledger_counterparty_establishment_conflict: Aquesta contrapart ja està
-      confirmada com a establerta en un altre territori; retireu el fet confirmat
-      abans de substituir-lo.
+      confirmada com a establerta en un altre territori; retira el fet confirmat abans
+      de substituir-lo.
     refused_ledger_counterparty_establishment_input: No es pot confirmar un fet d'establiment
       amb un identificador de contrapart que no valida.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
@@ -1168,6 +1196,8 @@ errors:
       en un format que aquesta ordre no ha pogut llegir, així que no s'ha pres res
       del document. No s'ha desat res; torna a executar l'ordre i, si continua passant,
       el que cal canviar és el model lector.
+    refused_ledger_own_account_register_validation: Un compte bancari propi o la seva
+      designació no ha superat la validació.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
@@ -1191,9 +1221,24 @@ errors:
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
+    refused_modelo_360_solicitud: No s'ha pogut declarar ni eliminar la sol·licitud
+      del Model 360 com has demanat.
+    refused_modelo_360_solicitud_account_bic_missing: El compte propi {own_account_id}
+      no té SWIFT-BIC, que el Model 360 exigeix; afegeix-lo amb app ledger account
+      update.
+    refused_modelo_360_solicitud_account_closed: El compte propi {own_account_id}
+      està tancat i no pot rebre la devolució.
+    refused_modelo_360_solicitud_account_invalid: El compte del representant no és
+      un IBAN vàlid amb el seu SWIFT-BIC.
+    refused_modelo_360_solicitud_account_unknown: El compte propi {own_account_id}
+      no és un dels teus comptes propis registrats.
+    refused_modelo_360_solicitud_holder_mismatch: El titular del compte a les dades
+      (camp 114) ha de ser el titular del compte que has triat.
+    refused_modelo_360_solicitud_undeclared: No hi ha cap sol·licitud del Model 360
+      declarada per a {filing_year}.
     refused_modelo_amendment_complementaria_liability_decrease: Una complementària
       no pot disminuir legalment el deute declarat abans de la unificació de l'autoliquidació
-      rectificativa. Utilitzeu el procediment de sol·licitud de rectificació per a
+      rectificativa. Utilitza el procediment de sol·licitud de rectificació per a
       una correcció que redueixi el deute.
     refused_modelo_amendment_detail_rows_required: En aquest model els registres de
       detall són la declaració mateixa, de manera que una rectificació els ha d'indicar.
@@ -1209,14 +1254,18 @@ errors:
     refused_modelo_amendment_verification: El mapa de caselles corregit de la declaració
       complementària no ha superat la verificació. Falten caselles obligatòries.
     refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
-      desconegut al registre. Es tracta d'un error d'autoria del registre; actualitzeu
+      desconegut al registre. Es tracta d'un error d'autoria del registre; actualitza
       la taula de despacho de filtres.
-    refused_modelo_charge_account_missing: S ha triat una domiciliació pero no hi
+    refused_modelo_charge_account_missing: S'ha triat una domiciliació pero no hi
       ha cap compte de càrrec registrat.
-    refused_modelo_export_prior_domiciliation_election_required: L'exportació del
-      model 303 necessita una elecció sobre la domiciliació anterior (mantenir-la,
-      o anul·lar-la o modificar-la); no se n'ha indicat cap, així que no s'ha escrit
-      res. Trieu-ne una i torneu a exportar.
+    refused_modelo_domiciliation_past_cutoff: La domiciliació d'aquesta declaració
+      es va tancar el {payment_cutoff_on}; el {export_on} només pots pagar el resultat
+      d'una altra manera.
+    refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
+    refused_modelo_export_prior_domiciliation_election_required: Una autoliquidació
+      rectificativa del model 303 amb la casella 111 necessita una elecció sobre la
+      domiciliació anterior (mantenir-la, o anul·lar-la o modificar-la); no se n'ha
+      indicat cap, així que no s'ha escrit res. Tria'n una i torna a exportar.
     refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura
@@ -1226,23 +1275,27 @@ errors:
       i el seu SHA-256 estan mal formats o no coincideixen, o l''atestació no consta
       en aquest perfil, pertany a un altre trimestre, ja no coincideix amb el perfil
       actual o contradiu una altra atestació del trimestre. No s''ha calculat res;
-      registreu una atestació nova per a aquest trimestre i torneu-ho a provar.'
+      registra una atestació nova per a aquest trimestre i torna-ho a provar.'
     refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
       exactament un motiu canònic en un disseny de registre aplicable i revisat; el
       motiu està prohibit en els altres casos.
     refused_modelo_payment_election_capability: El mètode de pagament escollit encara
       no està disponible.
-    refused_modelo_payment_election_incompatible: L opció de pagament escollida requereix
+    refused_modelo_payment_election_incompatible: L'opció de pagament escollida requereix
       un resultat positiu.
     refused_modelo_refund_account_missing: S'ha sol·licitat una devolució però no
       hi ha cap compte de devolució configurat; l'AEAT no pot pagar una devolució
-      sense un compte. Configureu un compte de devolució o compenseu el crèdit (compensar).
+      sense un compte. Configura un compte de devolució o compensa el crèdit (compensar).
     refused_modelo_refund_election_not_eligible: S'ha sol·licitat una devolució en
       un període on no està disponible; només l'últim període de declaració de l'any
       permet la devolució a un no inscrit a REDEME.
+    refused_modelo_result_disposition_uncodified: El disseny de registre d'aquest
+      model té un camp de tipus de declaració, però Cadrumo encara no té un joc de
+      codis fonamentat per a aquest camp, així que el resultat no es pot presentar
+      sense endevinar-lo.
     refused_modelo_stored_row_field_input: La revisió de càlcul {calculation_revision_id}
       desa un únic valor d'entrada per a les caselles {casilla_ids}, que prenen un
-      valor per cada fila de detall. Torneu a calcular la unitat de treball {work_unit_id}
+      valor per cada fila de detall. Torna a calcular la unitat de treball {work_unit_id}
       per substituir-la.
     refused_modeloprior_domiciliation_election: S'ha rebutjat la baixa o modificació
       de la domiciliació prèvia perquè manca o no és vàlida la rectificativa del model
@@ -1284,6 +1337,8 @@ errors:
       el perfil nou.
     refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
       perfil. Selecciona un règim admès.
+    refused_profile_foreign_asset_register_validation: Una entrada del registre de
+      béns a l'estranger del model 720 no ha superat la validació.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
       la validació.
     refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil és ambigua.'
@@ -1305,12 +1360,12 @@ errors:
     refused_renta_maritime_exemption_inactive: 'L''exempció DA 41 LIRPF (flota tonyinaire)
       està inactiva: no s''ha concedit l''autorització d''ajuts d''Estat de la UE
       per al 2024/2025. L''AEAT confirma la seva no aplicabilitat en la guia oficial
-      de 2024. Activeu-la només després que es concedeixi l''autorització europea
-      (Ley 35/2006 DA 41 BOE-A-2006-20764, afegida per la Ley 26/2014 BOE-A-2014-12327).'
+      de 2024. Activa-la només després que es concedeixi l''autorització europea (Ley
+      35/2006 DA 41 BOE-A-2006-20764, afegida per la Ley 26/2014 BOE-A-2014-12327).'
     refused_retention_floor: 'Esborrament rebutjat: %{retained_record_count} registre(s)
       tributari(s) presentat(s) encara són dins del termini legal de conservació (Llei
       58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
-      Espereu fins aleshores o torneu a executar amb --override-retention i --reason
+      Espera fins aleshores o torna a executar amb --override-retention i --reason
       per forçar-ho.'
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
@@ -1370,7 +1425,7 @@ errors:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
     ambiguous_revision_selection_year_only: 'Més d''una revisió del registre coincideix
-      amb el model %{modelo_id}: %{candidate_ids}. Indiqueu el període de declaració,
+      amb el model %{modelo_id}: %{candidate_ids}. Indica el període de declaració,
       o una data de referència, per seleccionar-ne una.'
     filing_year_outside_support_envelope: 'L''exercici %{filing_year} i el període
       %{period} del model %{modelo_id} queden fora dels exercicis admesos (mínim %{floor},
@@ -1415,7 +1470,14 @@ errors:
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
     ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'
+    ledger_import_own_account_mismatch: L'extracte indica un compte diferent del compte
+      propi {own_account_id}, així que no s'hi ha importat.
+    ledger_import_period_without_span: El període {period} no abasta dates del calendari,
+      així que no pot filtrar les files importades. Fes servir un trimestre, un mes
+      o 0A.
     ledger_import_requires_bucket: La importació d'un extracte bancari requereix un
       perfil actiu, llevat del mode de prova.
+    own_account_unknown: El compte propi {own_account_id} no és cap dels teus comptes
+      bancaris propis registrats.
     unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors
       reconeguts: {providers}.'

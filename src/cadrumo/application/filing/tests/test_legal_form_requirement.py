@@ -15,8 +15,8 @@ from pydantic import ValidationError
 from ....core.filing_producer_key import FilingProducerKey
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ....domain.filing.errors import FilingExportValidationError
-from .._record_field_renderer import _header_field_value
 from ..producer_snapshot import TaxpayerIdentityFacts
+from ..record_field_renderer import _header_field_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

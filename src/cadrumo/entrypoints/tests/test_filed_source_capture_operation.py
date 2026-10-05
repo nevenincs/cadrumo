@@ -394,7 +394,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
         def provider_preflight(profile: UUID, pinned_authority: PinnedAuthorityOperation) -> None:
             provider_preflights.append((profile, pinned_authority))
 
-        def composition_factory(_output_root: Path) -> FiledHistoryComposition:
+        def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
             return cast(FiledHistoryComposition, composition)
 
         definition = build_filed_source_capture_definition(

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from ._root_command_specs import ROOT_COMMAND_SPECS
-from .command_spec import CommandSpecFamily, CommandSpecGraph, DeferredTarget
+from .command_graph import CommandSpecFamily, CommandSpecGraph
+from .command_shared_contracts import DeferredTarget
 
 
 def _family(mount_key: str, module: str, qualname: str) -> CommandSpecFamily:
@@ -15,7 +16,6 @@ COMMAND_GRAPH = CommandSpecGraph(
     (
         _family("config", ".config.command_specs", "CONFIG_COMMAND_SPECS"),
         _family("app", "._app_diagnostics_command_specs", "DIAGNOSTICS_COMMAND_SPECS"),
-        _family("app", ".app_runtime_command_specs", "APP_RUNTIME_COMMAND_SPECS"),
         _family("app", "._app_ledger_command_specs", "LEDGER_COMMAND_SPECS"),
         _family("app", "._app_live_command_specs", "LIVE_COMMAND_SPECS"),
         _family("app", "._modelo_audit_command_specs", "MODELO_ROOT_COMMAND_SPEC"),

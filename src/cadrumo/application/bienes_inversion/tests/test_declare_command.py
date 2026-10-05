@@ -21,7 +21,8 @@ from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ..declare_command import (
     BienInversionDeclarationCommand,
     BienInversionDisposalIncompleteError,
-    declare_bien_inversion,
+    build_bien_inversion_record,
+    persist_bien_inversion_record,
     resolve_bien_inversion_disposal,
 )
 from ..service import BienesInversionRegisterService
@@ -62,6 +63,11 @@ def _command(**overrides: object) -> BienInversionDeclarationCommand:
     }
     payload.update(overrides)
     return BienInversionDeclarationCommand.model_validate(payload)
+
+
+def declare_bien_inversion(command: BienInversionDeclarationCommand, *, service: BienesInversionRegisterService):
+    """Validate the command into a record, then persist it, as the registered operation does."""
+    return persist_bien_inversion_record(build_bien_inversion_record(command), service=service)
 
 
 def test_a_declaration_with_no_disposal_carries_none() -> None:

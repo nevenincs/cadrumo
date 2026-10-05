@@ -16,10 +16,14 @@ from pathlib import Path, PurePosixPath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.temporal import ModeloRevisionDirectory, select_authored_revision_metadata
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.authority import compile_registry_tree, compile_validated_authority
@@ -29,20 +33,27 @@ from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.profile_schema import capture_profile_schema_source
 from ..compiler.registry_scope import validate_registry_scope
-from ._export_tree import RenderedExportTree
+from ..edition_delta_chain_materialisation import chain_materialisation, member_identities
+from ..edition_delta_proof_source import read_staged_edition
 from .export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     verify_export_fragment_provenance_manifest,
 )
+from .export_tree_models import RenderedExportTree
+from .generated_export_inheritance import require_generated_export_inheritance
+from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .joined_record_design import JoinedRecordDesign
-from .render_profile import RenderProfile, RenderProfileSourceEvidence
+from .render_check import _select_record_design_source
+from .render_profile_evidence import RenderProfileSourceEvidence
+from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
 from .tree_paths import require_existing_non_link
 
 __all__ = [
     "GeneratedExportTreeValidationContext",
     "ValidatedGeneratedExportTree",
+    "ValidatedHistoricalStaticGeneratedExportTree",
     "validate_generated_export_tree",
 ]
 
@@ -80,11 +91,20 @@ class GeneratedExportTreeValidationContext:
     #: rendered, compared, or published, and its target revision is refused:
     #: the rendered target remains the sole source of its own facts.
     continuity_metadata_modelo_root: Path | None = None
+    #: Full validated source supplies corpus context for scope-only checks.
+    #: Its target revision is always replaced with the freshly loaded candidate;
+    #: it supplies no generated layout, snapshot or target-validation verdict.
+    scope_authority: ValidatedRegistryAuthority | None = None
     #: Authority grade the caller is entitled to establish.  Existing check and
-    #: validation callers keep the filing-grade default; bootstrap publication
-    #: explicitly asks for calculation grade because a static generated layout
-    #: does not establish filing readiness.
+    #: validation callers keep the filing-grade default; publication supplies
+    #: the selected revision's declared grade because a static generated layout
+    #: does not establish calculation or filing readiness.
     required_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING
+    inheritance: GeneratedExportInheritanceContext | None = None
+    #: The exact selected official source for a static target below the
+    #: product's filing support floor. The normal None route still requires a
+    #: runtime snapshot at required_grade and refuses that historical year.
+    historical_static_source_ref: SourceRefId | None = None
 
     def __post_init__(self) -> None:
         if not self.period.strip():
@@ -105,6 +125,16 @@ class ValidatedGeneratedExportTree:
     provenance_manifest: ExportFragmentProvenanceManifest
 
 
+@dataclass(frozen=True, slots=True)
+class ValidatedHistoricalStaticGeneratedExportTree:
+    """A complete historical generated target with no runtime filing admission."""
+
+    target: ExportFragmentTarget
+    layout: ExportLayoutDefinition
+    inspection: RegistryRevisionInspection
+    provenance_manifest: ExportFragmentProvenanceManifest
+
+
 def validate_generated_export_tree(
     *,
     context: GeneratedExportTreeValidationContext,
@@ -113,13 +143,16 @@ def validate_generated_export_tree(
     rendered: RenderedExportTree,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-) -> ValidatedGeneratedExportTree:
-    """Prove that one complete, isolated generated tree is filing-selectable.
+) -> ValidatedGeneratedExportTree | ValidatedHistoricalStaticGeneratedExportTree:
+    """Prove an isolated generated tree at its requested admission boundary.
 
-    The input is deliberately a target-only directory-mode registry.  Reusing a
-    published registry, a direct revision file, an extra modelo, or a sibling
-    under ``export/`` is a refusal because each would allow the real loader to
-    admit facts that the current renderer did not produce.
+    An ordinary candidate contains only its target edition. An attested
+    inherited candidate contains exactly its pinned ancestor chain and thin
+    child; every staged edition must preserve its canonical effective meaning,
+    and the child must hydrate to the freshly rendered layout. Extra revisions,
+    modelos, or export files remain refusals. A pinned pre-floor target yields
+    only a static revision inspection; ordinary callers still select a runtime
+    snapshot at the requested grade and retain the support-floor refusal.
     """
     registry_root = _require_directory(context.registry_root, subject="generated registry root")
     source_root = _require_directory(context.source_root, subject="generation source root")
@@ -133,7 +166,22 @@ def validate_generated_export_tree(
         modelo_id=modelo_id,
         revision_id=revision_id,
         supporting_modelos=context.supporting_modelos,
+        baseline_revisions=(
+            tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors)
+            if context.inheritance is not None
+            else ()
+        ),
     )
+    if context.inheritance is not None:
+        if context.scope_authority is None:
+            raise RegistryValidationError("generated export inheritance requires the complete validated source")
+        require_generated_export_inheritance(
+            context.inheritance,
+            context.scope_authority,
+            source_root / "registry" / "aeat",
+            modelo=modelo_id,
+            revision=revision_id,
+        )
     _require_exact_generated_outputs(export_root, rendered.output_files)
 
     definition = load_modelo_directory(modelo_root)
@@ -141,11 +189,31 @@ def validate_generated_export_tree(
         raise RegistryValidationError(
             f"generated modelo directory loads modelo {definition.id!r}, expected {modelo_id!r}",
         )
-    if tuple(definition.revisions) != (revision_id,):
+    expected_revisions = (
+        (revision_id,)
+        if context.inheritance is None
+        else (*tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors), revision_id)
+    )
+    if tuple(definition.revisions) != expected_revisions:
         raise RegistryValidationError(
-            f"isolated generated modelo must load exactly revision {revision_id!r}, "
+            f"isolated generated modelo must load exactly revisions {expected_revisions!r}, "
             f"got {tuple(definition.revisions)!r}",
         )
+    if context.inheritance is not None and (
+        definition.revisions[expected_revisions[-2]].export_layouts != (context.inheritance.baseline_layout,)
+    ):
+        raise RegistryValidationError("generated export inheritance staged baseline layout changed")
+    if context.inheritance is not None:
+        source_modelo_root = source_root / "registry" / "aeat" / "modelos" / modelo_id
+        for selected_id in expected_revisions:
+            original = read_staged_edition(source_modelo_root, selected_id, side="source")
+            staged = read_staged_edition(modelo_root, selected_id, side="staged")
+            if member_identities(staged) != member_identities(original) or chain_materialisation(
+                staged,
+            ) != chain_materialisation(original):
+                raise RegistryValidationError(
+                    f"generated export inheritance changed hydrated {modelo_id}/{selected_id} source facts",
+                )
     loaded_revision = definition.revisions[revision_id]
     loaded_layout = _require_exact_generated_layout(
         loaded_revision.export_layouts,
@@ -161,7 +229,25 @@ def validate_generated_export_tree(
         field_derivations=rendered.field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        generated_export_inheritance=(context.inheritance.attestation if context.inheritance is not None else None),
     )
+
+    if context.historical_static_source_ref is not None:
+        inspection = _validated_historical_static_target(
+            context=context,
+            registry_root=registry_root,
+            source_root=source_root,
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+            target_definition=definition,
+            joined=joined,
+        )
+        return ValidatedHistoricalStaticGeneratedExportTree(
+            target=context.target,
+            layout=loaded_layout,
+            inspection=inspection,
+            provenance_manifest=provenance,
+        )
 
     snapshot = _validated_target_snapshot(
         context=context,
@@ -198,52 +284,204 @@ def _validated_target_snapshot(
     revision_id: str,
     target_definition: ModeloDefinition,
 ) -> RegistrySnapshot:
-    """Select the target through canonical authority, with an optional continuity witness.
+    """Select fresh target facts with separately supplied registry-wide context.
 
-    Normal candidates retain the ordinary :class:`ValidatedRegistryAuthority`
-    route.  A candidate that declares an incoming strict-continuity transition
+    The validated source can supply full corpus context for scope checks such
+    as semantic-role cardinality. Its target revision is replaced with the
+    freshly loaded candidate before validation; snapshot selection always uses
+    the candidate. Without that context, normal candidates retain the ordinary
+    authority route. A candidate that declares an incoming continuity transition
     can instead carry a separate witness for the predecessor facts that are
     intentionally absent from its target-only tree.  That witness is checked by
     the existing registry-scope validator after replacing *only* its target
     revision with the freshly loaded candidate revision; it cannot validate a
     stale target by copying one into the witness.
     """
-    if context.continuity_metadata_modelo_root is None:
-        identity = resolve_registry_identity(
-            registry_root,
-            collect_fingerprints=collect_registry_tree_fingerprints,
-        )
-        authority = compile_validated_authority(registry_root, source_root, identity=identity)
-        return authority.snapshot(
-            modelo_id,
-            filing_year=context.filing_year,
-            period=context.period,
-            on=context.on,
+    if context.continuity_metadata_modelo_root is None and context.scope_authority is None:
+        return _validated_authority_target_snapshot(
+            context,
+            registry_root=registry_root,
+            source_root=source_root,
+            modelo_id=modelo_id,
             revision_id=revision_id,
-            grade=context.required_grade,
         )
-
-    continuity_modelo = _load_continuity_metadata_modelo(
-        context.continuity_metadata_modelo_root,
+    return _validated_scoped_target_snapshot(
+        context,
+        registry_root=registry_root,
+        source_root=source_root,
         modelo_id=modelo_id,
         revision_id=revision_id,
+        target_definition=target_definition,
     )
+
+
+def _validated_historical_static_target(
+    *,
+    context: GeneratedExportTreeValidationContext,
+    registry_root: Path,
+    source_root: Path,
+    modelo_id: str,
+    revision_id: str,
+    target_definition: ModeloDefinition,
+    joined: JoinedRecordDesign,
+) -> RegistryRevisionInspection:
+    """Fully validate an authored pre-floor target without a filing snapshot."""
+    authority = context.scope_authority
+    source_ref = context.historical_static_source_ref
+    if authority is None or source_ref is None:
+        raise RegistryValidationError("historical static target requires its complete validated source and source pin")
     loaded_modelos, catalogues = compile_registry_tree(registry_root, source_root)
+    _require_loaded_candidate_target(loaded_modelos, modelo_id=modelo_id, target_definition=target_definition)
+    scoped_modelos = _scope_modelos_with_candidate(
+        context, loaded_modelos, modelo_id=modelo_id, revision_id=revision_id, target_definition=target_definition
+    )
+    _validate_scoped_candidate(source_root, loaded_modelos, catalogues, scoped_modelos)
+    support = catalogues.require_supported_filing_years()
+    if support != authority.catalogues.require_supported_filing_years():
+        raise RegistryValidationError("historical static target changed the supported filing years catalogue")
+    if context.filing_year >= support.floor:
+        raise RegistryValidationError("historical static target must be below the unchanged filing support floor")
+    scoped_modelo = next(modelo for modelo in scoped_modelos if str(modelo.id) == modelo_id)
+    selected = select_authored_revision_metadata(
+        ModeloRevisionDirectory.from_modelo(scoped_modelo),
+        filing_year=context.filing_year,
+        period=context.period,
+        on=context.on,
+    )
+    if str(selected.id) != revision_id:
+        raise RegistryValidationError(
+            f"historical static target selected authored revision {selected.id!r}, expected {revision_id!r}"
+        )
+    selected_source_ref, epoch = _select_record_design_source(
+        target_definition.revisions[revision_id],
+        catalogues.sources,
+        modelo=modelo_id,
+        revision=revision_id,
+        filing_year=context.filing_year,
+        period=context.period,
+        source_ref=None,
+    )
+    if (
+        selected_source_ref != source_ref
+        or joined.source.source_ref != source_ref
+        or epoch != context.target.design_epoch
+    ):
+        raise RegistryValidationError("historical static target source differs from the exact selected official design")
+    source = catalogues.sources.get(source_ref)
+    if source is None or joined.source.source_sha256 != source.sha256:
+        raise RegistryValidationError("historical static target source digest differs from the candidate catalogue")
+    return RegistryRevisionInspection.from_revision(
+        modelo=scoped_modelo,
+        revision=target_definition.revisions[revision_id],
+        source_root=source_root,
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
+    )
+
+
+def _validated_authority_target_snapshot(
+    context: GeneratedExportTreeValidationContext,
+    *,
+    registry_root: Path,
+    source_root: Path,
+    modelo_id: str,
+    revision_id: str,
+) -> RegistrySnapshot:
+    identity = resolve_registry_identity(
+        registry_root,
+        collect_fingerprints=collect_registry_tree_fingerprints,
+    )
+    authority = compile_validated_authority(registry_root, source_root, identity=identity)
+    return authority.snapshot(
+        modelo_id,
+        filing_year=context.filing_year,
+        period=context.period,
+        on=context.on,
+        revision_id=revision_id,
+        grade=context.required_grade,
+    )
+
+
+def _validated_scoped_target_snapshot(
+    context: GeneratedExportTreeValidationContext,
+    *,
+    registry_root: Path,
+    source_root: Path,
+    modelo_id: str,
+    revision_id: str,
+    target_definition: ModeloDefinition,
+) -> RegistrySnapshot:
+    loaded_modelos, catalogues = compile_registry_tree(registry_root, source_root)
+    _require_loaded_candidate_target(loaded_modelos, modelo_id=modelo_id, target_definition=target_definition)
+    scoped_modelos = _scope_modelos_with_candidate(
+        context,
+        loaded_modelos,
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+        target_definition=target_definition,
+    )
+    _validate_scoped_candidate(source_root, loaded_modelos, catalogues, scoped_modelos)
+    # ``build_snapshot`` owns the same model-local validation and requested-grade
+    # selection the production authority delegates to after registry scope passes.
+    return build_snapshot(
+        target_definition,
+        catalogues,
+        source_root=source_root,
+        filing_year=context.filing_year,
+        period=context.period,
+        on=context.on,
+        revision_id=revision_id,
+        grade=context.required_grade,
+    )
+
+
+def _require_loaded_candidate_target(
+    loaded_modelos: tuple[ModeloDefinition, ...],
+    *,
+    modelo_id: str,
+    target_definition: ModeloDefinition,
+) -> None:
     loaded_target = next((modelo for modelo in loaded_modelos if str(modelo.id) == modelo_id), None)
     if loaded_target is None:
         raise RegistryValidationError(f"generated target modelo {modelo_id!r} is absent from the isolated registry")
     if loaded_target != target_definition:
         raise RegistryValidationError("generated target loader result changed before continuity validation")
 
-    witness = continuity_modelo.model_copy(
-        update={
-            "revisions": {
-                **continuity_modelo.revisions,
-                revision_id: target_definition.revisions[revision_id],
-            },
-        },
+
+def _scope_modelos_with_candidate(
+    context: GeneratedExportTreeValidationContext,
+    loaded_modelos: tuple[ModeloDefinition, ...],
+    *,
+    modelo_id: str,
+    revision_id: str,
+    target_definition: ModeloDefinition,
+) -> tuple[ModeloDefinition, ...]:
+    if context.scope_authority is not None:
+        return _candidate_scope_modelos(
+            context.scope_authority,
+            loaded_modelos,
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+        )
+    if context.continuity_metadata_modelo_root is None:
+        raise RegistryValidationError("generated scope validation requires its declared source witness")
+    continuity_modelo = _load_continuity_metadata_modelo(
+        context.continuity_metadata_modelo_root,
+        modelo_id=modelo_id,
+        revision_id=revision_id,
     )
-    scoped_modelos = tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in loaded_modelos)
+    witness = continuity_modelo.model_copy(
+        update={"revisions": {**continuity_modelo.revisions, revision_id: target_definition.revisions[revision_id]}},
+    )
+    return tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in loaded_modelos)
+
+
+def _validate_scoped_candidate(
+    source_root: Path,
+    loaded_modelos: tuple[ModeloDefinition, ...],
+    catalogues: RegistryCatalogues,
+    scoped_modelos: tuple[ModeloDefinition, ...],
+) -> None:
     # Binding validators and snapshot selection resolve governed vocabulary. They
     # must read the candidate's own compiled facts, exactly as the full authority
     # compile does, never whatever authority happens to be ambient.
@@ -264,27 +502,57 @@ def _validated_target_snapshot(
         )
         for loaded_modelo in loaded_modelos:
             validator.validate_modelo(loaded_modelo)
-        continuity_failures = validate_registry_scope(scoped_modelos)
-        if continuity_failures:
+        scope_failures = validate_registry_scope(scoped_modelos)
+        if scope_failures:
             raise RegistryValidationError(
-                "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in continuity_failures)
+                "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in scope_failures)
             )
 
-        # ``build_snapshot`` owns exactly the model-local validation and
-        # requested-grade selection that the production authority delegates to
-        # after its registry scope has passed. The scope above is the same
-        # existing validator, with the copied predecessor facts used only to
-        # make strict continuity answerable.
-        return build_snapshot(
-            target_definition,
-            catalogues,
-            source_root=source_root,
-            filing_year=context.filing_year,
-            period=context.period,
-            on=context.on,
-            revision_id=revision_id,
-            grade=context.required_grade,
-        )
+
+def _candidate_scope_modelos(
+    authority: ValidatedRegistryAuthority,
+    loaded_modelos: tuple[ModeloDefinition, ...],
+    *,
+    modelo_id: str,
+    revision_id: str,
+) -> tuple[ModeloDefinition, ...]:
+    """Replace only the candidate revision within the complete validated scope."""
+    source_by_id = {str(modelo.id): modelo for modelo in authority.modelos}
+    candidate_by_id = {str(modelo.id): modelo for modelo in loaded_modelos}
+    if not candidate_by_id.keys() <= source_by_id.keys():
+        raise RegistryValidationError("generated candidate contains modelos absent from its validated source scope")
+    source_target = source_by_id[modelo_id]
+    candidate_target = candidate_by_id[modelo_id]
+    _require_candidate_revision_in_source_scope(source_target, revision_id)
+    _require_candidate_target_metadata(source_target, candidate_target)
+    _require_supporting_modelos_unchanged(source_by_id, candidate_by_id, modelo_id=modelo_id)
+    witness = source_target.model_copy(
+        update={"revisions": {**source_target.revisions, revision_id: candidate_target.revisions[revision_id]}},
+    )
+    return tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in authority.modelos)
+
+
+def _require_candidate_revision_in_source_scope(source_target: ModeloDefinition, revision_id: str) -> None:
+    if revision_id not in source_target.revisions:
+        raise RegistryValidationError("generated revision is absent from its validated source scope")
+
+
+def _require_candidate_target_metadata(source_target: ModeloDefinition, candidate_target: ModeloDefinition) -> None:
+    if source_target.model_copy(update={"revisions": candidate_target.revisions}) != candidate_target:
+        raise RegistryValidationError("generated candidate changed modelo metadata outside its target revision")
+
+
+def _require_supporting_modelos_unchanged(
+    source_by_id: dict[str, ModeloDefinition],
+    candidate_by_id: dict[str, ModeloDefinition],
+    *,
+    modelo_id: str,
+) -> None:
+    for candidate_id, candidate in candidate_by_id.items():
+        if candidate_id != modelo_id and candidate != source_by_id[candidate_id]:
+            raise RegistryValidationError(
+                "generated candidate changed supporting modelo facts from its validated scope"
+            )
 
 
 def _load_continuity_metadata_modelo(
@@ -315,6 +583,7 @@ def _require_isolated_target_context(
     modelo_id: str,
     revision_id: str,
     supporting_modelos: frozenset[str] = frozenset(),
+    baseline_revisions: tuple[str, ...] = (),
 ) -> tuple[Path, Path, Path]:
     modelos_root = _require_directory(registry_root / "modelos", subject="generated registry modelos root")
     modelo_root = modelos_root / modelo_id
@@ -334,9 +603,16 @@ def _require_isolated_target_context(
     revision_root = revisions_root / revision_id
     _require_exact_children(
         revisions_root,
-        expected={revision_id},
+        expected={revision_id, *baseline_revisions},
         subject="generated modelo revisions directory",
     )
+    if len(set((*baseline_revisions, revision_id))) != len(baseline_revisions) + 1:
+        raise RegistryValidationError("generated export inheritance repeats a target or ancestor revision")
+    for baseline_revision in baseline_revisions:
+        baseline_root = _require_directory(
+            revisions_root / baseline_revision, subject="generated export inheritance baseline revision"
+        )
+        require_existing_non_link(baseline_root / "export", subject="generated export inheritance baseline target")
     _require_directory(revision_root, subject="generated target revision directory")
     for name in ("revision.toml", "export"):
         require_existing_non_link(revision_root / name, subject=f"generated target revision member {name!r}")
@@ -366,9 +642,20 @@ def _require_exact_generated_outputs(export_root: Path, output_files: tuple[str,
     if not expected_files:
         raise RegistryValidationError("generated render result declares no output files")
     actual_files, actual_directories = _collect_regular_tree_members(export_root)
-    expected_directories = {
-        parent.as_posix() for path in expected_files for parent in path.parents if parent != PurePosixPath(".")
-    }
+    expected_directories = _expected_generated_directories(expected_files)
+    _require_generated_tree_matches(expected_files, actual_files, actual_directories, expected_directories)
+
+
+def _expected_generated_directories(expected_files: set[PurePosixPath]) -> set[str]:
+    return {parent.as_posix() for path in expected_files for parent in path.parents if parent != PurePosixPath(".")}
+
+
+def _require_generated_tree_matches(
+    expected_files: set[PurePosixPath],
+    actual_files: set[PurePosixPath],
+    actual_directories: set[str],
+    expected_directories: set[str],
+) -> None:
     manifest_path = PurePosixPath(EXPORT_FRAGMENT_PROVENANCE_FILENAME)
     actual_toml_files = actual_files - {manifest_path}
     if (

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:a739abebf411e56aafcd878addd411826908a8e7996b81b329d64cbc2c346038'
+modified: '2026-10-03'
+body_hash: 'sha256:3d951e12b6770089624de436258fc414045fbaab93b8def3937e277cde9a6da1'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-audit]]'
@@ -45,7 +45,7 @@ protocol features that postdate the refoundation decision.
 
 R2 chose "domain-grouped toolsets with a meta-tool fallback" and rejected the
 flat surface because it "crowds out the user's question and degrades tool
-selection". As built, `_list_tools` (`src/aeat/entrypoints/mcp/_server.py`,
+selection". As built, `_list_tools` (the former source file,
 line 499) returns the `harness.load` floor tool, the two grounding tools, the
 ENTIRE per-verb descriptor set, and the two meta-tools — ~273 tools flat when
 no persona is active. The five curated toolsets (`_toolsets.py`,

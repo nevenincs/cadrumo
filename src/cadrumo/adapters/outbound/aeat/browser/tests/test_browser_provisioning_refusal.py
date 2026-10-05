@@ -40,7 +40,7 @@ async def _launch_refusal() -> BrowserError:
 def test_missing_bundled_chromium_names_the_provisioning_command(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path / "empty-cache"))
+    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(tmp_path / "empty-cache"))
 
     error = asyncio.run(_launch_refusal())
 

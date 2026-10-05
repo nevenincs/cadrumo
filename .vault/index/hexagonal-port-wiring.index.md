@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#hexagonal-port-wiring'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e4fa3dd4b6002caf91b47124b5ed4cf73ec381d106199c1dd7472249978a1d33'
+body_hash: 'sha256:3e60da7b045ffadef8d2e2e26835ee452c787827f4e247b635909aae81ee5faf'
 related:
-  - '[[2026-06-01-hexagonal-port-wiring-plan]]'
-  - '[[2026-06-04-hexagonal-port-wiring-adr]]'
   - '[[2026-06-04-hexagonal-port-wiring-research]]'
 ---
 
@@ -18,14 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#hexagonal-port-wiring`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-hexagonal-port-wiring-adr` - `hexagonal-port-wiring` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
-### plan
-
-- `2026-06-01-hexagonal-port-wiring-plan` - `hexagonal-port-wiring` plan
 
 ### research
 

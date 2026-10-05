@@ -70,6 +70,23 @@ def _collect(value: object, seen: set[int], keys: set[str]) -> None:
         text = _key_text(getattr(value, field, None))
         if text is not None:
             keys.add(text)
+    collect_command_spec_children(value, seen, keys)
+
+
+def scan_command_spec_keys() -> set[str]:
+    """Return every translation key the live command-spec registry declares."""
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+
+    keys: set[str] = set()
+    _collect(COMMAND_GRAPH.specs, set(), keys)
+    return keys
+
+
+__all__ = ["scan_command_spec_keys"]
+
+
+def collect_command_spec_children(value: object, seen: set[int], keys: set[str]) -> None:
+    """Collect command spec children."""
     raw_slots = getattr(type(value), "__slots__", None)
     if isinstance(raw_slots, str):
         slots = (raw_slots,)
@@ -85,15 +102,3 @@ def _collect(value: object, seen: set[int], keys: set[str]) -> None:
     if isinstance(attributes, dict):
         for item in attributes.values():
             _collect(item, seen, keys)
-
-
-def scan_command_spec_keys() -> set[str]:
-    """Return every translation key the live command-spec registry declares."""
-    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-
-    keys: set[str] = set()
-    _collect(COMMAND_GRAPH.specs, set(), keys)
-    return keys
-
-
-__all__ = ["scan_command_spec_keys"]

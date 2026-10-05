@@ -11,7 +11,7 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.live.filed_data_capture import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from ....application.live.filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
 from ....application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FiledHistoryEvidenceNoticeV1,
@@ -26,7 +26,7 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from .. import _app_live as handler
 from .. import runtime_filed_history as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

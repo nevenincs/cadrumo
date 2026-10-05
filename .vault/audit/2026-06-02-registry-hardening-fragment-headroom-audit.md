@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:4edd84427588dd3547df5d59da59251ac70ffa32729cd8ecbe55bc210330050b'
+modified: '2026-10-03'
+body_hash: 'sha256:36d674275eaad2d28004398a8ed5231cad83059749d781e79a63ef09b3c21a82'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-next-work-health-audit]]'
 ---
 
@@ -36,30 +35,30 @@ The committed corpus currently stays inside the reviewability gates:
 
 | Lines | Headroom | Path |
 | ---: | ---: | --- |
-| 1706 | 44 | `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/completeness-manifest.toml` |
-| 1618 | 132 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-002.toml` |
-| 1612 | 138 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0065-modelo-200-page-043.toml` |
-| 1598 | 152 | `src/aeat/_data/registry/aeat/modelos/100/revisions/2023/completeness-manifest.toml` |
-| 1555 | 195 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0002-modelo-200-page-001.toml` |
-| 1555 | 195 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0033-modelo-200-page-020d.toml` |
-| 1550 | 200 | `src/aeat/_data/registry/aeat/modelos/100/revisions/2022/completeness-manifest.toml` |
-| 1536 | 214 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.toml` |
-| 1506 | 244 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.toml` |
-| 1472 | 278 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0016-modelo-200-page-013.toml` |
-| 1472 | 278 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0054-modelo-200-page-032.toml` |
-| 1462 | 288 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/constructs.part-002.toml` |
-| 1430 | 320 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0015-modelo-200-page-012.toml` |
-| 1394 | 356 | `src/aeat/_data/registry/aeat/modelos/100/revisions/2021/completeness-manifest.toml` |
-| 1388 | 362 | `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/completeness-manifest.toml` |
-| 1359 | 391 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0031-modelo-200-page-020b.toml` |
-| 1304 | 446 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0055-modelo-200-page-033.toml` |
-| 1296 | 454 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0003-export-layout.toml` |
-| 1296 | 454 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0003-export-layout.toml` |
-| 1287 | 463 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0018-modelo-200-page-014b.toml` |
-| 1239 | 511 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0002-export-layout.toml` |
-| 1239 | 511 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0002-export-layout.toml` |
-| 1234 | 516 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0047-modelo-200-page-026g.toml` |
-| 1218 | 532 | `src/aeat/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml` |
+| 1706 | 44 | the retired data file |
+| 1618 | 132 | the retired data file |
+| 1612 | 138 | the retired data file |
+| 1598 | 152 | the retired data file |
+| 1555 | 195 | the retired data file |
+| 1555 | 195 | the retired data file |
+| 1550 | 200 | the retired data file |
+| 1536 | 214 | the retired data file |
+| 1506 | 244 | the retired data file |
+| 1472 | 278 | the retired data file |
+| 1472 | 278 | the retired data file |
+| 1462 | 288 | the retired data file |
+| 1430 | 320 | the retired data file |
+| 1394 | 356 | the retired data file |
+| 1388 | 362 | the retired data file |
+| 1359 | 391 | the retired data file |
+| 1304 | 446 | the retired data file |
+| 1296 | 454 | the retired data file |
+| 1296 | 454 | the retired data file |
+| 1287 | 463 | the retired data file |
+| 1239 | 511 | the retired data file |
+| 1239 | 511 | the retired data file |
+| 1234 | 516 | the retired data file |
+| 1218 | 532 | the retired data file |
 
 ## Threshold Counts
 
@@ -104,9 +103,9 @@ This audit confirms the current P01 order remains defensible:
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable -q`
+- the historical check
   - Result: 1 passed in 2.84s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py -q`
+- the historical check
   - Result: 24 passed in 70.78s.
-- `uv run --no-sync vaultspec-core vault plan status .vault/plan/2026-06-02-registry-hardening-next-work-plan.md`
+- `uv run --no-sync vaultspec-core vault plan status.vault/plan/2026-06-02-registry-hardening-next-work-plan.md`
   - Result before closing `P01.S01`: L2, 4 phases, 26 steps, 0/26 complete.

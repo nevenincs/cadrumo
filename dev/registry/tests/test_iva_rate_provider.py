@@ -11,24 +11,24 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import (
-    FactSelector,
     GovernedFact,
     GovernedFactCatalogue,
-    GovernedFactVariant,
-    MappingFactPayload,
 )
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector, GovernedFactVariant
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.rates import (
     IVA_RATE_FACT_ID,
     rate_record_from_fact,
 )
-from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, require_eu_member_state
+from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.fact_loader import load_governed_facts

@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:59690fd568b81b5d37ed11b60d3441131b5b43302abc1160743f7c1d5771fe0f'
+body_hash: 'sha256:06448e8eb78343dc380be7d321bfeae96dfc002bb9b46ed73e0c17249e8f7e7a'
 related:
   - "[[2026-08-25-cli-root-verb-homes-audit]]"
+  - '[[2026-10-04-google-app-identity-adr]]'
 ---
 
 # `cli-root-verb-homes` adr: `root verb homes and bidirectional transport verb symmetry` | (**status:** `accepted`)
@@ -67,7 +68,7 @@ an assumption into a precondition.
   `if request.revision_id and ...`, so the projection already tolerates an omitted
   id. Only the CLI spec makes it required.
 - `config google sync probe` verifies OAuth credentials and root-folder resolution
-  (`src/cadrumo/entrypoints/cli/_config/_google.py:356`). It never reads the
+. It never reads the
   secure-object mirror; it is Google configuration.
 - `docs/_sequences/contracts/**/*.seq` is gate-covered by
   `test_documented_command_conformance.py`, so a rename reds there rather than
@@ -132,8 +133,8 @@ The change is larger than the first draft claimed. Beyond entrypoint specs it
 touches roughly 78 locale keys in each of four catalogues (312 leaves) under a
 hard parity gate and an honesty ratchet that forbids the placeholder; gate-covered
 `.seq` contracts and their JSON goldens; three non-gate-covered `docs/locales`
-catalogues; `src/cadrumo/application/operator_actions/_catalogue.py:512`;
-`dev/quality/cli_action_census_dispositions.toml`; and `dev/benchmarks/cli`
+catalogues; the former source file;
+the former source file; and `dev/benchmarks/cli`
 goldens.
 
 `aeat-cli-contract` must be amended, and D7 enumerates the specific sentences.
@@ -216,8 +217,9 @@ dispositions:
 - `app modelo audit`: `export` outbound; inbound absent — **declared gap**, an
   audit bundle is re-derivable and has no import case.
 - `app modelo review-package`: `export` and `import` both present; see D5.
-- `app ledger`: `import` / `export` complete for rows; `evidence pull` /
-  `pull-all` inbound from remote, outbound absent — **declared gap**.
+- `app ledger`: `import` / `export` complete for rows; evidence intake is local
+  (`evidence add`, `evidence batch`); remote inbound absent **by policy**
+  (`2026-10-04-google-app-identity-adr`).
 - `config profile archive`: `export` / `import` complete for local.
 - `config profile archive`: `push` outbound to the remote replica; `pull` absent
   — **declared gap**, the restore path does not exist and is owed a follow-on
@@ -345,6 +347,9 @@ becomes `app ledger evidence pull-all --folder`, using the real `pull-all`
 cardinality precedent from `app live filed` rather than the `-folder` locus
 suffix D2 refuses. `app ledger evidence add`'s positional local path and `evidence
 batch`'s positional directory declare their locus and take the D3 spellings.
+`evidence pull` and `evidence pull-all` are withdrawn by
+`2026-10-04-google-app-identity-adr`; `evidence add` and `evidence batch` are
+unchanged.
 
 **`file` transport uses are renamed.** `app modelo reconcile file` becomes
 `reconcile import`; `config profile censo file` becomes `censo import`. Both keep

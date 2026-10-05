@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#test-reconciliation-sweep'
 date: '2026-09-04'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed2a8ff250e4bfa05dfb24510d93c9dbf5cffd3b453a6e73569a34735a8c9d3f'
+body_hash: 'sha256:7240587f0f3a016e04ebe602a17c35f67a0f474b9a5241bb5943e881c421f6c0'
 related:
   - '[[2026-08-28-test-reconciliation-sweep-adr]]'
-  - '[[2026-08-28-test-reconciliation-sweep-ledger]]'
-  - '[[2026-08-28-test-reconciliation-sweep-plan]]'
 ---
 
 # `test-reconciliation-sweep` feature index
@@ -22,11 +20,3 @@ Auto-generated index of all documents tagged with `#test-reconciliation-sweep`.
 ### adr
 
 - `2026-08-28-test-reconciliation-sweep-adr` - `test-reconciliation-sweep` adr: `test reconciliation sweep` | (**status:** `accepted`)
-
-### exec
-
-- `2026-08-28-test-reconciliation-sweep-ledger` - `test-reconciliation-sweep` ledger
-
-### plan
-
-- `2026-08-28-test-reconciliation-sweep-plan` - `test-reconciliation-sweep` plan

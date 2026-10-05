@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:da11c0d886458f571fc866b37ef2781a33cc095491bc9c5b3c1ab5e3e13a2022'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+related: []
 ---
 # `ci-lane-deconflation` audit: `p02 s63 rollup review`
 

@@ -15,7 +15,8 @@ from ....core.period import Period
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationRegistry, OperationSchemaIdentityV1
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.schema_identity import OperationSchemaIdentityV1
 from ...user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -24,7 +25,7 @@ from ...user_profile.access_contracts import (
     OperationAccessRequest,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.access_policy import operation_scope_refusal
+from ...user_profile.operation_access_policy import operation_scope_refusal
 from ..pipeline_operation import (
     OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID,
     OverviewPipelineProjection,

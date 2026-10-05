@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#registry-schema-localization'
 date: '2026-06-11'
-modified: '2026-07-17'
-body_hash: 'sha256:b6636e0878eda637dd2c010f7b4ab286b1a8eefc639a34293cebf4dbb87333b8'
+modified: '2026-10-03'
+body_hash: 'sha256:4e97c38a16e1e646794372a555bb457a11330a66d92af094c66c6a016a19f740'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
 ---
@@ -16,7 +16,7 @@ This note records the current-state handoff for the schema-localization campaign
 ## Findings
 
 - The accepted decision is `2026-06-08-registry-localization-backend-adr`: keep `CasillaDefinition.label` as the official Spanish invariant, load per-modelo or per-revision locale TOML lazily, validate locale keys against real `casilla_id` or `continuidad_id`, and expose localized values through `get_label(locale)` and `get_help(locale)`.
-- The backend implementation already exists in `src/aeat/domain/calculations/registry/_loader.py` and `src/aeat/domain/calculations/registry/_schema_surfaces.py`. Locale files under `locales/` are excluded from revision-fragment parsing but included in registry fingerprints, so edits invalidate the compiled registry cache.
+- The backend implementation already exists  and the former source file. Locale files under `locales/` are excluded from revision-fragment parsing but included in registry fingerprints, so edits invalidate the compiled registry cache.
 - Existing concrete locale coverage before this continuation was seeded but sparse: M100 revision `2024` had 3 of 2068 casilla labels/help entries per locale, M130 revision `2019-y-siguientes` had 7 of 20 labels and 2 of 20 help entries per locale, M200 revision `2024-y-siguientes` had 2 of 3232, and M303 revision `2023-y-siguientes` had 2 of 120.
 - The M130 revision is now the first complete small-model exemplar: every one of its 20 casillas has localized labels and help in `en`, `ca`, and `hu`, including the internal carry-forward casilla `saldo-negativo-fin-periodo`.
 - Core application locale YAML files were not edited. The `aeat.locales` CLI remains the authority for core `tr(...)` catalogue work, while registry-local casilla translations currently live in the model-local TOML mechanism defined by the ADR.
@@ -62,7 +62,7 @@ Verified commands:
 - `uv run --no-sync python -m aeat.locales modelo audit ca 303 2023-y-siguientes` -> `locale=ca modelo=303 revision=2023-y-siguientes etiquetas=120/120 ayuda=120/120`.
 - `uv run --no-sync python -m aeat.locales modelo coverage hu 303 2023-y-siguientes` -> `locale=hu modelo=303 revision=2023-y-siguientes etiquetas=120/120 ayuda=120/120`.
 - `uv run --no-sync python -m aeat.locales modelo audit hu 303 2023-y-siguientes` -> `locale=hu modelo=303 revision=2023-y-siguientes etiquetas=120/120 ayuda=120/120`.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_registry_locales_parity.py -q -m unit` -> `2 passed`.
+- `uv run --no-sync pytest the former source file -q -m unit` -> `2 passed`.
 
 The M303 English pass covered both casilla part files:
 
@@ -155,9 +155,9 @@ Verified commands:
 - A subsequent structured placeholder scan over casillas `0720` through `0729` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
 - A subsequent structured placeholder scan over casillas `0730` through `0739` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
 - A subsequent structured placeholder scan over casillas `0740` through `0749` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
-- `uv run --no-sync pytest src/aeat/locales/tests/test_modelo_manager.py src/aeat/locales/tests/test_modelo_cli.py src/aeat/domain/calculations/registry/tests/test_registry_locales_loader.py src/aeat/domain/calculations/registry/tests/test_registry_locales_parity.py -q -m "unit or integration"` -> `21 passed`.
-- `uv run --no-sync ruff check src/aeat/domain/calculations/registry/__init__.py src/aeat/domain/calculations/registry/_queries.py src/aeat/domain/calculations/registry/_bindings.py src/aeat/domain/calculations/registry/_validate_record_sections.py` -> `All checks passed`.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_temporal.py -q -m unit` -> `9 passed`.
+- `uv run --no-sync pytest the former source file the former source file the former source file the former source file -q -m "unit or integration"` -> `21 passed`.
+- `uv run --no-sync ruff check the former source file the former source file the former source file the former source file` -> `All checks passed`.
+- `uv run --no-sync pytest the former source file -q -m unit` -> `9 passed`.
 
 During the M100 CLI batch, the registry package public import contract was found inconsistent: `registry.__init__` still expected `parse_modelo_period`, while `_queries.py` no longer exposed it. The helper and public re-export were restored so `from aeat.domain.calculations.registry import parse_modelo_period` works and the locale CLI remains importable.
 

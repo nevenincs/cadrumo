@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#iva-exemption-article'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:3794d5f15f9043000e0b0260cd1cd0e1543ff7dbfc6fe37152ca98002fa712a3'
+modified: '2026-10-03'
+body_hash: 'sha256:af469831b511af12fc1fd6409e728cf1cafd1354be6c93307d632aedd0e7dbf5'
 related: []
 ---
 
@@ -31,10 +31,10 @@ operating under 20.Uno.26.
 
 ## Existing surface
 
-The `IvaCategory` StrEnum lives at `src/aeat/domain/iva/_schema.py`
+The `IvaCategory` StrEnum lives
 (grep evidence: `IvaCategory.DOMESTIC_EXEMPT` referenced across
-`src/aeat/domain/iva/_classification.py:558,610`,
-`src/aeat/domain/iva/_invoice_classification.py:122`, and four test
+
+the former source file, and four test
 files). Classification routes a transaction to `DOMESTIC_EXEMPT` via
 two paths: `IvaRate.EXEMPT` → `DOMESTIC_EXEMPT` (line 558 of
 `_classification.py`), and immovable-property classification rule

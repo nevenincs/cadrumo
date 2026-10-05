@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:2471a756a2b92c139bdddd2b5c678b722ad74f6b34afcd1bd458a597fd0c3b78'
+modified: '2026-10-03'
+body_hash: 'sha256:e7e07131d8afdce6c9a53303e0fac35d2e1abcab90c4b8082aa902a8a8252b27'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S393-001 | PASS | Locale registry enrollment
 
-The review found that `src/aeat/application/modelo/_work_create_policy.py` declares
+The review found that the retired module declared
 live operator-facing locale keys through `STUB_MODELO_LOCALE_KEYS`, but the locale
 scanner previously only collected direct `tr()` calls, error-constructor keys, and
 dynamic namespace prefixes. The new scanner rule is narrow: only assignment targets
@@ -34,8 +34,8 @@ four catalogues as clean.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/locales/_ast_scanner.py src/aeat/locales/test_parity.py src/aeat/application/wizard/_prompter.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
-- `uv run --no-sync pytest -q src/aeat/locales/test_parity.py src/aeat/application/wizard/test_prompter.py src/aeat/application/wizard/test_setup_runtime.py src/aeat/application/wizard/test_questionary_smoke.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 
 Disposition: S393 follow-up remains closed.

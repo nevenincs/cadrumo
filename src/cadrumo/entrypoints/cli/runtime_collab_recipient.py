@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Never
 from uuid import UUID
 
 import typer
@@ -23,12 +22,10 @@ from ...application.modelo.review_package_recipient_operations import (
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _profile_client(ctx: typer.Context) -> tuple[UUID, RuntimeFrontendClient]:
@@ -39,16 +36,6 @@ def _profile_client(ctx: typer.Context) -> tuple[UUID, RuntimeFrontendClient]:
 
 def _active_profile_id() -> UUID:
     return UUID(active_bucket_id_or_refuse())
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _submit[ProjectionT: BaseModel](
@@ -76,7 +63,7 @@ def _submit[ProjectionT: BaseModel](
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -105,7 +92,7 @@ def submit_collab_recipient_add(
         result_type=ReviewPackageRecipientAddProjection,
     )
     if completed.effect is not OperationEffect.UPDATED:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -128,7 +115,7 @@ def submit_collab_recipient_list(
         or tuple(row.recipient_id for row in projection.recipients)
         != tuple(sorted(row.recipient_id for row in projection.recipients))
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -150,7 +137,7 @@ def submit_collab_recipient_remove(
         result_type=ReviewPackageRecipientRemoveProjection,
     )
     if completed.effect is not OperationEffect.UPDATED or completed.projection.recipient_id != recipient_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 

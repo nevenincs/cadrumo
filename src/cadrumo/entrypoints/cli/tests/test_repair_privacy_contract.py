@@ -22,6 +22,8 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....core.config import override_settings
 from ....core.logging import default_log_file_path
+from ....core.storage_taxonomy import StorageCategory
+from ....tests.storage_scope import relocated_storage_path, storage_overrides
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -29,6 +31,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _UUID_PATTERN = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 _SESSION_OPENED_AT = datetime(2099, 5, 28, 14, 50, 0, tzinfo=UTC)
 _ROW_WRITTEN_AT = datetime(2099, 5, 28, 14, 55, 0, tzinfo=UTC)
+_RELOCATED_CATEGORIES = (StorageCategory.LOGS, StorageCategory.TEMPORARY_FILES)
 
 
 @pytest.fixture(autouse=True)
@@ -38,6 +41,11 @@ def _isolated_secure_object_database(tmp_path: Path) -> Iterator[None]:
     # validates them and never creates them.
     for directory in ("probe-tokens", "probe-runs", "txs", "invoices", "probe-drafts"):
         (tmp_path / directory).mkdir()
+    # The runner pins the product log and temporary directories, and the
+    # repair-logs test below writes to the log file, so both are relocated like
+    # the others.
+    for category in _RELOCATED_CATEGORIES:
+        relocated_storage_path(tmp_path, category).mkdir()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
@@ -47,6 +55,7 @@ def _isolated_secure_object_database(tmp_path: Path) -> Iterator[None]:
             cadrumo_financial_txs_dir=tmp_path / "txs",
             cadrumo_invoices_dir=tmp_path / "invoices",
             cadrumo_drafts_dir=tmp_path / "probe-drafts",
+            **storage_overrides(tmp_path, *_RELOCATED_CATEGORIES),
         ),
     ):
         try:

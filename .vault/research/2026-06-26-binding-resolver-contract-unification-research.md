@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-07-17'
-body_hash: 'sha256:a40851d8dc894a366e884bc61c73dddaeaf45b7adcb91bc78fa35ee0d4c9cc90'
+modified: '2026-10-03'
+body_hash: 'sha256:0326644d33b9fafca36262e18a40b3476fc0b72ac9e267ac4e213cc450e4c25e'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-adr]]"
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
@@ -13,8 +13,8 @@ related:
 # `binding-resolver-contract-unification` research: `binding shape-c aggregation unification`
 
 Grounds follow-up #36 from the bindings-architecture-unification sweep: the shape-C
-per-modelo aggregation service (`aggregate_per_modelo`, `src/aeat/application/aggregation/_service.py`)
-is the SOLE backend of the CLI `aggregate` verb (`src/aeat/entrypoints/cli/_modelo_aggregate_cli.py`)
+per-modelo aggregation service (`aggregate_per_modelo`, the former source file)
+is the SOLE backend of the CLI `aggregate` verb
 and has NO calculate-path caller (enforced CLI-only by `test_backend_boundary.py`). The
 verb persists its observations (shared with calculate via set-replace), then computes a
 FULL ROLLUP preview through the service — a SECOND aggregation mechanism over the same

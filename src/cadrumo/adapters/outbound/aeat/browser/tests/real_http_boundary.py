@@ -15,6 +15,7 @@ import tempfile
 import threading
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -30,8 +31,10 @@ from playwright.async_api import BrowserContext, Playwright, Route, async_playwr
 from playwright.async_api import Error as PlaywrightError
 
 from ......application.auth.protocols import BrowserContextProvisioner, BrowserSessionFactoryPort
+from ......core.async_cleanup import await_cancellation_complete, close_async_resources
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_PATH, AEAT_CERTIFICATE_PROTECTED_URL
+from ......core.errors.hierarchy import InternalInvariantError
 from ..evasion import PlaywrightStealthEvasion
 from ..factory import DefaultBrowserSession
 from ..profile import Profile
@@ -207,6 +210,16 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
               <button type="submit">Confirmar</button>
             </form>
             """
+        elif self.path == "/clave-movil-representation-external-submit":
+            html = f"""
+            <form id="repForm" method="get" action="{_PRE303_TARGET_URL}">
+              <input name="forigen" type="hidden" value="pre303">
+              <input id="propio" name="representacion" type="radio" checked>
+              <label for="propio">Actuar en nombre propio</label>
+              <input id="representante" name="representacion" type="radio">
+            </form>
+            <button type="submit" onclick="document.querySelector('#repForm').requestSubmit()">Confirmar</button>
+            """
         elif self.path == "/clave-movil-representation-missing":
             html = "<main><h1>Representación autenticada</h1></main>"
         elif self.path in {"/clave-permanente-form-success", "/clave-permanente-form-invalid"}:
@@ -329,11 +342,17 @@ class LocalHttpBoundary:
                 if _CLAVE_MOVIL.selector_access_path_marker in requested_url
                 else "/clave-movil-pending"
             )
-        if scenario not in {"clave-movil-representation", "clave-movil-representation-missing"}:
+        if scenario not in {
+            "clave-movil-representation",
+            "clave-movil-representation-missing",
+            "clave-movil-representation-external-submit",
+        }:
             return None
         if _CLAVE_MOVIL.selector_access_path_marker in requested_url:
             return "/clave-movil-selector-representation"
         if _CLAVE_MOVIL.dialogo_representacion_path_marker in requested_url:
+            if scenario.endswith("-external-submit"):
+                return "/clave-movil-representation-external-submit"
             return (
                 "/clave-movil-representation-missing"
                 if scenario.endswith("-missing")
@@ -447,6 +466,16 @@ class _BoundaryTrustingBrowserSession(BrowserSession):
         return context_kwargs
 
 
+@dataclass(slots=True)
+class _BoundaryRuntimeOwner:
+    """Retain the real driver until startup failure cleanup has completed."""
+
+    playwright: Playwright
+
+    async def close(self) -> None:
+        await self.playwright.stop()
+
+
 async def open_real_browser_session(
     *,
     boundary: LocalHttpBoundary,
@@ -465,20 +494,36 @@ async def open_real_browser_session(
     need a display server that a headless host does not have. That request is
     the provider's own contract and is pinned by the provider's unit tests.
     """
-    playwright = await async_playwright().start()
-    session = _BoundaryTrustingBrowserSession(
-        playwright=playwright,
-        settings=settings.model_copy(
-            update={
-                "cadrumo_browser_headless": True,
-                "cadrumo_proxy_url": boundary.proxy_url,
-                "cadrumo_proxy_bypass": boundary.loopback_host,
-            }
-        ),
-        profile=Profile(name=profile_name),
-        evasion_strategy=RoutedStealthEvasion(boundary),
-    )
-    return playwright, session
+    playwright: Playwright | None = None
+    manager = async_playwright()
+
+    async def start_owned() -> None:
+        nonlocal playwright
+        playwright = await manager.start()
+
+    try:
+        await await_cancellation_complete(start_owned(), task_name="cadrumo-boundary-playwright-start")
+        if playwright is None:
+            raise InternalInvariantError("Boundary Playwright startup completed without an owned runtime")
+        session = _BoundaryTrustingBrowserSession(
+            playwright=playwright,
+            settings=settings.model_copy(
+                update={
+                    "cadrumo_browser_headless": True,
+                    "cadrumo_proxy_url": boundary.proxy_url,
+                    "cadrumo_proxy_bypass": boundary.loopback_host,
+                }
+            ),
+            profile=Profile(name=profile_name),
+            evasion_strategy=RoutedStealthEvasion(boundary),
+        )
+        return playwright, session
+    except BaseException:
+        if playwright is not None:
+            await close_async_resources(
+                _BoundaryRuntimeOwner(playwright), task_name="cadrumo-boundary-playwright-start-cleanup"
+            )
+        raise
 
 
 __all__ = [

@@ -2,8 +2,7 @@
 
 Provides :func:`get_logger` as the consistent logger factory to avoid scattered
 bare logging instances, with :func:`configure_logging` installing the project
-defaults. The installed log-record factory reads
-:class:`cadrumo.core.observability.sink.JsonlRunSink` state indirectly through
+defaults. The installed log-record factory reads the active correlation
 contextvars, so every record automatically picks up the active ``run_id`` /
 ``step_id`` while a run context is bound.
 
@@ -13,8 +12,7 @@ attached through :func:`configure_logging` receives a
 formatting. Shape-based NIF, URL, and bearer-token matching is delegated
 to :func:`~cadrumo.core.redaction.rules.redact_for_log`; this module keeps only
 logging-specific key-paired placeholders such as cookies, passphrases, and
-certificate serial suffixes. Per-run JSONL handlers are attached with
-:func:`attach_run_sink` so the same filter protects observability output.
+certificate serial suffixes.
 
 Encoded document payloads are contained at two seams, because the diagnostic
 log is plaintext on disk and a scanned invoice that reaches it has left secure
@@ -49,7 +47,12 @@ from pydantic import ConfigDict, RootModel
 if TYPE_CHECKING:
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
-from .redaction.rules import ALWAYS_REDACT_KEY_TERMS, redact_for_log
+from .redaction.rules import (
+    ALWAYS_REDACT_KEY_TERMS,
+    is_sensitive_redaction_key,
+    normalise_redaction_key,
+    redact_for_log,
+)
 from .type_guards import (
     is_object_list,
     is_object_list_or_tuple,
@@ -148,7 +151,7 @@ def _is_cli_metadata_invocation() -> bool:
     return is_metadata_invocation(sys.argv[1:])
 
 
-_SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
+_SENSITIVE_KEY_SET = frozenset(normalise_redaction_key(pattern) for pattern in SCRUB_FIELD_PATTERNS)
 _SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
 
 _SENSITIVE_ASSIGNMENT_RE = re.compile(
@@ -161,10 +164,16 @@ _SENSITIVE_ASSIGNMENT_RE = re.compile(
 )
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
-_PLACEHOLDER_PATTERN = r"%[-#+ 0-9.]*[a-zA-Z]"
-_PERCENT_PLACEHOLDER_ONLY_RE = re.compile(_PLACEHOLDER_PATTERN)
+_PLACEHOLDER_PATTERN = r"%(?:\([^)]+\))?[-#+ 0-9]*(?:\*|\d+)?(?:\.(?:\*|\d*))?[hlL]?[diouxXeEfFgGcrsa]"
+_PERCENT_PLACEHOLDER_ONLY_RE = re.compile(rf"%%|{_PLACEHOLDER_PATTERN}")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(rf"^{_PLACEHOLDER_PATTERN}$")
-_PERCENT_PLACEHOLDER_RE = re.compile(rf"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>{_PLACEHOLDER_PATTERN})")
+_PERCENT_PLACEHOLDER_RE = re.compile(
+    rf"%%|(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>{_PLACEHOLDER_PATTERN})"
+)
+_FORMAT_OPERAND_RE = re.compile(
+    r"%(?:\((?P<mapping>[^)]+)\))?[-#+ 0-9]*(?P<width>\*)?"
+    r"(?:\.(?P<precision>\*|\d*))?[hlL]?(?P<conversion>[diouxXeEfFgGcrsa])"
+)
 
 #: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
 #: when the image travels inline rather than as a bare field.
@@ -241,16 +250,9 @@ def _redact_payloads(value: str) -> str:
     return _OPAQUE_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
 
 
-def _normalise_log_key(key: str) -> str:
-    """Return a canonical, separator-stable representation of ``key``."""
-    camel_split = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
-    collapsed = re.sub(r"[^A-Za-z0-9]+", "_", camel_split)
-    return collapsed.strip("_").lower()
-
-
 def _looks_sensitive_key(key: str | None) -> bool:
     """Return whether ``key`` should have its value redacted."""
-    return key is not None and _normalise_log_key(key) in _SENSITIVE_KEY_SET
+    return is_sensitive_redaction_key(key, additional_exact_terms=_SENSITIVE_KEY_SET)
 
 
 def _redacted_value(key: str | None, value: str) -> str:
@@ -273,7 +275,7 @@ def _redact_around_placeholders(key: str | None, value: str) -> str:
 
     A value that is nothing but a placeholder carries no secret and is
     returned untouched, which is the ``credential=%s`` format-string shape the
-    paired :func:`_scrub_positional_args` pass redacts at the argument instead.
+    paired :func:`_scrub_positional_format` pass redacts at the argument instead.
     """
     if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(value.strip()):
         return value
@@ -281,6 +283,8 @@ def _redact_around_placeholders(key: str | None, value: str) -> str:
     pieces: list[str] = []
     cursor = 0
     for placeholder in _PERCENT_PLACEHOLDER_ONLY_RE.finditer(value):
+        if placeholder.group(0) == "%%":
+            continue  # An escaped percent is literal secret text, not an operand.
         if value[cursor : placeholder.start()].strip():
             pieces.append(marker)
         pieces.append(placeholder.group(0))
@@ -421,18 +425,102 @@ def _scrub_opaque_object(value: object) -> Any:  # ANY-RETURN-RATIONALE-OPAQUE-L
     return redacted if redacted != rendered else value
 
 
-# ANY-RETURN-RATIONALE-LOGGING-POSITIONAL-ARGS: args/return mirror the stdlib
-# logging.LogRecord positional-args tuple, whose element types are arbitrary
-# %-formatting operands -- `object`, not `Any`: typeshed already annotates
-# `LogRecord.args` as `tuple[object, ...] | ...`, and `Any` here erased the
-# element type of everything this helper returned.
-def _scrub_positional_args(message: str, args: tuple[object, ...]) -> tuple[object, ...]:
-    """Scrub tuple-style logging args using keys inferred from ``message``."""
-    placeholders = list(_PERCENT_PLACEHOLDER_RE.finditer(message))
-    return tuple(
-        _scrub_value(arg, key=placeholders[index].group("key") if index < len(placeholders) else None)
-        for index, arg in enumerate(args)
-    )
+def _scrub_format_operand(
+    value: object, key: str | None, placeholder: str, *, redacted: bool = False
+) -> tuple[object, str]:
+    """Keep the conversion compatible with a redacted operand.
+
+    A numeric credential becomes a string marker. Numeric conversions cannot
+    consume it, and string precision must not truncate the marker. Replacing
+    that one conversion preserves the other operands' diagnostic formatting.
+    """
+    scrubbed = _scrub_value(value, key=key)
+    operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+    if operand is not None and (
+        redacted
+        or _looks_sensitive_key(key)
+        or (
+            isinstance(scrubbed, str)
+            and (not isinstance(value, str) or scrubbed != value)
+            and operand.group("conversion") not in "sra"
+        )
+    ):
+        mapping = operand.group("mapping")
+        return scrubbed, f"%({mapping})s" if mapping is not None else "%s"
+    return scrubbed, placeholder
+
+
+def _scrub_positional_format(message: str, args: tuple[object, ...]) -> tuple[str, tuple[object, ...]]:
+    """Scrub operands and their conversions together, including star widths."""
+    pieces: list[str] = []
+    scrubbed_args: list[object] = []
+    cursor = 0
+    index = 0
+    for match in _PERCENT_PLACEHOLDER_RE.finditer(message):
+        placeholder = match.group("placeholder")
+        if placeholder is None:  # %% consumes no argument.
+            continue
+        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+        if operand is None or operand.group("mapping") is not None:
+            continue
+        stars = int(operand.group("width") == "*") + int(operand.group("precision") == "*")
+        if index + stars >= len(args):
+            break  # Retain the stdlib's refusal of an invalid format/arity.
+        value, conversion = _scrub_format_operand(args[index + stars], match.group("key"), placeholder)
+        pieces.append(message[cursor : match.start("placeholder")])
+        pieces.append(conversion)
+        cursor = match.end("placeholder")
+        if conversion == placeholder:
+            scrubbed_args.extend(args[index : index + stars])
+        scrubbed_args.append(value)
+        index += stars + 1
+    pieces.append(message[cursor:])
+    scrubbed_args.extend(_scrub_value(value) for value in args[index:])
+    return "".join(pieces), tuple(scrubbed_args)
+
+
+def _scrub_mapping_format(message: str, args: Mapping[str, object]) -> tuple[str, dict[str, object]]:
+    """Scrub mapping operands, preserving each use's conversion independently."""
+    scrubbed_args = {str(key): _scrub_value(value, key=str(key)) for key, value in args.items()}
+    redacted_keys: set[str] = set()
+
+    def replace(match: re.Match[str]) -> str:
+        placeholder = match.group("placeholder")
+        if placeholder is None:
+            return match.group(0)
+        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+        if operand is None:
+            return match.group(0)
+        mapping_key = operand.group("mapping")
+        if mapping_key is None or mapping_key not in args:
+            return match.group(0)
+        key = match.group("key") if _looks_sensitive_key(match.group("key")) else mapping_key
+        value, conversion = _scrub_format_operand(args[mapping_key], key, placeholder)
+        # A key used in a sensitive assignment must stay redacted in all uses.
+        if _looks_sensitive_key(key):
+            scrubbed_args[mapping_key] = value
+            redacted_keys.add(mapping_key)
+        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
+
+    rewritten = _PERCENT_PLACEHOLDER_RE.sub(replace, message)
+
+    # A later sensitive assignment may redact a key previously used numerically.
+    def compatible(match: re.Match[str]) -> str:
+        placeholder = match.group("placeholder")
+        if placeholder is None:
+            return match.group(0)
+        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
+        if operand is None:
+            return match.group(0)
+        mapping_key = operand.group("mapping")
+        if mapping_key is None or mapping_key not in scrubbed_args:
+            return match.group(0)
+        _, conversion = _scrub_format_operand(
+            scrubbed_args[mapping_key], None, placeholder, redacted=mapping_key in redacted_keys
+        )
+        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
+
+    return _PERCENT_PLACEHOLDER_RE.sub(compatible, rewritten), scrubbed_args
 
 
 def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
@@ -446,7 +534,7 @@ def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
 def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
     """Scrub record arguments, retaining placeholder-aware positional arity."""
     if is_object_list_or_tuple(record.args) and isinstance(message, str):
-        scrubbed_args = _scrub_positional_args(message, tuple(record.args))
+        record.msg, scrubbed_args = _scrub_positional_format(message, tuple(record.args))
         # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
         # | Mapping[str, object] | None``; ``list`` is not in the
         # union even though logging accepts it at runtime.
@@ -455,7 +543,10 @@ def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
         record.args = tuple(scrubbed_args)
         return
     if isinstance(record.args, Mapping):
-        record.args = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
+        if isinstance(message, str):
+            record.msg, record.args = _scrub_mapping_format(message, record.args)
+        else:
+            record.args = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
         return
     if isinstance(record.args, tuple | list):
         # Residual tuple/list args reach only when ``record.msg`` is not a
@@ -565,8 +656,7 @@ class DropRunEventFilter(logging.Filter):
     """Suppress observability ``run_event`` records on the stderr handler.
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
-    diet — they're already persisted to ``events.jsonl`` via
-    :class:`~cadrumo.core.observability.sink.JsonlRunSink`. Echoing them
+    diet — they are already delivered to the attached structured sink. Echoing them
     on stderr as well would spam the console with one
     ``run.event NAVIGATION`` line per step; suppressing them here
     removes the noise while leaving the record intact for any other
@@ -624,6 +714,10 @@ class _ThirdPartyDebugFilter(logging.Filter):
 #: the operator's stream as a structured document. Pass it through ``extra`` on
 #: any log call that accompanies such a write.
 OPERATOR_DOCUMENT_LOG_EXTRA = "operator_document"
+
+#: Line format of every ``cadrumo.log`` record. Readers that parse the file,
+#: such as the desktop log view, receive this value rather than a copy.
+LOG_FILE_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 
 
 class DropOperatorDocumentEchoFilter(logging.Filter):
@@ -771,12 +865,12 @@ def configure_logging() -> None:
             "version": 1,
             "disable_existing_loggers": False,
             "formatters": {
-                "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
+                "standard": {"format": LOG_FILE_FORMAT},
             },
             "filters": {
                 "drop_run_event": {"()": f"{__name__}.DropRunEventFilter"},
                 "drop_operator_document": {"()": f"{__name__}.DropOperatorDocumentEchoFilter"},
-                "third_party_debug": {"()": f"{__name__}._ThirdPartyDebugFilter"},
+                "third_party_debug": {"()": _ThirdPartyDebugFilter},
             },
             "handlers": configured_handlers,
             "root": {
@@ -856,50 +950,6 @@ def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
             handler.setLevel(level)
 
 
-def attach_run_sink(sink: logging.Handler) -> None:
-    """Install ``SecretScrubbingFilter`` on ``sink`` then attach it to root.
-
-    Ensures every record flowing through the JSONL run sink is scrubbed
-    before it reaches the serialiser, even when the root-logger filter
-    has already scrubbed the shared record in-place.  The filter is
-    idempotent: a second call with the same sink is a no-op because the
-    guard checks ``root_logger.handlers`` for an existing instance.
-
-    Args:
-        sink: The :class:`logging.Handler` (typically
-            :class:`cadrumo.core.observability.sink.JsonlRunSink`) to
-            attach to the root logger.
-
-    The sink is a diagnostic observability target. It receives redacted log
-    records, not CLI result payloads or secure-storage records.
-    """
-    if not any(isinstance(f, SecretScrubbingFilter) for f in sink.filters):
-        sink.addFilter(SecretScrubbingFilter())
-    logging.getLogger().addHandler(sink)
-
-
-def detach_run_sink(sink: logging.Handler) -> None:
-    """Remove ``sink`` from the root logger and perform symmetric teardown.
-
-    Reverses every side-effect of :func:`attach_run_sink`: the handler is
-    removed from the root logger, the :class:`SecretScrubbingFilter`
-    instances that :func:`attach_run_sink` installed on the sink are
-    removed, and the sink is flushed so in-flight records reach their
-    destination before the handle is released.
-
-    The caller is responsible for closing the sink after detach; this
-    function deliberately does not call :meth:`~logging.Handler.close` so
-    a caller can flush output and inspect state before teardown.
-
-    Args:
-        sink: The :class:`logging.Handler` previously attached by
-            :func:`attach_run_sink`.
-    """
-    logging.getLogger().removeHandler(sink)
-    sink.filters = [f for f in sink.filters if not isinstance(f, SecretScrubbingFilter | _ThirdPartyDebugFilter)]
-    sink.flush()
-
-
 _configuration_deferred = False
 
 
@@ -934,40 +984,60 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
     with any handler no longer reaches.
     """
 
-    _configuring = False
+    configuring = False
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
         root_logger = logging.getLogger()
         walked = root_logger.handlers
         position = walked.index(self) if self in walked else 0
-        if record.levelno >= logging.WARNING and not (
-            _configured or _configuration_deferred or type(self)._configuring
-        ):
-            type(self)._configuring = True
-            try:
-                configure_logging()
-            finally:
-                type(self)._configuring = False
-        if self in root_logger.handlers:
-            if record.levelno >= logging.WARNING:
-                _handle_as_last_resort(record)
-            else:
-                _pending_records.append(record)
+        _configure_for_first_record(self, record)
+        if _defer_record_if_placeholder(self, root_logger, record):
             return
-        # ``Logger.callHandlers`` is still walking the handler list it read
-        # before configuration ran. Where removing a handler mutates that list
-        # in place, the walk resumes over the configured handlers after this
-        # handler's former position, so only the ones up to it are ours. Where
-        # removal replaces the list instead (CPython 3.13.15 and 3.14.7 onward,
-        # gh-79366), the walk continues over the old list and reaches none of
-        # them, so all of them are ours; forwarding only the prefix there drops
-        # the very record that triggered configuration from the log file.
-        configured = root_logger.handlers
-        ours = configured if configured is not walked else configured[: position + 1]
-        for handler in ours:
-            if record.levelno >= handler.level:
-                handler.handle(record)
+        _forward_first_record(self, root_logger, walked, position, record)
+
+
+def _configure_for_first_record(handler: _ConfigureOnFirstRecordHandler, record: logging.LogRecord) -> None:
+    if record.levelno < logging.WARNING or _configured or _configuration_deferred or type(handler).configuring:
+        return
+    type(handler).configuring = True
+    try:
+        configure_logging()
+    finally:
+        type(handler).configuring = False
+
+
+def _defer_record_if_placeholder(
+    handler: _ConfigureOnFirstRecordHandler,
+    root_logger: logging.Logger,
+    record: logging.LogRecord,
+) -> bool:
+    if handler not in root_logger.handlers:
+        return False
+    if record.levelno >= logging.WARNING:
+        _handle_as_last_resort(record)
+    else:
+        _pending_records.append(record)
+    return True
+
+
+def _forward_first_record(
+    handler: _ConfigureOnFirstRecordHandler,
+    root_logger: logging.Logger,
+    walked: list[logging.Handler],
+    position: int,
+    record: logging.LogRecord,
+) -> None:
+    # ``Logger.callHandlers`` is still walking the handler list it read before
+    # configuration ran. If removal mutated that list in place, only the
+    # configured handlers before this placeholder are ours. If removal replaced
+    # it (CPython 3.13.15 and 3.14.7 onward, gh-79366), all configured handlers
+    # are ours and the triggering record must be forwarded to each one.
+    configured = root_logger.handlers
+    ours = configured if configured is not walked else configured[: position + 1]
+    for active_handler in ours:
+        if record.levelno >= active_handler.level:
+            active_handler.handle(record)
 
 
 def _handle_as_last_resort(record: logging.LogRecord) -> None:

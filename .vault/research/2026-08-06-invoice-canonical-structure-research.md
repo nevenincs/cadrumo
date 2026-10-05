@@ -3,24 +3,24 @@ tags:
   - '#research'
   - '#invoice-canonical-structure'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e53f9969a0072e9ac4a52ec1c22a6fa18c6cb447318c7af0abc08f474769940a'
+body_hash: 'sha256:32344d56eece3272a1ded9074509b3cff4189b873c2aa638996b99a054ec3cda'
 related:
   - "[[2026-06-10-ledger-invoice-unification-adr]]"
 ---
 # `invoice-canonical-structure` research: `Two invoice aggregates, one operator noun: canonicalisation scope`
 
 Two records model one concept. The rich `Invoice`
-(`src/cadrumo/domain/invoices/_models.py:469`) and the slim
+ and the slim
 `BusinessOperationInvoice`
-(`src/cadrumo/application/ledger/_business_operation_invoice.py:154`) both
+ both
 represent a business invoice, both are reachable from one operator noun
 (`aeat app ledger invoice` and `aeat app ledger invoice catalogue`,
 mounted together at `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py:86-87`),
 and — the fact that reframes the question — **both now feed the same Modelo 347
 and Modelo 349 calculations through one resolver that unions them without
-reconciling them** (`src/cadrumo/application/invoices/_source_resolver.py:200-202`).
+reconciling them** .
 
 This matters because an accepted ADR deliberately kept the split and warned
 against merging it. That ADR's premise no longer describes the code. This
@@ -47,7 +47,7 @@ documented sharp edge so "a future agent does not 'unify' them by mistake".
 That premise — slim is not a calculation input — held when written. Commit
 `432fc96d29` (2026-06-28, "fix(modelo): feed m349 from business invoices")
 introduced `_load_business_operation_invoices`
-(`src/cadrumo/application/invoices/_source_resolver.py:552-570`) and the slim
+ and the slim
 observation adapter (`:579-610`), putting the slim store into the calculation
 mesh 18 days later. The resolver's own module docstring now states both paths
 converge in it (`:6-8`, `:13-18`).
@@ -62,9 +62,8 @@ either way.
 
 Each store refuses duplicates within itself. The rich catalogue refuses a
 re-create with the same derived identity
-(`src/cadrumo/application/invoices/_creation.py:256, 284-285`). The slim store
+. The slim store
 disambiguates genuinely distinct same-content invoices
-(`src/cadrumo/application/ledger/_business_operation_invoice.py:294`).
 
 No guard spans them. `_load_business_operation_invoices` performs no dedup; its
 `rich_invoice_repository` parameter is consulted only as a storage-degradation
@@ -74,9 +73,9 @@ observations from both stores.
 Dedup by identity is not merely absent but structurally impossible: the two id
 derivations hash different tuples. `derive_invoice_id` folds
 `(kind, invoice_number, issued_at, counterparty_tax_id, currency, grand_total)`
-(`src/cadrumo/domain/invoices/_models.py:85-124`);
+
 `derive_business_operation_invoice_id` folds a different tuple including
-`source_kind` (`src/cadrumo/application/ledger/_business_operation_invoice.py:269-301`).
+`source_kind` .
 No correspondence exists between the two id spaces.
 
 The consequence is two-sided and both sides are reachable by ordinary operator
@@ -97,7 +96,7 @@ Adversarial verification returned CONFIRMED, and established two facts worse tha
 the code reading alone suggested.
 
 First, the M349 duplicate is invisible. `_build_operator_clave_rows`
-(`src/cadrumo/domain/calculations/registry/_invoice_bindings.py:822-859`) groups
+ groups
 by `(country_code, party_tax_id, clave)` with no `invoice_id` in the key, and
 accumulates `bucket.base_total += observation.base_amount` (`:844`). Two
 observations of one real invoice therefore do not produce two visible rows — they
@@ -141,21 +140,18 @@ or consciously dropped: physical partition of the two lanes into separate
 documents keyed by `source_kind`
 (`_business_operation_invoice.py:390-391`, services pinned at `:714, :720`), and
 the flat operator-edit shape the CLI writes directly. The rich catalogue is a
-single mixed-kind container (`src/cadrumo/domain/invoices/_service.py:100-118`)
+single mixed-kind container
 whose lane discipline is enforced per-consumer at six sites
-(`_models.py:856, :934`; `src/cadrumo/application/ledger/_evidence_reference.py:175`;
-`src/cadrumo/application/aggregation/_renta_ledger.py:742`;
-`src/cadrumo/application/aggregation/_renta_income_ledger.py:697`;
-`src/cadrumo/application/aggregation/_oss_ioss.py:325`).
+(`_models.py:856, :934`; the former source file;
 
 ### The writer surface cannot supply facts the canonical model can hold
 
 Independent of the fold, the rich aggregate's fields are largely unreachable from
 single-invoice entry. `create_catalogue_invoice`
-(`src/cadrumo/application/invoices/_creation.py:217-236`) accepts no retención
+ accepts no retención
 parameter; the only write path to `Invoice.retention_rate` /
 `retention_amount` in the tree is the bulk importer
-(`src/cadrumo/application/invoices/_importing.py:57-58`). `catalogue create`
+. `catalogue create`
 (`_ledger_business_invoice_cli.py:562-576`) and `catalogue wizard` (`:638-651`)
 expose no `--retention-rate`, `--retention-amount`, `--recargo`,
 `--iva-category`, `--invoice-class`, or `--series`; `wizard` additionally omits
@@ -172,19 +168,19 @@ recurs for every non-intracom regime.
 
 Mixed-rate invoices collapse at two independent points: the extraction schema
 carries a single scalar rate
-(`src/cadrumo/application/ledger/_evidence_draft.py:235-236`) and
+ and
 `build_catalogue_invoice` synthesises exactly one line unconditionally
-(`src/cadrumo/application/invoices/_creation.py:113-137`, docstring `:116-119`).
+(the former source file, docstring `:116-119`).
 The persisted model is not the constraint: `_require_lines`
-(`src/cadrumo/domain/invoices/_models.py:605-610`) bounds only the empty case,
+ bounds only the empty case,
 and the M303 comparison path already iterates lines
-(`src/cadrumo/application/aggregation/_modelo_bindings.py:1093-1105`). This is a
+. This is a
 two-end fix requiring no schema change.
 
 ### The M303 invoice screen is sound in design and narrow in reach
 
 `_raise_if_m303_invoice_domestic_iva_would_be_silent`
-(`src/cadrumo/application/aggregation/_modelo_bindings.py:1005-1069`) refuses an
+ refuses an
 M303 calculation when catalogue-invoice domestic IVA would exceed the
 transaction-ledger IVA the filing is about to use, with an instructive
 suggestion. It fails closed rather than under-declaring, and it screens both
@@ -199,7 +195,7 @@ exists.
 
 Its screened set is four cuota bindings (`:144-149`), and recargo is dropped
 before the comparison even runs: `invoice_line_to_iva_observation`
-(`src/cadrumo/domain/iva/_invoice_classification.py:221-245`) takes no recargo
+ takes no recargo
 parameter, so `InvoiceLine.recargo_amount` never reaches the guard. Catalogue
 invoices never bind to M303 casillas at all — that is by design, they are
 evidence, not a binding source — but the consequence is that a recargo
@@ -211,7 +207,7 @@ exists anywhere in the tree.
 
 **The M390 blocking rule cannot substitute for one, and this is structural
 rather than incidental.** `modelo-390-cuota-devengada-total-equals-reconciliacion-303`
-(`src/cadrumo/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/verification_expectations/0002-verification_predicates.toml:6-9`)
+
 equates two quantities that derive from the same source. Its left side,
 `iva.anual.cuota-devengada-total`, is re-aggregated for the whole year straight
 from the transaction ledger via `ledger_iva_aggregation`
@@ -227,7 +223,7 @@ symmetry requirement from the historical recargo case.
 
 Nor does any advisory close the gap on the calculate path. The capability to ask
 "which invoices are linked to nothing" exists as an on-demand query
-(`src/cadrumo/application/invoices/_queries.py:68-74`, `find_unmatched`) and as a
+(the former source file, `find_unmatched`) and as a
 link-consistency warning on `ledger check`
 (`src/cadrumo/entrypoints/cli/_ledger_read_cli.py:392-422`, which flags broken
 links, not absent ones). Neither is wired into `calculate` or `verify`. The
@@ -237,7 +233,7 @@ never reached the ledger.
 
 ### A second, weaker writer of the canonical aggregate exists off the entrypoint graph
 
-`src/cadrumo/application/invoices/_importing.py` writes `Invoice` records without
+the former source file writes `Invoice` records without
 going through `create_catalogue_invoice`: `parse_invoice_payload` (`:74`)
 constructs via a direct `Invoice.model_validate` (`:91`) and
 `import_invoices_from_path` (`:124`) persists directly (`:151`). It carries
@@ -271,23 +267,23 @@ asymmetry is not closable within the slim shape.
 ### Two unrelated concepts share the name "category"
 
 `InvoiceLine.category_id` is an untyped `str | None`
-(`src/cadrumo/domain/invoices/_models.py:397`). The deduction taxonomy is
+. The deduction taxonomy is
 `SpendingCategory`, a 42-member closed enum
-(`src/cadrumo/domain/categories/_spending_category.py:15-64`) with a
+ with a
 proportionality rule per member
-(`src/cadrumo/domain/categories/_proportionality.py:170-176`), and it lives on
+, and it lives on
 `Transaction`, not on any invoice. A reader encountering "category" on an
 invoice line will reasonably take it for the deduction taxonomy.
 
 Semantic discovery surfaced a third site using the same token with the enum
-meaning: `src/cadrumo/application/ledger/_preflight.py:304-320` documents its
+meaning: the former source file documents its
 `category_id` as a `SpendingCategory`. So the token carries at least two
 distinct meanings across the invoice and ledger surfaces.
 
 ### Lane is derived from bank-money direction rather than declared intent
 
 `_invoice_kind_for(direction: TransactionDirection)`
-(`src/cadrumo/application/aggregation/_iva_ledger.py:1518-1547`) maps
+ maps
 `INCOMING → ISSUED` and `OUTGOING → RECEIVED`, and the repercutido/soportado
 split follows from it (`:1230-1234`). This is coherent for a paid domestic
 invoice and incorrect for a refund or abono, a rectificativa, a reverse-charge
@@ -300,12 +296,12 @@ authorities can disagree, and nothing reconciles them.
 ### Purchase evidence can be confirmed as ISSUED without a plausibility check
 
 `confirm_invoice_draft_from_evidence`
-(`src/cadrumo/application/ledger/_evidence_draft.py:702-718`) takes `kind` as a
+ takes `kind` as a
 required argument and mints a catalogue invoice in either direction. The
 docstring is explicit that extraction cannot infer it (`:741-742`). The reverse
 gate is hard and tested — an ISSUED catalogue invoice is refused as purchase
-evidence (`src/cadrumo/application/ledger/_evidence_reference.py:175-180`, write
-gate at `src/cadrumo/application/ledger/_actions_common.py:521-527`) — but no
+evidence (the former source file, write
+gate ) — but no
 equivalent check asks whether a document being confirmed as ISSUED was plausibly
 issued by this taxpayer.
 
@@ -317,13 +313,13 @@ figure.
 ### Issuer status is an advisory approximation, not the lane authority
 
 There is no issuer-status entity. The lane axis is `InvoiceKind`
-(`src/cadrumo/domain/iva/_classification.py:102-119`). The one place RD
+. The one place RD
 1619/2012's issuance obligation is modelled is
-`src/cadrumo/application/invoices/_issuer_establishment.py`, whose
+the former source file, whose
 `issuer_established_in_tai` (`:86`, body `:103`) approximates TAI establishment
 from IRPF residency, is deliberately over-strict (`:43-66`), and is declared
 advisory weight, never a refusal (`:133-140`). The Canarias / Ceuta-Melilla
-limitation is pinned by test (`tests/test_issuer_establishment.py:160`).
+limitation is pinned by test .
 
 The lane separation an operator experiences as stringent comes from elsewhere:
 structural partition in the slim store, identity-folding in the rich one, and
@@ -452,24 +448,5 @@ this pass and is corrected above. It is recorded here because it is the same
 failure mode the index warning describes, and because the corrected reading is
 materially worse than the original.
 
-- `src/cadrumo/domain/invoices/_models.py:85-124, 397, 469, 474-505, 605-610, 856, 934`
-- `src/cadrumo/domain/invoices/_service.py:100-118`
-- `src/cadrumo/application/ledger/_business_operation_invoice.py:154, 171-196, 269-301, 294, 390-391, 714, 720`
-- `src/cadrumo/application/invoices/_source_resolver.py:6-18, 200-202, 552-570, 567-570, 579-610`
-- `src/cadrumo/application/invoices/_creation.py:113-137, 217-236, 256, 284-285`
-- `src/cadrumo/application/invoices/_importing.py:57-58`
-- `src/cadrumo/application/invoices/_issuer_establishment.py:43-66, 86, 103, 133-140`
-- `src/cadrumo/application/ledger/_evidence_draft.py:235-236, 702-718, 741-742`
-- `src/cadrumo/application/ledger/_evidence_reference.py:175-180`
-- `src/cadrumo/application/ledger/_actions_common.py:521-527`
-- `src/cadrumo/application/ledger/_preflight.py:304-320`
-- `src/cadrumo/application/aggregation/_modelo_bindings.py:144-149, 1005-1069, 1093-1105, 1113-1123`
-- `src/cadrumo/application/aggregation/_iva_ledger.py:1230-1234, 1518-1547`
-- `src/cadrumo/application/aggregation/_renta_ledger.py:742`
-- `src/cadrumo/application/aggregation/_renta_income_ledger.py:697`
-- `src/cadrumo/application/aggregation/_oss_ioss.py:325`
-- `src/cadrumo/domain/iva/_classification.py:102-119`
-- `src/cadrumo/domain/categories/_spending_category.py:15-64`
-- `src/cadrumo/domain/categories/_proportionality.py:170-176`
 - `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py:86-87, 125-145, 562-576, 638-651`
 - Commits `432fc96d29` (2026-06-28), `0b1e3f040b` (2026-08-06), `84f84166f` (referenced as an incident shape only)

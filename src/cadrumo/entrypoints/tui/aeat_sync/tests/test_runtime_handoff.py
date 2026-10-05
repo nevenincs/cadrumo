@@ -11,7 +11,8 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FiledHistoryOperationRequest,

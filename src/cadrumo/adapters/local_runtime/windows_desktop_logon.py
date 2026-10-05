@@ -89,31 +89,10 @@ def _validated_witness(
         raise _unavailable()
     token, station = before_token, before_station
     if (
-        not _sid_text_valid(token.os_owner_id)
-        or not _logon_sid_valid(token.logon_sid)
-        or token.os_owner_id == token.logon_sid
-        or type(token.authentication_id) is not int
-        or not -(2**63) <= token.authentication_id < 2**63
-        or token.authentication_id == 0
-        or type(token.session_id) is not int
-        or not 0 < token.session_id <= 0xFFFFFFFF
-        or type(token.logon_sid_count) is not int
-        or token.logon_sid_count != 1
-        or type(token.logon_kind) is not int
-        or token.logon_kind not in (2, 10, 11, 12)
-        or type(token.token_id) is not int
-        or not -(2**63) <= token.token_id < 2**63
-        or token.token_id == 0
-        or type(token.modified_id) is not int
-        or not -(2**63) <= token.modified_id < 2**63
-        or token.modified_id == 0
-        or station.name.casefold() != "winsta0"
-        or station.kind != "WindowStation"
-        or type(station.flags) is not int
-        or station.flags != 1
-        or station.inherited is not False
-        or station.reserved is not False
-        or station.associated_sid != token.logon_sid
+        not _native_token_origin_is_valid(token)
+        or not _native_token_role_is_valid(token)
+        or not _native_token_generation_is_valid(token)
+        or not _native_station_association_is_valid(station, token)
     ):
         raise _unavailable()
     return WindowsDesktopLogon(token.os_owner_id, token.authentication_id, token.session_id, token.logon_sid)
@@ -181,16 +160,9 @@ def _token_snapshot(process: int) -> _TokenSnapshot:
         session = information(token, win32security.TokenSessionId)
         primary_type = information(token, win32security.TokenType)
         groups = information(token, win32security.TokenGroups)
-        if (
-            not isinstance(raw_user, tuple)
-            or not isinstance(statistics, Mapping)
-            or type(session) is not int
-            or not 0 < session <= 0xFFFFFFFF
-            or type(primary_type) is not int
-            or primary_type != 1
-            or not isinstance(groups, (list, tuple))
-        ):
+        if not _native_token_fields_are_supported(raw_user, statistics, session, primary_type, groups):
             raise _unavailable()
+        session = cast(int, session)
         user_fields = cast(tuple[object, ...], raw_user)
         statistic_fields = cast(Mapping[str, object], statistics)
         group_rows = cast(Sequence[object], groups)
@@ -202,38 +174,14 @@ def _token_snapshot(process: int) -> _TokenSnapshot:
         modified_id = _luid(statistic_fields.get("ModifiedId"))
         logon_sids: list[str] = []
         mask = win32con.SE_GROUP_LOGON_ID & 0xFFFFFFFF
-        for row in group_rows:
-            if not isinstance(row, tuple):
-                raise _unavailable()
-            group_fields = cast(tuple[object, ...], row)
-            if len(group_fields) != 2:
-                raise _unavailable()
-            attributes = group_fields[1]
-            if type(attributes) is not int:
-                raise _unavailable()
-            sid = _native_sid_text(group_fields[0])
-            if attributes & mask == mask:
-                logon_sids.append(sid)
+        _append_native_logon_sids(logon_sids, group_rows, mask)
         if len(logon_sids) != 1 or not _logon_sid_valid(logon_sids[0]):
             raise _unavailable()
         # Keep this defining module independent of windows_login. Native LSA
         # metadata establishes interactive kind; timestamps are not correlated.
         read_logon = cast(Callable[[int], object], win32security.LsaGetLogonSessionData)
         logon = read_logon(authentication)
-        if not isinstance(logon, Mapping):
-            raise _unavailable()
-        logon_fields = cast(Mapping[str, object], logon)
-        kind = logon_fields.get("LogonType")
-        logon_session = logon_fields.get("Session")
-        if (
-            _luid(logon_fields.get("LogonId")) != authentication
-            or _native_sid_text(logon_fields.get("Sid")) != owner
-            or type(logon_session) is not int
-            or logon_session != session
-            or type(kind) is not int
-            or kind not in (2, 10, 11, 12)
-        ):
-            raise _unavailable()
+        kind = _validated_native_logon_kind(logon, authentication, owner, session)
         return _TokenSnapshot(
             owner, authentication, session, logon_sids[0], len(logon_sids), kind, token_id, modified_id
         )
@@ -334,3 +282,102 @@ def current_windows_desktop_logon() -> WindowsDesktopLogon:
                 return _validated_witness(before_token, before_station, after_token, after_station)
     except (pywintypes.error, OSError, KeyError, TypeError, ValueError, OverflowError):
         raise _unavailable() from None
+
+
+def _native_token_origin_is_valid(token: _TokenSnapshot) -> bool:
+    """Require canonical owner/logon SID and exact native authentication/session scalars."""
+    return not (
+        not _sid_text_valid(token.os_owner_id)
+        or not _logon_sid_valid(token.logon_sid)
+        or token.os_owner_id == token.logon_sid
+        or (type(token.authentication_id) is not int)
+        or (not -(2**63) <= token.authentication_id < 2**63)
+        or (token.authentication_id == 0)
+        or (type(token.session_id) is not int)
+        or (not 0 < token.session_id <= 4294967295)
+    )
+
+
+def _native_token_role_is_valid(token: _TokenSnapshot) -> bool:
+    """Require one logon SID and a supported interactive native logon kind."""
+    return not (
+        type(token.logon_sid_count) is not int
+        or token.logon_sid_count != 1
+        or type(token.logon_kind) is not int
+        or (token.logon_kind not in (2, 10, 11, 12))
+    )
+
+
+def _native_token_generation_is_valid(token: _TokenSnapshot) -> bool:
+    """Require exact nonzero native token and modification generation identities."""
+    return not (
+        type(token.token_id) is not int
+        or not -(2**63) <= token.token_id < 2**63
+        or token.token_id == 0
+        or (type(token.modified_id) is not int)
+        or (not -(2**63) <= token.modified_id < 2**63)
+        or (token.modified_id == 0)
+    )
+
+
+def _native_station_association_is_valid(station: _StationSnapshot, token: _TokenSnapshot) -> bool:
+    """Require exact WinSta0 metadata associated with this token's logon SID."""
+    return not (
+        station.name.casefold() != "winsta0"
+        or station.kind != "WindowStation"
+        or type(station.flags) is not int
+        or (station.flags != 1)
+        or (station.inherited is not False)
+        or (station.reserved is not False)
+        or (station.associated_sid != token.logon_sid)
+    )
+
+
+def _native_token_fields_are_supported(
+    raw_user: object, statistics: object, session: object, primary_type: object, groups: object
+) -> bool:
+    """Require the closed native token field shapes before interpreting their contents."""
+    return not (
+        not isinstance(raw_user, tuple)
+        or not isinstance(statistics, Mapping)
+        or type(session) is not int
+        or (not 0 < session <= 4294967295)
+        or (type(primary_type) is not int)
+        or (primary_type != 1)
+        or (not isinstance(groups, (list, tuple)))
+    )
+
+
+def _append_native_logon_sids(logon_sids: list[str], group_rows: Sequence[object], mask: int) -> None:
+    """Validate every native group tuple and retain only exact logon-role SIDs."""
+    for row in group_rows:
+        if not isinstance(row, tuple):
+            raise _unavailable()
+        group_fields = cast(tuple[object, ...], row)
+        if len(group_fields) != 2:
+            raise _unavailable()
+        attributes = group_fields[1]
+        if type(attributes) is not int:
+            raise _unavailable()
+        sid = _native_sid_text(group_fields[0])
+        if attributes & mask == mask:
+            logon_sids.append(sid)
+
+
+def _validated_native_logon_kind(logon: object, authentication: int, owner: str, session: int) -> int:
+    """Cross-check native LSA authentication, owner, session, and interactive kind."""
+    if not isinstance(logon, Mapping):
+        raise _unavailable()
+    logon_fields = cast(Mapping[str, object], logon)
+    kind = logon_fields.get("LogonType")
+    logon_session = logon_fields.get("Session")
+    if (
+        _luid(logon_fields.get("LogonId")) != authentication
+        or _native_sid_text(logon_fields.get("Sid")) != owner
+        or type(logon_session) is not int
+        or logon_session != session
+        or type(kind) is not int
+        or kind not in (2, 10, 11, 12)
+    ):
+        raise _unavailable()
+    return kind

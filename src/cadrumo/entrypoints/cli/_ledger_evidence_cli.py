@@ -17,12 +17,14 @@ from ...adapters.outbound.llm.consent import (
 )
 from ...application.ledger.evidence import PurchaseInvoiceEvidencePatch
 from ...application.ledger.invoice_draft_payloads import EvidenceExtractResult
-from ...application.ledger.invoice_draft_records import FieldProvenance
-from ...application.ledger.invoice_evidence_operation import (
-    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
+from ...application.ledger.invoice_draft_records import FieldProvenance, LabelReadingFallback
+from ...application.ledger.invoice_evidence_confirm_operation import (
     FindingResolutionInputV1,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
+)
+from ...application.ledger.invoice_evidence_extract_operation import (
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
 )
@@ -30,6 +32,8 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
     ConfirmedEstablishmentProjectionV1,
     InvoiceConfirmationProjectionV1,
     InvoiceDraftProjectionV1,
+    IvaCategoryResolutionProjectionV1,
+    LabelReadingFallbackProjectionV1,
 )
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.runtime.contracts import RuntimeRefusalCode
@@ -54,6 +58,8 @@ from .ledger_business_payloads import (
     EvidenceRemoveResult,
     EvidenceUpdateResult,
 )
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import submitted_operation_error
 from .runtime_ledger_evidence_add import run_ledger_evidence_add
 from .runtime_ledger_evidence_followup import (
     run_ledger_evidence_attachment_queue,
@@ -64,10 +70,6 @@ from .runtime_ledger_evidence_read import run_ledger_evidence_list, run_ledger_e
 from .runtime_ledger_invoice_evidence import (
     submit_invoice_evidence_confirm,
     submit_invoice_evidence_extract,
-)
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    submitted_operation_error,
 )
 
 
@@ -382,6 +384,11 @@ def _evidence_extract_payload(
         "draft_review_sha256": projection.draft_review_sha256,
         "consent_audit_effect": projection.consent_audit_effect,
         **_draft_payload(projection.draft),
+        "label_reading_fallback": (
+            None
+            if projection.label_reading_fallback is None
+            else projection.label_reading_fallback.model_dump(mode="json")
+        ),
         "off_host_provider": projection.off_host_provider,
         "off_host_acknowledged_surface": (
             f"runtime:{LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID}"
@@ -432,8 +439,13 @@ def _domain_provenance(draft: InvoiceDraftProjectionV1) -> tuple[FieldProvenance
     return tuple(FieldProvenance.model_validate(row.model_dump(mode="python")) for row in draft.provenance)
 
 
-def _evidence_extract_notices(reference: str, draft: InvoiceDraftProjectionV1) -> list[Notice]:
-    """Project review and field-degradation notices for one extracted draft."""
+def _domain_fallback(fallback: LabelReadingFallbackProjectionV1 | None) -> LabelReadingFallback | None:
+    """Restore the canonical label-reading fallback for its notice projector."""
+    return None if fallback is None else fallback.to_fallback()
+
+
+def _evidence_extract_notices(reference: str, projection: LedgerEvidenceExtractProjection) -> list[Notice]:
+    """Project review, field-degradation and label-reading notices for one extracted draft."""
     notices: list[Notice] = [
         Notice(
             severity=NoticeSeverity.INFO,
@@ -442,12 +454,8 @@ def _evidence_extract_notices(reference: str, draft: InvoiceDraftProjectionV1) -
             context={"reference": reference},
         ),
     ]
-    notices.extend(field_degradation_notices(_domain_provenance(draft)))
-    notices.extend(
-        label_reading_fallback_notices(
-            None if draft.label_reading_fallback is None else draft.label_reading_fallback.to_fallback()
-        )
-    )
+    notices.extend(field_degradation_notices(_domain_provenance(projection.draft)))
+    notices.extend(label_reading_fallback_notices(_domain_fallback(projection.label_reading_fallback)))
     return notices
 
 
@@ -486,7 +494,7 @@ def evidence_extract(
                 json.dumps(_evidence_extract_payload(bucket_id=bucket_id, projection=projection)),
             ),
             lines=_evidence_extract_lines(bucket_id, projection),
-            notices=_evidence_extract_notices(reference, projection.draft),
+            notices=_evidence_extract_notices(reference, projection),
         )
 
     _present_registered_evidence_operation(completed, render)
@@ -716,32 +724,7 @@ def _resolution_notices(
         return []
     result = establishment.category
     severity = NoticeSeverity.INFO if result.category is not None else NoticeSeverity.WARNING
-    outcome = result.outcome
-    if outcome is IvaCategoryOutcome.RATE_INFERRED:
-        code = "ledger.evidence.confirm.category_rate_inferred"
-        message = tr("cli.app.ledger.evidence.confirm_category_rate_inferred_message")
-    elif outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF:
-        code = "ledger.evidence.confirm.category_unsupported_relief"
-        message = tr("cli.app.ledger.evidence.confirm_category_unsupported_relief_message")
-    elif outcome is IvaCategoryOutcome.CONTRADICTED:
-        code = "ledger.evidence.confirm.category_contradicted"
-        message = tr("cli.app.ledger.evidence.confirm_category_contradicted_message")
-    elif outcome is IvaCategoryOutcome.UNRESOLVED:
-        code = "ledger.evidence.confirm.category_unresolved"
-        message = tr("cli.app.ledger.evidence.confirm_category_unresolved_message")
-    else:
-        code = None
-        message = None
-    notices: list[Notice] = []
-    if code is not None and message is not None:
-        context = {"outcome": outcome.value}
-        if result.category is not None:
-            context["iva_category"] = result.category
-        if result.declared is not None:
-            context["declared_category"] = result.declared.value
-        if result.note:
-            context["note"] = result.note
-        notices.append(Notice(severity=severity, code=code, message=message, context=context))
+    notices = _category_resolution_notices(result, severity)
     for item in establishment.review_items:
         if item.reason is ConfirmationBlockReason.CONTRADICTED_REGIME:
             code = "ledger.evidence.confirm.review_contradicted_regime"
@@ -803,12 +786,10 @@ def _evidence_confirm_notices(result: InvoiceConfirmationProjectionV1) -> list[N
                 context={"invoice_id": result.invoice.invoice_id},
             ),
         )
+    # The confirm surface describes the same re-read draft, so the operator
+    # sees why a field they are about to accept was not corroborated.
     notices.extend(field_degradation_notices(_domain_provenance(result.draft)))
-    notices.extend(
-        label_reading_fallback_notices(
-            None if result.draft.label_reading_fallback is None else result.draft.label_reading_fallback.to_fallback()
-        )
-    )
+    notices.extend(label_reading_fallback_notices(_domain_fallback(result.label_reading_fallback)))
     notices.extend(_resolution_notices(result.establishment))
     return notices
 
@@ -844,3 +825,34 @@ __all__ = [
     "evidence_update",
     "evidence_view",
 ]
+
+
+def _category_resolution_notices(result: IvaCategoryResolutionProjectionV1, severity: NoticeSeverity) -> list[Notice]:
+    """Build the IVA category notice before ordered establishment review notices."""
+    outcome = result.outcome
+    if outcome is IvaCategoryOutcome.RATE_INFERRED:
+        code = "ledger.evidence.confirm.category_rate_inferred"
+        message = tr("cli.app.ledger.evidence.confirm_category_rate_inferred_message")
+    elif outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF:
+        code = "ledger.evidence.confirm.category_unsupported_relief"
+        message = tr("cli.app.ledger.evidence.confirm_category_unsupported_relief_message")
+    elif outcome is IvaCategoryOutcome.CONTRADICTED:
+        code = "ledger.evidence.confirm.category_contradicted"
+        message = tr("cli.app.ledger.evidence.confirm_category_contradicted_message")
+    elif outcome is IvaCategoryOutcome.UNRESOLVED:
+        code = "ledger.evidence.confirm.category_unresolved"
+        message = tr("cli.app.ledger.evidence.confirm_category_unresolved_message")
+    else:
+        code = None
+        message = None
+    notices: list[Notice] = []
+    if code is not None and message is not None:
+        context = {"outcome": outcome.value}
+        if result.category is not None:
+            context["iva_category"] = result.category
+        if result.declared is not None:
+            context["declared_category"] = result.declared.value
+        if result.note:
+            context["note"] = result.note
+        notices.append(Notice(severity=severity, code=code, message=message, context=context))
+    return notices

@@ -41,6 +41,7 @@ from ..workflow.run_models import WorkflowResult
 from .edit_models import (
     ModeloEditCompatibilityRefusalV1,
     ModeloEditDomainRefusalV1,
+    ModeloEditParseRefusalV1,
     ModeloEditRefusalV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditUnsupportedIntentRefusalV1,
@@ -272,7 +273,7 @@ class ModeloWorkflowGateError(ModeloError):
     on a private attribute and exposes it through :attr:`result`. The rendered
     error context contains only primitive machine codes (``abort_code`` and
     ``stage``), which keeps CLI JSON/text payloads stable while allowing
-    telemetry and tests to inspect the full workflow run.
+    diagnostics and tests to inspect the full workflow run.
 
     See Also:
         :func:`cadrumo.application.modelo.workflow_gate.run_revision_workflow_gate`:
@@ -335,6 +336,15 @@ class CalculationRegistryUnavailableError(ModeloError):
 
 class ModeloAggregationBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
+
+
+class ModeloClearedCasillaSourceFedError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised before persistence when an explicitly cleared casilla still receives a source value.
+
+    Recording the clear would leave the revision saying "cleared" and carrying
+    the source's value for the same casilla. Withdrawing a source value is not
+    a clear; the operator restores the source instead.
+    """
 
 
 class ModeloRequiredBindingsMissingError(ModeloPreconditionErrorMixin, ModeloError):
@@ -436,6 +446,15 @@ class ModeloPaymentElectionCapabilityRefusedError(ModeloError):
     """
 
 
+class ModeloResultDispositionUncodifiedError(ModeloError):
+    """Raised when a layout declares "Tipo de declaración" but no code set is codified.
+
+    The header is a filing fact whose closed code set comes from the modelo's
+    record design. Without that codified set any value written there would be
+    a guess, so the export or filing is refused rather than defaulted to ``I``.
+    """
+
+
 class ModeloPriorDomiciliationElectionRefusedError(ModeloError):
     """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority."""
 
@@ -445,14 +464,14 @@ class ModeloRefundAccountMissingError(ModeloError):
 
     When the determined disposition is a refund (devolución, ``D`` / ``V`` /
     ``X``) the fichero must carry the cuenta-devolución block AEAT pays into —
-    the IBAN, or the SWIFT-BIC plus foreign-bank block for a non-SEPA account.
-    If the operator's profile carries no refund account (no ``iban``), the
-    export REFUSES rather than emitting an empty or partial DID block: an empty
-    refund block produces a devolución fichero AEAT cannot pay — a silent,
-    defective filing. The fix is operator-driven: configure a refund account on
-    the profile, or carry the credit forward (``compensar``) instead of
-    requesting a refund. This is the no-silent-under-declaration sibling of the
-    election's eligibility refusal.
+    the IBAN, plus the SWIFT-BIC and foreign-bank block for a non-SEPA account.
+    If no own account resolves for the refund role (no per-filing choice and no
+    REFUND designation in the ledger own-account register), or the one that
+    resolves is closed, the export REFUSES rather than emitting an empty or
+    partial DID block: an empty refund block produces a devolución fichero AEAT
+    cannot pay — a silent, defective filing. The fix is operator-driven:
+    designate a refund own account, choose one for the filing, or carry the
+    credit forward (``compensar``) instead of requesting a refund.
     """
 
 
@@ -460,10 +479,21 @@ class ModeloChargeAccountMissingError(ModeloError):
     """Raised when a domiciliación export has no charge account on file.
 
     A ``U`` declaration instructs AEAT to debit the taxpayer's account. The
-    DID page therefore needs the separately recorded charge-account IBAN; a
-    refund account is a destination for payments from AEAT and cannot satisfy
-    a debit instruction. The export refuses rather than falling back to that
-    separate account or writing an empty account page.
+    DID page therefore needs an own account resolved for the charge role (a
+    per-filing choice or a CHARGE designation); a refund designation is a
+    destination for payments from AEAT and cannot satisfy a debit instruction.
+    The export refuses rather than falling back to that separate account or
+    writing an empty account page.
+    """
+
+
+class ModeloDomiciliationPastCutoffError(ModeloError):
+    """Raised when a domiciliación export is dated after the window's payment cutoff.
+
+    The filing window's ``payment_cutoff_on`` is the last day AEAT accepts a
+    direct-debit instruction for the period, which closes before the plazo
+    itself. After it, a ``U`` fichero states a payment AEAT will not take, so
+    the export refuses and the operator settles the result another way.
     """
 
 
@@ -514,7 +544,7 @@ def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefused
             return ModeloEditIntentUnsupportedError()
         case ModeloEditVersionRefusalV1() | ModeloEditCompatibilityRefusalV1():
             return ModeloEditContractIncompatibleError()
-        case ModeloEditDomainRefusalV1():
+        case ModeloEditDomainRefusalV1() | ModeloEditParseRefusalV1():
             return ModeloEditRefusedError()
 
 
@@ -536,7 +566,9 @@ __all__ = [
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloChargeAccountMissingError",
+    "ModeloClearedCasillaSourceFedError",
     "ModeloCrossPeriodCleanStateError",
+    "ModeloDomiciliationPastCutoffError",
     "ModeloEditBaselineStaleError",
     "ModeloEditContractIncompatibleError",
     "ModeloEditIntentUnsupportedError",

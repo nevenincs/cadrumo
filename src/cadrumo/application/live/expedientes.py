@@ -186,36 +186,6 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, 
 LIVE_EXPEDIENTES_READ_OPERATION = "live-expedientes-read"
 
 
-async def capture_expedientes(
-    *,
-    bucket_id: str,
-    modelo: str,
-    year: int,
-    ports: ExpedientesPorts,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    browser_session_factory: BrowserSessionFactoryPort,
-    operator_scope_ports: OperatorScopePorts,
-    authority_operation: PinnedAuthorityOperation,
-    effect_guard: ExpedientesEffectGuard,
-    on_session_write: SessionWriteReporter | None = None,
-) -> PersistedExpedientesSnapshot:
-    """Capture the selected declaration-register view as encrypted local evidence."""
-    return (
-        await capture_expedientes_with_outcome(
-            bucket_id=bucket_id,
-            modelo=modelo,
-            year=year,
-            ports=ports,
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            browser_session_factory=browser_session_factory,
-            operator_scope_ports=operator_scope_ports,
-            authority_operation=authority_operation,
-            effect_guard=effect_guard,
-            on_session_write=on_session_write,
-        )
-    ).snapshot
-
-
 async def capture_expedientes_with_outcome(
     *,
     bucket_id: str,
@@ -345,7 +315,6 @@ __all__ = [
     "ExpedientesService",
     "ExpedientesSnapshotNotFoundError",
     "PersistedExpedientesSnapshot",
-    "capture_expedientes",
     "capture_expedientes_bulk",
     "capture_expedientes_with_outcome",
     "expedientes_snapshot_object_key",

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad5cdbe90855858e3da226dbba2a5ac06e5b4030805570f93849e2ced21135b6'
+body_hash: 'sha256:8d696bdfc2c54b8214f041dfc1f868a31b550c08189a7388ebfa260cb43e755f'
 related: []
 ---
 
@@ -20,13 +20,7 @@ record. The review checked immutable revision identity, cumulative page-state
 behaviour, generated-output ownership, and the prohibition on redeclaring
 application selector or operation-projection authority.
 
-Vaultspec RAG located `select_modelo_calculation_revision` and
-`_latest_revision_with_state` in `src/cadrumo/application/modelo/_selectors.py`
-as the canonical revision-selection boundary. Exact-symbol confirmation found
-no second implementation added by S251. The accepted Modelo addressing ADR
-requires immutable content-addressed calculation attempts and does not permit an
-already-filed duplicate to masquerade as a new draft; the reviewed contracts
-honour that decision by changing ledger input before recalculation.
+Exact-symbol confirmation found no second implementation added by S251. The accepted Modelo addressing ADR requires immutable content-addressed calculation attempts and does not permit an already-filed duplicate to masquerade as a new draft; the reviewed contracts honour that decision by changing ledger input before recalculation.
 
 ## Findings
 

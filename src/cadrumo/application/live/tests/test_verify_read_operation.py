@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from ....core.errors.hierarchy import NoActiveProfileError
 from ....core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...operations.access_resolution import OperationAccessContext
@@ -26,15 +27,10 @@ from ...user_profile.access_contracts import (
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..verify import VerifyObservation, VerifySurface
-from ..verify_read_operation import (
-    VERIFY_LATEST_DEFINITION_ID,
-    VERIFY_LIST_DEFINITION_ID,
-    VERIFY_VIEW_DEFINITION_ID,
-    VerifyLatestExecutor,
+from ..verify_read_contracts import (
     VerifyLatestOperationReport,
     VerifyLatestPublicResultV1,
     VerifyLatestRequest,
-    VerifyListExecutor,
     VerifyListOperationReport,
     VerifyListPublicResultV1,
     VerifyListRequest,
@@ -42,6 +38,13 @@ from ..verify_read_operation import (
     VerifyObservationSummaryPublicV1,
     VerifyViewOperationReport,
     VerifyViewRequest,
+)
+from ..verify_read_operation import (
+    VERIFY_LATEST_DEFINITION_ID,
+    VERIFY_LIST_DEFINITION_ID,
+    VERIFY_VIEW_DEFINITION_ID,
+    VerifyLatestExecutor,
+    VerifyListExecutor,
     build_verify_latest_definition,
     build_verify_latest_registration,
     build_verify_list_definition,
@@ -290,13 +293,18 @@ def test_latest_projector_preserves_the_stable_empty_shape() -> None:
     }
 
 
-def _executor_context(definition_id: str) -> tuple[OperationExecutorContext, _Operands]:
+def _executor_context(
+    definition_id: str,
+    *,
+    identity_subject_ref: str | None = None,
+    events: _Events | None = None,
+) -> tuple[OperationExecutorContext, _Operands]:
     identity = OperationIdentity(
         operation_id="e" * 64,
         definition_id=definition_id,
-        subject_ref=profile_operation_subject(str(_PROFILE)),
+        subject_ref=identity_subject_ref or profile_operation_subject(str(_PROFILE)),
     )
-    events = _Events()
+    events = events or _Events()
     operands = _Operands()
     context = cast(OperationExecutorContext, SimpleNamespace(identity=identity, events=events, operands=operands))
     return context, operands
@@ -332,6 +340,88 @@ def test_list_executor_preserves_service_filtering_and_capture_order(monkeypatch
     report = operands.values[0]
     assert isinstance(report, VerifyListOperationReport)
     assert [row.observation_id for row in report.rows] == ["a" * 64, "c" * 64]
+
+
+@pytest.mark.parametrize(
+    ("request_definition_id", "context_definition_id", "context_subject_ref"),
+    [
+        ("live.verify.list.other", "live.verify.list.other", profile_operation_subject(str(_PROFILE))),
+        (VERIFY_LIST_DEFINITION_ID, "live.verify.other", profile_operation_subject(str(_PROFILE))),
+        (
+            VERIFY_LIST_DEFINITION_ID,
+            VERIFY_LIST_DEFINITION_ID,
+            profile_operation_subject(str(_OTHER_PROFILE)),
+        ),
+    ],
+)
+def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
+    monkeypatch: pytest.MonkeyPatch,
+    request_definition_id: str,
+    context_definition_id: str,
+    context_subject_ref: str,
+) -> None:
+    import cadrumo.application.live.verify_read_operation as operation
+
+    events = _Events()
+    factory_buckets: list[str] = []
+    context, operands = _executor_context(
+        context_definition_id,
+        identity_subject_ref=context_subject_ref,
+        events=events,
+    )
+    request = OperationRequest[VerifyListRequest](
+        definition_id=request_definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=VerifyListRequest(profile_id=_PROFILE),
+    )
+    monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(
+            VerifyListExecutor(lambda bucket_id: factory_buckets.append(bucket_id) or _MemoryPersistence(())).execute(
+                request, context
+            )
+        )
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert events.phases == []
+    assert events.effects == []
+    assert factory_buckets == []
+    assert operands.values == []
+
+
+def test_list_executor_preserves_missing_profile_precedence_before_work(monkeypatch: pytest.MonkeyPatch) -> None:
+    import cadrumo.application.live.verify_read_operation as operation
+
+    events = _Events()
+    factory_buckets: list[str] = []
+    context, operands = _executor_context(
+        "live.verify.other",
+        identity_subject_ref=profile_operation_subject(str(_OTHER_PROFILE)),
+        events=events,
+    )
+    request = OperationRequest[VerifyListRequest](
+        definition_id=VERIFY_LIST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=VerifyListRequest(profile_id=_PROFILE),
+    )
+
+    def no_active_profile() -> str:
+        raise NoActiveProfileError(translated_message="synthetic missing active profile")
+
+    monkeypatch.setattr(operation, "require_active_bucket_id", no_active_profile)
+
+    with pytest.raises(NoActiveProfileError):
+        asyncio.run(
+            VerifyListExecutor(lambda bucket_id: factory_buckets.append(bucket_id) or _MemoryPersistence(())).execute(
+                request, context
+            )
+        )
+
+    assert events.phases == []
+    assert events.effects == []
+    assert factory_buckets == []
+    assert operands.values == []
 
 
 def test_list_executor_refuses_overflow_without_truncating(monkeypatch: pytest.MonkeyPatch) -> None:

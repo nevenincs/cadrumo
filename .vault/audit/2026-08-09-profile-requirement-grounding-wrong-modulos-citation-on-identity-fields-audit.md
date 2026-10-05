@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a50f8c3f944f21fc7a10bc7d53257e366f613b2502c7bea750ce24a0ee79ea1c'
+body_hash: 'sha256:0aaf5f3d48f887db278463f0491d7f441da51c1ab64492a027b5d0a84f0e72c9'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
   - "[[2026-08-09-profile-requirement-grounding-registry-schema-legal-refs-drift-reference]]"
 ---
 
@@ -73,7 +72,7 @@ uv run --no-sync python -c "from cadrumo.core.resources import resources; resour
 ```
 
 ```
-uv run --no-sync pytest -p no:cacheprovider -n 0 src/cadrumo/application/user_profile/tests/ src/cadrumo/application/modelo/tests/test_profile_readiness_gate.py -m unit
+Historical command omitted; its target was retired.
 484 passed, 72 deselected in 85.95s (0:01:25)
 ```
 

@@ -108,7 +108,7 @@ class RetentionPolicy(BaseModel):
     as a statutory retention rule. Any operational retention boundary is
     owned by the consumer that enforces it.
 
-    The retention that does ship -- LLM usage and run telemetry pruning,
+    The retention that does ship -- LLM usage and run record pruning,
     external session-file pruning -- runs on its own consumer-owned bounds and
     never consults this policy. Their working retention is not evidence
     that these two fields do anything.

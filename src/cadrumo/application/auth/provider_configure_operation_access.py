@@ -2,100 +2,75 @@
 
 from __future__ import annotations
 
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.auth_provider import AuthProviderKind
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ..operations.access_resolution import (
+    HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_declared_frontend_and_action,
+)
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.registry import OperationFrontendProjection
-from ..operator_actions.projection import PreconditionVerdictSnapshot
+from ..operator_actions.models import PreconditionVerdict
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operation_definitions import AUTH_CONFIGURE_OPERATION_DEFINITION_ID, AuthConfigureOperationRequest
+from .operator_result_projections import incomplete_auth_configuration_verdict
 from .operator_results import AuthConfigureResult
 
-_ACTIONS = frozenset(
-    {AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT}
-)
 _FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
 AUTH_CONFIGURE_RESULT_SCHEMA_ID = AUTH_CONFIGURE_OPERATION_DEFINITION_ID + ".result"
 
 
-class AuthConfigureResultSnapshot(BaseModel):
-    """Public configure result using the canonical serializer-free verdict shape."""
+class AuthConfigurePublicResultV2(BaseModel):
+    """Configured profile and its readiness facts, without a private path or prose.
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    The certificate file is reported only as provided or not, and the identity
+    alignment only as its finite state, so neither a filesystem location nor a
+    taxpayer identifier crosses the runtime boundary.
+    """
 
-    provider: str
-    file: str = ""
-    complete: bool = True
-    incomplete_reason: str = ""
-    profile_tax_id_present: bool = False
-    provider_identity_present: bool = False
-    identity_alignment: str = ""
-    identity_alignment_detail: str = ""
-    precondition_verdict: PreconditionVerdictSnapshot | None = None
+    model_config = STRICT_FROZEN_CONFIG
 
-    @classmethod
-    def from_result(cls, result: AuthConfigureResult) -> AuthConfigureResultSnapshot:
-        """Copy the existing result without its verdict's mapping serializer."""
-        return cls(
-            provider=result.provider,
-            file=result.file,
-            complete=result.complete,
-            incomplete_reason=result.incomplete_reason,
-            profile_tax_id_present=result.profile_tax_id_present,
-            provider_identity_present=result.provider_identity_present,
-            identity_alignment=result.identity_alignment,
-            identity_alignment_detail=result.identity_alignment_detail,
-            precondition_verdict=(
-                PreconditionVerdictSnapshot.from_verdict(result.precondition_verdict)
-                if result.precondition_verdict is not None
-                else None
-            ),
-        )
+    result_version: Literal[2] = 2
+    profile_id: UUID
+    provider: AuthProviderKind
+    changed: bool
+    certificate_file_provided: bool
+    complete: bool
+    profile_tax_id_present: bool
+    provider_identity_present: bool
+    identity_alignment: Literal[
+        "not_applicable",
+        "matches",
+        "mismatch",
+        "clave_identity_missing",
+        "profile_tax_id_missing",
+        "profile_tax_id_missing_and_clave_identity_missing",
+    ]
 
-    def to_result(self) -> AuthConfigureResult:
-        """Restore the canonical result for existing CLI envelope rendering."""
-        return AuthConfigureResult(
-            provider=self.provider,
-            file=self.file,
-            complete=self.complete,
-            incomplete_reason=self.incomplete_reason,
+    @property
+    def precondition_verdict(self) -> PreconditionVerdict | None:
+        """Derive canonical recovery evidence from the finite public facts."""
+        if self.complete:
+            return None
+        return incomplete_auth_configuration_verdict(
+            provider=self.provider.value,
+            certificate_file_provided=self.certificate_file_provided,
             profile_tax_id_present=self.profile_tax_id_present,
             provider_identity_present=self.provider_identity_present,
             identity_alignment=self.identity_alignment,
-            identity_alignment_detail=self.identity_alignment_detail,
-            precondition_verdict=(
-                self.precondition_verdict.to_verdict() if self.precondition_verdict is not None else None
-            ),
         )
-
-    @model_validator(mode="after")
-    def _canonical(self) -> AuthConfigureResultSnapshot:
-        self.to_result()
-        return self
-
-
-class AuthConfigureOperationProjection(BaseModel):
-    """The configured profile and its validated operator result snapshot."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    profile_id: UUID
-    result: AuthConfigureResultSnapshot
 
 
 def resolve_auth_configure_access(
@@ -109,59 +84,23 @@ def resolve_auth_configure_access(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if request.subject_ref != profile_operation_subject(str(context.profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if context.frontend not in _FRONTENDS:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    if context.action not in _ACTIONS:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    disclosure = None
-    if context.action is AccessAction.OBSERVE:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != AUTH_CONFIGURE_RESULT_SCHEMA_ID:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=_ACTIONS,
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=frozenset(),
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-            requires_human=True,
-        ),
+    access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
+    require_declared_frontend_and_action(context, frontends=_FRONTENDS, actions=access_profile.actions)
+    return bind_operation_access_profile(
+        context, access_profile, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
     )
 
 
 def project_auth_configure_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
-    """Release the existing operator result only for a successful exact profile."""
+    """Release only the finite readiness facts of a successful exact-profile configuration.
+
+    An unchanged selection settles with no effect and a change with an update;
+    any other pairing is refused rather than projected.
+    """
     if (
         type(result) is not AuthConfigureResult
         or receipt.identity.definition_id != AUTH_CONFIGURE_OPERATION_DEFINITION_ID
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.UPDATED
     ):
         raise ValueError("invalid provider configuration result")
     try:
@@ -171,15 +110,26 @@ def project_auth_configure_result(result: BaseModel, receipt: OperationTerminalR
     if receipt.identity.subject_ref != profile_operation_subject(str(profile_id)):
         raise ValueError("invalid provider configuration subject")
     validated = AuthConfigureResult.model_validate_json(result.model_dump_json(), strict=True)
-    return AuthConfigureOperationProjection(
-        profile_id=profile_id, result=AuthConfigureResultSnapshot.from_result(validated)
+    if receipt.effect is not (OperationEffect.UPDATED if validated.changed else OperationEffect.NONE):
+        raise ValueError("provider configuration effect does not match its change")
+    return AuthConfigurePublicResultV2.model_validate(
+        {
+            "profile_id": profile_id,
+            "provider": AuthProviderKind(validated.provider),
+            "changed": validated.changed,
+            "certificate_file_provided": bool(validated.file),
+            "complete": validated.complete,
+            "profile_tax_id_present": validated.profile_tax_id_present,
+            "provider_identity_present": validated.provider_identity_present,
+            "identity_alignment": validated.identity_alignment,
+        },
+        strict=True,
     )
 
 
 __all__ = [
     "AUTH_CONFIGURE_RESULT_SCHEMA_ID",
-    "AuthConfigureOperationProjection",
-    "AuthConfigureResultSnapshot",
+    "AuthConfigurePublicResultV2",
     "project_auth_configure_result",
     "resolve_auth_configure_access",
 ]

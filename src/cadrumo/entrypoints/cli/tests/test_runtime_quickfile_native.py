@@ -18,7 +18,8 @@ import pytest
 from click.testing import Result
 from pydantic import JsonValue
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -32,7 +33,8 @@ from ....application.aggregation.withholding_recognition import (
 )
 from ....application.modelo.quickfile import QUICKFILE_STAGE_ORDER, QuickfileStage, QuickfileStageStatus
 from ....application.modelo.quickfile_operation import QUICKFILE_OPERATION_DEFINITION_ID
-from ....application.modelo.quickfile_operation_contracts import QuickfileProjection, QuickfileRequest
+from ....application.modelo.quickfile_operation_contracts import QuickfileRequest
+from ....application.modelo.quickfile_operation_projections import QuickfileProjection
 from ....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationResultProjectionRequestV1,

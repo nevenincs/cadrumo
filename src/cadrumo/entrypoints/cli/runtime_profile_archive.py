@@ -7,7 +7,6 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.user_profile.archive_operation import (
     PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
@@ -20,12 +19,10 @@ from ...application.user_profile.archive_operation import (
     ProfileArchiveReconcileRequest,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _run_archive_operation[ProjectionT: BaseModel](
@@ -54,13 +51,7 @@ def _run_archive_operation[ProjectionT: BaseModel](
         or completed.refusal_code is not None
         or (expected_effects is not None and completed.effect not in expected_effects)
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -83,13 +74,7 @@ def run_profile_archive_export(
         or str(projection.receipt.bucket_id) != str(request.profile_id)
         or projection.receipt.target != str(request.target)
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -120,13 +105,7 @@ def run_profile_archive_push(
         or report.namespace_filter != request.namespace_filter
         or report.limit != request.limit
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -145,13 +124,7 @@ def run_profile_archive_reconcile(
     )
     projection = completed.projection
     if projection.profile_id != request.profile_id:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 

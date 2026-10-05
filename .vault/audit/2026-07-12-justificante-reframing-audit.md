@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#justificante-reframing'
 date: '2026-07-12'
-modified: '2026-08-15'
-body_hash: 'sha256:0e4c590cb446382e92c09ba1a0a6ff3e91bd985126aa26729a3da7d2e54843b0'
+modified: '2026-10-03'
+body_hash: 'sha256:4cf275b49ca171b51179613bd190c425345ecb065c45a3ba4f0b95df8eb9cce1'
 related: []
 ---
 
@@ -20,7 +20,7 @@ does not reappear as active development work.
 
 ### obsolete-import-vocabulary | low | every unchecked criterion belongs to a retired workflow
 
-The April plan proposed a `docs/concepts/aeat-pdfs.md` page and four legacy
+The April plan proposed a the retired document page and four legacy
 `aeat filing import --from-*` routes. The document does not exist and none of
 those option names is present in the current Python source. That absence is not
 an implementation gap: the accepted filing-record architecture intentionally

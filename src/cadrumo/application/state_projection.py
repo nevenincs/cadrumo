@@ -109,7 +109,7 @@ from .ledger.preflight import (
 )
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .operator_actions.models import PreconditionVerdict
-from .producer_capture import ProducerCapture, ProducerCaptureScope
+from .producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .state_projection_ports import StateProjectionReadPorts
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
@@ -456,14 +456,12 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.PAYABLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_recibida",
         BindingSourceKind.COLLECTIBLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_emitida",
         BindingSourceKind.M347_THIRD_PARTY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_tercero",
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_intracomunitaria",
         BindingSourceKind.LEDGER_TRANSACTION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: "cli.app.modelo.bindings.readiness.evidencia_factura_compra",
         BindingSourceKind.WITHHOLDING: "cli.app.modelo.bindings.readiness.retencion",
         BindingSourceKind.FOREIGN_ASSET: "cli.app.modelo.bindings.readiness.activo_extranjero",
-        BindingSourceKind.RELATED_PARTY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_vinculada",
         BindingSourceKind.ATRIBUCION_MEMBER: "cli.app.modelo.bindings.readiness.miembro_atribucion",
-        BindingSourceKind.REFUND_OPERATION: "cli.app.modelo.bindings.readiness.operacion_reembolso",
-        BindingSourceKind.DONATIVO_DONOR: "cli.app.modelo.bindings.readiness.donante_donativo",
         BindingSourceKind.GASTO193_CONTRIBUTOR: "cli.app.modelo.bindings.readiness.gasto193_contribuyente",
         BindingSourceKind.WITHHOLDING296: "cli.app.modelo.bindings.readiness.withholding296_perceptor",
     },
@@ -499,14 +497,12 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.PAYABLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.COLLECTIBLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.M347_THIRD_PARTY_OPERATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_TRANSACTION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.WITHHOLDING: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         BindingSourceKind.FOREIGN_ASSET: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
-        BindingSourceKind.RELATED_PARTY_OPERATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
         BindingSourceKind.ATRIBUCION_MEMBER: OperatorActionAxis.SET_PROFILE_FACT,
-        BindingSourceKind.REFUND_OPERATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
-        BindingSourceKind.DONATIVO_DONOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.GASTO193_CONTRIBUTOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.WITHHOLDING296: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
@@ -1457,6 +1453,19 @@ def capture_modelo_readiness(
     )
 
 
+def read_modelo_readiness_current_coordinate(
+    requests: tuple[ModeloReadinessRequest, ...],
+    *,
+    active_profile_id: str,
+    operation: PinnedAuthorityOperation,
+) -> ProducerCaptureCoordinate:
+    """Read the coordinate a later pass compares a readiness capture against."""
+    return _READINESS_CAPTURE_SCOPE.read_current_coordinate(
+        coordinate={"active_profile_id": active_profile_id, "requests": _readiness_request_coordinate(requests)},
+        observe=lambda: _readiness_owner_observation(active_profile_id, operation=operation),
+    )
+
+
 def _readiness_request_coordinate(requests: tuple[ModeloReadinessRequest, ...]) -> str:
     """Name the exact request set one readiness capture answers."""
     return content_hash_hex([request.model_dump(mode="json") for request in requests])
@@ -1480,4 +1489,5 @@ __all__ = [
     "build_operator_state_projection",
     "build_pending_obligations",
     "capture_modelo_readiness",
+    "read_modelo_readiness_current_coordinate",
 ]

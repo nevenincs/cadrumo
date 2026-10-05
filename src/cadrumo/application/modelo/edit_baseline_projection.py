@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.codes import ModeloCode
@@ -35,7 +36,7 @@ class ModeloEditApplyBaselineV1(BaseModel):
     is mirrored here. ``to_baseline`` re-validates it through the real type.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     compatibility: ModeloEditCompatibilityTupleV1
     bucket_id: BucketId
@@ -44,8 +45,8 @@ class ModeloEditApplyBaselineV1(BaseModel):
     period_filing_year: FilingYear
     period_code: Annotated[str, Field(min_length=1, max_length=16)]
     work_unit_id: WorkUnitId
-    work_catalogue_revision: ContentDigest
-    calculation_catalogue_revision: ContentDigest
+    work_unit_record_digest: ContentDigest
+    calculation_head_digest: ContentDigest
     current_calculation_revision_id: CalculationRevisionId | None
     law_selected_revision_id: RevisionId
     schema_identity: ModeloEditSchemaIdentityV1

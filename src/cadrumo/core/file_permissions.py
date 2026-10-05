@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Final
 from .logging import get_logger
 
 if TYPE_CHECKING:
-    from _win32typing import PyACL, PySECURITY_DESCRIPTOR
+    from _win32typing import PyACL, PySECURITY_DESCRIPTOR, PySID
 
 _log = get_logger(__name__)
 
@@ -82,25 +82,27 @@ def _grant_operator_full_control(path: Path, account: str, *, inheritable: bool)
     granted = False
     aces = () if current is None else tuple(current.GetAce(index) for index in range(current.GetAceCount()))
     for ace in aces:
-        (ace_type, ace_flags), mask, sid = ace[0], ace[1], ace[-1]
-        if ace_flags & win32security.INHERITED_ACE:
-            continue
-        if ace_type == ntsecuritycon.ACCESS_ALLOWED_ACE_TYPE and sid == operator_sid and ace_flags == grant_flags:
-            if not granted:
-                rewritten.AddAccessAllowedAceEx(
-                    win32security.ACL_REVISION, grant_flags, ntsecuritycon.FILE_ALL_ACCESS, operator_sid
-                )
-                granted = True
-        elif ace_type == ntsecuritycon.ACCESS_ALLOWED_ACE_TYPE:
-            rewritten.AddAccessAllowedAceEx(win32security.ACL_REVISION, ace_flags, mask, sid)
-        elif ace_type == ntsecuritycon.ACCESS_DENIED_ACE_TYPE:
-            rewritten.AddAccessDeniedAceEx(win32security.ACL_REVISION, ace_flags, mask, sid)
-        else:
-            raise ValueError(f"explicit ACE type {ace_type} cannot be carried over")
+        granted = _copy_explicit_ace(
+            rewritten,
+            ace,
+            operator_sid=operator_sid,
+            grant_flags=grant_flags,
+            granted=granted,
+            inherited_ace=win32security.INHERITED_ACE,
+            allowed_ace=ntsecuritycon.ACCESS_ALLOWED_ACE_TYPE,
+            denied_ace=ntsecuritycon.ACCESS_DENIED_ACE_TYPE,
+            acl_revision=win32security.ACL_REVISION,
+            full_access=ntsecuritycon.FILE_ALL_ACCESS,
+        )
     if not granted:
         rewritten.AddAccessAllowedAceEx(
             win32security.ACL_REVISION, grant_flags, ntsecuritycon.FILE_ALL_ACCESS, operator_sid
         )
+    control, _revision = descriptor.GetSecurityDescriptorControl()
+    if control & win32security.SE_DACL_PROTECTED and current is not None and _same_dacl(current, rewritten):
+        # Reapplying an inheritable DACL propagates through existing children.
+        # A root already carrying this exact boundary needs no such traversal.
+        return
     win32security.SetNamedSecurityInfo(
         str(path),
         win32security.SE_FILE_OBJECT,
@@ -110,6 +112,65 @@ def _grant_operator_full_control(path: Path, account: str, *, inheritable: bool)
         rewritten,
         None,
     )
+
+
+def _same_dacl(current: PyACL, rewritten: PyACL) -> bool:
+    """Compare every ordered ACE, including its flags, access mask and SID."""
+    count = current.GetAceCount()
+    return count == rewritten.GetAceCount() and all(
+        current.GetAce(index) == rewritten.GetAce(index) for index in range(count)
+    )
+
+
+def _copy_explicit_ace(
+    rewritten: PyACL,
+    ace: tuple[tuple[int, int], int, PySID],
+    *,
+    operator_sid: PySID,
+    grant_flags: int,
+    granted: bool,
+    inherited_ace: int,
+    allowed_ace: int,
+    denied_ace: int,
+    acl_revision: int,
+    full_access: int,
+) -> bool:
+    (ace_type, ace_flags), mask, sid = ace[0], ace[1], ace[-1]
+    if ace_flags & inherited_ace:
+        return granted
+    if _is_operator_full_control_ace(ace_type, ace_flags, sid, operator_sid, grant_flags, allowed_ace):
+        if not granted:
+            _add_operator_full_control(rewritten, operator_sid, grant_flags, acl_revision, full_access)
+            return True
+        return granted
+    if ace_type == allowed_ace:
+        rewritten.AddAccessAllowedAceEx(acl_revision, ace_flags, mask, sid)
+        return granted
+    if ace_type == denied_ace:
+        rewritten.AddAccessDeniedAceEx(acl_revision, ace_flags, mask, sid)
+        return granted
+    raise ValueError(f"explicit ACE type {ace_type} cannot be carried over")
+
+
+def _is_operator_full_control_ace(
+    ace_type: int,
+    ace_flags: int,
+    sid: PySID,
+    operator_sid: PySID,
+    grant_flags: int,
+    allowed_ace: int,
+) -> bool:
+    return ace_type == allowed_ace and sid == operator_sid and ace_flags == grant_flags
+
+
+def _add_operator_full_control(
+    rewritten: PyACL,
+    operator_sid: PySID,
+    grant_flags: int,
+    acl_revision: int,
+    full_access: int,
+) -> None:
+    rewritten.AddAccessAllowedAceEx(acl_revision, grant_flags, full_access, operator_sid)
 
 
 def _windows_restrict_to_operator(path: Path, *, inheritable: bool) -> None:

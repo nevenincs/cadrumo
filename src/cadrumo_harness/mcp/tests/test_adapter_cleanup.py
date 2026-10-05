@@ -11,8 +11,9 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection, write_document
+from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.runtime_frame_io import write_document
 from cadrumo.adapters.local_runtime.tests.test_enrollment_framing import MemoryChannel
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import (
@@ -21,9 +22,9 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
-from cadrumo.application.runtime.transport import RuntimeStatusRequest
+from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -245,7 +246,12 @@ async def test_cleanup_retry_releases_the_canonical_client_channel_without_reope
         assert channel.close_calls == 1
         assert adapter.client is None
         with pytest.raises(RuntimeRefusalError) as refused:
-            connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 10)
+            connection.session(
+                RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                ),
+                deadline=time.monotonic() + 10,
+            )
         assert refused.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
         await caught.value.retry_cleanup()
         assert channel.close_calls == 2

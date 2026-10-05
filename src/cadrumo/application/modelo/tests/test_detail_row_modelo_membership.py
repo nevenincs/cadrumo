@@ -5,7 +5,7 @@ unit was silently persisted into that revision's ``detail_rows`` while
 contributing to no figure -- a taxpayer-declared row that appeared to exist
 yet affected nothing, with no advisory anywhere. Each kind is proven
 separately because the whole finding is that they previously diverged: M210
-already refused, M349 silently dropped the aggregation, and M184/M232/M347
+already refused, M349 silently dropped the aggregation, and M184/M232
 had no check at all.
 """
 
@@ -24,7 +24,6 @@ from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
@@ -98,10 +97,6 @@ def _m349_rectificacion_row() -> Modelo349RectificacionRow:
     )
 
 
-def _m347_row() -> Modelo347ContraparteRow:
-    return Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.07"))
-
-
 def _m210_row() -> Modelo210AgrupacionRentaRow:
     return Modelo210AgrupacionRentaRow(
         source_id="manual-renta-jan",
@@ -122,7 +117,6 @@ def _m210_row() -> Modelo210AgrupacionRentaRow:
         (_m232_row, "232"),
         (_m349_operador_row, "349"),
         (_m349_rectificacion_row, "349"),
-        (_m347_row, "347"),
         (_m210_row, "210"),
     ],
 )
@@ -149,7 +143,6 @@ def test_each_detail_row_kind_refuses_against_the_wrong_modelo(
         (_m232_row, "232"),
         (_m349_operador_row, "349"),
         (_m349_rectificacion_row, "349"),
-        (_m347_row, "347"),
         (_m210_row, "210"),
     ],
 )

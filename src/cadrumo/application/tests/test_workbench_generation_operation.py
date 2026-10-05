@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import multiprocessing
 from collections.abc import Mapping
@@ -9,6 +10,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from threading import Event
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -23,7 +25,7 @@ from cadrumo.application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceStateV1,
 )
-from cadrumo.application.modelo.declarations_workspace import (
+from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceCalculationRevisionRefV1,
@@ -36,16 +38,32 @@ from cadrumo.application.modelo.declarations_workspace import (
     DeclarationsWorkspaceZoneStateV1,
 )
 from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
-from cadrumo.application.modelo.work_review import BlockerRef
-from cadrumo.application.modelo.workspace import graded_snapshot_refusal, resolve_static_inspection_result
+from cadrumo.application.modelo.work_review import (
+    BlockerRef,
+    ModeloWorkProgress,
+    ModeloWorkReview,
+    build_modelo_work_review_casillas,
+)
+from cadrumo.application.modelo.workspace import resolve_static_inspection_result
 from cadrumo.application.modelo.workspace_models import (
-    ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceExactWorkUnitTargetV1,
-    ModeloWorkspaceRefusalCode,
+    ModeloWorkspaceFacetName,
+    ModeloWorkspaceGradedSnapshotScopeV1,
+    ModeloWorkspaceProjectionV1,
+    ModeloWorkspaceSnapshotScopeV1,
+    ModeloWorkspaceStaticInspectionResultV1,
+    ModeloWorkspaceWorkReviewFacetV1,
 )
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operations.public_mirror import (
+    PublicScalarValueV1,
+    PublicTextEntryV1,
+    project_public_mirror,
+    restore_public_mirror,
+)
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.overview.calendar_models import (
     OverviewCalendarEntrySource,
@@ -70,12 +88,16 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
-    ModeloWorkspaceProjectedReadV1,
-    SecureProfileWorkbenchGenerationReadDoorV1,
+    assemble_workbench_generation,
+)
+from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
     WorkbenchGenerationV1,
-    assemble_workbench_generation,
+)
+from cadrumo.application.workbench_generation_modelo_contracts import (
+    PublicBlockerRef,
+    PublicModeloWorkConditionalRecargoPreview,
 )
 from cadrumo.application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
@@ -83,23 +105,21 @@ from cadrumo.application.workbench_generation_operation import (
     WorkbenchGenerationOperationRequest,
     build_workbench_generation_operation_definition,
     build_workbench_generation_operation_registration,
+    resolve_workbench_generation_access,
 )
 from cadrumo.application.workbench_generation_projection import (
-    PublicBlockerRef,
-    PublicModeloWorkConditionalRecargoPreview,
-    PublicScalarValueV1,
-    PublicTextEntryV1,
     WorkbenchGenerationOperationProjection,
-    _project,
-    _restore,
     project_workbench_generation,
     restore_workbench_generation,
 )
+from cadrumo.application.workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.operator_action_enums import OperatorActionAxis
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
@@ -130,10 +150,11 @@ class _Repository[ValueT]:
     def exists(self) -> bool:
         return True
 
-    def load(self) -> ValueT:
+    def load(self, *, operation: object | None = None) -> ValueT:
         return self.value
 
-    def load_revisioned(self) -> tuple[ValueT, str]:
+    def load_revisioned(self, *, operation: PinnedAuthorityOperation | None = None) -> tuple[ValueT, str]:
+        del operation
         return self.value, "revision-1"
 
     def save(self, catalogue: ValueT) -> None:
@@ -198,13 +219,6 @@ def _generation(
             ),
             aeat_sync=missing,
             modelo=(WorkbenchGenerationSourceResultV1.available((), observed_at=_NOW) if empty_modelo else missing),
-            modelo_graded_refusals=(
-                WorkbenchGenerationSourceResultV1.available({}, observed_at=_NOW)
-                if empty_modelo
-                else WorkbenchGenerationSourceResultV1.never_captured(
-                    refusal="workbench.modelo.graded_refusal_not_captured"
-                )
-            ),
             ledger_admission=admission("workbench.ledger"),
             declarations_admission=(
                 WorkbenchDestinationAdmission(
@@ -451,6 +465,28 @@ def test_result_requires_profile_and_tax_disclosures_for_exact_subject() -> None
     assert mismatch.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
+def test_result_without_a_registered_result_schema_is_refused_not_silently_undisclosed() -> None:
+    profile_id = uuid4()
+    request = cast(OperationRequest[BaseModel], cast(object, _request(profile_id)))
+    contract = _registry().lookup_public_contract(WORKBENCH_GENERATION_OPERATION_DEFINITION_ID)
+    schemaless = contract.model_copy(update={"result_schema": None})
+
+    def context(action: AccessAction) -> OperationAccessContext:
+        return OperationAccessContext(
+            profile_id=profile_id,
+            destination_id=uuid4(),
+            action=action,
+            frontend=OperationFrontendProjection.CLI,
+            contract=schemaless,
+            published_authority=Availability.AVAILABLE,
+        )
+
+    assert resolve_workbench_generation_access(request, context(AccessAction.SUBMIT)).policy.disclosures == frozenset()
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_workbench_generation_access(request, context(AccessAction.RESULT))
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
 def test_public_projection_restores_generation_without_search_identity_transport() -> None:
     profile_id = uuid4()
     generation = _generation()
@@ -469,14 +505,14 @@ def _restore_in_fresh_process(document: str, result_path: str) -> None:
 
     projection = WorkbenchGenerationOperationProjection.model_validate_json(document)
     restored = restore_workbench_generation(projection)
-    assert restored.modelo_graded_refusals.projection == {}
+    assert restored.modelo.projection == ()
     Path(result_path).write_text("ok", encoding="utf-8")
 
 
-def test_fresh_import_restores_empty_graded_mapping_from_json(tmp_path: Path) -> None:
+def test_fresh_import_restores_empty_modelo_projection_from_json(tmp_path: Path) -> None:
     profile_id = uuid4()
     generation = _generation(empty_modelo=True)
-    assert generation.modelo_graded_refusals.projection == {}
+    assert generation.modelo.projection == ()
     public = project_workbench_generation(profile_id, generation)
     result_path = tmp_path / "restored.txt"
     process = multiprocessing.get_context("spawn").Process(
@@ -546,7 +582,8 @@ def test_catalogue_recovery_action_survives_strict_public_round_trip() -> None:
     )
 
 
-def test_secure_canonical_generation_round_trips_without_search_documents() -> None:
+@pytest.mark.parametrize("populated_review", [False, True])
+def test_secure_canonical_generation_round_trips_without_search_documents(populated_review: bool) -> None:
     profile_id = uuid4()
     with bundled_indexed_authority().operation() as operation:
         record = create_user_profile_record(
@@ -583,20 +620,58 @@ def test_secure_canonical_generation_round_trips_without_search_documents() -> N
             authority=operation,
             output_language=OutputLanguage.ES,
         )
-        exact_target = ModeloWorkspaceExactWorkUnitTargetV1(
-            target=ModeloExactWorkUnitTarget(work_unit_id=unit.work_unit_id, bucket_id=unit.bucket_id)
-        )
-        refusal = graded_snapshot_refusal(
-            ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
-            requested_target=exact_target,
-            selected_target=static_result.projection.target,
-            capability=ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
-            reconsideration_condition="calculate this work unit, then request a graded snapshot again",
-            facts=(),
-            evidence=(),
-            source_disposition=None,
-            recovery_action=None,
-        ).refusal
+        assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
+        static_projection = static_result.projection
+        if populated_review:
+            rows = build_modelo_work_review_casillas(
+                snapshot=operation.snapshot("130", filing_year=2026, period="1T"),
+                revision=None,
+                operation=operation,
+            )
+            values = (None, Decimal("123.4500"), 0, False, "", date(2026, 1, 1))
+            rows = tuple(
+                row.model_copy(update={"value": values[index]}) if index < len(values) else row
+                for index, row in enumerate(rows)
+            )
+            review = ModeloWorkReview(
+                bucket_id=str(profile_id),
+                modelo=unit.modelo,
+                filing_year=2026,
+                period=period,
+                registry_revision_id=revision_id,
+                work_unit_id=unit.work_unit_id,
+                calculation_revision_id=None,
+                lifecycle_state=None,
+                verification_outcome=None,
+                progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
+                casillas=rows,
+                findings=(),
+                blockers=(),
+            )
+            facet = static_projection.schema_facet.model_dump()
+            facet.update(
+                records=(),
+                next_cursor=None,
+                has_more=False,
+                disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+            )
+            payload = static_projection.model_dump()
+            payload.update(
+                admission=ModeloWorkspaceGradedSnapshotScopeV1(
+                    scope=ModeloWorkspaceSnapshotScopeV1(
+                        required_grade=RegistryAuthorityGrade.CALCULATION,
+                        declared_grade=RegistryAuthorityGrade.CALCULATION,
+                        snapshot_scope_digest=static_projection.evidence_horizon.evidence_digest,
+                    )
+                ),
+                materialization_facet={**facet, "facet": ModeloWorkspaceFacetName.MATERIALIZATION},
+                provenance_facet={**facet, "facet": ModeloWorkspaceFacetName.PROVENANCE},
+                work_review=ModeloWorkspaceWorkReviewFacetV1(
+                    disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+                    review=review,
+                ),
+            )
+            static_projection = ModeloWorkspaceProjectionV1.model_validate(payload)
         generation = InstalledWorkbenchGenerationProviderV1(
             SecureProfileWorkbenchGenerationReadDoorV1(
                 profile_id=str(profile_id),
@@ -616,9 +691,7 @@ def test_secure_canonical_generation_round_trips_without_search_documents() -> N
                     profile_label="Local human",
                     expires_at=_NOW,
                 ),
-                modelo_projection_reader=lambda _unit: ModeloWorkspaceProjectedReadV1(
-                    projection=static_result.projection, graded_refusal=refusal
-                ),
+                modelo_projection_reader=lambda _unit: static_projection,
             )
         )()
     public = project_workbench_generation(profile_id, generation)
@@ -626,7 +699,20 @@ def test_secure_canonical_generation_round_trips_without_search_documents() -> N
     assert restore_workbench_generation(decoded) == generation
     assert '"documents"' not in public.model_dump_json()
     assert generation.modelo.projection is not None
-    assert generation.modelo_graded_refusals.projection == {str(unit.work_unit_id): refusal}
+    if populated_review:
+        assert public.generation.modelo.projection is not None
+        public_review = public.generation.modelo.projection[0].work_review.review
+        assert public_review is not None
+        assert [(row.value.kind, row.value.text) for row in public_review.casillas[:6]] == [
+            ("null", ""),
+            ("decimal", "123.4500"),
+            ("integer", "0"),
+            ("boolean", "false"),
+            ("string", ""),
+            ("date", "2026-01-01"),
+        ]
+        assert public_review.calculation_revision_id is None
+        assert public_review.progress.denominator is None
 
 
 def test_ordered_fact_entries_retain_decimal_precision_and_refuse_duplicate_keys() -> None:
@@ -635,13 +721,13 @@ def test_ordered_fact_entries_retain_decimal_precision_and_refuse_duplicate_keys
         native_code="source.review",
         facts={"amount": Decimal("1.2300"), "false": False},
     )
-    public = cast(PublicBlockerRef, _project(canonical, BlockerRef, PublicBlockerRef))
+    public = cast(PublicBlockerRef, project_public_mirror(canonical, BlockerRef, PublicBlockerRef))
     assert [(item.key, item.kind, item.text) for item in public.facts] == [
         ("amount", "decimal", "1.2300"),
         ("false", "boolean", "false"),
     ]
     decoded = PublicBlockerRef.model_validate_json(public.model_dump_json())
-    assert _restore(decoded, BlockerRef, PublicBlockerRef) == canonical
+    assert restore_public_mirror(decoded, BlockerRef, PublicBlockerRef) == canonical
     with pytest.raises(ValidationError, match="duplicate blocker fact key"):
         PublicBlockerRef.model_validate(
             {"axis": public.axis, "native_code": public.native_code, "facts": (*public.facts, public.facts[0])}
@@ -650,15 +736,15 @@ def test_ordered_fact_entries_retain_decimal_precision_and_refuse_duplicate_keys
 
 def test_malformed_mapping_and_reused_model_are_refused_without_coercion() -> None:
     with pytest.raises(TypeError, match="mapping key must be text"):
-        _project({1: "value"}, Mapping[str, str], tuple[PublicTextEntryV1, ...])
+        project_public_mirror({1: "value"}, Mapping[str, str], tuple[PublicTextEntryV1, ...])
     with pytest.raises(TypeError, match="mapping value must be text"):
-        _project({"key": 7}, Mapping[str, str], tuple[PublicTextEntryV1, ...])
+        project_public_mirror({"key": 7}, Mapping[str, str], tuple[PublicTextEntryV1, ...])
     malformed_account = HomeAccountSession.model_construct(
         posture=HomeSessionPosture.NO_PROFILE,
         profile_label="contradictory",
     )
     with pytest.raises(ValidationError, match="no-profile session"):
-        _project(malformed_account, HomeAccountSession, HomeAccountSession)
+        project_public_mirror(malformed_account, HomeAccountSession, HomeAccountSession)
 
 
 def test_malformed_decimal_date_and_utc_values_refuse_at_public_boundary() -> None:
@@ -673,8 +759,8 @@ def test_malformed_decimal_date_and_utc_values_refuse_at_public_boundary() -> No
                 "assessment_status": "unassessed",
             }
         )
-    with pytest.raises(ValueError, match="invalid workbench decimal"):
-        _restore("not-a-decimal", Decimal, str)
+    with pytest.raises(ValueError, match="invalid public-mirror decimal"):
+        restore_public_mirror("not-a-decimal", Decimal, str)
     with pytest.raises(ValidationError, match="invalid date scalar"):
         PublicScalarValueV1(kind="date", text="2026-99-99")
     valid = project_workbench_generation(uuid4(), _generation())
@@ -714,7 +800,7 @@ async def test_unpageable_success_refuses_before_any_result_storage(monkeypatch:
     )
 
     async def reader(
-        _context: OperationExecutorContext, _payload: WorkbenchGenerationOperationRequest
+        _identity: OperationIdentity, _payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
         return _generation()
 
@@ -728,16 +814,28 @@ async def test_unpageable_success_refuses_before_any_result_storage(monkeypatch:
 
 
 @pytest.mark.asyncio
-async def test_executor_stores_actual_generation_and_none_effect_only_after_reader() -> None:
+async def test_executor_stores_actual_generation_and_none_effect_only_after_reader(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     profile_id = uuid4()
     request = _request(profile_id, language=OutputLanguage.CA)
     generated = _generation()
     calls: list[object] = []
+    loop = asyncio.get_running_loop()
+    validate = generation_operation_module._require_pageable_result
+
+    def responsive_validation(projection: WorkbenchGenerationOperationProjection) -> None:
+        heartbeat = Event()
+        loop.call_soon_threadsafe(heartbeat.set)
+        assert heartbeat.wait(2), "projection validation blocked runtime observations and lease renewal"
+        validate(projection)
+
+    monkeypatch.setattr(generation_operation_module, "_require_pageable_result", responsive_validation)
 
     async def reader(
-        context: OperationExecutorContext, payload: WorkbenchGenerationOperationRequest
+        identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
-        assert context.identity.subject_ref == request.subject_ref
+        assert identity.subject_ref == request.subject_ref
         assert payload == request.payload
         calls.append("read")
         return generated

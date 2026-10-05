@@ -19,8 +19,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
-from cadrumo.adapters.local_runtime.server import RuntimeListener, RuntimeTransportServer
+from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
+from cadrumo.adapters.local_runtime.server import RuntimeListener
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
@@ -51,6 +51,8 @@ from cadrumo.core.async_cleanup import (
 )
 from cadrumo.core.time.clock import now
 
+from .retained_server import RetainedRuntimeTransportServer
+
 PROFILE_INPUT = "synthetic-worker-password"
 
 
@@ -60,7 +62,7 @@ class NativeRuntimeFixtureOwner:
     def __init__(self, endpoint: RuntimeListener, stop: Event, *, timeout: float, drained: Event | None = None) -> None:
         self.endpoint, self.stop = endpoint, stop
         self.timeout, self.drained = timeout, drained
-        self.server: RuntimeTransportServer | None = None
+        self.server: RetainedRuntimeTransportServer | None = None
         self.running: Future[None] | None = None
         self.auxiliary: list[Future[None]] = []
         self.executor: ThreadPoolExecutor | None = None
@@ -283,7 +285,7 @@ def changed[T: BaseModel](model: T, **values: object) -> T:
 
 
 def owner_id() -> str:
-    if sys.platform == "linux":
+    if sys.platform != "win32":
         return str(os.getuid())
     import win32api
     import win32security

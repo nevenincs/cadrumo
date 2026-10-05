@@ -13,10 +13,10 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from .....domain.contribuyente.inventory.records import (
     InventoryLedger,
     InventoryLedgerDocument,
-    InventoryLedgerError,
     MovementKind,
     MovementRecord,
     ValuationMethod,

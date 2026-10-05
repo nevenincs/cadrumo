@@ -8,7 +8,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_corrupt_xlsx_returns_failed_report(tmp_path) -> None:
-    from ..workbook_parity import scan_workbook
+    from ..workbook_parity_scanning import scan_workbook
 
     bad_xlsx = tmp_path / "bad.xlsx"
     bad_xlsx.write_bytes(b"NOT AN XLSX FILE CONTENT AT ALL!!!")
@@ -23,8 +23,8 @@ def test_tokenizer_error_triggers_regex_fallback() -> None:
     from openpyxl.formula import Tokenizer
     from openpyxl.formula.tokenizer import TokenizerError
 
-    from ..workbook_parity import _formula_references
     from ..workbook_parity_models import WorkbookCellRef
+    from ..workbook_parity_scanning import _formula_references
 
     formula = '="unterminated string A1'
     with pytest.raises(TokenizerError):
@@ -36,7 +36,7 @@ def test_tokenizer_error_triggers_regex_fallback() -> None:
 
 
 def test_well_formed_formula_returns_refs() -> None:
-    from ..workbook_parity import _formula_references
+    from ..workbook_parity_scanning import _formula_references
 
     result = _formula_references("Sheet1", "=SUM(A1,B2,C3)", remaining=10)
 

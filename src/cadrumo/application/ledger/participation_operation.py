@@ -2,41 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from ...core.async_cleanup import await_cancellation_complete
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.profile_guard import require_profile_operation_identity
+from ..operations.read_capture import capture_read_result
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
@@ -61,7 +40,7 @@ class LedgerParticipationProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     transaction_prefix: str = Field(min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
-    transaction_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]+$")
+    transaction_id: TransactionId
     participations: tuple[LedgerParticipationEntryProjection, ...]
 
 
@@ -81,12 +60,9 @@ class LedgerParticipationExecutor:
         """Publish an encrypted read result with no domain mutation effect."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.subject_ref != request.subject_ref
-        ):
+        if request.definition_id != LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, payload.profile_id)
         await context.events.phase(LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID)
 
         def read() -> LedgerParticipationProjection:
@@ -114,60 +90,29 @@ class LedgerParticipationExecutor:
                 ),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="ledger-participation")
+        return await capture_read_result(context, read, task_name="ledger-participation")
 
 
 def build_ledger_participation_definition(
     ports: LedgerActionPortsFactory, participation: TransactionParticipationIndexRepositoryFactory
 ) -> OperationDefinition:
     """Declare one local read without COMMIT or external-provider capability."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID,
         request_type=LedgerParticipationRequest,
         result_type=LedgerParticipationProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerParticipationRequest,
-            executor_type=LedgerParticipationExecutor,
-            build=lambda: LedgerParticipationExecutor(ports, participation),
-        ),
-        phase_codes=(LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        executor_type=LedgerParticipationExecutor,
+        build=lambda: LedgerParticipationExecutor(ports, participation),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
 def build_ledger_participation_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind strict result facts and the complete-profile read permission."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerParticipationRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerParticipationProjection
-        ),
+        public_result_type=LedgerParticipationProjection,
         access_resolver=resolve_ledger_participation_access,
     )
 

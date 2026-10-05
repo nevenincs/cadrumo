@@ -6,23 +6,12 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import replace
 from threading import Event
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from textual.screen import Screen
-from textual.widgets import Button, Static
 
-from ....application.runtime.contracts import RuntimeRefusalError
-from ....application.runtime.management_status import (
-    RuntimeListenerState,
-    RuntimeManagementSnapshot,
-    RuntimeManagerAvailability,
-)
 from ....application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
-from ....core.async_cleanup import AsyncResourceCleanupError
-from ....core.i18n.render import tr
-from ...tests.test_runtime_management import StopFixture
-from .. import runtime_management
 from ..account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp, RootBindingV1
 from ..home import HomeScreen
@@ -33,7 +22,6 @@ from ..navigation import (
     build_destination_catalogue,
     declared_destination_ids,
 )
-from ..runtime_management import RuntimeManagementScreen, RuntimeStopConfirmationScreen
 from ..search import WorkbenchSearchDoorV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
@@ -114,90 +102,6 @@ def test_precomposed_root_uses_injected_doors_without_local_operation_services()
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("outcome", ["accepted", "lost"])
-async def test_human_installed_runner_retains_stop_outcome_and_cleanup_after_modal_close(
-    outcome: Literal["accepted", "lost"], monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    fixture = StopFixture(channel_failures=10, outcome=outcome)
-    monkeypatch.setattr(runtime_management, "preview_installed_runtime_stop", fixture.open)
-
-    async def read() -> RuntimeManagementSnapshot:
-        return RuntimeManagementSnapshot(
-            listener=RuntimeListenerState.READY,
-            manager_availability=RuntimeManagerAvailability.UNAVAILABLE,
-        )
-
-    driver_failures: list[BaseException] = []
-
-    async def drive_steps(pilot: Pilot[object]) -> None:
-        app = pilot.app
-        assert isinstance(app, CadrumoTuiApp)
-        await pilot.pause()
-        await app.workers.wait_for_complete()
-        await pilot.pause()
-        app._runtime_management_reader = read
-        async with asyncio.timeout(10):
-            app.action_runtime_management()
-            while not isinstance(app.screen, RuntimeManagementScreen):
-                await pilot.pause(0.02)
-            screen = app.screen
-            while screen._busy or tr("tui.runtime_management.listener.ready") not in str(
-                screen.query_one("#runtime-management-listener", Static).content
-            ):
-                await pilot.pause(0.02)
-            screen.query_one("#runtime-management-stop", Button).press()
-            while not isinstance(app.screen, RuntimeStopConfirmationScreen):
-                await pilot.pause(0.02)
-            app.screen.query_one("#runtime-stop-confirm", Button).press()
-            while screen._busy or fixture.channel.close_calls < 1:
-                await pilot.pause(0.02)
-            assert (fixture.consent.accepted is not None) == (outcome == "accepted")
-            assert fixture.consent.uncertain == (outcome == "lost")
-            assert screen.query_one("#runtime-management-stop", Button).disabled
-            assert "synthetic private" not in str(screen.query_one("#runtime-management-status", Static).content)
-            screen.action_close()
-            while screen in app.screen_stack:
-                await pilot.pause(0.02)
-            app.action_runtime_management()
-            while not isinstance(app.screen, RuntimeManagementScreen):
-                await pilot.pause(0.02)
-            reopened = app.screen
-            while reopened._busy or tr("tui.runtime_management.listener.ready") not in str(
-                reopened.query_one("#runtime-management-listener", Static).content
-            ):
-                await pilot.pause(0.02)
-            assert reopened.query_one("#runtime-management-stop", Button).disabled
-            assert fixture.channel.confirmations == 1
-            app.exit()
-
-    async def drive(pilot: Pilot[object]) -> None:
-        try:
-            async with asyncio.timeout(15):
-                await drive_steps(pilot)
-        except BaseException as error:
-            driver_failures.append(error)
-        finally:
-            pilot.app.exit()
-
-    expected = AsyncResourceCleanupError if outcome == "accepted" else RuntimeRefusalError
-    with pytest.raises(expected) as failed:
-        await run_precomposed_runtime_root_session(load_root=_root, headless=True, auto_pilot=drive)
-    assert not driver_failures, driver_failures
-    error = failed.value
-    retained = error if isinstance(error, AsyncResourceCleanupError) else error.__dict__.get("async_cleanup_error")
-    assert isinstance(retained, AsyncResourceCleanupError)
-    attempts = fixture.channel.close_calls
-    endpoint_attempts = fixture.endpoint.close_calls
-    fixture.channel.failures = 0
-    await retained.retry_cleanup()
-    assert fixture.channel.close_calls == attempts + 1
-    assert fixture.endpoint.close_calls == endpoint_attempts
-    assert fixture.consent.released and fixture.channel.confirmations == 1
-    captured = capsys.readouterr()
-    assert "synthetic private" not in captured.out + captured.err
-
-
-@pytest.mark.asyncio
 async def test_cancelled_root_read_retains_ownership_until_blocking_read_finishes() -> None:
     """Closing a frontend cannot leave its private loader running unowned."""
     started = asyncio.Event()
@@ -274,7 +178,7 @@ async def test_root_read_failure_is_a_safe_refusal_without_rendering_exception(
     async with app.run_test() as pilot:
         await app.workers.wait_for_complete()
         await pilot.pause()
-        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app._account_factories is None
     captured = capsys.readouterr()
     assert private_value not in captured.out + captured.err

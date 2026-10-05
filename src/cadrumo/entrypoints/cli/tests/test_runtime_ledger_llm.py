@@ -15,25 +15,27 @@ import pytest
 import typer
 from pydantic import BaseModel
 
-from ....application.ledger.classify_operation import (
-    LEDGER_OPERATOR_IVA_DEFINITION_ID,
+from ....application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
-    LedgerOperatorIvaRequest,
-    LedgerOperatorIvaResult,
 )
-from ....application.ledger.llm_review_operation import (
+from ....application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
     LedgerLlmChildProjection,
-    LedgerLlmOperationResult,
     LedgerLlmReviewProjection,
     LedgerLlmReviewRequest,
     LedgerLlmReviewResponse,
     LedgerLlmSuggestionProjection,
 )
+from ....application.ledger.llm_review_results import LedgerLlmOperationResult
 from ....application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ....application.ledger.operator_iva_contracts import (
+    LEDGER_OPERATOR_IVA_DEFINITION_ID,
+    LedgerOperatorIvaRequest,
+    LedgerOperatorIvaResult,
+)
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
-from ....application.operations.registry import OperationSchemaIdentityV1
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.review.filter import LedgerReviewStatus
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -42,7 +44,7 @@ from .. import _ledger_llm_cli as classify
 from .. import ledger_lifecycle_cli as lifecycle
 from .. import runtime_ledger_classify as operator_bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import (
+from ..registered_operation_contracts import (
     RegisteredOperationCompletion,
     RegisteredOperationReviewCompletion,
     RegisteredOperationReviewHandler,

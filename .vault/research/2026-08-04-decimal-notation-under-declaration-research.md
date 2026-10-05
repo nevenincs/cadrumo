@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#decimal-notation-under-declaration'
 date: '2026-08-04'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb2aa77c3782f416a78236318311660406f8895e3d78e130e09b47efa48e948e'
+body_hash: 'sha256:76966f321e320dead6f03cb65a434d8c6cf0d72705c9b2190babe2c51a308b4f'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
@@ -13,7 +13,9 @@ related:
 
 # `decimal-notation-under-declaration` research: Spanish thousands separator silently misread as a decimal point
 
-## Context
+## Findings
+
+### Context
 
 A live, silent under-declaration measured on 2026-08-04 on the documented operator entry
 surface. Recorded before any remedy is designed, because the defect currently exists only
@@ -28,7 +30,7 @@ worth stating independently of the cents question. Probing one form further alon
 axis found the defect. Neither the cents question nor the comma observation was itself the
 problem.
 
-## The measurement
+### The measurement
 
 The operator-facing descendiente flag parses a rentas figure through the shared canonical
 decimal parser. Measured behaviour across the four forms a Spanish taxpayer might type:
@@ -43,7 +45,7 @@ The last is the defect. In Spanish notation the dot is a thousands separator, so
 entering eight thousand euros records eight — a factor-of-one-thousand misread with no
 refusal, no advisory, and nothing in the stored value that looks wrong.
 
-## The tax outcome
+### The tax outcome
 
 Driven through the production injector rather than reasoned. A descendant earning 12.500
 euros is above the Art. 58.1 ceiling and must be excluded from the mínimo:
@@ -60,7 +62,7 @@ both readings produce the same mínimo, because the ceiling excludes only figure
 above it and 8.000 is not above 8.000. A probe using the threshold figure itself shows no
 divergence. The defect only becomes visible with a figure that should exclude.
 
-## What is not yet known
+### What is not yet known
 
 The blast radius is being measured and is the open question. The ambiguity lives in the
 shared canonical decimal parser rather than in the descendiente flag, so every
@@ -131,7 +133,7 @@ operator-typed. That requires the profile write boundary to distinguish an opera
 from an application reload, which it currently does not. That is a boundary design decision
 rather than a parser change, and it should be recorded before it is built.
 
-## The decision this needs
+### The decision this needs
 
 The remedy is a product decision as much as a technical one, and it should be made
 explicitly rather than settled by whoever writes the patch first.
@@ -150,7 +152,7 @@ Worth grounding before deciding: whether this project has already made a canonic
 Spanish-notation decision somewhere. It is a Spanish-stem codebase and the question is
 older than this defect.
 
-## Companion findings from the same surface, both bounded
+### Companion findings from the same surface, both bounded
 
 Recorded here because they were measured in the same pass and would otherwise be
 re-derived.
@@ -164,7 +166,7 @@ is integer-only too, so this is a consistent design rather than an oversight, an
 feeds a proportional deduction rather than a threshold test, so rounding there loses cents
 without flipping an outcome.
 
-## Closed, and the residuals the call-site gate exposed
+### Closed, and the residuals the call-site gate exposed
 
 The canonicalization landed in two commits: the detector composed into the parsers so
 ambiguity refuses by construction, the bypassing sites routed, three contracts named in an
@@ -224,3 +226,11 @@ That is the boundary of the whole exercise. Canonicalization establishes one hom
 **concept**, not a merge of every site that looks alike — and the discriminator is whether
 the specific case carries meaning the general authority discards. A postcode is not a
 decimal.
+
+## Sources
+
+- `src/cadrumo/core/decimal/grammar.py` — the canonical decimal grammar used by operator input.
+- `src/cadrumo/domain/user_profile/values.py:123-205` — profile fact decoding, including the re-parse path and coercion boundary.
+- `src/cadrumo/domain/user_profile/tests/test_values.py` — profile value parsing and round-trip tests.
+- `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py` — the live descendant-income threshold path.
+- `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-58.html` — LIRPF article 58.1 and its descendant-income ceiling.

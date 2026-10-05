@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e6683789c51f671d5fc1506f44d75a08f45e2c0d5e09243b39894cc3782aef85'
 related:
-  - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-sub-year-epoch-adr]]"
 ---

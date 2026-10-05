@@ -2,69 +2,29 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import NoReturn
+from uuid import UUID
 
 import typer
 
-from ...application.modelo.verification_report_read_operation import (
+from ...application.modelo.verification_report_read_contracts import (
     MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID,
     MODELO_VERIFICATION_REPORT_VIEW_OPERATION_DEFINITION_ID,
-    ModeloVerificationFactProjection,
-    ModeloVerificationReportListProjection,
     ModeloVerificationReportListRequest,
-    ModeloVerificationReportProjection,
-    ModeloVerificationReportViewProjection,
     ModeloVerificationReportViewRequest,
+)
+from ...application.modelo.verification_report_read_projection import (
+    ModeloVerificationReportListProjection,
+    ModeloVerificationReportViewProjection,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationReport
 from ._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
 from ._modelo_rendering import verification_report_lines, verification_report_payload
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import submitted_operation_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
-
-
-def _to_domain_report(projection: ModeloVerificationReportProjection) -> VerificationReport:
-    """Restore the canonical report so the existing renderer owns localization."""
-    findings = tuple(
-        ModeloVerificationFinding(
-            kind=finding.kind,
-            severity=finding.severity,
-            casilla_id=finding.casilla_id,
-            expectation_id=finding.expectation_id,
-            message_locale_key=finding.message_locale_key,
-            message_facts=_facts_by_key(finding.message_facts),
-            legal_refs=finding.legal_refs,
-            source_refs=finding.source_refs,
-        )
-        for finding in projection.findings
-    )
-    snapshot = projection.registry_snapshot_ref
-    return VerificationReport(
-        verification_report_id=projection.verification_report_id,
-        calculation_revision_id=projection.calculation_revision_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=snapshot.modelo,
-            revision_id=snapshot.revision_id,
-            modelo_year=snapshot.modelo_year,
-            period=snapshot.period,
-        ),
-        completeness_status=projection.completeness_status,
-        findings=findings,
-        resolved_casilla_ids=projection.resolved_casilla_ids,
-        missing_required_casilla_ids=projection.missing_required_casilla_ids,
-        run_at=projection.run_at,
-        verified_by=projection.verified_by,
-        granted_verificado_completo=projection.granted_verificado_completo,
-    )
-
-
-def _facts_by_key(facts: tuple[ModeloVerificationFactProjection, ...]) -> dict[str, str | int | bool | Decimal]:
-    """Rebuild typed message arguments for the domain finding validator."""
-    return {fact.key: Decimal(str(fact.value)) if fact.value_kind == "decimal" else fact.value for fact in facts}
+from .runtime_registered_operation import run_registered_operation
 
 
 def _invalid_projection(completed: object) -> NoReturn:
@@ -107,24 +67,11 @@ def read_modelo_verification_report_list(
     if not isinstance(projection, ModeloVerificationReportListProjection):
         _invalid_projection(completed)
     try:
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.refusal_code is not None
-            or completed.effect is not OperationEffect.NONE
-            or projection.result_version != 1
-            or projection.profile_id != client.profile_id
-            or projection.calculation_revision_id_filter != calculation_revision_id
-            or projection.report_count != len(projection.reports)
-            or len({row.verification_report_id for row in projection.reports}) != len(projection.reports)
-            or any(
-                calculation_revision_id is not None and row.calculation_revision_id != calculation_revision_id
-                for row in projection.reports
-            )
-            or projection.reports
-            != tuple(sorted(projection.reports, key=lambda row: (row.calculation_revision_id, row.run_at)))
-        ):
+        if _verification_list_receipt_invalid(
+            completed, projection, client.profile_id, calculation_revision_id
+        ) or _verification_list_rows_invalid(projection, calculation_revision_id):
             _invalid_projection(completed)
-        reports = tuple(_to_domain_report(row) for row in projection.reports)
+        reports = tuple(row.to_report() for row in projection.reports)
         result = VerificationReportListResult(
             calculation_revision_id_filter=calculation_revision_id,
             report_count=len(reports),
@@ -189,7 +136,7 @@ def read_modelo_verification_report_view(
             or projection.report.verification_report_id != verification_report_id
         ):
             _invalid_projection(completed)
-        report = _to_domain_report(projection.report)
+        report = projection.report.to_report()
         payload = verification_report_payload(report)
         result = VerificationReportShowResult.model_validate(payload.model_dump(mode="python"))
         lines = ["operation\tmodelo.verification_report.show", *verification_report_lines(report)]
@@ -199,3 +146,38 @@ def read_modelo_verification_report_view(
 
 
 __all__ = ["read_modelo_verification_report_list", "read_modelo_verification_report_view"]
+
+
+def _verification_list_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloVerificationReportListProjection],
+    projection: ModeloVerificationReportListProjection,
+    profile_id: UUID,
+    calculation_revision_id: str | None,
+) -> bool:
+    """Require the settled receipt and exact requested profile and revision."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.NONE
+        or (projection.result_version != 1)
+        or (projection.profile_id != profile_id)
+        or (projection.calculation_revision_id_filter != calculation_revision_id)
+    )
+
+
+def _verification_list_rows_invalid(
+    projection: ModeloVerificationReportListProjection, calculation_revision_id: str | None
+) -> bool:
+    """Require complete unique reports in canonical order within the revision filter."""
+    return (
+        projection.report_count != len(projection.reports)
+        or len({row.verification_report_id for row in projection.reports}) != len(projection.reports)
+        or any(
+            calculation_revision_id is not None and row.calculation_revision_id != calculation_revision_id
+            for row in projection.reports
+        )
+        or (
+            projection.reports
+            != tuple(sorted(projection.reports, key=lambda row: (row.calculation_revision_id, row.run_at)))
+        )
+    )

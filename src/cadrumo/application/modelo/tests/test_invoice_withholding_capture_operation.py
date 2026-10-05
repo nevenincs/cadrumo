@@ -21,7 +21,9 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 
 from ...aggregation.invoice_retencion import (
+    InvoiceRetencionProjectionDefect,
     InvoiceWithholdingCapture,
+    InvoiceWithholdingDefectsError,
     InvoiceWithholdingEvidenceError,
     InvoiceWithholdingEvidenceRequest,
 )
@@ -47,21 +49,24 @@ from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..invoice_withholding_capture_operation import (
+from ..invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE,
-    ModeloInvoiceWithholdingCaptureExecutor,
+    MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES,
+    MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE,
     ModeloInvoiceWithholdingCapturePorts,
     ModeloInvoiceWithholdingCapturePortsFactory,
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureReport,
     ModeloInvoiceWithholdingCaptureRequest,
-    _PreparedCapture,
+)
+from ..invoice_withholding_capture_execution import ModeloInvoiceWithholdingCaptureExecutor, _PreparedCapture
+from ..invoice_withholding_capture_operation import (
     build_modelo_invoice_withholding_capture_definition,
     build_modelo_invoice_withholding_capture_registration,
-    project_modelo_invoice_withholding_capture_result,
     resolve_modelo_invoice_withholding_capture_access,
 )
+from ..invoice_withholding_capture_projection import project_modelo_invoice_withholding_capture_result
 from ..invoice_withholding_capture_public import PublicInvoiceWithholdingEvidence
 from .withholding_window_operation_test_support import WithholdingWindowServiceFixture
 
@@ -122,7 +127,11 @@ def test_definition_and_access_are_confidential_exact_profile_and_period_scoped(
 
     assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
     assert definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
-    assert definition.refusal_detail_codes == frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE})
+    assert definition.refusal_detail_codes == MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES
+    assert (
+        frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE, MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE})
+        == MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODES
+    )
     assert definition.permitted_frontends == frozenset(
         {
             OperationFrontendProjection.CLI,
@@ -360,7 +369,12 @@ def _prepared() -> _PreparedCapture:
     )
 
 
-def _terminal_receipt(*, effect: OperationEffect, refused: bool = False) -> OperationTerminalReceipt:
+def _terminal_receipt(
+    *,
+    effect: OperationEffect,
+    refused: bool = False,
+    refusal_ref: str = MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE,
+) -> OperationTerminalReceipt:
     identity = OperationIdentity(
         operation_id="c" * 64,
         definition_id=MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
@@ -373,7 +387,7 @@ def _terminal_receipt(*, effect: OperationEffect, refused: bool = False) -> Oper
             condition=OperationTerminalCondition.REFUSED,
             effect=OperationEffect.NONE,
             settled_at=datetime.now(UTC),
-            refusal_ref=MODELO_INVOICE_WITHHOLDING_CAPTURE_REFUSAL_CODE,
+            refusal_ref=refusal_ref,
             refusal_detail_ref="d" * 64,
         )
     return OperationTerminalReceipt(
@@ -406,9 +420,10 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
     assert isinstance(service, _WithholdingService)
     context = _executor_context(events, operands, authority_operation=authority_operation)
     monkeypatch.setattr(
-        "cadrumo.application.modelo.invoice_withholding_capture_operation.require_active_bucket_id",
+        "cadrumo.application.modelo.invoice_withholding_capture_execution.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
 
     def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
@@ -419,7 +434,7 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
         return result
 
     monkeypatch.setattr(
-        "cadrumo.application.modelo.invoice_withholding_capture_operation.aggregate_per_modelo",
+        "cadrumo.application.modelo.invoice_withholding_capture_execution.aggregate_per_modelo",
         aggregate_then_advance,
     )
 
@@ -433,7 +448,7 @@ def test_executor_effect_matches_replay_and_publishes_only_safe_result(
             return SimpleNamespace(scope=_SCOPE, mutation=SimpleNamespace(replayed=replayed))
 
     monkeypatch.setattr(
-        "cadrumo.application.modelo.invoice_withholding_capture_operation.WithholdingProducer",
+        "cadrumo.application.modelo.invoice_withholding_capture_execution.WithholdingProducer",
         _Producer,
     )
 
@@ -470,9 +485,10 @@ def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
     )
     monkeypatch.setattr(
-        "cadrumo.application.modelo.invoice_withholding_capture_operation.require_active_bucket_id",
+        "cadrumo.application.modelo.invoice_withholding_capture_execution.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def refuse_before_commit(*_args: object) -> _PreparedCapture:
         raise InvoiceWithholdingEvidenceError("not_a_retenedor_liability")
@@ -507,6 +523,79 @@ def test_prewrite_refusal_is_bounded_and_stored_as_secure_result_detail(
         "refusal_reason",
         "refusal_defects",
     }
+    assert projection.refusal_defects is None
+
+
+def test_invoice_retencion_defects_refuse_naming_every_defect_under_their_own_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Every defect travels as a stable token under the defects code, never as a flattened generic reason."""
+    events = _Events()
+    operands = _Operands()
+    executor = ModeloInvoiceWithholdingCaptureExecutor(
+        cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
+    )
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.invoice_withholding_capture_execution.require_active_bucket_id",
+        lambda: str(_PROFILE),
+    )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    defects = (
+        InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,
+        InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,
+    )
+
+    def refuse_with_defects(*_args: object) -> _PreparedCapture:
+        raise InvoiceWithholdingDefectsError(defects)
+
+    monkeypatch.setattr(executor, "_prepare", refuse_with_defects)
+
+    result = asyncio.run(executor.execute(_request(), _executor_context(events, operands)))
+
+    assert isinstance(result, OperationRefusalEvidence)
+    assert result.refusal_code == MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE
+    assert events.effects == [OperationEffect.NONE]
+    report = operands.values[0]
+    assert isinstance(report, ModeloInvoiceWithholdingCaptureReport)
+    assert not report.local_write_performed
+    projection = project_modelo_invoice_withholding_capture_result(
+        report,
+        _terminal_receipt(
+            effect=OperationEffect.NONE, refused=True, refusal_ref=MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE
+        ),
+    )
+    assert isinstance(projection, ModeloInvoiceWithholdingCaptureProjection)
+    assert projection.refusal_defects == defects
+    assert projection.refusal_code == MODELO_INVOICE_WITHHOLDING_DEFECTS_REFUSAL_CODE
+    assert projection.model_dump(mode="json")["refusal_defects"] == [defect.value for defect in defects]
+
+    with pytest.raises(ValueError, match="contradicts its terminal receipt"):
+        project_modelo_invoice_withholding_capture_result(
+            report,
+            _terminal_receipt(effect=OperationEffect.NONE, refused=True),
+        )
+
+
+def test_refused_projection_refuses_repeated_or_captured_defects() -> None:
+    defect = InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED
+    with pytest.raises(ValidationError, match="repeats an invoice withholding defect"):
+        ModeloInvoiceWithholdingCaptureProjection(
+            outcome="refused",
+            profile_id=_PROFILE,
+            modelo="111",
+            period=_PERIOD,
+            refusal_reason="invoice_withholding_defects",
+            refusal_defects=(defect, defect),
+        )
+    with pytest.raises(ValidationError):
+        ModeloInvoiceWithholdingCaptureProjection(
+            outcome="refused",
+            profile_id=_PROFILE,
+            modelo="111",
+            period=_PERIOD,
+            refusal_reason="invoice_withholding_defects",
+            refusal_defects=(),
+        )
 
 
 @pytest.mark.parametrize(
@@ -522,9 +611,10 @@ def test_invoice_source_conflict_refuses_and_ambiguous_mutation_keeps_effect_unk
         cast(ModeloInvoiceWithholdingCapturePortsFactory, cast(object, lambda **_kwargs: None))
     )
     monkeypatch.setattr(
-        "cadrumo.application.modelo.invoice_withholding_capture_operation.require_active_bucket_id",
+        "cadrumo.application.modelo.invoice_withholding_capture_execution.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     prepared = _prepared()
     monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
 
@@ -538,7 +628,7 @@ def test_invoice_source_conflict_refuses_and_ambiguous_mutation_keeps_effect_unk
             raise WithholdingObservationMutationError(refusal_code)
 
     monkeypatch.setattr(
-        "cadrumo.application.modelo.invoice_withholding_capture_operation.WithholdingProducer",
+        "cadrumo.application.modelo.invoice_withholding_capture_execution.WithholdingProducer",
         _Producer,
     )
 

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:80a73a6d2f52f37a5c1858f18ee6dcc3525d31ec08f6f8d1d2195c8bcea97237'
-related:
-  - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:8d32cfb7ae37c71c97292bcf5161d3194dad900c3b4383f2cacdf5f107993838'
+related: []
 ---
 
 # `binding-vocabulary-cli-cohesion` audit: `Wave 1 D9 close-blocker audit`
@@ -41,7 +40,7 @@ The Observation-prefix phase remains open. Several listed names are already pref
 but live code still exposes unprefixed carriers such as `RetencionObservation`,
 `CounterpartObservation`, `CounterpartAggregationObservation`,
 `DeclaracionObservation`, `BorradorObservation`, and `GroiObservation`. The first
-phase target includes `src/aeat/domain/calculations/registry/_ledger_bindings.py`,
+phase target includes the retired module,
 which already has non-authored WIP, so this pass did not start the relocation series.
 S15-S18 are formally deferred to the named W03.P05 observation-prefix relocation
 follow-up in this same approved plan, resuming at S15 after the dirty target files are
@@ -52,8 +51,8 @@ peer-clean.
 The CLI verb-reconciliation phase remains open: `bindings preview`, `calc pull --compute`,
 and `work calculate` are still present in the live CLI. The step surface includes the
 locale catalogues and operator help/write-policy/error-suggestion sweep; scoped WIP
-checks found active non-authored edits in `src/aeat/locales/ca.yml`,
-`src/aeat/locales/en.yml`, `src/aeat/locales/es.yml`, and `src/aeat/locales/hu.yml`.
+checks found active non-authored edits in the retired data file,
+The retired data file, the retired data file, and the retired data file.
 Because these are operator-visible locale-bound changes, S21-S24 are deferred until
 the locale/operator-surface WIP is clear and the locale CLI can own the full sweep.
 The named follow-up is this plan's W04.P07 CLI source-pull verb reconciliation
@@ -111,13 +110,13 @@ focused evidence.
 
 Verification refreshed for the reconciled G1/G2 surface:
 
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py -k "bindings"` passed (`2 passed`).
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/tests/test_google_payloads.py` passed (`7 passed`).
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` passed (`140 passed`).
+- the historical check passed (`2 passed`).
+- the historical check passed (`7 passed`).
+- the historical check passed (`140 passed`).
 - `vaultspec-core vault check features --feature binding-vocabulary-cli-cohesion` is clean after rebuilding the feature index.
 
 `test_documented_command_conformance.py` is not clean, but the failure is unrelated to
-this feature: `docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md` cites `aeat app agent --layout
+this feature: the retired document cites `aeat app agent --layout
 plugin`, where `plugin` is parsed as a nonexistent subcommand, plus an ellipsis command
 path. No failure names `modelo bindings resolve`, `config google sync calc pull`, or
 `config google sync calc compute`.

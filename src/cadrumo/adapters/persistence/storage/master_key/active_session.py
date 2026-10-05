@@ -207,7 +207,7 @@ def current_active_bucket_session() -> BucketSession | None:
     gating) that need the live session's attributes (``bucket_id``, ``sealed``,
     idle deadline) rather than only its DEK (:func:`get_active_master_key`) or
     its presence (:func:`has_active_bucket_session`). Never mutates the
-    context; :func:`activate_session`, :func:`suspend_active_session`, and
+    context; :func:`activate_session` and
     :func:`close_active_bucket_session` own binding changes.
     """
     session = active_session.get()
@@ -283,13 +283,6 @@ def close_active_bucket_session() -> None:
         active_session.clear_bound(session)
 
 
-@contextmanager
-def suspend_active_session() -> Generator[None]:
-    """Temporarily clear the active :class:`BucketSession` for the current context."""
-    with active_session.override(None):
-        yield
-
-
 def _close_active_session_at_exit() -> None:
     """Best-effort close of every live session on interpreter shutdown.
 
@@ -333,5 +326,4 @@ __all__ = [
     "get_active_master_key",
     "has_active_bucket_session",
     "session_serves_bucket",
-    "suspend_active_session",
 ]

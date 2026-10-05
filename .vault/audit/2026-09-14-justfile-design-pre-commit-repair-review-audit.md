@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#justfile-design'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:6adb6727e068aa6653003b009fee642287f5468c9e615f3287c6f82fb02f7063'
-related:
-  - "[[2026-09-11-justfile-design-plan]]"
+related: []
 ---
 
 # `justfile-design` audit: `pre commit repair review`

@@ -15,16 +15,15 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     AdministrationSubject,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
@@ -71,6 +70,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentReceipt
@@ -81,6 +81,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -102,7 +103,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -244,7 +245,10 @@ def test_refusal_detail_is_fenced_after_authority_revocation(
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:

@@ -15,8 +15,7 @@ import pytest
 from pydantic import SecretBytes, ValidationError
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import generate_api_key
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
-from cadrumo.adapters.persistence.storage.custody.automation_store import CONTROL_NAMESPACE, WRAP_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     NOW,
     PROFILE_INPUT,
@@ -24,11 +23,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.application.user_profile.access_contracts import AuthorityState
-from cadrumo.application.user_profile.automation_administration import (
-    AutomationAdministrationService,
-    enrollment_review_digest,
-)
+from cadrumo.application.user_profile.automation_administration import enrollment_review_digest
+from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentProposal, EnrollmentStage
 
@@ -382,7 +380,7 @@ def test_client_possession_is_bound_to_original_review_digest(subject: Administr
 def test_client_native_delivery_failure_reconciles_exact_committed_write(
     subject: AdministrationSubject, after: bool
 ) -> None:
-    from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+    from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 
     receipt = subject.service.request(uuid4(), subject.proposal).receipt
     subject.client_native.fail_write = CLIENT_NAMESPACE

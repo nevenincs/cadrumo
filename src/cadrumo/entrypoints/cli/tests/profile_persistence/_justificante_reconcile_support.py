@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -14,6 +15,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.period import Period
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -32,7 +39,7 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 _EXP_130_1T = "13020260410ABCD1234EFGH5678"
-_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 45, tzinfo=UTC)
+_WORK_UNIT_TIMESTAMP = datetime(2026, 4, 18, 8, 0, tzinfo=UTC)
 
 
 @contextmanager
@@ -111,14 +118,57 @@ def _seed_unverified_filing(
     aeat_accepted: bool = False,
     external_evidence: ExternalEvidence | None = None,
 ) -> ModeloRecord:
+    """Persist a coherent local filing chain with optional official confirmation."""
     bucket_id = _active_bucket_id()
-    revision_id = hashlib.sha256(f"rev:{work_unit_id}".encode()).hexdigest()
     filing_period = Period.from_year_and_code(filing_year, period)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_provenance=(),
+        filing_instance_evidence=None,
+    )
+    filed_at = datetime(2026, 4, 18, 9, 0, tzinfo=UTC)
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=snapshot.snapshot_ref,
+        state=CalculationRevisionState.PRESENTADO,
+        source_provenance=(),
+        filing_instance_evidence=None,
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=filed_at,
+        verified_at=filed_at,
+        verified_by="operator",
+        filed_at=filed_at,
+        filed_by="operator",
+    )
+    calculations = CalculationRevisionCatalogueRepository()
+    calculations.save(upsert_calculation_revision(calculations.load(), revision))
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
         filed_by="operator",
         member_nif=member_nif,
+    )
+    work_units = WorkUnitCatalogueRepository()
+    catalogue = work_units.load()
+    work_unit = catalogue.get(work_unit_id)
+    assert work_unit is not None
+    work_units.save(
+        upsert_work_unit(
+            catalogue,
+            work_unit.model_copy(
+                update={
+                    "current_calculation_revision_id": revision_id,
+                    "filed_calculation_revision_id": revision_id,
+                    "current_filing_record_id": filing_id,
+                    "updated_at": filed_at,
+                }
+            ),
+        )
     )
     filing = ModeloRecord(
         filing_record_id=filing_id,
@@ -129,7 +179,7 @@ def _seed_unverified_filing(
         filing_year=filing_year,
         period=filing_period,
         member_nif=member_nif,
-        filed_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+        filed_at=filed_at,
         filed_by="operator",
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.CONFIRMADA if aeat_accepted else AeatConfirmationState.PENDIENTE,

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#docs-delivery-hardening'
 date: '2026-09-27'
-modified: '2026-09-29'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:07e30c35522bbd074313d956e8ecf2bc5933c906f1125f17cbbfae59fb2904a4'
+body_hash: 'sha256:fe42027c7541e58c452c357a3563e86d94bf12647dd2f261fa3b94492c8b8e4e'
 related:
   - "[[2026-09-27-docs-delivery-hardening-plan]]"
 ---
@@ -32,7 +32,6 @@ related:
 - `S02` `verify:` `105 unit tests plus 37 integration tests including one registry-race rerun` -> `pass`
 - `S02` `verify:` `Ruff, ty, actionlint and zizmor` -> `pass`
 - `S02` `M` `dev/deploy/cloudflare_api.py`
-- `S02` `D` `dev/deploy/tests/test_docs_worker.py`
 - `S02` `D` `worker/docs-site.mjs`
 - `S02` `D` `worker/docs-site.test.mjs`
 - `S02` `M` `justfile`

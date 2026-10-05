@@ -7,7 +7,7 @@ import struct
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility
+from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState
 
 from .. import macos_login
 from ..macos_login import MacosLoginBinding, MacosSessionObservation, decode_macos_peer_audit_token
@@ -49,7 +49,8 @@ def test_graphic_session_does_not_imply_unlocked_or_unattended_eligibility(monke
     binding = MacosLoginBinding("501", 100022)
     context = binding.observe(credential_facilities=Availability.AVAILABLE)
     assert observed == [100022] and context.login_id == "macos:501:100022"
-    assert context.active and context.locked and context.unattended is LoginEligibility.UNKNOWN
+    assert context.active and context.lock_state is OsLockState.UNKNOWN and not context.unlocked
+    assert context.unattended is LoginEligibility.UNKNOWN
     assert context.credential_facilities is Availability.AVAILABLE
 
 
@@ -62,11 +63,13 @@ def test_missing_session_and_native_failure_remain_distinct_and_cannot_restore_a
     monkeypatch.setattr(macos_login, "observe_macos_session", missing)
     binding = MacosLoginBinding("501", 100022)
     absent = binding.observe(credential_facilities=Availability.UNAVAILABLE)
-    assert not absent.active and absent.locked and absent.unattended is LoginEligibility.INELIGIBLE
+    assert not absent.active and absent.lock_state is OsLockState.UNKNOWN
+    assert absent.unattended is LoginEligibility.INELIGIBLE
 
     def unavailable(_session_id: int) -> None:
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
     monkeypatch.setattr(macos_login, "observe_macos_session", unavailable)
     failed = binding.observe(credential_facilities=Availability.AVAILABLE)
-    assert not failed.active and failed.locked and failed.unattended is LoginEligibility.UNKNOWN
+    assert not failed.active and failed.lock_state is OsLockState.UNKNOWN
+    assert failed.unattended is LoginEligibility.UNKNOWN

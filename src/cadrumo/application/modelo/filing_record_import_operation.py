@@ -5,55 +5,35 @@ from __future__ import annotations
 import asyncio
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Literal, Self
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
-from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import FilingRecordId, WorkUnitId
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.identity.hex_ids import WorkUnitId
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.modelos.filing_record import (
-    ExternalEvidenceKind,
-    FilingDeclarationKind,
-)
-from ...domain.modelos.filing_text import EvidenceReference
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    require_single_period_admission,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -71,228 +51,32 @@ from .external_import_actions import (
     import_external_filing_evidence,
 )
 from .filing_chain_reconciliation import (
-    FilingReconciliationNotice,
-    FilingReconciliationNoticeCode,
     FilingReconciliationOutcome,
-    FilingReconciliationResult,
 )
-from .filing_record_list_operation import (
-    ModeloFilingRecordListEntryProjection,
+from .filing_record_import_contracts import (
+    MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
+    ModeloFilingRecordImportOperationReport,
+    ModeloFilingRecordImportProjection,
+    ModeloFilingRecordImportReconciliationProjection,
+    ModeloFilingRecordImportRequest,
 )
+from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .local_observation_spreadsheet import parse_casilla_lexical_spreadsheet
 from .work_addressing import ModeloWorkRegistryYearMismatchError, law_selected_revision_for_work_target
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
-MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID = "modelo.filing_record.import"
-MAX_MODELO_FILING_RECORD_IMPORT_CASILLAS = 4_096
-MAX_MODELO_FILING_RECORD_IMPORT_NOTICES = 32
-MAX_MODELO_FILING_RECORD_IMPORT_CONTEXT_ITEMS = 32
-MAX_MODELO_FILING_RECORD_IMPORT_SOURCE_PATH_LENGTH = 4_096
 
 # Leave envelope and operation metadata headroom inside the local runtime frame.
 _MAX_RESULT_DOCUMENT_BYTES = 48 * 1024
+
+
 _PHASES = (
     "modelo-filing-record-import.prepare",
     "modelo-filing-record-import.commit",
     "modelo-filing-record-import.result",
 )
-
-_SourcePath = Annotated[
-    str,
-    Field(
-        min_length=1,
-        max_length=MAX_MODELO_FILING_RECORD_IMPORT_SOURCE_PATH_LENGTH,
-        pattern=r"\S",
-    ),
-]
-_CasillaDecimalLexical = Annotated[
-    str,
-    Field(
-        min_length=1,
-        max_length=128,
-        pattern=r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$",
-    ),
-]
-_CasillaValues = Annotated[
-    tuple[tuple[CasillaId, _CasillaDecimalLexical], ...],
-    Field(max_length=MAX_MODELO_FILING_RECORD_IMPORT_CASILLAS),
-]
-_ContextItems = Annotated[
-    tuple[tuple[Annotated[str, Field(min_length=1, max_length=128)], Annotated[str, Field(max_length=256)]], ...],
-    Field(max_length=MAX_MODELO_FILING_RECORD_IMPORT_CONTEXT_ITEMS),
-]
-_AffectedFilingRecordIds = Annotated[
-    tuple[FilingRecordId, ...], Field(max_length=MAX_MODELO_FILING_RECORD_IMPORT_CASILLAS)
-]
-_DifferingCasillaIds = Annotated[tuple[CasillaId, ...], Field(max_length=MAX_MODELO_FILING_RECORD_IMPORT_CASILLAS)]
-
-
-class ModeloFilingRecordImportRequest(BaseModel):
-    """Immutable filing import intent, retained only through secure custody."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    work_unit_id: WorkUnitId
-    evidence_kind: ExternalEvidenceKind
-    evidence_reference_id: EvidenceReference
-    declared_kind: FilingDeclarationKind | None = None
-    actor: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")] = "aeat-import"
-    casilla_values: _CasillaValues = ()
-    source_path: _SourcePath | None = None
-
-    @model_validator(mode="after")
-    def _one_casilla_source(self) -> Self:
-        """Admit precisely one input source and canonical, finite direct values."""
-        has_direct_values = bool(self.casilla_values)
-        if (self.source_path is not None) == has_direct_values:
-            raise ValueError("filing import requires exactly one of casilla values or source_path")
-        keys = tuple(key for key, _value in self.casilla_values)
-        if keys != tuple(sorted(set(keys))):
-            raise ValueError("filing import casilla values must have unique, sorted keys")
-        for key, lexical in self.casilla_values:
-            validated_casilla_id(key, surface="filing record import")
-            try:
-                value = Decimal(lexical)
-            except Exception as exc:  # pragma: no cover - the schema regex closes this input
-                raise ValueError("filing import values must be canonical decimals") from exc
-            exponent = value.as_tuple().exponent
-            if not value.is_finite() or not isinstance(exponent, int) or -exponent > 2:
-                raise ValueError("filing import values must be finite decimals with at most two fraction digits")
-        if self.source_path is not None and ("\x00" in self.source_path or not self.source_path.strip()):
-            raise ValueError("source_path must identify a local spreadsheet")
-        return self
-
-
-class ModeloFilingRecordImportNoticeProjection(BaseModel):
-    """One stable reconciliation notice with bounded, sorted context."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    code: FilingReconciliationNoticeCode
-    context: _ContextItems = ()
-
-    @model_validator(mode="after")
-    def _canonical_context(self) -> Self:
-        keys = tuple(key for key, _value in self.context)
-        if keys != tuple(sorted(set(keys))):
-            raise ValueError("filing import notice context keys must be unique and sorted")
-        return self
-
-    @classmethod
-    def from_notice(cls, notice: FilingReconciliationNotice) -> ModeloFilingRecordImportNoticeProjection:
-        """Copy stable notice fields without mutable mapping aliases."""
-        return cls(code=notice.code, context=tuple(sorted(notice.context.items())))
-
-
-class ModeloFilingRecordImportReconciliationProjection(BaseModel):
-    """Allowlisted reconciliation fields matching the current CLI payload."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    outcome: FilingReconciliationOutcome
-    bucket_id: BucketId
-    modelo: Annotated[str, Field(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")]
-    filing_year: FilingYear
-    period: Annotated[str, Field(min_length=1, max_length=16, pattern=r"\S")]
-    member_nif: Annotated[str, Field(min_length=1, max_length=32)] | None = None
-    filing_record_id: FilingRecordId | None = None
-    affected_filing_record_ids: _AffectedFilingRecordIds = ()
-    differing_casilla_ids: _DifferingCasillaIds = ()
-    evidence_basis: Literal["casillas", "receipt_totals"] | None = None
-    notices: Annotated[
-        tuple[ModeloFilingRecordImportNoticeProjection, ...], Field(max_length=MAX_MODELO_FILING_RECORD_IMPORT_NOTICES)
-    ] = ()
-
-    @model_validator(mode="after")
-    def _validate_scope_and_order(self) -> Self:
-        """Keep the result in its exact period and preserve canonical sequences."""
-        Period.from_year_and_code(self.filing_year, self.period)
-        if len(set(self.affected_filing_record_ids)) != len(self.affected_filing_record_ids):
-            raise ValueError("filing import reconciliation repeats an affected record")
-        if len(set(self.differing_casilla_ids)) != len(self.differing_casilla_ids):
-            raise ValueError("filing import reconciliation repeats a differing casilla")
-        return self
-
-    @classmethod
-    def from_result(
-        cls,
-        result: FilingReconciliationResult,
-    ) -> ModeloFilingRecordImportReconciliationProjection:
-        """Copy the complete public reconciliation result in bounded form."""
-        return cls(
-            outcome=result.outcome,
-            bucket_id=result.bucket_id,
-            modelo=result.modelo,
-            filing_year=result.filing_year,
-            period=result.period.registry_token,
-            member_nif=result.member_nif,
-            filing_record_id=result.filing_record_id,
-            affected_filing_record_ids=result.affected_filing_record_ids,
-            differing_casilla_ids=result.differing_casilla_ids,
-            evidence_basis=result.evidence_basis,
-            notices=tuple(ModeloFilingRecordImportNoticeProjection.from_notice(notice) for notice in result.notices),
-        )
-
-    def to_result(self) -> FilingReconciliationResult:
-        """Rebuild the canonical application result for the established renderer."""
-        return FilingReconciliationResult(
-            outcome=self.outcome,
-            bucket_id=self.bucket_id,
-            modelo=self.modelo,
-            filing_year=self.filing_year,
-            period=Period.from_year_and_code(self.filing_year, self.period),
-            member_nif=self.member_nif,
-            filing_record_id=self.filing_record_id,
-            affected_filing_record_ids=self.affected_filing_record_ids,
-            differing_casilla_ids=self.differing_casilla_ids,
-            evidence_basis=self.evidence_basis,
-            notices=tuple(
-                FilingReconciliationNotice(code=notice.code, context=dict(notice.context)) for notice in self.notices
-            ),
-        )
-
-
-class ModeloFilingRecordImportProjection(BaseModel):
-    """Safe filing receipt and complete reconciliation result for CLI parity."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    result_version: Literal[1] = 1
-    profile_id: UUID
-    record: ModeloFilingRecordListEntryProjection
-    reconciliation: ModeloFilingRecordImportReconciliationProjection
-
-    @model_validator(mode="after")
-    def _correlate_receipt_and_reconciliation(self) -> Self:
-        """Refuse a result that crosses a profile, receipt, or filing coordinate."""
-        record = self.record
-        reconciliation = self.reconciliation
-        if (
-            record.bucket_id != str(self.profile_id)
-            or reconciliation.bucket_id != str(self.profile_id)
-            or reconciliation.filing_record_id != record.filing_record_id
-            or reconciliation.modelo != str(record.modelo)
-            or reconciliation.filing_year != record.filing_year
-            or reconciliation.period != record.period
-            or reconciliation.member_nif != record.member_nif
-            or record.external_evidence is None
-        ):
-            raise ValueError("filing import receipt exceeds its profile or reconciliation scope")
-        if reconciliation.outcome is FilingReconciliationOutcome.UNVERIFIABLE:
-            raise ValueError("unverifiable filing imports do not produce a filing receipt")
-        return self
-
-
-class ModeloFilingRecordImportOperationReport(BaseModel):
-    """Private encrypted result retaining the writer-effect witness."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    projection: ModeloFilingRecordImportProjection
-    local_write_performed: bool
 
 
 def _project_filing_record_import(
@@ -304,18 +88,14 @@ def _project_filing_record_import(
     report = ModeloFilingRecordImportOperationReport.model_validate(result, strict=True)
     projection = report.projection
     expected_effect = OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE
-    if (
-        receipt.identity.definition_id != MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not expected_effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("filing import projection contradicts its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=expected_effect,
+        message="filing import projection contradicts its terminal receipt",
+    )
     return projection
 
 
@@ -405,15 +185,9 @@ class ModeloFilingRecordImportExecutor:
         """Import one filing while guarding every possible domain write."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
 
@@ -517,19 +291,7 @@ def build_modelo_filing_record_import_definition(
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
@@ -565,32 +327,18 @@ def build_modelo_filing_record_import_registration(
         context: OperationAccessContext,
         /,
     ) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(
-            payload, ModeloFilingRecordImportRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        payload = require_access_request_profile_payload(
+            request,
+            definition_id=definition.definition_id,
+            payload_type=ModeloFilingRecordImportRequest,
+            access_profile_id=context.profile_id,
+        )
 
         admitted = context.admitted_request
-        if admitted is not None and context.action in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }:
-            if (
-                admitted.profile_id != context.profile_id
-                or admitted.definition_id != request.definition_id
-                or admitted.action is not AccessAction.SUBMIT
-                or admitted.period_independent
-                or len(admitted.periods) != 1
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            periods = admitted.periods
+        if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+            periods = require_single_period_admission(
+                admitted, profile_id=context.profile_id, definition_id=request.definition_id
+            )
         else:
             period = _resolve_import_period(payload, context, ports_factory)
             periods = frozenset({period})
@@ -621,34 +369,9 @@ def build_modelo_filing_record_import_registration(
             policy = policy.model_copy(update={"disclosures": disclosures})
         return ResolvedOperationAccess(request=resolved.request, policy=policy)
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloFilingRecordImportRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloFilingRecordImportProjection,
-        ),
+        public_result_type=ModeloFilingRecordImportProjection,
         result_projector=_project_filing_record_import,
         access_resolver=resolve,
     )
-
-
-__all__ = [
-    "MAX_MODELO_FILING_RECORD_IMPORT_CASILLAS",
-    "MAX_MODELO_FILING_RECORD_IMPORT_CONTEXT_ITEMS",
-    "MAX_MODELO_FILING_RECORD_IMPORT_NOTICES",
-    "MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID",
-    "ModeloFilingRecordImportExecutor",
-    "ModeloFilingRecordImportNoticeProjection",
-    "ModeloFilingRecordImportOperationReport",
-    "ModeloFilingRecordImportProjection",
-    "ModeloFilingRecordImportReconciliationProjection",
-    "ModeloFilingRecordImportRequest",
-    "build_modelo_filing_record_import_definition",
-    "build_modelo_filing_record_import_registration",
-]

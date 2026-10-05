@@ -13,7 +13,7 @@ from pathlib import Path
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import content_hash_hex
 from ..authority import ValidatedRegistryAuthority, bundled_indexed_authority
-from ..authority_artifact import _json_value
+from ..authority_component_codec import _json_value
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ..snapshot import build_validated_snapshot as _build_validated_snapshot

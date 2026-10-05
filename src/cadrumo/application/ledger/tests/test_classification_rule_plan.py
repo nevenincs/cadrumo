@@ -47,8 +47,9 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ..action_ports import LedgerActionPorts
 from ..actions_classification import (
+    ClassificationRulePlan,
     add_classification_rule,
-    apply_classification_rules,
+    apply_classification_rule_match,
     plan_classification_rules,
 )
 from ..protocols import (
@@ -473,6 +474,19 @@ def _stored(*transactions: Transaction) -> Iterator[_ClassificationScenario]:
         yield _ClassificationScenario(TransactionCatalogue.from_transactions(transactions), operation=operation)
 
 
+def _apply_plan(scenario: _ClassificationScenario, plan: ClassificationRulePlan) -> None:
+    """Write every planned row through the same boundary the operation supervisor uses."""
+    for row in plan.matches:
+        apply_classification_rule_match(
+            bucket_id=_BUCKET,
+            row=row,
+            actor="operator",
+            source_command="aeat app ledger rule apply",
+            reaffirm=False,
+            ports=scenario.ports,
+        )
+
+
 def test_the_plan_matches_exactly_what_the_apply_writes() -> None:
     """The load-bearing parity claim: a preview cannot promise a different run."""
     with _stored(
@@ -492,20 +506,20 @@ def test_the_plan_matches_exactly_what_the_apply_writes() -> None:
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
-        applied = apply_classification_rules(
-            bucket_id=_BUCKET,
-            actor="operator",
-            ports=scenario.ports,
-            rule_repository=scenario.rule_repository,
-        )
+        _apply_plan(scenario, plan)
 
-        assert [row.transaction_id for row in plan.matches] == [row.transaction_id for row in applied.applied]
-        assert [row.matched_rule_id for row in plan.matches] == [row.matched_rule_id for row in applied.applied]
-        assert [row.classification for row in plan.matches] == [row.classification for row in applied.applied]
-        assert applied.matched == len(plan.matches)
+        written = {
+            transaction.transaction_id: transaction
+            for transaction in scenario.ports.transaction_repository.load()
+            if transaction.business_classification is not BusinessClassification.NOT_YET_PROCESSED
+        }
+        assert set(written) == {row.transaction_id for row in plan.matches}
+        for row in plan.matches:
+            assert written[row.transaction_id].business_classification == row.classification
+            assert written[row.transaction_id].classified_by == f"rule:{row.matched_rule_id}"
 
 
-def test_the_plan_counters_match_the_applied_counters() -> None:
+def test_the_plan_counters_describe_the_scan() -> None:
     """A preview that under-reports the scan is how an operator misjudges scope."""
     with _stored(
         _transaction(provider_id="a", description="OFFICE SUPPLIES LTD"),
@@ -524,17 +538,12 @@ def test_the_plan_counters_match_the_applied_counters() -> None:
             ports=scenario.ports,
             rule_repository=scenario.rule_repository,
         )
-        applied = apply_classification_rules(
-            bucket_id=_BUCKET,
-            actor="operator",
-            ports=scenario.ports,
-            rule_repository=scenario.rule_repository,
-        )
 
-        assert plan.rules_evaluated == applied.rules_evaluated
-        assert plan.transactions_scanned == applied.transactions_scanned
-        assert plan.skipped_already_classified == applied.skipped_already_classified
-        assert plan.no_match == applied.no_match == 1
+        assert plan.rules_evaluated == 1
+        assert plan.transactions_scanned == 2
+        assert plan.skipped_already_classified == 0
+        assert plan.no_match == 1
+        assert len(plan.matches) == 1
 
 
 def test_the_winning_rule_carries_its_category_through_to_the_patch() -> None:
@@ -598,11 +607,13 @@ def test_an_already_classified_row_is_out_of_scope_until_reaffirmed() -> None:
             actor="operator",
             rule_repository=scenario.rule_repository,
         )
-        apply_classification_rules(
-            bucket_id=_BUCKET,
-            actor="operator",
-            ports=scenario.ports,
-            rule_repository=scenario.rule_repository,
+        _apply_plan(
+            scenario,
+            plan_classification_rules(
+                bucket_id=_BUCKET,
+                ports=scenario.ports,
+                rule_repository=scenario.rule_repository,
+            ),
         )
 
         second = plan_classification_rules(

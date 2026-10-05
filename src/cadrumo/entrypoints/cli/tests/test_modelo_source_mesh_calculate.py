@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -14,13 +15,18 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
+)
+from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
+from ....application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
 )
 from ....application.user_profile.login_session import login_profile
 from ....core.external_constants import OutputLanguage
@@ -39,85 +45,101 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
-from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m303_ordinary_cli_support import joint_return_options
-from ._modelo_work_ux_support import _capture_m115_invoice_withholding
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 __all__ = ["_isolated_cli_backend"]
 
 # Seeded rows and stored records decode against registry facts, so the test
-# body holds the same authority lease a CLI invocation holds.
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+# body holds the same authority lease a CLI invocation holds. Every command runs
+# through the registered profile's native worker, as an operator's CLI does.
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
 
 _IVA_WALLET_DECIDED_AT = datetime(2025, 4, 1, 16, 10, tzinfo=UTC)
+_PROFILE_LABEL = "operator"
+_OPERATOR_FACTS: dict[str, str] = {
+    "identity.tax_id": "12345678Z",
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.name": "Operator",
+    "identity.surnames": "Operator",
+    "activities.description": "design",
+    "taxpayer_type.irpf_income_categories": "actividad_economica",
+    "censo.activity_start_date": "2025-01-01",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+}
+# The renta facts a Modelo 100 2024 calculation reads from the profile.
+_M100_FACTS: dict[str, str] = {
+    "tax_residence.ccaa": "madrid",
+    "irpf.estimation_regime": "directa_normal",
+    "censo.activity_start_date": "2020-01-01",
+    "renta_taxpayer.birth_date": "1980-03-15",
+    "renta_taxpayer.sex": "H",
+    "renta_taxpayer.marital_status": "1",
+    "renta_taxpayer.marriage_full_year": "false",
+    "renta_taxpayer.marriage_month_start": "0",
+    "renta_taxpayer.marriage_month_end": "0",
+    "renta_filing.declaration_type": "1",
+    "renta_family.minor_children_in_unit": "false",
+    "renta_family.descendientes_count": "0",
+    "renta_family.cotizaciones_ss_madre_2024": "0",
+    "renta_family.descendants_eu_eea_deduction": "false",
+}
 
 
-def _invoke_native_profile(profile: NativeCliProfileFixture, args: Sequence[str]) -> Result:
+@contextmanager
+def _operator_profile(tmp_path: Path, extra_facts: dict[str, str] | None = None) -> Iterator[NativeCliProfileFixture]:
+    """Register the operator profile and serve it through its native worker.
+
+    ``extra_facts`` carries per-modelo attestations that readiness demands of
+    that modelo alone, so the shared profile stays minimal.
+    """
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label=_PROFILE_LABEL, facts={**_OPERATOR_FACTS, **(extra_facts or {})})
+        yield profile
+
+
+def _cli(profile: NativeCliProfileFixture, *args: str) -> Result:
+    """Run one CLI command authenticated as the operator, as a fresh process would."""
     close_active_bucket_session()
     result = invoke_cached_cli(
-        ["--profile", "operator", "--profile-secrets-stdin", *args],
+        ["--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args],
         input=json.dumps({"profile_passphrase": profile.passphrase}),
     )
     assert profile.passphrase not in result.output
     return result
 
 
-@pytest.fixture
-def _native_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
-    with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(
-            label="operator",
-            facts={
-                "identity.tax_id": "12345678Z",
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.name": "Operator",
-                "identity.surnames": "Operator",
-                "activities.description": "design",
-                "taxpayer_type.irpf_income_categories": "actividad_economica",
-                "censo.activity_start_date": "2025-01-01",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
-        )
-        yield profile
+@contextmanager
+def _opened_profile(profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation) -> Iterator[str]:
+    """Open the registered profile's encrypted bucket for direct seeding or assertions."""
+    close_active_bucket_session()
+    login = login_profile(
+        name=_PROFILE_LABEL,
+        passphrase_callback=lambda: profile.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    try:
+        yield login.bucket_id
+    finally:
+        close_active_bucket_session()
 
 
-def _create_profile(**extra_facts: str) -> None:
-    """Register the profile through the shared CLI registration door.
-
-    ``extra_facts`` carries per-modelo attestations that readiness demands of
-    that modelo alone, so the shared profile stays minimal.
-    """
-    facts = {
-        "identity.tax_id": "12345678Z",
-        "taxpayer_type.entity_type": "natural_person",
-        "identity.name": "Operator",
-        "identity.surnames": "Operator",
-        "activities.description": "design",
-        "taxpayer_type.irpf_income_categories": "actividad_economica",
-        "censo.activity_start_date": "2025-01-01",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-    }
-    facts.update(extra_facts)
-    register_cli_profile(label="operator", facts=facts, log_in=False)
-
-
-def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
+def _create_work_unit(profile: NativeCliProfileFixture, *, modelo: str, year: int, period: str) -> dict[str, str]:
     """Create a work unit and let the registry authority pick the revision.
 
     No ``--revision`` is injected. AEAT binds each ``(modelo, filing_year,
@@ -128,21 +150,20 @@ def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
     M303 to an obsolete revision for 2026, which began refusing outright
     once the 2026 revision shipped and capped that window at 2025-12-31.
     """
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            modelo,
-            "--year",
-            str(year),
-            "--period",
-            period,
-        ],
+    result = _cli(
+        profile,
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        modelo,
+        "--year",
+        str(year),
+        "--period",
+        period,
     )
     assert result.exit_code == 0, result.output
     payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(result.output))
@@ -151,20 +172,92 @@ def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
     return {"work_unit_id": work_unit_id}
 
 
-def _create_303_work_unit() -> dict[str, str]:
-    return _create_work_unit(modelo="303", year=2025, period="1T")
+def _create_303_work_unit(profile: NativeCliProfileFixture) -> dict[str, str]:
+    return _create_work_unit(profile, modelo="303", year=2025, period="1T")
 
 
-def _create_115_work_unit(*, year: int = 2026, period: str = "1T") -> dict[str, str]:
-    return _create_work_unit(modelo="115", year=year, period=period)
+def _create_115_work_unit(profile: NativeCliProfileFixture, *, year: int = 2026, period: str = "1T") -> dict[str, str]:
+    return _create_work_unit(profile, modelo="115", year=year, period=period)
 
 
-def _create_111_work_unit() -> dict[str, str]:
-    return _create_work_unit(modelo="111", year=2025, period="2T")
+def _create_111_work_unit(profile: NativeCliProfileFixture) -> dict[str, str]:
+    return _create_work_unit(profile, modelo="111", year=2025, period="2T")
 
 
-def _create_180_work_unit() -> dict[str, str]:
-    return _create_work_unit(modelo="180", year=2026, period="0A")
+def _create_180_work_unit(profile: NativeCliProfileFixture) -> dict[str, str]:
+    return _create_work_unit(profile, modelo="180", year=2026, period="0A")
+
+
+def _capture_m115_invoice_withholding(profile: NativeCliProfileFixture) -> None:
+    """Capture one received urban-rent invoice's retención as Modelo 115 2025 1T evidence.
+
+    ``ledger invoice add`` mints a received rent invoice (2700.00 base, 19%
+    retención = 513.00), then ``modelo aggregate --received-invoice-retencion``
+    records its single paid allocation with the property detail Modelo 180
+    requires. The settlement is the invoice grand total (2700.00 + 21% IVA =
+    3267.00) less the retención: 2754.00.
+    """
+    paid_on = date(2025, 3, 15)
+    created = _cli(
+        profile,
+        "--format", "json",
+        "app", "ledger", "invoice", "add",
+        "--kind", "received",
+        "--counterparty-name", "Arrendador Ejemplo SL",
+        "--counterparty-nif", "B12345674",
+        "--invoice-number", "M115-RENT-2025-001",
+        "--invoice-date", paid_on.isoformat(),
+        "--country-code", "ES",
+        "--taxable-base", "2700.00", "--iva-rate", "21",
+        "--retention-rate", "0.19", "--retention-amount", "513.00",
+        "--iva-category", "domestic_general",
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    invoice_id = _payload(created.output)["invoice_id"]
+    assert isinstance(invoice_id, str) and invoice_id, created.output
+
+    request = InvoiceWithholdingEvidenceRequest(
+        invoice_id=invoice_id,
+        income_kind=WithholdingIncomeKind.URBAN_RENT,
+        scheme="arrendamiento_urbano",
+        recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+        recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_occurred_on=paid_on,
+        allocation_id="m115-rent-allocation-1",
+        allocated_base=Decimal("2700.00"),
+        allocated_withholding=Decimal("513.00"),
+        allocated_settlement=Decimal("2754.00"),
+        idempotency_key="m115-rent-allocation-1",
+        modelo_180_property=Modelo180PropertyEvidence(
+            property_key="m115-rent-property",
+            situation="1",
+            cadastral_reference="1234567VK4713C0001XY",
+            address=Modelo180StructuredAddress(
+                province_code="28",
+                municipality_code="079",
+                municipality="Madrid",
+                locality="Madrid",
+                postal_code="28001",
+                street_type="CL",
+                street_name="Ejemplo",
+                number_type="NUM",
+                house_number="1",
+            ),
+            recipient_province_code="28",
+            modality="1",
+            accrual_year=2025,
+            withholding_percentage=Decimal("19.00"),
+        ),
+    )
+    captured = _cli(
+        profile,
+        "--format", "json",
+        "app", "modelo", "aggregate",
+        "--modelo", "115", "--year", "2025", "--period", "1T",
+        "--received-invoice-retencion", request.model_dump_json(),
+    )  # fmt: skip
+    assert captured.exit_code == 0, captured.output
 
 
 def _raw_transaction(
@@ -320,50 +413,6 @@ def _m100_activity_expense_transaction(
     )
 
 
-def _seed_m100_profile_facts(bucket_id: str) -> None:
-    from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-        load_test_profile_record,
-        replace_test_profile_record,
-    )
-
-    record = load_test_profile_record(bucket_id)
-    additions = (
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-        UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-        UserProfileFact(path="renta_taxpayer.sex", value="H"),
-        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-        UserProfileFact(path="renta_filing.declaration_type", value="1"),
-        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-        UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-        UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-    )
-    facts_by_path = {fact.path: fact for fact in record.facts}
-    facts_by_path.update({fact.path: fact for fact in additions})
-    replace_test_profile_record(
-        record.model_copy(
-            update={
-                "facts": tuple(facts_by_path[path] for path in sorted(facts_by_path)),
-                "updated_at": record.created_at,
-            },
-        ),
-    )
-
-
 def _seed_prior_m100_zero_carry() -> None:
     from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
@@ -394,15 +443,15 @@ def _seed_prior_m100_zero_carry() -> None:
     )
 
 
-def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() -> None:
+def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation(tmp_path: Path) -> None:
     """M115 CLI calculation consumes persisted URBAN_RENTAL retención evidence."""
 
-    _create_profile()
-    work_unit = _create_115_work_unit(year=2025)
-    _capture_m115_invoice_withholding()
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_115_work_unit(profile, year=2025)
+        _capture_m115_invoice_withholding(profile)
 
-    calculated = invoke_cached_cli(
-        [
+        calculated = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -412,8 +461,7 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
             str(work_unit["work_unit_id"]),
             "--casilla",
             "04=0",
-        ],
-    )
+        )
     assert calculated.exit_code == 0, calculated.output
     casilla_values = _payload(calculated.output)["casilla_values"]
     assert Decimal(casilla_values["01"]) == Decimal("1")
@@ -422,34 +470,10 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
     assert Decimal(casilla_values["05"]) == Decimal("513.00")
 
 
-def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> None:
+def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """An operator's public CLI M100 path carries ledger income through 0171/0180/0224."""
-    from ....core.bucket_pointer import resolve_active_bucket_id
-
-    _create_profile()
-    work_unit = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "100",
-            "--year",
-            "2024",
-            "--period",
-            "0A",
-            "--revision",
-            "2024",
-        ],
-    )
-    assert work_unit.exit_code == 0, work_unit.output
-    work_unit_payload = _payload(work_unit.output)
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None, "profile create must install an active-profile pointer"
-
     expense_rows = (
         _m100_activity_expense_transaction(
             "m100-expense-office",
@@ -476,20 +500,39 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> Non
             taxable_base=Decimal("900.00"),
         ),
     )
-    with open_test_profile_session(bucket_id):
-        _seed_m100_profile_facts(bucket_id)
-        _seed_prior_m100_zero_carry()
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((_m100_activity_income_transaction(), *expense_rows)),
+    with _operator_profile(tmp_path, _M100_FACTS) as profile:
+        work_unit = _cli(
+            profile,
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+            "--revision",
+            "2024",
         )
-        InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
-        save_usage_ratios(
-            UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("1")}),
-            bucket_id=bucket_id,
-        )
+        assert work_unit.exit_code == 0, work_unit.output
+        work_unit_payload = _payload(work_unit.output)
+        with _opened_profile(profile, authority_operation) as bucket_id:
+            _seed_prior_m100_zero_carry()
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(
+                TransactionCatalogue.from_transactions((_m100_activity_income_transaction(), *expense_rows)),
+            )
+            InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
+            save_usage_ratios(
+                UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("1")}),
+                bucket_id=bucket_id,
+            )
 
-    calculated = invoke_cached_cli(
-        [
+        calculated = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -499,8 +542,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> Non
             str(work_unit_payload["work_unit_id"]),
             "--binding",
             "renta-modelo-100-estimacion-directa-es-normal=1",
-        ],
-    )
+        )
     assert calculated.exit_code == 0, calculated.output
     casilla_values = _payload(calculated.output)["casilla_values"]
 
@@ -511,18 +553,18 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> Non
     assert Decimal(casilla_values["0224"]) == Decimal("9600.00")
 
 
-def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path() -> None:
+def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path(tmp_path: Path) -> None:
     """A no-observation M111 quarter is not filed blank; the CLI names the attestation path."""
 
     # Modelo 111 readiness demands an explicit colegio-concertado attestation
     # (preflight.py:280), and the export producer refuses without it
     # (_producer_snapshot.py:1548). Declare it so the run reaches the
     # no-retenciones attestation path this test is about.
-    _create_profile(**{"withholding.colegio_concertado": "false"})
-    _create_111_work_unit()
+    with _operator_profile(tmp_path, {"withholding.colegio_concertado": "false"}) as profile:
+        _create_111_work_unit(profile)
 
-    calculated = invoke_cached_cli(
-        [
+        calculated = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -537,8 +579,18 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
             "2T",
             "--by",
             "Javier",
-        ],
-    )
+        )
+        attested = _cli(
+            profile,
+            "config",
+            "profile",
+            "edit",
+            _PROFILE_LABEL,
+            "--quiet",
+            "--modelo-111-no-retenciones-periods",
+            "2025:2T,2025:3T,2025:4T",
+        )
+        shown = _cli(profile, "config", "profile", "view", _PROFILE_LABEL)
 
     assert calculated.exit_code != 0, calculated.output
     envelope = json.loads(calculated.output)
@@ -556,19 +608,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
     assert "all-blank Modelo 111" in message
     assert "--modelo-111-no-retenciones-periods 2025:2T" in message
 
-    attested = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "edit",
-            "operator",
-            "--quiet",
-            "--modelo-111-no-retenciones-periods",
-            "2025:2T,2025:3T,2025:4T",
-        ],
-    )
     assert attested.exit_code == 0, attested.output
-    shown = invoke_cached_cli(("config", "profile", "view", "operator"))
     assert shown.exit_code == 0, shown.output
     assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
 
@@ -577,12 +617,12 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
     tmp_path: Path,
 ) -> None:
     """Public Q3/Q4 profile evidence materialises local M115 zero history."""
-    _create_profile()
-    q3_work_unit = _create_115_work_unit(year=2025, period="3T")
-    q4_work_unit = _create_115_work_unit(year=2025, period="4T")
+    with _operator_profile(tmp_path) as profile:
+        q3_work_unit = _create_115_work_unit(profile, year=2025, period="3T")
+        q4_work_unit = _create_115_work_unit(profile, year=2025, period="4T")
 
-    refused = invoke_cached_cli(
-        [
+        refused = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -590,30 +630,28 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
             "work",
             "calculate",
             str(q3_work_unit["work_unit_id"]),
-        ],
-    )
-    assert refused.exit_code != 0, refused.output
-    assert json.loads(refused.output)["error"]["context"]["period"] == "3T"
+        )
+        assert refused.exit_code != 0, refused.output
+        assert json.loads(refused.output)["error"]["context"]["period"] == "3T"
 
-    attested = invoke_cached_cli(
-        [
+        attested = _cli(
+            profile,
             "config",
             "profile",
             "edit",
-            "operator",
+            _PROFILE_LABEL,
             "--quiet",
             "--modelo-115-no-relevant-payment-periods",
             "2025:3T,2025:4T",
-        ],
-    )
-    assert attested.exit_code == 0, attested.output
-    shown = invoke_cached_cli(("config", "profile", "view", "operator"))
-    assert shown.exit_code == 0, shown.output
-    assert "withholding.modelo_115_no_relevant_payment_periods\t2025:3T,2025:4T" in shown.output
+        )
+        assert attested.exit_code == 0, attested.output
+        shown = _cli(profile, "config", "profile", "view", _PROFILE_LABEL)
+        assert shown.exit_code == 0, shown.output
+        assert "withholding.modelo_115_no_relevant_payment_periods\t2025:3T,2025:4T" in shown.output
 
-    for period, work_unit in (("3T", q3_work_unit), ("4T", q4_work_unit)):
-        calculated = invoke_cached_cli(
-            [
+        for period, work_unit in (("3T", q3_work_unit), ("4T", q4_work_unit)):
+            calculated = _cli(
+                profile,
                 "--format",
                 "json",
                 "app",
@@ -621,28 +659,25 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
                 "work",
                 "calculate",
                 str(work_unit["work_unit_id"]),
-            ],
-        )
-        assert calculated.exit_code == 0, calculated.output
-        payload = _payload(calculated.output)
-        assert Decimal(payload["casilla_values"]["01"]) == Decimal("0")
-        assert Decimal(payload["casilla_values"]["02"]) == Decimal("0")
-        assert Decimal(payload["casilla_values"]["03"]) == Decimal("0")
-        assert Decimal(payload["casilla_values"]["05"]) == Decimal("0")
-        assert any(
-            "explicit no-relevant-payment attestation" in notice["message"]
-            for notice in unwrap_envelope_notices(calculated.output)
-            if notice["code"] == "modelo.work.calculate.source_advisory"
-        )
-        calculation_revision_id = payload["calculation_revision_id"]
-        assert isinstance(calculation_revision_id, str)
-        verified = invoke_cached_cli(
-            ["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id],
-        )
-        assert verified.exit_code == 0, verified.output
-        output = tmp_path / f"modelo-115-2025-{period}.boe"
-        exported = invoke_cached_cli(
-            [
+            )
+            assert calculated.exit_code == 0, calculated.output
+            payload = _payload(calculated.output)
+            assert Decimal(payload["casilla_values"]["01"]) == Decimal("0")
+            assert Decimal(payload["casilla_values"]["02"]) == Decimal("0")
+            assert Decimal(payload["casilla_values"]["03"]) == Decimal("0")
+            assert Decimal(payload["casilla_values"]["05"]) == Decimal("0")
+            assert any(
+                "explicit no-relevant-payment attestation" in notice.get("context", {}).get("detail", "")
+                for notice in unwrap_envelope_notices(calculated.output)
+                if notice["code"] == "modelo.work.calculate.source_advisory"
+            )
+            calculation_revision_id = payload["calculation_revision_id"]
+            assert isinstance(calculation_revision_id, str)
+            verified = _cli(profile, "--format", "json", "app", "modelo", "work", "verify", calculation_revision_id)
+            assert verified.exit_code == 0, verified.output
+            output = tmp_path / f"modelo-115-2025-{period}.boe"
+            exported = _cli(
+                profile,
                 "--format",
                 "json",
                 "app",
@@ -652,31 +687,28 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
                 calculation_revision_id,
                 "--output",
                 str(output),
-            ],
-        )
-        assert exported.exit_code == 0, exported.output
-        export_payload = _payload(exported.output)
-        assert export_payload["calculation_revision_id"] == calculation_revision_id
-        assert export_payload["modelo"] == "115"
-        assert output.exists()
-        assert output.stat().st_size > 0
+            )
+            assert exported.exit_code == 0, exported.output
+            export_payload = _payload(exported.output)
+            assert export_payload["calculation_revision_id"] == calculation_revision_id
+            assert export_payload["modelo"] == "115"
+            assert output.exists()
+            assert output.stat().st_size > 0
 
 
-def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
+def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """A classified rent ledger row alone must hard-stop instead of producing zeros."""
-    from ....core.bucket_pointer import resolve_active_bucket_id
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_115_work_unit(profile)
+        with _opened_profile(profile, authority_operation) as bucket_id:
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(
+                TransactionCatalogue.from_transactions((_classified_rent_transaction(),)),
+            )
 
-    _create_profile()
-    work_unit = _create_115_work_unit()
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
-    with open_test_profile_session(bucket_id):
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((_classified_rent_transaction(),)),
-        )
-
-    calculated = invoke_cached_cli(
-        [
+        calculated = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -686,8 +718,7 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
             str(work_unit["work_unit_id"]),
             "--casilla",
             "04=0",
-        ],
-    )
+        )
 
     assert calculated.exit_code != 0, calculated.output
     envelope = json.loads(calculated.output)
@@ -707,7 +738,7 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert "115" in envelope["error"]["message"]
 
 
-def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_its_value() -> None:
+def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_its_value(tmp_path: Path) -> None:
     """A casilla the perceptor record fills once per row is refused for being a row field.
 
     The value is a NIF, not a decimal, so the refusal must come from the
@@ -715,11 +746,11 @@ def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_
     the record whose detail rows carry it.
     """
 
-    _create_profile()
-    work_unit = _create_180_work_unit()
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_180_work_unit(profile)
 
-    calculated = invoke_cached_cli(
-        [
+        calculated = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -729,8 +760,7 @@ def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_
             str(work_unit["work_unit_id"]),
             "--casilla",
             "perc.nif=B12345678",
-        ],
-    )
+        )
 
     assert calculated.exit_code != 0, calculated.output
     envelope = json.loads(calculated.output)
@@ -746,238 +776,55 @@ def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_
     assert "aeat" not in envelope["error"]["message"]
 
 
-@pytest.mark.windows_only
-@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_work_calculate_persists_ledger_source_mesh_observations(
     capsys: pytest.CaptureFixture[str],
     operation: PinnedAuthorityOperation,
-    _native_profile: NativeCliProfileFixture,
+    tmp_path: Path,
 ) -> None:
-    from ....core.bucket_pointer import resolve_active_bucket_id
+    with _operator_profile(tmp_path) as native_profile:
+        work_unit = _create_303_work_unit(native_profile)
+        sale = _transaction(
+            "sale-general",
+            direction=TransactionDirection.INCOMING,
+            amount=Decimal("121.00"),
+            taxable_base=Decimal("100.00"),
+            iva_amount=Decimal("21.00"),
+        )
+        purchase = _transaction(
+            "purchase-general",
+            direction=TransactionDirection.OUTGOING,
+            amount=Decimal("60.50"),
+            taxable_base=Decimal("50.00"),
+            iva_amount=Decimal("10.50"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
+            deduction_locator="invoice:purchase-general-2025-1T",
+        )
 
-    work_unit = _create_303_work_unit()
-    # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
-    # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
-    # segment on Windows (``<`` / ``>`` are reserved). Resolve the real
-    # bucket id from the active-profile pointer the freshly-created
-    # profile installed.
-    resolved = resolve_active_bucket_id()
-    assert resolved is not None, "profile create must install an active-profile pointer"
-    bucket_id = resolved
-    sale = _transaction(
-        "sale-general",
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("121.00"),
-        taxable_base=Decimal("100.00"),
-        iva_amount=Decimal("21.00"),
-    )
-    purchase = _transaction(
-        "purchase-general",
-        direction=TransactionDirection.OUTGOING,
-        amount=Decimal("60.50"),
-        taxable_base=Decimal("50.00"),
-        iva_amount=Decimal("10.50"),
-        deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-        deduction_locator="invoice:purchase-general-2025-1T",
-    )
+        # Seed ledger data and a zero-amount IVA wallet decision after password
+        # authentication has opened the registered profile's actual encrypted
+        # bucket.  The test-only synthetic DEK helper cannot reopen a retired
+        # registered-profile session.
+        # The IVA wallet decision is required by the Modelo 303 reconciliation
+        # guard: it blocks calculation when ``compensacion-pendiente-anteriores``
+        # is supplied without a persisted decision, even when the amount is zero.
+        # A local_recurrence decision with selected_amount=0 satisfies the guard
+        # while leaving the ledger mesh assertions meaningful.
+        # The CLI JSON output redacts ``bucket_id``, so seeding takes it from the
+        # password login that opens the registered profile's encrypted bucket.
+        bucket_id = login_profile(
+            name=_PROFILE_LABEL,
+            passphrase_callback=lambda: native_profile.passphrase,
+            profile_decode_context=operation.profile_decode_context(),
+        ).bucket_id
+        from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+        from ....domain.iva_compensation.reconciliation import (
+            IvaCompensationAuthoritySource,
+            IvaCompensationReconciliationDecision,
+        )
 
-    # Seed ledger data and a zero-amount IVA wallet decision after password
-    # authentication has opened the registered profile's actual encrypted
-    # bucket.  The test-only synthetic DEK helper cannot reopen a retired
-    # registered-profile session.
-    # The IVA wallet decision is required by the Modelo 303 reconciliation
-    # guard: it blocks calculation when ``compensacion-pendiente-anteriores``
-    # is supplied without a persisted decision, even when the amount is zero.
-    # A local_recurrence decision with selected_amount=0 satisfies the guard
-    # while leaving the ledger mesh assertions meaningful.
-    login_profile(
-        name="operator",
-        passphrase_callback=lambda: _native_profile.passphrase,
-        profile_decode_context=operation.profile_decode_context(),
-    )
-    from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-    from ....domain.iva_compensation.reconciliation import (
-        IvaCompensationAuthoritySource,
-        IvaCompensationReconciliationDecision,
-    )
-
-    TransactionCatalogueRepository(bucket_id=bucket_id).save(
-        TransactionCatalogue.from_transactions((sale, purchase)),
-    )
-    decision = IvaCompensationReconciliationDecision(
-        taxpayer_nif="12345678Z",
-        target_year=2025,
-        target_period=Period.from_year_and_code(2025, "1T"),
-        target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
-        source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
-        selected_authority="local_recurrence",
-        selected_amount=Decimal("0"),
-        wallet_amount=None,
-        local_recurrence_amount=Decimal("0"),
-        authority_sources=(
-            IvaCompensationAuthoritySource(
-                source_kind="local_recurrence",
-                amount=Decimal("0"),
-                source_locator="test:local-recurrence:2025:1T",
-                source_modelo="303",
-                source_filing_year=2025,
-                source_periods=(Period.from_year_and_code(2025, "1T"),),
-                registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
-            ),
-        ),
-        override_amount=None,
-        divergence="wallet_missing",
-        blocked=False,
-        stale_wallet=False,
-        reason_identity="first_period_zero_aeat_wallet",
-        decided_at=_IVA_WALLET_DECIDED_AT,
-    )
-    IvaWalletDecisionRepository().save_decision(decision)
-
-    result = _invoke_native_profile(
-        _native_profile,
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "calculate",
-            str(work_unit["work_unit_id"]),
-            *joint_return_options(),
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
-    revision_id = payload["calculation_revision_id"]
-
-    login_profile(
-        name="operator",
-        passphrase_callback=lambda: _native_profile.passphrase,
-        profile_decode_context=operation.profile_decode_context(),
-    )
-    persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
-
-    payload_provenance = payload["source_provenance"]
-    assert payload_provenance, "calculate JSON must carry the persisted source-mesh trace"
-    assert {row["source_ref"] for row in payload_provenance} == {
-        source.source_ref for source in persisted.source_provenance
-    }
-    assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
-    assert Decimal(persisted.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == sale.iva_amount
-    assert Decimal(persisted.binding_overrides["modelo-303-iva-soportado-interiores-cuota"]) == purchase.iva_amount
-    observations = {observation.casilla_id: observation for observation in persisted.observations}
-    output_observation = observations["iva.repercutido.general"]
-    input_observation = observations["iva.soportado.interiores"]
-    assert output_observation.formula_id is None
-    assert input_observation.formula_id is None
-    assert output_observation.legal_refs
-    assert input_observation.legal_refs
-    assert output_observation.source_refs
-    assert input_observation.source_refs
-    payload_observations = {observation["casilla_id"]: observation for observation in payload["observations"]}
-    assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
-    assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
-
-    observations_result = _invoke_native_profile(
-        _native_profile,
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "observations",
-            revision_id,
-        ],
-    )
-    assert observations_result.exit_code == 0, observations_result.output
-    observations_payload = _payload(observations_result.output)
-    assert observations_payload["operation"] == "modelo.work.observations"
-    assert observations_payload["calculation_revision_id"] == revision_id
-    assert observations_payload["work_unit_id"] == work_unit["work_unit_id"]
-    assert observations_payload["observation_count"] == len(payload["observations"])
-    command_observations = {
-        observation["casilla_id"]: observation for observation in observations_payload["observations"]
-    }
-    assert command_observations["iva.repercutido.general"]["legal_refs"] == list(output_observation.legal_refs)
-    assert command_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
-    assert command_observations["iva.soportado.interiores"]["legal_refs"] == list(input_observation.legal_refs)
-    assert command_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
-
-    text_observations = _invoke_native_profile(
-        _native_profile,
-        [
-            "app",
-            "modelo",
-            "work",
-            "observations",
-            revision_id,
-        ],
-    )
-    assert text_observations.exit_code == 0, text_observations.output
-    assert "operation\tmodelo.work.observations" in text_observations.output
-    assert f"calculation_revision_id\t{revision_id}" in text_observations.output
-    assert "iva.repercutido.general" in text_observations.output
-    assert output_observation.legal_refs[0] in text_observations.output
-    assert output_observation.source_refs[0] in text_observations.output
-
-    # The wizard's success emitter receives the same persisted calculation
-    # result as calculate. Exercise its real JSON envelope with this
-    # source-mesh-backed revision, rather than a hand-built payload, so a
-    # future mapper exclusion cannot make its provenance disappear.
-    import typer
-    import typer.main
-
-    from ....application.modelo.calculate_input import ModeloWorkCalculationServiceResult
-    from ....application.modelo.operation_definitions import calculation_public_result
-    from .._modelo_behavior_support import resolve_work_unit_for_cli
-    from .._modelo_work_wizard_cli import _emit_wizard_result
-
-    wizard_app = typer.Typer()
-
-    @wizard_app.command()
-    def _noop() -> None: ...
-
-    wizard_context = typer.Context(typer.main.get_command(wizard_app), obj={"format": "json"})
-    login_profile(
-        name="operator",
-        passphrase_callback=lambda: _native_profile.passphrase,
-        profile_decode_context=operation.profile_decode_context(),
-    )
-    wizard_work_unit = resolve_work_unit_for_cli(work_unit_id=work_unit["work_unit_id"])
-    _emit_wizard_result(
-        wizard_context,
-        calculation_public_result(
-            ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit, revision_published=True),
-            operation=operation,
-        ),
-        (),
-        language=OutputLanguage.EN,
-    )
-    wizard_payload = _payload(capsys.readouterr().out)
-    assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
-    assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {
-        source.source_ref for source in persisted.source_provenance
-    }
-
-
-def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
-    """Persist a zero-amount local-recurrence IVA wallet decision for bucket.
-
-    The Modelo 303 reconciliation guard blocks calculation when
-    ``compensacion-pendiente-anteriores`` is supplied without a persisted
-    decision, even when the amount is zero. A ``local_recurrence`` decision
-    with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
-    advisory assertions meaningful.
-    """
-    from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-    from ....domain.iva_compensation.reconciliation import (
-        IvaCompensationAuthoritySource,
-        IvaCompensationReconciliationDecision,
-    )
-
-    with open_test_profile_session(bucket_id):
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((sale, purchase)),
+        )
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2025,
@@ -1008,8 +855,179 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
         )
         IvaWalletDecisionRepository().save_decision(decision)
 
+        result = _cli(
+            native_profile,
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            *joint_return_options(),
+        )
+        assert result.exit_code == 0, result.output
+        payload = _payload(result.output)
+        revision_id = payload["calculation_revision_id"]
 
-def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply() -> None:
+        login_profile(
+            name=_PROFILE_LABEL,
+            passphrase_callback=lambda: native_profile.passphrase,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
+
+        payload_provenance = payload["source_provenance"]
+        assert payload_provenance, "calculate JSON must carry the persisted source-mesh trace"
+        assert {row["source_ref"] for row in payload_provenance} == {
+            source.source_ref for source in persisted.source_provenance
+        }
+        assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
+        assert Decimal(persisted.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == sale.iva_amount
+        assert Decimal(persisted.binding_overrides["modelo-303-iva-soportado-interiores-cuota"]) == purchase.iva_amount
+        observations = {observation.casilla_id: observation for observation in persisted.observations}
+        output_observation = observations["iva.repercutido.general"]
+        input_observation = observations["iva.soportado.interiores"]
+        assert output_observation.formula_id is None
+        assert input_observation.formula_id is None
+        assert output_observation.legal_refs
+        assert input_observation.legal_refs
+        assert output_observation.source_refs
+        assert input_observation.source_refs
+        payload_observations = {observation["casilla_id"]: observation for observation in payload["observations"]}
+        assert payload_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
+        assert payload_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+
+        observations_result = _cli(
+            native_profile,
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "observations",
+            revision_id,
+        )
+        assert observations_result.exit_code == 0, observations_result.output
+        observations_payload = _payload(observations_result.output)
+        assert observations_payload["operation"] == "modelo.work.observations"
+        assert observations_payload["calculation_revision_id"] == revision_id
+        assert observations_payload["work_unit_id"] == work_unit["work_unit_id"]
+        assert observations_payload["observation_count"] == len(payload["observations"])
+        command_observations = {
+            observation["casilla_id"]: observation for observation in observations_payload["observations"]
+        }
+        assert command_observations["iva.repercutido.general"]["legal_refs"] == list(output_observation.legal_refs)
+        assert command_observations["iva.repercutido.general"]["source_refs"] == list(output_observation.source_refs)
+        assert command_observations["iva.soportado.interiores"]["legal_refs"] == list(input_observation.legal_refs)
+        assert command_observations["iva.soportado.interiores"]["source_refs"] == list(input_observation.source_refs)
+
+        text_observations = _cli(
+            native_profile,
+            "app",
+            "modelo",
+            "work",
+            "observations",
+            revision_id,
+        )
+        assert text_observations.exit_code == 0, text_observations.output
+        assert "operation\tmodelo.work.observations" in text_observations.output
+        assert f"calculation_revision_id\t{revision_id}" in text_observations.output
+        assert "iva.repercutido.general" in text_observations.output
+        assert output_observation.legal_refs[0] in text_observations.output
+        assert output_observation.source_refs[0] in text_observations.output
+
+        # The wizard's success emitter receives the same persisted calculation
+        # result as calculate. Exercise its real JSON envelope with this
+        # source-mesh-backed revision, rather than a hand-built payload, so a
+        # future mapper exclusion cannot make its provenance disappear.
+        import typer
+        import typer.main
+
+        from ....application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+        from ....application.modelo.operation_definitions import calculation_public_result
+        from .._modelo_work_wizard_cli import _emit_wizard_result
+        from ._modelo_work_ux_support import load_work_unit_by_id
+
+        wizard_app = typer.Typer()
+
+        @wizard_app.command()
+        def _noop() -> None: ...
+
+        wizard_context = typer.Context(typer.main.get_command(wizard_app), obj={"format": "json"})
+        login_profile(
+            name=_PROFILE_LABEL,
+            passphrase_callback=lambda: native_profile.passphrase,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        wizard_work_unit = load_work_unit_by_id(work_unit_id=work_unit["work_unit_id"])
+        _emit_wizard_result(
+            wizard_context,
+            calculation_public_result(
+                ModeloWorkCalculationServiceResult(
+                    revision=persisted, work_unit=wizard_work_unit, revision_published=True
+                ),
+                operation=operation,
+            ),
+            (),
+            language=OutputLanguage.EN,
+        )
+        wizard_payload = _payload(capsys.readouterr().out)
+        assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
+        assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {
+            source.source_ref for source in persisted.source_provenance
+        }
+
+
+def _seed_zero_iva_wallet_decision() -> None:
+    """Persist a zero-amount local-recurrence IVA wallet decision in the opened profile.
+
+    The Modelo 303 reconciliation guard blocks calculation when
+    ``compensacion-pendiente-anteriores`` is supplied without a persisted
+    decision, even when the amount is zero. A ``local_recurrence`` decision
+    with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
+    advisory assertions meaningful.
+    """
+    from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+    from ....domain.iva_compensation.reconciliation import (
+        IvaCompensationAuthoritySource,
+        IvaCompensationReconciliationDecision,
+    )
+
+    decision = IvaCompensationReconciliationDecision(
+        taxpayer_nif="12345678Z",
+        target_year=2025,
+        target_period=Period.from_year_and_code(2025, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+        source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+        selected_authority="local_recurrence",
+        selected_amount=Decimal("0"),
+        wallet_amount=None,
+        local_recurrence_amount=Decimal("0"),
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("0"),
+                source_locator="test:local-recurrence:2025:1T",
+                source_modelo="303",
+                source_filing_year=2025,
+                source_periods=(Period.from_year_and_code(2025, "1T"),),
+                registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
+            ),
+        ),
+        override_amount=None,
+        divergence="wallet_missing",
+        blocked=False,
+        stale_wallet=False,
+        reason_identity="first_period_zero_aeat_wallet",
+        decided_at=_IVA_WALLET_DECIDED_AT,
+    )
+    IvaWalletDecisionRepository().save_decision(decision)
+
+
+def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """An INTRA_COMMUNITY_SUPPLY observation is cuota-less, so it raises NO advisory.
 
     Per the ``aeat-ledger-contract`` rule, an
@@ -1021,14 +1039,6 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     that suppression on the operator-facing calculate surface across both the
     JSON ``notices`` channel and the human text output.
     """
-    from ....core.bucket_pointer import resolve_active_bucket_id
-
-    _create_profile()
-    work_unit = _create_303_work_unit()
-    resolved = resolve_active_bucket_id()
-    assert resolved is not None, "profile create must install an active-profile pointer"
-    bucket_id = resolved
-
     # A consumed domestic sale (matches the repercutido-general binding) ...
     domestic_sale = _transaction(
         "sale-general",
@@ -1060,14 +1070,16 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         # only the establishment is what this fixture used to do.
         counterparty_identification_state=EUMemberState.from_registry("de"),
     )
-    with open_test_profile_session(bucket_id):
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((domestic_sale, cuota_less_supply)),
-        )
-    _seed_zero_iva_wallet_decision(bucket_id)
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_303_work_unit(profile)
+        with _opened_profile(profile, authority_operation) as bucket_id:
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(
+                TransactionCatalogue.from_transactions((domestic_sale, cuota_less_supply)),
+            )
+            _seed_zero_iva_wallet_decision()
 
-    result = invoke_cached_cli(
-        [
+        result = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -1076,8 +1088,22 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "calculate",
             str(work_unit["work_unit_id"]),
             *joint_return_options(),
-        ],
-    )
+        )
+        # Text mode likewise emits no source ADVISORY line for the cuota-less supply.
+        # Re-run in text mode against the same seeded bucket; the calculate verb is
+        # idempotent over the ledger substrate (it persists a new draft revision but
+        # the cuota-less supply stays advisory-free on both transports).
+        text_result = _cli(
+            profile,
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            *joint_return_options(),
+        )
     assert result.exit_code == 0, result.output
 
     notices = unwrap_envelope_notices(result.output)
@@ -1086,22 +1112,6 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         f"INTRA_COMMUNITY_SUPPLY is cuota-less and must not raise a source advisory; got {source_advisories}"
     )
 
-    # Text mode likewise emits no source ADVISORY line for the cuota-less supply.
-    # Re-run in text mode against the same seeded bucket; the calculate verb is
-    # idempotent over the ledger substrate (it persists a new draft revision but
-    # the cuota-less supply stays advisory-free on both transports).
-    text_result = invoke_cached_cli(
-        [
-            "--language",
-            "en",
-            "app",
-            "modelo",
-            "work",
-            "calculate",
-            str(work_unit["work_unit_id"]),
-            *joint_return_options(),
-        ],
-    )
     assert text_result.exit_code == 0, text_result.output
     # Pinned to English because "ADVISORY:" is the ENGLISH prefix. The ambient
     # test locale is Spanish, which renders the same notice as "AVISO:", so
@@ -1110,7 +1120,9 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     assert "ADVISORY:" not in text_result.output
 
 
-def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
+def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """#64 converse: an all-consumed IVA observation set surfaces ZERO advisories.
 
     Anti-tautology guard for the advisory test above: only observations no
@@ -1118,14 +1130,6 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     repercutido-general binding must leave ``source_advisories`` empty and emit
     no ADVISORY line.
     """
-    from ....core.bucket_pointer import resolve_active_bucket_id
-
-    _create_profile()
-    work_unit = _create_303_work_unit()
-    resolved = resolve_active_bucket_id()
-    assert resolved is not None, "profile create must install an active-profile pointer"
-    bucket_id = resolved
-
     domestic_sale = _transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
@@ -1133,14 +1137,16 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )
-    with open_test_profile_session(bucket_id):
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((domestic_sale,)),
-        )
-    _seed_zero_iva_wallet_decision(bucket_id)
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_303_work_unit(profile)
+        with _opened_profile(profile, authority_operation) as bucket_id:
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(
+                TransactionCatalogue.from_transactions((domestic_sale,)),
+            )
+            _seed_zero_iva_wallet_decision()
 
-    result = invoke_cached_cli(
-        [
+        result = _cli(
+            profile,
             "--format",
             "json",
             "app",
@@ -1149,17 +1155,11 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "calculate",
             str(work_unit["work_unit_id"]),
             *joint_return_options(),
-        ],
-    )
-    assert result.exit_code == 0, result.output
-
-    notices = unwrap_envelope_notices(result.output)
-    assert [n for n in notices if n["code"] == "modelo.work.calculate.source_advisory"] == []
-
-    # Text mode emits no ADVISORY line either: only an unrouted declarable
-    # observation produces one, and every observation here was consumed.
-    text_result = invoke_cached_cli(
-        [
+        )
+        # Text mode emits no ADVISORY line either: only an unrouted declarable
+        # observation produces one, and every observation here was consumed.
+        text_result = _cli(
+            profile,
             "--language",
             "en",
             "app",
@@ -1168,8 +1168,12 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "calculate",
             str(work_unit["work_unit_id"]),
             *joint_return_options(),
-        ],
-    )
+        )
+    assert result.exit_code == 0, result.output
+
+    notices = unwrap_envelope_notices(result.output)
+    assert [n for n in notices if n["code"] == "modelo.work.calculate.source_advisory"] == []
+
     assert text_result.exit_code == 0, text_result.output
     # Pinned to English because "ADVISORY:" is the ENGLISH prefix. The ambient
     # test locale is Spanish, which renders the same notice as "AVISO:", so

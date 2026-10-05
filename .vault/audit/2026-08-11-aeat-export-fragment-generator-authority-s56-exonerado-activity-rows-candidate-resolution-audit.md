@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f54f4bd580e775e701471f71f860d64aed8989f3d0ed46c2eb65322f9fb95ea4'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 # `aeat-export-fragment-generator-authority` audit: `S56 exonerado-390 activity-row authority closure review`
 

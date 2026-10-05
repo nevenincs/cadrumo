@@ -1,6 +1,23 @@
 modelo:
   schema:
     '347':
+      binding:
+        modelo-347-declarante-importe-total-anual-operaciones:
+          help: Dada declarada al model 347, declaració anual d'operacions amb terceres
+            persones.
+          label: IMPORT TOTAL ANUAL DE LES OPERACIONS
+        modelo-347-declarante-importe-total-arrendamiento-locales:
+          help: Dada declarada al model 347, declaració anual d'operacions amb terceres
+            persones.
+          label: IMPORT TOTAL DE LES OPERACIONS D'ARRENDAMENT DE LOCALS DE NEGOCI
+        modelo-347-declarante-numero-inmuebles:
+          help: Dada declarada al model 347, declaració anual d'operacions amb terceres
+            persones.
+          label: NOMBRE TOTAL D'IMMOBLES
+        modelo-347-declarante-numero-personas-entidades:
+          help: Dada declarada al model 347, declaració anual d'operacions amb terceres
+            persones.
+          label: NOMBRE TOTAL DE PERSONES I ENTITATS
       casilla:
         continuidad:
           arrendamiento-local-negocio:
@@ -70,14 +87,6 @@ modelo:
             help: Dada declarada al model 347, declaració anual d'operacions amb terceres
               persones.
             label: IMPORT PERCEBUT EN METÀL·LIC
-          importe-total-anual-operaciones:
-            help: Dada declarada al model 347, declaració anual d'operacions amb terceres
-              persones.
-            label: IMPORT TOTAL ANUAL DE LES OPERACIONS
-          importe-total-arrendamiento-locales:
-            help: Dada declarada al model 347, declaració anual d'operacions amb terceres
-              persones.
-            label: IMPORT TOTAL DE LES OPERACIONS D'ARRENDAMENT DE LOCALS DE NEGOCI
           importe-transmisiones-inmuebles:
             help: Dada declarada al model 347, declaració anual d'operacions amb terceres
               persones.
@@ -137,18 +146,6 @@ modelo:
             label: SITUACIÓ DE L'IMMOBLE
           tipo-declaracion:
             label: Tipus de declaració (originària / substitutiva / complementària)
-          tipo-soporte:
-            help: Dada declarada al model 347, declaració anual d'operacions amb terceres
-              persones.
-            label: TIPUS DE SUPORT
-          total-inmuebles:
-            help: Dada declarada al model 347, declaració anual d'operacions amb terceres
-              persones.
-            label: NOMBRE TOTAL D'IMMOBLES
-          total-personas-entidades:
-            help: Dada declarada al model 347, declaració anual d'operacions amb terceres
-              persones.
-            label: NOMBRE TOTAL DE PERSONES I ENTITATS
       construct:
         modelo-347-informative:
           field:

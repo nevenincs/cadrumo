@@ -19,8 +19,8 @@ from cadrumo.application.runtime.contracts import (
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
-from ..framing import RuntimeTransportCleanup, close_runtime_transport_after_failure
-from ..server import RuntimeTransportServer
+from ..runtime_transport_cleanup import RuntimeTransportCleanup, close_runtime_transport_after_failure
+from .retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -92,10 +92,10 @@ class _Listener:
         self.closed.set()
 
 
-def _server(channel: _Channel, *, reject: bool = False) -> tuple[RuntimeTransportServer, _Listener]:
+def _server(channel: _Channel, *, reject: bool = False) -> tuple[RetainedRuntimeTransportServer, _Listener]:
     stop = Event()
     listener = _Listener(channel, stop, reject_on_accept=reject)
-    return RuntimeTransportServer(listener, product_version="cleanup-test", stop=stop), listener
+    return RetainedRuntimeTransportServer(listener, product_version="cleanup-test", stop=stop), listener
 
 
 @pytest.mark.parametrize("reject", ["stopping", "capacity"])
@@ -130,7 +130,7 @@ def test_failed_submission_preserves_exact_error_and_retries_its_native_owner() 
             stop.set()
             raise submission_error
 
-    class FailedSubmissionServer(RuntimeTransportServer):
+    class FailedSubmissionServer(RetainedRuntimeTransportServer):
         @override
         def _accept_connections(self, workers: ThreadPoolExecutor) -> None:
             super()._accept_connections(cast(ThreadPoolExecutor, FailedExecutor()))
@@ -180,7 +180,7 @@ async def test_listener_failure_preserves_primary_and_retains_retry_owner(
         def submit(self, *_args: object) -> Future[None]:
             raise primary
 
-    class FailedServer(RuntimeTransportServer):
+    class FailedServer(RetainedRuntimeTransportServer):
         @override
         def _accept_connections(self, workers: ThreadPoolExecutor) -> None:
             super()._accept_connections(cast(ThreadPoolExecutor, FailedExecutor()) if phase == "submit" else workers)
@@ -217,7 +217,7 @@ async def test_clean_serve_listener_failure_has_its_own_retry_error(active_calle
     stop = Event()
     stop.set()
     listener = _Listener(_Channel(), stop, close_failures=1)
-    server = RuntimeTransportServer(listener, product_version="cleanup-test", stop=stop)
+    server = RetainedRuntimeTransportServer(listener, product_version="cleanup-test", stop=stop)
     caller_error = ValueError("synthetic caller exception")
     if active_caller_error:
         try:
@@ -257,7 +257,7 @@ def test_accept_failure_transfers_unreturned_native_owner_before_mapping(failure
             raise primary
 
     listener = FailedAcceptListener(channel, stop)
-    server = RuntimeTransportServer(listener, product_version="cleanup-test", stop=stop)
+    server = RetainedRuntimeTransportServer(listener, product_version="cleanup-test", stop=stop)
     with pytest.raises(type(primary)) as caught:
         server.serve()
     assert caught.value is primary
@@ -307,7 +307,7 @@ def test_terminal_request_with_unsettled_callback_retains_listener() -> None:
     channel = _Channel()
     listener = _Listener(channel, stop)
 
-    class CallbackServer(RuntimeTransportServer):
+    class CallbackServer(RetainedRuntimeTransportServer):
         @override
         def _accept_connections(self, workers: ThreadPoolExecutor) -> None:
             def request() -> None:
@@ -369,7 +369,7 @@ def test_drain_retry_uses_remaining_deadline_for_concurrent_listener_cleanup() -
             super().close()
 
     listener = HeldListener(_Channel(), stop, close_failures=1)
-    server = RuntimeTransportServer(listener, product_version="cleanup-test", stop=stop)
+    server = RetainedRuntimeTransportServer(listener, product_version="cleanup-test", stop=stop)
     with pytest.raises(AsyncResourceCleanupError) as caught:
         server.serve()
     cleanup = caught.value

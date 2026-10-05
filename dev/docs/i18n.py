@@ -28,7 +28,6 @@ the page set.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import re
@@ -37,7 +36,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path, PureWindowsPath
 from tempfile import TemporaryDirectory
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -47,9 +46,15 @@ if not __package__:
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.hashing import sha256_file
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT
+from dev.first_party_source import is_test_source
 
 from .build import docs_build_jobs, ensure_isolated_storage_root
+
+if TYPE_CHECKING:
+    from babel.messages.catalog import Catalog
 
 SOURCE_MANIFEST_NAME: Final[str] = ".source-manifest.json"
 SOURCE_MANIFEST_SCHEMA_VERSION: Final[int] = 1
@@ -189,7 +194,7 @@ def user_scope_source_pages(docs_root: Path) -> list[str]:
         relative = source.relative_to(docs_root)
         if relative.parts[0] in _EXCLUDED_TOP_DIRS:
             continue
-        if relative.name in _EXCLUDED_FILES or relative.name.startswith(("test_", "_test_")):
+        if relative.name in _EXCLUDED_FILES or is_test_source(relative):
             continue
         if _is_generated_page(source):
             continue
@@ -342,24 +347,9 @@ def prune_orphan_catalogues(
     doomed: list[Path] = []
     inspected = 0
     for language in languages:
-        catalogue_root = _language_catalogue_root(docs_root, language)
-        if catalogue_root is None:
-            continue
-        for catalogue in scan_directory(
-            catalogue_root,
-            pattern="*.po",
-            recursive=True,
-            select=DirectoryEntryKind.FILES,
-        ):
-            inspected += 1
-            resolved_catalogue = catalogue.resolve()
-            try:
-                relative_catalogue = resolved_catalogue.relative_to(catalogue_root)
-            except ValueError as exc:
-                raise ValueError(f"catalogue path escapes {catalogue_root}: {catalogue}") from exc
-            if relative_catalogue.as_posix() in expected:
-                continue
-            doomed.append(catalogue)
+        language_inspected, language_doomed = _language_orphan_catalogues(docs_root, language, expected)
+        inspected += language_inspected
+        doomed.extend(language_doomed)
 
     if len(doomed) > allowance:
         listed = ", ".join(str(path.relative_to(docs_root).as_posix()) for path in sorted(doomed)[:10])
@@ -497,7 +487,7 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
         raise SystemExit(result.returncode)
     manifest = {
         "schema_version": SOURCE_MANIFEST_SCHEMA_VERSION,
-        "sources": {page: hashlib.sha256((docs_root / page).read_bytes()).hexdigest() for page in pages},
+        "sources": {page: sha256_file(docs_root / page) for page in pages},
     }
     (out_dir / SOURCE_MANIFEST_NAME).write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
@@ -542,7 +532,7 @@ def update_catalogues(
         _run_catalogue_update(repo_root, docs_root, templates, languages)
         prune_orphan_catalogues(repo_root, languages)
         return
-    with TemporaryDirectory(prefix="cadrumo-docs-pot-") as scoped_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-pot-", dir=prepare_temporary_directory()) as scoped_text:
         scoped = Path(scoped_text)
         _stage_selected_templates(templates, validated_pages(docs_root, pages), scoped, docs_root)
         _run_catalogue_update(repo_root, docs_root, scoped, languages)
@@ -609,7 +599,7 @@ def _run_scoped_pages(repo_root: Path, pages: Sequence[str], *, extract_only: bo
     """
     docs_root = repo_root / "docs"
     selected = validated_pages(docs_root, pages)
-    with TemporaryDirectory(prefix="cadrumo-docs-scoped-pot-") as scoped_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-scoped-pot-", dir=prepare_temporary_directory()) as scoped_text:
         templates = extract_pot(repo_root, out_dir=Path(scoped_text))
         print(f"Extracted the whole surface; syncing {len(selected)} page(s) from {templates}", flush=True)
         if extract_only:
@@ -679,7 +669,7 @@ def sync_catalogue_locations(
     Returns:
         The catalogues that were rewritten.
     """
-    from babel.messages.pofile import read_po, write_po
+    from babel.messages.pofile import read_po
 
     rewritten: list[Path] = []
     for template_path in scan_directory(templates, pattern="*.pot", recursive=True, select=DirectoryEntryKind.FILES):
@@ -687,21 +677,7 @@ def sync_catalogue_locations(
             template = read_po(handle)
         relative = template_path.relative_to(templates).with_suffix(".po")
         for language in languages:
-            catalogue_root = _language_catalogue_root(docs_root, language)
-            catalogue_path = None if catalogue_root is None else catalogue_root / relative
-            if catalogue_path is None or not catalogue_path.is_file():
-                continue
-            with catalogue_path.open("rb") as handle:
-                catalogue = read_po(handle)
-            if not any(_is_machine_location(filename) for message in catalogue for filename, _ in message.locations):
-                continue
-            for message in catalogue:
-                source = template.get(message.id, message.context) if message.id else None
-                if source is not None:
-                    message.locations = list(source.locations)
-            with catalogue_path.open("wb") as handle:
-                write_po(handle, catalogue, width=_CATALOGUE_LINE_WIDTH, ignore_obsolete=False)
-            rewritten.append(catalogue_path)
+            _sync_template_language(docs_root, relative, template, language, rewritten)
     return tuple(rewritten)
 
 
@@ -728,7 +704,7 @@ def _stage_selected_templates(templates: Path, pages: Sequence[str], destination
 
 def _scoped_update_from(repo_root: Path, docs_root: Path, templates: Path, pages: Sequence[str]) -> None:
     """Run the catalogue update from a tree narrowed to exactly *pages*."""
-    with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-") as selected_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-", dir=prepare_temporary_directory()) as selected_text:
         selected = Path(selected_text)
         _stage_selected_templates(templates, pages, selected, docs_root)
         _run_catalogue_update(repo_root, docs_root, selected, TARGET_LANGUAGES)
@@ -782,6 +758,54 @@ def main(argv: list[str] | None = None) -> int:
         flush=True,
     )
     return 0
+
+
+def _language_orphan_catalogues(docs_root: Path, language: str, expected: set[str]) -> tuple[int, list[Path]]:
+    """Collect validated orphan candidates for one language before any removal."""
+    inspected = 0
+    doomed: list[Path] = []
+    catalogue_root = _language_catalogue_root(docs_root, language)
+    if catalogue_root is None:
+        return inspected, doomed
+    for catalogue in scan_directory(
+        catalogue_root,
+        pattern="*.po",
+        recursive=True,
+        select=DirectoryEntryKind.FILES,
+    ):
+        inspected += 1
+        resolved_catalogue = catalogue.resolve()
+        try:
+            relative_catalogue = resolved_catalogue.relative_to(catalogue_root)
+        except ValueError as exc:
+            raise ValueError(f"catalogue path escapes {catalogue_root}: {catalogue}") from exc
+        if relative_catalogue.as_posix() in expected:
+            continue
+        doomed.append(catalogue)
+    return inspected, doomed
+
+
+def _sync_template_language(
+    docs_root: Path, relative: Path, template: Catalog, language: str, rewritten: list[Path]
+) -> None:
+    """Sync template language."""
+    from babel.messages.pofile import read_po, write_po
+
+    catalogue_root = _language_catalogue_root(docs_root, language)
+    catalogue_path = None if catalogue_root is None else catalogue_root / relative
+    if catalogue_path is None or not catalogue_path.is_file():
+        return
+    with catalogue_path.open("rb") as handle:
+        catalogue = read_po(handle)
+    if not any(_is_machine_location(filename) for message in catalogue for filename, _ in message.locations):
+        return
+    for message in catalogue:
+        source = template.get(message.id, message.context) if message.id else None
+        if source is not None:
+            message.locations = list(source.locations)
+    with catalogue_path.open("wb") as handle:
+        write_po(handle, catalogue, width=_CATALOGUE_LINE_WIDTH, ignore_obsolete=False)
+    rewritten.append(catalogue_path)
 
 
 if __name__ == "__main__":

@@ -12,9 +12,9 @@ from ...domain.modelos.codes import ModeloCode
 from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
 from .common import activate_subcommand_output_language, emit_envelope
+from .registered_operation_errors import submitted_operation_error
 from .runtime_modelo_metadata import read_modelo_work_unit
 from .runtime_modelo_work_review import read_modelo_work_review
-from .runtime_registered_operation import submitted_operation_error
 
 
 def _review_lines(result: WorkReviewResult) -> list[str]:

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#agent-harness-content-review'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:f8be67657d79b975fc335dbb0210bc76250693535908727d70c20184fa88b447'
+modified: '2026-10-03'
+body_hash: 'sha256:aed661c5dd91ea7f300cba169aa1a64a58b674c797fcc7fc1d0d69658c87eefd'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-07-01-agent-harness-research]]"
@@ -37,13 +37,13 @@ D1 (`2026-07-02-agent-harness-refoundation-adr`, decision D1) chose a runtime ma
 read filtered by the active persona, backed by a build-time-verified pinning
 test, over a second codegen'd allowlist artifact. Commit `198e6d6c7`
 (`feat(mcp): persona-scoped tool boundary (D1)`) landed the mechanism
-(`src/aeat/entrypoints/mcp/_persona_scope.py`) but the initial review found
+ but the initial review found
 it constructed and exported without a live call site inside the MCP
 `PreToolUse` gate - a mechanism that type-checked and unit-tested in
 isolation but never executed on the request path, functionally dead code at
 that commit. The gap is now closed in the working tree (uncommitted): the
-persona-scope filter is wired into `src/aeat/entrypoints/mcp/_server.py`'s
-tool-dispatch path, and `src/aeat/entrypoints/mcp/tests/test_persona_server_wiring.py`
+persona-scope filter is wired into the retired module's
+tool-dispatch path, and the retired test
 (new, uncommitted) exercises the end-to-end boundary - a persona's declared
 `(family, mutability)` ceiling actually gates the tool call, not merely
 describes it. Verified green in this review pass. Disposition: **resolved**,
@@ -64,12 +64,12 @@ that campaign's post-honesty-review correction found the sweep was not
 merely an attribution problem. It permanently removed, from history, the
 M100 anualidades separate-escala derivation
 (`_inject_derived_anualidades_eligibility_facts` in
-`src/aeat/application/modelo/_profile_binding.py`, added moments earlier by
+The retired module, added moments earlier by
 peer commit `63f9b6125`) and its unit test
-(`src/aeat/application/modelo/tests/test_anualidades_eligibility_derivation.py`),
+,
 and stripped `art-64`/`art-75` from the 2024/2025 M100 `renta-cuota-chain`
 construct `legal_refs`. At committed HEAD,
-`src/aeat/_data/registry/aeat/user_profile/schema.toml` and the M100
+The retired data file and the M100
 2020-2025 registry bindings still reference the deleted
 `anualidades_sin_minimo_descendientes_{year}` profile-fact key, so the M100
 anualidades regime is a broken derivation chain referencing a function that

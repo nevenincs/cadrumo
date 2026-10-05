@@ -40,6 +40,7 @@ from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ._modelo_cli_support import validate_trusted_public_key
 from ._modelo_payloads import WorkReportResult, WorkReportVerifyResult
 from .common import activate_subcommand_output_language, emit_envelope
+from .registered_operation_errors import invalid_completion_error
 
 __all__ = ["work_report", "work_report_verify"]
 
@@ -119,14 +120,12 @@ def work_report(
         # installation that cannot write the summary learns so, and how to fix
         # it, before any figure is read.
         require_calculation_summary_pdf_available()
-    from ...application.modelo.operation_definitions import ModeloExportRequest
     from ...application.modelo.selectors import ModeloCalculationRevisionSelector
-    from ...application.runtime.contracts import RuntimeRefusalCode
+    from ...application.modelo.work_export_contracts import ModeloExportRequest
     from ...core.modelo_export_artefact import ModeloExportArtefact
     from ._modelo_cli_support import resolve_default_actor
     from .runtime_modelo_export import run_modelo_export
     from .runtime_modelo_verification import select_modelo_work_revision_for_cli
-    from .runtime_registered_operation import submitted_operation_error
 
     client, selection = select_modelo_work_revision_for_cli(
         ctx,
@@ -158,13 +157,7 @@ def work_report(
     )
     receipt = completed.projection.calculation_report
     if receipt is None:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     result = receipt.to_result()
     emit_envelope(
         ctx,

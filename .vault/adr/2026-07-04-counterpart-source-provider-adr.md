@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#counterpart-source-provider'
 date: '2026-07-04'
-modified: '2026-08-15'
-body_hash: 'sha256:37a4a077c480344af308fb290b29e627a58f7c50edaca86dd06410517375b1e8'
+modified: '2026-10-03'
+body_hash: 'sha256:5027dbb2f75f26605c1597b55c7866724da6572d9f4f91a780f7afde2bdd08e1'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
@@ -21,12 +21,12 @@ The counterpart (Modelo 347/349 operaciones-con-terceros / intracomunitarias)
 aggregation surface is half-connected to the live calculate mesh, and the
 stale connectivity plan step `W02.P05.S29` ("enroll counterpart aggregation
 registry provider through source mesh;
-`src/aeat/application/aggregation/_registry_provider.py`") names a module
+the former source file") names a module
 that does not exist and a design that predates three later rulings. Current
 ground truth:
 
 - `CounterpartAggregationSourceResolver`
-  (`src/aeat/application/aggregation/_counterpart.py`) is authored (step
+   is authored (step
   `P03.S10` of the binding-resolver contract unification) but NOT enrolled in
   `merge_source_resolutions`; it is repository-free (the caller supplies
   `CounterpartObservation` rows via the constructor) so on the live

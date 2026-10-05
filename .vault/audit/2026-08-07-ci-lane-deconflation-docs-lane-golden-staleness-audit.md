@@ -3,15 +3,16 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d01345c1d9ad2e014908065f825154507cd5712e134e575461f64fb37999d730'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+body_hash: 'sha256:7e28c950603cea119a94e37228078cc240a7f000b03f395d51d111bf24d3c407'
+related: []
 ---
 # `ci-lane-deconflation` audit: the docs lane is red on stale goldens, not on nondeterminism
 
-## Summary
+## Scope
+
+### Summary
 
 The docs conformance lane has failed every run for a day. Two distinct causes sat
 behind that single red signal, and conflating them is what kept the finding open.
@@ -24,7 +25,9 @@ The second is what remains, and it is mundane: the goldens are stale against a
 legal-grounding change that landed since they were recorded. It is not the
 nondeterminism this campaign has been chasing.
 
-## What the runner actually reports
+## Findings
+
+### What the runner actually reports
 
 On the pushed head, the lane reports thirteen pages diverging. Aggregating every
 reported envelope path by shape rather than reading them one at a time:
@@ -45,7 +48,7 @@ change is correct and well grounded; only the recordings are behind.
 The remaining handful on `profile_derivable` are a separate, smaller change and
 are not explained by this finding.
 
-## The fix, and why it is not applied here
+### The fix, and why it is not applied here
 
 The repair is a golden refresh. It is deliberately not performed in this pass,
 and the reason is a working-tree condition rather than a doubt about the repair.
@@ -60,7 +63,7 @@ One mass refresh was attempted and produced exactly that outcome: locally the
 failing-page count went from thirteen to twenty-four. All thirty-five rewritten
 goldens were restored to their committed state rather than published.
 
-## What was ruled out, by measurement
+### What was ruled out, by measurement
 
 A plausible mechanism was that the tie-break identifier varies per run. Bucket
 events are ordered on a pair of occurrence time and event identifier, the
@@ -82,7 +85,7 @@ removal marker, so the events are ABSENT from the live run rather than reordered
 The event count varies, not the order. That mechanism is still unidentified, and
 it is a smaller finding than the lane's red signal suggested.
 
-## Isolation result worth keeping
+### Isolation result worth keeping
 
 Per-page behaviour separates the two causes cleanly. A page refreshed and then
 checked twice in isolation is stable across both checks. The same page inside a
@@ -90,7 +93,9 @@ full-tree refresh followed by a full-tree check is not. Whatever remains is
 therefore a property of the whole-run execution, not of an individual sequence -
 which is where a later investigation should start, rather than at the sort key.
 
-## Recommendation
+## Recommendations
+
+### Recommendation
 
 Refresh the goldens once the storage refactor lands and the sandbox executes
 cleanly, then re-run the lane. Treat a refresh performed while any layer the

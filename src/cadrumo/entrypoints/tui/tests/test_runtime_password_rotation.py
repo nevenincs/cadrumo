@@ -17,21 +17,26 @@ from textual.pilot import Pilot
 from textual.widgets import Input, Select
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalError
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
@@ -39,7 +44,10 @@ from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.launcher import main
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -60,7 +68,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -110,7 +118,8 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         stages: list[str] = []

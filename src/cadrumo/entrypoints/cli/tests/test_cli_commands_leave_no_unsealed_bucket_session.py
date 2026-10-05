@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.storage.profile_login_session import build_pro
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
+from ....application.user_profile.access_contracts import ProfileAccessBinding
 from ....application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     unlock_profile_custody_password,
@@ -42,6 +43,7 @@ from ....application.user_profile.login_session_port import (
     ProfileLoginThrottleEvaluationPort,
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
+    ProfileSignInGenerationPort,
     bind_profile_login_session_port,
 )
 from ....application.user_profile.profile_record_repository import profile_record_session_if_authenticated
@@ -207,7 +209,10 @@ class _ReceiptResumingPort:
         now: datetime,
         idle_minutes: int,
         absolute_minutes: int,
-    ) -> ProfilePersistedSessionPort:
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
+        sign_in_generation: ProfileSignInGenerationPort,
+    ) -> ProfilePersistedSessionPort | None:
         return self._real.mint_acceleration_receipt(
             storage_root=storage_root,
             profile_id=profile_id,
@@ -217,6 +222,9 @@ class _ReceiptResumingPort:
             now=now,
             idle_minutes=idle_minutes,
             absolute_minutes=absolute_minutes,
+            login_id=login_id,
+            sign_in_binding=sign_in_binding,
+            sign_in_generation=sign_in_generation,
         )
 
     def resume_acceleration_receipt(
@@ -245,17 +253,8 @@ class _ReceiptResumingPort:
         *,
         storage_root: Path,
         profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return self._real.borrow_acceleration_receipt_key(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            now=now,
-        )
+        return self._real.borrow_acceleration_receipt_key(storage_root=storage_root, profile_id=profile_id)
 
     def resume_acceleration_receipt_with_key(
         self,
@@ -266,6 +265,8 @@ class _ReceiptResumingPort:
         dek_epoch: str,
         now: datetime,
         receipt_key: bytearray,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
         return self._real.resume_acceleration_receipt_with_key(
             storage_root=storage_root,
@@ -274,6 +275,8 @@ class _ReceiptResumingPort:
             dek_epoch=dek_epoch,
             now=now,
             receipt_key=receipt_key,
+            login_id=login_id,
+            sign_in_binding=sign_in_binding,
         )
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:

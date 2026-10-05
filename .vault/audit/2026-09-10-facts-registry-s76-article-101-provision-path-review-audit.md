@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:68848057a386978ad02d20515419d8cf195c2d36ca42f6b1fae1428f787584dc'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 
 # `facts-registry` audit: `s76 article 101 provision path review`

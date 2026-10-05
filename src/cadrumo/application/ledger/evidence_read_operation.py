@@ -11,42 +11,25 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
+from ..operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_succeeded_terminal_receipt,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -66,7 +49,6 @@ _InvoiceNumber = Annotated[str, Field(max_length=1_024)]
 _InvoiceDate = Annotated[str, Field(max_length=64)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
 _Notes = Annotated[str, Field(max_length=16_384)]
-_UtcTimestamp = datetime
 
 
 class LedgerEvidenceListRequest(BaseModel):
@@ -104,11 +86,12 @@ class LedgerEvidenceRecordProjection(BaseModel):
     iva_rate: _DecimalText | None = None
     iva_amount: _DecimalText | None = None
     notes: _Notes = ""
-    created_at: _UtcTimestamp
-    updated_at: _UtcTimestamp
+    created_at: datetime
+    updated_at: datetime
 
     @field_validator("created_at", "updated_at")
     @classmethod
+    @pydantic_validation_boundary
     def _timestamps_are_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
@@ -234,20 +217,26 @@ def _require_terminal_success(
     profile_id: UUID,
 ) -> None:
     """Bind a public read result to a complete successful operation receipt."""
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or receipt.effect is not OperationEffect.NONE
-    ):
-        raise ValueError("evidence read result has an incompatible terminal receipt")
+    _require_read_receipt(receipt, definition_id=definition_id, profile_id=profile_id)
     if getattr(result, "profile_id", None) != profile_id:
         raise ValueError("evidence read result belongs to another profile")
+
+
+def _require_read_receipt(
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str,
+    profile_id: UUID,
+) -> None:
+    """Require the terminal receipt identity and effect for a successful read."""
+    message = "evidence read result has an incompatible terminal receipt"
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        effect=OperationEffect.NONE,
+        message=message,
+    )
 
 
 def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -433,31 +422,13 @@ def _build_definition(
     executor_type: type[LedgerEvidenceListExecutor] | type[LedgerEvidenceViewExecutor],
     ports_factory: LedgerEvidencePortsFactory,
 ) -> OperationDefinition:
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=lambda: executor_type(ports_factory),
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=executor_type,
+        build=lambda: executor_type(ports_factory),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -518,14 +489,9 @@ def build_ledger_evidence_list_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the exact list request/result contracts and whole-profile disclosure."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerEvidenceListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerEvidenceListProjection
-        ),
+        public_result_type=LedgerEvidenceListProjection,
         result_projector=_project_list_result,
         access_resolver=_resolve_list_access,
     )
@@ -535,14 +501,9 @@ def build_ledger_evidence_view_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the exact view request/result contracts and whole-profile disclosure."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerEvidenceViewRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerEvidenceViewProjection
-        ),
+        public_result_type=LedgerEvidenceViewProjection,
         result_projector=_project_view_result,
         access_resolver=_resolve_view_access,
     )

@@ -178,14 +178,6 @@ class Borrador100SnapshotRepository(SnapshotRepository[Borrador100Snapshot], Pro
     """
 
 
-class Borrador100SnapshotRepositoryFactory(Protocol):
-    """Construct the required borrador repository for one profile bucket."""
-
-    def __call__(self, *, bucket_id: str) -> Borrador100SnapshotRepository:
-        """Return the application repository capability for ``bucket_id``."""
-        ...
-
-
 class _Borrador100CaptureRequest(BaseModel):
     model_config = _STRICT_FROZEN
 
@@ -364,7 +356,6 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
 __all__ = [
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
-    "Borrador100SnapshotRepositoryFactory",
     "Borrador100SnapshotService",
     "BorradorSnapshotNotFoundError",
     "borrador_100_snapshot_object_key",

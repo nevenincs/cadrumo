@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-10-03'
 body_hash: 'sha256:f20b1df18431d96b5792d221e95e09094d0467b63e13db45f1148bbf8daa1528'
-related:
-  - '[[2026-07-26-declaracion-real-render-verification-plan]]'
+related: []
 ---
 
 # `declaracion-real-render-verification` audit: `S15 form_number sourcing: a measured negative result`

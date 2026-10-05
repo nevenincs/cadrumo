@@ -25,7 +25,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
     NativeClientCredentialStore,
 )
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.application.auth.read_operation import AUTH_READ_OPERATION_DEFINITION_ID, AUTH_READ_RESULT_SCHEMA_ID
+from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID, AUTH_READ_RESULT_SCHEMA_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -41,6 +41,7 @@ from cadrumo.application.user_profile.automation_custody_port import (
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 pytestmark = [
     pytest.mark.integration,
@@ -118,6 +119,7 @@ def _installed_mcp_executable() -> Path:
 
 @pytest.mark.anyio
 async def test_installed_stdio_authenticates_and_reads_pinned_auth_result(tmp_path: Path) -> None:
+    require_os_credential_store()
     backend = _native_backend_for_current_platform()
     native_store = native_automation_secret_store(backend)
     assert native_store.backend is backend

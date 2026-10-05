@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a85965f5de17a8af2eabc913ef0fe8620fa03b27e66d5f0454df5874b1ecf2cd'
+body_hash: 'sha256:dc4f4315ef0ecfaf5d6e8fed64640a64c581bafcaa038ee3bb5b8f0627c8bc30'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
@@ -15,13 +15,7 @@ related:
 
 ## Scope
 
-Commit `63617870cb` and current HEAD were reviewed against the accepted canonical
-credential capability ADR, its research and incident reference, the active plan, and
-the S02 execution record. Semantic discovery located the governing core and custody
-surfaces before exact-symbol confirmation. The review covered the complete
-`src/cadrumo/core/_credentials.py`, every live exact consumer of its removed and added
-symbols, the public core facade, the commit diff, direct Unicode-boundary probes, and a
-representative registration test collection.
+Commit `63617870cb` and current HEAD were reviewed against the accepted canonical credential capability ADR, its research and incident reference, the active plan, and the S02 execution record. Semantic discovery located the governing core and custody surfaces before exact-symbol confirmation.
 
 The pure assessment correctly counts Python Unicode scalar values after refusing
 surrogates, preserves composed and decomposed inputs without rewriting, accepts 15
@@ -37,34 +31,9 @@ below.
 
 ### step-atomicity | high | The committed core change breaks the live public facade and registration import graph
 
-`src/cadrumo/core/_credentials.py:37-51` removes
-`NIST_PASSPHRASE_MIN_LENGTH`, `PassphraseStrength.TOO_SHORT`, and the public
-`character_class_count`, and `src/cadrumo/core/_credentials.py:86` changes
-`assess_passphrase_strength` from a required `minimum_length` API to a one-argument
-advisory API. However, `src/cadrumo/core/__init__.py:155-159`,
-`src/cadrumo/core/__init__.py:535`, `src/cadrumo/core/__init__.py:752`,
-`src/cadrumo/core/__init__.py:1003`, and `src/cadrumo/core/__init__.py:1125` still
-publish or lazily resolve the deleted names, while
-`src/cadrumo/application/user_profile/_registration.py:39`,
-`src/cadrumo/application/user_profile/_registration.py:63`,
-`src/cadrumo/application/user_profile/_registration.py:115`, and
-`src/cadrumo/application/user_profile/_registration.py:152` still import or call the
-old contract. `src/cadrumo/adapters/inbound/tui/_registration_screen.py:120` and
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:131` also still require the
-deleted enum member. Conversely, none of the new profile-specific types, constants, or
-assessment function is exposed through the public core facade yet.
+Conversely, none of the new profile-specific types, constants, or assessment function is exposed through the public core facade yet.
 
-This is an observable repository break, not merely an unintegrated new feature:
-accessing `cadrumo.core.NIST_PASSPHRASE_MIN_LENGTH` raises `AttributeError`, and pytest
-cannot even collect `src/cadrumo/application/user_profile/tests/test_registration.py`
-because `_registration.py` cannot import the removed constant. The S02 execution record
-acknowledges this state at lines 47-49, but acknowledgment does not make a committed Step
-independently coherent. S03 only changes the facade and S07 is deferred until W02, so
-following the current plan literally would preserve broken application and TUI imports
-across multiple intervening commits. This violates the architectural direction of a
-public core authority consumed through stable boundaries and prevents meaningful gates
-for subsequent Steps. It is HIGH and blocks continuing until the commit boundary or
-Step sequence is repaired.
+The S02 execution record acknowledges this state at lines 47-49, but acknowledgment does not make a committed Step independently coherent. S03 only changes the facade and S07 is deferred until W02, so following the current plan literally would preserve broken application and TUI imports across multiple intervening commits. This violates the architectural direction of a public core authority consumed through stable boundaries and prevents meaningful gates for subsequent Steps. It is HIGH and blocks continuing until the commit boundary or Step sequence is repaired.
 
 ## Recommendations
 
@@ -106,18 +75,7 @@ The remaining byte-precedence and exact Unicode matrix belongs to S04 as recomme
 
 ### step-atomicity-remediation | low | Follow-up review confirms the blocking import-graph finding is closed
 
-The follow-up review re-grounded current code and the accepted ADR semantically, then
-confirmed the exact symbol graph and inspected remediation commits `2ca941531e` and
-`61a63f2f8c`. Current `src/cadrumo/core/__init__.py:155-162`,
-`src/cadrumo/core/__init__.py:551-553`, `src/cadrumo/core/__init__.py:711-712`,
-`src/cadrumo/core/__init__.py:756`, and `src/cadrumo/core/__init__.py:1011-1013`
-publish and lazily resolve the canonical bounds, assessment, refusal taxonomy, and
-assessor. Registration consumes that assessor at
-`src/cadrumo/application/user_profile/_registration.py:182`, rotation at
-`src/cadrumo/application/user_profile/_passphrase_rotation.py:116`, TUI validation at
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:369` and
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:415`, and CLI composition at
-`src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:468-471`.
+The follow-up review re-grounded current code and the accepted ADR semantically, then confirmed the exact symbol graph and inspected remediation commits `2ca941531e` and `61a63f2f8c`. Current `src/cadrumo/core/__init__.py:155-162`, `src/cadrumo/core/__init__.py:551-553`, `src/cadrumo/core/__init__.py:711-712`, `src/cadrumo/core/__init__.py:756`, and `src/cadrumo/core/__init__.py:1011-1013` publish and lazily resolve the canonical bounds, assessment, refusal taxonomy, and assessor.
 
 Exact repository search under `src/cadrumo` finds no
 `NIST_PASSPHRASE_MIN_LENGTH`, `PassphraseStrength.TOO_SHORT`, public
@@ -177,19 +135,7 @@ reviews.
 
 ### s05-secret-free-error-bite | medium | The safe-error test does not prove the candidate and measurements are absent
 
-The mandatory S05 review grounded commit `c92641e881` against the accepted ADR,
-research, incident reference, live plan, current source, execution record, commit history,
-and overlapping shared-worktree state. `src/cadrumo/adapters/persistence/storage/custody/_records.py:75-82`
-delegates validity exclusively to the public core assessment, maps only the finite
-`reason.value` into an internal `ProfileCustodyPasswordError`, and returns the exact
-strict UTF-8 encoding. Lines 85-92 strictly decode transport bytes, reapply the same
-canonical assessment, and return the submitted sequence without normalization. The
-duplicate custody bounds and old validators are absent from `_records.__all__`, both
-custody facades, and exact repository consumers; direct facade probes confirm there are
-no aliases or shims. The accepted 15/256 scalar and 1,024-byte boundaries,
-1,025-byte-over-scalar precedence, every typed reason, malformed UTF-8, and
-composed/decomposed exact roundtrips are exercised in
-`src/cadrumo/adapters/persistence/storage/custody/tests/test_records.py:132-177`.
+Lines 85-92 strictly decode transport bytes, reapply the same canonical assessment, and return the submitted sequence without normalization. The duplicate custody bounds and old validators are absent from `_records.__all__`, both custody facades, and exact repository consumers; direct facade probes confirm there are no aliases or shims. The accepted 15/256 scalar and 1,024-byte boundaries, 1,025-byte-over-scalar precedence, every typed reason, malformed UTF-8, and composed/decomposed exact roundtrips are exercised in `src/cadrumo/adapters/persistence/storage/custody/tests/test_records.py:132-177`.
 
 The generic parent and worker wrap operation still routes recovery secrets through the
 same private password codec at `_kdf_supervision.py:362` and `_kdf_worker.py:130`. This
@@ -247,7 +193,7 @@ artifact, and isolation behavior, and the complete serial default custody lane p
 
 The new S06 bite does not prove the load-bearing separation through the supervised child.
 `test_recovery_secret_roundtrip_is_byte_exact_and_not_password_shaped` at
-`tests/test_recovery_secret_codec.py:14-20` sends empty, short, and over-256-scalar
+`src/cadrumo/adapters/persistence/storage/custody/tests/test_recovery_secret_codec.py` sends empty, short, and over-256-scalar
 secrets only through the direct codec. The negative-space scan at lines 37-46 reads
 `_recovery.py`, `_recovery_artifact.py`, and `_recovery_secret_codec.py`, but omits the
 two exact routing owners, `_kdf_supervision.py` and `_kdf_worker.py`. Existing real
@@ -266,16 +212,7 @@ production-policy coupling.
 
 ### s06-format-evidence | medium | Three modified production modules fail the formatter gate
 
-The S06 execution record says the custody surface remains lint-clean, and Ruff lint does
-pass, but `ruff format --check` reports that
-`src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py`,
-`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py`, and
-`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py` would be
-reformatted. The diff shows the newly inserted regions carrying inconsistent line
-endings/layout relative to their surrounding files. This is current production quality
-debt and contradicts the Step evidence; run the repository formatter over exactly those
-owned modules, verify no semantic diff, rerun Ruff and the focused/full serial custody
-tests, and amend the execution evidence honestly.
+The diff shows the newly inserted regions carrying inconsistent line endings/layout relative to their surrounding files. This is current production quality debt and contradicts the Step evidence; run the repository formatter over exactly those owned modules, verify no semantic diff, rerun Ruff and the focused/full serial custody tests, and amend the execution evidence honestly.
 
 No HIGH or CRITICAL defect was found. These two MEDIUM findings block review-clean S06
 closure and therefore block dispatching S07 until remediated; the complete serial custody
@@ -326,46 +263,13 @@ remains from this review chain, and W01.P03.S07 may proceed.
 
 ### s07-refusal-context-mutability | medium | The frozen refusal exposes a mutable context
 
-The mandatory S07 review grounded the application implementation in commits
-`cee3240301`, `8b01182fb9`, and `f0fcbb9681` against the accepted ADR, research,
-incident reference, live plan, current source, execution record, history, and shared
-worktree state. The production ordering is correct today: registration assesses at
-`src/cadrumo/application/user_profile/_registration.py:191-200` before identity
-generation, random key material, custody creation, session construction, or lifecycle
-publication; rotation assesses at
-`src/cadrumo/application/user_profile/_passphrase_rotation.py:125-135` before root
-resolution, transaction locking, committed-material loading, unwrap, re-heading, or
-publication. Exact search finds no stale minimum-only application policy, compatibility
-alias, or parallel validator. The real integration tests cover all four reasons, both
-surrogate-range endpoints, 14/15/256/257 scalars, the 1,024/1,025-byte boundary and
-precedence, and exact composed/decomposed usability. Whole-root byte snapshots prove
-that refused registration and rotation leave every extant capsule, inventory, session,
-record, recovery, and envelope path unchanged. Successful rotation coverage retains the
-DEK epoch, recovery door, generation, record history, and new-password session behavior.
+The mandatory S07 review grounded the application implementation in commits `cee3240301`, `8b01182fb9`, and `f0fcbb9681` against the accepted ADR, research, incident reference, live plan, current source, execution record, history, and shared worktree state. Exact search finds no stale minimum-only application policy, compatibility alias, or parallel validator. The real integration tests cover all four reasons, both surrogate-range endpoints, 14/15/256/257 scalars, the 1,024/1,025-byte boundary and precedence, and exact composed/decomposed usability. Whole-root byte snapshots prove that refused registration and rotation leave every extant capsule, inventory, session, record, recovery, and envelope path unchanged. Successful rotation coverage retains the DEK epoch, recovery door, generation, record history, and new-password session behavior.
 
-However, `ProspectiveProfilePasswordRefusal` is only shallowly frozen. Its declaration
-at `src/cadrumo/application/user_profile/_prospective_password.py:32-39` stores
-`context` as a mutable `dict`; callers can add, remove, or replace presentation facts
-despite `frozen=True`, and both application errors retain that same object. This violates
-the Step's immutable stable-context contract and lets a downstream surface accidentally
-turn a reviewed secret-free payload into an expanded or inconsistent one. Store a truly
-immutable mapping (constructed from a fresh private mapping) and add a test that mutation
-is refused. Pin the exact translation key and exact finite context keys/values for each
-reason, rather than the current prefix assertion and the tautological comparison between
-an error and its own payload. This is a current contract defect, not evidence of a
-present secret leak.
+However, `ProspectiveProfilePasswordRefusal` is only shallowly frozen. This violates the Step's immutable stable-context contract and lets a downstream surface accidentally turn a reviewed secret-free payload into an expanded or inconsistent one. Store a truly immutable mapping (constructed from a fresh private mapping) and add a test that mutation is refused. Pin the exact translation key and exact finite context keys/values for each reason, rather than the current prefix assertion and the tautological comparison between an error and its own payload. This is a current contract defect, not evidence of a present secret leak.
 
 ### s07-preflight-order-bite | medium | Storage snapshots do not prove the claimed preflight boundary
 
-The refusal matrices at
-`src/cadrumo/application/user_profile/tests/test_registration.py:184-211` and
-`src/cadrumo/application/user_profile/tests/test_passphrase_rotation.py:226-261` prove
-typed outcomes and durable no-mutation. They do not prove the stronger ordering claimed
-by the ADR and execution record. Registration could generate an identity and key
-material or enter custody before returning the same application refusal; rotation could
-resolve the root, acquire and release the transaction lock, load the envelope, or unwrap
-the current password before assessing the replacement. Those regressions can leave the
-whole-root snapshot byte-identical, so every current test would remain green.
+They do not prove the stronger ordering claimed by the ADR and execution record. Registration could generate an identity and key material or enter custody before returning the same application refusal; rotation could resolve the root, acquire and release the transaction lock, load the envelope, or unwrap the current password before assessing the replacement. Those regressions can leave the whole-root snapshot byte-identical, so every current test would remain green.
 
 Add collaborator-boundary bites that make `new_profile_id`, randomness, and custody
 material creation fail if reached during invalid registration, and make root resolution,
@@ -391,26 +295,9 @@ S07 closure and therefore block S08 until remediated and independently rechecked
 
 #### S07 remediation closure
 
-Current-HEAD re-review of commit `8b50c24566`, after repeated semantic code and
-governing-ADR discovery plus exact-symbol confirmation, closes all three S07 MEDIUM
-findings. `ProspectiveProfilePasswordRefusal` at
-`src/cadrumo/application/user_profile/_prospective_password.py:32-56` now stores only
-frozen typed scalar fields and derives a fresh `MappingProxyType` context from them.
-There is no mutable context retained inside the result; attempted writes through the
-read surface raise `TypeError` and cannot alter the underlying refusal. The application
-errors continue to make their own plain-dictionary copy through the established
-`CadrumoError` convention.
+Current-HEAD re-review of commit `8b50c24566`, after repeated semantic code and governing-ADR discovery plus exact-symbol confirmation, closes all three S07 MEDIUM findings. There is no mutable context retained inside the result; attempted writes through the read surface raise `TypeError` and cannot alter the underlying refusal. The application errors continue to make their own plain-dictionary copy through the established `CadrumoError` convention.
 
-Both refusal matrices now pin the exact finite translation key and the exact safe
-context keys and values for every canonical reason, including the absence of a byte
-measurement for surrogate refusal. They independently exclude the submitted candidate
-from the typed payload. Registration's fail-if-called bite at
-`src/cadrumo/application/user_profile/tests/test_registration.py:254-268` guards profile
-identity generation, every randomness call, and custody material/KDF entry. Rotation's
-bite at `src/cadrumo/application/user_profile/tests/test_passphrase_rotation.py:293-315`
-guards root resolution, transaction locking, material loading, unwrap, record re-heading,
-and envelope publication. The existing whole-root byte snapshots remain separate proof
-that capsule, inventory, session, record, recovery, and envelope state is unchanged.
+Both refusal matrices now pin the exact finite translation key and the exact safe context keys and values for every canonical reason, including the absence of a byte measurement for surrogate refusal. They independently exclude the submitted candidate from the typed payload. The existing whole-root byte snapshots remain separate proof that capsule, inventory, session, record, recovery, and envelope state is unchanged.
 
 Commit diff hygiene passes. Independent Ruff lint and format checks pass over all six
 owned files, reporting them already formatted. The correctly selected serial integration
@@ -421,34 +308,9 @@ CRITICAL, or MEDIUM finding remains, and W02.P05.S08 may proceed.
 
 ### s08-cli-absent-channel-laundering | high | The CLI relabels every storage fault as a missing password channel
 
-The mandatory S08 review grounded commit `94abc99a67` against the accepted ADR,
-research, incident reference, live plan, current source, commit history, diff, and
-execution evidence. The central application contract is narrow and secret-free:
-`ProfileAuthenticationRefusedError` has one stable translation key and no context;
-the closed `ProfilePasswordProofOperation` enum makes every mapping call explicit; and
-`map_profile_password_proof_failure` at
-`src/cadrumo/application/user_profile/_custody_ports.py:1014-1023` collapses exactly
-`ProfileCustodyPasswordError`, allowing record, integrity, archive, supervision,
-transaction, resource, keyring, and storage faults to propagate. Login preserves the
-throttle write before raising the common refusal. Real malformed and wrong passwords
-are indistinguishable at login, password restore, and recovery export, with no candidate,
-measurement, or prospective-policy guidance and no publication. Rotation retains its
-operation-specific outer error while using the same narrow internal classification.
-Exact search confirms the obsolete broad password predicate and all consumers are gone,
-no recovery-removal capability exists, and this commit makes no locale changes.
+The mandatory S08 review grounded commit `94abc99a67` against the accepted ADR, research, incident reference, live plan, current source, commit history, diff, and execution evidence. Login preserves the throttle write before raising the common refusal. Real malformed and wrong passwords are indistinguishable at login, password restore, and recovery export, with no candidate, measurement, or prospective-policy guidance and no publication. Rotation retains its operation-specific outer error while using the same narrow internal classification. Exact search confirms the obsolete broad password predicate and all consumers are gone, no recovery-removal capability exists, and this commit makes no locale changes.
 
-The required minimal CLI adjustment is not narrow. In
-`src/cadrumo/entrypoints/cli/_config/_custody.py:253-275`, the handler catches both the
-new authentication refusal and every `SecretStoreError`; when no callback or configured
-passphrase exists, its condition tests only `isinstance(exc, SecretStoreError)`. Thus a
-`KeyringUnavailableError`, unavailable storage, corruption, supervision failure, or
-other operational storage fault occurring during callback-free login is replaced by
-`CliRefusedBoundaryError(application.user_profile.errors.passphrase_channel_absent)`.
-That tells the operator to supply a password channel when the real fault is operational,
-violates the ADR's explicit non-laundering boundary, and can suppress the correct
-retryability/remediation classification. The adjacent comment still claims that only
-the absent-channel custody refusal is selected, but the old predicate that made that
-true was deleted.
+The required minimal CLI adjustment is not narrow. Thus a `KeyringUnavailableError`, unavailable storage, corruption, supervision failure, or other operational storage fault occurring during callback-free login is replaced by `CliRefusedBoundaryError(application.user_profile.errors.passphrase_channel_absent)`. That tells the operator to supply a password channel when the real fault is operational, violates the ADR's explicit non-laundering boundary, and can suppress the correct retryability/remediation classification. The adjacent comment still claims that only the absent-channel custody refusal is selected, but the old predicate that made that true was deleted.
 
 Represent absence of an explicit password channel with its own typed application outcome
 before this boundary, or otherwise match only that exact condition without resurrecting
@@ -488,15 +350,7 @@ W03.P06.S09 dispatch until remediated and independently verified.
 
 #### S08 remediation closure
 
-Current-HEAD re-review of the S08 paths in mixed-provenance commits `b64e27f26c`,
-`1da3ae3f89`, and `f9a4062945`, after repeated semantic code and governing-ADR
-discovery plus exact-symbol confirmation, closes both findings. The CLI boundary at
-`src/cadrumo/entrypoints/cli/_config/_custody.py:253-280` no longer imports or catches
-the broad `SecretStoreError` family. It catches only the application authentication
-refusal and the exact custody password error that escapes before authentication when
-there is no callback or configured password. Only the latter, combined with both
-channel-absence facts, becomes `passphrase_channel_absent`; an offered malformed or
-wrong password remains the common application refusal.
+Current-HEAD re-review of the S08 paths in mixed-provenance commits `b64e27f26c`, `1da3ae3f89`, and `f9a4062945`, after repeated semantic code and governing-ADR discovery plus exact-symbol confirmation, closes both findings. It catches only the application authentication refusal and the exact custody password error that escapes before authentication when there is no callback or configured password. Only the latter, combined with both channel-absence facts, becomes `passphrase_channel_absent`; an offered malformed or wrong password remains the common application refusal.
 
 The new CLI classification tests inject `KeyringUnavailableError`, custody record
 integrity failure, and KDF supervision refusal into callback-free login and require the
@@ -507,18 +361,7 @@ errors are outside the catch tuple entirely, so their type, category, retryabili
 context cannot be rewritten there. No broad password predicate or `SecretStoreError`
 catch has been reintroduced.
 
-The mapper negative-space matrix at
-`src/cadrumo/application/user_profile/tests/test_authentication_failure_mapping.py:18-35`
-covers record/integrity, transaction, KDF resource, KDF supervision, and keyring
-unavailability for every closed `ProfilePasswordProofOperation`; all return `None`.
-Each public application door handles that result with a bare re-raise, preserving the
-original exception object, while only `ProfileCustodyPasswordError` becomes
-`ProfileAuthenticationRefusedError`. Rotation now pairs a malformed `short` current
-password with a cryptographically incorrect well-shaped password and proves identical
-outer translation key, `context is None`, candidate absence, whole-storage byte identity,
-and continued unlock by the current credential. The existing prospective replacement
-matrix remains separate and retains its detailed reason-bearing contract. No new error
-or compatibility type was introduced.
+Each public application door handles that result with a bare re-raise, preserving the original exception object, while only `ProfileCustodyPasswordError` becomes `ProfileAuthenticationRefusedError`. Rotation now pairs a malformed `short` current password with a cryptographically incorrect well-shaped password and proves identical outer translation key, `context is None`, candidate absence, whole-storage byte identity, and continued unlock by the current credential. The existing prospective replacement matrix remains separate and retains its detailed reason-bearing contract. No new error or compatibility type was introduced.
 
 Diff hygiene passes for the isolated S08 paths. Independent Ruff lint and format checks
 pass over all four remediation files. The serial CLI/mapper lane passes all 24 cases in
@@ -544,16 +387,7 @@ exit, and neither attempt nor refusal envelope retains it. Locale files are unto
 assigned to S10. Accepted live 15/256/1,024 and composed/decomposed end-to-end coverage
 is properly scheduled for S11 rather than duplicated in this mapping Step.
 
-However, `assessment_refusal` at
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:142-164` independently rebuilds
-the complete reason-to-message map, safe-context shape, and reason-specific limit facts
-already owned by application
-`src/cadrumo/application/user_profile/_prospective_password.py:32-72`. It imports all
-three profile-password limits and branches over every refusal reason a second time. A
-future application key or context change can therefore make live TUI feedback disagree
-with submission, and a new reason requires synchronized edits in two layers. This is the
-parallel policy/presentation path the ADR and the campaign's no-bloat requirement forbid,
-even though its current values agree.
+It imports all three profile-password limits and branches over every refusal reason a second time. A future application key or context change can therefore make live TUI feedback disagree with submission, and a new reason requires synchronized edits in two layers. This is the parallel policy/presentation path the ADR and the campaign's no-bloat requirement forbid, even though its current values agree.
 
 Expose the already canonical prospective refusal projection through the application
 facade (or a dependency-safe equivalent application presenter) and have both live TUI
@@ -565,14 +399,7 @@ architectural consistency and bloat defect, not a current secret leak.
 
 ### s09-original-crash-bite | medium | The live screen test stays green on the original worker-error regression
 
-`test_short_password_refuses_and_creates_nothing` at
-`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:162-175` drives the
-real Textual screen but asserts only `outcome is None` and no manifest. In the original
-bug, 8-14-scalar input reached the worker, raised custody English, rendered mixed-language
-INTERNAL guidance, created no profile, and also left `outcome` as `None`; this test would
-therefore remain green. The new parameterized test at lines 45-76 asserts the direct
-manager attempt envelope, not the live worker settlement or pinned status message, and
-its `"INTERNAL" not in repr(attempt)` assertion cannot detect what the screen renders.
+In the original bug, 8-14-scalar input reached the worker, raised custody English, rendered mixed-language INTERNAL guidance, created no profile, and also left `outcome` as `None`; this test would therefore remain green. The new parameterized test at lines 45-76 asserts the direct manager attempt envelope, not the live worker settlement or pinned status message, and its `"INTERNAL" not in repr(attempt)` assertion cannot detect what the screen renders.
 
 Strengthen the live 14-scalar regression to require `app.error is None`, an error-toned
 nonempty pinned refusal, the expected typed key/context path, and absence of INTERNAL
@@ -591,27 +418,9 @@ review-clean S09 and S10 until remediated and independently verified.
 
 #### S09 remediation closure
 
-Current-HEAD re-review of commit `fbfaa7cb84`, after repeated semantic code and
-governing-ADR discovery plus exact-symbol confirmation, closes both S09 findings. The
-application facade now exports `prospective_profile_password_refusal`, whose immutable
-result remains the sole production owner of refusal-reason message keys, exact safe
-context, and reason-specific limits. TUI `assessment_refusal` at
-`src/cadrumo/adapters/inbound/tui/_registration_screen.py:140-151` only adapts that
-application result into the immutable screen envelope. Exact search finds no TUI copy of
-the four keys, maximum-scalar or byte limits, or reason-to-context branches; the retained
-minimum import serves only the independent password-hint copy. The five refused
-candidate cases prove exact equality between live projection and the real submission
-attempt envelope, including both surrogate endpoints.
+Current-HEAD re-review of commit `fbfaa7cb84`, after repeated semantic code and governing-ADR discovery plus exact-symbol confirmation, closes both S09 findings. The application facade now exports `prospective_profile_password_refusal`, whose immutable result remains the sole production owner of refusal-reason message keys, exact safe context, and reason-specific limits. Exact search finds no TUI copy of the four keys, maximum-scalar or byte limits, or reason-to-context branches; the retained minimum import serves only the independent password-hint copy. The five refused candidate cases prove exact equality between live projection and the real submission attempt envelope, including both surrogate endpoints.
 
-The headless 14-scalar regression at
-`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:165-198` drives the
-real password widget and create action. It proves nonempty live and submitted refusal
-copy, error tone, `app.error is None`, no manifest, and absence of the candidate,
-`INTERNAL`, the original raw custody English, and traceback text. Its assertions would
-turn red on the original escaped-worker failure. The paired unkeyed `RuntimeError` test
-at lines 201-220 proves the genuine unexpected path retains the exact exception in
-`app.error` and renders exactly the active-language INTERNAL boundary guidance. Expected
-keyed errors therefore remain typed and localized without swallowing programming faults.
+It proves nonempty live and submitted refusal copy, error tone, `app.error is None`, no manifest, and absence of the candidate, `INTERNAL`, the original raw custody English, and traceback text. Its assertions would turn red on the original escaped-worker failure. The paired unkeyed `RuntimeError` test at lines 201-220 proves the genuine unexpected path retains the exact exception in `app.error` and renders exactly the active-language INTERNAL boundary guidance. Expected keyed errors therefore remain typed and localized without swallowing programming faults.
 
 Diff hygiene passes. Independent Ruff lint and format checks pass on all three
 remediation source/test files. The authoritative registration, language-switch, and
@@ -640,16 +449,7 @@ leaves are absent. The commit changes only the expected application and flow cat
 for each locale, with the mechanical ordering/wrapping produced by the documented
 `dev.locales` authority; no unrelated locale changes were overwritten.
 
-However, the real JSON error document also publishes
-`"password_refusal":"<ProspectiveProfilePasswordRefusal>"` inside `error.context`, in
-addition to `reason`, `scalar_count`, `utf8_byte_count`, and `minimum_scalars`. This is
-the CLI boundary auto-projecting the public exception's typed payload attribute as an
-opaque class marker. It is non-secret, but it is neither one of the stable safe facts nor
-useful operator/machine context; it exposes an implementation type name and makes the
-wire contract change when that internal class is renamed. The new test at
-`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:188-204`
-checks only forbidden substrings and nonzero exit, so it would pass with an empty or
-misclassified envelope and does not catch this extra field.
+However, the real JSON error document also publishes `"password_refusal":"<ProspectiveProfilePasswordRefusal>"` inside `error.context`, in addition to `reason`, `scalar_count`, `utf8_byte_count`, and `minimum_scalars`. This is the CLI boundary auto-projecting the public exception's typed payload attribute as an opaque class marker. It is non-secret, but it is neither one of the stable safe facts nor useful operator/machine context; it exposes an implementation type name and makes the wire contract change when that internal class is renamed.
 
 Keep the typed payload available to in-process application/TUI consumers without letting
 automatic CLI context extraction publish it--for example through an explicitly excluded
@@ -679,17 +479,7 @@ corrected.
 
 #### S10 remediation closure
 
-Current-HEAD re-review of commit `4ecef2687f`, after repeated semantic code and
-governing-ADR discovery plus exact-symbol confirmation, closes both S10 findings. The
-registration error now stores its typed refusal only in `_password_refusal` and exposes
-it to trusted in-process consumers through the getter-only `password_refusal` property
-at `src/cadrumo/application/user_profile/_registration.py:77-82`. The matching rotation
-error uses the same private-storage/read-only-access contract at
-`src/cadrumo/application/user_profile/_passphrase_rotation.py:74-79`. The stored value is
-the existing frozen, slotted `ProspectiveProfilePasswordRefusal`, whose derived context
-is a `MappingProxyType`; no candidate is retained. Because automatic CLI context
-extraction deliberately skips underscore-prefixed attributes, the typed payload remains
-available in process without becoming public wire context.
+Current-HEAD re-review of commit `4ecef2687f`, after repeated semantic code and governing-ADR discovery plus exact-symbol confirmation, closes both S10 findings. The stored value is the existing frozen, slotted `ProspectiveProfilePasswordRefusal`, whose derived context is a `MappingProxyType`; no candidate is retained. Because automatic CLI context extraction deliberately skips underscore-prefixed attributes, the typed payload remains available in process without becoming public wire context.
 
 The real scripted regression now parses the nonempty stderr JSON document and pins the
 exact six outer keys and eight error keys, command, error status, empty notices,
@@ -711,41 +501,11 @@ No unresolved HIGH, CRITICAL, or MEDIUM finding remains, and W03.P07.S11 may pro
 
 ### s11-cross-surface-matrix-absent | high | The recorded 22 cases do not prove the required inbound parity matrix
 
-The mandatory S11 review isolated the feature-owned paths in mixed commit
-`005b1c2fdc`, then reviewed `793cbb44b4` and `41c8daa7ff` against the accepted
-ADR, research, incident reference, live plan, current source, exact-symbol search, and
-execution evidence. The new machine channel itself follows the established custody
-shape: `_CreationSecrets` at
-`src/cadrumo/entrypoints/cli/_config/_scripted_registration.py:50-55` is frozen,
-uses `SecretStr`, and forbids extras; `resolve_creation_passphrase` delegates to the
-shared bounded strict reader at lines 69-70, compares confirmation without echo at
-lines 71-75, and passes only the selected value to registration. The lazy create
-signature adds one boolean `--secrets-stdin` option at
-`src/cadrumo/entrypoints/cli/_config/_manager_dispatch.py:160-172`. Live help contains
-the option exactly once, and the lazy verb schema resolves one matching boolean field.
-The malformed-JSON and extra-field cases refuse without the fixture secret, traceback,
-or profile publication.
+The mandatory S11 review isolated the feature-owned paths in mixed commit `005b1c2fdc`, then reviewed `793cbb44b4` and `41c8daa7ff` against the accepted ADR, research, incident reference, live plan, current source, exact-symbol search, and execution evidence. Live help contains the option exactly once, and the lazy verb schema resolves one matching boolean field. The malformed-JSON and extra-field cases refuse without the fixture secret, traceback, or profile publication.
 
-The core purpose of S11 is nevertheless absent. Exact search shows that scripted CLI
-has only the 14-scalar prospective refusal at
-`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:190-243`.
-It has no real cases for accepted 15, 256, or 1,024-byte candidates; refused 257 or
-1,025-byte candidates; either surrogate endpoint; or composed/decomposed exact
-usability and distinctness. The TUI registration module's parameterization at
-`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:45-59` covers 14,
-257, one 1,025-byte candidate, and both surrogates only through direct submission. It
-does not cover 15, 256, or 1,024-byte accepted boundaries or composed/decomposed exact
-credentials. Its byte candidate is 260 scalars and therefore proves the chosen byte
-precedence, not an independent accepted/refused byte boundary pair. The one live
-accepted screen case uses a single ordinary password and does not fill those cells.
+The core purpose of S11 is nevertheless absent. It has no real cases for accepted 15, 256, or 1,024-byte candidates; refused 257 or 1,025-byte candidates; either surrogate endpoint; or composed/decomposed exact usability and distinctness. It does not cover 15, 256, or 1,024-byte accepted boundaries or composed/decomposed exact credentials. Its byte candidate is 260 scalars and therefore proves the chosen byte precedence, not an independent accepted/refused byte boundary pair. The one live accepted screen case uses a single ordinary password and does not fill those cells.
 
-Likewise, `test_profile_password_messages_are_complete_distinct_real_translations` at
-`src/cadrumo/adapters/inbound/tui/tests/test_profile_password_locale_parity.py:21-30`
-calls `tr` directly. It proves five catalogue leaves are nonempty, interpolated, and
-different across en/es/ca/hu, but it does not drive either real inbound surface in any
-locale and therefore cannot prove one-language TUI/scripted rendering or the required
-absence of INTERNAL guidance, raw custody text, traceback, key, candidate, internal
-marker, and persistence across the matrix.
+It proves five catalogue leaves are nonempty, interpolated, and different across en/es/ca/hu, but it does not drive either real inbound surface in any locale and therefore cannot prove one-language TUI/scripted rendering or the required absence of INTERNAL guidance, raw custody text, traceback, key, candidate, internal marker, and persistence across the matrix.
 
 The stated 22 combined integration cases genuinely pass in 13.07 seconds, and the five
 catalogue cases pass in 3.04 seconds, but those counts are the existing module totals,
@@ -758,28 +518,11 @@ review-clean S11 and W04.P09.S12.
 
 ### s11-creation-channel-contract-bite | medium | Confirmation and lazy-option invariants lack regressions
 
-The creation-specific channel tests cover syntactically malformed JSON and one object
-with an extra field at
-`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:246-264`.
-They do not cover a missing `passphrase_confirmation`, unequal passphrase and
-confirmation, oversized input at the shared bound, or assert that lazy help and the
-projected verb schema contain the option exactly once. The shared reader already has
-generic strict/bounded coverage, so duplicating its entire parser matrix is unnecessary;
-however, the creation model's exact required fields, its operation-specific confirmation
-comparison, and its dynamically injected lazy option are new integration seams and can
-regress independently. Add focused cases for missing and mismatched confirmation with
-no echo/no profile, plus one lazy help/schema uniqueness assertion; either rely explicitly
-on the shared bound test or add one real oversized creation payload if the execution
-record claims that boundary end to end.
+They do not cover a missing `passphrase_confirmation`, unequal passphrase and confirmation, oversized input at the shared bound, or assert that lazy help and the projected verb schema contain the option exactly once. The shared reader already has generic strict/bounded coverage, so duplicating its entire parser matrix is unnecessary; however, the creation model's exact required fields, its operation-specific confirmation comparison, and its dynamically injected lazy option are new integration seams and can regress independently. Add focused cases for missing and mismatched confirmation with no echo/no profile, plus one lazy help/schema uniqueness assertion; either rely explicitly on the shared bound test or add one real oversized creation payload if the execution record claims that boundary end to end.
 
 ### s11-secret-channel-prose-drift | low | The scripted registration module still documents the pre-stdin channel order
 
-The module prose at `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py:8-23`
-still lists only console prompt, environment fallback, and refusal, while the function
-docstring says the channel is console-first even though explicit `--secrets-stdin` is
-now checked first. The code is correct--an explicitly selected machine channel must win--
-but the stale security-contract prose can mislead future maintenance. Reconcile it in
-the documentation/bloat Step without changing behavior.
+The code is correct--an explicitly selected machine channel must win-- but the stale security-contract prose can mislead future maintenance. Reconcile it in the documentation/bloat Step without changing behavior.
 
 Ruff lint and Ruff format checks pass on all four feature-owned Python files. The S11
 commit itself is clean; whole mixed-commit diff hygiene reports an unrelated trailing
@@ -791,21 +534,7 @@ S12 until remediated and independently verified.
 
 #### S11 remediation follow-up
 
-Current-HEAD re-review of commit `601e90890f`, after repeated semantic code and
-governing-ADR discovery plus exact-symbol confirmation, closes the central HIGH matrix
-gap and the LOW prose drift. The new real scripted matrix at
-`src/cadrumo/entrypoints/cli/_config/tests/test_profile_password_inbound_matrix.py:43-105`
-drives `config profile create --secrets-stdin` for refused 14 and 257 scalars, the
-1,025-byte precedence case, and both surrogate halves; accepted 15 and 256 scalars,
-exactly 1,024 UTF-8 bytes, and composed/decomposed sequences create real profiles. Each
-accepted profile's committed capsule unlocks with the submitted sequence, while the
-opposite normalization form is refused for both composition variants. The TUI's real
-headless Pilot acceptance case at
-`src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py:99-161` now covers
-the same five accepted candidates, real persistence, exact unlock, normalization
-counterpart refusal, and an unrelated wrong-password refusal. Its established typed
-submission refusal matrix still covers 14, 257, 1,025-byte precedence, and both
-surrogate endpoints without profile publication.
+Current-HEAD re-review of commit `601e90890f`, after repeated semantic code and governing-ADR discovery plus exact-symbol confirmation, closes the central HIGH matrix gap and the LOW prose drift. Each accepted profile's committed capsule unlocks with the submitted sequence, while the opposite normalization form is refused for both composition variants. Its established typed submission refusal matrix still covers 14, 257, 1,025-byte precedence, and both surrogate endpoints without profile publication.
 
 The scripted module prose now accurately places explicit bounded `--secrets-stdin`
 first, followed by the no-echo terminal, configured secret, and refusal. The independent
@@ -816,17 +545,7 @@ and `s11-secret-channel-prose-drift` is closed. Two residual test-contract gaps 
 
 ### s11-language-surface-bite | medium | Four-locale runtime cases do not prove one-language or full no-leak/no-persistence claims
 
-The new en/es/ca/hu runtime test at
-`src/cadrumo/entrypoints/cli/_config/tests/test_profile_password_inbound_matrix.py:72-80`
-parses only `error.message` and asserts that it is nonempty, omits the candidate and
-message-key prefix, and differs from the raw English custody diagnostic. It does not
-assert refusal status/classification, equality to the exact translation for the selected
-locale, inequality/absence of the other three rendered leaves, or absence of INTERNAL,
-traceback, internal type marker, and profile publication. Consequently the test would
-remain green if every locale incorrectly rendered the same non-key sentence, if a leak
-appeared elsewhere in stdout/stderr, or if the refusal stranded storage. The English
-matrix cases prove those negatives only for English and only check for one capsule
-filename rather than the authoritative bucket listing.
+It does not assert refusal status/classification, equality to the exact translation for the selected locale, inequality/absence of the other three rendered leaves, or absence of INTERNAL, traceback, internal type marker, and profile publication. Consequently the test would remain green if every locale incorrectly rendered the same non-key sentence, if a leak appeared elsewhere in stdout/stderr, or if the refusal stranded storage. The English matrix cases prove those negatives only for English and only check for one capsule filename rather than the authoritative bucket listing.
 
 Strengthen the four-locale real invocation to compare the public message with the exact
 selected-locale rendering, prove it is not any other locale's rendering, apply all
@@ -836,16 +555,7 @@ record's one-language/no-leak/no-persistence claim and S12.
 
 ### s11-creation-channel-contract-bite-follow-up | medium | The new command tests still leave three claimed seams unpinned
 
-Missing confirmation, malformed JSON, an extra field, and greater-than-8-KiB payloads
-now refuse and the shared list command proves no profile for those parameterized cases.
-Unequal confirmation is also refused. However, the mismatch test at
-`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:269-276`
-does not prove the distinct confirmation value is absent or that no profile was created.
-The oversized case asserts absence of `_PASSPHRASE`, which is not present in its payload,
-so it would not catch echo of the actual 9,000-character secret. Finally, the help test
-at lines 279-282 proves one rendered option but never builds the lazy verb schema or
-asserts its single boolean `secrets_stdin` field, despite the execution claim covering
-both help and schema.
+Missing confirmation, malformed JSON, an extra field, and greater-than-8-KiB payloads now refuse and the shared list command proves no profile for those parameterized cases. Unequal confirmation is also refused. The oversized case asserts absence of `_PASSPHRASE`, which is not present in its payload, so it would not catch echo of the actual 9,000-character secret. Finally, the help test at lines 279-282 proves one rendered option but never builds the lazy verb schema or asserts its single boolean `secrets_stdin` field, despite the execution claim covering both help and schema.
 
 Add exact mismatch no-echo/no-profile assertions, make the oversized case check its own
 submitted value (or a distinctive safe substring) plus no profile, and assert the lazy
@@ -855,38 +565,11 @@ CRITICAL finding remains, but these two MEDIUM findings block W04.P09.S12.
 
 #### S11 final remediation closure
 
-Current-HEAD re-review of the feature-owned portions of mixed commit `b556e1ceba`
-and execution-record commit `38da9b3642`, after repeated semantic code and
-governing-ADR discovery plus exact-symbol confirmation, closes both residual MEDIUM
-findings. The scripted create diversion now calls the canonical
-`activate_subcommand_output_language` at
-`src/cadrumo/entrypoints/cli/_config/_manager_dispatch.py:122` after Click has parsed
-the declared option and before scripted registration resolves input, reads a secret,
-assesses the candidate, or constructs a refusal. This matches the timing used by sibling
-subcommands and fixes the real defect exposed by the new test: without the activation,
-non-Spanish requests could inherit ambient Spanish.
+Current-HEAD re-review of the feature-owned portions of mixed commit `b556e1ceba` and execution-record commit `38da9b3642`, after repeated semantic code and governing-ADR discovery plus exact-symbol confirmation, closes both residual MEDIUM findings. This matches the timing used by sibling subcommands and fixes the real defect exposed by the new test: without the activation, non-Spanish requests could inherit ambient Spanish.
 
-The four real en/es/ca/hu invocations at
-`src/cadrumo/entrypoints/cli/_config/tests/test_profile_password_inbound_matrix.py:74-112`
-now pin the complete error object: stable REFUSED category and registration code, exact
-four-fact safe context, null action/runbook/trace identifier, non-retryability, and the
-exact selected-locale message. Each case excludes the other three rendered messages,
-the candidate, message key, internal typed marker, raw custody diagnostic, traceback,
-and INTERNAL guidance, and proves no published capsule. The already exact outer-envelope
-regression and authoritative zero-profile listing cover the same real 14-scalar path;
-locale activation changes only presentation context before that unchanged pre-mutation
-application refusal. `s11-language-surface-bite` is closed.
+Each case excludes the other three rendered messages, the candidate, message key, internal typed marker, raw custody diagnostic, traceback, and INTERNAL guidance, and proves no published capsule. The already exact outer-envelope regression and authoritative zero-profile listing cover the same real 14-scalar path; locale activation changes only presentation context before that unchanged pre-mutation application refusal. `s11-language-surface-bite` is closed.
 
-All creation-channel invalid shapes now prove refusal and zero listed profiles: malformed
-JSON, missing confirmation, extra field, greater-than-8-KiB payload, and unequal
-confirmation. The parameterized test checks the actual 9,000-character submitted value
-is absent from combined stdout/stderr, while the mismatch test checks both distinct
-submitted secrets are absent. The lazy contract test at
-`src/cadrumo/entrypoints/cli/_config/tests/test_scripted_profile_creation.py:287-295`
-independently proves rendered help contains one `--secrets-stdin` occurrence and the
-materialized `config.profile.create` verb schema contains exactly one matching parameter
-with that flag. `s11-creation-channel-contract-bite-follow-up` and the original MEDIUM
-are closed.
+All creation-channel invalid shapes now prove refusal and zero listed profiles: malformed JSON, missing confirmation, extra field, greater-than-8-KiB payload, and unequal confirmation. The parameterized test checks the actual 9,000-character submitted value is absent from combined stdout/stderr, while the mismatch test checks both distinct submitted secrets are absent. `s11-creation-channel-contract-bite-follow-up` and the original MEDIUM are closed.
 
 Independent serial verification passes all 44 real TUI/scripted integration cases in
 32.98 seconds and all five locale-parity cases in 3.04 seconds. Ruff lint and Ruff format
@@ -913,17 +596,7 @@ mapping remains deliberately limited to `ProfileCustodyPasswordError`, preservin
 non-oracular application authentication outcome without reclassifying recovery-secret
 representation as a profile password.
 
-However, the new type is still constructed with raw persistence-owned English at
-`src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py:412` and
-`src/cadrumo/adapters/persistence/storage/custody/_recovery_secret_codec.py:14,22`.
-`restore_profile_from_recovery_artifact` at
-`src/cadrumo/application/user_profile/_recovery_custody.py:263-269` lets this exception
-cross the application boundary unchanged. Registration in the error catalogue does not
-localize it: `resolve_error_message` at `src/cadrumo/core/errors/_registry.py:492-509`
-prefers a nonempty first string argument before the registered message key. A direct
-runtime proof returns code `REFUSED_STORAGE_PROFILE_CUSTODY_RECOVERY_SECRET` and the
-correct generic message key, but resolves the public message to the raw sentence
-`profile recovery secret did not authenticate the custody envelope`.
+A direct runtime proof returns code `REFUSED_STORAGE_PROFILE_CUSTODY_RECOVERY_SECRET` and the correct generic message key, but resolves the public message to the raw sentence `profile recovery secret did not authenticate the custody envelope`.
 
 This recreates the incident's architectural failure on the recovery door: an expected
 credential refusal is typed and classified, yet storage prose still reaches the
@@ -970,17 +643,7 @@ passes 22 cases, and Ruff lint and format checks are clean. The HIGH is closed.
 
 #### Independent S12 HIGH closure verification
 
-Commits `f60746befe` and `1ca33b9cf1` close
-`s12-recovery-raw-presentation` in production. The single credential-neutral
-`map_profile_authentication_proof_failure` entry point has no retired
-password-named alias or export. At
-`src/cadrumo/application/user_profile/_custody_ports.py:1014-1028`, only
-`ProfileCustodyRecoverySecretError` under the explicit `RECOVERY_RESTORE`
-operation and `ProfileCustodyPasswordError` under the four password-proof
-operations collapse to the same context-free
-`ProfileAuthenticationRefusedError`; the cross-type cases remain unmapped.
-The five-operation matrix also leaves representative record-integrity,
-transaction, resource, supervision, and keyring failures unchanged.
+Commits `f60746befe` and `1ca33b9cf1` close `s12-recovery-raw-presentation` in production. The single credential-neutral `map_profile_authentication_proof_failure` entry point has no retired password-named alias or export. The five-operation matrix also leaves representative record-integrity, transaction, resource, supervision, and keyring failures unchanged.
 
 The real Spanish wrong-mnemonic restore excludes the custody diagnostic,
 translation key, `INTERNAL`, traceback, and submitted mnemonic. The real
@@ -993,15 +656,7 @@ verified closed.
 
 ### s12-recovery-presentation-matrix-bite | medium | Recovery refusal assertions split presentation and atomicity across cases
 
-`src/cadrumo/application/user_profile/tests/test_recovery_custody.py:245-276`
-does not yet prove the complete promised public contract for either hostile
-candidate in one real boundary test. The wrong-mnemonic case renders in Spanish
-and checks leak absence, but does not assert that the destination capsule was
-not published. Its localization assertion is message containment rather than
-an exact rendered-envelope assertion. The malformed-surrogate case asserts
-only context-free type and non-publication; it never renders in Spanish or
-excludes raw adapter text, the translation key, `INTERNAL`, traceback, or the
-candidate from the rendered result.
+The wrong-mnemonic case renders in Spanish and checks leak absence, but does not assert that the destination capsule was not published. Its localization assertion is message containment rather than an exact rendered-envelope assertion. The malformed-surrogate case asserts only context-free type and non-publication; it never renders in Spanish or excludes raw adapter text, the translation key, `INTERNAL`, traceback, or the candidate from the rendered result.
 
 The production mapping is coherent and the original security leak is closed,
 so this is not a remaining raw-presentation defect. It is a regression-proof
@@ -1025,16 +680,7 @@ lint and format checks are clean. The MEDIUM is closed and S12 is review-clean.
 
 #### Independent S12 presentation-matrix closure verification
 
-Commits `e02fab1b68` and `ebeeca7bf9` fully close
-`s12-recovery-presentation-matrix-bite`. The parameterized real recovery door at
-`src/cadrumo/application/user_profile/tests/test_recovery_custody.py:257-309`
-executes the wrong-mnemonic and malformed-high-surrogate candidates separately.
-Each case requires the exact Spanish `ErrorEnvelope` field set and values, the
-exact single rendered refusal line, context `None`, and absence of both custody
-diagnostics, the translation key, `INTERNAL`, traceback, and the candidate's
-safe representation. The surrogate is constructed with `chr(0xD800)` and only
-its ASCII backslash representation participates in leak assertions, avoiding
-unsafe terminal or test-identifier transport.
+Commits `e02fab1b68` and `ebeeca7bf9` fully close `s12-recovery-presentation-matrix-bite`. Each case requires the exact Spanish `ErrorEnvelope` field set and values, the exact single rendered refusal line, context `None`, and absence of both custody diagnostics, the translation key, `INTERNAL`, traceback, and the candidate's safe representation. The surrogate is constructed with `chr(0xD800)` and only its ASCII backslash representation participates in leak assertions, avoiding unsafe terminal or test-identifier transport.
 
 Each parameter captures the full storage tree as relative path, filesystem
 kind, and exact file bytes before proof, then requires an identical snapshot

@@ -18,9 +18,9 @@ from uuid import uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.persistence.storage.custody import linux_secret_service_store as native
+from cadrumo.adapters.persistence.storage.custody import linux_secret_bus as secret_bus
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
@@ -104,10 +104,10 @@ def _trace_native_calls(
     expected_control_directory: Path,
 ) -> _NativeCallTrace:
     trace = _NativeCallTrace()
-    actual_call = native._DeadlineBus.call
+    actual_call = secret_bus.DeadlineSecretBus.call
 
     def traced_call(
-        bus: native._DeadlineBus,
+        bus: secret_bus.DeadlineSecretBus,
         path: str,
         interface: str,
         method: str,
@@ -133,7 +133,7 @@ def _trace_native_calls(
             assert reply == (str(expected_control_directory),)
         return reply
 
-    monkeypatch.setattr(native._DeadlineBus, "call", traced_call)
+    monkeypatch.setattr(secret_bus.DeadlineSecretBus, "call", traced_call)
     return trace
 
 

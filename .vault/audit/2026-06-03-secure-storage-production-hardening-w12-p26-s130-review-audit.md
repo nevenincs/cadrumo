@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:41d3da34367bd518cc15f40e6c56d158838fd5fb7449251e927555cc1ece33d8'
+modified: '2026-10-03'
+body_hash: 'sha256:97970bf6f1fc408dce0ddc5d029be6dcaef87f5acf3f5d68c9362396d163f853'
 related: []
 ---
 
@@ -20,8 +20,8 @@ Google API and validation failures stay on typed outbound storage exceptions. Th
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_calc_sheets_pull_typing.py src/aeat/adapters/outbound/google/test_pull_adapter_helpers.py src/aeat/adapters/outbound/google/test_compute_from_pull.py src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py src/aeat/adapters/outbound/google/test_calc_sheets_apply.py` passed with 38 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/_calc_sheets_pull.py src/aeat/adapters/outbound/google/test_calc_sheets_pull_typing.py src/aeat/adapters/outbound/google/test_pull_adapter_helpers.py src/aeat/adapters/outbound/google/test_compute_from_pull.py src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py src/aeat/adapters/outbound/google/test_calc_sheets_apply.py` passed.
+- the historical check passed with 38 tests.
+- the historical check passed.
 - A source scan found no naked environment reads, DB route setup, secure-object repository constructors, local storage provider constructors, or direct local file read/write calls in `_calc_sheets_pull.py`.
 
 Disposition: close `AFR-028` as `remote-mirror`.
@@ -46,7 +46,7 @@ Follow-up review found that blank spreadsheet id, foreign Drive ownership, and m
 Validation:
 
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_pull_adapter_helpers.py src/aeat/adapters/outbound/google/test_compute_from_pull.py` passed.
+- the historical check passed.
 - Targeted Ruff passed for `_calc_sheets_pull.py` and the focused tests.
 
 ADR grounding: the 2026-06-03 modelo export evidence/workbook parity ADRs were reviewed. This step remains a Google Sheets transport hardening step only; it does not claim the new evidence-bundling surface, official-layout parity gate, or offline/online workbook parity contract.

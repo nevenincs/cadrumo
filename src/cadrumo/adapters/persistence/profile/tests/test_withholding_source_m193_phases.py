@@ -72,6 +72,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.user_profile.values import UserProfileFact
 
+from .retencion_observation_authoring import replace_retencion_observations
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # The coupon accrues in the shared fixture's exercise, whose selected Modelo 193
@@ -337,17 +339,13 @@ def test_an_accrual_below_the_support_floor_carrying_pending_evidence_is_refused
         _capture(capture, profile.repository)
         retenciones = RetencionObservationRepositoryAdapter(objects=profile.repository)
         (captured,) = retenciones.load_observations("123", Period.from_year_and_code(_GROUNDED_ACCRUAL_EXERCISE, "4T"))
-        retenciones.replace_observations(
+        replace_retencion_observations(
+            retenciones,
             modelo="123",
             filing_year=below,
             period=Period.from_year_and_code(below, "4T"),
             observations=[
-                captured.model_copy(
-                    update={
-                        "source_object_id": f"coupon-{below}-12",
-                        "accrued_on": f"{below}-12-15",
-                    }
-                )
+                captured.model_copy(update={"source_object_id": f"coupon-{below}-12", "accrued_on": f"{below}-12-15"})
             ],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )

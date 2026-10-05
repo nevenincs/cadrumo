@@ -25,6 +25,8 @@ class OAuthCredentials(Protocol):
 
 class Flow:
     credentials: OAuthCredentials
+    redirect_uri: str | None
+    def authorization_url(self, **kwargs: Any) -> tuple[str, str]: ...
     def run_local_server(
         self,
         host: str = ...,
@@ -48,3 +50,6 @@ class InstalledAppFlow(Flow):
         scopes: Sequence[str] | None,
         **kwargs: Any,
     ) -> InstalledAppFlow: ...
+
+class WSGITimeoutError(AttributeError):
+    """Raised by `run_local_server` when no redirect arrives within `timeout_seconds`."""

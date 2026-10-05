@@ -12,14 +12,22 @@ terminal-liquidación roles, Modelo 100 today; modelo 303's casillas carry
 positional roles such as `dr303_23` that name no meaning, so this resolver
 returns nothing for them rather than guessing. A caller must render that
 absence as "not available", not as a blank or a zero.
+
+:func:`declaration_result_casillas` is the one rule for which casillas hold a
+revision's result: the boxes the modelo's "tipo de declaración" rule reads,
+where the revision defines any, and otherwise the registry's declared final
+result. The workbench's settlement result and the help card's chain to the
+result both take it from here.
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
 from ...core.errors.hierarchy import CadrumoError
+from ...core.result_disposition import result_disposition_casilla_ids
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -123,9 +131,46 @@ def declaration_result_casilla_id(revision: SettlementRevisionV1) -> CasillaId |
     return settling[0]
 
 
+@dataclass(frozen=True, slots=True)
+class DeclarationResultCasillas:
+    """The casillas that hold one revision's result, and which rule named them.
+
+    ``by_declared_type`` is true when the modelo's "tipo de declaración" rule
+    names them, in the order it declares them, so its sign rule gives the
+    direction; false when the registry's final-result role names the one
+    casilla, whose direction no rule states.
+    """
+
+    casilla_ids: tuple[CasillaId, ...]
+    by_declared_type: bool
+
+
+def declaration_result_casillas(modelo: str, revision: SettlementRevisionV1) -> DeclarationResultCasillas | None:
+    """Return the casillas holding ``revision``'s result, or ``None`` when it names none.
+
+    The result boxes the modelo's "tipo de declaración" rule reads come first,
+    those of them ``revision`` defines; otherwise the casilla the registry
+    declares the final result.
+
+    Raises:
+        AmbiguousDeclarationResultError: The revision falls back to the
+            registry's role and two casillas claim it.
+    """
+    defined = {str(casilla.id) for casilla in revision.casillas}
+    declared = tuple(
+        casilla_id for casilla_id in result_disposition_casilla_ids(modelo) or () if str(casilla_id) in defined
+    )
+    if declared:
+        return DeclarationResultCasillas(casilla_ids=declared, by_declared_type=True)
+    role = declaration_result_casilla_id(revision)
+    return None if role is None else DeclarationResultCasillas(casilla_ids=(role,), by_declared_type=False)
+
+
 __all__ = [
     "DECLARATION_RESULT_SEMANTIC_ROLES",
     "SETTLEMENT_SEMANTIC_ROLES",
     "AmbiguousDeclarationResultError",
+    "DeclarationResultCasillas",
     "declaration_result_casilla_id",
+    "declaration_result_casillas",
 ]

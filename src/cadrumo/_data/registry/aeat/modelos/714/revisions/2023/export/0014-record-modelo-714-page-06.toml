@@ -1,0 +1,54 @@
+[[revisions.2023.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2023.export_layouts.records]]
+id = 'modelo-714-page-06'
+record_type = '714-06'
+order = 5
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-15'
+offset = 1436
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-15'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-06-reserved-2'
+offset = 1449
+length = 140
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-714-page-06-end'
+offset = 1589
+length = 12
+kind = 'literal'
+literal = '</T71406000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-265-2024:art-4']
+source_refs = ['aeat-dr-714-2023']
+
+[revisions.2023.export_layouts.records.row_field_casilla_ids]

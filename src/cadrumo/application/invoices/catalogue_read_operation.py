@@ -1,4 +1,7 @@
-"""Recorded invoice inspection under exact-profile, whole-period authority."""
+"""Recorded invoice inspection under exact-profile, whole-period authority.
+
+Core types: :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +12,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -24,6 +26,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.classification import InvoiceKind
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -36,16 +39,11 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import resolve_catalogue_invoice
@@ -239,22 +237,8 @@ class InvoiceCatalogueReadExecutor:
             if any(row.bucket_id is not None and str(row.bucket_id) != profile for row in catalogue.values()):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             if isinstance(payload, InvoiceListRequest):
-                return InvoiceListResult(
-                    profile_id=payload.profile_id,
-                    kind=payload.kind,
-                    invoices=tuple(
-                        CatalogueInvoiceSnapshot.from_invoice(row)
-                        for row in catalogue.values()
-                        if payload.kind is None or row.kind is payload.kind
-                    ),
-                )
-            try:
-                invoice = resolve_catalogue_invoice(catalogue, payload.invoice_id)
-            except InvoiceLookupRefusedError as exc:
-                outcome: InvoiceViewOutcome = InvoiceViewRefusal(reason=exc.reason, candidate_ids=exc.candidate_ids)
-            else:
-                outcome = InvoiceViewSuccess(invoice=CatalogueInvoiceSnapshot.from_invoice(invoice))
-            return InvoiceViewResult(profile_id=payload.profile_id, invoice_id=payload.invoice_id, outcome=outcome)
+                return _capture_invoice_list(payload, catalogue)
+            return _capture_invoice_view(payload, catalogue)
 
     async def execute(
         self, request: OperationRequest[InvoiceListRequest | InvoiceViewRequest], context: OperationExecutorContext
@@ -266,15 +250,9 @@ class InvoiceCatalogueReadExecutor:
             if isinstance(payload, InvoiceListRequest)
             else INVOICE_VIEW_OPERATION_DEFINITION_ID
         )
-        if (
-            request.definition_id != expected
-            or request.definition_id != self._definition_id
-            or request.subject_ref != profile_operation_subject(str(payload.profile_id))
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != str(payload.profile_id)
-        ):
+        if request.definition_id != expected or request.definition_id != self._definition_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(self._definition_id)
 
         async def capture() -> str | OperationRefusalEvidence:
@@ -288,6 +266,28 @@ class InvoiceCatalogueReadExecutor:
         return await await_cancellation_complete(capture(), task_name="invoice-catalogue-read")
 
 
+def _capture_invoice_list(payload: InvoiceListRequest, catalogue: InvoiceCatalogue) -> InvoiceListResult:
+    return InvoiceListResult(
+        profile_id=payload.profile_id,
+        kind=payload.kind,
+        invoices=tuple(
+            CatalogueInvoiceSnapshot.from_invoice(row)
+            for row in catalogue.values()
+            if payload.kind is None or row.kind is payload.kind
+        ),
+    )
+
+
+def _capture_invoice_view(payload: InvoiceViewRequest, catalogue: InvoiceCatalogue) -> InvoiceViewResult:
+    try:
+        invoice: Invoice = resolve_catalogue_invoice(catalogue, payload.invoice_id)
+    except InvoiceLookupRefusedError as exc:
+        outcome: InvoiceViewOutcome = InvoiceViewRefusal(reason=exc.reason, candidate_ids=exc.candidate_ids)
+    else:
+        outcome = InvoiceViewSuccess(invoice=CatalogueInvoiceSnapshot.from_invoice(invoice))
+    return InvoiceViewResult(profile_id=payload.profile_id, invoice_id=payload.invoice_id, outcome=outcome)
+
+
 def _definition(
     definition_id: str,
     request_type: type[BaseModel],
@@ -296,17 +296,12 @@ def _definition(
     *,
     private_request: bool,
 ) -> OperationDefinition:
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=InvoiceCatalogueReadExecutor,
-            build=lambda: InvoiceCatalogueReadExecutor(factory, definition_id),
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=InvoiceCatalogueReadExecutor,
+        build=lambda: InvoiceCatalogueReadExecutor(factory, definition_id),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -324,10 +319,7 @@ def _definition(
             permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({INVOICE_VIEW_REFUSAL_CODE}) if private_request else frozenset(),
     )
 
@@ -365,29 +357,19 @@ def resolve_invoice_read_access(
 
 def build_invoice_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Expose independently typed inventory output behind the shared access policy."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=InvoiceListRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=InvoiceListProjection
-        ),
-        access_resolver=resolve_invoice_read_access,
+        public_result_type=InvoiceListProjection,
         result_projector=project_invoice_list_result,
+        access_resolver=resolve_invoice_read_access,
     )
 
 
 def build_invoice_view_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Expose a guarded selected record or explicitly registered refusal detail."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=InvoiceViewRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=InvoiceViewProjection
-        ),
-        access_resolver=resolve_invoice_read_access,
+        public_result_type=InvoiceViewProjection,
         result_projector=project_invoice_view_result,
+        access_resolver=resolve_invoice_read_access,
     )

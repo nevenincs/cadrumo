@@ -45,7 +45,7 @@ def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="003a1085-09ba-4bb7-b507-792b9aa74379") as profile:
         repository = profile.repository
         plaintext_by_key = {
-            "google_oauth_client": b"push-path-client-secret-plaintext",
+            "google_drive_config": b"push-path-drive-config-plaintext",
             "google_oauth_token": b"push-path-refresh-token-plaintext",
             "google_oauth_metadata": b"push-path-metadata-plaintext",
         }
@@ -346,7 +346,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
             written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"tampered-lineage-plaintext",
         )
-        clean_definition = lookup_namespace_definition("google_oauth_client")
+        clean_definition = lookup_namespace_definition("google_drive_config")
         clean_namespace = clean_definition.namespace
         repository.save(
             namespace=clean_namespace,
@@ -401,7 +401,7 @@ def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tm
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="9ce8825c-9620-4ebb-8097-63cf14fc514d") as profile:
         repository = profile.repository
         plaintext_by_key = {
-            "google_oauth_client": b"dry-run-client-secret-plaintext",
+            "google_drive_config": b"dry-run-drive-config-plaintext",
             "google_oauth_token": b"dry-run-refresh-token-plaintext",
             "google_oauth_metadata": b"dry-run-metadata-plaintext",
         }
@@ -518,7 +518,7 @@ def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="5a71781d-e8a9-4e01-8c5a-19442d44b402") as profile:
         repository = profile.repository
         plaintext_by_key = {
-            "google_oauth_client": b"filter-client-secret-plaintext",
+            "google_drive_config": b"filter-drive-config-plaintext",
             "google_oauth_token": b"filter-refresh-token-plaintext",
         }
         for namespace_key, plaintext in plaintext_by_key.items():
@@ -531,7 +531,7 @@ def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path)
                 written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
                 payload=plaintext,
             )
-        target_namespace = lookup_namespace_definition("google_oauth_client").namespace
+        target_namespace = lookup_namespace_definition("google_drive_config").namespace
         other_namespace = lookup_namespace_definition("google_oauth_token").namespace
         provider = LocalFileSystemProvider(tmp_path / "mirror")
 

@@ -3,43 +3,32 @@
 from __future__ import annotations
 
 import asyncio
-import re
 from dataclasses import dataclass
-from typing import Annotated, Literal, Protocol, Self
-from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel
 
-from ...core.aggregation import BindingSourceKind
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
-from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.withholding_bindings import aggregate_withholding_by_clave
-from ...domain.transactions.models import TransactionCatalogue
 from ..aggregation.errors import AggregationConfigError, AggregationUnsupportedModeloError
 from ..aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingCapture,
     LedgerPaymentWithholdingEvidenceError,
-    LedgerPaymentWithholdingEvidenceRequest,
     build_ledger_payment_withholding_capture,
     resolve_ledger_payment_transaction,
 )
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
-from ..aggregation.retencion_observations_repository import RetencionObservationPorts, RetencionObservationRepository
+from ..aggregation.percepciones_observations_repository import (
+    PercepcionObservationPorts,
+)
+from ..aggregation.retencion_observations_repository import (
+    RetencionObservationPorts,
+)
 from ..aggregation.service import (
     CalculationWithholdingRows,
     PerModeloAggregationCommand,
@@ -55,240 +44,64 @@ from ..aggregation.withholding_filing_cadence import (
     load_bucket_withholding_filer_cadence,
 )
 from ..aggregation.withholding_observation_service import (
-    WithholdingGenerationAudit,
-    WithholdingMutationMode,
     WithholdingObservationMutationError,
-    WithholdingObservationService,
-    WithholdingWindowBaseline,
     WithholdingWindowScope,
     WithholdingWindowState,
 )
-from ..aggregation.withholding_producer import WithholdingProducer, WithholdingProducerError
+from ..aggregation.withholding_producer import (
+    WithholdingEvidenceCaptureResult,
+    WithholdingProducer,
+    WithholdingProducerError,
+)
 from ..aggregation.withholding_recognition import WithholdingRecognitionError
 from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicDecimal
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
-from ..user_profile.access_errors import ProfileAccessRefusedError
-from .aggregate_public import PublicLedgerPaymentEvidenceRequest, PublicModeloAggregateCommand
-
-MODELO_AGGREGATE_OPERATION_DEFINITION_ID = "modelo.aggregate"
-MODELO_AGGREGATE_UNSUPPORTED_MODELO_REFUSAL_CODE = "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO"
-MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE = "REFUSED_LEDGER_PAYMENT_WITHHOLDING_EVIDENCE"
-MODELO_AGGREGATE_CADENCE_REFUSAL_CODE = "REFUSED_WITHHOLDING_FILING_CADENCE"
-MODELO_AGGREGATE_PRODUCER_REFUSAL_CODE = "REFUSED_WITHHOLDING_PRODUCER"
-MODELO_AGGREGATE_RECOGNITION_REFUSAL_CODE = "REFUSED_WITHHOLDING_RECOGNITION"
-MODELO_AGGREGATE_REFUSAL_CODES = frozenset(
-    {
-        MODELO_AGGREGATE_UNSUPPORTED_MODELO_REFUSAL_CODE,
-        MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
-        MODELO_AGGREGATE_CADENCE_REFUSAL_CODE,
-        MODELO_AGGREGATE_PRODUCER_REFUSAL_CODE,
-        MODELO_AGGREGATE_RECOGNITION_REFUSAL_CODE,
-    }
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
 )
-
-_PREPARE_PHASE = "modelo-aggregate.prepare"
-_COMMIT_PHASE = "modelo-aggregate.commit"
-_RESULT_PHASE = "modelo-aggregate.result"
-_PHASES = (_PREPARE_PHASE, _COMMIT_PHASE, _RESULT_PHASE)
-_MAX_RESULT_BYTES = 16 * 1024
-_WITHHOLDING_MODELOS = frozenset({"111", "115", "123"})
-_LEDGER_PAYMENT_MODELOS = frozenset({"111", "123"})
-_SAFE_REFUSAL_REASON = Annotated[
-    str,
-    Field(min_length=1, max_length=96, pattern=r"^[a-z][a-z0-9_]*$"),
-]
-
-
-class TransactionCatalogueReadPort(Protocol):
-    """Profile-bound transaction catalogue view needed for payment capture."""
-
-    @property
-    def bucket_id(self) -> str:
-        """Return the immutable profile binding of this reader."""
-        ...
-
-    def load_revision(self) -> str | None:
-        """Return the exact revision of the full transaction catalogue."""
-        ...
-
-    def load_by_ids(self, transaction_ids: tuple[str, ...]) -> TransactionCatalogue:
-        """Read the addressed transaction rows from this profile's catalogue."""
-        ...
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloAggregateOperationPorts:
-    """Canonical profile-scoped readers and producer service for one request."""
-
-    profile_id: str
-    transaction_catalogue_repository: TransactionCatalogueReadPort
-    retencion_observation_repository: RetencionObservationRepository
-    withholding_observation_service: WithholdingObservationService
-    percepcion_observation_ports: PercepcionObservationPorts | None = None
-
-
-class ModeloAggregateOperationPortsFactory(Protocol):
-    """Build every aggregate capability already bound to the requested profile."""
-
-    def __call__(self, *, profile_id: str) -> ModeloAggregateOperationPorts:
-        """Return the exact profile's aggregate read and capture capabilities."""
-        ...
-
-
-class ModeloAggregateOperationRequest(BaseModel):
-    """Confidential typed aggregation operands and optional ledger payment evidence."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: UUID
-    command: PublicModeloAggregateCommand = Field(repr=False)
-    ledger_payment: PublicLedgerPaymentEvidenceRequest | None = Field(default=None, repr=False)
-
-    @model_validator(mode="after")
-    def _closed_aggregate_scope(self) -> Self:
-        model = self.command.modelo
-        if model in _WITHHOLDING_MODELOS and self.command.retencion_observations:
-            raise ValueError("withholding-model aggregate reads stored retención observations")
-        if self.ledger_payment is not None:
-            if model not in _LEDGER_PAYMENT_MODELOS:
-                raise ValueError("ledger-payment withholding capture is supported only for Modelos 111 and 123")
-            if self.command.counterpart_observations or self.command.foreign_asset_observations:
-                raise ValueError("ledger-payment capture cannot be mixed with another aggregation provider")
-        return self
-
-    @classmethod
-    def from_inputs(
-        cls,
-        *,
-        profile_id: UUID,
-        command: PerModeloAggregationCommand,
-        ledger_payment: LedgerPaymentWithholdingEvidenceRequest | None = None,
-    ) -> Self:
-        """Keep the exact typed CLI/TUI/MCP operands in the encrypted request store."""
-        return cls(
-            profile_id=profile_id,
-            command=PublicModeloAggregateCommand.from_domain(command),
-            ledger_payment=(
-                None if ledger_payment is None else PublicLedgerPaymentEvidenceRequest.from_domain(ledger_payment)
-            ),
-        )
-
-
-class ModeloAggregateWindowBaseline(BaseModel):
-    """Metadata-only generation coordinates for one active withholding window."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    scope_token: str = Field(min_length=1, max_length=256)
-    generation_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
-
-
-class ModeloAggregateGenerationAudit(BaseModel):
-    """Bounded lineage metadata without withholding evidence rows."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    parent_generation_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
-    mode: WithholdingMutationMode
-    supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
-
-
-class ModeloAggregateWindow(BaseModel):
-    """CLI-compatible metadata-only readback of one withholding window."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    baseline: ModeloAggregateWindowBaseline
-    generation: NonNegativeInt
-    generation_audit: ModeloAggregateGenerationAudit | None = None
-
-
-class ModeloAggregateClaveBreakdown(BaseModel):
-    """Bounded per-clave financial summary released under RESULT disclosure."""
-
-    model_config = STRICT_FROZEN_CONFIG
-    clave: str = Field(min_length=1, max_length=128)
-    percepcion_count: NonNegativeInt
-    percibido_total: PublicDecimal
-    retencion_total: PublicDecimal
-
-
-class ModeloAggregateProjection(BaseModel):
-    """Allowlisted aggregation summary; raw observation rows never leave custody."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    outcome: Literal["aggregated", "refused"]
-    profile_id: UUID
-    modelo: str = Field(min_length=1, max_length=16)
-    period: PublicPeriod
-    provider: PerModeloAggregationContributor | None = None
-    observation_count: NonNegativeInt | None = None
-    source_kinds: tuple[BindingSourceKind, ...] | None = None
-    result_row_count: NonNegativeInt | None = None
-    clave_breakdown: tuple[ModeloAggregateClaveBreakdown, ...] | None = Field(default=None, max_length=64)
-    calculation_revision_id: str | None = Field(default=None, max_length=128)
-    absent_source_families: tuple[BindingSourceKind, ...] = Field(default=(), max_length=2)
-    withholding_window: ModeloAggregateWindow | None = None
-    refusal_reason: _SAFE_REFUSAL_REASON | None = None
-
-    @model_validator(mode="after")
-    def _outcome_shape(self) -> Self:
-        aggregate_fields = (
-            self.provider,
-            self.observation_count,
-            self.source_kinds,
-            self.result_row_count,
-            self.clave_breakdown,
-        )
-        if self.outcome == "aggregated":
-            if self.refusal_reason is not None or any(value is None for value in aggregate_fields):
-                raise ValueError("aggregated result requires the canonical summary fields")
-            if self.modelo in _WITHHOLDING_MODELOS and self.withholding_window is None:
-                raise ValueError("withholding aggregate requires its exact window readback")
-            if self.modelo in _WITHHOLDING_MODELOS and (
-                self.clave_breakdown or self.calculation_revision_id is not None or self.absent_source_families
-            ):
-                raise ValueError("periodic withholding aggregate cannot carry annual detail metadata")
-        elif self.refusal_reason is None or any(value is not None for value in aggregate_fields):
-            raise ValueError("refused result requires only a bounded refusal reason")
-        elif self.withholding_window is not None:
-            raise ValueError("refused result cannot carry a withholding window")
-        elif self.calculation_revision_id is not None or self.absent_source_families:
-            raise ValueError("refused result cannot carry annual detail metadata")
-        return self
-
-
-class ModeloAggregateReport(BaseModel):
-    """Private result operand correlated with the settled operation receipt."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    projection: ModeloAggregateProjection
-    local_write_performed: bool
-    refusal_code: str | None = None
+from ..user_profile.access_errors import ProfileAccessRefusedError
+from .aggregate_contracts import (
+    AGGREGATE_COMMIT_PHASE,
+    AGGREGATE_MAX_RESULT_BYTES,
+    AGGREGATE_PHASES,
+    AGGREGATE_PREPARE_PHASE,
+    AGGREGATE_RESULT_PHASE,
+    AGGREGATE_WITHHOLDING_MODELOS,
+    MODELO_AGGREGATE_CADENCE_REFUSAL_CODE,
+    MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
+    MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
+    MODELO_AGGREGATE_PRODUCER_REFUSAL_CODE,
+    MODELO_AGGREGATE_RECOGNITION_REFUSAL_CODE,
+    MODELO_AGGREGATE_REFUSAL_CODES,
+    MODELO_AGGREGATE_UNSUPPORTED_MODELO_REFUSAL_CODE,
+)
+from .aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
+from .aggregate_projection import (
+    ModeloAggregateClaveTotals,
+    ModeloAggregateProjection,
+    ModeloAggregateReport,
+    ModeloAggregateWindow,
+    bounded_aggregate_refusal_reason,
+    project_aggregate_window,
+    project_modelo_aggregate_result,
+    project_refused_aggregate,
+)
+from .aggregate_public import PublicLedgerPaymentEvidenceRequest
+from .aggregate_request import ModeloAggregateOperationRequest
 
 
 def _profile_ports(
@@ -300,94 +113,6 @@ def _profile_ports(
     if ports.profile_id != profile_id or ports.transaction_catalogue_repository.bucket_id != profile_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return ports
-
-
-def _project_window(
-    *,
-    baseline: WithholdingWindowBaseline,
-    generation: int,
-    audit: WithholdingGenerationAudit | None,
-) -> ModeloAggregateWindow:
-    return ModeloAggregateWindow(
-        baseline=ModeloAggregateWindowBaseline(
-            scope_token=baseline.scope_token,
-            generation_id=baseline.generation_id,
-        ),
-        generation=generation,
-        generation_audit=(
-            None
-            if audit is None
-            else ModeloAggregateGenerationAudit(
-                parent_generation_id=audit.parent_generation_id,
-                mode=audit.mode,
-                supersedes_generation_id=audit.supersedes_generation_id,
-            )
-        ),
-    )
-
-
-def _bounded_reason(error: Exception) -> str:
-    """Select a stable reason token without copying exception prose or private facts."""
-    candidate: object = getattr(error, "refusal_code", None)
-    if candidate is None:
-        refusal = getattr(error, "refusal", None)
-        candidate = getattr(refusal, "value", refusal)
-    if not isinstance(candidate, str) or re.fullmatch(r"[a-z][a-z0-9_]{0,95}", candidate) is None:
-        return "invalid_aggregate_input"
-    return candidate
-
-
-def _refused_projection(
-    *,
-    profile_id: UUID,
-    command: PublicModeloAggregateCommand,
-    reason: str,
-) -> ModeloAggregateProjection:
-    return ModeloAggregateProjection(
-        outcome="refused",
-        profile_id=profile_id,
-        modelo=command.modelo,
-        period=command.period,
-        refusal_reason=reason,
-    )
-
-
-def project_modelo_aggregate_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
-    """Release only the bounded summary whose identity and effect match its receipt."""
-    if type(result) is not ModeloAggregateReport:
-        raise ValueError("invalid modelo-aggregate operation result")
-    report = ModeloAggregateReport.model_validate(result.model_dump(mode="python"), strict=True)
-    projection = report.projection
-    if (
-        receipt.identity.definition_id != MODELO_AGGREGATE_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("modelo-aggregate result differs from its terminal receipt")
-    if projection.outcome == "refused":
-        if (
-            report.local_write_performed
-            or receipt.condition is not OperationTerminalCondition.REFUSED
-            or receipt.effect is not OperationEffect.NONE
-            or report.refusal_code not in MODELO_AGGREGATE_REFUSAL_CODES
-            or receipt.refusal_ref != report.refusal_code
-            or receipt.refusal_detail_ref is None
-            or receipt.result_ref is not None
-        ):
-            raise ValueError("modelo-aggregate refusal contradicts its terminal receipt")
-    elif (
-        receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or report.refusal_code is not None
-        or receipt.effect is not (OperationEffect.UPDATED if report.local_write_performed else OperationEffect.NONE)
-    ):
-        raise ValueError("modelo-aggregate result contradicts its terminal receipt")
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
-        raise ValueError("modelo-aggregate projection exceeds its public result limit")
-    return projection
 
 
 class ModeloAggregateExecutor:
@@ -405,17 +130,11 @@ class ModeloAggregateExecutor:
         """Run a read aggregate or one idempotent ledger-payment capture."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_AGGREGATE_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_AGGREGATE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
-        await context.events.phase(_PREPARE_PHASE)
+        await context.events.phase(AGGREGATE_PREPARE_PHASE)
         operation = context.authority_operation
         try:
             prepared = await asyncio.to_thread(self._prepare, payload, profile_id, operation)
@@ -424,21 +143,21 @@ class ModeloAggregateExecutor:
                 payload,
                 context,
                 refusal_code=MODELO_AGGREGATE_UNSUPPORTED_MODELO_REFUSAL_CODE,
-                reason=_bounded_reason(error),
+                reason=bounded_aggregate_refusal_reason(error),
             )
         except LedgerPaymentWithholdingEvidenceError as error:
             return await self._refuse(
                 payload,
                 context,
                 refusal_code=MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
-                reason=_bounded_reason(error),
+                reason=bounded_aggregate_refusal_reason(error),
             )
         except WithholdingFilingCadenceError as error:
             return await self._refuse(
                 payload,
                 context,
                 refusal_code=MODELO_AGGREGATE_CADENCE_REFUSAL_CODE,
-                reason=_bounded_reason(error),
+                reason=bounded_aggregate_refusal_reason(error),
             )
 
         capture = prepared.capture
@@ -455,7 +174,7 @@ class ModeloAggregateExecutor:
         async def commit_and_aggregate() -> str | OperationRefusalEvidence:
             async with context.cancellation.irreversible_section():
                 self._require_active_profile(profile_id)
-                await context.events.phase(_COMMIT_PHASE)
+                await context.events.phase(AGGREGATE_COMMIT_PHASE)
                 current_revision = await asyncio.to_thread(
                     prepared.ports.transaction_catalogue_repository.load_revision
                 )
@@ -473,14 +192,7 @@ class ModeloAggregateExecutor:
                     )
                 await context.events.effect(OperationEffect.UNKNOWN)
                 try:
-                    if prepared.cadence is None:
-                        raise AssertionError("ledger capture preparation must resolve filer cadence")
-                    captured = await asyncio.to_thread(
-                        WithholdingProducer(service=prepared.ports.withholding_observation_service).capture,
-                        capture.command,
-                        cadence=prepared.cadence,
-                        source_catalogue_revision_id=capture.catalogue_read_revision_id,
-                    )
+                    captured = await self._capture_prepared_payment(prepared, capture)
                 except (WithholdingProducerError, WithholdingRecognitionError) as error:
                     # Producer validation and recognition finish before service.apply;
                     # storage failures remain UNKNOWN because their delivery is ambiguous.
@@ -494,7 +206,7 @@ class ModeloAggregateExecutor:
                         payload,
                         context,
                         refusal_code=refusal_code,
-                        reason=_bounded_reason(error),
+                        reason=bounded_aggregate_refusal_reason(error),
                     )
                 except WithholdingObservationMutationError as error:
                     if error.refusal_code != "source_revision_changed":
@@ -504,7 +216,7 @@ class ModeloAggregateExecutor:
                         payload,
                         context,
                         refusal_code=MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
-                        reason=_bounded_reason(error),
+                        reason=bounded_aggregate_refusal_reason(error),
                     )
                 if captured is None or captured.scope != capture.scope:
                     raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -529,6 +241,21 @@ class ModeloAggregateExecutor:
 
         return await commit_and_aggregate()
 
+    async def _capture_prepared_payment(
+        self,
+        prepared: _PreparedModeloAggregate,
+        capture: LedgerPaymentWithholdingCapture,
+    ) -> WithholdingEvidenceCaptureResult | None:
+        """Apply one prepared payment under the caller's existing commit fence."""
+        if prepared.cadence is None:
+            raise AssertionError("ledger capture preparation must resolve filer cadence")
+        return await asyncio.to_thread(
+            WithholdingProducer(service=prepared.ports.withholding_observation_service).capture,
+            capture.command,
+            cadence=prepared.cadence,
+            source_catalogue_revision_id=capture.catalogue_read_revision_id,
+        )
+
     def _prepare(
         self,
         payload: ModeloAggregateOperationRequest,
@@ -539,31 +266,17 @@ class ModeloAggregateExecutor:
         ports = _profile_ports(self._factory, profile_id=profile_id)
         with validating_governed_facts(operation):
             command = payload.command.to_domain()
-            calculation_rows = None
-            if command.modelo not in _WITHHOLDING_MODELOS and RetencionesAggregationSourceResolver.supports_modelo(
-                command.modelo
-            ):
-                if ports.percepcion_observation_ports is None:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-                calculation_rows = load_calculation_withholding_rows(
-                    command.modelo,
-                    command.period,
-                    operation=operation,
-                    retencion_ports=RetencionObservationPorts(repository=ports.retencion_observation_repository),
-                    percepcion_ports=ports.percepcion_observation_ports,
-                    cadence=lambda: load_bucket_withholding_filer_cadence(
-                        bucket_id=profile_id, filing_year=command.period.filing_year, operation=operation
-                    ),
-                )
-                command = command.model_copy(update={"retencion_observations": calculation_rows.retenciones or ()})
             window_state = (
                 ports.withholding_observation_service.read_window(
                     WithholdingWindowScope(modelo=command.modelo, period=command.period)
                 )
-                if command.modelo in _WITHHOLDING_MODELOS
+                if command.modelo in AGGREGATE_WITHHOLDING_MODELOS
                 else None
             )
             command = self._withholding_command(command, window_state)
+            calculation_rows = self._calculation_rows(command, ports, profile_id, operation)
+            if calculation_rows is not None:
+                command = command.model_copy(update={"retencion_observations": calculation_rows.retenciones or ()})
             provider = provider_for_modelo(command.modelo, operation=operation)
             preflight_result = aggregate_per_modelo(command, operation=operation)
         if preflight_result.provider is not provider:
@@ -579,9 +292,24 @@ class ModeloAggregateExecutor:
 
         if provider is not PerModeloAggregationContributor.RETENCIONES:
             raise LedgerPaymentWithholdingEvidenceError("ledger_payment_provider_mismatch")
+        return self._prepare_ledger_capture(
+            payload.ledger_payment, profile_id, operation, ports, command, preflight_result, window_state
+        )
+
+    def _prepare_ledger_capture(
+        self,
+        ledger_payment: PublicLedgerPaymentEvidenceRequest,
+        profile_id: str,
+        operation: PinnedAuthorityOperation,
+        ports: ModeloAggregateOperationPorts,
+        command: PerModeloAggregationCommand,
+        preflight_result: PerModeloAggregationResult,
+        window_state: WithholdingWindowState | None,
+    ) -> _PreparedModeloAggregate:
+        """Bracket the exact payment transaction and build its pinned capture."""
         try:
             with validating_governed_facts(operation):
-                ledger_request = payload.ledger_payment.to_domain()
+                ledger_request = ledger_payment.to_domain()
         except ValueError as error:
             raise LedgerPaymentWithholdingEvidenceError("invalid_evidence") from error
         cadence = load_bucket_withholding_filer_cadence(
@@ -593,11 +321,11 @@ class ModeloAggregateExecutor:
         first_revision = transaction_repository.load_revision()
         if first_revision is None:
             raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_unavailable")
-        catalogue = transaction_repository.load_by_ids((str(payload.ledger_payment.transaction_id),))
+        catalogue = transaction_repository.load_by_ids((str(ledger_payment.transaction_id),))
         second_revision = transaction_repository.load_revision()
         if second_revision is None or second_revision != first_revision:
             raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_changed")
-        transaction = resolve_ledger_payment_transaction(catalogue, str(payload.ledger_payment.transaction_id))
+        transaction = resolve_ledger_payment_transaction(catalogue, str(ledger_payment.transaction_id))
         with validating_governed_facts(operation):
             capture = build_ledger_payment_withholding_capture(
                 transaction,
@@ -615,6 +343,54 @@ class ModeloAggregateExecutor:
             window_state=window_state,
             capture=capture,
             cadence=cadence,
+        )
+
+    @staticmethod
+    def _calculation_rows(
+        command: PerModeloAggregationCommand,
+        ports: ModeloAggregateOperationPorts,
+        profile_id: str,
+        operation: PinnedAuthorityOperation,
+    ) -> CalculationWithholdingRows | None:
+        """Read the stored rows an annual withholding summary's calculation reads.
+
+        ``None`` for a periodic window, which is read back from its own store,
+        and for a modelo outside the retenciones family, which has no
+        withholding store. Every other modelo is an annual summary composed from
+        stored windows, so it aggregates exactly what its calculation reads.
+        """
+        if command.modelo in AGGREGATE_WITHHOLDING_MODELOS or not RetencionesAggregationSourceResolver.supports_modelo(
+            command.modelo
+        ):
+            return None
+        return load_calculation_withholding_rows(
+            command.modelo,
+            command.period,
+            operation=operation,
+            retencion_ports=RetencionObservationPorts(repository=ports.retencion_observation_repository),
+            percepcion_ports=PercepcionObservationPorts(repository=ports.percepcion_observation_repository),
+            cadence=lambda: load_bucket_withholding_filer_cadence(
+                bucket_id=profile_id,
+                filing_year=command.period.filing_year,
+                operation=operation,
+            ),
+        )
+
+    @staticmethod
+    def _clave_totals(
+        calculation_rows: CalculationWithholdingRows | None,
+    ) -> tuple[ModeloAggregateClaveTotals, ...]:
+        """Project the per-perceptor-clave rows the calculation reads into per-clave totals."""
+        if calculation_rows is None or calculation_rows.percepciones is None:
+            return ()
+        return tuple(
+            ModeloAggregateClaveTotals(
+                clave=row.clave.value,
+                percepcion_count=row.percepcion_count,
+                percibido_total=PublicDecimal(decimal=str(row.percibido_total)),
+                retencion_total=PublicDecimal(decimal=str(row.retencion_total)),
+            )
+            for row in aggregate_withholding_by_clave(calculation_rows.percepciones)
         )
 
     @staticmethod
@@ -668,28 +444,18 @@ class ModeloAggregateExecutor:
             observation_count=aggregate_result.log_fields.observation_count,
             source_kinds=aggregate_result.source_kinds,
             result_row_count=aggregate_result.log_fields.result_row_count,
-            clave_breakdown=tuple(
-                ModeloAggregateClaveBreakdown(
-                    clave=str(row.clave),
-                    percepcion_count=row.percepcion_count,
-                    percibido_total=PublicDecimal(decimal=str(row.percibido_total)),
-                    retencion_total=PublicDecimal(decimal=str(row.retencion_total)),
-                )
-                for row in aggregate_withholding_by_clave(
-                    () if prepared.calculation_rows is None else prepared.calculation_rows.percepciones or ()
-                )
+            clave_breakdown=self._clave_totals(prepared.calculation_rows),
+            absent_source_families=(
+                () if prepared.calculation_rows is None else prepared.calculation_rows.absent_source_families
             ),
             calculation_revision_id=(
                 None if prepared.calculation_rows is None else prepared.calculation_rows.revision_id
             ),
-            absent_source_families=(
-                () if prepared.calculation_rows is None else prepared.calculation_rows.absent_source_families
-            ),
             withholding_window=window,
         )
-        await context.events.phase(_RESULT_PHASE)
+        await context.events.phase(AGGREGATE_RESULT_PHASE)
         report = ModeloAggregateReport(projection=projection, local_write_performed=local_write_performed)
-        if len(canonical_json_bytes(report.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
+        if len(canonical_json_bytes(report.model_dump(mode="json"))) > AGGREGATE_MAX_RESULT_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         if require_active_bucket_id() != str(payload.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -709,7 +475,7 @@ class ModeloAggregateExecutor:
             if state.generation == 0
             else ports.withholding_observation_service.read_generation(state.scope, state.baseline.generation_id)
         )
-        return _project_window(baseline=state.baseline, generation=state.generation, audit=audit)
+        return project_aggregate_window(baseline=state.baseline, generation=state.generation, audit=audit)
 
     @staticmethod
     def _require_active_profile(profile_id: str) -> None:
@@ -740,7 +506,7 @@ class ModeloAggregateExecutor:
         if refusal_code not in MODELO_AGGREGATE_REFUSAL_CODES:
             raise ValueError("modelo-aggregate refusal code is not registered for this operation")
         detail = ModeloAggregateReport(
-            projection=_refused_projection(
+            projection=project_refused_aggregate(
                 profile_id=payload.profile_id,
                 command=payload.command,
                 reason=reason,
@@ -758,9 +524,9 @@ class _PreparedModeloAggregate:
     aggregate_command: PerModeloAggregationCommand
     preflight_result: PerModeloAggregationResult
     window_state: WithholdingWindowState | None = None
+    calculation_rows: CalculationWithholdingRows | None = None
     capture: LedgerPaymentWithholdingCapture | None = None
     cadence: WithholdingFilerCadence | None = None
-    calculation_rows: CalculationWithholdingRows | None = None
 
 
 def build_modelo_aggregate_operation_definition(
@@ -776,29 +542,11 @@ def build_modelo_aggregate_operation_definition(
             executor_type=ModeloAggregateExecutor,
             build=lambda: ModeloAggregateExecutor(factory),
         ),
-        phase_codes=_PHASES,
+        phase_codes=AGGREGATE_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {
-                OperationFrontendProjection.CLI,
-                OperationFrontendProjection.TUI,
-                OperationFrontendProjection.MCP,
-            }
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=MODELO_AGGREGATE_REFUSAL_CODES,
     )
 
@@ -809,15 +557,12 @@ def resolve_modelo_aggregate_access(
     /,
 ) -> ResolvedOperationAccess:
     """Bind result disclosure and optional capture COMMIT rights to one profile and period."""
-    if request.definition_id != MODELO_AGGREGATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, ModeloAggregateOperationRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
+        payload_type=ModeloAggregateOperationRequest,
+        access_profile_id=context.profile_id,
+    )
     # A capture reads a revision digest over the complete profile transaction
     # catalogue to bracket its targeted transaction read. Ordinary aggregate
     # and stored-window reads stay scoped to the requested filing period.
@@ -832,10 +577,7 @@ def resolve_modelo_aggregate_access(
     )
     if payload.ledger_payment is None:
         return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return ResolvedOperationAccess(request=resolved.request, policy=policy)
+    return with_commit_action(resolved)
 
 
 def build_modelo_aggregate_operation_registration(
@@ -846,39 +588,14 @@ def build_modelo_aggregate_operation_registration(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id=MODELO_AGGREGATE_OPERATION_DEFINITION_ID + ".request",
-            schema_version=1,
+            schema_version=2,
             model_type=ModeloAggregateOperationRequest,
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=MODELO_AGGREGATE_OPERATION_DEFINITION_ID + ".result",
-            schema_version=1,
+            schema_version=2,
             model_type=ModeloAggregateProjection,
         ),
         result_projector=project_modelo_aggregate_result,
         access_resolver=resolve_modelo_aggregate_access,
     )
-
-
-__all__ = [
-    "MODELO_AGGREGATE_CADENCE_REFUSAL_CODE",
-    "MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE",
-    "MODELO_AGGREGATE_OPERATION_DEFINITION_ID",
-    "MODELO_AGGREGATE_PRODUCER_REFUSAL_CODE",
-    "MODELO_AGGREGATE_RECOGNITION_REFUSAL_CODE",
-    "MODELO_AGGREGATE_REFUSAL_CODES",
-    "MODELO_AGGREGATE_UNSUPPORTED_MODELO_REFUSAL_CODE",
-    "ModeloAggregateExecutor",
-    "ModeloAggregateGenerationAudit",
-    "ModeloAggregateOperationPorts",
-    "ModeloAggregateOperationPortsFactory",
-    "ModeloAggregateOperationRequest",
-    "ModeloAggregateProjection",
-    "ModeloAggregateReport",
-    "ModeloAggregateWindow",
-    "ModeloAggregateWindowBaseline",
-    "TransactionCatalogueReadPort",
-    "build_modelo_aggregate_operation_definition",
-    "build_modelo_aggregate_operation_registration",
-    "project_modelo_aggregate_result",
-    "resolve_modelo_aggregate_access",
-]

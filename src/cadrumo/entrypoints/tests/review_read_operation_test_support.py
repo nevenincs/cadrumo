@@ -12,14 +12,16 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.review.enums import ReviewSeverity, ReviewState
-from ...application.review.read_operation import (
+from ...application.review.read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
     REVIEW_VIEW_OPERATION_DEFINITION_ID,
-    ReviewQueueReadProjection,
     ReviewQueueReadRequest,
+    ReviewViewReadRequest,
+)
+from ...application.review.read_projections import (
+    ReviewQueueReadProjection,
     ReviewQueueRowProjection,
     ReviewViewReadProjection,
-    ReviewViewReadRequest,
 )
 from ...core.config import override_settings
 from ...core.external_constants import OutputLanguage

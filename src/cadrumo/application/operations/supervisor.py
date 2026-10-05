@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
-from decimal import Decimal
+from functools import partial
 from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel
@@ -16,26 +16,25 @@ from ...core.hex import Hex64Str
 from ...core.logging import get_logger
 from ...core.operations import (
     OperationCancellation,
-    OperationClosePolicy,
+    OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
+from ._supervisor_drain import SupervisorDrainMixin, require_positive_duration
 from ._supervisor_execution import SupervisorExecutionMixin
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from ._supervisor_reconciliation import SupervisorReconciliationMixin
 from ._supervisor_settlement import SupervisorSettlementMixin
+from ._supervisor_submission import SupervisorSubmissionMixin
 from .authorization import OperationExecutionAuthority
-from .drain import OperationDrainResult
 from .event_replay import OperationEventCursor
-from .financial_operand import (
-    OperationTransientFinancialOperandDelivery,
-    OperationTransientFinancialOperandRequirement,
-)
-from .financial_operand_submission import (
-    BoundTransientFinancialOperandAccess,
-    OperationTransientFinancialOperandBroker,
+from .financial_operand_contract import (
+    CredentialFreeFinancialOperationRequest,
+    OperationFinancialOperandRefusalCode,
+    OperationFinancialOperandRefusedError,
+    OperationTransientFinancialOperandRequirementV1,
 )
 from .interactions import (
     OperationApplyResponse,
@@ -44,16 +43,17 @@ from .interactions import (
 )
 from .models import (
     OperationId,
-    OperationIdentity,
     OperationRequest,
     OperationStoredInvocation,
+    OperationTerminalReceipt,
     new_operation_id,
 )
+from .operation_definition import OperationDefinition
 from .persistence.events import (
     OperationNoticeEvent,
 )
 from .persistence.financial_operand_custody import (
-    OperationFinancialOperandCustodyRepository,
+    OperationTypedFinancialOperandCustodyRepository,
 )
 from .persistence.journal import (
     OperationEventStream,
@@ -73,12 +73,13 @@ from .persistence.replay import (
 )
 from .projection_services import OperationResponseAuthorityIssuer
 from .provenance import OperationAdmissionProvenance
-from .registry import OperationDefinition, OperationRegistry
+from .registry import OperationRegistry
 from .secret_submission import (
     EphemeralSecretBroker,
     OperationSecretRequirement,
     zeroize_secret_buffer,
 )
+from .typed_financial_operand_submission import OperationTypedFinancialOperandBroker
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -87,40 +88,25 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 
-def _financial_operand_broker(
-    custody: OperationFinancialOperandCustodyRepository | None,
-    clock: Callable[[], datetime],
-) -> OperationTransientFinancialOperandBroker | None:
-    if custody is None:
-        return None
-    return OperationTransientFinancialOperandBroker(custody=custody, clock=clock)
-
-
-def _require_positive_duration(name: str, duration: timedelta | None) -> None:
-    if duration is not None and duration <= timedelta():
-        raise ValueError(f"{name} must be positive when configured")
-
-
 def _validate_supervisor_configuration(
     registry: OperationRegistry,
     lease_duration: timedelta,
     execution_timeout: timedelta | None,
     cleanup_timeout: timedelta | None,
-    financial_operands: OperationTransientFinancialOperandBroker | None,
 ) -> None:
     if lease_duration <= timedelta():
         raise ValueError("operation lease duration must be positive")
-    _require_positive_duration("operation execution timeout", execution_timeout)
-    _require_positive_duration("operation cleanup timeout", cleanup_timeout)
+    require_positive_duration("operation execution timeout", execution_timeout)
+    require_positive_duration("operation cleanup timeout", cleanup_timeout)
     for definition in registry.definitions:
         declaration = definition.ephemeral_secret
         if declaration is not None and declaration.lifetime >= lease_duration:
             raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
-        if definition.transient_financial_operands and financial_operands is None:
-            raise ValueError("transient financial operand operations require a durable custody repository")
 
 
 class OperationSupervisor(
+    SupervisorDrainMixin,
+    SupervisorSubmissionMixin,
     SupervisorExecutionMixin,
     SupervisorSettlementMixin,
     SupervisorReconciliationMixin,
@@ -145,8 +131,8 @@ class OperationSupervisor(
         cleanup_timeout: timedelta | None = None,
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
         response_token_factory: Callable[[], str] = _supervisor_context.new_response_token,
-        financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
         execution_authority: OperationExecutionAuthority | None = None,
+        typed_financial_operand_custody: OperationTypedFinancialOperandCustodyRepository | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner."""
         self.registry = registry
@@ -180,13 +166,26 @@ class OperationSupervisor(
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
         self._ephemeral_secrets = EphemeralSecretBroker()
-        self._financial_operands = _financial_operand_broker(financial_operand_custody, clock)
+        self._typed_financial_operands = (
+            None
+            if typed_financial_operand_custody is None
+            else OperationTypedFinancialOperandBroker(
+                custody=typed_financial_operand_custody,
+                clock=clock,
+                lock_for=self._lease_lock,
+                require_current=self._require_current_financial_binding,
+                settle_expiry=self._settle_pre_entry_financial_expiry,
+            )
+        )
+        if self._typed_financial_operands is None and any(
+            definition.transient_financial_operand is not None for definition in registry.definitions
+        ):
+            raise ValueError("typed financial operations require hardened durable custody")
         _validate_supervisor_configuration(
             registry,
             lease_duration,
             execution_timeout,
             cleanup_timeout,
-            self._financial_operands,
         )
 
     @override
@@ -206,32 +205,156 @@ class OperationSupervisor(
 
     @override
     @staticmethod
-    def _validate_request_payload[RequestPayloadT: BaseModel](
-        request: OperationRequest[RequestPayloadT], request_type: type[BaseModel]
-    ) -> None:
-        if not isinstance(request.payload, request_type):
+    def _validate_request_payload(payload: BaseModel, request_type: type[BaseModel]) -> None:
+        """Require exactly the registered request model at admission and at restore.
+
+        A subclass is refused: it may carry fields or validation the definition
+        was never registered for, and durable restore hydrates only the
+        registered type, so admitting it would change the operand's type
+        between submission and execution.
+        """
+        if type(payload) is not request_type:
             raise ValueError("request payload does not match definition")
 
     @override
-    def _bound_financial_operand(
-        self,
-        identity: OperationIdentity,
-        definition: OperationDefinition,
-    ) -> BoundTransientFinancialOperandAccess:
-        """Scope the operand broker to one invocation's own declarations."""
-        return BoundTransientFinancialOperandAccess(
-            declarations=definition.transient_financial_operands,
-            broker=self._financial_operands,
-            identity=identity,
-            revision=0,
+    async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None:
+        """Require delivery custody to finish before any terminal receipt is committed."""
+        if self._typed_financial_operands is not None:
+            await self._typed_financial_operands.settle_operation(operation_id)
+
+    async def bind_typed_financial_operand(self, operation_id: OperationId, operand: BaseModel) -> None:
+        """Transfer a complete batch only after its amount-free invocation was admitted."""
+        if not self._accepting_admissions:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.OWNER_LOST)
+
+        async def transfer(batch: BaseModel) -> None:
+            try:
+                broker = self._typed_financial_operands
+                if broker is None:
+                    raise OperationFinancialOperandRefusedError(
+                        OperationFinancialOperandRefusalCode.UNKNOWN_REQUIREMENT
+                    )
+                snapshot = await self.inspect(operation_id)
+                definition = self._require_pinned_definition(snapshot)
+                declaration = definition.transient_financial_operand
+                if declaration is None or type(batch) is not declaration.operand_type:
+                    raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
+                baseline = declaration.baseline_accessor(batch)
+                if type(baseline) is not declaration.baseline_type:
+                    raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
+                submission = await broker.open(
+                    declaration=declaration,
+                    identity=snapshot.identity,
+                    revision=snapshot.revision + 1,
+                    domain_baseline_ref=declaration.baseline_reference(baseline),
+                    bind_requirement=self._attach_financial_requirement,
+                )
+                try:
+                    submission.operand = batch
+                    await broker.submit(submission)
+                finally:
+                    submission.release()
+            finally:
+                del batch
+
+        try:
+            await self._admit(operation_id, partial(transfer, operand))
+        finally:
+            del operand
+
+    async def refuse_unstarted_financial_input(self, operation_id: OperationId) -> None:
+        """Release an admitted batch and settle a failed intake with no executor or domain effect."""
+        snapshot = await self.inspect(operation_id)
+        definition = self._require_pinned_definition(snapshot)
+        if (
+            definition.transient_financial_operand is None
+            or snapshot.executor_entered_at is not None
+            or snapshot.lifecycle is not OperationLifecycle.CREATED
+        ):
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.STALE_REVISION)
+        await self._settle_financial_operand_custody(operation_id)
+        await self.settle(
+            operation_id,
+            OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=OperationTerminalCondition.REFUSED,
+                effect=OperationEffect.NONE,
+                settled_at=self._clock(),
+                refusal_ref="REFUSED_OPERATION_FINANCIAL_OPERAND",
+            ),
         )
 
-    @override
-    async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None:
-        """Acknowledge and release every operand one finished invocation held."""
-        if self._financial_operands is None:
+    async def _attach_financial_requirement(self, requirement: OperationTransientFinancialOperandRequirementV1) -> None:
+        """Coherently attach only safe coordinates while the broker owns the operation lock."""
+        snapshot = await self.inspect(requirement.identity.operation_id)
+        if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.financial_requirement is not None:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.DUPLICATE_SUBMISSION)
+        if snapshot.revision + 1 != requirement.invocation_revision:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.STALE_REVISION)
+        definition = self._require_pinned_definition(snapshot)
+        payload = await self._resolve_request_payload(snapshot, definition)
+        if not isinstance(payload, CredentialFreeFinancialOperationRequest) or (
+            payload.financial_baseline_ref != requirement.domain_baseline_ref
+        ):
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_BASELINE)
+        now = self._clock()
+        lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
+        successor = snapshot.model_copy(
+            update={
+                "financial_requirement": requirement,
+                "revision": requirement.invocation_revision,
+                "updated_at": now,
+                "event_cursor": snapshot.event_cursor + 1,
+                "events": (
+                    OperationNoticeEvent(
+                        identity=snapshot.identity,
+                        revision=requirement.invocation_revision,
+                        sequence=snapshot.event_cursor + 1,
+                        timestamp=now,
+                        code="operation.financial_operand.awaiting",
+                        notice_code="operation.financial_operand.awaiting",
+                    ),
+                ),
+            }
+        )
+        await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
+        self._notify_durable_change(successor)
+
+    async def _require_current_financial_binding(
+        self, requirement: OperationTransientFinancialOperandRequirementV1
+    ) -> None:
+        """Verify immutable invocation, model, baseline and owner coordinates under the operation lock."""
+        snapshot = await self.inspect(requirement.identity.operation_id)
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.TERMINAL_OPERATION)
+        if snapshot.identity != requirement.identity or snapshot.financial_requirement != requirement:
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.STALE_REVISION)
+        declaration = self._require_pinned_definition(snapshot).transient_financial_operand
+        if declaration is None or (
+            declaration.operand_schema != requirement.operand_schema
+            or declaration.baseline_schema != requirement.baseline_schema
+        ):
+            raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
+        await self._require_owned_lease_unlocked(snapshot.identity, self._clock())
+
+    async def _settle_pre_entry_financial_expiry(
+        self, requirement: OperationTransientFinancialOperandRequirementV1
+    ) -> None:
+        """Settle an unconsumed expired handoff without claiming a domain effect."""
+        snapshot = await self.inspect(requirement.identity.operation_id)
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL or snapshot.executor_entered_at is not None:
             return
-        await self._financial_operands.settle_operation(operation_id, now=self._clock())
+        await self.settle(
+            snapshot.identity.operation_id,
+            OperationTerminalReceipt(
+                identity=snapshot.identity,
+                revision=snapshot.revision + 1,
+                condition=OperationTerminalCondition.INTERRUPTED,
+                effect=OperationEffect.NONE,
+                settled_at=self._clock(),
+            ),
+        )
 
     async def _admit[T](self, operation_id: OperationId, action: Callable[[], Awaitable[T]]) -> T:
         if not self._accepting_admissions:
@@ -260,7 +383,7 @@ class OperationSupervisor(
         proposed_id = operation_id or new_operation_id()
         return await self._admit(
             proposed_id,
-            lambda: SupervisorExecutionMixin.submit(self, request, operation_id=proposed_id, provenance=provenance),
+            lambda: SupervisorSubmissionMixin.submit(self, request, operation_id=proposed_id, provenance=provenance),
         )
 
     @override
@@ -281,15 +404,6 @@ class OperationSupervisor(
         if not self._accepting_admissions:
             raise ValueError("operation owner is draining")
         SupervisorExecutionMixin._schedule_continuation(self, snapshot, definition, continuation)
-
-    @override
-    async def submit_transient_financial_operand(
-        self, requirement: OperationTransientFinancialOperandRequirement, amount: Decimal
-    ) -> OperationTransientFinancialOperandDelivery:
-        return await self._admit(
-            requirement.identity.operation_id,
-            lambda: SupervisorExecutionMixin.submit_transient_financial_operand(self, requirement, amount),
-        )
 
     @override
     async def submit_ephemeral_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:
@@ -319,95 +433,6 @@ class OperationSupervisor(
                 self._ephemeral_secrets.require_ready(requirement, observed_at=self._clock())
 
         await self._admit(requirement.identity.operation_id, inspect_ready)
-
-    async def drain(self, timeout: timedelta) -> OperationDrainResult:
-        """Stop admissions and wait one total monotonic window for declared close.
-
-        Any live task at the deadline is reported, not assumed cancelled. The
-        caller owns process and descendant containment before releasing custody.
-        Repeating drain observes the same local work under a new finite window.
-        """
-        _require_positive_duration("operation host drain timeout", timeout)
-        loop = asyncio.get_running_loop()
-        deadline = loop.time() + timeout.total_seconds()
-        self._accepting_admissions = False
-        self._ephemeral_secrets.close()
-        self._capture_drain_tasks()
-        for operation_id, settlement in tuple(self._settlement_tasks.items()):
-            if settlement.done() or operation_id in self._drain_close_tasks:
-                continue
-            close_task = asyncio.create_task(
-                self._close_unsettled(operation_id, settlement, deadline),
-                name=f"operation-drain-{operation_id}",
-            )
-            self._drain_close_tasks[operation_id] = close_task
-            self._drain_tasks.setdefault(operation_id, set()).add(close_task)
-            close_task.add_done_callback(self._drain_close_completed)
-        pending = self._pending_drain_tasks()
-        if pending:
-            await asyncio.wait(pending, timeout=max(0.0, deadline - loop.time()))
-        self._capture_drain_tasks()
-        pending = self._pending_drain_tasks()
-        if pending:
-            for task in pending:
-                if task not in self._admissions:
-                    task.cancel()
-            await asyncio.wait(pending, timeout=max(0.0, deadline - loop.time()))
-        self._capture_drain_tasks()
-        unresolved = tuple(
-            sorted(
-                operation_id
-                for operation_id, tasks in self._drain_tasks.items()
-                if any(not task.done() for task in tasks)
-            )
-        )
-        recovery_required = tuple(
-            sorted(
-                operation_id
-                for operation_id, tasks in self._drain_tasks.items()
-                if self._requires_recovery(operation_id, tasks)
-            )
-        )
-        if self._financial_operands is not None:
-            self._financial_operands.close()
-        return OperationDrainResult(unresolved=unresolved, recovery_required=recovery_required)
-
-    async def shutdown(self) -> OperationDrainResult:
-        """Close within a default bound and expose any remaining ownership."""
-        return await self.drain(timedelta(seconds=5))
-
-    def _capture_drain_tasks(self) -> None:
-        for operation_id in tuple(self._leases_by_operation):
-            self._drain_tasks.setdefault(operation_id, set())
-        for mapping in (self._executor_tasks, self._cleanup_tasks, self._continuation_tasks, self._settlement_tasks):
-            for operation_id, task in tuple(mapping.items()):
-                self._drain_tasks.setdefault(operation_id, set()).add(task)
-        for operation_id, task in tuple(self._settlement_tasks.items()):
-            self._drain_settlements.setdefault(operation_id, task)
-        for task, operation_id in tuple(self._admissions.items()):
-            self._drain_tasks.setdefault(operation_id, set()).add(task)
-
-    def _pending_drain_tasks(self) -> set[asyncio.Task[object]]:
-        return {task for tasks in self._drain_tasks.values() for task in tasks if not task.done()}
-
-    def _requires_recovery(self, operation_id: OperationId, tasks: set[asyncio.Task[object]]) -> bool:
-        settlement = self._drain_settlements.get(operation_id)
-        if settlement is None:
-            return operation_id in self._leases_by_operation or bool(tasks)
-        if not settlement.done() or settlement.cancelled():
-            return True
-        try:
-            return settlement.result().lifecycle is not OperationLifecycle.TERMINAL
-        except Exception:
-            return True
-
-    @staticmethod
-    def _drain_close_completed(task: asyncio.Task[None]) -> None:
-        if task.cancelled():
-            return
-        error = task.exception()
-        if error is not None:
-            _log.error("operation close failed: %s", task.get_name(), exc_info=error)
 
     @override
     def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None:
@@ -544,29 +569,6 @@ class OperationSupervisor(
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Release a frontend without mutating the durable operation."""
         return await self.inspect(operation_id)
-
-    async def _close_unsettled(
-        self,
-        operation_id: OperationId,
-        settlement: asyncio.Task[OperationPersistedSnapshot],
-        deadline: float,
-    ) -> None:
-        definition = self._require_pinned_definition(await self.inspect(operation_id))
-        capabilities = definition.capabilities
-        if (
-            capabilities.close_policy is not OperationClosePolicy.DETACH_ALLOWED
-            and capabilities.cancellation is not OperationCancellation.UNSUPPORTED
-        ):
-            try:
-                await self.request_cancel(operation_id)
-            except ValueError:
-                _log.debug("operation %s could not accept a cancellation at host close", operation_id)
-            else:
-                loop = asyncio.get_running_loop()
-                window = self._cleanup_timeout.total_seconds() if self._cleanup_timeout is not None else 0.0
-                await asyncio.wait((settlement,), timeout=min(window, max(0.0, deadline - loop.time())))
-        if not settlement.done():
-            settlement.cancel()
 
     @override
     def _settlement_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None:

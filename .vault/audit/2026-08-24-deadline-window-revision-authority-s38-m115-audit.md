@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:4383f00b368fdb37effed27f23d54f413aca8e9591893c102585f86c7cd7b61f'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+related: []
 ---
 
 # `deadline-window-revision-authority` audit: `S38 Modelo 115 deadline corpus`

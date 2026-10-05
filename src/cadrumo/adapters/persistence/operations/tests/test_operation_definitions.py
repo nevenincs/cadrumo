@@ -40,19 +40,21 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.operations import (
+    USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
-    USER_PROFILE_OPERATION_DEFINITIONS,
     ProfileBundleExportOperationRequest,
     ProfileFieldMutationOperationRequest,
+    ProfileLogoutOperationRequest,
     ProfileMutationOperationResult,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowMutationOperationResult,
     ProfileRepeatableRowValue,
-    build_profile_logout_operation_request,
-    build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
@@ -62,6 +64,7 @@ from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
+    profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -351,7 +354,11 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
                         authority_operation=authority_operation,
                     )
                     created = await supervisor.submit(
-                        build_profile_logout_operation_request(profile_id),
+                        OperationRequest(
+                            definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
+                            subject_ref=profile_operation_subject(str(profile_id)),
+                            payload=ProfileLogoutOperationRequest(profile_id=profile_id),
+                        ),
                         operation_id="d" * 64,
                     )
                     terminal = await run_to_settlement(supervisor, created)

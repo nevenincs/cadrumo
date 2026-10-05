@@ -1,6 +1,10 @@
 modelo:
   schema:
     '100':
+      binding:
+        renta-modelo-100-estimacion-directa-es-normal:
+          help: 'Igen: normál módozat (N). Nem: egyszerűsített módozat (S).'
+          label: A közvetlen becslés normál módozatát alkalmazza?
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -3661,45 +3665,71 @@ modelo:
       construct:
         renta-anexo-c-base-liquidable-negativa-general:
           field:
-            title: '100-as nyomtatvány: C melléklet negatív általános nettó adóalap
+            title: 'Modelo 100 nyomtatvány: C melléklet negatív általános nettó adóalap
               carry-forward'
         renta-cuota-chain:
           field:
-            title: '100-as nyomtatvány: az IRPF-kvóta számítási lánca'
+            title: 'Modelo 100 nyomtatvány: az IRPF-kvóta számítási lánca'
         renta-economic-activities:
           field:
-            title: '100-as nyomtatvány: a gazdasági tevékenységtől való függőség bizonyítékai'
+            title: 'Modelo 100 nyomtatvány: a gazdasági tevékenységtől való függőség
+              bizonyítékai'
         renta-final-settlement:
           field:
-            title: '100-as nyomtatvány: vég settlement result'
+            title: 'Modelo 100 nyomtatvány: vég settlement result'
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
-            title: '100-as nyomtatvány 2025: Madridi autonóm közösség születési/örökbefogadási
+            title: 'Modelo 100 nyomtatvány 2025: Madridi autonóm közösség születési/örökbefogadási
               levonása (1039. rovat)'
         renta-movable-capital:
           field:
-            title: '100-as nyomtatvány: az ingó tőkétől való függőség bizonyítékai'
+            title: 'Modelo 100 nyomtatvány: az ingó tőkétől való függőség bizonyítékai'
         renta-observation-parsing:
           field:
-            title: '100-as nyomtatvány: a bevallott adatok megfigyeléseinek rögzítése'
+            title: 'Modelo 100 nyomtatvány: a bevallott adatok megfigyeléseinek rögzítése'
         renta-payments-retentions:
           field:
-            title: '100-as nyomtatvány: levonások és adóelőleg-fizetések'
+            title: 'Modelo 100 nyomtatvány: levonások és adóelőleg-fizetések'
         renta-personal-family:
           field:
-            title: '100-as nyomtatvány: a személyi és családi profil adatai'
+            title: 'Modelo 100 nyomtatvány: a személyi és családi profil adatai'
         renta-real-estate-capital:
           field:
-            title: '100-as nyomtatvány: az ingatlantőkétől való függőség bizonyítékai'
+            title: 'Modelo 100 nyomtatvány: az ingatlantőkétől való függőség bizonyítékai'
         renta-source-foundation:
           field:
-            title: '100-as nyomtatvány: a forrás, az elrendezés és a szimuláció bizonyítékai'
+            title: 'Modelo 100 nyomtatvány: a forrás, az elrendezés és a szimuláció
+              bizonyítékai'
         renta-work-income:
           field:
-            title: '100-as nyomtatvány: a munkajövedelemtől való függőség igazolása'
+            title: 'Modelo 100 nyomtatvány: a munkajövedelemtől való függőség igazolása'
       field:
         official_name: Modelo 100. A magánszemélyek jövedelemadójának (IRPF) bevallása.
         title: IRPF éves bevallás
+      form:
+        section:
+          bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
+            heading: A tulajdonosok rendelkezésére álló, bérbe adott vagy harmadik
+              félnek átengedett, illetve gazdasági tevékenységhez rendelt ingatlanok
+          ganancias-patrimoniales-por-cambio-de-res-0c81c7:
+            heading: Vagyoni nyereségek a spanyol területen kívülre történő lakóhely-változás
+              miatt (a törvény 95 bis. cikke)
+          ganancias-y-perdidas-patrimoniales-deriva-0655e2:
+            heading: Virtuális pénznemek átruházásából vagy cseréjéből eredő vagyoni
+              nyereségek és veszteségek
+          ganancias-y-perdidas-patrimoniales-deriva-73c62b:
+            heading: Jegyzési jogok átruházásából származó vagyoni nyereségek és veszteségek
+          ganancias-y-perdidas-por-la-transmision-d-3735fe:
+            heading: Befektetési társaságok és alapok, valamint SOCIMI-k átruházásából
+              eredő nyereségek és veszteségek
+          ganancias-y-perdidas-por-la-transmision-d-5aa38b:
+            heading: Tőzsdén jegyzett alapok (ETF) befektetési jegyeinek és tőzsdén
+              jegyzett index SICAV-ok részvényeinek átruházásából eredő nyereségek
+              és veszteségek
+          rendimientos-de-trabajo:
+            heading: Munkaviszonyból származó jövedelem
+          transmision-de-acciones-negociadas:
+            heading: Tőzsdén jegyzett részvények átruházása
       revision:
         '2020':
           casilla:
@@ -5649,34 +5679,37 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: '100-as nyomtatvány 2020: levonások, részletfizetések és más
-                  kapcsolódó modellekből származó levonások'
+                title: 'Modelo 100 nyomtatvány 2020: levonások, részletfizetések és
+                  más kapcsolódó bevallásokból származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: '100-as nyomtatvány 2020: a közvetlen adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2020: a közvetlen adózás összesítő
+                  mezői'
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: '100-as nyomtatvány 2020: az objektív adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2020: az objektív adózás összesítő
+                  mezői'
             renta-mini-model-base-y-cuota:
               field:
-                title: '100-as nyomtatvány 2020: adóalap / nettó adóalap / adó aggregators'
+                title: 'Modelo 100 nyomtatvány 2020: adóalap / nettó adóalap / adó
+                  aggregators'
             renta-mini-model-capital-inmobiliario:
               field:
-                title: '100-as nyomtatvány 2020: az ingatlantőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2020: az ingatlantőke összesítő mezői'
             renta-mini-model-capital-mobiliario:
               field:
-                title: '100-as nyomtatvány 2020: az ingó tőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2020: az ingó tőke összesítő mezői'
             renta-mini-model-ganancias-patrimoniales:
               field:
-                title: '100-as nyomtatvány 2020: vagyoni nyereségek és veszteségek
+                title: 'Modelo 100 nyomtatvány 2020: vagyoni nyereségek és veszteségek
                   aggregators'
             renta-mini-model-regimenes-especiales:
               field:
-                title: '100-as nyomtatvány 2020: atribucion / imputacion szerinti
+                title: 'Modelo 100 nyomtatvány 2020: atribucion / imputacion szerinti
                   jövedelmek aggregators'
             renta-mini-model-trabajo:
               field:
-                title: '100-as nyomtatvány 2020: munkajövedelem aggregators'
+                title: 'Modelo 100 nyomtatvány 2020: munkajövedelem aggregators'
           field:
             label: Adóév 2020
         '2021':
@@ -6893,34 +6926,37 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: '100-as nyomtatvány 2021: levonások, részletfizetések és más
-                  kapcsolódó modellekből származó levonások'
+                title: 'Modelo 100 nyomtatvány 2021: levonások, részletfizetések és
+                  más kapcsolódó bevallásokból származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: '100-as nyomtatvány 2021: a közvetlen adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2021: a közvetlen adózás összesítő
+                  mezői'
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: '100-as nyomtatvány 2021: az objektív adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2021: az objektív adózás összesítő
+                  mezői'
             renta-mini-model-base-y-cuota:
               field:
-                title: '100-as nyomtatvány 2021: adóalap / nettó adóalap / adó aggregators'
+                title: 'Modelo 100 nyomtatvány 2021: adóalap / nettó adóalap / adó
+                  aggregators'
             renta-mini-model-capital-inmobiliario:
               field:
-                title: '100-as nyomtatvány 2021: az ingatlantőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2021: az ingatlantőke összesítő mezői'
             renta-mini-model-capital-mobiliario:
               field:
-                title: '100-as nyomtatvány 2021: az ingó tőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2021: az ingó tőke összesítő mezői'
             renta-mini-model-ganancias-patrimoniales:
               field:
-                title: '100-as nyomtatvány 2021: vagyoni nyereségek és veszteségek
+                title: 'Modelo 100 nyomtatvány 2021: vagyoni nyereségek és veszteségek
                   aggregators'
             renta-mini-model-regimenes-especiales:
               field:
-                title: '100-as nyomtatvány 2021: atribucion / imputacion szerinti
+                title: 'Modelo 100 nyomtatvány 2021: atribucion / imputacion szerinti
                   jövedelmek aggregators'
             renta-mini-model-trabajo:
               field:
-                title: '100-as nyomtatvány 2021: munkajövedelem aggregators'
+                title: 'Modelo 100 nyomtatvány 2021: munkajövedelem aggregators'
           field:
             label: Adóév 2021
         '2022':
@@ -8285,34 +8321,37 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: '100-as nyomtatvány 2022: levonások, részletfizetések és más
-                  kapcsolódó modellekből származó levonások'
+                title: 'Modelo 100 nyomtatvány 2022: levonások, részletfizetések és
+                  más kapcsolódó bevallásokból származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: '100-as nyomtatvány 2022: a közvetlen adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2022: a közvetlen adózás összesítő
+                  mezői'
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: '100-as nyomtatvány 2022: az objektív adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2022: az objektív adózás összesítő
+                  mezői'
             renta-mini-model-base-y-cuota:
               field:
-                title: '100-as nyomtatvány 2022: adóalap / nettó adóalap / adó aggregators'
+                title: 'Modelo 100 nyomtatvány 2022: adóalap / nettó adóalap / adó
+                  aggregators'
             renta-mini-model-capital-inmobiliario:
               field:
-                title: '100-as nyomtatvány 2022: az ingatlantőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2022: az ingatlantőke összesítő mezői'
             renta-mini-model-capital-mobiliario:
               field:
-                title: '100-as nyomtatvány 2022: az ingó tőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2022: az ingó tőke összesítő mezői'
             renta-mini-model-ganancias-patrimoniales:
               field:
-                title: '100-as nyomtatvány 2022: vagyoni nyereségek és veszteségek
+                title: 'Modelo 100 nyomtatvány 2022: vagyoni nyereségek és veszteségek
                   aggregators'
             renta-mini-model-regimenes-especiales:
               field:
-                title: '100-as nyomtatvány 2022: atribucion / imputacion szerinti
+                title: 'Modelo 100 nyomtatvány 2022: atribucion / imputacion szerinti
                   jövedelmek aggregators'
             renta-mini-model-trabajo:
               field:
-                title: '100-as nyomtatvány 2022: munkajövedelem aggregators'
+                title: 'Modelo 100 nyomtatvány 2022: munkajövedelem aggregators'
           field:
             label: Adóév 2022
         '2023':
@@ -9579,34 +9618,37 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: '100-as nyomtatvány 2023: levonások, részletfizetések és más
-                  kapcsolódó modellekből származó levonások'
+                title: 'Modelo 100 nyomtatvány 2023: levonások, részletfizetések és
+                  más kapcsolódó bevallásokból származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: '100-as nyomtatvány 2023: a közvetlen adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2023: a közvetlen adózás összesítő
+                  mezői'
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: '100-as nyomtatvány 2023: az objektív adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2023: az objektív adózás összesítő
+                  mezői'
             renta-mini-model-base-y-cuota:
               field:
-                title: '100-as nyomtatvány 2023: adóalap / nettó adóalap / adó aggregators'
+                title: 'Modelo 100 nyomtatvány 2023: adóalap / nettó adóalap / adó
+                  aggregators'
             renta-mini-model-capital-inmobiliario:
               field:
-                title: '100-as nyomtatvány 2023: az ingatlantőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2023: az ingatlantőke összesítő mezői'
             renta-mini-model-capital-mobiliario:
               field:
-                title: '100-as nyomtatvány 2023: az ingó tőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2023: az ingó tőke összesítő mezői'
             renta-mini-model-ganancias-patrimoniales:
               field:
-                title: '100-as nyomtatvány 2023: vagyoni nyereségek és veszteségek
+                title: 'Modelo 100 nyomtatvány 2023: vagyoni nyereségek és veszteségek
                   aggregators'
             renta-mini-model-regimenes-especiales:
               field:
-                title: '100-as nyomtatvány 2023: atribucion / imputacion szerinti
+                title: 'Modelo 100 nyomtatvány 2023: atribucion / imputacion szerinti
                   jövedelmek aggregators'
             renta-mini-model-trabajo:
               field:
-                title: '100-as nyomtatvány 2023: munkajövedelem aggregators'
+                title: 'Modelo 100 nyomtatvány 2023: munkajövedelem aggregators'
           field:
             label: Adóév 2023
         '2024':
@@ -15790,40 +15832,44 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: '100-as nyomtatvány 2024: levonások, részletfizetések és más
-                  kapcsolódó modellekből származó levonások'
+                title: 'Modelo 100 nyomtatvány 2024: levonások, részletfizetések és
+                  más kapcsolódó bevallásokból származó levonások'
             renta-final-settlement:
               field:
-                title: '100-as nyomtatvány 2024: vég settlement result'
+                title: 'Modelo 100 nyomtatvány 2024: vég settlement result'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: '100-as nyomtatvány 2024: a közvetlen adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2024: a közvetlen adózás összesítő
+                  mezői'
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: '100-as nyomtatvány 2024: az objektív adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2024: az objektív adózás összesítő
+                  mezői'
             renta-mini-model-base-y-cuota:
               field:
-                title: '100-as nyomtatvány 2024: adóalap / nettó adóalap / adó aggregators'
+                title: 'Modelo 100 nyomtatvány 2024: adóalap / nettó adóalap / adó
+                  aggregators'
             renta-mini-model-capital-inmobiliario:
               field:
-                title: '100-as nyomtatvány 2024: az ingatlantőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2024: az ingatlantőke összesítő mezői'
             renta-mini-model-capital-mobiliario:
               field:
-                title: '100-as nyomtatvány 2024: az ingó tőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2024: az ingó tőke összesítő mezői'
             renta-mini-model-ganancias-patrimoniales:
               field:
-                title: '100-as nyomtatvány 2024: vagyoni nyereségek és veszteségek
+                title: 'Modelo 100 nyomtatvány 2024: vagyoni nyereségek és veszteségek
                   aggregators'
             renta-mini-model-regimenes-especiales:
               field:
-                title: '100-as nyomtatvány 2024: atribucion / imputacion szerinti
+                title: 'Modelo 100 nyomtatvány 2024: atribucion / imputacion szerinti
                   jövedelmek aggregators'
             renta-mini-model-trabajo:
               field:
-                title: '100-as nyomtatvány 2024: munkajövedelem aggregators'
+                title: 'Modelo 100 nyomtatvány 2024: munkajövedelem aggregators'
             renta-personal-family:
               field:
-                title: '100-as nyomtatvány 2024: a személyi és családi profil adatai'
+                title: 'Modelo 100 nyomtatvány 2024: a személyi és családi profil
+                  adatai'
           field:
             label: Adóév 2024
         '2025':
@@ -18075,26 +18121,29 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: '100-as nyomtatvány: a függő modelloktól származó adatok'
+                title: 'Modelo 100 nyomtatvány: a kapcsolódó bevallásokból származó
+                  adatok'
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: '100-as nyomtatvány 2025: az objektív adózás összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2025: az objektív adózás összesítő
+                  mezői'
             renta-mini-model-base-y-cuota:
               field:
-                title: '100-as nyomtatvány 2025: adóalap / nettó adóalap / adó aggregators'
+                title: 'Modelo 100 nyomtatvány 2025: adóalap / nettó adóalap / adó
+                  aggregators'
             renta-mini-model-capital-inmobiliario:
               field:
-                title: '100-as nyomtatvány 2025: az ingatlantőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2025: az ingatlantőke összesítő mezői'
             renta-mini-model-capital-mobiliario:
               field:
-                title: '100-as nyomtatvány 2025: az ingó tőke összesítő mezői'
+                title: 'Modelo 100 nyomtatvány 2025: az ingó tőke összesítő mezői'
             renta-mini-model-ganancias-patrimoniales:
               field:
-                title: '100-as nyomtatvány 2025: vagyoni nyereségek és veszteségek
+                title: 'Modelo 100 nyomtatvány 2025: vagyoni nyereségek és veszteségek
                   aggregators'
             renta-mini-model-regimenes-especiales:
               field:
-                title: '100-as nyomtatvány 2025: atribucion / imputacion szerinti
+                title: 'Modelo 100 nyomtatvány 2025: atribucion / imputacion szerinti
                   jövedelmek aggregators'
           field:
             label: Adóév 2025

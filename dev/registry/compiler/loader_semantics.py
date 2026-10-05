@@ -16,8 +16,14 @@ from cadrumo.domain.calculations.registry.export_semantics import ExportComputed
 from ._toml_helpers import as_toml_table
 
 
-def _passthrough_toml_row(raw: object) -> dict[str, object]:
-    """Carry a non-table TOML row through to schema validation unchanged."""
+def passthrough_toml_row(raw: object) -> dict[str, object]:
+    """Carry a non-table TOML row through unchanged, so validation still sees it.
+
+    A compilation step that derives fields from a row has nothing to derive from
+    when the row is not a table, but the row must still reach ``model_validate``,
+    which is what turns a malformed fragment into an attributable error. Dropping
+    it would make it vanish silently instead.
+    """
     # CAST-RATIONALE-TOML-ROW: raw TOML value, shape confirmed by the isinstance
     # guard in the same expression. The malformed row must reach model validation.
     # nosemgrep: no-cast-in-domain-application
@@ -28,7 +34,7 @@ def compile_export_semantic_field(source_path: Path, raw_field: object) -> dict[
     """Construct closed export selector enums at the TOML compiler boundary."""
     field = as_toml_table(raw_field)
     if field is None:
-        return _passthrough_toml_row(raw_field)
+        return passthrough_toml_row(raw_field)
     if "header_key" in field:
         raise RegistryLoadError(
             f"{source_path}: legacy export field header_key is not accepted; use producer_key with a canonical "
@@ -69,7 +75,7 @@ def compile_projection_endpoint_declaration(source_path: Path, raw_declaration: 
     """Hydrate one revision-owned projection declaration at the TOML boundary."""
     declaration = as_toml_table(raw_declaration)
     if declaration is None:
-        return _passthrough_toml_row(raw_declaration)
+        return passthrough_toml_row(raw_declaration)
     payload = dict(declaration)
     if "projection_ref" in payload:
         try:

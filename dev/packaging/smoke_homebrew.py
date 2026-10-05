@@ -31,6 +31,12 @@ if not __package__:
     __package__ = "dev.packaging"
 
 REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT
+_STORAGE_ENVIRONMENT = importlib.import_module("cadrumo.core.storage_environment")
+resolve_storage_path = _STORAGE_ENVIRONMENT.resolve_storage_path
+tool_storage_environment = _STORAGE_ENVIRONMENT.tool_storage_environment
+require_homebrew_installation_prefix = importlib.import_module(
+    "dev.packaging.homebrew_storage",
+).require_homebrew_installation_prefix
 _COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
 CommandResult = _COMMAND_EXECUTION.CommandResult
 run_command = _COMMAND_EXECUTION.run_command
@@ -167,12 +173,42 @@ def localize_formula(
 
 
 def _new_run_root(evidence_dir: Path) -> Path:
-    evidence = evidence_dir.resolve()
+    evidence = resolve_storage_path(evidence_dir)
     evidence.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
     run_root = evidence / f"run-{run_id}"
     run_root.mkdir()
     return run_root
+
+
+def _homebrew_storage_environment() -> dict[str, str]:
+    """Bind Homebrew caches, logs and build scratch beneath Cadrumo storage."""
+    locations = {
+        name: Path(value)
+        for name, value in tool_storage_environment().items()
+        if name in {"HOMEBREW_CACHE", "HOMEBREW_LOGS", "HOMEBREW_TEMP"}
+    }
+    for path in locations.values():
+        path.mkdir(parents=True, exist_ok=True)
+    return {name: str(path) for name, path in locations.items()}
+
+
+def _require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
+    """Refuse a Homebrew temp path on a different filesystem from its prefix.
+
+    Homebrew requires its build temporary directory to share a filesystem with
+    the active prefix so it can move built files into the Cellar atomically.
+    The override remains available for installations whose checkout and prefix
+    live on different volumes; in that case the default fails before brew can
+    stage files somewhere uncontrolled.
+    """
+    temporary_root = Path(environment["HOMEBREW_TEMP"])
+    if temporary_root.stat().st_dev != brew_prefix.stat().st_dev:
+        raise SystemExit(
+            "Homebrew build temporary storage must share a filesystem with its prefix; "
+            "set CADRUMO_HOMEBREW_TEMP_DIR to a writable directory on the Homebrew volume "
+            f"(prefix={brew_prefix}, temp={temporary_root})",
+        )
 
 
 def _installed_python(prefix: Path) -> Path:
@@ -208,6 +244,43 @@ def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
         raise SystemExit(f"installed CLI oracle returned unexpected evidence: {tax_document!r}")
 
 
+def _finish_homebrew_evidence(
+    run_root: Path,
+    evidence: dict[str, object],
+    cleanup_errors: list[str],
+    cleanup: dict[str, object],
+    started_at: datetime,
+) -> None:
+    if evidence and not cleanup_errors:
+        evidence["status"] = "passed"
+        evidence["completed_at"] = datetime.now(UTC).isoformat()
+        evidence["cleanup"] = cleanup
+        _write_json(run_root / "homebrew-evidence.json", evidence)
+    if cleanup_errors:
+        failure_path = run_root / "homebrew-failure.json"
+        failure: dict[str, object]
+        if failure_path.is_file():
+            loaded_failure = json.loads(failure_path.read_text(encoding=_UTF_8))
+            failure = dict(loaded_failure) if isinstance(loaded_failure, dict) else {}
+        else:
+            failure = {
+                "schema": "cadrumo.packaging.homebrew-smoke-failure.v1",
+                "status": "failed",
+                "started_at": started_at.isoformat(),
+                "failed_at": datetime.now(UTC).isoformat(),
+            }
+        failure["cleanup"] = cleanup
+        _write_json(failure_path, failure)
+        raise SystemExit("; ".join(cleanup_errors))
+
+
+def _require_homebrew_platform() -> None:
+    if platform.system() not in {"Darwin", "Linux"}:
+        raise SystemExit(f"Homebrew smoke requires macOS or Linux; got {platform.system()}")
+    if platform.machine().casefold() not in {"x86_64", "amd64", "arm64", "aarch64"}:
+        raise SystemExit(f"unsupported Homebrew smoke architecture: {platform.machine()}")
+
+
 def run_homebrew_smoke(
     *,
     formula_path: Path,
@@ -234,10 +307,7 @@ def run_homebrew_smoke(
         raise SystemExit(f"Homebrew executable is not a file: {brew}")
     repo = repo_root.resolve(strict=True)
     _require_valid_tap_name(tap_name)
-    if platform.system() not in {"Darwin", "Linux"}:
-        raise SystemExit(f"Homebrew smoke requires macOS or Linux; got {platform.system()}")
-    if platform.machine().casefold() not in {"x86_64", "amd64", "arm64", "aarch64"}:
-        raise SystemExit(f"unsupported Homebrew smoke architecture: {platform.machine()}")
+    _require_homebrew_platform()
     os.environ["HOMEBREW_NO_AUTO_UPDATE"] = "1"
     brew_prefix = brew.parent.parent
     os.environ["PATH"] = os.pathsep.join(
@@ -247,6 +317,16 @@ def run_homebrew_smoke(
     run_root = _new_run_root(evidence_dir)
     logs = run_root / "logs"
     logs.mkdir()
+    homebrew_environment = _homebrew_storage_environment()
+    os.environ.update(homebrew_environment)
+    prefix_text = _run(
+        [str(brew), "--prefix"],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-prefix-root",
+    ).stdout.strip()
+    brew_prefix = require_homebrew_installation_prefix(prefix_text)
+    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
     tap_repo = run_root / "tap"
     formula_dir = tap_repo / "Formula"
     formula_dir.mkdir(parents=True)
@@ -488,6 +568,7 @@ def run_homebrew_smoke(
         server.server_close()
         server_thread.join(timeout=5)
 
+        cleanup: dict[str, object]
         if retain_install:
             # The workflow's later emit step hashes the INSTALLED executables
             # (the mint-time isolation proof), so the keg must survive this
@@ -523,27 +604,7 @@ def run_homebrew_smoke(
             )
             cleanup_errors.extend(deferred_errors)
             cleanup["errors"] = cleanup_errors
-        if evidence and not cleanup_errors:
-            evidence["status"] = "passed"
-            evidence["completed_at"] = datetime.now(UTC).isoformat()
-            evidence["cleanup"] = cleanup
-            _write_json(run_root / "homebrew-evidence.json", evidence)
-        if cleanup_errors:
-            failure_path = run_root / "homebrew-failure.json"
-            failure: dict[str, object]
-            if failure_path.is_file():
-                loaded_failure = json.loads(failure_path.read_text(encoding=_UTF_8))
-                failure = dict(loaded_failure) if isinstance(loaded_failure, dict) else {}
-            else:
-                failure = {
-                    "schema": "cadrumo.packaging.homebrew-smoke-failure.v1",
-                    "status": "failed",
-                    "started_at": started_at.isoformat(),
-                    "failed_at": datetime.now(UTC).isoformat(),
-                }
-            failure["cleanup"] = cleanup
-            _write_json(failure_path, failure)
-            raise SystemExit("; ".join(cleanup_errors))
+        _finish_homebrew_evidence(run_root, evidence, cleanup_errors, cleanup, started_at)
 
     return run_root / "homebrew-evidence.json"
 
@@ -566,6 +627,25 @@ def cleanup_state_document(
         "installed_prefix": None if installed_prefix is None else str(installed_prefix),
         "preexisting_formulae": sorted(preexisting_formulae),
         "preexisting_taps": sorted(preexisting_taps),
+    }
+
+
+def _brew_retained_state(
+    retained_formulae: set[str],
+    retained_taps: set[str],
+    installed_prefix: Path | None,
+    cleanup_errors: list[str],
+) -> dict[str, object]:
+    if retained_formulae:
+        cleanup_errors.append(f"cleanup retained formulae: {sorted(retained_formulae)!r}")
+    if retained_taps:
+        cleanup_errors.append(f"cleanup retained taps: {sorted(retained_taps)!r}")
+    if installed_prefix is not None and installed_prefix.exists():
+        cleanup_errors.append(f"cleanup retained installed prefix: {installed_prefix}")
+    return {
+        "retained_formulae": sorted(retained_formulae),
+        "retained_taps": sorted(retained_taps),
+        "installed_prefix_absent": installed_prefix is None or not installed_prefix.exists(),
     }
 
 
@@ -677,17 +757,7 @@ def _run_brew_cleanup(
         )
         - preexisting_taps
     )
-    if retained_formulae:
-        cleanup_errors.append(f"cleanup retained formulae: {sorted(retained_formulae)!r}")
-    if retained_taps:
-        cleanup_errors.append(f"cleanup retained taps: {sorted(retained_taps)!r}")
-    if installed_prefix is not None and installed_prefix.exists():
-        cleanup_errors.append(f"cleanup retained installed prefix: {installed_prefix}")
-    cleanup: dict[str, object] = {
-        "retained_formulae": sorted(retained_formulae),
-        "retained_taps": sorted(retained_taps),
-        "installed_prefix_absent": installed_prefix is None or not installed_prefix.exists(),
-    }
+    cleanup = _brew_retained_state(retained_formulae, retained_taps, installed_prefix, cleanup_errors)
     return cleanup_errors, cleanup
 
 
@@ -706,6 +776,14 @@ def run_deferred_cleanup(state_path: Path) -> int:
     run_root = resolved_state.parent
     logs = run_root / "logs"
     logs.mkdir(exist_ok=True)
+    os.environ.update(_homebrew_storage_environment())
+    prefix_text = _run(
+        [str(state["brew"]), "--prefix"],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-prefix-cleanup",
+    ).stdout
+    require_homebrew_installation_prefix(prefix_text)
     installed_prefix_text = state.get("installed_prefix")
     cleanup_errors, cleanup = _run_brew_cleanup(
         brew=Path(str(state["brew"])),

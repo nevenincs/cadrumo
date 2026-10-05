@@ -313,12 +313,12 @@ async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> 
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        assert app.home_refresh_refusal_code is None
+        assert app._home_refresh_refusal_code is None
 
         app._show_home(None)
         await pilot.pause()
 
-        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app.return_value is None
         assert app.is_running
         app.exit(None)
@@ -343,7 +343,7 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
         await pilot.pause()
 
         assert app.return_value is None
-        assert app.home_refresh_refusal_code == "workbench.home.refresh_unavailable"
+        assert app._home_refresh_refusal_code == "workbench.home.refresh_unavailable"
         assert app._account_factories is not None
         app.exit(None)
 
@@ -827,3 +827,13 @@ async def test_the_return_to_home_rereads_off_the_event_loop_and_shows_that_it_i
 
     assert refreshes == [1]
     assert app.workbench_search_service is refreshed_search
+
+
+def test_a_screen_detached_before_its_mount_handler_gets_no_chrome() -> None:
+    """Exiting or dismissing mid-transition must not crash on the chrome mount."""
+    screen = AccountChromeScreen()
+
+    assert not screen.is_attached
+    screen._mount_account_chrome()
+
+    assert not screen.query("#account-bar")

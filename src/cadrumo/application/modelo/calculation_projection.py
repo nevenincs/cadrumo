@@ -54,7 +54,10 @@ class ModeloCalculationObservationSnapshot(BaseModel):
 
     @classmethod
     def from_observation(cls, observation: CasillaObservation) -> Self:
-        """Retain the canonical observation, including its scalar discriminator."""
+        """Retain the canonical observation, including its scalar discriminator.
+
+        Parameter types: ``observation`` (:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`).
+        """
         value = observation.value
         return cls(
             casilla_id=observation.casilla_id,
@@ -170,7 +173,10 @@ class ModeloCalculationSnapshot(BaseModel):
         work_unit: WorkUnit,
         operation: PinnedAuthorityOperation,
     ) -> Self:
-        """Project existing visibility and headline owners, then validate correlation."""
+        """Project existing visibility and headline owners, then validate correlation.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
+        """
         snapshot = resolve_registry_snapshot_for_work_unit(
             work_unit, grade=RegistryAuthorityGrade.CALCULATION, operation=operation
         )
@@ -246,39 +252,51 @@ class ModeloCalculationSnapshot(BaseModel):
 
     @model_validator(mode="after")
     def _exact_coordinates_and_fact_types(self) -> Self:
-        registry = self.registry_snapshot_ref
-        if (
-            self.modelo != registry.modelo
-            or self.filing_year != registry.modelo_year
-            or self.period.code != registry.period
-            or self.period.filing_year != self.filing_year
-            or self.work_unit_id
-            != derive_work_unit_id(
-                bucket_id=self.bucket_id,
-                modelo=self.modelo,
-                filing_year=self.filing_year,
-                period=self.period.to_period(),
-                revision_id=registry.revision_id,
-            )
-        ):
-            raise ValueError("calculation snapshot has mismatched work-unit or registry coordinates")
-        for facts, expected_type in (
-            (self.casilla_values, PublicDecimal),
-            (self.binding_overrides, str),
-            (self.relation_overrides, str),
-            (self.input_values_by_casilla_id, str),
-        ):
-            keys = tuple(item.key for item in facts)
-            if keys != tuple(sorted(set(keys))) or any(not isinstance(item.value, expected_type) for item in facts):
-                raise ValueError("calculation snapshot has unordered or duplicate names or altered scalar types")
-        values = {item.key: item.value for item in self.casilla_values}
-        if any(values.get(row.casilla_id) != row.value for row in self.result_summary):
-            raise ValueError("calculation headline does not match visible casilla values")
-        if len({row.casilla_id for row in self.result_summary}) != len(self.result_summary):
-            raise ValueError("duplicate calculation headline casilla")
-        if any(row.index != index for index, row in enumerate(self.detail_rows, start=1)):
-            raise ValueError("calculation detail rows must retain contiguous indexes")
+        _validate_snapshot_coordinates(self)
+        _validate_snapshot_scalar_facts(self)
+        _validate_snapshot_summary_and_rows(self)
         return self
+
+
+def _validate_snapshot_coordinates(snapshot: ModeloCalculationSnapshot) -> None:
+    registry = snapshot.registry_snapshot_ref
+    if (
+        snapshot.modelo != registry.modelo
+        or snapshot.filing_year != registry.modelo_year
+        or snapshot.period.code != registry.period
+        or snapshot.period.filing_year != snapshot.filing_year
+        or snapshot.work_unit_id
+        != derive_work_unit_id(
+            bucket_id=snapshot.bucket_id,
+            modelo=snapshot.modelo,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period.to_period(),
+            revision_id=registry.revision_id,
+        )
+    ):
+        raise ValueError("calculation snapshot has mismatched work-unit or registry coordinates")
+
+
+def _validate_snapshot_scalar_facts(snapshot: ModeloCalculationSnapshot) -> None:
+    for facts, expected_type in (
+        (snapshot.casilla_values, PublicDecimal),
+        (snapshot.binding_overrides, str),
+        (snapshot.relation_overrides, str),
+        (snapshot.input_values_by_casilla_id, str),
+    ):
+        keys = tuple(item.key for item in facts)
+        if keys != tuple(sorted(set(keys))) or any(not isinstance(item.value, expected_type) for item in facts):
+            raise ValueError("calculation snapshot has unordered or duplicate names or altered scalar types")
+
+
+def _validate_snapshot_summary_and_rows(snapshot: ModeloCalculationSnapshot) -> None:
+    values = {item.key: item.value for item in snapshot.casilla_values}
+    if any(values.get(row.casilla_id) != row.value for row in snapshot.result_summary):
+        raise ValueError("calculation headline does not match visible casilla values")
+    if len({row.casilla_id for row in snapshot.result_summary}) != len(snapshot.result_summary):
+        raise ValueError("duplicate calculation headline casilla")
+    if any(row.index != index for index, row in enumerate(snapshot.detail_rows, start=1)):
+        raise ValueError("calculation detail rows must retain contiguous indexes")
 
 
 def _decimal_facts(values: Mapping[CasillaId, Decimal]) -> tuple[PublicNamedScalar, ...]:

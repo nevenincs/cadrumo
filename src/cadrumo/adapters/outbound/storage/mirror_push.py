@@ -526,7 +526,11 @@ def push_secure_object_mirror_rows(
     limit: int | None,
     dry_run: bool,
 ) -> MirrorRowsResult:
-    """Push complete permitted ciphertext namespaces through canonical mirror policy."""
+    """Push complete permitted ciphertext namespaces through canonical mirror policy.
+
+    Parameter types: ``repository``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     if limit is not None and not dry_run:
         raise OutboundStorageValidationError(
             "non-dry-run Google sync push with --limit cannot produce a complete remote mirror manifest",

@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#censo-operator-manual-enrolment'
 date: '2026-07-12'
-modified: '2026-07-12'
-body_hash: 'sha256:052ff451a302b460b75094a6b7d6b363495b23fbe600edb00a3b379cdae14e1e'
+modified: '2026-10-03'
+body_hash: 'sha256:41663140c078339bdb1cb367396a07ca51139b4b62c17094550846a0b88eeef7'
 related:
   - "[[2026-07-11-censo-operator-manual-enrolment-adr]]"
-  - "[[2026-07-11-censo-operator-manual-enrolment-plan]]"
   - "[[2026-07-12-censo-operator-manual-enrolment-audit]]"
 ---
 
@@ -42,8 +41,8 @@ snapshot. It derives the surviving home-office ratio from encrypted,
 operator-declared `vivienda_office` facts written through `config profile edit`.
 Nothing stamps the two AEAT-verified Censo source tags, so the calendar keeps its
 `censo.enrolment_unverified` posture. Evidence:
-`file:src/aeat/application/user_profile/_censo_sync.py:1-17` and
-`file:src/aeat/application/user_profile/_censo_sync.py:41-92`.
+`file:the former source file` and
+`file:the former source file`.
 
 An exact current search found no active reference to the retired
 `config profile censo pull`, `compare`, `apply`, or `show` family in the product
@@ -51,8 +50,8 @@ source, documentation, development tree, or tests. The current Censo how-to,
 live-read guide, and activity-start skill correctly direct operators to
 `config profile edit` and the taxpayer's Modelo 036 copy:
 `file:docs/how-to/censo-update.md:10-14`,
-`file:docs/how-to/read-live-aeat-data.md:50-58`, and
-`file:src/aeat/_data/agent/skills/inicio-actividad/SKILL.md:44-60`.
+`file:the former source file`, and
+`file:the former source file`.
 
 ### One stale documentation residual remains
 
@@ -75,8 +74,8 @@ the outstanding documentation task as genuine work.
 
 - `file:.vault/adr/2026-07-11-censo-operator-manual-enrolment-adr.md:14-123`
 - `file:.vault/plan/2026-07-11-censo-operator-manual-enrolment-plan.md:14-43`
-- `file:src/aeat/application/user_profile/_censo_sync.py:1-116`
+- `file:the former source file`
 - `file:docs/how-to/authenticate-with-aeat.md:1-3`
 - `file:docs/how-to/censo-update.md:10-14`
-- `file:docs/how-to/read-live-aeat-data.md:50-58`
-- `file:src/aeat/_data/agent/skills/inicio-actividad/SKILL.md:44-60`
+- `file:the former source file`
+- `file:the former source file`

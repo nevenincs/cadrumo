@@ -1,6 +1,6 @@
 @step Declare the attribution-entity taxpayer type this informational modelo belongs to.
 @setup aeat config profile edit docs-sequence-sandbox --quiet --entity-type attribution_entity
-@step Open the list-based work unit for the informational modelo.
+@step Open the list-based declaration for the informational modelo.
 aeat --format json app modelo work create --modelo 184 --year 2024 --period 0A
 @capture work_unit_id result.work_unit_id
 @step Calculate, supplying each record as a repeatable --row input.

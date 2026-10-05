@@ -3,23 +3,16 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0586f4cab6360115f782550567fe85531d7e90f4653850fe0f3eae2c2c35bb8f'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+body_hash: 'sha256:4d4036200695a989bfd6f1fdfe3cc60190a28d6bcfa318960e88c0d36a27b2fd'
+related: []
 ---
 # `object-name-declustering` audit: `s09 transform review`
 
 ## Scope
 
-Reviewed the live `dev/quality/object_name_transform.py` implementation for
-`W02.P04.S09` against the accepted ADR, reference, plan, and current manifest
-and graph contracts. The review covered read-only proposal behavior, raw-byte
-preconditions, exact allowlist equality, module moves, LibCST definition and
-qualified-reference handling, dynamic and generated refusal, unsupported
-constructs, deterministic outputs, and the no-shim boundary. No implementation
-or test file was changed.
+The review covered read-only proposal behavior, raw-byte preconditions, exact allowlist equality, module moves, LibCST definition and qualified-reference handling, dynamic and generated refusal, unsupported constructs, deterministic outputs, and the no-shim boundary. No implementation or test file was changed.
 
 The live implementation performs no filesystem mutation, resolves normalized
 paths without traversing links, rechecks every declared byte precondition,
@@ -45,15 +38,7 @@ hit count describe the wrong binding set.
 
 ### cross-package-relative-import | high | Module moves can silently retarget relative imports
 
-A module move may cross package boundaries, but transformation parses and emits
-the source using its old module context and copies those bytes to the new target.
-Relative imports inside the moved module that do not themselves name the renamed
-module are left unchanged. A disposable production-path probe moved
-`src/cadrumo/old.py` containing `from .support import VALUE` to
-`src/other/new.py`; the proposal succeeded and emitted the same relative import,
-changing its runtime authority from `cadrumo.support` to `other.support`. The
-manifest and allowlist can therefore be satisfied while the moved module's
-meaning changes silently.
+A module move may cross package boundaries, but transformation parses and emits the source using its old module context and copies those bytes to the new target. Relative imports inside the moved module that do not themselves name the renamed module are left unchanged. The manifest and allowlist can therefore be satisfied while the moved module's meaning changes silently.
 
 ## Recommendations
 
@@ -84,12 +69,7 @@ name, and occurrence together. Re-running the exact prior fixture successfully
 renamed `Widgets` while preserving the unrelated occurrence-one `Other` class.
 This closes `definition-locator-selection`.
 
-The LibCST import-from path now detects a module operation transforming its own
-source and refuses a cross-package parent change whenever the source contains a
-relative import. Re-running the exact prior `src/cadrumo/old.py` to
-`src/other/new.py` fixture refused `from .support import VALUE` with the owning
-cross-package-relative-import diagnostic. This closes
-`cross-package-relative-import` without weakening same-package behavior.
+The LibCST import-from path now detects a module operation transforming its own source and refuses a cross-package parent change whenever the source contains a relative import. This closes `cross-package-relative-import` without weakening same-package behavior.
 
 Final re-review checks passed: both disposable counterexamples, Ruff lint, Ruff
 formatting, canonical `ty` checking, bytecode compilation, and live import. No

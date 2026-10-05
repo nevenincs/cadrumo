@@ -15,6 +15,7 @@ from ....application.operations.persistence.events import (
 from ....application.operations.persistence.journal import OperationPersistedSnapshot
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.operations import OperationLifecycle
 from ..storage.errors import RepositoryError
 
 
@@ -124,6 +125,20 @@ def validate_advance(
     """Validate one compare-and-swap successor against its current snapshot."""
     _validate_advance_revision(current, snapshot, expected_revision)
     _validate_advance_identity(current, snapshot)
+    if current.financial_requirement is not None:
+        _raise_if(
+            snapshot.financial_requirement != current.financial_requirement,
+            "operation journal cannot replace or remove its financial requirement",
+            RepositoryError,
+        )
+    elif snapshot.financial_requirement is not None:
+        _raise_if(
+            current.lifecycle is not OperationLifecycle.CREATED
+            or snapshot.lifecycle is not OperationLifecycle.CREATED
+            or snapshot.financial_requirement.invocation_revision != snapshot.revision,
+            "financial requirement must be attached at the exact created revision",
+            RepositoryError,
+        )
     _validate_advance_consumed_interactions(current, snapshot)
     _validate_advance_lifecycle(current)
     _validate_advance_events(current, snapshot)

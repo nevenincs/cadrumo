@@ -3,13 +3,13 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c756bb8fb40924ce2e7033b65bca8b5cbed85c1c0f15d14aba6d88310b1e12d'
+body_hash: 'sha256:a55e38a4d4f4966134e3144ea296d7d52c97ef3297450c222ec69b081b60ce6f'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]"
 ---
+
 # `registry-completeness-closure` reference: `Modelo 036 source-connectivity participation`
 
 ## Summary
@@ -33,10 +33,6 @@ The existing registry-side census coordinate was extended from `Period` to `Peri
 ## Evidence chain
 
 - The official catalogue source `aeat-modelo-036-procedure` is cited by the M036 binding and casilla declarations.
-- `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/bindings/0001-profile-censo-status.toml` declares `source = "profile"`, selector `censo.status`, and `censo_event_kind`.
-- `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/casillas/cdecl.event-kind__cdecl.vigencia-2025.toml` binds `decl.event-kind` to that declaration and gives it `tipo_evento_censal`.
-- `src/cadrumo/application/aggregation/_source_profile.py` is the canonical owner of `BindingSourceKind.PROFILE`; existing live-mesh coverage resolves the M036 enum and provenance.
-- `src/cadrumo/application/modelo/_m036_lifecycle.py` records human-filed `alta`, `modificacion`, and `baja` events securely and prohibits local filing.
 
 ## Census and gate repair
 

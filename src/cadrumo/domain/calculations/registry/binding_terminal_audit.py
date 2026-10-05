@@ -48,6 +48,7 @@ _FINGERPRINTED_ORIGIN_KINDS = frozenset(
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
     },
 )
 """Filing-grade families whose terminal fact is an individually addressable record.

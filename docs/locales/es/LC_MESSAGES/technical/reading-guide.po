@@ -1,0 +1,270 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/reading-guide.md:1
+msgid "Snapshot and reading guide"
+msgstr "Instantánea y guía de lectura"
+
+#: ../../technical/reading-guide.md:3
+msgid ""
+"[Technical overview](architecture.md) · [Detailed article "
+"index](articles/catalogue.md)"
+msgstr ""
+"[Panorámica técnica](architecture.md) · [Índice de artículos "
+"detallados](articles/catalogue.md)"
+
+#: ../../technical/reading-guide.md:5
+msgid "Audience and structure"
+msgstr "Público y estructura"
+
+#: ../../technical/reading-guide.md:7
+msgid ""
+"This collection serves readers investigating Cadrumo's internals. "
+"Application instructions and tax-filing workflows belong to the separate "
+"user documentation."
+msgstr ""
+"Esta colección se dirige a quienes investigan el funcionamiento interno "
+"de Cadrumo. Las instrucciones de la aplicación y los flujos de "
+"preparación de declaraciones tributarias pertenecen a la documentación de"
+" usuario independiente."
+
+#: ../../technical/reading-guide.md:9
+msgid ""
+"**Architecture:** the main body of the technical landing page explains "
+"the system's organization and boundaries."
+msgstr ""
+"**Arquitectura:** el cuerpo principal de la página técnica de inicio "
+"explica la organización y los límites del sistema."
+
+#: ../../technical/reading-guide.md:10
+msgid ""
+"**Cross-cutting assessments:** four additional pages cover capabilities, "
+"knowledge and provenance, security, and implementation quality."
+msgstr ""
+"**Evaluaciones transversales:** cuatro páginas adicionales tratan las "
+"capacidades, el conocimiento y la procedencia, la seguridad y la calidad "
+"de la implementación."
+
+#: ../../technical/reading-guide.md:11
+msgid ""
+"**Topics:** 18 full overview reports explain subsystems. Each has one "
+"corresponding synthesis brief, retained in an expandable summary. Short "
+"landing-page descriptions help readers choose a topic."
+msgstr ""
+"**Temas:** 18 informes panorámicos completos explican los subsistemas. "
+"Cada uno tiene un resumen de síntesis correspondiente, conservado en un "
+"resumen desplegable. Las descripciones breves de la página principal "
+"ayudan a elegir un tema."
+
+#: ../../technical/reading-guide.md:12
+msgid ""
+"**Detailed articles:** 206 source-analysis reports provide the underlying"
+" mechanisms, observations, and coverage. Each topic draws on multiple "
+"articles. Article pages link back to their assigned topic; inline "
+"references retain additional cross-topic connections."
+msgstr ""
+"**Artículos detallados:** 206 informes de análisis del código fuente "
+"aportan los mecanismos, las observaciones y la cobertura subyacentes. "
+"Cada tema se basa en varios artículos. Las páginas de los artículos "
+"enlazan con su tema asignado; las referencias integradas conservan "
+"conexiones adicionales entre temas."
+
+#: ../../technical/reading-guide.md:14
+msgid ""
+"The original analysis called the overview and assessment collection "
+"**Stage 1** and the detailed collection **Stage 2**. The 18 synthesis "
+"briefs summarize the Stage 1 topic reports one-to-one. They do not "
+"summarize individual Stage 2 articles."
+msgstr ""
+"El análisis original denominó **Stage 1** a la colección de panorámicas y"
+" evaluaciones, y **Stage 2** a la colección detallada. Los 18 resúmenes "
+"de síntesis corresponden, uno por uno, a los informes temáticos de Stage "
+"1. No resumen artículos individuales de Stage 2."
+
+#: ../../technical/reading-guide.md:16
+msgid "What the snapshot establishes"
+msgstr "Qué acredita la instantánea"
+
+#: ../../technical/reading-guide.md:18
+msgid ""
+"The analysis recorded repository HEAD as "
+"`3df7c143cc67663fadeacedb38a113df5aaac07e`, but inspected the on-disk "
+"source snapshot, including its existing omissions. That identifier is "
+"context, not a claim that the analyzed tree was identical to a clean "
+"checkout."
+msgstr ""
+"El análisis registró el HEAD del repositorio como "
+"`3df7c143cc67663fadeacedb38a113df5aaac07e`, pero examinó la instantánea "
+"del código fuente presente en disco, incluidas sus omisiones existentes. "
+"Ese identificador aporta contexto; no afirma que el árbol analizado fuera"
+" idéntico a una copia de trabajo limpia."
+
+#: ../../technical/reading-guide.md:20
+msgid ""
+"The snapshot contained 8,355 files, including 3,025 Python files. Its "
+"original test tree and root build configuration were absent. Missing "
+"material in this snapshot must not be interpreted as missing from the "
+"project."
+msgstr ""
+"La instantánea contenía 8,355 archivos, entre ellos 3,025 archivos "
+"Python. Faltaban el árbol de pruebas original y la configuración de "
+"compilación de la raíz. La ausencia de material en esta instantánea no "
+"debe interpretarse como una ausencia en el proyecto."
+
+#: ../../technical/reading-guide.md:22
+msgid ""
+"Reviewers read each assigned implementation file or line range in full. "
+"They inventoried the large reference-data collections completely and "
+"reviewed bounded, representative content samples. Coverage appendices "
+"retain those distinctions and the sampled material."
+msgstr ""
+"Los revisores leyeron íntegramente cada archivo de implementación o "
+"intervalo de líneas asignado. Inventariaron por completo las grandes "
+"colecciones de datos de referencia y revisaron muestras de contenido "
+"acotadas y representativas. Los apéndices de cobertura conservan estas "
+"distinciones y el material muestreado."
+
+#: ../../technical/reading-guide.md:24
+msgid ""
+"The analysis did not execute the application or its tests, verify live "
+"behavior at Spain's tax agency (AEAT), or independently validate current "
+"tax law. An implemented path, a conditionally available operation, a "
+"refused operation, and an unverified outcome remain distinct findings. "
+"Bundled schemas and source counts do not establish complete calculation "
+"or export support."
+msgstr ""
+"El análisis no ejecutó la aplicación ni sus pruebas, no verificó el "
+"comportamiento en vivo ante la agencia tributaria española (AEAT) ni "
+"validó de forma independiente la legislación tributaria vigente. Una ruta"
+" implementada, una operación disponible bajo condiciones, una operación "
+"rechazada y un resultado sin verificar siguen siendo hallazgos distintos."
+" Los esquemas incluidos y los recuentos de fuentes no acreditan una "
+"compatibilidad completa de cálculo o exportación."
+
+#: ../../technical/reading-guide.md:26
+msgid "Reading the evidence"
+msgstr "Cómo interpretar las evidencias"
+
+#: ../../technical/reading-guide.md:28
+msgid ""
+"Begin with a topic or cross-cutting assessment when investigating "
+"behavior across modules. Detailed articles describe bounded assignments; "
+"a local observation or unresolved question may depend on controls "
+"elsewhere. Follow the documentation references before drawing a system-"
+"wide conclusion."
+msgstr ""
+"Empieza por un tema o una evaluación transversal cuando investigues el "
+"comportamiento entre módulos. Los artículos detallados describen tareas "
+"acotadas; una observación local o una cuestión sin resolver puede "
+"depender de controles situados en otra parte. Sigue las referencias de la"
+" documentación antes de extraer una conclusión sobre todo el sistema."
+
+#: ../../technical/reading-guide.md:30
+msgid ""
+"Source identifiers remain as plain text. They locate the evidence in the "
+"analyzed snapshot conceptually; they are not links or promises about "
+"current file locations. Direct code links and line-number anchors have "
+"been removed. Links within this collection connect documentation pages "
+"and retained analysis metadata."
+msgstr ""
+"Los identificadores del código fuente se mantienen como texto sin "
+"formato. Sitúan conceptualmente las evidencias en la instantánea "
+"analizada; no son enlaces ni garantías sobre la ubicación actual de los "
+"archivos. Se han eliminado los enlaces directos al código y los anclajes "
+"a números de línea. Los enlaces de esta colección conectan páginas de "
+"documentación y metadatos del análisis conservados."
+
+#: ../../technical/reading-guide.md:32
+msgid ""
+"The original report prose, findings, qualifications, tables, diagrams, "
+"and coverage appendices are preserved. Presentation changes are limited "
+"to headings, navigation, placement of summaries, and citation formatting."
+" The architecture report forms the landing page's body. No source-code "
+"reinspection or new runtime verification was performed for this "
+"presentation."
+msgstr ""
+"Se conservan la prosa, los hallazgos, las salvedades, las tablas, los "
+"diagramas y los apéndices de cobertura del informe original. Los cambios "
+"de presentación se limitan a los encabezados, la navegación, la ubicación"
+" de los resúmenes y el formato de las citas. El informe de arquitectura "
+"constituye el cuerpo de la página principal. Para esta presentación no se"
+" volvió a examinar el código fuente ni se realizaron nuevas "
+"verificaciones en ejecución."
+
+#: ../../technical/reading-guide.md:34
+msgid "Provenance"
+msgstr "Procedencia"
+
+#: ../../technical/reading-guide.md:36
+msgid ""
+"[Document manifest](manifest.json): original report paths and hashes, "
+"destination pages, and preserved-body hashes."
+msgstr ""
+"[Manifiesto de documentos](manifest.json): rutas y hashes de los informes"
+" originales, páginas de destino y hashes de los cuerpos conservados."
+
+#: ../../technical/reading-guide.md:37
+msgid ""
+"[Original snapshot and analysis record](evidence/run.json): recorded "
+"scope, assignments, and validation results."
+msgstr ""
+"[Registro de la instantánea y del análisis "
+"originales](evidence/run.json): alcance, tareas asignadas y resultados de"
+" validación registrados."
+
+#: ../../technical/reading-guide.md:38
+msgid ""
+"[Registry inventory](evidence/registry-structure.json): structural "
+"observations from the analyzed registry."
+msgstr ""
+"[Inventario del registro](evidence/registry-structure.json): "
+"observaciones estructurales del registro analizado."
+
+#: ../../technical/reading-guide.md:39
+msgid ""
+"[Terminology sampling record](evidence/terminology-sample-bound.json): "
+"the bounded terminology review."
+msgstr ""
+"[Registro del muestreo terminológico](evidence/terminology-sample-"
+"bound.json): la revisión terminológica acotada."
+
+#: ../../technical/reading-guide.md:40
+msgid ""
+"[Cross-module review questions](evidence/review-questions.md): original "
+"review leads, distinct from the synthesized conclusions."
+msgstr ""
+"[Preguntas de revisión entre módulos](evidence/review-questions.md): "
+"líneas de investigación originales, distintas de las conclusiones "
+"sintetizadas."
+
+#: ../../technical/reading-guide.md:42
+msgid ""
+"This collection is part of the compiled documentation site, under its own"
+" Technical documentation section. Its source pages live in "
+"`docs/technical/`. Sphinx builds them with the site, and gettext "
+"catalogues provide the Spanish, Catalan, and Hungarian editions. User "
+"guides remain in their existing sections."
+msgstr ""
+"Esta colección forma parte del sitio de documentación compilado, dentro "
+"de su propia sección de Documentación técnica. Sus páginas fuente se "
+"encuentran en `docs/technical/`. Sphinx las compila junto con el sitio, y"
+" los catálogos gettext proporcionan las ediciones en español, catalán y "
+"húngaro. Las guías de usuario permanecen en sus secciones existentes."

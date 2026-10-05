@@ -15,12 +15,12 @@ from pydantic import JsonValue
 
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.application.auth.operation_definitions import AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.mcp_query_operation import (
+from cadrumo.application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSummaryProjection,
 )
 from cadrumo.application.modelo.operation_definitions import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.query_read_operation import (
+from cadrumo.application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,
     ModeloBindingsResolveRequest,
@@ -62,7 +62,8 @@ from cadrumo.entrypoints.tests.modelo_query_operation_test_support import (
     ModeloQueryConformanceCase,
     prepare_modelo_query_conformance_case,
 )
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [

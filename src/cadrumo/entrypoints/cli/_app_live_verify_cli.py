@@ -18,7 +18,7 @@ from ...application.live.verify import (
     VerifySurface,
 )
 from ...application.live.verify_capture_operation import VerifyCapturePublicResultV1
-from ...application.live.verify_read_operation import VerifyObservationSummaryPublicV1
+from ...application.live.verify_read_contracts import VerifyObservationSummaryPublicV1
 from ...core.i18n.render import tr
 from ...core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from .common import emit_envelope

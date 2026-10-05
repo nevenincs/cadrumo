@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-26'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:433d1e06d6817b1d7a32c77a349a8acc56aabf27e8a2fc75e44d77bffab1a19c'
+body_hash: 'sha256:285cfee7b69ce8c4e3b55a1aebe1021ab34a6bdfad58c98d6e92550e50e4f919'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -13,6 +13,8 @@ related:
   - "[[2026-08-13-profile-session-lifecycle-successor-adr]]"
   - "[[2026-08-13-cli-action-envelope-successor-adr]]"
   - "[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]"
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
+  - '[[2026-10-04-application-sign-in-adr]]'
 ---
 
 # `mcp-purpose-authentication` adr: profile API keys, delegated sessions and CLI/TUI parity | (**status:** `accepted`)
@@ -21,7 +23,7 @@ related:
 
 Enable a local agent to authenticate an exact Cadrumo profile and resume authorized work without repeating the human password journey on every connection. CLI and TUI must each operate the complete API-key, authentication and session-lock lifecycle.
 
-This record owns delegated authority, protected automation unlock, credential/session transitions and interface parity. Local runtime placement and MCP process management belong to 2026-09-26-mcp-purpose-authentication-adr. Evidence belongs to the related Reference and Research.
+This record owns delegated authority, protected automation unlock, credential/session transitions and interface parity. Local runtime placement and execution boundaries belong to 2026-09-26-mcp-purpose-authentication-adr. Runtime management, including health monitoring, service installation, start/stop/status controls and restart supervision, is explicitly excluded from both records and deferred to application bundling, building and provisioning. Evidence belongs to the related Reference and Research.
 
 ## Considerations
 
@@ -148,12 +150,13 @@ Access sessions are short, with a five-minute maximum lease, clipped to parent/g
 | Lock/log out of this session | End that session and its descendants; clear its private presentation state |
 | Reconnect after session lock using a valid API key | May obtain a new independent session; a session lock does not revoke its root grant |
 | Human logout or idle/absolute expiry | End that human session and attended descendants; disclose independently enabled automation |
+| Human sign-out (`2026-10-04-application-sign-in-adr`) | Advance the profile's human sign-in generation, delete the human receipt, and end every human and attended session of the profile; disclose independently enabled automation; API grants unaffected |
 | Revoke one key | End sessions derived from that key, refuse new admission and pause dependent jobs; other separately authorized keys remain scoped |
 | Revoke a grant or all profile automation | Remove its usable unlock capability, revoke descendants and pause affected work |
-| Lock this profile everywhere | Invalidate all profile sessions and suspend every automation unlock until fresh password-authorized resume |
+| Lock this profile everywhere | Invalidate all profile sessions, advance the human sign-in generation and delete the human receipt, and suspend every automation unlock until fresh password-authorized resume |
 | Resume a globally locked profile | Fresh password proof; show and explicitly select automation grants to reactivate within their original scope/end date |
 | Password rotation/reset, recovery reset or profile deletion | Revoke all automation grants/unlock material; require re-enrollment if the profile remains |
-| OS lock | End attended access; continue unattended work only if its enrollment explicitly permits it |
+| OS lock | End attended access; on positive lock evidence also advance the human sign-in generation and delete the human receipt; continue unattended work only if its enrollment explicitly permits it |
 | Originating OS logout | Invalidate dependent human/attended sessions and descendants; do not revoke independent API grants |
 | Unattended login eligibility or required credential facilities unavailable/unknown | Fence dependent work; another login or surviving user manager is insufficient |
 | Last eligible logout | Fence private admission/effects, bounded runtime shutdown and custody release; no permanent grant revocation or profile-global suspension |
@@ -180,7 +183,6 @@ Both interfaces independently invoke the same typed application operations and r
 | List/inspect sessions and unattended access | Structured inventory | Session inventory with remaining access | Same identity, parent, expiry and capability facts |
 | Lock/logout current session; revoke a selected session | Explicit scope | Explicit scope | Same invalidation and acknowledgement |
 | Lock profile everywhere; password-authorized resume | Distinct profile-wide operation | Distinct profile-wide control | Same suspension and selected reactivation |
-| Inspect runtime; start/stop; configure background mode | Runtime management commands | Runtime management views/actions | Same lifecycle policy from the runtime ADR |
 
 Key-authenticated CLI and TUI expose only authorized operations. Security administration does not become available because a particular screen can be opened. Human administration can revoke without expanding authority; enrollment, rotation, extension and global unlock require fresh proof. The password-authenticated human TUI may show the owner's data under its existing visibility decision; neither interface may export extra data through an agent session.
 
@@ -192,6 +194,10 @@ A durable grant answers whether unattended work is authorized; an API key authen
 
 ## Consequences
 
+Scope amendment accepted 2026-10-03 under the operator's instruction: CLI/TUI parity applies to profile authentication, grants, sessions and work, and creates no runtime-management requirement. Remove the former runtime-management controls. Connection failures and authorization/custody state remain truthful application outcomes, without runtime health dashboards or service administration.
+
 Cadrumo gains an optional delegated unlock path and a visible administration surface. It incurs credential-store portability, enrollment atomicity, revocation, generation and crash-recovery obligations. Background access is explicit and independently revocable.
 
 Local API authentication cannot guarantee perpetual AEAT authentication, filing readiness or hostile same-user isolation. Accepted 2026-09-26 on the operator's instruction to continue the presented plan after the documentation handoff. Acceptance records the design; the plan separately records authorization for product implementation. It is not evidence that API keys or runtime behavior already work.
+
+Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human login receipt is the runtime-owned shared sign-in. It is bound to the originating login and to a durable sign-in generation, and revoked by human sign-out and positive lock-down. Automatic resume defaults to interactive surfaces. That is a client-side default, not an authority control: agents authenticate with enrolled API keys or explicit attended delegation.

@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Protocol, get_args
+from typing import TYPE_CHECKING, Protocol, cast, get_args
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -109,10 +109,7 @@ _LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
 # build site is not otherwise visible to the static AST scanner.
 _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
     "validation",
-    "client_not_registered",
     "client_revoked",
-    "token_revoked",
-    "token_expired",
     "scope_insufficient",
     "network",
     "loopback_bind",
@@ -121,9 +118,6 @@ _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
     "unsecured_mode",
     "keychain_locked",
     "profile_unbound",
-    "adc_unavailable",
-    "adc_stale",
-    "impersonation_refused",
     "storage",
     "auth_failed",
 )
@@ -174,6 +168,11 @@ _STORAGE_LABEL_SUFFIXES: tuple[str, ...] = (
 )
 
 
+def _enum_values(enum: type[Enum]) -> tuple[str, ...]:
+    """Read the declared string values in enum iteration order."""
+    return tuple(cast("str", item.value) for item in enum)
+
+
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
 
@@ -183,13 +182,6 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
-    from cadrumo.application.modelo.workspace import MODELO_WORKSPACE_RECOVERY_ACTION_IDS
-    from cadrumo.application.modelo.workspace_models import (
-        ModeloWorkspaceCapabilityDisposition,
-        ModeloWorkspaceCapabilityName,
-        ModeloWorkspaceRefusalCode,
-        ModeloWorkspaceRevisionAssertionDisposition,
-    )
     from cadrumo.application.operations.frontend_requests import (
         OperationCancellationRefusalCode,
         OperationDetachRefusalCode,
@@ -201,18 +193,14 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
     from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
+    from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-    from cadrumo.core.revision_review import RevisionReviewStatus
+    from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_tokens
-    from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-    from cadrumo.domain.modelos.verification_report import (
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-    )
     from cadrumo.domain.user_profile.values import ProfileSetupState
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
@@ -269,6 +257,14 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
         FStringKeyRegistration(
+            # The operations modal renders tr(terminal_copy_key), a key the
+            # projection selects per terminal condition, plus the partial-success
+            # key no condition selects alone (entrypoints/tui/operations/projection.py).
+            description="operation.modal.terminal.* (OperationTerminalCondition)",
+            key_factory=lambda v: f"operation.modal.terminal.{v}",
+            values=(*(condition.value for condition in OperationTerminalCondition), "succeeded_partial"),
+        ),
+        FStringKeyRegistration(
             # Bounded union: the operations modal derives its refusal copy key
             # from the code's own value across all three refusal enums, so the enums
             # decide which keys must exist (entrypoints/tui/operations/modal.py).
@@ -288,7 +284,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             # copy map in entrypoints/tui/ledger/controller.py.
             description="tui.ledger.review_status.* (LedgerReviewStatus)",
             key_factory=lambda v: f"tui.ledger.review_status.{v}",
-            values=tuple(status.value for status in LedgerReviewStatus),
+            values=_enum_values(LedgerReviewStatus),
         ),
         FStringKeyRegistration(
             # Bounded enumeration: the live IVA wallet renders one operator
@@ -296,7 +292,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             # enum's own value in entrypoints/cli/_app_live.py.
             description="cli.app.live.iva_wallet.acquisition.outcome.* (LiveIvaAcquisitionFailureMode)",
             key_factory=lambda v: f"cli.app.live.iva_wallet.acquisition.outcome.{v}",
-            values=tuple(mode.value for mode in LiveIvaAcquisitionFailureMode),
+            values=_enum_values(LiveIvaAcquisitionFailureMode),
         ),
         FStringKeyRegistration(
             description="errors.prefix.* (ErrorCategory)",
@@ -333,13 +329,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             ),
         ),
         FStringKeyRegistration(
-            # Bounded enumeration, pinned to _COLUMN_KEYS in
-            # entrypoints/tui/modelo/view/work_select.py. Held as a literal
-            # rather than imported: that constant is module-private, and the
-            # registry should not deepen a private reach into a view module.
-            description="flows.modelo_select.column.* (work-select table columns)",
-            key_factory=lambda v: f"flows.modelo_select.column.{v}",
-            values=("modelo", "filing_year", "period", "name", "state"),
+            # The resume refusal derives its message key from the reason's own
+            # value in application/workflow/resume.py and the CLI resume command.
+            description="application.workflow.errors.resume_refused_* (WorkflowResumeRefusalReason)",
+            key_factory=lambda v: f"application.workflow.errors.resume_refused_{v}",
+            values=_enum_values(WorkflowResumeRefusalReason),
         ),
         FStringKeyRegistration(
             description="wizard.setup.descendientes.relacion.choices.*.label (descendant relationship authority)",
@@ -350,57 +344,9 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             FStringKeyRegistration(
                 description=f"{prefix}.* (AccountActionV1)",
                 key_factory=lambda v, prefix=prefix: f"{prefix}.{v}",
-                values=tuple(action.value for action in AccountActionV1),
+                values=_enum_values(AccountActionV1),
             )
             for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
-        ),
-        *(
-            FStringKeyRegistration(
-                description=f"tui.modelo.{leaf}.* ({enum.__name__})",
-                key_factory=lambda v, leaf=leaf: f"tui.modelo.{leaf}.{v}",
-                values=tuple(member.value for member in enum),
-            )
-            for leaf, enum in (
-                ("capability", ModeloWorkspaceCapabilityName),
-                ("disposition", ModeloWorkspaceCapabilityDisposition),
-                ("assertion", ModeloWorkspaceRevisionAssertionDisposition),
-                ("review_status", RevisionReviewStatus),
-                ("input_kind", InputKind),
-                ("finding_kind", ModeloVerificationFindingKind),
-                ("finding_severity", ModeloVerificationFindingSeverity),
-                ("workspace_refusal.reason", ModeloWorkspaceRefusalCode),
-            )
-        ),
-        FStringKeyRegistration(
-            # Bounded set: the only ``ModeloWorkspaceEvidenceFactV1.name`` values
-            # `graded_snapshot_refusal` call sites in
-            # application/modelo/workspace.py actually populate. ``name`` is a
-            # free-form bounded code on the typed record, not an enum, so this
-            # is pinned to that call-site inventory like
-            # ``tui.modelo.destination.*`` below rather than derived from a type.
-            description="tui.modelo.workspace_refusal.facts.* (ModeloWorkspaceEvidenceFactV1.name)",
-            key_factory=lambda v: f"tui.modelo.workspace_refusal.facts.{v}",
-            values=("modelo", "period", "required_grade", "work_unit_id"),
-        ),
-        FStringKeyRegistration(
-            # Bounded set declared once in application/modelo/workspace.py, which
-            # refuses any other id; entrypoints/tui/modelo/view/models.py names
-            # each offered action through this key.
-            description="tui.modelo.recovery_action.* (MODELO_WORKSPACE_RECOVERY_ACTION_IDS)",
-            key_factory=lambda v: f"tui.modelo.recovery_action.{v}",
-            values=tuple(sorted(MODELO_WORKSPACE_RECOVERY_ACTION_IDS)),
-        ),
-        FStringKeyRegistration(
-            # Pinned to _OTHER_DESTINATIONS in entrypoints/tui/modelo/view/overview.py.
-            description="tui.modelo.destination.* (workspace read pages)",
-            key_factory=lambda v: f"tui.modelo.destination.{v}",
-            values=("inputs", "results", "verification", "provenance", "filing"),
-        ),
-        FStringKeyRegistration(
-            # The registry record families the workspace manifest discloses.
-            description="tui.modelo.record_family.* (schema record families)",
-            key_factory=lambda v: f"tui.modelo.record_family.{v}",
-            values=("bindings", "casillas", "formulas", "parameters", "relations"),
         ),
         FStringKeyRegistration(
             # Bounded enumeration, pinned to the _translated_error codes in
@@ -437,119 +383,114 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
                 "unsupported_provenance",
             ),
         ),
-        *_diagnostics_range_registrations(),
+        *_diagnostics_command_spec_registrations(),
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),
-        *_modelo_workspace_registrations(),
+        *_modelo_workbench_registrations(),
     )
 
 
-def _modelo_workspace_registrations() -> tuple[FStringKeyRegistration, ...]:
-    """Register the Modelo workspace destinations table and label keys.
+def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the modelo workbench's words for each state, step, source, period and refused entry.
 
-    Every tail below is a BOUNDED enumeration pinned to a literal tuple in the
-    owning view module, so each concrete key is registered here and the scaffold
-    re-materialises it. None is open-ended: the values are column orders, label
-    rows and readiness axes the screens declare, not operator or registry data.
-
-    Held as literals rather than imported, following the ``flows.modelo_select``
-    precedent above: each source constant is module-private, and the registry
-    should not deepen a private reach into a view module. The comment beside
-    each names its source so a divergence stays findable.
+    Each tail is the value of a closed vocabulary the workbench renders, so the
+    registration derives from that vocabulary and follows it when a member is
+    added. The text disclosure and layout provenance register only the members
+    the workbench puts into words: a localized label and a reviewed layout are
+    shown without a note.
     """
+    from cadrumo.application.modelo.calculation_notes import (
+        CALCULATION_NOTE_ATTENTION,
+        what_locale_key,
+        what_to_do_locale_key,
+    )
+    from cadrumo.application.modelo.edit_models import ModeloEditParseReason
+    from cadrumo.application.modelo.source_policy import SourceFamily
+    from cadrumo.application.modelo.work_form_models import (
+        ModeloFormEditability,
+        ModeloFormLayoutProvenance,
+        ModeloFormOrigin,
+        ModeloFormTextDisclosure,
+    )
+    from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
+    from cadrumo.entrypoints.tui.modelo.workbench.installed import WORDED_FINDING_CODES
+    from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
+    from cadrumo.entrypoints.tui.modelo.workbench.progress import NextAction, WorkbenchStep
+    from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
+    from cadrumo.entrypoints.tui.modelo.workbench.review import REVIEW_EFFECTS
+    from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
+    from cadrumo.entrypoints.tui.modelo.workbench.vocabulary import NOT_WRITABLE_REASONS, SOURCE_WORDED_ORIGINS
+    from cadrumo.entrypoints.tui.modelo.workbench.wording import PERIOD_WORD_NAMES
+
+    root = "tui.modelo.workbench"
+    vocabularies: tuple[tuple[str, tuple[str, ...]], ...] = (
+        ("origin", _enum_values(ModeloFormOrigin)),
+        (
+            "origin_source",
+            tuple(f"{origin.value}.{family.value}" for origin in SOURCE_WORDED_ORIGINS for family in SourceFamily),
+        ),
+        ("editability", _enum_values(ModeloFormEditability)),
+        ("not_writable", NOT_WRITABLE_REASONS),
+        (
+            "disclosure",
+            tuple(item.value for item in ModeloFormTextDisclosure if item is not ModeloFormTextDisclosure.LOCALIZED),
+        ),
+        (
+            "layout",
+            tuple(item.value for item in ModeloFormLayoutProvenance if item is not ModeloFormLayoutProvenance.REVIEWED),
+        ),
+        ("filter", _enum_values(WorkbenchFilter)),
+        ("step", _enum_values(WorkbenchStep)),
+        ("next", _enum_values(NextAction)),
+        ("stage_refused", _enum_values(StageRefusal)),
+        ("editor.placeholder", EDITOR_HINT_KINDS),
+        ("editor.format", EDITOR_HINT_KINDS),
+        ("review.effect", REVIEW_EFFECTS),
+        ("review.finding", WORDED_FINDING_CODES),
+        ("result_diff.group", _enum_values(ResultGroup)),
+        ("result_diff.count", _enum_values(ResultGroup)),
+        ("period", PERIOD_WORD_NAMES),
+    )
+    return (
+        *(
+            FStringKeyRegistration(
+                description=f"{root}.{leaf}.* (modelo workbench vocabulary)",
+                key_factory=lambda value, leaf=leaf: f"{root}.{leaf}.{value}",
+                values=values,
+            )
+            for leaf, values in vocabularies
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.edit.parse.* (ModeloEditParseReason)",
+            key_factory=lambda value: f"application.modelo.edit.parse.{value}",
+            values=_enum_values(ModeloEditParseReason),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.calc_diagnostic.*.what (calculation note reasons)",
+            key_factory=what_locale_key,
+            values=tuple(CALCULATION_NOTE_ATTENTION),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.calc_diagnostic.*.what_to_do (calculation note reasons)",
+            key_factory=what_to_do_locale_key,
+            values=tuple(CALCULATION_NOTE_ATTENTION),
+        ),
+    )
+
+
+def _diagnostics_command_spec_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register diagnostic keys declared by the live command-spec registry."""
+    from ._command_spec_scanner import scan_command_spec_keys
+
+    keys = tuple(sorted(key for key in scan_command_spec_keys() if key.startswith("cli.diagnostics.")))
+    if not keys:
+        raise RuntimeError("The command-spec registry declared no CLI diagnostics translation keys")
     return (
         FStringKeyRegistration(
-            # _COLUMN_KEYS in entrypoints/tui/modelo/view/filing.py
-            description="flows.modelo_workspace_filing.column.* (filing table columns)",
-            key_factory=lambda v: f"flows.modelo_workspace_filing.column.{v}",
-            values=("capability", "disposition"),
+            description="cli.diagnostics.* (live command-spec TranslationKey fields)",
+            key_factory=lambda key: key,
+            values=keys,
         ),
-        FStringKeyRegistration(
-            # _WHY_KEYS values in entrypoints/tui/modelo/view/filing.py, which
-            # already carry their own why. segment, so the factory adds none.
-            description="flows.modelo_workspace_filing.why.* (capability refusal reasons)",
-            key_factory=lambda v: f"flows.modelo_workspace_filing.{v}",
-            values=("why.draft_structural",),
-        ),
-        FStringKeyRegistration(
-            # _COLUMN_KEYS in entrypoints/tui/modelo/view/inputs.py
-            description="flows.modelo_workspace_inputs.column.* (inputs table columns)",
-            key_factory=lambda v: f"flows.modelo_workspace_inputs.column.{v}",
-            values=("address", "label", "value", "input_kind"),
-        ),
-        FStringKeyRegistration(
-            # _CAPABILITY_COLUMN_KEYS plus the shared field/value pair every
-            # label table adds, in entrypoints/tui/modelo/view/overview.py
-            description="flows.modelo_workspace_overview.column.* (overview table columns)",
-            key_factory=lambda v: f"flows.modelo_workspace_overview.column.{v}",
-            values=("capability", "disposition", "field", "value"),
-        ),
-        FStringKeyRegistration(
-            # _ADDRESS_ROW_KEYS + _REVISION_ROW_KEYS in the same module
-            description="flows.modelo_workspace_overview.label.* (overview label rows)",
-            key_factory=lambda v: f"flows.modelo_workspace_overview.label.{v}",
-            values=(
-                "modelo",
-                "filing_year",
-                "period",
-                "work_unit",
-                "work_state",
-                "law_selected",
-                "requested_assertion",
-                "stored_assertion",
-                "review_status",
-            ),
-        ),
-        FStringKeyRegistration(
-            # The group argument of _mount_label_table, plus the capabilities
-            # group mounted directly, in entrypoints/tui/modelo/view/overview.py
-            description="flows.modelo_workspace_overview.section.* (overview disclosure groups)",
-            key_factory=lambda v: f"flows.modelo_workspace_overview.section.{v}",
-            values=("address", "revision", "capabilities"),
-        ),
-        FStringKeyRegistration(
-            # _COLUMN_KEYS in entrypoints/tui/modelo/view/provenance.py
-            description="flows.modelo_workspace_provenance.column.* (provenance table columns)",
-            key_factory=lambda v: f"flows.modelo_workspace_provenance.column.{v}",
-            values=("subject", "resolver", "source_ref"),
-        ),
-        FStringKeyRegistration(
-            # _COLUMN_KEYS in entrypoints/tui/modelo/view/results.py
-            description="flows.modelo_workspace_results.column.* (results table columns)",
-            key_factory=lambda v: f"flows.modelo_workspace_results.column.{v}",
-            values=("casilla", "value", "formula"),
-        ),
-        FStringKeyRegistration(
-            # _READINESS_ROW_KEYS in entrypoints/tui/modelo/view/verification.py
-            description="flows.modelo_workspace_verification.axis.* (readiness axes)",
-            key_factory=lambda v: f"flows.modelo_workspace_verification.axis.{v}",
-            values=("profile_ready", "registry_ready", "binding_ready", "ledger_ready", "ready"),
-        ),
-        FStringKeyRegistration(
-            # _FINDING_COLUMN_KEYS plus the axis/value pair the readiness table
-            # adds directly, in entrypoints/tui/modelo/view/verification.py
-            description="flows.modelo_workspace_verification.column.* (verification table columns)",
-            key_factory=lambda v: f"flows.modelo_workspace_verification.column.{v}",
-            values=("severity", "kind", "casilla", "axis", "value"),
-        ),
-    )
-
-
-def _diagnostics_range_registrations() -> tuple[FStringKeyRegistration, ...]:
-    """Register the shared since/until/provider options every range command declares.
-
-    ``_range(prefix)`` in ``entrypoints/cli/_app_diagnostics_command_specs.py``
-    builds the same three options for each diagnostics range command, so the
-    value space is the set of commands that call it.
-    """
-    commands = ("run_health", "runs", "latency", "errors", "llm_usage")
-    return tuple(
-        FStringKeyRegistration(
-            description=f"cli.diagnostics.*.{option}_help",
-            key_factory=lambda command, option=option: f"cli.diagnostics.{command}.{option}_help",
-            values=commands,
-        )
-        for option in ("since", "until", "provider")
     )
 
 
@@ -676,8 +617,9 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
     than to a member value, and leaving it out would report the shipped key
     as an orphan.
     """
+    from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
     from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarSource
-    from cadrumo.application.modelo.declarations_workspace import (
+    from cadrumo.application.modelo.declarations_workspace_contracts import (
         DeclarationsLifecycleKind,
         DeclarationsWorkspaceAvailability,
     )
@@ -686,6 +628,7 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
         OverviewLocalFilingState,
         OverviewPeriodState,
     )
+    from cadrumo.application.overview.coverage import CoverageAdviceReason
     from cadrumo.domain.deadlines.models import ObligationStatus
     from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
     from cadrumo.domain.modelos.work_unit import WorkUnitState
@@ -695,6 +638,45 @@ def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...
         return tuple(str(member.value) for member in enum)
 
     return (
+        FStringKeyRegistration(
+            description="tui.declarations.list.advice.* (CoverageAdviceReason)",
+            key_factory=lambda v: f"tui.declarations.list.advice.{v}",
+            values=_values(CoverageAdviceReason),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.filter.* (grouped declarations filter choices)",
+            key_factory=lambda v: f"tui.declarations.list.filter.{v}",
+            values=("all", "attention", "this_year", "recorded", "not_started"),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.sort.* (grouped declarations sort choices)",
+            key_factory=lambda v: f"tui.declarations.list.sort.{v}",
+            values=("deadline", "modelo", "result", "state"),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.state.* (summary states plus calendar-only states)",
+            key_factory=lambda v: f"tui.declarations.list.state.{v}",
+            # Recorded/discarded rows use explicit group/work-state keys.
+            values=(
+                *(
+                    str(member.value)
+                    for member in DeclarationSummaryState
+                    if member
+                    not in {
+                        DeclarationSummaryState.RECORDED,
+                        DeclarationSummaryState.DISCARDED,
+                    }
+                ),
+                "aeat_unlinked",
+                "aeat_needs_check",
+                "not_started",
+            ),
+        ),
+        FStringKeyRegistration(
+            description="tui.declarations.list.next.* (row_words conditional action choices)",
+            key_factory=lambda v: f"tui.declarations.list.next.{v}",
+            values=("open_local_draft", "create_file", "none", "continue"),
+        ),
         FStringKeyRegistration(
             description="tui.declarations.availability.* (DeclarationsWorkspaceAvailability)",
             key_factory=lambda v: f"tui.declarations.availability.{v}",
@@ -763,14 +745,14 @@ def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
 
     axes = (
-        ("input_kind", tuple(member.value for member in InputKind)),
-        ("binding_source", tuple(member.value for member in BindingSourceKind)),
-        ("realised_kind", tuple(member.value for member in ModeloValueKind)),
-        ("origin_anomaly", tuple(member.value for member in ModeloWorkOriginAnomaly)),
-        ("estado_casilla_oficial", tuple(member.value for member in EstadoCasillaOficial)),
-        ("operator_action", tuple(member.value for member in OperatorActionAxis)),
-        ("finding_kind", tuple(member.value for member in ModeloVerificationFindingKind)),
-        ("finding_severity", tuple(member.value for member in ModeloVerificationFindingSeverity)),
+        ("input_kind", _enum_values(InputKind)),
+        ("binding_source", _enum_values(BindingSourceKind)),
+        ("realised_kind", _enum_values(ModeloValueKind)),
+        ("origin_anomaly", _enum_values(ModeloWorkOriginAnomaly)),
+        ("estado_casilla_oficial", _enum_values(EstadoCasillaOficial)),
+        ("operator_action", _enum_values(OperatorActionAxis)),
+        ("finding_kind", _enum_values(ModeloVerificationFindingKind)),
+        ("finding_severity", _enum_values(ModeloVerificationFindingSeverity)),
         ("relation_channel", get_args(RelationConsumptionChannel)),
     )
     return tuple(
@@ -800,7 +782,7 @@ def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
     ``docs`` is not among them. Until that root is admitted, this registration
     is what keeps scaffold from pruning the families as stale.
     """
-    from dev.docs.casilla_reference import display_locale_keys
+    from dev.docs.casilla_display import display_locale_keys
 
     return (
         FStringKeyRegistration(

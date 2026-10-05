@@ -7,7 +7,7 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
     MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
@@ -17,19 +17,16 @@ from ...application.modelo.work_create_operation import (
     ModeloWorkCreateSuccess,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from .common import no_active_profile_refusal
 from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,45 +81,95 @@ def create_modelo_work(
     outcome = projection.outcome
     invalid = projection.profile_id != client.profile_id or projection.period != requested_period
     if isinstance(outcome, ModeloWorkCreateRefusal):
-        invalid = invalid or (
-            outcome.modelo != modelo.strip()
-            or completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.refusal_code != MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
-            or completed.effect is not OperationEffect.NONE
-            or allow_not_applicable
-        )
-        if not invalid:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.app.modelo.work.create_not_applicable_refused",
-                context={
-                    "modelo": outcome.modelo,
-                    "reason": outcome.reason,
-                    "operation_id": str(completed.operation_id),
-                    "refusal_code": completed.refusal_code,
-                    "terminal_condition": completed.terminal_condition.value,
-                    "effect": completed.effect.value,
-                },
-            )
+        _present_work_create_refusal(completed, outcome, modelo, allow_not_applicable, invalid)
     else:
-        expected_effect = (
-            OperationEffect.UPDATED if not outcome.reused or outcome.name_applied is not None else OperationEffect.NONE
+        creation = _correlate_work_creation(
+            completed, outcome, client.profile_id, requested_period, modelo, revision_id, allow_not_applicable, invalid
         )
-        invalid = invalid or (
-            completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.refusal_code is not None
-            or completed.effect is not expected_effect
-            or outcome.unit.bucket_id != str(client.profile_id)
-            or outcome.unit.period != requested_period
-            or outcome.unit.modelo != modelo.strip()
-            or (bool(revision_id) and outcome.unit.revision_id != revision_id)
-            or outcome.applicability_guard_bypassed is not allow_not_applicable
-        )
-        if not invalid:
-            return ModeloWorkCreation(completion=completed, result=outcome)
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
+        if creation is not None:
+            return creation
+    raise invalid_completion_error(completed)
+
+
+def _present_work_create_refusal(
+    completed: RegisteredOperationCompletion[ModeloWorkCreateProjection],
+    outcome: ModeloWorkCreateRefusal,
+    modelo: str,
+    allow_not_applicable: bool,
+    invalid: bool,
+) -> None:
+    """Present an applicability refusal only after exact receipt correlation."""
+    invalid = invalid or (
+        outcome.modelo != modelo.strip()
+        or completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.refusal_code != MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
+        or completed.effect is not OperationEffect.NONE
+        or allow_not_applicable
     )
+    if not invalid:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.app.modelo.work.create_not_applicable_refused",
+            context={
+                "modelo": outcome.modelo,
+                "reason": outcome.reason,
+                "operation_id": str(completed.operation_id),
+                "refusal_code": completed.refusal_code,
+                "terminal_condition": completed.terminal_condition.value,
+                "effect": completed.effect.value,
+            },
+        )
+
+
+def _work_creation_terminal_invalid(
+    completed: RegisteredOperationCompletion[ModeloWorkCreateProjection], expected_effect: OperationEffect
+) -> bool:
+    """Require the successful creation receipt and the expected reuse effect."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+    )
+
+
+def _work_creation_coordinates_invalid(
+    outcome: ModeloWorkCreateSuccess,
+    profile_id: UUID,
+    requested_period: PublicPeriod,
+    modelo: str,
+    revision_id: str | None,
+    allow_not_applicable: bool,
+) -> bool:
+    """Correlate exact profile, period, modelo, revision, and applicability choice."""
+    return (
+        outcome.unit.bucket_id != str(profile_id)
+        or outcome.unit.period != requested_period
+        or outcome.unit.modelo != modelo.strip()
+        or (bool(revision_id) and outcome.unit.revision_id != revision_id)
+        or (outcome.applicability_guard_bypassed is not allow_not_applicable)
+    )
+
+
+def _correlate_work_creation(
+    completed: RegisteredOperationCompletion[ModeloWorkCreateProjection],
+    outcome: ModeloWorkCreateSuccess,
+    profile_id: UUID,
+    requested_period: PublicPeriod,
+    modelo: str,
+    revision_id: str | None,
+    allow_not_applicable: bool,
+    invalid: bool,
+) -> ModeloWorkCreation | None:
+    """Return creation only after all successful receipt and coordinate checks."""
+    expected_effect = (
+        OperationEffect.UPDATED if not outcome.reused or outcome.name_applied is not None else OperationEffect.NONE
+    )
+    invalid = (
+        invalid
+        or _work_creation_terminal_invalid(completed, expected_effect)
+        or _work_creation_coordinates_invalid(
+            outcome, profile_id, requested_period, modelo, revision_id, allow_not_applicable
+        )
+    )
+    if not invalid:
+        return ModeloWorkCreation(completion=completed, result=outcome)
+    return None

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#llm-ledger-classification'
 date: '2026-06-13'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:c155d70a9af4c5331a3a4d97c7147a36b43ee18394d378b14fce51d343e2ea50'
 related:
   - "[[2026-06-04-llm-ledger-classification-adr]]"
-  - "[[2026-06-04-llm-ledger-classification-plan]]"
 ---
 
 # `llm-ledger-classification` audit: `Saturation pipeline: peer review (PASS) + persona test findings`

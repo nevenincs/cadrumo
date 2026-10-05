@@ -271,7 +271,7 @@ def test_classify_refuses_m210_evidence_flags_on_auto_split(
     )
 
     assert result.exit_code != 0
-    assert "explicit operator decision" in result.output
+    assert "a decision you make explicitly" in result.output
 
 
 def test_classify_reason_persists_to_transaction_notes(

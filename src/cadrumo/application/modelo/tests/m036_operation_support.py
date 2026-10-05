@@ -31,6 +31,7 @@ from ...user_profile.access_contracts import (
     Availability,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -38,7 +39,7 @@ from ...user_profile.access_contracts import (
     SessionState,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.access_policy import evaluate_operation_access
+from ...user_profile.operation_access_policy import evaluate_operation_access
 from ..m036_lifecycle import M036DeclarationAmbiguousError, M036DeclarationNotFoundError, M036DeclarationResult
 from ..m036_lifecycle_ports import M036LifecyclePorts
 from ..m036_operation_ports import M036OperationPorts
@@ -289,7 +290,7 @@ def policy_decision(
                     login_id="synthetic-login",
                     os_owner_id=binding.os_owner_id,
                     active=True,
-                    locked=False,
+                    lock_state=OsLockState.UNLOCKED,
                     unattended=LoginEligibility.ELIGIBLE,
                     credential_facilities=Availability.AVAILABLE,
                 ),

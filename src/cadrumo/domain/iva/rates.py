@@ -12,11 +12,12 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ..calculations.registry.facts.payloads import MappingFactPayload
 from ..calculations.registry.facts.resolution import ResolvedMappingFact
-from ..calculations.registry.facts.schema import MappingFactPayload
 from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from .errors import IvaCatalogueError
-from .schema import EUMemberState, IvaRateRecord, require_eu_member_state
+from .schema import EUMemberState, IvaRateRecord
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation

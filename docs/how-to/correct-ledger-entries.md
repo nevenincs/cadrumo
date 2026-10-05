@@ -1,6 +1,7 @@
-# Correct mistakes in your ledger
+(correct-mistakes-in-your-ledger)=
+# Correct mistakes in your records
 
-Fix wrong transactions in your ledger without losing track of what changed. Every correction leaves a visible history entry, so you can always see what a transaction looked like before and after. Everything happens on your computer - nothing is sent anywhere.
+Fix wrong transactions in your records without losing track of what changed. Every correction leaves a visible history entry, so you can always see what a transaction looked like before and after. Everything happens on your computer - nothing is sent anywhere.
 
 ## Before you start
 
@@ -8,9 +9,9 @@ You need:
 
 - An active taxpayer profile. Every command on this page works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
 - Your passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
-- A ledger with transactions in it.
+- Transactions in your records.
 
-To find the transaction you want to fix, list your transactions and view one in detail. The following sequence records an example expense, lists the ledger, and inspects that row:
+To find the transaction you want to fix, list your transactions and view one in detail. The sequence below records an example expense, lists your records, and inspects that row:
 
 ```{cli-sequence} correct-find-transaction
 :verify: Confirm the inspected transaction is the one you want to fix.
@@ -54,7 +55,7 @@ Remove deletes a transaction from your active records. Preview it first with `--
 :verify: Confirm the removed transaction no longer resolves.
 ```
 
-A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row. Remove also refuses a row that a verified or presented calculation cites. Removing a transaction releases its links to catalogue invoices.
+A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row. Remove also refuses a row that a checked or presented calculation cites. Removing a transaction releases its links to catalogue invoices.
 
 (split-one-transaction-into-parts)=
 ## Split one transaction into parts
@@ -100,7 +101,7 @@ Use stash for a row you have not resolved yet and archive for a row you have del
 :verify: Confirm the excluded row stays active and carries the excluded state.
 ```
 
-Exclude works on active rows only, refuses a row that is already excluded, and refuses a row that a verified or presented calculation cites. To count the row again, classify it with `aeat app ledger classify`.
+Exclude works on active rows only, refuses a row that is already excluded, and refuses a row that a checked or presented calculation cites. To count the row again, classify it with `aeat app ledger classify`.
 
 (archive-a-transaction)=
 ## Archive a transaction
@@ -122,9 +123,9 @@ If you stashed or archived a transaction by mistake, restore it to active. Resto
 :verify: Confirm the restored transaction is active again.
 ```
 
-Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to reset the whole ledger. List does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`.
+Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to clear all your records. List does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`.
 
-Restore refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through an amendment.
+Restore refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through a correction.
 
 ## Review what changed
 
@@ -136,19 +137,20 @@ Every correction is recorded. To see every action on a transaction in order, run
 
 The history lists each action with its timestamp, event type, and event reference. Details such as the reason and the new values are in the JSON output. To see a value before a change, read the earlier events in the history. `aeat app ledger track <transaction-id>` shows the event lineage of one transaction. The [CLI reference](../cli/index.rst) covers every field the history shows.
 
-## Evidence and corrections
+(evidence-and-corrections)=
+## Supporting documents and corrections
 
-An attached evidence record - a receipt or invoice - is not deleted when you correct a transaction. After a split or merge, check the new transactions and re-attach evidence where needed. The [evidence guide](ledger-evidence.md) covers attaching and checking evidence.
+An attached supporting document - a receipt or invoice - is not deleted when you correct a transaction. After a split or merge, check the new transactions and re-attach the supporting document where needed. The [supporting documents guide](ledger-evidence.md) covers attaching and checking supporting documents.
 
 ## Start over as a last resort
 
-If the ledger is beyond repair - for example, after importing the wrong files repeatedly - clear it and rebuild. Preview first, then confirm. The example starts with one row, previews the reset, clears the ledger, and confirms nothing remains:
+If your records are beyond repair - for example, after importing the wrong files repeatedly - clear them and rebuild. Preview first, then confirm. The example starts with one row, previews the reset, clears your records, and confirms nothing remains:
 
 ```{cli-sequence} correct-reset-ledger
-:verify: Confirm the reset cleared the active ledger.
+:verify: Confirm the reset cleared the active records.
 ```
 
-Reset clears the whole ledger for the active profile. Use the [transactions guide](import-bank-statements.md) to rebuild it from your statements.
+Reset clears all your records for the active profile. Use the [transactions guide](import-bank-statements.md) to rebuild them from your statements.
 
 ## Where to get help
 
@@ -157,6 +159,6 @@ If a command refuses or fails, check the [troubleshooting guide](troubleshooting
 ## Next steps
 
 - [Import and manage transactions](import-bank-statements.md) - bring in new transactions.
-- [Attach invoices and receipts](ledger-evidence.md) - back your corrections with receipts.
+- [Attach invoices and receipts to transactions](ledger-evidence.md) - back your corrections with receipts.
 - [Classify transactions](classify-transactions.md) - prepare corrected rows for tax calculations.
-- [CLI reference](../cli/index.rst) - full field detail for every ledger command.
+- [CLI reference](../cli/index.rst) - full field detail for every command that works on your records.

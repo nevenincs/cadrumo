@@ -43,7 +43,7 @@ from ...tests.cli_runner import invoke_cached_cli
 from .. import _censo_transport
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
 from .._censo_review_cli import confirm_censal_review
-from ..runtime_censal_review import CensalRuntimeReviewResult
+from ..runtime_censal_contracts import CensalRuntimeReviewResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -115,6 +115,7 @@ def test_the_live_transport_is_named_pull() -> None:
     names = set(_censo_commands())
     assert "pull" in names
     assert "import" in names
+    assert "show" in names
     assert names & _FORBIDDEN_FETCH_VERBS == set()
 
 
@@ -129,6 +130,7 @@ def test_the_two_transports_share_the_apply_door_and_differ_only_in_input() -> N
     # The live transport reads from AEAT; a path option on it would be a
     # second way to do what the import sibling already owns.
     assert "--file" not in pull_flags
+    assert "--apply" not in _option_flags(commands["show"])
 
 
 def test_the_read_cannot_be_aimed_at_another_taxpayer() -> None:

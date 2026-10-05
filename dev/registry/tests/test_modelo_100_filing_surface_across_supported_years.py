@@ -23,7 +23,7 @@ import pytest
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.binding_provider_registration import provider_model_for
+from cadrumo.domain.calculations.registry.binding_provider_registration import registration_for
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.export_parse import decode_dictionary_text
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -369,7 +369,7 @@ _REPEATING_FAMILY_ROWS: Mapping[str, tuple[str, str]] = {
 def test_profile_bindings_dispatch_through_the_single_profile_provider(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:
-    assert provider_model_for(BindingSourceKind.PROFILE) is ProfileProvider
+    assert registration_for(BindingSourceKind.PROFILE).provider_model is ProfileProvider
     profile = [b for b in edition(filing_year).revision.bindings if b.source is BindingSourceKind.PROFILE]
     assert profile
     assert all(isinstance(binding.provider, ProfileProvider) for binding in profile)

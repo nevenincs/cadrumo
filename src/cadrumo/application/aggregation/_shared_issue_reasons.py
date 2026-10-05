@@ -13,7 +13,7 @@ upstream filter rejections converge:
 - A row whose date falls outside the requested period.
 
 Both ledgers spell those five rejections identically so cross-ledger
-tooling, locale lookup, and downstream telemetry can group them under
+tooling, locale lookup, and downstream reporting can group them under
 one key. The two enums survive natively in their respective
 modules; this file is the single source of truth for the shared
 strings.

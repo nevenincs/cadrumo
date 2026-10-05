@@ -22,19 +22,32 @@ capability and operator-scope capability explicitly at this outer seam.
 
 from __future__ import annotations
 
+import asyncio
+from pathlib import Path
+
+import keyring
 import pytest
+from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import (
+    live_clave_movil_profile_scope,
+    register_minimal_profile,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.auth.actions import update_auth
 from cadrumo.application.auth.credentials import resolve_active_provider_kind
+from cadrumo.application.auth.operator_scope import active_profile_storage_span
+from cadrumo.application.auth.protocols import BrowserSessionPort
+from cadrumo.application.auth.sessions import ensure_authenticated_aeat_session
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.config import Settings, override_settings
+from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -139,3 +152,50 @@ def test_nothing_configured_anywhere_resolves_the_certificate_default() -> None:
 
     with override_settings(cadrumo_auth_provider=None) as settings:
         assert _resolve_provider_kind_for_test(settings) is AuthProviderKind.CERTIFICATE
+
+
+class _BrowserLaunchReachedError(Exception):
+    """Raised where the live lane would launch the browser that contacts AEAT."""
+
+
+async def _refuse_browser_launch(settings: Settings) -> BrowserSessionPort:
+    del settings
+    raise _BrowserLaunchReachedError
+
+
+def test_the_live_lane_profile_reaches_the_provider_step_on_a_clean_storage_root(tmp_path: Path) -> None:
+    """The live-lane fixture yields a logged-in profile on first use and on every later one.
+
+    Without it, a clean environment refused every live test with ``no_session``
+    before any AEAT contact. The first entry creates the profile, the second
+    logs in to the one it left, and each time the live session entry resolves
+    the persisted Cl@ve Movil choice and proceeds to the browser launch -- the
+    last step before AEAT. The OS keychain is pinned away for the span and
+    restored after it.
+    """
+    operator_scope_ports = build_operator_scope_ports()
+    ambient_keyring = keyring.get_keyring()
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+        cadrumo_clave_movil_dni_fecha="2030-01-01",
+        cadrumo_auth_provider=None,
+    ):
+        for _entry in range(2):
+            with live_clave_movil_profile_scope(tmp_path / "live-tests") as profile:
+                assert keyring.get_keyring() is not ambient_keyring
+                with active_profile_storage_span(
+                    load_settings(), operator_scope_ports=operator_scope_ports
+                ) as bucket_id:
+                    assert bucket_id == profile.profile_id
+                with bundled_indexed_authority().operation() as operation, pytest.raises(_BrowserLaunchReachedError):
+                    asyncio.run(
+                        ensure_authenticated_aeat_session(
+                            load_settings(),
+                            certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                            browser_session_factory=_refuse_browser_launch,
+                            operation="live-lane-profile-offline-proof",
+                            operator_scope_ports=operator_scope_ports,
+                            profile_decode_context=operation.profile_decode_context(),
+                        )
+                    )
+            assert keyring.get_keyring() is ambient_keyring

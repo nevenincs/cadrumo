@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-verb-profile-diagnostics'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:49dbf938a3d07d417efbef827290ef772a130b5dde985777497d8e527ff1c162'
-related:
-  - "[[2026-08-09-cli-verb-profile-diagnostics-plan]]"
+related: []
 ---
 # `cli-verb-profile-diagnostics` audit: `Fresh-context honesty review`
 

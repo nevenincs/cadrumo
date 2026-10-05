@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cross-domain-continuity'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:5ca72e65daf80b46efeceff43bd3949ad87864fbe5d874544556e1adfd708a9c'
+modified: '2026-10-03'
+body_hash: 'sha256:921ab930abbd1fdaa034a1c77f0aa9c4d562be7704a96aa26f6b8d1877e82225'
 related: []
 ---
 
@@ -62,10 +62,10 @@ own files landed; the peer's records went under their own commits.
 **Pathway**: `aeat.core.errors.__init_subclass__` → `bind_error_code`
 → `_registry.py:222` ValueError.
 
-**File**: `src/aeat/core/errors/__init__.py:95`.
+**File**: the retired module.
 
 **What is lost**: An operator running the test suite mid-collision
-sees a `ValueError: AeatError subclass ... is missing a declared
+sees a `ValueError: AeatError subclass... is missing a declared
 ErrorCode registry entry`. The message does not signal that the
 state is transient (a peer mid-edit), so an operator may chase it
 as a defect to fix in their own work tree.
@@ -91,7 +91,7 @@ commit during peer-heavy windows); signal-to-noise drops.
 `.gitattributes` already declares the rule. No further code change
 needed; the warnings are git doing the right thing.
 
-### Finding 3 — peer-WIP file-additions to .vault/ between status and add
+### Finding 3 — peer-WIP file-additions to.vault/ between status and add
 
 **Pathway**: Peer agent commits exec records (e.g.
 `secure-storage-production-hardening-W12-P26-S117.md`) between a

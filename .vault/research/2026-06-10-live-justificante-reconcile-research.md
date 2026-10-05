@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:1fcb70a662321636b3bb03065c750b54023b3c3d31230692e9210d4e83e4b881'
+modified: '2026-10-03'
+body_hash: 'sha256:6d3ef3fd34ce290c84cb9173bb36ca7e203a33c3881b4dcce4f6f66dacd3cef4'
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
 ---
@@ -25,23 +25,21 @@ so an ADR can choose a direction.
 ### 1. Two disconnected tracks
 
 **Reconcile is deliberately local-only.** The reconcile application service
-`modelo_reconcile` in `src/aeat/application/modelo/_reconcile.py` takes a
+`modelo_reconcile`  takes a
 `ModeloReconciliationCommand` whose `source_path` is a `pathlib.Path`. Its
 docstring states the invariant explicitly: it "never contacts AEAT and never
 invokes `require_live_read`." It calls `parse_justificante(command.source_path)`
-from `src/aeat/adapters/inbound/justificante/_parser.py`, diffs the parsed
+, diffs the parsed
 record's `modelo` and `ejercicio` against the work unit, and emits a
 `MODELO_RECONCILED` bucket event. The CLI verbs `reconcile` and
-`reconcile-from-justificante` in
-`src/aeat/entrypoints/cli/_modelo_reconcile_cli.py` only expose
+`reconcile-from-justificante`  only expose
 `--from-justificante PATH` / `--from-declaration PATH`, and their help text
 repeats "Local-only; never contacts AEAT."
 
-**The live pull exists and is complete.** `capture_justificante` in
-`src/aeat/adapters/outbound/aeat/sede/_walker.py` performs the full read-only
+**The live pull exists and is complete.** `capture_justificante`  performs the full read-only
 chain: authenticated session, navigate the Mis Expedientes procedure tree,
 resolve the per-filing CSV handle, GET the raw PDF body, and return a
-`SedeCapture`. `SedeCapture` in `src/aeat/adapters/outbound/aeat/sede/_schema.py`
+`SedeCapture`. `SedeCapture`
 carries `expediente`, the CSV `ref`, the raw `pdf_bytes`, and `pdf_sha256`. Every
 sede record carries `mode: Literal["read"]`.
 
@@ -75,14 +73,13 @@ calculate / previous-filing path — a different consumer than reconcile.
   to live auth would erode that boundary. A live capability belongs in a distinct
   surface that owns the live gate.
 - **Read-only safety envelope already exists.** The sibling `verify` adapter
-  (`src/aeat/adapters/outbound/aeat/verify/__init__.py`, `verify_csv`) shows the
+  (the former source file, `verify_csv`) shows the
   established pattern: a named read capability (`aeat-csv-verifier-read`) with
   allow-listed browser action patterns, opt-in only. A live justificante capture
   rides the same read-only, no-write envelope and does **not** touch
   `aeat-safety-legal-gates` (no submit/mutate).
 - **Official-evidence gate is the natural beneficiary.** The cross-period
-  clean-state gate in
-  `src/aeat/application/calculations/_cross_period_clean_state.py` raises
+  clean-state gate  raises
   `MISSING_JUSTIFICANTE_VERIFICATION` unless an upstream observation carries an
   official `source_kind`. `_OFFICIAL_SOURCE_KINDS` already enumerates
   `aeat_sede_justificante`, `aeat_sede_live_capture`, and `aeat_csv_register`. A
@@ -91,7 +88,7 @@ calculate / previous-filing path — a different consumer than reconcile.
   companion rule on non-official local evidence (the `app_filing` carve-out)
   confirms the official/non-official distinction is safety-critical.
 - **An existing persistence pattern to mirror.** `import_external_filing_evidence`
-  in `src/aeat/application/modelo/_external_import_actions.py` already persists an
+   already persists an
   externally-filed return with an `ExternalEvidence(kind=..., reference_id=...)`
   stamp (`ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF`) and supersedes the prior
   filing. A live-capture bridge can follow this shape rather than inventing a new

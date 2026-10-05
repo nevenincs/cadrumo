@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:994be4c3aec4497faaca002093773cc2ea22a642c5a230974445f8d999f43767'
+modified: '2026-10-03'
+body_hash: 'sha256:29bd9e8fd613e624549aed7b783e503a0e7cf0020e2ba68c11d1f024e102c509'
 related: []
 ---
 
@@ -21,7 +21,7 @@ profile-create recovery guidance without the bad-parameter wrapper.
 
 ## S385-001 | PASS | Overview is a read-only local CLI surface
 
-`src/aeat/entrypoints/cli/_overview.py` renders status, calendar, agenda, backlog, and
+The retired module renders status, calendar, agenda, backlog, and
 explain outputs from local application services. The inspected paths do not persist new
 profile, filing, ledger, or live-read state.
 
@@ -47,17 +47,17 @@ events. The failure is not silent, and the overview calendar remains read-only.
 
 ## S385-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_overview.py src/aeat/entrypoints/cli/_overview_payloads.py src/aeat/entrypoints/cli/_overview_rendering.py src/aeat/entrypoints/cli/tests/test_overview.py src/aeat/entrypoints/cli/tests/test_overview_verbs.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_overview_agenda_verb.py src/aeat/entrypoints/cli/tests/test_overview_backlog_verb.py src/aeat/entrypoints/cli/tests/test_overview_explain_verb.py` passed.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_overview.py src/aeat/entrypoints/cli/tests/test_overview_verbs.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_overview_agenda_verb.py src/aeat/entrypoints/cli/tests/test_overview_backlog_verb.py src/aeat/entrypoints/cli/tests/test_overview_explain_verb.py` passed with 38 tests.
+- the historical check passed.
+- the historical check passed with 38 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "overview all profiles list profile buckets profile storage session ProfileRepository load manifest discovery" --type code --port 8766 --max-results 5` returned manifest scan, `list_profile_buckets`, and profile repository list evidence.
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_overview.py src/aeat/entrypoints/cli/tests/test_cold_start_no_profile.py src/aeat/entrypoints/cli/tests/test_overview.py src/aeat/entrypoints/cli/tests/test_overview_verbs.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_overview_agenda_verb.py src/aeat/entrypoints/cli/tests/test_overview_backlog_verb.py src/aeat/entrypoints/cli/tests/test_overview_explain_verb.py` passed after the S385-007 fix.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_cold_start_no_profile.py src/aeat/entrypoints/cli/tests/test_overview.py src/aeat/entrypoints/cli/tests/test_overview_verbs.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_overview_agenda_verb.py src/aeat/entrypoints/cli/tests/test_overview_backlog_verb.py src/aeat/entrypoints/cli/tests/test_overview_explain_verb.py` passed with 48 tests after the S385-007 fix.
+- the historical check passed after the S385-007 fix.
+- the historical check passed with 48 tests after the S385-007 fix.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed after adding the cross-lane `cli.ledger.errors.invalid_category` locale leaves through `python -m aeat.locales set`.
 
 ## S385-006 | INFO | Broader backend-boundary suite has unrelated open failures
 
-`uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_backend_boundary.py`
+the historical check
 failed on pre-existing and parallel-lane surfaces outside `_overview.py`: ledger review help
 vocabulary, modelo work resume `NameError`, two retired moved-test path guards, and existing
 skip/xfail/stub language detections. These failures are not introduced by S385 and should be

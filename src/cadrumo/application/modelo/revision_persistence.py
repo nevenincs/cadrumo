@@ -25,7 +25,7 @@ See Also:
         Separate import boundary that creates current records with
         :class:`~ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
-    :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo.filed_revision_observation.prepare_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
     :class:`~domain.prorrata_register.protocols.ProrrataRegisterRepositoryProtocol`:
@@ -89,6 +89,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -299,6 +300,7 @@ def _build_calculation_revision(
     borrador_snapshot_id: str | None,
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     cleared_casilla_ids: tuple[CasillaId, ...],
+    operator_layer: CalculationOperatorLayer | None,
     casilla_values: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
@@ -329,6 +331,7 @@ def _build_calculation_revision(
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
@@ -553,6 +556,7 @@ def persist_calculation_revision(
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
@@ -652,6 +656,7 @@ def persist_calculation_revision(
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
     )
     stamped_annual_summary_handoff = _stamp_annual_summary_handoff(
         m303_regimen_simplificado_annual_summary_handoff,
@@ -690,6 +695,7 @@ def persist_calculation_revision(
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
+        operator_layer=operator_layer,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
@@ -970,6 +976,19 @@ def _new_local_filing_record(
     )
 
 
+def _require_m303_settlement_result_values(
+    target: CalculationRevision, work_unit: WorkUnit, result_ids: tuple[CasillaId, ...] | None
+) -> dict[CasillaId, Decimal]:
+    """Require the declared result casillas after admitting the credit-state operands."""
+    if result_ids is None or any(casilla_id not in target.casilla_values for casilla_id in result_ids):
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "missing", {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"}
+            )
+        )
+    return {casilla_id: target.casilla_values[casilla_id] for casilla_id in result_ids}
+
+
 def _new_local_m303_settlement_snapshot(
     *,
     target: CalculationRevision,
@@ -982,20 +1001,14 @@ def _new_local_m303_settlement_snapshot(
         return None
     state = prepared_observation.iva_compensation_state
     result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
-    if (
-        state is None
-        or state.prior_pending_amount is None
-        or state.applied_amount is None
-        or result_ids is None
-        or any(casilla_id not in target.casilla_values for casilla_id in result_ids)
-    ):
+    if state is None or state.prior_pending_amount is None or state.applied_amount is None:
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(
                 "missing",
                 {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"},
             ),
         )
-    result_values = {casilla_id: target.casilla_values[casilla_id] for casilla_id in result_ids}
+    result_values = _require_m303_settlement_result_values(target, work_unit, result_ids)
     result_amount = canonical_result_amount(str(work_unit.modelo), result_values)
     if result_amount is None or result_disposition is None:
         raise M303FilingEvidenceError(
@@ -1164,6 +1177,21 @@ def _rectificativa_aggregate_context(
     )
 
 
+def _approved_verification_report_differs(
+    report: VerificationReport, granting_reports: tuple[VerificationReport, ...], target: CalculationRevision
+) -> bool:
+    """Bind the exact granting report to revision, authority and stored verification facts."""
+    return (
+        report.calculation_revision_id != target.calculation_revision_id
+        or report.registry_snapshot_ref != target.registry_snapshot_ref
+        or not report.granted_verificado_completo
+        or len(granting_reports) != 1
+        or granting_reports[0] != report
+        or report.run_at != target.verified_at
+        or report.verified_by != target.verified_by
+    )
+
+
 def require_approved_verification_report(
     *,
     target: CalculationRevision,
@@ -1171,23 +1199,14 @@ def require_approved_verification_report(
     catalogue: VerificationReportCatalogue,
     operation: PinnedAuthorityOperation,
 ) -> VerificationReport:
-    """Bind a filing to the exact current granting report for its revision."""
+    """Bind a filing to the current granting report for its :class:`CalculationRevision`."""
     report = catalogue.get(approved_verification_report_id)
     granting_reports = tuple(
         candidate
         for candidate in catalogue.reports.values()
         if candidate.calculation_revision_id == target.calculation_revision_id and candidate.granted_verificado_completo
     )
-    if (
-        report is None
-        or report.calculation_revision_id != target.calculation_revision_id
-        or report.registry_snapshot_ref != target.registry_snapshot_ref
-        or not report.granted_verificado_completo
-        or len(granting_reports) != 1
-        or granting_reports[0] != report
-        or report.run_at != target.verified_at
-        or report.verified_by != target.verified_by
-    ):
+    if report is None or _approved_verification_report_differs(report, granting_reports, target):
         raise VerificationReportNotFoundError(
             translated_message="application.modelo.errors.verification_report_not_found",
             context={

@@ -1,6 +1,446 @@
 modelo:
   schema:
     '390':
+      binding:
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj2o8:
+          label: 'Statistical data: other activity 1'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj4o8:
+          label: 'Statistical data: other activity 2'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj6o8:
+          label: 'Statistical data: other activity 3'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj8o8:
+          label: 'Statistical data: other activity 4'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmjao8:
+          label: 'Statistical data: other activity 5'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lo74qbecdkn0obc:
+          label: 'Statistical data: main activity'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd65gg:
+          label: 'Statistical data, other activity 1: activity code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd69gg:
+          label: 'Statistical data, other activity 2: activity code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6dgg:
+          label: 'Statistical data, other activity 3: activity code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6hgg:
+          label: 'Statistical data, other activity 4: activity code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6lgg:
+          label: 'Statistical data, other activity 5: activity code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbge9kmsor9e1gmo:
+          label: 'Statistical data, main activity: activity code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd65ng:
+          label: 'Statistical data, other activity 1: IAE heading'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd69ng:
+          label: 'Statistical data, other activity 2: IAE heading'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6dng:
+          label: 'Statistical data, other activity 3: IAE heading'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6hng:
+          label: 'Statistical data, other activity 4: IAE heading'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6lng:
+          label: 'Statistical data, other activity 5: IAE heading'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbge9kmsor9e1gmo:
+          label: 'Statistical data, main activity: IAE heading'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8bb4clhmoobic5hmirre5lgmstb1dgmmus35e9gm6bb3dtn2qt35e9hmasj1ecmn0pbiednmsobj
+        : label: Annual declaration of transactions with third parties
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8pb3dhgn4ob3d5nmsbb3dtn6ktbeehgiqrj9co:
+          label: 'Joint declaration: NIF'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8pb3dhgn4ob3d5nmsbb3dtn6ktbeehgiqsj1f9nmsbbjdthmiobc:
+          label: 'Joint declaration: company name'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp35epimsprf5lpnasrkd5q7at39epgg:
+          label: Sustitutiva declaration
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp35epimsprf5lpnasrkd5q7at39epgiqs3fe8mn4pb3ehkmcqb3c5hmirre5li6abb3elnn8obj:
+          label: Sustitutiva declaration for rectification of tax amounts
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb1e1imor39chnn6bbp5ln6urb2e9iiqsj1f9nmsbbjdthmiobc
+        : label: 'Representative: surname and first name, or company name'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb3c5m6op9de1t62bb1epi62
+        : label: 'Representative: street, square or avenue'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb3dti6iprf5lo6usrkc5m0
+        : label: 'Representative: postal code'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb5edhg
+        : label: 'Representative: staircase'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbdeln6ior9e1kmu
+        : label: 'Representative: municipality'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbed5j0
+        : label: 'Representative: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbedtmm4sj55li6abbcc4mncqb15lo7aojcd5hm2
+        : label: 'Representative: name of the public road'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbeelmmasjf
+        : label: 'Representative: number'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbgd5pmu
+        : label: 'Representative: floor'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbge9nncqbecdkm2
+        : label: 'Representative: province'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbge9q62
+        : label: 'Representative: door'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbkclm6apjfdpng
+        : label: 'Representative: telephone'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Enter the date as day, month and year, in the format DDMMAAAA.
+          label: 'Representative (legal entity) 1: date of the power of attorney'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrj9co:
+          label: 'Representative (legal entity) 1: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Representative (legal entity) 1: first name and surname'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrjfehgn4qb1:
+          label: 'Representative (legal entity) 1: notary''s office'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Enter the date as day, month and year, in the format DDMMAAAA.
+          label: 'Representative (legal entity) 2: date of the power of attorney'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrj9co:
+          label: 'Representative (legal entity) 2: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Representative (legal entity) 2: first name and surname'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrjfehgn4qb1:
+          label: 'Representative (legal entity) 2: notary''s office'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Enter the date as day, month and year, in the format DDMMAAAA.
+          label: 'Representative (legal entity) 3: date of the power of attorney'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrj9co:
+          label: 'Representative (legal entity) 3: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Representative (legal entity) 3: first name and surname'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrjfehgn4qb1:
+          label: 'Representative (legal entity) 3: notary''s office'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmm8pbgcln68qb5dpq6a:
+          label: 'Taxable person: dependent entity?'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmm8rrdd5n62rjkck:
+          label: 'Taxable person: dominant entity?'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmmsqb65limst39chgm8bb4dtmmirj1dpq6a:
+          label: 'Taxable person: NIF of the dominant entity'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmmstbdclp6ubb4ckmmesjle1ng:
+          label: 'Taxable person: group number'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn4pb7d5mmarhdclpn0pb3d5gmobb4clm2qprielo6ubb4ckmmarjkd5i62p35ec:
+          label: 'Taxable person: special regime for groups of entities'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn4pb7d5pn8sjf5li6abb4clr6ur3lcdkmurhddlimssrlc5m0:
+          label: 'Taxable person: monthly refund register'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn8qbgdsmn4pb7d5mmarhdclpn0pb3d5gmobb1e1m6ior1c9m6abb1e9q2qc9m6cmn6pbod5in6bb3d5n66rpdedkiqrpddpng
+        : label: 'Taxable person: type of special regime, article 163 sexies.cinco'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+          help: Leave it blank if the page is not complementary; enter C if it is.
+          label: Complementary page indicator
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdnm8qb7ds
+        : label: 'Farming or livestock activity 1: code'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K1
+          label: 'Farming or livestock activity 1: derived tax amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315li6atj5dpjm2p31
+        : label: 'Farming or livestock activity 1: output tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315lpmus3fe9q62p31
+        : label: 'Farming or livestock activity 1: input tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dd5n68qb3ckmm6tbfehgg
+        : label: 'Farming or livestock activity 1: tax amount index'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reduction that applies to activity carried out in municipalities affected
+            by the DANA.
+          label: 'Farming or livestock activity 1: reduction for the DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9depnmotbdcln2qqbectp6asrfec
+        : label: 'Farming or livestock activity 1: revenue volume'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdnm8qb7ds
+        : label: 'Farming or livestock activity 2: code'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K2
+          label: 'Farming or livestock activity 2: derived tax amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315li6atj5dpjm2p31
+        : label: 'Farming or livestock activity 2: output tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315lpmus3fe9q62p31
+        : label: 'Farming or livestock activity 2: input tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdd5n68qb3ckmm6tbfehgg
+        : label: 'Farming or livestock activity 2: tax amount index'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchde9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reduction that applies to activity carried out in municipalities affected
+            by the DANA.
+          label: 'Farming or livestock activity 2: reduction for the DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdepnmotbdcln2qqbectp6asrfec
+        : label: 'Farming or livestock activity 2: revenue volume'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdnm8qb7ds
+        : label: 'Farming or livestock activity 3: code'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K3
+          label: 'Farming or livestock activity 3: derived tax amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315li6atj5dpjm2p31
+        : label: 'Farming or livestock activity 3: output tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315lpmus3fe9q62p31
+        : label: 'Farming or livestock activity 3: input tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdd5n68qb3ckmm6tbfehgg
+        : label: 'Farming or livestock activity 3: tax amount index'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpde9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reduction that applies to activity carried out in municipalities affected
+            by the DANA.
+          label: 'Farming or livestock activity 3: reduction for the DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdepnmotbdcln2qqbectp6asrfec
+        : label: 'Farming or livestock activity 3: revenue volume'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdnm8qb7ds
+        : label: 'Farming or livestock activity 4: code'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K4
+          label: 'Farming or livestock activity 4: derived tax amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315li6atj5dpjm2p31
+        : label: 'Farming or livestock activity 4: output tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315lpmus3fe9q62p31
+        : label: 'Farming or livestock activity 4: input tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dd5n68qb3ckmm6tbfehgg
+        : label: 'Farming or livestock activity 4: tax amount index'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reduction that applies to activity carried out in municipalities affected
+            by the DANA.
+          label: 'Farming or livestock activity 4: reduction for the DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1depnmotbdcln2qqbectp6asrfec
+        : label: 'Farming or livestock activity 4: revenue volume'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdnm8qb7ds
+        : label: 'Farming or livestock activity 5: code'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6o
+        : box_number: K5
+          label: 'Farming or livestock activity 5: derived tax amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315li6atj5dpjm2p31
+        : label: 'Farming or livestock activity 5: output tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315lpmus3fe9q62p31
+        : label: 'Farming or livestock activity 5: input tax'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dd5n68qb3ckmm6tbfehgg
+        : label: 'Farming or livestock activity 5: tax amount index'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reduction that applies to activity carried out in municipalities affected
+            by the DANA.
+          label: 'Farming or livestock activity 5: reduction for the DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9depnmotbdcln2qqbectp6asrfec
+        : label: 'Farming or livestock activity 5: revenue volume'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd64
+        : label: 'Activity 1, module 1: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd68
+        : label: 'Activity 1, module 2: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6c
+        : label: 'Activity 1, module 3: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6g
+        : label: 'Activity 1, module 4: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6k
+        : label: 'Activity 1, module 5: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6o
+        : label: 'Activity 1, module 6: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6s
+        : label: 'Activity 1, module 7: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kog
+        : label: 'Activity 1, module 1: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kp0
+        : label: 'Activity 1, module 2: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kpg
+        : label: 'Activity 1, module 3: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kq0
+        : label: 'Activity 1, module 4: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kqg
+        : label: 'Activity 1, module 5: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kr0
+        : label: 'Activity 1, module 6: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5krg
+        : label: 'Activity 1, module 7: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb35lhnarrkc4mm8pbmcln6eob4c4mmus35e9gm6qbfdpin6bb3dtp74qb5dpq6aso
+        : label: 'Activity 1: output tax on current operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb3elnn8o9dchin4qbmc5i62bbicljmirb5domn6qbde1m6ipj9cdgm8rpdd8og
+        : box_number: J1
+          label: 'Activity 1: tax amount derived from the simplified regime'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb45lhnarrkc4mn6rrgdtp78ob4c5piqrrgclp62or9dtn6aspdcdnn4sj9cln78pbj
+        : label: 'Activity 1: input tax on current operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb55lkmsp39cdiiqorfe9p6aorkdtp0
+        : label: 'Activity 1: correction index'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb5e1kmesj1cpiiqq9dc4mma:
+          box_number: '66'
+          label: 'Activity 1: IAE heading'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
+        : help: 'Only for headings 691.9 and 722: enter 1 or 2 depending on the activity.
+            Otherwise leave it blank.'
+          label: 'Activity 1: IAE heading auxiliary indicator'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb65lp6asrldhq62p3f:
+          label: 'Activity 1: result'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb75lo6usj3cln78obackmm6tbfehgiqrb9dpkmqo8
+        : label: 'Activity 1: minimum tax amount percentage'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb85li6atjfdhqm6qbfdomm6tbfehgn6bbjdto6usjkc5i62spddtq74rrj5lo62qbjclpg
+        : label: 'Activity 1: refund of input tax in other countries'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb95lhnarrkc4mmqqbed5mm2:
+          label: 'Activity 1: minimum tax amount'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbcdtp66o8:
+          label: 'Activity 1: Lorca reduction'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5limobbkclp6qqbe
+        : label: 'Activity 1: reduction for the municipality of Lorca'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5lmnarj9cdkn0
+        : label: 'Activity 1: reduction for municipalities affected by the DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmspbj5lq6ut31dg
+        : label: 'Activity 1: reductions (total)'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd64
+        : label: 'Activity 2, module 1: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd68
+        : label: 'Activity 2, module 2: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6c
+        : label: 'Activity 2, module 3: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6g
+        : label: 'Activity 2, module 4: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6k
+        : label: 'Activity 2, module 5: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6o
+        : label: 'Activity 2, module 6: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6s
+        : label: 'Activity 2, module 7: number of units'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kog
+        : label: 'Activity 2, module 1: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kp0
+        : label: 'Activity 2, module 2: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kpg
+        : label: 'Activity 2, module 3: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kq0
+        : label: 'Activity 2, module 4: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kqg
+        : label: 'Activity 2, module 5: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kr0
+        : label: 'Activity 2, module 6: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5krg
+        : label: 'Activity 2, module 7: amount'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb35lhnarrkc4mm8pbmcln6eob4c4mmus35e9gm6qbfdpin6bb3dtp74qb5dpq6aso
+        : label: 'Activity 2: output tax on current operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb3elnn8o9dchin4qbmc5i62bbicljmirb5domn6qbde1m6ipj9cdgm8rpdd8p0
+        : box_number: J2
+          label: 'Activity 2: tax amount derived from the simplified regime'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb45lhnarrkc4mn6rrgdtp78ob4c5piqrrgclp62or9dtn6aspdcdnn4sj9cln78pbj
+        : label: 'Activity 2: input tax on current operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb55lkmsp39cdiiqorfe9p6aorkdtp0
+        : label: 'Activity 2: correction index'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb5e1kmesj1cpiiqq9dc4mma:
+          box_number: '66'
+          label: 'Activity 2: IAE heading'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
+        : help: 'Only for headings 691.9 and 722: enter 1 or 2 depending on the activity.
+            Otherwise leave it blank.'
+          label: 'Activity 2: IAE heading auxiliary indicator'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb65lp6asrldhq62p3f:
+          label: 'Activity 2: result'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb75lo6usj3cln78obackmm6tbfehgiqrb9dpkmqo8
+        : label: 'Activity 2: minimum tax amount percentage'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb85li6atjfdhqm6qbfdomm6tbfehgn6bbjdto6usjkc5i62spddtq74rrj5lo62qbjclpg
+        : label: 'Activity 2: refund of input tax in other countries'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb95lhnarrkc4mmqqbed5mm2:
+          label: 'Activity 2: minimum tax amount'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbcdtp66o8:
+          label: 'Activity 2: Lorca reduction'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5limobbkclp6qqbe
+        : label: 'Activity 2: reduction for the municipality of Lorca'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5lmnarj9cdkn0
+        : label: 'Activity 2: reduction for municipalities affected by the DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmspbj5lq6ut31dg
+        : label: 'Activity 2: reductions (total)'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bb9epgiqsrfe1nn4t31chniqpbe5lgm8sbld5pmior9dtn2qp355lgm6t39epnn6bb6d5l6uso
+        : box_number: '80'
+          label: 'Simplified regime: input VAT on acquisition of fixed assets'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bbicljnar31e9knkob3d5nmsbb4ckmm4qb5dpin6bb4ckmmirjmclp76qbfdo
+        : box_number: '81'
+          label: 'Simplified regime: regularisation of capital goods'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bbjelmm2bb4ckmm8pb4elhm6qbfdpin6
+        : box_number: '82'
+          label: 'Simplified regime: sum of deductions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5limsbb1chonaqbjd5hmirreclpiqqbeehp62orfdlqmsqbkc5p6iobj
+        : box_number: '76'
+          label: 'Simplified regime: output VAT on intra-Community acquisitions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lknco9dchincpbectgm8rpdcln2qpbeehp6apr1ecmm8p9dc5hn8qbmdtpiqpj9d9nn6
+        : box_number: '78'
+          label: 'Simplified regime: output VAT on supplies of fixed assets'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lknco9dchincpbectgm8rpde1nn4bb9dpr6asjjd5nmsbb4clm2qsrld9in8rpde1gn6qbmds
+        : box_number: '77'
+          label: 'Simplified regime: output VAT on reverse charge'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lpnarb15lhnarrkc5piqob3ehkncqb4c5i6aspdc5jn4qb35ljm2rj1cgmnibb6dtp6asrk
+        : box_number: '75'
+          label: 'Sum of tax amounts: farming, livestock and forestry activities'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lpnarb15lhnarrkc5piqob3ehkncqb4c5i6aspddpniqob7e9km6bb7c5n62p1df4mmcrriclpn8
+        : box_number: '74'
+          label: 'Sum of tax amounts: activities other than farming, livestock, forestry'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmn4pbjelm78ob4dsmn4pb7d5mmarhdedkmqs3cd5j6ior1chng
+        : box_number: '83'
+          label: Simplified regime result
+        x-dlnm8pbcdsmj6e9g5po62pr5bsrisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+          help: Leave it blank if the page is not complementary; enter C if it is.
+          label: Complementary page indicator
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 1: activity carried out'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 1: CNAE code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 1: amount of operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 1: amount of operations with the right to deduct'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 1: prorrata percentage'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Enter G or E, or leave it blank.
+          label: 'Prorrata 1: prorrata type'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 2: activity carried out'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 2: CNAE code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 2: amount of operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 2: amount of operations with the right to deduct'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 2: prorrata percentage'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Enter G or E, or leave it blank.
+          label: 'Prorrata 2: prorrata type'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 3: activity carried out'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 3: CNAE code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 3: amount of operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 3: amount of operations with the right to deduct'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 3: prorrata percentage'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Enter G or E, or leave it blank.
+          label: 'Prorrata 3: prorrata type'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 4: activity carried out'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 4: CNAE code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 4: amount of operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 4: amount of operations with the right to deduct'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 4: prorrata percentage'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Enter G or E, or leave it blank.
+          label: 'Prorrata 4: prorrata type'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 5: activity carried out'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 5: CNAE code'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 5: amount of operations'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 5: amount of operations with the right to deduct'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 5: prorrata percentage'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Enter G or E, or leave it blank.
+          label: 'Prorrata 5: prorrata type'
       casilla:
         continuidad:
           filing-year:
@@ -1162,6 +1602,251 @@ modelo:
       field:
         official_name: Modelo 390. Annual summary return for Value Added Tax.
         title: VAT. Annual summary return
+      form:
+        column:
+          actividad-desarrollada:
+            heading: Activity carried on
+          fecha-poder-ddmmaaaa:
+            heading: Date of power of attorney
+          nif:
+            heading: Tax ID (NIF)
+          nombre-y-apellidos:
+            heading: Full name
+          notaria:
+            heading: Notary
+          reduccion-aplicable-por-actividad-realiza-8322da:
+            heading: Reduction for activity in municipalities hit by the DANA storm
+          reducciones-total:
+            heading: Reductions (total)
+          regularizacion-de-inversiones:
+            heading: Investment adjustment
+          suma-de-deducciones:
+            heading: Total deductions
+        page:
+          pag-1:
+            heading: Page 1
+          pag-2:
+            heading: Page 2
+          pag-2-bis:
+            heading: Page 2 bis
+          pag-3:
+            heading: Page 3
+          pag-4:
+            heading: Page 4
+          pag-5:
+            heading: Page 5
+          pag-6:
+            heading: Page 6
+          pag-7:
+            heading: Page 7
+          pag-8:
+            heading: Page 8
+        row:
+          '1':
+            heading: Line 1
+          '2':
+            heading: Line 2
+          '3':
+            heading: Line 3
+          '4':
+            heading: Line 4
+          '5':
+            heading: Line 5
+          actividad-1:
+            heading: Activity 1
+          actividad-2:
+            heading: Activity 2
+          bienes-corrientes:
+            heading: Current goods
+          bienes-inversion:
+            heading: Capital goods
+          bienes-y-servic:
+            heading: Current goods and services
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Special farming, livestock and fishing regime compensation
+          cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
+            heading: Tax deductible under a final ruling at rates no longer in force
+          importes-de-las-adquisiciones-de-bienes-r-d3ef1e:
+            heading: Acquisitions under the special cash-accounting regime
+          importes-de-las-entregas-de-bienes-regime-fa8564:
+            heading: Supplies under the special cash-accounting regime
+          iva-deveng-invers-sujeto-pasivo:
+            heading: VAT due under reverse charge
+          modific-recargo-equiv-concurso-acreedores:
+            heading: Equivalence surcharge adjustment for insolvency
+          modific-recargo-equivalencia:
+            heading: Equivalence surcharge adjustment
+          modificac-bases-cuotas-concurso-acreedores:
+            heading: Adjustment of bases and tax for insolvency
+          modificac-bases-y-cuotas:
+            heading: Adjustment of bases and tax
+          modificac-bases-y-cuotas-intragrupo:
+            heading: Adjustment of intra-group bases and tax
+          rectificacion-de-deducciones:
+            heading: Correction of deductions
+          rectificacion-de-deducciones-intragrupo:
+            heading: Correction of intra-group deductions
+          represent-1:
+            heading: Representative 1
+          represent-2:
+            heading: Representative 2
+          represent-3:
+            heading: Representative 3
+          tipo-0-26-pct:
+            heading: 0.26% rate
+          tipo-0-5-pct:
+            heading: 0.5% rate
+          tipo-0-62-pct:
+            heading: 0.62% rate
+          tipo-0-pct:
+            heading: 0% rate
+          tipo-1-4-pct:
+            heading: 1.4% rate
+          tipo-1-75-pct:
+            heading: 1.75% rate
+          tipo-1-pct:
+            heading: 1% rate
+          tipo-10-pct:
+            heading: 10% rate
+          tipo-2-pct:
+            heading: 2% rate
+          tipo-21-pct:
+            heading: 21% rate
+          tipo-4-pct:
+            heading: 4% rate
+          tipo-5-2-pct:
+            heading: 5.2% rate
+          tipo-5-pct:
+            heading: 5% rate
+          tipo-7-5-pct:
+            heading: 7.5% rate
+          total-adqui-intra-bienes-corrientes:
+            heading: Total intra-EU acquisitions of current goods
+          total-adqui-intra-bienes-inversion:
+            heading: Total intra-EU acquisitions of capital goods
+          total-adqui-intra-servicios:
+            heading: Total intra-EU acquisitions of services
+          total-bases-y-cuotas-iva:
+            heading: Total VAT bases and tax
+          total-import-bienes-corrientes:
+            heading: Total imports of current goods
+          total-importacion-bienes-inversion:
+            heading: Total imports of capital goods
+          total-oper-inter-bienes-de-inversion:
+            heading: Total domestic capital goods transactions
+          total-oper-inter-corrientes-bienes-y-servic:
+            heading: Total domestic current goods and services
+          total-oper-intra-bienes-de-inversion:
+            heading: Total intra-group capital goods transactions
+          total-oper-intragrupo-corrientes:
+            heading: Total intra-group current transactions
+        section:
+          1-sujeto-pasivo:
+            heading: 1. Taxpayer
+          10-volumen-de-operaciones:
+            heading: 10. Turnover
+          11-oper-especificas:
+            heading: 11. Specific transactions
+          12-prorratas:
+            heading: 12. Pro rata
+          13-reg-deducc-diferenc:
+            heading: Differentiated deductions
+          13-reg-deducc-diferenc-1:
+            heading: Differentiated deductions · sector 1
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: Sector 1 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: Sector 1 · deductible VAT on imports
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: Sector 1 · deductible VAT on domestic transactions
+          13-reg-deducc-diferenc-2:
+            heading: Differentiated deductions · sector 2
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: Sector 2 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: Sector 2 · deductible VAT on imports
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: Sector 2 · deductible VAT on domestic transactions
+          13-reg-deducc-diferenc-3:
+            heading: Differentiated deductions · sector 3
+          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
+            heading: Sector 3 · deductible VAT on intra-EU acquisitions
+          13-reg-deducc-diferenc-3-iva-ded-importaciones:
+            heading: Sector 3 · deductible VAT on imports
+          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
+            heading: Sector 3 · deductible VAT on domestic transactions
+          2-devengo:
+            heading: 2. Accrual
+          3-datos-estadisticos:
+            heading: 3. Statistical data
+          3-datos-estadisticos-a:
+            heading: 3. Statistical data · A
+          3-datos-estadisticos-a-actividades:
+            heading: 3. Statistical data · A · Activities
+          3-datos-estadisticos-b:
+            heading: 3. Statistical data · B
+          3-datos-estadisticos-c:
+            heading: 3. Statistical data · C
+          4-representante-personas-fisicas-comunid-bienes:
+            heading: 4. Representative · Individuals and joint ownerships
+          4-representante-personas-juridicas:
+            heading: 4. Representative · Legal entities
+          5-operaciones-reg-gral:
+            heading: 5. General regime transactions
+          5-operaciones-reg-gral-base-imponible-y-c-0050f7:
+            heading: 5. General regime · Output · Travel agencies special regime
+          5-operaciones-reg-gral-base-imponible-y-c-542bb5:
+            heading: 5. General regime · Output · Intra-EU acquisitions of services
+          5-operaciones-reg-gral-base-imponible-y-c-5505bd:
+            heading: 5. General regime · Output · Cash-accounting special regime
+          5-operaciones-reg-gral-base-imponible-y-c-93d4a1:
+            heading: 5. General regime · Output · Second-hand goods special regime
+          5-operaciones-reg-gral-base-imponible-y-c-9faf8e:
+            heading: 5. General regime · Output · Intra-EU acquisitions of goods
+          5-operaciones-reg-gral-base-imponible-y-c-a46fd9:
+            heading: 5. General regime · Output · Intra-group transactions
+          5-operaciones-reg-gral-base-imponible-y-c-f2cdb2:
+            heading: 5. General regime · Output · Ordinary regime
+          5-operaciones-reg-gral-base-imponible-y-c-fef341:
+            heading: 5. General regime · Output · Equivalence surcharge
+          5-operaciones-reg-gral-base-imponible-y-cuota:
+            heading: 5. General regime · Taxable base and tax
+          5-operaciones-reg-gral-iva-deducible:
+            heading: 5. General regime · Deductible VAT
+          5-operaciones-reg-gral-iva-deducible-adqu-315b09:
+            heading: 5. General regime · Deductible · Intra-EU acquisitions of services
+          5-operaciones-reg-gral-iva-deducible-adqu-812147:
+            heading: 5. General regime · Deductible · Intra-EU acquisitions of capital
+              goods
+          5-operaciones-reg-gral-iva-deducible-adqu-84c649:
+            heading: 5. General regime · Deductible · Intra-EU acquisitions of current
+              goods
+          5-operaciones-reg-gral-iva-deducible-impo-56be24:
+            heading: 5. General regime · Deductible · Imports of capital goods
+          5-operaciones-reg-gral-iva-deducible-impo-f31793:
+            heading: 5. General regime · Deductible · Imports of current goods
+          5-operaciones-reg-gral-iva-deducible-oper-0e46cf:
+            heading: 5. General regime · Deductible · Intra-group current transactions
+          5-operaciones-reg-gral-iva-deducible-oper-3192c1:
+            heading: 5. General regime · Deductible · Intra-group capital goods transactions
+          5-operaciones-reg-gral-iva-deducible-oper-5198bd:
+            heading: 5. General regime · Deductible · Domestic capital goods transactions
+          5-operaciones-reg-gral-iva-deducible-oper-6cb02a:
+            heading: 5. General regime · Deductible · Domestic current goods and services
+          6-operaciones-reg-simplificado:
+            heading: 6. Simplified regime transactions
+          6-operaciones-reg-simplificado-act-agrico-8df6bd:
+            heading: 6. Simplified regime · Farming and livestock activities
+          6-operaciones-reg-simplificado-actividad-1:
+            heading: 6. Simplified regime · Activity 1
+          6-operaciones-reg-simplificado-actividad-2:
+            heading: 6. Simplified regime · Activity 2
+          7-resultado-liquidacion-anual:
+            heading: 7. Annual return result
+          8-tributacion-razon-de-territorio:
+            heading: 8. Taxation by territory
+          9-resultado-de-las-liquidaciones:
+            heading: 9. Results of the returns
       revision:
         '2021':
           casilla:

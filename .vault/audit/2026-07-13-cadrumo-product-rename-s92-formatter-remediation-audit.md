@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s92-formatter-remediation'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-10-03'
 body_hash: 'sha256:6ac442e969de545ba21226c64f37cdc270ea8dd10abbfc20b689ba61eecfebc9'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s92-formatter-remediation` audit: `S92 formatter remediation review`

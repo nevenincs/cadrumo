@@ -3,19 +3,20 @@ tags:
   - '#adr'
   - '#modelo-190-percepciones-count'
 date: '2026-06-25'
-modified: '2026-07-17'
-body_hash: 'sha256:795593127c9ba4fafd0bb1da1d990ca8d3442615c4a12aa876bbd9a233edaeba'
+modified: '2026-10-03'
+body_hash: 'sha256:b336813ac86566f2ea3da8293369e9309b6c78160d9090ce974fa2a88e9ca74a'
 related:
-  - "[[2026-06-25-modelo-190-percepciones-count-research]]"
+  - '[[2026-06-25-modelo-190-percepciones-count-research]]'
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
 
 # `modelo-190-percepciones-count` adr: `Modelo 190 percepciones count: distinct-(perceptor,clave) over the withholding source` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Audit #22 flagged the Modelo 190 annual box `decl.total-percepciones` ("NÚMERO
+At decision entry on 2026-06-25, Audit #22 flagged the Modelo 190 annual box `decl.total-percepciones` ("NÚMERO
 TOTAL DE PERCEPCIONES") as an over-declaration of the same op=sum shape RET-1
-fixes for M180/M193. It IS over-declared: the box is computed by formula
+fixes for M180/M193. It was then over-declared: the box is computed by formula
 `modelo-190-total-percepciones` = `add()` of nine per-clave relations, each
 `op="sum"` over `1T-4T` of Modelo 111 box `01` (`semantic_role="perceptor_count"`).
 A perceptor present under one clave across multiple quarters is counted once per
@@ -45,8 +46,10 @@ would UNDER-declare). This ADR decides M190's correct fix.
 - The 8-member `RetencionScheme` enum (the RET-1 source's only category axis) does
   NOT map to M190's clave taxonomy (no dinerario/especie split, no derechos-imagen)
   — a second reason the RET-1 source cannot express the M190 figure.
-- The WITHHOLDING source is in `DEFERRED_SOURCE_KINDS` (advisory-only on the calc
-  path today), so the box falls back to the wrong op=sum relation.
+- At decision entry (2026-06-25), the WITHHOLDING source was in
+  `DEFERRED_SOURCE_KINDS` and advisory-only on the calculation path, so the box fell
+  back to the wrong op=sum relation. The implementation-status reconciliation below
+  records the completed enrollment.
 - `calculation-source-canonical-mechanism`: the monetary base/retenciones annual
   relations stay additive sums; only the COUNT is wrong.
 
@@ -55,11 +58,12 @@ would UNDER-declare). This ADR decides M190's correct fix.
 - Regulated filed figure: an over- or under-count is a mis-declaration. The
   distinct-key MUST match the Diseño ("registros de tipo 2" = per perceptor +
   clave/subclave), grounded against the bundled corpus, not a secondary source.
-- `no-dormant-source-resolvers`: enrolling a count over the withholding source
-  requires either live enrollment in `merge_source_resolutions` +
-  `_BUCKET_AGGREGATION_OWNED_SOURCES`, or explicit deferral — never a silent blank.
-  The withholding source is currently deferred; this fix enrols a distinct-count
-  path or the registry binding stays inert (the inert-resolver trap RET-1 P02 hit).
+- `no-dormant-source-resolvers`: a withholding count needs an executable owner on the
+  production calculation route. At decision entry (2026-06-25), the source was not
+  enrolled. The original text below retained an explicit deferred-with-advisory
+  option while enrollment was pending; the 2026-09-07 amendment to the accepted
+  aggregation-taxonomy ADR withdrew that allowance. The current enrollment is
+  recorded below.
 - `one-aggregation-path-pull-equals-calculate`: pull and calculate must produce
   the same percepciones count from the one withholding store; a parity gate enforces it.
 - Producer-supplies-clave is load-bearing: the pull/import path that builds the
@@ -82,10 +86,13 @@ calc mesh:
   subclave) `WithholdingObservation` rows for the annual window. This reuses the
   existing per-perceptor-clave row machinery; it does NOT touch the RET-1 retención
   store or `RetencionesAggregation`.
-- Enrol the withholding-count path on the live mesh (`merge_source_resolutions` +
-  owned set), or keep it explicitly deferred-with-advisory until enrolled — never a
-  silent blank. This mirrors RET-1 P02's enrol-a-typed-count pattern, applied to the
-  withholding source instead of the dedicated retención store.
+- The original rollout clause allowed the withholding-count path either to be
+  enrolled on the live mesh (`merge_source_resolutions` + owned set) or to remain
+  explicitly deferred-with-advisory until enrollment — never a silent blank. The
+  accepted 2026-09-07 aggregation-taxonomy amendment withdrew the deferred option;
+  the source must have an executable owner on the live route. This mirrors RET-1
+  P02's enrol-a-typed-count pattern, applied to the withholding source instead of the
+  dedicated retención store.
 - Re-point M190 `decl.total-percepciones` to the count binding (casilla
   `computed`→`bound` or formula→binding), and RETIRE the nine op=sum per-clave
   percepciones relations + drop their dependency entries (no registry≠runtime drift).
@@ -119,14 +126,33 @@ enrol-a-typed-distinct-count discipline.
 Gains: M190's filed percepciones count becomes correct (distinct per
 perceptor-clave) on the calc path; the wrong sum-of-quarterly relation is retired;
 the fix reuses the existing clave-bearing withholding model with no new data-model
-axis. Difficulties: the withholding source is deferred today, so this fix must
-enrol a count path (the load-bearing new capability) — a count primitive over a
-clave-less producer would be inert (the RET-1 P02 inert-resolver lesson). Pitfalls:
+axis. Difficulties at decision entry: the withholding source was deferred, so this fix had
+to enrol a count path (the load-bearing new capability) — a count primitive over a
+clave-less producer would have been inert (the RET-1 P02 inert-resolver lesson).
+Pitfalls:
 routing M190 through RET-1's distinct-NIF `retenciones_aggregation` would
 under-declare (the regression this ADR exists to prevent); the producer/pull path
 must actually supply the clave per row; the distinct key must be (NIF, clave,
 subclave) per the Diseño, not (NIF) alone.
 
+## Implementation status reconciliation (2026-10-03)
+
+The distinct-key decision and its Diseño grounding remain unchanged. The planned
+rollout has landed: `src/cadrumo/application/modelo/calculation_route.py:123` enrolls
+`WithholdingSourceResolver` on the production calculation route;
+`src/cadrumo/application/aggregation/withholding_source.py:355-363` documents the distinct
+`(perceptor_tax_id, clave, subclave)` materialization; and the Modelo 190 2022
+binding at `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/bindings/0001-declarations.toml:670-676` declares the `withholding` fact
+`percepcion_count` with `count_distinct`. The resolver also emits the typed
+`withholding_detail_absent` diagnostic for absent detail, and focused tests cover
+the distinct-key cases.
+
+The accepted 2026-09-07 amendment to
+`[[2026-06-10-calculation-aggregation-taxonomy-adr]]` withdrew the earlier allowance
+to leave resolver-less sources deferred. The deferred alternative retained above is
+historical; the live binding must remain executable on the calculation route. This
+status update records implementation evidence and does not infer or change AEAT
+legal authority.
 ## Codification candidates
 
 - **Rule slug:** `retenciones-counts-match-their-diseno-distinct-key`.

@@ -51,7 +51,7 @@ from ....application.modelo.export import ModeloExportCommand, export_modelo_rev
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_action_ports import FilingActionPorts
 from ....application.modelo.filing_actions import file_modelo_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -128,6 +128,7 @@ def _verification_ports(
 
 def _filing_ports(
     *,
+    operation: PinnedAuthorityOperation,
     work_repo: WorkUnitCatalogueRepository,
     calc_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -135,7 +136,7 @@ def _filing_ports(
 ) -> FilingActionPorts:
     """Compose the complete filing bundle over the isolated repositories."""
     return replace(
-        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -430,7 +431,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
             pytest.raises(ModeloRequiredBindingsMissingError) as verify_error,
             bundled_indexed_authority().operation() as operation,
         ):
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 draft.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_ports(
@@ -475,6 +476,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
                 actor="operator-test",
                 workflow_profile=profile,
                 ports=_filing_ports(
+                    operation=operation,
                     work_repo=work_repo,
                     calc_repo=calc_repo,
                     filing_repo=filing_repo,
@@ -549,6 +551,7 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(
                 actor="operator-test",
                 workflow_profile=workflow_profile(Decimal("500000")),
                 ports=_filing_ports(
+                    operation=operation,
                     work_repo=work_repo,
                     calc_repo=calc_repo,
                     filing_repo=filing_repo,
@@ -621,7 +624,7 @@ def test_m202_declared_incn_below_or_above_threshold_can_verify(
         )
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_ports(
@@ -637,7 +640,7 @@ def test_m202_declared_incn_below_or_above_threshold_can_verify(
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
         assert report.granted_verificado_completo is True
         stored = calc_repo.load().get(revision.calculation_revision_id)

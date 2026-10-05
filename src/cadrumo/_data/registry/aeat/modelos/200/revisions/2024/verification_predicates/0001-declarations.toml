@@ -46,13 +46,15 @@ predicate_id = "modelo-200-compensacion-bin-no-excede-limite-art-26"
 expression = 'cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])'
 legal_refs = ["ley-27-2014:art-26"]
 
-# Stock BLOCKING gate (LIS art. 26): the applied BIN compensation cannot exceed
-# the BIN stock available at the start of the period (casilla 00670). You cannot
-# compensate more negative bases than you hold.
+# Stock BLOCKING gate (LIS art. 26): 00547 remains elective. This predicate
+# does not require stock when the application is omitted or non-positive. A
+# positive 00547 requires an actually present opening stock value in 00670
+# and must not exceed it; a missing value is not treated as zero. The existing
+# cross-period clean-source checks remain responsible for source provenance.
 [[revisions."2024".verification_predicates]]
-id = "cap-le-when-positive:compensacion-bin-no-excede-stock-disponible"
+id = "positive-application-le-present-stock:compensacion-bin-no-excede-stock-disponible"
 predicate_id = "modelo-200-compensacion-bin-no-excede-stock-disponible"
-expression = 'cap_le_when_positive(["DP200014:00547", "00670"])'
+expression = 'positive_application_le_present_stock(["DP200014:00547", "00670"])'
 legal_refs = ["ley-27-2014:art-26"]
 
 # Art. 13 dotaciones-deterioro carry-integration advisory. The dotaciones por

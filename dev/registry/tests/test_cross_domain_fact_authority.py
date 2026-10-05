@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedEventFact, ResolvedMappingFact
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
-from cadrumo.domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
+from cadrumo.domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from cadrumo.domain.deadlines.festivos import holiday_calendar_from_authority
 from cadrumo.domain.iva.rates import rate_record_from_fact

@@ -1,10 +1,9 @@
 ---
 tags: ['#audit', '#live-pull-verification-sweep']
 date: '2026-06-12'
-modified: '2026-07-17'
-body_hash: 'sha256:ebfbf50672f95b6b19c3f495f2478a240eb70a7290d7ff05945ea881ca133f76'
-related:
-  - '[[2026-06-12-live-pull-verification-sweep-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:f02d6fe53b9eb0b6c0ab7bd5b78db5cd35b352802d15e5080bf00f911a6f0936'
+related: []
 ---
 
 # `live-pull-verification-sweep` Code Review
@@ -37,9 +36,9 @@ The exec record correctly avoids overclaiming full S14 completion: authenticated
 
 ## LPS-006 | INFO | No blocking review findings for expedientes/calendar identity binding
 
-Reviewed the W02.P04.S12 and W03.P06.S27 delta in `src/aeat/application/live/_expedientes.py`, `src/aeat/application/live/__init__.py`, `src/aeat/application/overview/_calendar.py`, `src/aeat/entrypoints/cli/_overview.py`, and the focused expedientes/calendar CLI tests. Expedientes snapshots now persist the authenticated session identity, overview calendar projection gates expediente filing events and filing evidence against the active taxpayer, filed-declaration and calculation observations retain taxpayer identity checks, and the event identity field is excluded from JSON output.
+Reviewed the W02.P04.S12 and W03.P06.S27 delta in the retired module, the retired module, the retired module, the retired module, and the focused expedientes/calendar CLI tests. Expedientes snapshots now persist the authenticated session identity, overview calendar projection gates expediente filing events and filing evidence against the active taxpayer, filed-declaration and calculation observations retain taxpayer identity checks, and the event identity field is excluded from JSON output.
 
-Focused gate: `uv run pytest src/aeat/application/live/tests/test_expedientes.py src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py` passed with 82 selected tests and 9 deselected. No blocking findings were identified.
+Focused gate: the historical check passed with 82 selected tests and 9 deselected. No blocking findings were identified.
 
 ## LPS-007 | HIGH | Parser-backed verification writes decrypted justificante bytes to a temp file
 
@@ -49,7 +48,7 @@ The W02.P04.S14/W03.P06.S27 overview CLI delta loads encrypted filed-declaration
 
 The filed-declaration calendar verification path now calls `parse_justificante_bytes`, which extracts text from in-memory PDF bytes and binds the digest directly into the shared justificante extractor. The overview CLI no longer imports or calls `tempfile`, `mkstemp`, `os.fdopen`, or any temp-file parser bridge for decrypted filed-declaration artefact bytes.
 
-Focused gates passed after the remediation: `uv run pytest src/aeat/adapters/inbound/justificante/tests/test_parser.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/application/overview/tests/test_calendar.py -m "integration or not integration" -q` with 159 tests, and `uv run ruff check` over the touched justificante parser and overview CLI files. A text scan over the modified calendar/parser path found no remaining `tempfile`, `mkstemp`, or `NamedTemporaryFile` references.
+Focused gates passed after the remediation: the historical check with 159 tests, and `uv run ruff check` over the touched justificante parser and overview CLI files. A text scan over the modified calendar/parser path found no remaining `tempfile`, `mkstemp`, or `NamedTemporaryFile` references.
 
 ## LPS-009 | INFO | No blocking review findings for filed-pull justificante metadata enrollment
 
@@ -61,23 +60,23 @@ Focused gates passed for the reviewer: the two new filed metadata enrollment tes
 
 ## LPS-010 | INFO | No blocking review findings for cross-period justificante identity gate
 
-Reviewed the W04.P08.S31 scoped delta in `src/aeat/application/calculations/_cross_period_clean_state.py` and `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`. No blocking findings were identified.
+Reviewed the W04.P08.S31 scoped delta in the retired module and the retired test. No blocking findings were identified.
 
 The justificante match now refuses `AEAT_LIVE_CAPTURE` and `AEAT_JUSTIFICANTE_PDF` evidence when neither `member_nif` nor `taxpayer_tax_id` supplies a known taxpayer identity, so a matching modelo, ejercicio, and period alone cannot clear cross-period clean-state. Group member filings remain covered because `filing.member_nif` is still the first identity source for both justificante comparison and member observation provenance checks, so member fan-in does not depend on the parent taxpayer id to validate a member receipt.
 
-The tests use real repository/catalogue/domain objects under `isolated_runtime_profile`, not fakes, mocks, stubs, monkeypatches, skips, or xfails. The focused clean-state suite passed with `uv run pytest src/aeat/application/calculations/tests/test_cross_period_clean_state.py -q` reporting 31 passed.
+The tests use real repository/catalogue/domain objects under `isolated_runtime_profile`, not fakes, mocks, stubs, monkeypatches, skips, or xfails. The focused clean-state suite passed with the historical check reporting 31 passed.
 
 ## LPS-011 | INFO | No blocking review findings for bounded all-model filed history
 
-Reviewed the W02.P04.S11 and W03.P05.S17 scoped delta in `src/aeat/core/_config_timeouts.py`, `src/aeat/application/live/_filed_data.py`, `src/aeat/application/live/_filed_data_capture.py`, `src/aeat/application/live/__init__.py`, `src/aeat/application/live/tests/test_filed_bulk_capture.py`, and `src/aeat/entrypoints/cli/_app_live.py`. No blocking findings were identified.
+Reviewed the W02.P04.S11 and W03.P05.S17 scoped delta in the retired module, the retired module, the retired module, the retired module, the retired test, and the retired module. No blocking findings were identified.
 
 The filed CLI now keeps all-model acquisition under `filed pull` options, and the help surface exposes `list`, `pull`, and `pull-sources` only; `pull-all` is rejected. The all-model list path delegates to `list_filed_data_bulk`, which opens one authenticated register session and returns typed per-model/year failure rows instead of looping backend sessions in the CLI. Filed register walks are bounded by `aeat_live_filed_register_walk_timeout_ms` and bulk list/pull paths preserve partial success by mapping query and capture failures into `FiledDataCaptureFailureRow`.
 
-The filed pull and pull-sources report wiring still carries the justificante enrollment fields for metadata CSVs, stamped filing evidence ids, and conflict ids in both text metrics and JSON payload construction. The focused review gates passed: `uv run pytest src/aeat/application/live/tests/test_filed_bulk_capture.py -q` reported 5 passed, `uv run ruff check` passed for the six scoped files, and CLI help checks confirmed `filed pull-all` is not registered.
+The filed pull and pull-sources report wiring still carries the justificante enrollment fields for metadata CSVs, stamped filing evidence ids, and conflict ids in both text metrics and JSON payload construction. The focused review gates passed: the historical check reported 5 passed, `uv run ruff check` passed for the six scoped files, and CLI help checks confirmed `filed pull-all` is not registered.
 
 ## LPS-012 | INFO | No blocking review findings for calendar censo reconciliation warning
 
-Reviewed the scoped delta in `src/aeat/application/overview/_calendar.py`, `src/aeat/entrypoints/cli/_overview.py`, `src/aeat/entrypoints/cli/_config/_profile_censo.py`, `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`, `src/aeat/core/access_gate/__init__.py`, `src/aeat/core/access_gate/tests/test_override.py`, and the four overview locale files. No blocking findings were identified.
+Reviewed the scoped delta in the retired module, the retired module, the retired module, the retired test, the retired module, the retired test, and the four overview locale files. No blocking findings were identified.
 
 The calendar now receives censo-stamped profile paths from the CLI and emits `censo.enrolment_unverified` for active Modelo obligations whose applicability has no censo-backed enrolment path. Strict calendar mode refuses that warning, while `--allow-incomplete` exposes the provisional calendar with affected modelos and still carries per-obligation local-vs-AEAT filing evidence and justificante verification booleans. `config profile censo apply` uses the same provenance input for its post-apply calendar summary, avoiding a parallel enrolment projection path.
 
@@ -87,7 +86,7 @@ Focused gates passed for the reviewer: 32 CLI/access-gate tests, 189 overview te
 
 ## LPS-013 | INFO | No blocking review findings for Period-backed filed-history calendar guard
 
-Reviewed the additional regression in `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py` and the active plan wording update. No blocking findings were identified.
+Reviewed the additional regression in the retired test and the active plan wording update. No blocking findings were identified.
 
 The regression uses the real Modelo 130 justificante PDF fixture and the encrypted filed-declaration observation store. It proves that a stored justificante artefact that parses as Modelo 130 / 2026 / `1T` can verify the matching `1T` observation, while a second observation that reuses the same bytes but claims typed Period `2T` remains only `submitted_observed` with `justificante_verified=false`. This preserves the current `core.Period` authority and prevents a storage-ref-only shortcut from upgrading a filed-history row to verified justificante evidence.
 
@@ -95,7 +94,7 @@ The command-drift tracking was corrected in the active plan: censo is now tracke
 
 ## LPS-014 | INFO | No blocking review findings for direct justificante conflict guard
 
-Reviewed the direct `register_capture_as_filing_evidence` change in `src/aeat/application/live/_justificante.py` and its regressions in `src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`. No blocking findings were identified.
+Reviewed the direct `register_capture_as_filing_evidence` change in the retired module and its regressions in the retired test. No blocking findings were identified.
 
 The direct live justificante path now matches the filed-history enrollment contract: a current filing with existing AEAT evidence for the same CSV is idempotent and can repair missing parsed justificante metadata, while a different existing AEAT evidence reference is not overwritten. The refusal happens before `JustificanteRepository.save`, filing catalogue save, or `MODELO_LIVE_EVIDENCE_STAMPED` event emission, so a conflicting live capture cannot mutate the official evidence axis.
 
@@ -103,7 +102,7 @@ Focused gates passed across direct live justificante capture, filed-history enro
 
 ## LPS-015 | INFO | No blocking review findings for strict calendar justificante warning
 
-Reviewed the calendar warning hardening in `src/aeat/application/overview/_calendar.py`, the CLI regression in `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`, and the locale additions for `filing.justificante_unverified`. No blocking findings were identified.
+Reviewed the calendar warning hardening in the retired module, the CLI regression in the retired test, and the locale additions for `filing.justificante_unverified`. No blocking findings were identified.
 
 The calendar now refuses strict rendering when AEAT-observed or AEAT-accepted filing evidence exists without a verified matching justificante. The warning is keyed separately from censo provenance and points operators to the existing `aeat app live filed pull --modelo MODELO --year YEAR` remediation path; no `pull-all` operator surface was introduced. The CLI regression proves strict mode refuses the unverified AEAT filing while `--allow-incomplete` exposes the warning, affected modelo, and `pull` fix command in JSON.
 
@@ -111,7 +110,7 @@ Focused gates passed for the overview calendar suite, CLI calendar suite, live j
 
 ## LPS-016 | INFO | No blocking review findings for filed CLI output hardening
 
-Reviewed the filed CLI text-output helper added to `src/aeat/entrypoints/cli/_app_live.py` and the focused report-model tests in `src/aeat/entrypoints/cli/tests/test_registry_cli.py`. No blocking findings were identified.
+Reviewed the filed CLI text-output helper added to the retired module and the focused report-model tests in the retired test. No blocking findings were identified.
 
 The change does not move the live-read gate or introduce a new AEAT transport path. It only centralizes text metrics after the existing backend reports are returned, preserving the JSON payload construction already used by `filed pull` and `filed pull-sources`. The new text lines improve operator-visible evidence by showing mode, target, failure count, justificante metadata count, filing evidence stamp count, conflict count, observation paths, and artefact refs. Bulk acquisition remains under `filed pull`; no `pull-all` command or alias was introduced.
 
@@ -119,8 +118,8 @@ Focused gates passed for ruff, six filed command/output tests, and the full regi
 
 ## LPS-017 | INFO | No blocking review findings for censo CLI auth preflight
 
-Reviewed the scoped censo CLI change in `src/aeat/entrypoints/cli/_config/_profile_censo.py`
-and the regression in `src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`.
+Reviewed the scoped censo CLI change in the retired module
+and the regression in the retired test.
 No blocking findings were identified.
 
 `config profile censo pull` now emits the shared redacted live-auth preflight
@@ -136,8 +135,8 @@ censo and calendar-projection plan rows correctly remain open.
 
 ## LPS-018 | INFO | No blocking review findings for calendar text evidence details
 
-Reviewed the scoped calendar text-output change in `src/aeat/entrypoints/cli/_overview.py`
-and its CLI regression in `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+Reviewed the scoped calendar text-output change in the retired module
+and its CLI regression in the retired test.
 No blocking findings were identified.
 
 The change only affects operator text rendering for existing calendar filing
@@ -156,7 +155,7 @@ open until AEAT authentication completes and returns positive evidence.
 ## LPS-019 | INFO | No blocking review findings for calendar CSV-register justificante guard
 
 Reviewed the scoped CLI regression in
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`. No blocking
+The retired test. No blocking
 findings were identified.
 
 The new regression proves the calendar strict-mode surface refuses an imported
@@ -174,8 +173,8 @@ blockers. No live-auth completion is claimed by this review.
 ## LPS-020 | INFO | No blocking review findings for censo IVA enrolment provenance
 
 Reviewed the scoped censo CLI provenance change in
-`src/aeat/entrypoints/cli/_config/_profile_censo.py` and its regressions in
-`src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`. No blocking
+The retired module and its regressions in
+The retired test. No blocking
 findings were identified.
 
 The censo apply calendar summary now includes `iva.regime=aeat_censo_read`
@@ -191,9 +190,8 @@ derivation test. Positive live Modelo 036/censo pull evidence remains open.
 
 ## LPS-021 | INFO | No blocking review findings for censo enrolment key centralisation
 
-Reviewed the centralisation change in `src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/__init__.py`,
-`src/aeat/entrypoints/cli/_config/_profile_censo.py`, and the focused overview
+Reviewed the centralisation change in the retired module,
+The retired module, and the focused overview
 calendar/censo CLI tests. No blocking findings were identified.
 
 The censo apply summary now consumes `calendar_censo_enrolment_profile_keys()`
@@ -209,7 +207,7 @@ calendar unit suite, and the full censo CLI suite. Positive live Modelo
 ## LPS-022 | INFO | No blocking review findings for Cl@ve live persistence proof
 
 Reviewed the scoped S09 test change in
-`src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil_live.py`. No
+The retired test. No
 blocking findings were identified.
 
 The full Cl@ve live test now verifies the persistence contract in the same
@@ -229,9 +227,8 @@ and are not claimed as covered by this Cl@ve acceptance pass.
 ## LPS-023 | INFO | No blocking review findings for all-required censo calendar provenance
 
 Reviewed the scoped censo/calendar hardening in
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/tests/test_calendar.py`, and
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`. No blocking
+The retired test, and
+The retired test. No blocking
 findings were identified.
 
 The calendar censo warning now requires every censo-relevant enrolment key for
@@ -311,11 +308,8 @@ downgraded to `profile_skipped`.
 
 ## LPS-026 | INFO | No blocking review findings for live justificante reconcile and calendar fail-closed sweep
 
-Reviewed the scoped delta in `src/aeat/application/modelo/_reconcile.py`,
-`src/aeat/application/modelo/__init__.py`,
-`src/aeat/application/live/_justificante.py`,
-`src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`,
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`, and the four
+Reviewed the scoped delta in the retired module,
+The retired test, and the four
 overview locale files. No blocking findings were identified.
 
 The live justificante reconcile path now uses `modelo_reconcile_bytes` and
@@ -334,9 +328,7 @@ Calendar loading refuses unreadable local filing evidence through
 `typer.BadParameter`; the all-profiles path re-raises that refusal and does not
 downgrade corrupt AEAT filing evidence to `profile_skipped`.
 
-Focused gates passed: `uv run pytest
-src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py
-src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -q` reported 14
+Focused gates passed: the historical check reported 14
 selected tests passed, and `uv run ruff check` passed for the reviewed Python
 files. Locale YAML parsed under the project environment and all four locale
 files expose `calendar_local_filing_evidence_unavailable`,
@@ -351,11 +343,9 @@ acceptance remains blocked externally and is not claimed by this review.
 
 ## LPS-027 | INFO | No blocking review findings for justificante pull enrolment outcome
 
-Reviewer Hilbert audited the focused delta in `src/aeat/application/live/__init__.py`,
-`src/aeat/application/live/_justificante.py`,
-`src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`,
-`src/aeat/entrypoints/cli/_app_live_justificante_cli.py`, and
-`src/aeat/entrypoints/cli/_app_live_payloads.py`. No blocking findings were
+Reviewer Hilbert audited the focused delta in the retired module,
+The retired module, and
+The retired module. No blocking findings were
 identified.
 
 The review confirmed that `capture_justificante_snapshot_outcome` returns the
@@ -382,10 +372,7 @@ non-interactive and `AEAT_SECRET_PASSPHRASE` is not set.
 ## LPS-037 | MEDIUM | Resolved CSV-register justificante-bound clean-state gate
 
 Reviewer Russell audited the scoped CSV-register hardening in
-`src/aeat/application/modelo/_external_import_actions.py`,
-`src/aeat/application/calculations/_cross_period_clean_state.py`,
-`src/aeat/application/live/_filed_observation_persistence.py`,
-`src/aeat/application/live/_justificante.py`, and the related calculation,
+The retired module, and the related calculation,
 modelo, overview, and live tests.
 
 The review identified `CSVREG-001`: filed-history justificante enrollment
@@ -416,8 +403,7 @@ interactive AEAT-authenticated profile handoff has completed in this shell.
 ## LPS-038 | MEDIUM | Resolved calendar case-equivalent justificante CSV masking
 
 Reviewer Mencius audited the scoped calendar CSV lookup hardening in
-`src/aeat/application/overview/_calendar.py` and
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`.
+The retired module and
 
 The review identified that a simple casefolded `dict` index for justificante
 metadata would overwrite case-only duplicate CSV records. If the repository
@@ -446,8 +432,7 @@ interactive profile/authentication handoff has not completed.
 ## LPS-039 | INFO | No blocking findings for ModeloRecord CSV-register calendar alignment
 
 Reviewer Hooke audited the scoped calendar consistency change in
-`src/aeat/application/overview/_calendar.py` and
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`.
+The retired module and
 
 No blocking findings were identified. The calendar now treats
 `aeat_csv_register` as a justificante-backed external evidence kind for
@@ -479,8 +464,7 @@ interactive profile/authentication handoff has not completed.
 Status: PASS for local/backend scope; authenticated-live rows remain open.
 
 Reviewed the scoped continuation in
-`src/aeat/application/overview/_calendar.py` and
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`.
+The retired module and
 
 The finding addressed here was an integration drift: cross-period clean-state
 accepted `aeat_sede_live_capture` and `aeat_csv_register` as official observed
@@ -510,9 +494,7 @@ removed after verifying it resolved inside the workspace.
 ## LPS-035 | HIGH | Resolved cross-period verified-state and reconcile hardening findings
 
 Reviewer Kuhn audited the scoped delta in
-`src/aeat/application/modelo/_calculation_actions.py`,
-`src/aeat/application/modelo/_reconcile.py`,
-`src/aeat/application/calculations/_cross_period_clean_state.py`, and the
+The retired module, and the
 corresponding Modelo, calculations, live justificante, and reconciliation tests.
 No blocking findings remained after the fixes.
 
@@ -535,9 +517,9 @@ Resolved issues in this wave:
 
 Focused reviewer gates passed:
 
-- `uv run pytest src/aeat/application/calculations/tests/test_cross_period_clean_state.py src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py src/aeat/application/modelo/tests/test_reconcile.py src/aeat/application/modelo/tests/test_reconciliation_history.py -q`
+- the historical check
   passed 67 tests.
-- `uv run pytest src/aeat/application/modelo/tests/test_export.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_import_flow.py -q`
+- the historical check
   passed 59 tests.
 
 Local gates also passed in the main execution session: the consolidated 145
@@ -555,10 +537,7 @@ the authenticated live plan rows are intentionally not marked complete.
 ## LPS-034 | HIGH | Resolved typed Period boundary and evidence conflict review findings
 
 Reviewer Rawls audited the scoped continuation in
-`src/aeat/application/overview/_calendar_models.py`,
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/domain/calculations/registry/_bindings.py`,
-`src/aeat/entrypoints/cli/_app_live_justificante_cli.py`, and the matching
+The retired module, and the matching
 overview/domain/CLI tests.
 
 The review identified a high-severity issue: `RegistryModeloObservation` still
@@ -595,8 +574,7 @@ and stdin is not interactive.
 
 Status: PASS.
 
-Reviewed the scoped delta in `src/aeat/application/live/_justificante.py` and
-`src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`.
+Reviewed the scoped delta in the retired module and
 No Critical or High findings were identified.
 
 The direct live justificante stamping path now compares the CSV parsed from the
@@ -624,11 +602,9 @@ session.
 
 Status: PASS.
 
-Reviewed the scoped delta in `src/aeat/application/live/_notifications.py`,
-`src/aeat/application/live/__init__.py`,
-`src/aeat/application/live/tests/test_notifications.py`,
-`src/aeat/application/overview/_calendar.py`, and
-`src/aeat/application/overview/tests/test_calendar.py`. No Critical or High
+Reviewed the scoped delta in the retired module,
+The retired module, and
+The retired test. No Critical or High
 findings were identified.
 
 The live notification capture now persists the authenticated AEAT session
@@ -657,9 +633,8 @@ the current environment still lacks a completed authenticated session.
 Status: PASS.
 
 Reviewed the scoped notification calendar delta in
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/tests/test_calendar.py`, and
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`. No Critical
+The retired test, and
+The retired test. No Critical
 or High findings were identified.
 
 The calendar now filters notification-derived `message` events by the active
@@ -687,11 +662,7 @@ authenticated AEAT session.
 ## LPS-030 | HIGH | Resolved filed-history justificante metadata threading review findings
 
 Reviewer Locke audited the scoped filed-history metadata threading in
-`src/aeat/application/live/_filed_data_capture.py`,
-`src/aeat/application/live/_filed_observation_persistence.py`,
-`src/aeat/application/live/tests/test_filed_capture_calculation_history.py`,
-`src/aeat/application/calculations/_cross_period_clean_state.py`, and
-`src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+The retired module, and
 
 The review identified a high-severity issue: filed-history justificante
 enrolment could stamp a current Modelo filing without comparing a parsed
@@ -721,8 +692,7 @@ non-interactive and `AEAT_SECRET_PASSPHRASE` is not set.
 ## LPS-029 | INFO | No blocking review findings for cross-period filed-history reference locking
 
 Reviewer Peirce audited the scoped delta in
-`src/aeat/application/calculations/_cross_period_clean_state.py` and
-`src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+The retired module and
 No blocking findings were identified.
 
 The review confirmed that optional filed-history `aeat_justificante_csv`
@@ -774,14 +744,7 @@ Status: PASS for the reviewed live-pull-verification-sweep slice; one broader
 registry gate remains red outside this slice.
 
 Reviewer Codex audited the scoped delta in
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/_calendar_models.py`,
-`src/aeat/application/overview/__init__.py`,
-`src/aeat/entrypoints/cli/_overview.py`,
-`src/aeat/entrypoints/cli/_overview_payloads.py`,
-`src/aeat/application/overview/tests/test_calendar.py`,
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`,
-`src/aeat/entrypoints/cli/tests/test_registry_cli.py`, and
+The retired test, and
 `var/aeat/live-auth-run/run-live-auth-20260613-operator.ps1`.
 No blocking findings were identified.
 
@@ -816,9 +779,8 @@ CLI pull/period guard tests for `pull`, no `pull-all`, command-tree drift, and
 filed-list period output.
 
 The broader explicit-marker gate
-`uv run pytest src/aeat/application/overview/tests/test_calendar.py
-src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py
-src/aeat/entrypoints/cli/tests/test_registry_cli.py -m "integration or not
+Historical command omitted; its target was retired.
+The retired test -m "integration or not
 integration" -q` failed 3 of 120 tests. All three failures are existing
 registry filed-state tests in `test_registry_cli.py` whose helper now trips
 `RegistryValidationError` because previous-filing-bound casilla `05` is
@@ -831,7 +793,7 @@ the calendar/censo slice blocked by those unrelated registry-fixture failures.
 Status: PASS.
 
 Reviewer Codex audited the scoped follow-up in
-`src/aeat/entrypoints/cli/tests/test_registry_cli.py`. No blocking findings
+The retired test. No blocking findings
 were identified.
 
 The `_modelo_130_inputs` helper no longer supplies naked casilla `05` as a
@@ -853,9 +815,9 @@ verification output for casilla `19`, and exercise the drift path by mutating
 the filed observation after the production calculation has been generated.
 
 Focused gates passed:
-`uv run pytest src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_verify_filed_state_compares_local_calculation_to_encrypted_observation src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_verify_filed_state_cli_loads_secure_observation_refs src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_verify_filed_state_reports_drift_from_encrypted_observation src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_verify_filed_state_cli_help_resolves_locale_keys -m "integration or not integration" -q`
+the historical check
 reported 4 passed. The broader gate recorded red in `LPS-040` now passes:
-`uv run pytest src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_registry_cli.py -m "integration or not integration" -q`
+the historical check
 reported 120 passed.
 
 ## LPS-042 | INFO | No blocking findings for concrete calendar filed-pull warning commands
@@ -863,9 +825,8 @@ reported 120 passed.
 Status: PASS.
 
 Reviewer Codex audited the scoped follow-up in
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`, and
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`. No blocking
+The retired test, and
+The retired test. No blocking
 findings were identified.
 
 The `filing.justificante_unverified` and `filing.aeat_evidence_conflict`
@@ -885,13 +846,13 @@ AEAT evidence and disagreeing AEAT reference ids only produce strict-mode
 warnings/refusals and do not upgrade the justificante axis.
 
 Focused gates passed:
-`uv run pytest src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_calendar_warns_when_aeat_submission_lacks_verified_justificante src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_calendar_uses_generic_justificante_fix_when_multiple_periods_need_pull src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disagree -m "integration or not integration" -q`
+the historical check
 reported 3 passed.
 
-`uv run pytest src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py::test_calendar_strict_mode_refuses_unverified_aeat_filing src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py::test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py::test_calendar_strict_mode_refuses_imported_csv_register_without_justificante -m "integration or not integration" -q`
+the historical check
 reported 3 passed.
 
-`uv run pytest src/aeat/application/overview/tests/test_calendar_filing_evidence.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -m "integration or not integration" -q`
+the historical check
 reported 70 passed.
 
 ## LPS-043 | HIGH | Cross-period expediente hardening leaves valid official fixture paths red
@@ -899,10 +860,7 @@ reported 70 passed.
 Status: FINDING.
 
 Reviewer Codex audited the scoped cross-period clean-state hardening in
-`src/aeat/application/calculations/_cross_period_clean_state.py`,
-`src/aeat/application/calculations/tests/test_cross_period_clean_state_provenance.py`,
-`src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`,
-and `src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py`.
+and the retired test.
 
 The production hardening is directionally correct: official observation
 provenance now requires `aeat_expediente_id` in addition to active
@@ -917,24 +875,22 @@ source observations still persist `source_kind="aeat_sede_justificante"` with
 `aeat_expediente_id`. The new blocker therefore keeps those revisions from
 reaching `VERIFICADO_COMPLETO` and breaks real-behavior filing gates rather
 than only tightening invalid evidence. Confirmed red gates:
-`uv run pytest src/aeat/application/modelo/tests/test_file_flow_filing.py -m
+Historical command omitted; its target was retired.
 "integration or not integration" -q` reported 5 failed and 2 passed, and
-`uv run pytest src/aeat/application/modelo/tests/test_verificado_completo_regression.py::test_verify_grants_when_required_casillas_supplied_m130 -m
+Historical command omitted; its target was retired.
 "integration or not integration" -q` failed because
 `granted_verificado_completo` stayed false.
 
 The stale helper locations observed during review are
-`src/aeat/application/modelo/tests/_file_flow_support.py`,
-`src/aeat/application/modelo/tests/test_verificado_completo_regression.py`,
 and a non-failing wallet/export helper in
-`src/aeat/application/modelo/tests/test_export.py`. Update the valid official
+The retired test. Update the valid official
 fixture metadata there to carry an expediente id, or deliberately reclassify
 any helper that is meant to model non-official local evidence.
 
 Focused passing gates for the scoped files:
-`uv run ruff check src/aeat/application/calculations/_cross_period_clean_state.py src/aeat/application/calculations/tests/test_cross_period_clean_state_provenance.py src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py`
+the historical check
 reported clean, and
-`uv run pytest src/aeat/application/calculations/tests/test_cross_period_clean_state_provenance.py src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py -m
+Historical command omitted; its target was retired.
 "integration or not integration" -q` reported 41 passed.
 
 ## LPS-044 | INFO | PASS for LPS-043 closure, official fixture metadata, and pull-only drift guards
@@ -943,9 +899,9 @@ Status: PASS.
 
 Reviewer Codex audited the live-pull-verification-sweep follow-up scope after
 LPS-043: cross-period AEAT register-reference hardening closure, valid official
-fixture metadata in `src/aeat/application/modelo/tests/_file_flow_support.py`,
-`src/aeat/application/modelo/tests/test_verificado_completo_regression.py`, and
-`src/aeat/application/modelo/tests/test_export.py`, and CLI drift guards for
+fixture metadata in the retired test,
+The retired test, and
+The retired test, and CLI drift guards for
 `aeat app live filed pull` / `aeat app live expedientes pull` versus forbidden
 `pull-all`.
 
@@ -958,9 +914,9 @@ kinds while still comparing justificante CSV or presentation references when
 comparable receipt metadata is available.
 
 The LPS-043 red paths are now green. Focused gates passed:
-`uv run pytest src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_verificado_completo_regression.py::test_verify_grants_when_required_casillas_supplied_m130 src/aeat/application/modelo/tests/test_export.py::test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance -m "integration or not integration" -q`
+the historical check
 reported 9 passed, and
-`uv run pytest src/aeat/application/calculations/tests/test_cross_period_clean_state_provenance.py src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py -m "integration or not integration" -q`
+the historical check
 reported 41 passed.
 
 The pull-only CLI drift gates also passed. `aeat app live filed pull --help`
@@ -968,18 +924,14 @@ and `aeat app live expedientes pull --help` expose bounded single and bulk
 options under `pull`; `aeat app live filed pull-all --help` and
 `aeat app live expedientes pull-all --help` both fail with `No such command
 'pull-all'. Did you mean 'pull'?`. The targeted registry guard lane
-`uv run pytest src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_capture_sources_cli_help_resolves_without_registry_alias src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_command_tree_rejects_pull_all_and_capture_all_aliases -m "integration or not integration" -q`
+the historical check
 reported 4 passed. The filed rendering guard reported 3 passed, the
 expedientes subgroup guard reported 3 passed, and the root fallback/help guard
 reported 46 passed.
 
 Ruff passed over the scoped production and test files:
-`src/aeat/application/calculations/_cross_period_clean_state.py`,
-`src/aeat/application/calculations/tests/test_cross_period_clean_state_provenance.py`,
 the three reviewed Modelo fixture files, `test_file_flow_filing.py`,
-`src/aeat/entrypoints/cli/_app_live.py`,
-`src/aeat/entrypoints/cli/_app_live_expedientes_cli.py`, and
-`src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
+The retired module, and
 
 Residual risk: the broader `test_live_read_subgroups.py` suite still has two
 IVA-wallet watchdog failures in process-command inspection on this Windows run
@@ -1040,10 +992,8 @@ readable live censo/filed/justificante/calendar evidence after authentication.
 Status: FINDING.
 
 Reviewer Codex audited the live-pull-verification-sweep calendar justificante
-presented-at slice in `src/aeat/application/overview/_calendar.py`,
-`src/aeat/entrypoints/cli/_overview.py`,
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`,
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`, and the
+presented-at slice in the retired module,
+The retired test, and the
 calendar justificante presented-at exec record.
 
 The direct Modelo-record path sets `aeat_submitted_at` from
@@ -1083,8 +1033,7 @@ existing official receipt timestamp instead of promoting `captured_at`.
 Status: PASS. LPS-046 is resolved.
 
 Reviewer Codex audited the LPS-046 fix scope in
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`, the
+The retired test, the
 live-pull-verification-sweep plan, prior audit entry, and the
 calendar-justificante-presented-at review-fix exec record. No blocking findings
 were identified.
@@ -1114,11 +1063,11 @@ the existing CLI guard lane still rejects the forbidden aliases. I did not run
 live AEAT authentication and this review does not claim live AEAT success.
 
 Focused local gates run during review:
-`uv run pytest src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_official_calculation_observation_source_with_matching_justificante_is_verified src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_verified_modelo_record_receipt_time_survives_calculation_observation_merge -q --tb=short`
+the historical check
 reported 2 passed;
-`uv run pytest src/aeat/application/overview/tests/test_calendar_filing_evidence.py -q --tb=short`
+the historical check
 reported 52 passed; and
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_command_tree_rejects_pull_all_and_capture_all_aliases -q --tb=short`
+the historical check
 reported 3 passed.
 
 ## LPS-048 | INFO | PASS for bulk filed pull limit and live-auth retry slice
@@ -1126,10 +1075,7 @@ reported 3 passed.
 Status: PASS.
 
 Reviewer Codex audited the latest live-pull-verification-sweep bulk filed pull
-limit and live-auth retry slice in `src/aeat/application/live/_filed_data_capture.py`,
-`src/aeat/entrypoints/cli/_app_live.py`,
-`src/aeat/application/live/tests/test_filed_bulk_capture.py`,
-`src/aeat/entrypoints/cli/tests/test_registry_cli.py`,
+limit and live-auth retry slice in the retired module,
 `var/aeat/live-auth-run/run-live-auth-20260613-operator.ps1`, the active
 plan, the S18/S10 exec record, and this rolling audit. No blocking findings
 were identified.
@@ -1165,8 +1111,8 @@ local projection with `events=0`, `censo_enrolment=unverified`, and
 `aeat=not_observed`.
 
 Focused local gates run during review:
-`uv run pytest src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_bulk_pull_accepts_limit_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_command_tree_rejects_pull_all_and_capture_all_aliases -m "integration or not integration" -q --tb=short`
-reported 9 passed; `uv run ruff check src/aeat/application/live/_filed_data_capture.py src/aeat/entrypoints/cli/_app_live.py src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/entrypoints/cli/tests/test_registry_cli.py`
+the historical check
+reported 9 passed; the historical check
 reported all checks passed; and
 `rg -n "pull-all|capture-all|pull_all|capture_all" src/aeat/entrypoints src/aeat/application var/aeat/live-auth-run/run-live-auth-20260613-operator.ps1 --glob "!**/tests/**" --glob "!**/__pycache__/**"`
 returned no production matches. I did not run live AEAT authentication.
@@ -1177,12 +1123,7 @@ Status: PASS.
 
 Reviewer Codex audited the latest live-pull-verification-sweep calendar
 Modelo-record event presented-at slice in
-`src/aeat/application/overview/_calendar_models.py`,
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/entrypoints/cli/_overview_payloads.py`,
-`src/aeat/entrypoints/cli/_overview.py`,
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`,
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`, the active
+The retired test, the active
 plan, the presented-at exec record, and this rolling audit. No blocking
 findings were identified.
 
@@ -1218,9 +1159,9 @@ No pull-all or capture-all production drift was found. `rg -n
 --glob "!**/__pycache__/**"` returned no production matches.
 
 Focused local gates run during review:
-`uv run pytest src/aeat/application/overview/tests/test_calendar_filing_evidence.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -m "integration or not integration" -q --tb=short`
+the historical check
 reported 71 passed, and
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py -q --tb=short`
+the historical check
 reported 94 passed. I did not run live AEAT authentication.
 
 ## LPS-050 | INFO | PASS for expedientes event submitted-at slice
@@ -1228,13 +1169,8 @@ reported 94 passed. I did not run live AEAT authentication.
 Status: PASS.
 
 Reviewer Codex audited the latest live-pull-verification-sweep expedientes
-event submitted-at slice in `src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/tests/test_calendar.py`,
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`,
-`src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`,
-`src/aeat/application/overview/_calendar_models.py`,
-`src/aeat/entrypoints/cli/_overview_payloads.py`,
-`src/aeat/entrypoints/cli/_overview.py`, the active plan, the S27/S29 exec
+event submitted-at slice in the retired module,
+The retired module, the active plan, the S27/S29 exec
 record, and this rolling audit. No blocking findings were identified.
 
 Active expedientes/declaracion filing events now preserve
@@ -1262,13 +1198,13 @@ justificante, notification, expediente, or live-backed calendar proof. The
 operator-mediated Cl@ve completion timeout blocker remains open.
 
 Focused local gates run during review:
-`uv run ruff check src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py src/aeat/application/overview/tests/test_calendar_filing_evidence.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`
+the historical check
 reported all checks passed;
-`uv run pytest -m "" src/aeat/application/overview/tests/test_calendar.py src/aeat/application/overview/tests/test_calendar_filing_evidence.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -q --tb=short`
+the historical check
 reported 116 passed;
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py -q --tb=short`
+the historical check
 reported 94 passed;
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_command_tree_rejects_pull_all_and_capture_all_aliases -q --tb=short`
+the historical check
 reported 3 passed; and
 `rg -n "pull-all|capture-all|pull_all|capture_all" src/aeat --glob "!**/tests/**" --glob "!**/__pycache__/**"`
 returned no production matches.
@@ -1319,13 +1255,13 @@ expediente, or live-backed calendar proof was captured, and keeps the
 operator-mediated `auth_completion_timeout` blocker explicit.
 
 Focused local gates run during review:
-`uv run ruff check src/aeat/adapters/outbound/aeat/auth/_clave_movil_page_flow.py src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil.py`
+the historical check
 reported all checks passed;
-`uv run pytest -m "" src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil.py -k "representation_dispatcher" -q --tb=short`
+the historical check
 reported 4 passed and 37 deselected;
 `$env:AEAT_CLAVE_MOVIL_TIMEOUT_MS='180000'; uv run python -c "from aeat.core.config import Settings; Settings(); print('settings-ok')"`
 failed with the expected settings validation error; and
-`rg -n "pull-all|capture-all|pull_all|capture_all" src/aeat/adapters/outbound/aeat/auth/_clave_movil_page_flow.py src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil.py var/aeat/live-auth-run/run-live-auth-20260613-ready-auth.ps1`
+the historical check
 returned no matches. I did not run live AEAT authentication.
 
 ## LPS-052 | INFO | PASS for LPS-051 timeout fallback resolution
@@ -1336,7 +1272,7 @@ Status: PASS for LPS-051 resolution.
 `var/aeat/live-auth-run/run-live-auth-20260613-ready-auth.ps1:64` now only seeds
 `AEAT_CLAVE_MOVIL_TIMEOUT_MS` when the operator environment has not provided it,
 and the seeded value is `120000`. That matches the production settings schema
-cap at `src/aeat/core/config.py:675` through `src/aeat/core/config.py:678`,
+cap at the retired module through the retired module,
 where `aeat_clave_movil_timeout_ms` defaults to `120_000` and is constrained
 with `le=120_000`.
 
@@ -1350,9 +1286,9 @@ Focused local gates run during follow-up review:
 `[System.Management.Automation.Language.Parser]::ParseFile(...)` over
 `var/aeat/live-auth-run/run-live-auth-20260613-ready-auth.ps1` reported
 PowerShell syntax ok;
-`uv run ruff check src/aeat/adapters/outbound/aeat/auth/_clave_movil_page_flow.py src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil.py`
+the historical check
 reported all checks passed; and
-`uv run pytest -m "" src/aeat/adapters/outbound/aeat/auth/tests/test_clave_movil.py -q --tb=short`
+the historical check
 reported 41 passed.
 
 ## LPS-053 | INFO | PASS for calendar calculation-observation register-reference guard
@@ -1360,10 +1296,7 @@ reported 41 passed.
 Status: PASS.
 
 Reviewer Codex audited the latest live-pull-verification-sweep slice in
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`,
-`src/aeat/entrypoints/cli/_app_live.py`,
-`src/aeat/entrypoints/cli/tests/test_registry_cli.py`, the active plan, and
+The retired test, the active plan, and
 the code-review template. No blocking findings were identified.
 
 Official calculation-observation projection now refuses an AEAT submission row
@@ -1390,9 +1323,9 @@ filed and expedientes surfaces. A scoped production search over
 production `pull-all`, `capture-all`, `pull_all`, or `capture_all` matches.
 
 Focused local gates run during review:
-`uv run pytest -m "" src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_sede_calculation_observation_without_register_reference_is_not_submission_evidence src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_official_calculation_observation_sources_are_calendar_submission_evidence src/aeat/application/overview/tests/test_calendar_filing_evidence.py::test_period_bearing_calendar_models_roundtrip_through_json -q --tb=short`
+the historical check
 reported 4 passed;
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_command_tree_rejects_pull_all_and_capture_all_aliases -q --tb=short`
+the historical check
 reported 3 passed; and
 `rg -n "pull-all|capture-all|pull_all|capture_all" src/aeat/application/overview src/aeat/entrypoints/cli --glob "!**/tests/**" --glob "!**/__pycache__/**"`
 returned no production matches.
@@ -1402,13 +1335,7 @@ returned no production matches.
 Status: PASS.
 
 Reviewer Codex audited the direct justificante capture enrolment slice in
-`src/aeat/application/live/_justificante.py`,
-`src/aeat/application/live/__init__.py`,
-`src/aeat/application/overview/_calendar.py`,
-`src/aeat/application/overview/__init__.py`,
-`src/aeat/entrypoints/cli/_overview.py`,
-`src/aeat/application/overview/tests/test_calendar_filing_evidence.py`, and
-`src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`.
+The retired test, and
 No blocking findings were identified.
 
 The reviewed design preserves the two-axis filing semantics. A direct live
@@ -1434,19 +1361,19 @@ under `app live filed pull`, direct justificante acquisition stays under
 overview, and CLI surfaces.
 
 Focused local gates run during review:
-`uv run ruff check src/aeat/application/live/_justificante.py src/aeat/application/live/__init__.py src/aeat/application/overview/_calendar.py src/aeat/application/overview/__init__.py src/aeat/entrypoints/cli/_overview.py src/aeat/application/overview/tests/test_calendar_filing_evidence.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`
+the historical check
 reported all checks passed;
-`uv run pytest -m "" src/aeat/application/overview/tests/test_calendar_filing_evidence.py -q --tb=short`
+the historical check
 reported 56 passed;
-`uv run pytest -m "" src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py -q --tb=short`
+the historical check
 reported 20 passed;
-`uv run pytest -m "" src/aeat/application/overview/tests/test_calendar.py src/aeat/application/overview/tests/test_calendar_filing_evidence.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -q --tb=short`
+the historical check
 reported 120 passed;
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all src/aeat/entrypoints/cli/tests/test_registry_cli.py::test_live_command_tree_rejects_pull_all_and_capture_all_aliases -q --tb=short`
+the historical check
 reported 2 passed;
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_live_justificante_verbs.py -q --tb=short`
+the historical check
 reported 4 passed;
-`uv run pytest -m "" src/aeat/application/live/tests/test_justificante_capture.py src/aeat/application/live/tests/test_justificante_capture_resolution.py -q --tb=short`
+the historical check
 reported 13 passed; and the three CLI help probes for live filed, live
 justificante, and overview calendar completed successfully.
 
@@ -1460,10 +1387,7 @@ proof was captured for this review entry.
 Status: PASS.
 
 Reviewer Codex audited the continuation slice in
-`src/aeat/application/live/__init__.py`,
-`src/aeat/entrypoints/cli/_app_live_payloads.py`,
-`src/aeat/entrypoints/cli/_app_live_justificante_cli.py`, and
-`src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`.
+The retired module, and
 No blocking findings were identified.
 
 The reviewed change makes the live justificante pull outcome explicit about
@@ -1484,13 +1408,13 @@ requires matching Justificante metadata by CSV/model/year/typed Period/taxpayer
 before accepting `aeat_live_capture` evidence.
 
 Focused local gates run during review:
-`uv run ruff check src/aeat/application/live/__init__.py src/aeat/application/live/_justificante.py src/aeat/entrypoints/cli/_app_live_payloads.py src/aeat/entrypoints/cli/_app_live_justificante_cli.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/application/overview/_calendar.py src/aeat/entrypoints/cli/_overview.py src/aeat/application/overview/tests/test_calendar_filing_evidence.py`
+the historical check
 reported all checks passed;
-`uv run pytest -m "" src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/entrypoints/cli/tests/test_live_justificante_verbs.py -q --tb=short`
+the historical check
 reported 24 passed;
-`uv run pytest -m "" src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py -q --tb=short`
+the historical check
 reported 94 passed;
-`uv run pytest -m "" src/aeat/application/overview/tests/test_calendar.py src/aeat/application/overview/tests/test_calendar_filing_evidence.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py src/aeat/application/calculations/tests/test_cross_period_clean_state_provenance.py -q --tb=short`
+the historical check
 reported 148 passed; and the registry command-tree guard lane reported 4
 passed for the pull-only checks.
 

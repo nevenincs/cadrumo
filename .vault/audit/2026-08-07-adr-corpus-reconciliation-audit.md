@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#adr-corpus-reconciliation'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:299b41afa93688fdb98da21a1978a04461ffd8d869e3a3227f1b33df6802afed'
+body_hash: 'sha256:1a5b1e4c5c1d9501a62afa430fb926d864c531356c940683a7abcf8215704ac9'
 related: []
 ---
 # `adr-corpus-reconciliation` audit: `Reconciling the ADR corpus against HEAD`
@@ -170,13 +170,12 @@ longer exists in the tree.
 
 Measured at HEAD: the subprocess provider family and the
 evidence-acknowledged flag are indeed gone (confirmed against
-src/cadrumo/tests/test_cloud_transport_fully_deleted.py's declared deleted
+The retired test's declared deleted
 symbol set). But cadrumo_evidence_gestor_mode and
 cadrumo_evidence_cloud_upload_permitted are present in
 src/cadrumo/core/config.py and actively read
-(src/cadrumo/application/user_profile/_capabilities.py,
-src/cadrumo/llm/_consent.py,
-src/cadrumo/entrypoints/cli/_config/_check_cli.py), and
+(the retired module,
+The retired module), and
 ServiceCapability.CLOUD_EVIDENCE_UPLOAD exists and is wired at the
 LLMClient.complete dispatch choke point. The claim "no longer exists in the
 tree" is false at HEAD for these four symbols.
@@ -220,7 +219,7 @@ this audit.
 ### output-casilla-id-framing-checked-against-tonights-fourth-enum-member | low | framing survives, unaffected
 
 Follow-up check: a fourth IvaFlowDirection member, OPERACION_CON_INVERSION,
-landed tonight (src/cadrumo/domain/iva/_flow.py, the supplier's side of a
+landed tonight (the retired module, the supplier's side of a
 reverse-charge operation, deliberately contributing to NEITHER settlement
 side). Asked whether this is the kind of schema change the
 binding-output-casilla-declaration-adr's framing needs to survive, since it

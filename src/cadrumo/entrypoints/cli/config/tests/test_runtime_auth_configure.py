@@ -15,18 +15,14 @@ from .....application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
 )
-from .....application.auth.operator_results import AuthConfigureResult
-from .....application.auth.provider_configure_operation_access import (
-    AuthConfigureOperationProjection,
-    AuthConfigureResultSnapshot,
-)
+from .....application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from .....application.runtime.contracts import RuntimeRefusalCode
-from .....core.auth_provider import AuthProviderKind
+from .....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from .....core.external_constants import OutputLanguage
 from .....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...config_payloads import AuthConfigurePayload
 from ...errors import CliRefusedBoundaryError
-from ...runtime_registered_operation import RegisteredOperationCompletion
+from ...registered_operation_contracts import RegisteredOperationCompletion
 from .. import _auth as auth_cli
 from .. import runtime_auth_configure as bridge
 
@@ -41,14 +37,17 @@ def _projection(
     *,
     profile_id: UUID = _PROFILE,
     provider: str = "certificate",
-) -> AuthConfigureOperationProjection:
-    return AuthConfigureOperationProjection(
+    changed: bool = True,
+) -> AuthConfigurePublicResultV2:
+    return AuthConfigurePublicResultV2(
         profile_id=profile_id,
-        result=AuthConfigureResultSnapshot(
-            provider=provider,
-            file="C:/synthetic/aeat-certificate.p12",
-            complete=True,
-        ),
+        provider=AuthProviderKind(provider),
+        changed=changed,
+        certificate_file_provided=True,
+        complete=True,
+        profile_tax_id_present=False,
+        provider_identity_present=False,
+        identity_alignment="not_applicable",
     )
 
 
@@ -114,7 +113,7 @@ def test_configure_submits_exact_profile_operation_and_returns_operator_result(
     )
 
     assert bound_profiles == [_PROFILE]
-    assert result == projection.result.to_result()
+    assert result == projection
     assert len(submitted) == 1
     _client, request, options = submitted[0]
     assert request == AuthConfigureOperationRequest(
@@ -123,8 +122,9 @@ def test_configure_submits_exact_profile_operation_and_returns_operator_result(
     )
     assert options["definition_id"] == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
-    assert options["result_type"] is AuthConfigureOperationProjection
-    assert options["request_version"] == options["result_version"] == 1
+    assert options["result_type"] is AuthConfigurePublicResultV2
+    assert options["request_version"] == 1
+    assert options["result_version"] == 2
     assert options["timeout"] == 120
 
 
@@ -142,14 +142,10 @@ def test_relative_certificate_reference_keeps_caller_file_after_worker_cwd_chang
     unintended.parent.mkdir(parents=True)
     intended.write_bytes(b"synthetic caller certificate input")
     unintended.write_bytes(b"different worker-relative file")
-    projection = AuthConfigureOperationProjection(
-        profile_id=_PROFILE,
-        result=AuthConfigureResultSnapshot(provider="certificate", file=str(intended), complete=True),
-    )
-    submitted, bound_profiles = _bind(monkeypatch, projection)
+    submitted, bound_profiles = _bind(monkeypatch, _projection())
     monkeypatch.chdir(caller)
 
-    result = bridge.run_auth_configure(_context(), provider="certificate", certificate_path=relative)
+    bridge.run_auth_configure(_context(), provider="certificate", certificate_path=relative)
 
     assert bound_profiles == [_PROFILE]
     assert len(submitted) == 1
@@ -161,7 +157,6 @@ def test_relative_certificate_reference_keeps_caller_file_after_worker_cwd_chang
     assert relative.read_bytes() == b"different worker-relative file"
     assert received.certificate_path is not None
     assert received.certificate_path.read_bytes() == b"synthetic caller certificate input"
-    assert result.file == str(intended)
 
 
 @pytest.mark.parametrize(
@@ -180,6 +175,7 @@ def test_relative_certificate_reference_keeps_caller_file_after_worker_cwd_chang
             None,
         ),
         (_projection(), OperationEffect.NONE, OperationTerminalCondition.SUCCEEDED, None),
+        (_projection(changed=False), OperationEffect.UPDATED, OperationTerminalCondition.SUCCEEDED, None),
         (_projection(), OperationEffect.UNKNOWN, OperationTerminalCondition.SUCCEEDED, None),
         (_projection(), OperationEffect.UPDATED, OperationTerminalCondition.REFUSED, "REFUSED_PROFILE_MISMATCH"),
         (_projection(), OperationEffect.UPDATED, OperationTerminalCondition.SUCCEEDED, "REFUSED_PROFILE_MISMATCH"),
@@ -188,7 +184,8 @@ def test_relative_certificate_reference_keeps_caller_file_after_worker_cwd_chang
     ids=[
         "foreign-profile",
         "wrong-provider",
-        "no-effect",
+        "change-without-effect",
+        "no-change-with-effect",
         "unknown-effect",
         "refused",
         "refusal-code",
@@ -197,7 +194,7 @@ def test_relative_certificate_reference_keeps_caller_file_after_worker_cwd_chang
 )
 def test_configure_correlates_projection_and_settled_receipt(
     monkeypatch: pytest.MonkeyPatch,
-    projection: AuthConfigureOperationProjection,
+    projection: AuthConfigurePublicResultV2,
     effect: OperationEffect,
     terminal_condition: OperationTerminalCondition,
     refusal_code: str | None,
@@ -218,6 +215,24 @@ def test_configure_correlates_projection_and_settled_receipt(
     assert error.value.context["reason"] == RuntimeRefusalCode.INVALID_FRAME.value
     assert error.value.context["effect"] == effect.value
     assert error.value.context["terminal_condition"] == terminal_condition.value
+
+
+def test_unchanged_selection_settles_with_no_effect(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Re-selecting the recorded configuration is a successful no-op, not a malformed receipt."""
+    projection = _projection(changed=False)
+    _bind(monkeypatch, projection, effect=OperationEffect.NONE)
+
+    assert bridge.run_auth_configure(_context(), provider="certificate") == projection
+
+
+def test_clave_movil_route_travels_in_the_registered_request(monkeypatch: pytest.MonkeyPatch) -> None:
+    submitted, _bound = _bind(monkeypatch, _projection(provider="clave_movil"))
+
+    bridge.run_auth_configure(_context(), provider="clave_movil", clave_movil_route="qr")
+
+    request = submitted[0][1]
+    assert isinstance(request, AuthConfigureOperationRequest)
+    assert request.clave_movil_route is ClaveMovilRoute.QR
 
 
 def test_unknown_provider_keeps_cli_message_without_resolving_profile_or_runtime(
@@ -254,16 +269,17 @@ def test_no_active_profile_keeps_configure_refusal_before_runtime_submission(
 def test_auth_configure_keeps_payload_and_operator_text_lines(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    result = AuthConfigureResult(
-        provider="clave_movil",
-        file="",
+    result = AuthConfigurePublicResultV2(
+        profile_id=_PROFILE,
+        provider=AuthProviderKind.CLAVE_MOVIL,
+        changed=True,
+        certificate_file_provided=False,
         complete=True,
         profile_tax_id_present=True,
         provider_identity_present=True,
-        identity_alignment="aligned",
-        identity_alignment_detail="identities match",
+        identity_alignment="matches",
     )
-    invoked: list[tuple[typer.Context, str, Path | None]] = []
+    invoked: list[tuple[typer.Context, str, Path | None, str | None]] = []
     emitted: list[dict[str, object]] = []
     activated: list[tuple[typer.Context, OutputLanguage | None]] = []
     ctx = _context()
@@ -275,8 +291,8 @@ def test_auth_configure_keeps_payload_and_operator_text_lines(
     )
     monkeypatch.setattr(
         "cadrumo.entrypoints.cli.config.runtime_auth_configure.run_auth_configure",
-        lambda passed_ctx, *, provider, certificate_path: (
-            invoked.append((passed_ctx, provider, certificate_path)) or result
+        lambda passed_ctx, *, provider, certificate_path, clave_movil_route: (
+            invoked.append((passed_ctx, provider, certificate_path, clave_movil_route)) or result
         ),
     )
     monkeypatch.setattr(
@@ -289,10 +305,11 @@ def test_auth_configure_keeps_payload_and_operator_text_lines(
         ctx,
         provider="clave_movil",
         file=None,
+        clave_movil_route="qr",
         output_language=OutputLanguage.EN,
     )
 
-    assert invoked == [(ctx, "clave_movil", None)]
+    assert invoked == [(ctx, "clave_movil", None, "qr")]
     assert activated == [(ctx, OutputLanguage.EN)]
     assert len(emitted) == 1
     assert emitted[0]["ctx"] is ctx
@@ -302,11 +319,11 @@ def test_auth_configure_keeps_payload_and_operator_text_lines(
     assert payload.provider == "clave_movil"
     assert payload.complete is True
     assert emitted[0]["lines"] == [
-        "provider\tclave_movil",
-        "file\t",
-        "status\tconfigured",
-        "profile_tax_id\tpresent",
-        "clave_identity\tpresent",
-        "identity_alignment\taligned",
-        "identity_alignment_detail\tidentities match",
+        "provider	clave_movil",
+        "changed	True",
+        "certificate_file_provided	False",
+        "status	configured",
+        "profile_tax_id	present",
+        "clave_identity	present",
+        "identity_alignment	matches",
     ]

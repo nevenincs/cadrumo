@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from threading import Condition
 from types import SimpleNamespace
-from typing import cast
+from typing import NoReturn, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -26,9 +26,10 @@ from ....application.operations.persistence.replay import OperationReplayStatus
 from ....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
+    OperationPublicDefinitionContractV1,
     OperationRegistry,
-    OperationSchemaIdentityV1,
 )
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.runtime.contracts import (
     RuntimeClientHello,
     RuntimePeer,
@@ -38,24 +39,48 @@ from ....application.runtime.contracts import (
 )
 from ....application.runtime.operation_access import RuntimeOperationPage, RuntimeOperationResultPage
 from ....application.runtime.profile_access import RuntimeAccessRefusal, RuntimeRequest
-from ....application.runtime.projection_pages import ProjectionPage, ProjectionPageRequest, project_document_page
-from ....application.user_profile.access_contracts import AccessDenialCode
+from ....application.runtime.profile_worker import ProfileWorkerIdentity, ProfileWorkerProjectionPage
+from ....application.runtime.projection_pages import (
+    PROJECTION_PAGE_BYTES,
+    ProjectionPage,
+    ProjectionPageRequest,
+    project_document_page,
+)
+from ....application.runtime.worker_authorization import WorkerAuthorizationRequest, WorkerResponseScopeRequest
+from ....application.user_profile.access_contracts import (
+    AccessAction,
+    AccessDenialCode,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+    ProfileAccessBinding,
+)
 from ....application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
-from ....application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID, ProfileViewPageKind
+from ....application.user_profile.view_operation import (
+    PROFILE_VIEW_OPERATION_DEFINITION_ID,
+    ProfileViewOperationRequest,
+    ProfileViewPageKind,
+)
 from ....core.hashing import canonical_json_bytes, sha256_hex
 from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake, read_document, write_document
-from ..frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....core.period import Period
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..frontend_client import RuntimeFrontendClient
+from ..frontend_client_contracts import RuntimeFrontendRefusedError
+from ..frontend_profile_view_client import RuntimeProfileViewFrontend
+from ..runtime_frame_io import MAXIMUM_FRAME_BYTES, document_frame, read_document, write_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _PROFILE_ID = UUID("b1270000-0000-4000-8000-000000000001")
 _SESSION_ID = UUID("b1270000-0000-4000-8000-000000000002")
 _OPERATION_ID = "a" * 64
-_DOCUMENT: dict[str, JsonValue] = {"message": "ñ" * 12_000, "changed": False}
+_DOCUMENT: dict[str, JsonValue] = {"message": "ñ" * (PROJECTION_PAGE_BYTES * 3 // 4), "changed": False}
 _NOW = datetime(2026, 9, 28, tzinfo=UTC)
 
 
@@ -190,7 +215,7 @@ def test_frontend_reads_one_bound_result_page_without_collecting_full_document()
     assert isinstance(result, ProjectionPage)
     assert result.offset == 0
     assert result.total_bytes == len(canonical_json_bytes(_DOCUMENT))
-    assert result.decode() == canonical_json_bytes(_DOCUMENT)[:16_384]
+    assert result.decode() == canonical_json_bytes(_DOCUMENT)[:PROJECTION_PAGE_BYTES]
     assert len(requests) == 1
     assert requests[0].result == _result()
 
@@ -249,9 +274,9 @@ def test_frontend_reassembles_verified_multi_page_result() -> None:
     _, result, requests = _exchange(2, reply)
     assert result == _DOCUMENT
     assert requests[0].page == ProjectionPageRequest()
-    assert requests[1].page.offset == 16_384
+    assert requests[1].page.offset == PROJECTION_PAGE_BYTES
     assert requests[1].page.expected_digest == project_document_page(_DOCUMENT, ProjectionPageRequest()).document_digest
-    assert len(canonical_json_bytes(result)) > 16_384
+    assert len(canonical_json_bytes(result)) > PROJECTION_PAGE_BYTES
 
 
 @pytest.mark.parametrize("fault", ["digest", "offset", "operation", "total"])
@@ -419,7 +444,7 @@ def test_profile_view_terminal_refusal_exposes_registered_refusal_code_without_r
     started: list[object] = []
     observed: list[object] = []
 
-    def contract_lookup(definition_id: str, *, deadline: float) -> object:
+    def contract_lookup(definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
         del deadline
         assert definition_id == PROFILE_VIEW_OPERATION_DEFINITION_ID
         return contract
@@ -438,24 +463,133 @@ def test_profile_view_terminal_refusal_exposes_registered_refusal_code_without_r
         observed.append(operation_id)
         return observation
 
-    def result(*_args: object, **_kwargs: object) -> object:
-        raise AssertionError("a refused terminal projection must not request its result")
+    class RefusedProfileViewClient(RuntimeProfileViewFrontend):
+        """Exercise the real collection capability with refused operation replies."""
 
-    client = cast(
-        RuntimeFrontendClient,
-        SimpleNamespace(
-            profile_id=profile_id,
-            contract=contract_lookup,
-            submit=submit,
-            start=start,
-            observe=observe,
-            result=result,
-        ),
-    )
+        def __init__(self) -> None:
+            self._profile_id = profile_id
+
+        @override
+        def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
+            return contract_lookup(definition_id, deadline=deadline)
+
+        @override
+        def submit(self, payload: ProfileViewOperationRequest, *, deadline: float) -> str:
+            return submit(payload, deadline=deadline)
+
+        @override
+        def start(self, operation_id: str, *, deadline: float) -> None:
+            start(operation_id, deadline=deadline)
+
+        @override
+        def observe(self, operation_id: str, *, deadline: float) -> OperationObservationSuccessV1:
+            return observe(operation_id, deadline=deadline)
+
+        @override
+        def result(self, *_args: object, **_kwargs: object) -> NoReturn:
+            raise AssertionError("a refused terminal projection must not request its result")
+
+    client = RefusedProfileViewClient()
 
     with pytest.raises(RuntimeFrontendRefusedError) as raised:
-        RuntimeFrontendClient.read_profile_view(client, (ProfileViewPageKind.FACTS,))
+        client.read_profile_view((ProfileViewPageKind.FACTS,))
 
     assert raised.value.reason == refusal_code
     assert len(submitted) == len(started) == len(observed) == 1
     assert started == observed == [_OPERATION_ID]
+
+
+@pytest.mark.parametrize("release_kind", ["authorize", "response_scope"])
+def test_full_page_worker_and_runtime_envelopes_fit_real_frames(release_kind: str) -> None:
+    """A full byte page leaves room for bounded authority metadata, not just bare base64."""
+    page = project_document_page(_DOCUMENT, ProjectionPageRequest())
+    assert len(page.decode()) == PROJECTION_PAGE_BYTES
+    destination = uuid4()
+    periods = frozenset(
+        Period.from_year_and_code(year, f"{month:02d}") for year in range(2020, 2030) for month in range(1, 13)
+    )
+    definition = "a" * 128
+    request = OperationAccessRequest(
+        profile_id=_PROFILE_ID,
+        definition_id=definition,
+        action=AccessAction.RESULT if release_kind == "authorize" else AccessAction.RESPOND,
+        frontend=OperationFrontendProjection.TUI,
+        periods=periods,
+        period_independent=False,
+        destination_id=destination,
+    )
+    policy = OperationAccessPolicy(
+        definition_id=definition,
+        definition_contract_digest="d" * 64,
+        actions=frozenset(AccessAction),
+        periods=periods,
+        allow_period_independent=False,
+        disclosures=frozenset(
+            DisclosurePermission(destination_id=destination, projection_id="a." + "b" * 158, category=category)
+            for category in DisclosureCategory
+        ),
+        backend=Availability.AVAILABLE,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.AVAILABLE,
+        transaction_authority_required=False,
+    )
+    authority_type = WorkerAuthorizationRequest if release_kind == "authorize" else WorkerResponseScopeRequest
+    release = authority_type(
+        request_id=uuid4(),
+        connection_id=uuid4(),
+        session_id=_SESSION_ID,
+        operation_id=_OPERATION_ID,
+        request=request,
+        policy=policy,
+    )
+    worker = ProfileWorkerProjectionPage(
+        identity=ProfileWorkerIdentity(
+            worker_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            binding=ProfileAccessBinding(
+                profile_id=_PROFILE_ID,
+                installation_id=uuid4(),
+                os_owner_id="界" * 256,
+                custody_generation=1,
+                dek_epoch=uuid4(),
+            ),
+        ),
+        request_id=uuid4(),
+        page=page,
+        release=release,
+    )
+    runtime = RuntimeOperationPage(
+        request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), operation_id=_OPERATION_ID, page=page
+    )
+    for envelope in (worker, runtime):
+        wire = document_frame(envelope)
+        assert len(wire) - 5 <= MAXIMUM_FRAME_BYTES
+        assert len(wire) - 5 == int.from_bytes(wire[1:5], "big")
+        left, right = MemoryChannel(), MemoryChannel()
+        left.pair(right)
+        try:
+            deadline = time.monotonic() + 5
+            write_document(left, envelope, deadline=deadline)
+            restored = read_document(right, type(envelope), deadline=deadline)
+            assert restored == envelope
+            assert restored.page.decode() == page.decode()
+        finally:
+            left.close()
+            right.close()
+
+    # Authority sets have no global cardinality cap. Oversized metadata must
+    # still fail the actual frame boundary rather than silently truncate.
+    oversized_policy = policy.model_copy(
+        update={
+            "disclosures": frozenset(
+                DisclosurePermission(
+                    destination_id=uuid4(), projection_id="a." + "b" * 158, category=DisclosureCategory.TAX_VALUES
+                )
+                for _ in range(300)
+            )
+        }
+    )
+    oversized = worker.model_copy(update={"release": release.model_copy(update={"policy": oversized_policy})})
+    with pytest.raises(RuntimeRefusalError) as raised:
+        document_frame(oversized)
+    assert raised.value.reason is RuntimeRefusalCode.INVALID_FRAME

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:203860ad32cace6c5155eec41e643baf7e0e40fe7dc341de8150c43c85e2d4aa'
+body_hash: 'sha256:73d574af57b1831298223cfe6090b41829f779e0d7a7d9e2357ae4a565d565c2'
 related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-load-topology-reference]]"
 ---
@@ -23,7 +22,7 @@ enumeration-completeness question the coverage decision record left open on its
 import-graph axis; the repo-wide regulatory-literal axis is a separate census
 and is not answered here.
 
-Three instruments, all re-runnable through `dev/registry/load_census.py`:
+Three instruments, all re-runnable through the retired module:
 
 The **static closure** is computed with grimp over the `cadrumo` root package,
 excluding `TYPE_CHECKING`-guarded imports so the graph describes what a running
@@ -75,8 +74,8 @@ conditionally reachable. The step this census executes carries a deletion
 clause, and that clause has no members: nothing was deleted, because nothing
 qualified.
 
-The classification is recorded in `dev/registry/load_census_classification.py`
-as reviewed rules, and `src/cadrumo/domain/calculations/registry/tests/test_load_census_classification.py`
+The classification is recorded in the retired module
+as reviewed rules, and the retired test
 refuses any universe member a rule does not cover. The gate was proven to bite:
 an empty module dropped into the package produced one unclassified member and
 exit code 1, and its removal restored exit code 0.
@@ -108,16 +107,16 @@ Four -- `_validate_cross_domain_snapshot`, `_validate_reference_checker`,
 `_validate_reference_sections` and `_validate_references` -- execute under
 inspection snapshot construction, observed directly by tracing `build_snapshot`
 across the bundled corpus. Their entry point is the snapshot-scoped reference
-check at `src/cadrumo/domain/calculations/registry/_snapshot.py:328`, which the
+check at the retired module, which the
 load never reaches because the load builds no snapshot.
 
 `_validate_cache` publishes the three cache objects that
-`src/cadrumo/domain/calculations/registry/_validate.py:38` binds at import. It
+The retired module binds at import. It
 defines no callable of its own, so it cannot appear in any execution set however
 live it is; its absence measures the instrument, not the module.
 
 `_validate_cross_revision_advisory` is imported by
-`src/cadrumo/domain/calculations/registry/_validate_cross_revision.py:30`, which
+The retired module, which
 executes on every cold load. Its advisory builders fire only for a corpus
 carrying a contiguity divergence, which the bundled corpus does not present.
 
@@ -129,7 +128,7 @@ the deletion clause has no members rather than finding some.
 ### load-closure-census | high | the snapshot reference check cannot be reached at filing grade, because the operator-review gate refuses first for every revision in the corpus
 
 `check_all_id_references` runs at
-`src/cadrumo/domain/calculations/registry/_snapshot.py:328`, after the review
+The retired module, after the review
 gate at `:303`. `build_validated_snapshot` -- the path
 `ValidatedRegistryAuthority.snapshot` takes -- passes
 `require_operator_review=True` at `:403`, and no revision in the corpus carries
@@ -154,9 +153,8 @@ establish reachability before it can claim to have proven anything.
 `src/cadrumo/domain/calculations/registry/__init__.py:612` and listed in
 `__all__` at `:1122`. Its only consumers are the package's own tests and the
 census trace. The three production files that mention it by name --
-`src/cadrumo/adapters/outbound/aeat/sede/_declarations.py:44`,
 `src/cadrumo/adapters/outbound/aeat/sede/_declarations_fetch.py:29` and
-`src/cadrumo/entrypoints/cli/_config/_google.py:45` -- do so in comments about
+The retired module -- do so in comments about
 cross-domain check installation, not in code.
 
 This is the same class of surface as the raw loader family the coverage decision
@@ -166,7 +164,7 @@ demotion is cheap now and gets more expensive with every future consumer.
 
 ### load-closure-census | medium | the load path carries one first-party import edge no AST import graph can represent, and it crosses a domain boundary
 
-`src/cadrumo/domain/calculations/registry/_snapshot.py:177` imports the renta
+The retired module imported the renta
 routing-integrity modules by name, iterating a module-level tuple, for their
 registration side effect. The edge is deliberate and the import-linter
 configuration documents it as the sanctioned Protocol-injection direction in
@@ -187,12 +185,12 @@ tuple will under-report by these eight modules and will not say so.
 The scanner resolves a literal argument and a loop over a module-level tuple of
 module paths. Five production sites match neither shape and are reported as
 unresolved rather than assumed harmless:
-`src/cadrumo/domain/calculations/registry/_static_inspection.py:88` builds its
+The retired module built its
 target with an f-string over `__package__`;
 `src/cadrumo/entrypoints/cli/__init__.py:1168` and
-`src/cadrumo/entrypoints/cli/_app_contract.py:82` take a loop variable through
-an intervening function boundary; `dev/identity/hex64_acceptance_probe.py:146`
-and `dev/quality/shims.py:28` are dev tooling.
+The retired module take a loop variable through
+an intervening function boundary; the retired module
+and the retired module were dev tooling.
 
 There is no sanctioned inventory of first-party function-local import edges in
 this repository to check these against. They are therefore reported on the graph
@@ -213,11 +211,10 @@ settle, then measure.
 
 ### load-closure-census | medium | the coverage ledger is imported by every load and executed by none, which is how its single-representative-year defect stayed unobserved
 
-`src/cadrumo/domain/calculations/registry/_coverage.py` is in the static closure
+The retired module was in the static closure
 of every load, so its declarations run on every import, and it appears in no
 execution set for any of the three traced entry points. Its only named trigger
 is registry conformance reporting through
-`src/cadrumo/application/registry/_conformance.py`.
 
 A module in that position looks present to any reader of the import graph and
 runs for nobody in ordinary use. The two live defects the load-topology
@@ -285,7 +282,7 @@ import with execution, and conflated this module with
 `_validate_cross_revision_contiguity`, which is the module that genuinely fires
 during validation and is reached from `_validate_cross_revision_evolution`.
 The same mis-attribution was copied into the classification rule in
-`dev/registry/analysis/load_census_classification.py`, whose stated reason
+The retired module, whose stated reason
 described contiguity while its members named the advisory; that rule has been
 re-pointed at the module its prose actually describes.
 

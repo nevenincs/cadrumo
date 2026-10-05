@@ -6,7 +6,7 @@ import pytest
 
 from ....core.i18n.render import tr
 from .._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
-from ..command_spec import DefaultKind
+from ..command_shared_contracts import DefaultKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

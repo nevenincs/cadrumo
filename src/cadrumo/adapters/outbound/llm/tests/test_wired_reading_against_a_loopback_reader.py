@@ -176,10 +176,10 @@ def reader(secure_object_test_profile: TestRuntimeProfile) -> Iterator[tuple[str
     """Serve a real reader endpoint on a loopback port; yield its URL and requests.
 
     Depends on ``secure_object_test_profile`` for the real bucket runtime: the reading path
-    writes run telemetry through the profile-bound encrypted repository, so a
+    writes run record through the profile-bound encrypted repository, so a
     read with no active bucket fails before the transport is reached. Taking the
     shared fixture keeps this a REAL storage runtime rather than disabling the
-    telemetry write to make the test pass.
+    run-record write to make the test pass.
     """
     requests: Queue[dict[str, object]] = Queue()
     _LoopbackRequestHandler.requests = requests

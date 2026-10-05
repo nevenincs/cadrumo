@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:fdb788c10d891db3fe0e0df61b66f7f2a4d007e60766f6aefb248f5acf5c542f'
+body_hash: 'sha256:5172ad798a78c0dd2592cbbf4b32f4631d9425331d82fe5ffaceba7341225e19'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -27,19 +26,19 @@ Focused evidence: the seven integration pilots passed in 37.81 seconds; focused 
 
 ### legacy-tui-placement | critical | The new screen violates the accepted canonical TUI root
 
-- [ ] `src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py:21` introduces new Textual types under the legacy inbound-adapter package, and `src/cadrumo/adapters/inbound/tui/__init__.py:53` plus lines 115-116 publicly export the screen and host. D0, D10, and D11 of the accepted `2026-08-11-tui-architecture-adr` make `src/cadrumo/entrypoints/tui/` the exclusive home for Textual code, reserve Modelo review under `modelo.view`, and prohibit Textual classes outside that root. The accepted `2026-08-11-tui-interface-adr` likewise requires the inbound TUI adapter to disappear and forbids public screen internals in the canonical root facade. The older S34 plan row still naming the legacy path is now inconsistent with those accepted decisions; following that stale locator grows the migration inventory instead of satisfying the governing architecture.
+- [ ] the retired module introduces new Textual types under the legacy inbound-adapter package, and the retired module plus lines 115-116 publicly export the screen and host. D0, D10, and D11 of the accepted `2026-08-11-tui-architecture-adr` make `src/cadrumo/entrypoints/tui/` the exclusive home for Textual code, reserve Modelo review under `modelo.view`, and prohibit Textual classes outside that root. The accepted `2026-08-11-tui-interface-adr` likewise requires the inbound TUI adapter to disappear and forbids public screen internals in the canonical root facade. The older S34 plan row still naming the legacy path is now inconsistent with those accepted decisions; following that stale locator grows the migration inventory instead of satisfying the governing architecture.
 
 ### lossy-finding-rendering | medium | Finding meaning and canonical expectation identity are dropped
 
-- [ ] `src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py:204` renders the raw dotted `message_locale_key` inside grounding JSON instead of resolving the operator-facing localized message, and lines 211-224 omit the canonical optional `expectation_id` entirely. The CLI's established projection resolves the localized message, while the canonical `ModeloVerificationFinding` model carries expectation identity for precise registry-rule traceability. `src/cadrumo/adapters/inbound/tui/tests/test_modelo_work_review_screen.py:104` constructs no expectation id and line 167 asserts only the kind token, so an internal untranslated key and lost expectation identity both pass unnoticed.
+- [ ] the retired module renders the raw dotted `message_locale_key` inside grounding JSON instead of resolving the operator-facing localized message, and lines 211-224 omit the canonical optional `expectation_id` entirely. The CLI's established projection resolves the localized message, while the canonical `ModeloVerificationFinding` model carries expectation identity for precise registry-rule traceability. the retired test constructs no expectation id and line 167 asserts only the kind token, so an internal untranslated key and lost expectation identity both pass unnoticed.
 
 ### responsive-proof | medium | Size-labelled pilots do not prove a usable responsive surface
 
-- [ ] `src/cadrumo/adapters/inbound/tui/tests/test_modelo_work_review_screen.py:148`, line 189, and line 216 launch real pilots at `80x24`, `160x48`, and `120x36`, but assertions inspect backing row counts and selected model-derived cell tokens only. They do not prove visible layout, clipping, access to the last canonical row and wide columns, horizontal or vertical navigation, focus behavior, or frame content. All named outliers run only at the widest size, and there is no locale or light/dark matrix. These tests would remain green if the narrow terminal were visually unusable, so they do not satisfy the accepted TUI responsive proof.
+- [ ] the retired test, line 189, and line 216 launch real pilots at `80x24`, `160x48`, and `120x36`, but assertions inspect backing row counts and selected model-derived cell tokens only. They do not prove visible layout, clipping, access to the last canonical row and wide columns, horizontal or vertical navigation, focus behavior, or frame content. All named outliers run only at the widest size, and there is no locale or light/dark matrix. These tests would remain green if the narrow terminal were visually unusable, so they do not satisfy the accepted TUI responsive proof.
 
 ### s35-control-regression | low | The no-filter assertion excludes only one control type
 
-- [ ] `src/cadrumo/adapters/inbound/tui/tests/test_modelo_work_review_screen.py:175` rejects only Textual `Input`. A premature S35 filter built with `Select`, `SelectionList`, `Checkbox`, `RadioSet`, `Button`, or another interactive control would pass this gate. Current whole-file inspection found no such filtering or write control, so this is a regression-proof gap rather than a present behavior defect.
+- [ ] the retired test rejects only Textual `Input`. A premature S35 filter built with `Select`, `SelectionList`, `Checkbox`, `RadioSet`, `Button`, or another interactive control would pass this gate. Current whole-file inspection found no such filtering or write control, so this is a regression-proof gap rather than a present behavior defect.
 
 ### transitional-placement-curation | resolved | Placement is a sanctioned transitional receipt
 
@@ -59,7 +58,7 @@ The blocked pilot now rejects `Input`, `Select`, `SelectionList`, `Checkbox`, `R
 
 ### execution-receipt-history | medium | The repaired execution record misstates the initial commit boundary and one gate result
 
-The current S34 execution record says commit `0c5fb5253d` landed the initial screen, tests, facade exports, locale leaves, **and execution record**. Git proves `0c5fb5253d` contains only the seven code/test/locale files; the execution record and initial audit landed later in `4e7de18d4b`. Its repaired atomicity note acknowledges later review and uncommitted repairs but does not correct that explicit false attribution. It also claims focused Ruff format passed, while the exact focused `ruff format --check` reports that `src/cadrumo/adapters/inbound/tui/__init__.py` would be reformatted. Ruff lint and strict BasedPyright do pass. Because the delegated review may not edit the execution record, this remains the only open finding and keeps the verdict at CHANGES REQUESTED until the receipt is corrected through the VaultSpec CLI and the claimed format gate is made truthful or rerun green.
+The current S34 execution record says commit `0c5fb5253d` landed the initial screen, tests, facade exports, locale leaves, **and execution record**. Git proves `0c5fb5253d` contains only the seven code/test/locale files; the execution record and initial audit landed later in `4e7de18d4b`. Its repaired atomicity note acknowledges later review and uncommitted repairs but does not correct that explicit false attribution. It also claims focused Ruff format passed, while the exact focused `ruff format --check` reports that the retired module would be reformatted. Ruff lint and strict BasedPyright do pass. Because the delegated review may not edit the execution record, this remains the only open finding and keeps the verdict at CHANGES REQUESTED until the receipt is corrected through the VaultSpec CLI and the claimed format gate is made truthful or rerun green.
 
 Re-review verification: nine real encrypted-storage/Textual pilots passed in 55.00 seconds; focused Ruff lint passed; focused BasedPyright reported zero errors, warnings, or notes; 25 literal screen keys resolve in Catalan, English, Spanish, and Hungarian; scoped diff-check passed; feature-scoped VaultSpec checks carry only the known stale feature-index and old S02 body warnings. No fake, mock, stub, patch, monkeypatch, skip, xfail, mirrored business logic, staging, commit, or unrelated edit was introduced by the review.
 

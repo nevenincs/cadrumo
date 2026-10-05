@@ -3,11 +3,12 @@ tags:
   - '#reference'
   - '#registry-edition-authoring'
 date: '2026-09-14'
-modified: '2026-09-19'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:077b8ba71e3cdc7b453550102c4f19ca1894532ae75b9a0d686f7db536406c30'
+body_hash: 'sha256:b99cecd27bc53dcc10b4567486a9ab3dfd195bf7f481f74df2c27e13589a1484'
 related: []
 ---
+
 # `registry-edition-authoring` reference: `registry-wide collapse survey`
 
 ## Summary
@@ -83,7 +84,7 @@ These are opportunities measured by the current checker, not projected byte savi
 
 ### Conversion applicability
 
-The reusable schema/loader and assessor support multiple modelos, but the complete family converter remains specialized. `dev/registry/modelo_100_family_delta.py:190` enumerates 2021 through 2025, and `migrate_modelo_100_field_deltas` in `dev/registry/edition_delta_migration.py` fixes the modelo to 100. Generalization must use actual authored revision identity, temporal/applicability branches and baseline relationships, not rename the function and retain a yearly loop.
+Generalization must use actual authored revision identity, temporal/applicability branches and baseline relationships, not rename the function and retain a yearly loop.
 
 Modelo 714 is the largest measured repeated-value target: 34771 redundant values, including 3842 binding-related findings. It already has predecessor declarations but still repeats substantial family payload. Modelo 200 follows with 18942 redundant values and 3842 findings: 3202 casilla findings and 578 projection-endpoint findings dominate. Modelos 303 and 322 contribute 7626 and 4205 redundant values respectively. These four account for 65544 of 77573 detected redundant values (84.49 percent).
 

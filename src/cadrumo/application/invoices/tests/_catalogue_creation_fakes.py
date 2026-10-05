@@ -9,6 +9,8 @@ from decimal import Decimal
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import append_bucket_event
+from ....domain.currency.models import EurRateLookup
+from ....domain.currency.tests.fx_lookup import eur_rate_lookup
 from ....domain.invoices.models import InvoiceCatalogue
 from ..catalogue_creation_ports import CatalogueCreationPorts
 
@@ -94,7 +96,10 @@ class _InMemoryRateProvider:
     def rate_source_id(self) -> str:
         return "test_reference"
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         del currency, rate_date
         return None
 

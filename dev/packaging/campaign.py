@@ -549,6 +549,22 @@ def _adopt_cohort(source: Path, repo_root: Path) -> None:
     shutil.copytree(cohort, destination)
 
 
+def _run_campaign_forms(selectors: tuple[str, ...], workers: int, repo_root: Path, log_dir: Path) -> None:
+    failures: list[str] = []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(_run_form, selector, repo_root, log_dir) for selector in selectors]
+        for future in futures:
+            selector, exit_code, seconds, log_path = future.result()
+            verdict = "ok" if exit_code == 0 else f"FAILED exit {exit_code}"
+            print(f"[campaign] form {selector}: {verdict} in {seconds / 60:.1f} min", flush=True)
+            sys.stdout.write(log_path.read_text(encoding=_UTF_8, errors="replace"))
+            sys.stdout.flush()
+            if exit_code != 0:
+                failures.append(selector)
+    if failures:
+        raise SystemExit(f"packaging forms failed: {', '.join(sorted(failures))}")
+
+
 def main(argv: list[str] | None = None) -> int:
     """Build the cohort once, run the profile's lanes concurrently, then the serial oracles."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -623,20 +639,7 @@ def main(argv: list[str] | None = None) -> int:
     for lane_name in dict.fromkeys(selector.split("/", 1)[0] for selector in selectors):
         print(f"[campaign]   lane {lane_name}: {_LANES[lane_name].invariant}", flush=True)
 
-    failures: list[str] = []
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(_run_form, selector, repo_root, log_dir) for selector in selectors]
-        for future in futures:
-            selector, exit_code, seconds, log_path = future.result()
-            verdict = "ok" if exit_code == 0 else f"FAILED exit {exit_code}"
-            print(f"[campaign] form {selector}: {verdict} in {seconds / 60:.1f} min", flush=True)
-            sys.stdout.write(log_path.read_text(encoding=_UTF_8, errors="replace"))
-            sys.stdout.flush()
-            if exit_code != 0:
-                failures.append(selector)
-
-    if failures:
-        raise SystemExit(f"packaging forms failed: {', '.join(sorted(failures))}")
+    _run_campaign_forms(selectors, workers, repo_root, log_dir)
 
     _run_step(
         pytest_pass_argv(_INSTALLED_ORACLES_PASS, repo_root, test_workers=None),

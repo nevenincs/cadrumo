@@ -78,9 +78,11 @@ class _Factory:
         self.repository = repository
         self.selected_bucket = selected_bucket
         self.requested: list[str] = []
+        self.operations: list[object] = []
 
-    def __call__(self, *, bucket_id: str) -> object:
+    def __call__(self, *, bucket_id: str, operation: object) -> object:
         self.requested.append(bucket_id)
+        self.operations.append(operation)
         selected = self.selected_bucket if self.selected_bucket is not None else bucket_id
         return SimpleNamespace(
             work_unit_repository=SimpleNamespace(bucket_id=selected),
@@ -181,15 +183,17 @@ def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
     operands = _Operands()
     repository = object()
     factory = _Factory(repository)
-    seen: list[tuple[int, object]] = []
+    seen: list[tuple[int, object, object]] = []
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_balance_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
-    def query(*, as_of_year: int, repository: object) -> IvaWalletBalanceReport:
+    def query(*, as_of_year: int, repository: object, operation: object) -> IvaWalletBalanceReport:
+        assert operation is _AUTHORITY
         assert governed_facts_in_scope() is _AUTHORITY
-        seen.append((as_of_year, repository))
+        seen.append((as_of_year, repository, operation))
         return IvaWalletBalanceReport(
             as_of_year=as_of_year,
             total_balance=Decimal("500.00"),
@@ -207,7 +211,8 @@ def test_executor_reads_exact_profile_and_year_inside_pinned_fact_scope(
 
     assert result_ref == "balance-reference"
     assert factory.requested == [str(_PROFILE)]
-    assert seen == [(2024, repository)]
+    assert factory.operations == [_AUTHORITY]
+    assert seen == [(2024, repository, _AUTHORITY)]
     assert events.phases == [f"{MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID}.read"]
     assert events.effects == [OperationEffect.NONE]
     report = cast(ModeloIvaWalletBalanceOperationReport, operands.values[0])
@@ -240,11 +245,13 @@ def test_executor_refuses_a_factory_bundle_for_another_profile(monkeypatch: pyte
         "cadrumo.application.modelo.iva_wallet_balance_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     executor = ModeloIvaWalletBalanceExecutor(cast(ModeloIvaWalletSeedPortsFactory, factory))
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
         asyncio.run(executor.execute(_request(), _executor_context(events, operands)))
 
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert factory.operations == [_AUTHORITY]
     assert events.effects == []
     assert operands.values == []

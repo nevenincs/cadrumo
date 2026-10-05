@@ -23,12 +23,19 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.adapters.local_runtime.boot_record import RuntimeBootRecordUnavailable, read_runtime_boot_record
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.posix import PosixRuntimeEndpoint, posix_owner_uid
+from cadrumo.adapters.local_runtime.posix import posix_owner_uid
+from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess, WindowsProcessScope
-from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.transport import RuntimeStatusRequest
+from cadrumo.application.runtime.contracts import (
+    RuntimeClientHello,
+    RuntimeExitReason,
+    RuntimeRefusalCode,
+    RuntimeRefusalError,
+)
+from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 
 pytestmark = [
     pytest.mark.integration,
@@ -38,9 +45,15 @@ pytestmark = [
     ),
 ]
 
+_LINUX_UNIX_SOCKET_ONLY = "requires installed Linux Unix-socket ownership"
+
 type _Endpoint = WindowsRuntimeEndpoint | PosixRuntimeEndpoint
 type _Process = WindowsOwnedProcess | subprocess.Popen[bytes]
 type _Launch = tuple[WindowsProcessScope | None, _Process]
+
+# Cold bootstrap includes imports and public registry preparation before IPC.
+# This setup allowance is independent of the request deadlines below.
+_STARTUP_TIMEOUT_SECONDS = 60
 
 
 def _terminate(launch: _Launch) -> None:
@@ -83,6 +96,9 @@ def launch(
     executable = Path(sysconfig.get_path("scripts")) / name
     assert executable.is_file(), "install the current project entrypoints before installed acceptance"
     environment = os.environ.copy()
+    # Native IPC acceptance is independent of the test runner's desktop session.
+    # Session-policy tests separately exercise strict native admission.
+    environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] = "1"
     # The isolated bootstrap must not let this path replace application modules.
     environment["PYTHONPATH"] = str(root / "untrusted-imports")
     arguments = (
@@ -92,7 +108,6 @@ def launch(
         identity,
         "--expected-version",
         cohort or version("cadrumo"),
-        "--managed-session",
     )
     if sys.platform == "win32":
         if startup_stderr is not None:
@@ -116,7 +131,8 @@ def launch(
 
 
 def connect(endpoint: _Endpoint) -> VerifiedRuntimeConnection:
-    deadline = time.monotonic() + 20
+    started = time.monotonic()
+    deadline = started + _STARTUP_TIMEOUT_SECONDS
     while True:
         try:
             channel = endpoint.connect(timeout=0.2)
@@ -129,6 +145,7 @@ def connect(endpoint: _Endpoint) -> VerifiedRuntimeConnection:
             )
         except RuntimeRefusalError as error:
             if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                error.add_note(f"installed runtime handshake failed after {time.monotonic() - started:.3f}s")
                 raise
             time.sleep(0.05)
 
@@ -142,18 +159,24 @@ def test_installed_launches_converge_and_restart_changes_boot_identity(tmp_path:
     clients: list[VerifiedRuntimeConnection] = []
     with ExitStack() as resources:
         resources.callback(endpoint.close)
+        startup_deadline = time.monotonic() + _STARTUP_TIMEOUT_SECONDS
         launches = [launch(resources, tmp_path, endpoint.storage_identity) for _ in range(3)]
         for _ in launches:
             client = connect(endpoint)
             resources.callback(client.close)
             clients.append(client)
         statuses = [
-            client.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 3) for client in clients
+            client.session(
+                RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                ),
+                deadline=time.monotonic() + 3,
+            )
+            for client in clients
         ]
         assert len({item.runtime_boot_id for item in statuses}) == 1
         assert len({item.connection_id for item in statuses}) == 3
-        deadline = time.monotonic() + 3
-        while sum(_active(launched) for launched in launches) != 1 and time.monotonic() < deadline:
+        while sum(_active(launched) for launched in launches) != 1 and time.monotonic() < startup_deadline:
             time.sleep(0.02)
         assert sum(_active(launched) for launched in launches) == 1
         for launched in launches:
@@ -163,7 +186,7 @@ def test_installed_launches_converge_and_restart_changes_boot_identity(tmp_path:
                     _wait(process, timeout=0)
                 assert waiting.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
             else:
-                assert _wait(process, timeout=0) == 2
+                assert _wait(process, timeout=0) == RuntimeExitReason.OWNER_BUSY
         first_boot = statuses[0].runtime_boot_id
         for client in clients:
             client.close()
@@ -174,9 +197,31 @@ def test_installed_launches_converge_and_restart_changes_boot_identity(tmp_path:
         fresh = connect(endpoint)
         resources.callback(fresh.close)
         clients.append(fresh)
-        status = fresh.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 3)
+        status = fresh.session(
+            RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 3,
+        )
         assert status.runtime_boot_id != first_boot
-        assert not tuple(tmp_path.iterdir()), "transport startup must not initialize private profile storage"
+        # Only a supervised runtime publishes a boot record.
+        assert read_runtime_boot_record(storage_root=tmp_path) is RuntimeBootRecordUnavailable.ABSENT
+        assert {path.name for path in tmp_path.iterdir()} <= {"logs"}, (
+            "transport startup may write diagnostics but must not initialize private profile storage"
+        )
+
+
+def test_installed_fixture_reaps_launcher_on_body_failure(tmp_path: Path) -> None:
+    launched: _Launch | None = None
+    endpoint = (
+        WindowsRuntimeEndpoint(storage_root=tmp_path)
+        if sys.platform == "win32"
+        else PosixRuntimeEndpoint(storage_root=tmp_path)
+    )
+    with pytest.raises(AssertionError, match="synthetic test failure"), ExitStack() as resources:
+        resources.callback(endpoint.close)
+        launched = launch(resources, tmp_path, endpoint.storage_identity)
+        raise AssertionError("synthetic test failure")
+    assert launched is not None
+    assert not _active(launched)
 
 
 @pytest.mark.parametrize("mismatch", ["version", "root"])
@@ -194,7 +239,8 @@ def test_installed_mismatch_exits_without_claiming_endpoint(tmp_path: Path, mism
             "0" * 64 if mismatch == "root" else endpoint.storage_identity,
             cohort="unsupported-cohort" if mismatch == "version" else None,
         )
-        assert _wait(process, timeout=20) == 2
+        expected = RuntimeExitReason.ROOT_MISMATCH if mismatch == "root" else RuntimeExitReason.VERSION_MISMATCH
+        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == expected
         with pytest.raises(RuntimeRefusalError) as refusal:
             endpoint.connect(timeout=0.2)
         assert refusal.value.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY
@@ -202,7 +248,26 @@ def test_installed_mismatch_exits_without_claiming_endpoint(tmp_path: Path, mism
         assert not tuple(tmp_path.iterdir()), "refused startup must not initialize private profile storage"
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="requires installed Linux Unix-socket ownership")
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows has no catchable SIGTERM")
+def test_installed_runtime_reports_a_signal_stop(tmp_path: Path) -> None:
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path)
+    with ExitStack() as resources:
+        resources.callback(endpoint.close)
+        _scope, process = launch(resources, tmp_path, endpoint.storage_identity)
+        # A verified handshake proves the signal handlers are installed before the stop.
+        connect(endpoint).close()
+        assert isinstance(process, subprocess.Popen)
+        process.send_signal(signal.SIGTERM)
+        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == RuntimeExitReason.SIGNAL_STOP
+
+
+def _foreign_unix_listener() -> socket.socket:
+    if sys.platform == "linux":
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    pytest.skip(_LINUX_UNIX_SOCKET_ONLY)
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason=_LINUX_UNIX_SOCKET_ONLY)
 def test_installed_runtime_refuses_foreign_endpoint_without_contact_or_replacement(tmp_path: Path) -> None:
     endpoint = PosixRuntimeEndpoint(storage_root=tmp_path)
     namespace = Path("/").joinpath("tmp", f"cdr-{posix_owner_uid()}")
@@ -210,7 +275,7 @@ def test_installed_runtime_refuses_foreign_endpoint_without_contact_or_replaceme
     foreign_path = namespace / f"foreign-{uuid4().hex}.sock"
     with ExitStack() as resources:
         resources.callback(endpoint.close)
-        foreign = resources.enter_context(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
+        foreign = resources.enter_context(_foreign_unix_listener())
         foreign.bind(str(foreign_path))
         resources.callback(foreign_path.unlink)
         foreign.listen(1)
@@ -222,7 +287,8 @@ def test_installed_runtime_refuses_foreign_endpoint_without_contact_or_replaceme
         assert initial.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
 
         _scope, process = launch(resources, tmp_path, endpoint.storage_identity)
-        assert _wait(process, timeout=20) == 2
+        # A foreign endpoint is not a configuration refusal the supervisor can act on.
+        assert _wait(process, timeout=_STARTUP_TIMEOUT_SECONDS) == RuntimeExitReason.UNEXPECTED_FAILURE
         with pytest.raises(RuntimeRefusalError) as after_refusal:
             endpoint.connect(timeout=0.2)
         assert after_refusal.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED

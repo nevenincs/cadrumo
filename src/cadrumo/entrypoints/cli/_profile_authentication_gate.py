@@ -9,6 +9,7 @@ import typer
 
 from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
 from ...core.errors.hierarchy import InternalInvariantError
+from ._command_secret_contracts import MachineSecretVariantSpec
 from ._profile_authentication_contract import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
@@ -16,11 +17,8 @@ from ._profile_authentication_contract import (
     profile_authentication_posture,
     root_profile_secret_model,
 )
-from .command_spec import (
-    CommandSpec,
-    CommandSpecGraph,
-    MachineSecretVariantSpec,
-)
+from .command_graph import CommandSpecGraph
+from .command_spec import CommandSpec
 from .config.secure_input import (
     MachineSecretChannel,
     MachineSecretPayload,
@@ -36,6 +34,7 @@ from .config.secure_input import (
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
+    from uuid import UUID
 
     from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer
@@ -46,19 +45,13 @@ _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 _RUNTIME_PROFILE_KEYS = frozenset(
     {
         "config_check",
-        "config_google_register",
         "config_google_login",
         "config_google_status",
         "config_google_logout",
-        "config_google_credential_source_set",
-        "config_google_credential_source_view",
-        "config_google_folder_set",
         "config_google_folder_view",
         "config_google_probe",
         "app_quickfile",
         "app_ledger_evidence_batch",
-        "app_ledger_evidence_pull",
-        "app_ledger_evidence_pull_all",
         "config_auth_configure",
         "config_auth_apoderado_status",
         "config_auth_apoderado_configure",
@@ -70,7 +63,6 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "app_diagnostics_latency",
         "app_diagnostics_errors",
         "app_diagnostics_llm_usage",
-        "app_diagnostics_telemetry_flush",
         "app_ledger_llm_diagnostics",
         "app_live_borrador_100_import",
         "app_live_borrador_100_latest",
@@ -114,6 +106,7 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "config_auth_certificate_secret_set",
         "config_auth_certificate_secret_remove",
         "config_profile_censo_pull",
+        "config_profile_censo_show",
         "config_profile_censo_import",
         "app_live_filed_list",
         "app_live_filed_discover",
@@ -207,6 +200,14 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "app_ledger_counterparty_confirm",
         "app_ledger_counterparty_view",
         "app_ledger_counterparty_withdraw",
+        "app_ledger_account_add",
+        "app_ledger_account_list",
+        "app_ledger_account_show",
+        "app_ledger_account_update",
+        "app_ledger_account_close",
+        "app_ledger_account_remove",
+        "app_ledger_account_designate",
+        "app_ledger_account_undesignate",
         "app_ledger_status",
         "app_ledger_check",
         "app_ledger_preflight",
@@ -315,6 +316,51 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "config_profile_capabilities_set",
     }
 )
+
+
+def _require_discard_confirmation(spec: CommandSpec, arguments: Mapping[str, object]) -> None:
+    """Require discard confirmation."""
+    if spec.key == "app_modelo_work_discard" and arguments.get("confirmed") is not True:
+        from ...core.i18n.render import tr
+
+        target_label = arguments.get("work_unit_id") or " ".join(
+            str(arguments.get(key) or "?") for key in ("modelo", "year", "period")
+        )
+        raise typer.BadParameter(tr("cli.app.modelo.work.discard_requires_yes", work_unit_id=str(target_label)))
+
+
+def _require_automation_change_sources(
+    spec: CommandSpec,
+    method: ProfileAuthenticationMethod,
+    credential_reference: UUID | None,
+    leaf: MachineSecretSelection | None,
+) -> None:
+    """Require automation change sources."""
+    if spec.key == "config_profile_automation_change":
+        if method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None:
+            _refuse("automation_change_credential_ref_required")
+        if leaf is None:
+            _refuse("automation_change_proposal_required")
+
+
+def _require_profile_credential_posture(
+    credential_reference: UUID | None,
+    method: ProfileAuthenticationMethod,
+    posture: ProfileAuthenticationPosture,
+    runtime_profile_client: bool,
+    root: ProfileSecretSelection | None,
+) -> None:
+    """Require profile credential posture."""
+    if credential_reference is not None:
+        if method is not ProfileAuthenticationMethod.API_KEY:
+            _refuse("profile_credential_ref_requires_api_key")
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
+            _refuse("profile_credential_ref_inapplicable")
+    elif method is ProfileAuthenticationMethod.API_KEY:
+        if root is None:
+            _refuse("profile_secrets_api_key_requires_channel")
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
+            _refuse("profile_secrets_api_key_inapplicable")
 
 
 def _refuse(key: str) -> Never:
@@ -609,13 +655,7 @@ def preflight_parsed_leaf(
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
     node = graph.node(spec.key)
     posture = profile_authentication_posture(node)
-    if spec.key == "app_modelo_work_discard" and arguments.get("confirmed") is not True:
-        from ...core.i18n.render import tr
-
-        target_label = arguments.get("work_unit_id") or " ".join(
-            str(arguments.get(key) or "?") for key in ("modelo", "year", "period")
-        )
-        raise typer.BadParameter(tr("cli.app.modelo.work.discard_requires_yes", work_unit_id=str(target_label)))
+    _require_discard_confirmation(spec, arguments)
     root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
     if spec.key == "config_profile_automation_create" and leaf is None:
         _refuse("automation_create_proposal_required")
@@ -625,21 +665,8 @@ def preflight_parsed_leaf(
     method = source.method
     credential_reference = source.credential_reference
     runtime_profile_client = _uses_runtime_profile_client(spec, arguments)
-    if spec.key == "config_profile_automation_change":
-        if method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None:
-            _refuse("automation_change_credential_ref_required")
-        if leaf is None:
-            _refuse("automation_change_proposal_required")
-    if credential_reference is not None:
-        if method is not ProfileAuthenticationMethod.API_KEY:
-            _refuse("profile_credential_ref_requires_api_key")
-        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
-            _refuse("profile_credential_ref_inapplicable")
-    elif method is ProfileAuthenticationMethod.API_KEY:
-        if root is None:
-            _refuse("profile_secrets_api_key_requires_channel")
-        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or not runtime_profile_client:
-            _refuse("profile_secrets_api_key_inapplicable")
+    _require_automation_change_sources(spec, method, credential_reference, leaf)
+    _require_profile_credential_posture(credential_reference, method, posture, runtime_profile_client, root)
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
         _refuse("profile_secrets_inapplicable")
     # The secret-source refusals above are still parse-time refusals and write
@@ -673,68 +700,19 @@ def preflight_parsed_leaf(
             arguments=arguments,
         )
 
-    if _diagnose_unregistered_profile(spec=spec, root=root, credential_reference=credential_reference is not None):
-        return
-    if (
-        spec.key == "config_profile_status"
-        and explicit_target is None
-        and root is None
-        and credential_reference is None
+    if _activate_runtime_leaf(
+        ctx,
+        spec,
+        arguments,
+        root,
+        leaf,
+        explicit_target,
+        explicit_label,
+        method,
+        credential_reference,
+        runtime_profile_client,
+        node.path[1:],
     ):
-        from ...core.bucket_pointer import resolve_active_bucket_id
-
-        if resolve_active_bucket_id() is None:
-            return
-    if spec.key == "config_profile_resume":
-        from ...core.bucket_pointer import resolve_active_bucket_id
-        from .common import no_active_profile_refusal
-        from .runtime_profile_admission import activate_runtime_recovery
-
-        if explicit_target is None and resolve_active_bucket_id() is None:
-            raise no_active_profile_refusal()
-        _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
-        activate_runtime_recovery(ctx, target_bucket_id=explicit_target, root_selection=root)
-        return
-    if spec.key == "config_profile_automation_create":
-        from ...core.bucket_pointer import resolve_active_bucket_id
-        from ._profile_session_gate import bind_profile_target
-        from .common import no_active_profile_refusal
-
-        bucket_id = explicit_target or resolve_active_bucket_id()
-        if bucket_id is None:
-            raise no_active_profile_refusal()
-        _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
-        bind_profile_target(ctx, bucket_id=bucket_id)
-        return
-    if spec.key == "config_profile_automation_change":
-        from .config.runtime_automation_request import stage_automation_change_input
-        from .runtime_profile_admission import activate_runtime_profile
-
-        if leaf is None:
-            _refuse("automation_change_proposal_required")
-        stage_automation_change_input(selection=leaf, kind=arguments.get("kind"))
-        _require_resume_target(root, explicit_target, credential_reference=True)
-        activate_runtime_profile(
-            ctx,
-            target_bucket_id=explicit_target,
-            target_profile_label=explicit_label,
-            root_selection=root,
-            method=method,
-            credential_reference=credential_reference,
-        )
-        return
-    if runtime_profile_client:
-        from .runtime_profile_admission import activate_runtime_profile
-
-        _require_resume_target(root, explicit_target, credential_reference=credential_reference is not None)
-        activate_runtime_profile(
-            ctx,
-            target_bucket_id=explicit_target,
-            target_profile_label=explicit_label,
-            root_selection=root,
-            method=method,
-            credential_reference=credential_reference,
-        )
         return
     _activate_parsed_profile_session(
         ctx,
@@ -866,3 +844,113 @@ __all__ = [
     "prompt_root_authentication",
     "resolved_command_profile_target",
 ]
+
+
+def _profile_status_has_no_target(
+    spec: CommandSpec,
+    explicit_target: str | None,
+    root: ProfileSecretSelection | None,
+    credential_reference: UUID | None,
+) -> bool:
+    """Allow empty profile status only when no explicit or active target exists."""
+    if (
+        spec.key == "config_profile_status"
+        and explicit_target is None
+        and root is None
+        and credential_reference is None
+    ):
+        from ...core.bucket_pointer import resolve_active_bucket_id
+
+        if resolve_active_bucket_id() is None:
+            return True
+    return False
+
+
+def _activate_runtime_leaf(
+    ctx: typer.Context,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+    root: ProfileSecretSelection | None,
+    leaf: MachineSecretSelection | None,
+    explicit_target: str | None,
+    explicit_label: str | None,
+    method: ProfileAuthenticationMethod,
+    credential_reference: UUID | None,
+    runtime_profile_client: bool,
+    command_path: tuple[str, ...],
+) -> bool:
+    """Apply special runtime routes before the ordinary session gate."""
+    if _diagnose_unregistered_profile(spec=spec, root=root, credential_reference=credential_reference is not None):
+        return True
+    if _profile_status_has_no_target(spec, explicit_target, root, credential_reference):
+        return True
+    if spec.key == "config_profile_resume":
+        _activate_profile_recovery(ctx, spec, arguments, root, leaf, explicit_target)
+        return True
+    if spec.key == "config_profile_automation_create":
+        from ...core.bucket_pointer import resolve_active_bucket_id
+        from ._profile_session_gate import bind_profile_target
+        from .common import no_active_profile_refusal
+
+        bucket_id = explicit_target or resolve_active_bucket_id()
+        if bucket_id is None:
+            raise no_active_profile_refusal()
+        _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
+        bind_profile_target(ctx, bucket_id=bucket_id)
+        return True
+    if spec.key == "config_profile_automation_change":
+        from .config.runtime_automation_request import stage_automation_change_input
+        from .runtime_profile_admission import activate_runtime_profile
+
+        if leaf is None:
+            _refuse("automation_change_proposal_required")
+        stage_automation_change_input(selection=leaf, kind=arguments.get("kind"))
+        _require_resume_target(root, explicit_target, credential_reference=True)
+        activate_runtime_profile(
+            ctx,
+            target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
+            root_selection=root,
+            method=method,
+            credential_reference=credential_reference,
+        )
+        return True
+    if runtime_profile_client:
+        from ._profile_session_gate import enforce_explicit_database_route
+        from .runtime_profile_admission import activate_runtime_profile
+
+        enforce_explicit_database_route(
+            spec=spec,
+            command_path=command_path,
+            target_bucket_id=explicit_target,
+        )
+        _require_resume_target(root, explicit_target, credential_reference=credential_reference is not None)
+        activate_runtime_profile(
+            ctx,
+            target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
+            root_selection=root,
+            method=method,
+            credential_reference=credential_reference,
+        )
+        return True
+    return False
+
+
+def _activate_profile_recovery(
+    ctx: typer.Context,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+    root: ProfileSecretSelection | None,
+    leaf: MachineSecretSelection | None,
+    explicit_target: str | None,
+) -> None:
+    """Stage required leaf input before exact-target profile recovery."""
+    from ...core.bucket_pointer import resolve_active_bucket_id
+    from .common import no_active_profile_refusal
+    from .runtime_profile_admission import activate_runtime_recovery
+
+    if explicit_target is None and resolve_active_bucket_id() is None:
+        raise no_active_profile_refusal()
+    _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
+    activate_runtime_recovery(ctx, target_bucket_id=explicit_target, root_selection=root)

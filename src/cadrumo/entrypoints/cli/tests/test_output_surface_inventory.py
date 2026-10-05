@@ -129,12 +129,6 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "rendering is unavailable; it cannot route through the rich path it is "
         "the fallback for."
     ),
-    ("entrypoints/cli/modelo_spreadsheet_cli.py", "modelo_spreadsheet_export", "write"): (
-        "Not a stream: LocalFileExportSink.write puts the workbook bytes into the "
-        "operator-named output file and returns a receipt. The receipt reaches "
-        "the operator through the ordinary envelope, so no text crosses into "
-        "stdout or stderr here."
-    ),
     ("entrypoints/cli/_terminal_errors.py", "_emit_abort", "write"): (
         "Last-resort crash-boundary fallback emitting the constant 'Aborted.' "
         "marker; no operator data passes through it."

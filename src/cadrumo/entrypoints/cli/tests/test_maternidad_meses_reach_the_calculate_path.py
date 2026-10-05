@@ -84,7 +84,6 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-guarderia-gastos-reales=0",
     "--binding", "renta-profile-cotizaciones-ss-madre=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
@@ -184,9 +183,9 @@ def _advisory_kinds(output: str) -> set[str]:
 
 
 def _advisory_messages(output: str, *, source_kind: str) -> list[str]:
-    """The rendered ``message`` text of every notice carrying *source_kind*."""
+    """The calculation's own account (``detail``) of every notice carrying *source_kind*."""
     return [
-        str(notice["message"])
+        str(notice.get("context", {}).get("detail", ""))
         for notice in unwrap_envelope_notices(output)
         if notice["code"] == "modelo.work.calculate.source_advisory"
         and notice.get("context", {}).get("source_kind") == source_kind

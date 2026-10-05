@@ -123,6 +123,48 @@ class RegistryClosurePredicateRefusal(_ClosureReportModel):
         return self
 
 
+def _require_temporal_row_coordinate(
+    coordinate: tuple[str, str],
+    temporal_coverage: TemporalRevisionCoverageSummary,
+) -> None:
+    if (str(temporal_coverage.modelo), str(temporal_coverage.revision)) != coordinate:
+        raise ValueError("temporal coverage coordinate must match its closure-report row")
+
+
+def _require_filing_limb_consistency(
+    coordinate: tuple[str, str],
+    limb: RegistryClosureLimb | None,
+    disagreements: tuple[RegistryClosureJoinDisagreement, ...],
+) -> None:
+    if limb is None:
+        if len(disagreements) != 1 or disagreements[0].kind != "missing_from_limb":
+            raise ValueError("missing filing_export limb requires one missing-from-limb disagreement")
+        return
+    if (str(limb.modelo), str(limb.revision)) != coordinate or limb.name != "filing_export":
+        raise ValueError("filing_export limb coordinate must match its closure-report row")
+    if disagreements:
+        raise ValueError("present filing_export limb cannot carry a join disagreement")
+
+
+def _require_row_disagreement_coordinate(
+    coordinate: tuple[str, str],
+    disagreements: tuple[RegistryClosureJoinDisagreement, ...],
+) -> None:
+    if any((item.modelo, item.revision) != coordinate for item in disagreements):
+        raise ValueError("closure-report row disagreement must name the enclosing coordinate")
+
+
+def _require_filing_grade_outcome(
+    temporal_coverage: TemporalRevisionCoverageSummary,
+    filing: RegistryClosureLimb,
+) -> None:
+    filing_required = temporal_coverage.declared_authority_grade is RegistryAuthorityGrade.FILING
+    if filing_required and filing.outcome == "not_applicable":
+        raise ValueError("filing-grade temporal coverage requires a participating filing-export limb")
+    if not filing_required and filing.outcome != "not_applicable":
+        raise ValueError("below-filing temporal coverage requires a not-applicable filing-export limb")
+
+
 class RegistryClosureRevisionReport(_ClosureReportModel):
     """The temporal and filing closure limbs for one registered revision."""
 
@@ -135,28 +177,11 @@ class RegistryClosureRevisionReport(_ClosureReportModel):
     @model_validator(mode="after")
     def _require_exact_coordinate_and_limb_identity(self) -> RegistryClosureRevisionReport:
         coordinate = (self.modelo, self.revision)
-        if (str(self.temporal_coverage.modelo), str(self.temporal_coverage.revision)) != coordinate:
-            raise ValueError("temporal coverage coordinate must match its closure-report row")
-        expected = (("filing_export", self.filing_export),)
-        for name, limb in expected:
-            disagreements = self.join_disagreements
-            if limb is None:
-                if len(disagreements) != 1 or disagreements[0].kind != "missing_from_limb":
-                    raise ValueError(f"missing {name} limb requires one missing-from-limb disagreement")
-                continue
-            if (str(limb.modelo), str(limb.revision)) != coordinate or limb.name != name:
-                raise ValueError(f"{name} limb coordinate must match its closure-report row")
-            if disagreements:
-                raise ValueError(f"present {name} limb cannot carry a join disagreement")
-        if any((item.modelo, item.revision) != coordinate for item in self.join_disagreements):
-            raise ValueError("closure-report row disagreement must name the enclosing coordinate")
-        filing = self.filing_export
-        if filing is not None:
-            filing_required = self.temporal_coverage.declared_authority_grade is RegistryAuthorityGrade.FILING
-            if filing_required and filing.outcome == "not_applicable":
-                raise ValueError("filing-grade temporal coverage requires a participating filing-export limb")
-            if not filing_required and filing.outcome != "not_applicable":
-                raise ValueError("below-filing temporal coverage requires a not-applicable filing-export limb")
+        _require_temporal_row_coordinate(coordinate, self.temporal_coverage)
+        _require_filing_limb_consistency(coordinate, self.filing_export, self.join_disagreements)
+        _require_row_disagreement_coordinate(coordinate, self.join_disagreements)
+        if self.filing_export is not None:
+            _require_filing_grade_outcome(self.temporal_coverage, self.filing_export)
         return self
 
     @computed_field
@@ -274,29 +299,8 @@ def build_registry_closure_report(
     filing_by_coordinate = {(str(limb.modelo), str(limb.revision)): limb for limb in filing_export.limbs}
     temporal_rows = temporal_coverage.revision_summaries
     temporal_coordinates = {(str(row.modelo), str(row.revision)) for row in temporal_rows}
-    row_disagreements: list[RegistryClosureJoinDisagreement] = []
-    rows: list[RegistryClosureRevisionReport] = []
-    for temporal in temporal_rows:
-        coordinate = (str(temporal.modelo), str(temporal.revision))
-        filing_limb = filing_by_coordinate.get(coordinate)
-        disagreements: list[RegistryClosureJoinDisagreement] = []
-        if filing_limb is None:
-            disagreements.append(_missing_limb_disagreement(coordinate=coordinate, limb="filing_export"))
-        row_disagreements.extend(disagreements)
-        rows.append(
-            RegistryClosureRevisionReport(
-                modelo=coordinate[0],
-                revision=coordinate[1],
-                temporal_coverage=temporal,
-                filing_export=filing_limb,
-                join_disagreements=tuple(disagreements),
-            ),
-        )
-    extra_disagreements = [
-        _unexpected_limb_disagreement(coordinate=coordinate, limb="filing_export")
-        for coordinate in filing_by_coordinate
-        if coordinate not in temporal_coordinates
-    ]
+    rows, row_disagreements = _temporal_closure_rows(temporal_rows, filing_by_coordinate)
+    extra_disagreements = _unexpected_filing_disagreements(filing_by_coordinate, temporal_coordinates)
     joined_disagreements = tuple(
         sorted(
             (*row_disagreements, *extra_disagreements),
@@ -306,18 +310,7 @@ def build_registry_closure_report(
     # Each row already owns its missing-limb disagreement.  Align the report's
     # authoritative sequence with the same deterministic ordering before model
     # validation, rather than relying on construction order.
-    rows = [
-        row.model_copy(
-            update={
-                "join_disagreements": tuple(
-                    item
-                    for item in joined_disagreements
-                    if item.kind == "missing_from_limb" and (item.modelo, item.revision) == (row.modelo, row.revision)
-                ),
-            },
-        )
-        for row in rows
-    ]
+    rows = _attach_ordered_row_disagreements(rows, joined_disagreements)
     return RegistryClosureReport(as_of=as_of, rows=tuple(rows), join_disagreements=joined_disagreements)
 
 
@@ -349,6 +342,60 @@ def load_registry_closure_report(
 def check_registry_closure_release(report: RegistryClosureReport) -> RegistryClosureReleaseResult:
     """Evaluate the blocking release predicate over one already-derived report."""
     return RegistryClosureReleaseResult(report=report)
+
+
+def _temporal_closure_rows(
+    temporal_rows: tuple[TemporalRevisionCoverageSummary, ...],
+    filing_by_coordinate: dict[tuple[str, str], RegistryClosureLimb],
+) -> tuple[list[RegistryClosureRevisionReport], list[RegistryClosureJoinDisagreement]]:
+    row_disagreements: list[RegistryClosureJoinDisagreement] = []
+    rows: list[RegistryClosureRevisionReport] = []
+    for temporal in temporal_rows:
+        coordinate = (str(temporal.modelo), str(temporal.revision))
+        filing_limb = filing_by_coordinate.get(coordinate)
+        disagreements: list[RegistryClosureJoinDisagreement] = []
+        if filing_limb is None:
+            disagreements.append(_missing_limb_disagreement(coordinate=coordinate, limb="filing_export"))
+        row_disagreements.extend(disagreements)
+        rows.append(
+            RegistryClosureRevisionReport(
+                modelo=coordinate[0],
+                revision=coordinate[1],
+                temporal_coverage=temporal,
+                filing_export=filing_limb,
+                join_disagreements=tuple(disagreements),
+            ),
+        )
+    return rows, row_disagreements
+
+
+def _unexpected_filing_disagreements(
+    filing_by_coordinate: dict[tuple[str, str], RegistryClosureLimb],
+    temporal_coordinates: set[tuple[str, str]],
+) -> list[RegistryClosureJoinDisagreement]:
+    return [
+        _unexpected_limb_disagreement(coordinate=coordinate, limb="filing_export")
+        for coordinate in filing_by_coordinate
+        if coordinate not in temporal_coordinates
+    ]
+
+
+def _attach_ordered_row_disagreements(
+    rows: list[RegistryClosureRevisionReport],
+    joined_disagreements: tuple[RegistryClosureJoinDisagreement, ...],
+) -> list[RegistryClosureRevisionReport]:
+    return [
+        row.model_copy(
+            update={
+                "join_disagreements": tuple(
+                    item
+                    for item in joined_disagreements
+                    if item.kind == "missing_from_limb" and (item.modelo, item.revision) == (row.modelo, row.revision)
+                ),
+            },
+        )
+        for row in rows
+    ]
 
 
 def render_registry_closure_report(report: RegistryClosureReport) -> str:

@@ -52,6 +52,8 @@ from ..filesystem import (
     profile_custody_root_lock,
 )
 from ..filesystem_primitives import ensure_profile_custody_local_directory
+from ..sign_in_generation import SignInGeneration
+from .receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody, uncommitted_sign_in
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -59,6 +61,7 @@ _NOW = datetime(2026, 8, 14, 12, 0, 0, tzinfo=UTC)
 _IDLE_MINUTES = 15
 _ABSOLUTE_MINUTES = 240
 _EPOCH = "test-dek-epoch-1"
+_SIGN_IN = SignInGeneration(lineage=UUID("3d2c1b0a-9f8e-4d7c-8b6a-5f4e3d2c1b0a"), generation=1)
 
 
 def _profile_id() -> UUID:
@@ -80,6 +83,8 @@ def _wrap(*, session_key: bytes, dek: bytes, profile_id: UUID) -> PersistedProfi
         session_id=uuid4(),
         custody_generation=1,
         dek_epoch=_EPOCH,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=_SIGN_IN,
         issued_at=_NOW,
         idle_deadline=_NOW + timedelta(minutes=_IDLE_MINUTES),
         absolute_deadline=_NOW + timedelta(minutes=_ABSOLUTE_MINUTES),
@@ -107,6 +112,9 @@ class TestSessionReceiptAad:
             {"issued_at": _NOW - timedelta(seconds=1)},
             {"idle_deadline": _NOW + timedelta(minutes=60)},
             {"absolute_deadline": _NOW + timedelta(minutes=300)},
+            {"login_binding": "0" * 64},
+            {"sign_in": SignInGeneration(lineage=_SIGN_IN.lineage, generation=2)},
+            {"sign_in": SignInGeneration(lineage=uuid4(), generation=1)},
         ],
         ids=(
             "schema-version",
@@ -117,6 +125,9 @@ class TestSessionReceiptAad:
             "issued-at",
             "idle-deadline",
             "absolute-deadline",
+            "login-binding",
+            "sign-in-generation",
+            "sign-in-lineage",
         ),
     )
     def test_metadata_substitution_fails_tag(self, mutation: dict[str, object]) -> None:
@@ -140,6 +151,8 @@ class TestSessionReceiptAad:
                 session_id=uuid4(),
                 custody_generation=1,
                 dek_epoch=_EPOCH,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=_SIGN_IN,
                 issued_at=datetime(2026, 8, 14, 12, 0, 0),
                 idle_deadline=_NOW + timedelta(minutes=15),
                 absolute_deadline=_NOW + timedelta(minutes=240),
@@ -162,6 +175,9 @@ class TestKeyringBoundary:
                 now=_NOW,
                 idle_minutes=_IDLE_MINUTES,
                 absolute_minutes=_ABSOLUTE_MINUTES,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=sign_in_custody(tmp_path, profile_id),
+                generation=sign_in_custody(tmp_path, profile_id).establish().current,
             )
         except KeyringUnavailableError:
             # The live Windows credential boundary refused the key before a
@@ -276,6 +292,8 @@ finally:
 """
         children: list[asyncio.subprocess.Process] = []
         minted = False
+        sign_in = sign_in_custody(tmp_path, profile_id)
+        captured = sign_in.establish().current
         try:
             with profile_custody_root_lock(tmp_path):
                 child = await asyncio.create_subprocess_exec(
@@ -309,6 +327,9 @@ finally:
                         now=_NOW,
                         idle_minutes=_IDLE_MINUTES,
                         absolute_minutes=_ABSOLUTE_MINUTES,
+                        login_id=RECEIPT_LOGIN_ID,
+                        sign_in=sign_in,
+                        generation=captured,
                     )
                 except KeyringUnavailableError:
                     pass
@@ -608,6 +629,9 @@ class TestProfileSessionAcceleration:
             now=_NOW,
             idle_minutes=_IDLE_MINUTES,
             absolute_minutes=_ABSOLUTE_MINUTES,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=sign_in_custody(tmp_path, profile_id),
+            generation=sign_in_custody(tmp_path, profile_id).establish().current,
         )
         return record, dek
 
@@ -790,6 +814,9 @@ class TestProfileSessionAcceleration:
                 now=_NOW,
                 idle_minutes=0,
                 absolute_minutes=_ABSOLUTE_MINUTES,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=uncommitted_sign_in(tmp_path, profile_id),
+                generation=_SIGN_IN,
             )
         assert not profile_session_path(storage_root=tmp_path, profile_id=profile_id).exists()
         assert not (tmp_path / ".profile-custody-root.lock").exists()
@@ -851,6 +878,9 @@ class TestProfileSessionAcceleration:
                 now=_NOW,
                 idle_minutes=_IDLE_MINUTES,
                 absolute_minutes=_ABSOLUTE_MINUTES,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=uncommitted_sign_in(tmp_path, profile_id),
+                generation=_SIGN_IN,
             )
         assert not (tmp_path / ".profile-custody-root.lock").exists()
         assert not any(tmp_path.iterdir())
@@ -884,6 +914,9 @@ def test_revocation_refuses_when_the_receipt_survives_the_clear(tmp_path: Path) 
         now=_NOW,
         idle_minutes=_IDLE_MINUTES,
         absolute_minutes=_ABSOLUTE_MINUTES,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=sign_in_custody(tmp_path, profile_id),
+        generation=sign_in_custody(tmp_path, profile_id).establish().current,
     )
     path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     try:
@@ -920,6 +953,9 @@ def test_revocation_returns_normally_when_the_receipt_is_cleared(tmp_path: Path)
         now=_NOW,
         idle_minutes=_IDLE_MINUTES,
         absolute_minutes=_ABSOLUTE_MINUTES,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=sign_in_custody(tmp_path, profile_id),
+        generation=sign_in_custody(tmp_path, profile_id).establish().current,
     )
     path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     assert path.exists()

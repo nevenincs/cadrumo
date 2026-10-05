@@ -19,8 +19,8 @@ Run via ``python -m dev.registry.aeip inventory`` for the event matrix,
 
 Major declarations:
 
-* :func:`~dev.registry.aeip.manager.extract_occurrences` — read the family.
-* :func:`~dev.registry.aeip.manager.plan_chains` — plan chains and records.
+* :func:`~dev.registry.aeip.inventory.extract_occurrences` — read the family.
+* :func:`~dev.registry.aeip.planning.plan_chains` — plan chains and records.
 * :class:`~dev.registry.aeip.adjudications.AdjudicationSet` — the recorded
   identity judgments the planner reads instead of guessing.
 """

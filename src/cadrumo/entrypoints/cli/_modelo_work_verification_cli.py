@@ -11,16 +11,15 @@ import typer
 
 from ...application.modelo.action_errors import CalculationRevisionStateError, VerificationReportNotFoundError
 from ...application.modelo.dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
-from ...application.modelo.operation_definitions import (
-    ModeloWorkFileApproval,
-    ModeloWorkFilePublicResultV2,
-    ModeloWorkFileRequest,
-    ModeloWorkVerifyPublicResultV2,
-    ModeloWorkVerifyRequest,
-)
 from ...application.modelo.preconditions import build_modelo_work_file_unverified_revision_failure
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...application.modelo.verify_selector import ModeloVerifySelector
+from ...application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
@@ -53,13 +52,13 @@ from ._modelo_rendering import (
     verification_report_payload,
 )
 from .common import activate_subcommand_output_language, emit_envelope
+from .registered_operation_errors import submitted_operation_error
 from .runtime_modelo_dependencies import read_modelo_dependencies
 from .runtime_modelo_verification import (
     run_modelo_work_filing,
     run_modelo_work_verification,
     select_modelo_work_revision_for_cli,
 )
-from .runtime_registered_operation import submitted_operation_error
 
 
 def _dependency_inventory_item_payload(

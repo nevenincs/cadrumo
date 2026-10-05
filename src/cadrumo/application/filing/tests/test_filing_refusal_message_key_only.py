@@ -108,12 +108,20 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
     "projection.py": (
         "Projection-plan and value-address invariants are consumed by export.py's render-request boundary."
     ),
-    "_record_field_renderer.py": (
+    "record_field_renderer.py": (
         "Field offset, length, and role invariants are consumed by "
         "record_renderer.py/export.py at the artifact boundary."
     ),
     "record_renderer.py": (
         "Record ordering and occurrence invariants are consumed by export.py at the artifact boundary."
+    ),
+    "m190_context_validation.py": (
+        "Modelo 190 signed-reintegro context invariants are consumed by record_field_renderer.py, "
+        "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
+    ),
+    "m280_context_validation.py": (
+        "Modelo 280 negative-imputation context invariants are consumed by record_field_renderer.py, "
+        "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
     ),
 }
 

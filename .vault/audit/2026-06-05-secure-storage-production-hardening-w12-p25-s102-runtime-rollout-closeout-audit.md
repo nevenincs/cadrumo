@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:58e4c240a35387596f696c0780275914c1967cf8ed5d9778f0ed223147ebc35e'
+modified: '2026-10-03'
+body_hash: 'sha256:c4bea6fe7c9963dcbfbbed484cf5716861254488022ce5082a4ac47421b4cf11'
 related:
   - '[[2026-06-03-secure-storage-production-hardening-w12-p25-s102-review-audit]]'
 ---
@@ -66,9 +66,9 @@ identity, provider metadata, revision, and drift semantics.
 
 Validation:
 
-- `uv run --no-sync pytest src/aeat/adapters/persistence/storage/tests/test_hardening_convention_guards.py -q`
-- `uv run --no-sync pytest src/aeat/adapters/outbound/storage/tests/test_mirror_manifest.py -q`
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/tests/test_hardening_convention_guards.py src/aeat/adapters/outbound/storage/tests/test_mirror_manifest.py`
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
 
 Disposition: close `W12.P25.S102`. Remaining secure-storage plan work is outside the

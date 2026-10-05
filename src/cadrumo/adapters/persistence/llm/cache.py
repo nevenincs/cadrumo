@@ -273,7 +273,7 @@ class LLMCache:
         """Delete cached entries older than the retention window or beyond the count cap.
 
         Two-stage bound mirroring
-        :meth:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder.prune`: entries
+        :meth:`~adapters.persistence.llm.run_records.LLMRunRecorder.prune`: entries
         older than ``retention_days`` (measured against the current time) are
         removed, then -- if more than ``max_records`` remain -- the oldest excess
         entries beyond the cap are removed too. Both bounds default to the
@@ -338,28 +338,6 @@ class LLMCache:
         rows.sort(key=lambda item: item[0].created_at)
         return rows
 
-    def _path_for(self, key: CacheKey) -> Path:
-        """Return the logical cache path for a derived key.
-
-        Args:
-            key: Derived cache key.
-
-        Returns:
-            Logical path for displaying the cache entry location. The cache
-            itself is persisted in encrypted SQL secure objects.
-        """
-        # Sanitise the operator-controllable model string before path
-        # composition. ``model_override`` flows through provider
-        # configuration / env vars, so a malicious or accidentally-
-        # malformed value (``../../etc/passwd``, ``..\\foo``,
-        # ``C:\\bar``) must not let the cache write outside
-        # ``root_dir``. Forward slashes are normalised to ``__`` (a
-        # legitimate convention for namespaced model names like
-        # ``anthropic/claude-3-7-sonnet``); every other suspicious
-        # token is rejected.
-        sanitised_model = self._sanitise_model_for_path(key.model)
-        return self.root_dir / key.provider.value.lower() / sanitised_model / f"{key.prompt_hash}-{key.args_hash}.json"
-
     @staticmethod
     def _key_of(entry: CachedEntry) -> CacheKey:
         """Reconstruct the cache key a stored entry claims to be filed under.
@@ -410,15 +388,11 @@ class LLMCache:
     def _encode_model_for_object_key(cls, model: str) -> str:
         """Encode one accepted model identity injectively for secure storage.
 
-        The filesystem display path deliberately keeps its compact, lossy
-        normalisation (for example ``qwen:3b`` becomes ``qwen_3b``). Secure
-        object identity cannot use that representation: an underscore-bearing
-        model would alias the tagged model. Validate through the existing path
-        safety boundary, then hex-encode the original UTF-8 bytes. Hex is
+        Validate the model identity, then hex-encode the original UTF-8 bytes. Hex is
         reversible and contains neither the object-key delimiter nor path
         separators, so every accepted model string has one distinct safe token.
         """
-        cls._sanitise_model_for_path(model)
+        cls._validate_model_identity(model)
         return model.encode("utf-8").hex()
 
     def _logical_root(self) -> str:
@@ -429,7 +403,7 @@ class LLMCache:
         """Wrap a redacted entry with its logical partition before encryption.
 
         Serialised through :func:`~core.hashing.canonical_json_bytes`, the same
-        helper the sibling usage and run-telemetry stores write their payloads
+        helper the sibling usage and run-record stores write their payloads
         with, so all three diagnostic stores in this package produce one byte
         shape. ``entry`` reaches here as ``model_dump(mode="json")`` output that
         has been through redaction, so it is JSON-native and the helper's
@@ -463,23 +437,11 @@ class LLMCache:
         return isinstance(logical_root, str) and logical_root == self._logical_root()
 
     @staticmethod
-    def _sanitise_model_for_path(model: str) -> str:
-        """Normalise a model identifier into a single safe path segment.
+    def _validate_model_identity(model: str) -> None:
+        """Refuse empty, relative-path and malformed model identity segments.
 
-        Forward slashes (used for vendor-prefixed names like
-        ``anthropic/claude-3-7-sonnet``) are replaced with ``__`` so
-        the model becomes a single directory segment under the
-        provider directory. A colon (the Ollama ``name:tag`` separator,
-        e.g. ``qwen2.5vl:3b``) is normalised to ``_`` so the tag is
-        carried into a safe single segment rather than rejected. Every
-        other path-shaped or unsafe value raises.
-
-        Path-traversal and drive-letter shapes stay rejected: a Windows
-        drive path carries a backslash and is refused by the backslash
-        check before any colon is considered, and the sanitised colon
-        is a literal token inside one path segment joined under
-        ``root_dir`` — it can never re-introduce a drive prefix or an
-        alternate-data-stream separator.
+        Vendor namespaces and tags retain their original spelling; secure
+        object keys encode that identity without lossy normalisation.
         """
         if not model:
             raise LLMCacheError("LLM cache: model identifier must be non-empty")
@@ -489,10 +451,9 @@ class LLMCache:
             raise LLMCacheError(
                 f"LLM cache: model identifier must not contain backslashes: {model!r}",
             )
-        # Split and normalise on forward slashes so each segment is
+        # Split on forward slashes so each segment is
         # validated against path-traversal tokens individually.
         segments = model.split("/")
-        sanitised_segments: list[str] = []
         for segment in segments:
             if not segment:
                 raise LLMCacheError(
@@ -506,11 +467,3 @@ class LLMCache:
                 raise LLMCacheError(
                     f"LLM cache: model identifier segment must not start with '.': {model!r}",
                 )
-            # Normalise the Ollama ``name:tag`` separator into a safe
-            # single-character token. The backslash rejection above has
-            # already refused Windows drive paths (``C:\\foo``), so a
-            # residual colon here is a legitimate tag separator, not a
-            # drive letter; folding it to ``_`` keeps the segment a
-            # literal, traversal-free path token.
-            sanitised_segments.append(segment.replace(":", "_"))
-        return "__".join(sanitised_segments)

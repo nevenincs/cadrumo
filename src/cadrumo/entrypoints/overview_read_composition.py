@@ -1,4 +1,9 @@
-"""Compose canonical overview reads inside one authenticated profile worker."""
+"""Compose canonical overview reads inside one authenticated profile worker.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`,
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 
@@ -7,21 +12,23 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
-from ..application.overview.calendar_models import OverviewCalendar
+from ..application.overview.applicability_evidence import (
+    FilingYearApplicabilityEvidence,
+    bind_filing_year_applicability_evidence,
+)
+from ..application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..application.overview.read_calendar_projection import (
     OverviewAgendaSnapshot,
     OverviewBacklogSnapshot,
     OverviewCalendarSnapshot,
 )
-from ..application.overview.read_operation import (
+from ..application.overview.read_payload import (
     OverviewAgendaRead,
     OverviewBacklogRead,
     OverviewCalendarRead,
     OverviewExplainRead,
     OverviewPrepareRead,
-    OverviewReadKind,
     OverviewReadPayload,
-    OverviewReadRequest,
     OverviewStatusRead,
 )
 from ..application.overview.read_projection import (
@@ -34,11 +41,14 @@ from ..application.overview.read_projection import (
     OverviewPrepareSnapshot,
     OverviewStatusSnapshot,
 )
+from ..application.overview.read_request import OverviewReadKind, OverviewReadRequest
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..application.user_profile.projections import fact_value, projection_for_taxpayer, record_to_values
+from ..application.workflow.profile_bucket_models import ProfileBucketPointer
 from ..core.bucket_pointer import require_active_bucket_id
+from ..core.json_contract import Notice
 from ..core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -114,6 +124,36 @@ def _refusal_requirements(
     )
 
 
+def _filing_year_applicability_evidence(
+    bucket_id: str,
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> FilingYearApplicabilityEvidence:
+    """Bind the per-year profile and ledger evidence to this worker's profile and invoice stores.
+
+    The invoice reader is the one the filing calculation composes for the same
+    bucket, so the ledger signal reads exactly the catalogue the declaration
+    is built from.
+    """
+    from ..adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+
+    return bind_filing_year_applicability_evidence(
+        record=record,
+        schema=operation.profile_decode_context().schema,
+        bucket_id=bucket_id,
+        invoice_source_ports=InvoiceSourceResolverPorts(
+            catalogue_reader=InvoiceCatalogueSourceResolverAdapter(
+                repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
+            ),
+        ),
+        operation=operation,
+        today=today_madrid(),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _OverviewReadPorts:
     bucket_id: str
@@ -132,18 +172,30 @@ class _OverviewReadPorts:
             schema = operation.profile_decode_context().schema
             taxpayer = projection_for_taxpayer(record, schema=schema)
             raw_values = record_to_values(record, schema=schema)
+            evidence = _filing_year_applicability_evidence(self.bucket_id, record, operation=operation)
             if request.kind is OverviewReadKind.STATUS:
-                return self._status(request, operation=operation, raw_values=raw_values, taxpayer=taxpayer)
+                return self._status(
+                    request, operation=operation, raw_values=raw_values, taxpayer=taxpayer, evidence=evidence
+                )
             if request.kind is OverviewReadKind.CALENDAR:
                 return self._calendar(
-                    request, operation=operation, record=record, taxpayer=taxpayer, raw_values=raw_values
+                    request,
+                    operation=operation,
+                    record=record,
+                    taxpayer=taxpayer,
+                    raw_values=raw_values,
+                    evidence=evidence,
                 )
             if request.kind is OverviewReadKind.AGENDA:
-                return self._agenda(request, operation=operation, taxpayer=taxpayer, raw_values=raw_values)
+                return self._agenda(
+                    request, operation=operation, taxpayer=taxpayer, raw_values=raw_values, evidence=evidence
+                )
             if request.kind is OverviewReadKind.BACKLOG:
-                return self._backlog(request, operation=operation, taxpayer=taxpayer, raw_values=raw_values)
+                return self._backlog(
+                    request, operation=operation, taxpayer=taxpayer, raw_values=raw_values, evidence=evidence
+                )
             if request.kind is OverviewReadKind.EXPLAIN:
-                return self._explain(request, operation=operation, record=record, taxpayer=taxpayer)
+                return self._explain(request, operation=operation, record=record, taxpayer=taxpayer, evidence=evidence)
             return self._prepare(request, operation=operation)
 
     def _status(
@@ -153,10 +205,12 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         raw_values: Mapping[str, object],
         taxpayer: TaxpayerProfile,
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewStatusRead:
         from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
         from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
         from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
+        from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
         from ..application.filing.draft_revision_gate import require_modelo_draft_coordinates_current
         from ..application.overview.calendar import build_overview_calendar
         from ..application.overview.calendar_models import OverviewCalendarRange
@@ -189,7 +243,11 @@ class _OverviewReadPorts:
             operator_scope_ports=build_operator_scope_ports(),
             state=state,
             raw_values=raw_values,
-            read_ports=build_state_projection_read_ports(),
+            read_ports=build_state_projection_read_ports(
+                operation=operation,
+                objects=secure_object_repository_for_bucket(self.bucket_id),
+                bucket_id=self.bucket_id,
+            ),
             operation=operation,
         )
         today = today_madrid()
@@ -199,6 +257,7 @@ class _OverviewReadPorts:
             operation=operation,
             today=today,
             raw_values=raw_values,
+            applicability_evidence=evidence,
         )
         history = overview_no_aeat_history_notice(tax_route=derive_tax_route(taxpayer))
         return OverviewStatusRead(
@@ -216,10 +275,10 @@ class _OverviewReadPorts:
         record: UserProfileRecord,
         taxpayer: TaxpayerProfile,
         raw_values: Mapping[str, object],
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewCalendarRead:
         from ..application.overview.calendar import build_overview_calendar
         from ..application.overview.calendar_models import OverviewCalendarRange
-        from ..application.workflow.profile_bucket_scan import list_profile_buckets
         from ..domain.calculations.registry.applicability import derive_tax_route
         from ..domain.user_profile.values import ProfileSetupState
         from .payer_fact_migration_notices import pending_payer_fact_notices
@@ -246,7 +305,7 @@ class _OverviewReadPorts:
                 self.bucket_id, rng, expected_tax_id=expected_tax_id
             )
             events = (*live, *modelo_events)
-            evidence, evidence_notice = local_calendar_filing_evidence(
+            filing_evidence, evidence_notice = local_calendar_filing_evidence(
                 self.bucket_id, events, operation=operation, expected_tax_id=expected_tax_id
             )
             units, units_notice = local_modelo_work_units(self.bucket_id)
@@ -259,15 +318,15 @@ class _OverviewReadPorts:
                 raw_values=raw_values,
                 show_suppressed=bool(request.show_suppressed),
                 events=events,
-                filing_evidence=evidence,
+                filing_evidence=filing_evidence,
                 work_units=units,
                 live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
+                applicability_evidence=evidence,
             )
             active = OverviewCalendarSnapshot.from_calendar(calendar)
             legal_ref = _deemed_served_legal_ref(calendar, operation=operation)
-            notices = tuple(
-                OverviewNoticeSnapshot.from_notice(notice)
-                for notice in (
+            notices = _calendar_notice_snapshots(
+                (
                     live_notice,
                     modelo_notice,
                     evidence_notice,
@@ -275,7 +334,6 @@ class _OverviewReadPorts:
                     history,
                     *pending_payer_fact_notices(record, operation=operation),
                 )
-                if notice is not None
             )
         if not request.all_profiles:
             if active is None or calendar is None:
@@ -291,40 +349,8 @@ class _OverviewReadPorts:
                     warning_codes=tuple(warning.code for warning in calendar.warnings),
                 ),
             )
-        pointers = list_profile_buckets()
-        own_pointer = pointers.get(self.bucket_id)
-        other = tuple(
-            OverviewLockedProfileSnapshot(profile_id=pointer.bucket_id, label=pointer.label)
-            for bucket_id, pointer in sorted(pointers.items(), key=lambda pair: pair[1].label)
-            if bucket_id != self.bucket_id
-        )
-        incomplete = record.setup_state is not ProfileSetupState.COMPLETE
-        return OverviewCalendarRead(
-            survey=OverviewCalendarSurveySnapshot(
-                from_date=rng.from_date,
-                to_date=rng.to_date,
-                active_profile_id=self.bucket_id if active is not None else None,
-                active_label=own_pointer.label if own_pointer is not None and active is not None else None,
-                active_calendar=active,
-                locked=other,
-                setup_incomplete=(
-                    (OverviewLockedProfileSnapshot(profile_id=own_pointer.bucket_id, label=own_pointer.label),)
-                    if incomplete and own_pointer is not None
-                    else ()
-                ),
-            ),
-            notices=notices,
-            deemed_served_legal_ref=legal_ref,
-            refusal_requirements=(
-                _refusal_requirements(
-                    operation=operation,
-                    taxpayer=taxpayer,
-                    taxpayer_model_declared=calendar.taxpayer_model_declared,
-                    warning_codes=tuple(warning.code for warning in calendar.warnings),
-                )
-                if active is not None and calendar is not None
-                else ()
-            ),
+        return _calendar_profile_survey(
+            self.bucket_id, rng, record, operation, taxpayer, active, calendar, legal_ref, notices
         )
 
     def _agenda(
@@ -334,6 +360,7 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         taxpayer: TaxpayerProfile,
         raw_values: Mapping[str, object],
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewAgendaRead:
         from ..application.overview.agenda import build_overview_agenda
 
@@ -343,6 +370,7 @@ class _OverviewReadPorts:
             operation=operation,
             horizon_days=request.horizon_days or 14,
             raw_values=raw_values,
+            applicability_evidence=evidence,
         )
         return OverviewAgendaRead(
             agenda=OverviewAgendaSnapshot.from_agenda(agenda),
@@ -361,6 +389,7 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         taxpayer: TaxpayerProfile,
         raw_values: Mapping[str, object],
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewBacklogRead:
         from ..application.overview.backlog import build_overview_backlog
 
@@ -372,6 +401,7 @@ class _OverviewReadPorts:
             to_date=request.to_date,
             raw_values=raw_values,
             work_units=units,
+            applicability_evidence=evidence,
         )
         return OverviewBacklogRead(
             backlog=OverviewBacklogSnapshot.from_backlog(report),
@@ -391,6 +421,7 @@ class _OverviewReadPorts:
         operation: PinnedAuthorityOperation,
         record: UserProfileRecord,
         taxpayer: TaxpayerProfile,
+        evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewExplainRead:
         from ..application.overview.explain import build_overview_explain
         from ..domain.calculations.registry.applicability import ApplicabilityVerdict
@@ -398,7 +429,13 @@ class _OverviewReadPorts:
 
         if request.modelo is None:
             raise ValueError("explanation query requires modelo")
-        report = build_overview_explain(taxpayer, modelo=request.modelo, year=request.year, operation=operation)
+        report = build_overview_explain(
+            taxpayer,
+            modelo=request.modelo,
+            year=request.year,
+            operation=operation,
+            applicability_evidence=evidence,
+        )
         notices = (
             tuple(
                 OverviewNoticeSnapshot.from_notice(notice)
@@ -413,6 +450,7 @@ class _OverviewReadPorts:
         from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
         from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
         from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+        from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
         from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
         from ..application.ledger.preflight import preflight_ledger_tax_readiness
         from ..application.modelo.registry_discovery import registry_describe_modelo_for_scope
@@ -423,7 +461,11 @@ class _OverviewReadPorts:
         period = request.period.to_period()
         registry_describe_modelo_for_scope(request.modelo, period=period, operation=operation)
         transactions = TransactionCatalogueRepository(bucket_id=self.bucket_id)
-        read_ports = build_state_projection_read_ports()
+        read_ports = build_state_projection_read_ports(
+            operation=operation,
+            objects=secure_object_repository_for_bucket(self.bucket_id),
+            bucket_id=self.bucket_id,
+        )
         invoices = InvoiceCatalogueRepository(bucket_id=self.bucket_id).load()
         evidence = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=self.bucket_id)).list_all(
             bucket_id=self.bucket_id
@@ -459,3 +501,68 @@ def build_overview_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
 
 
 __all__ = ["build_overview_read_ports"]
+
+
+def _calendar_other_profiles(
+    active_bucket_id: str, pointers: Mapping[str, ProfileBucketPointer]
+) -> tuple[OverviewLockedProfileSnapshot, ...]:
+    """List every other public profile pointer in the established label order."""
+    other = tuple(
+        OverviewLockedProfileSnapshot(profile_id=pointer.bucket_id, label=pointer.label)
+        for bucket_id, pointer in sorted(pointers.items(), key=lambda pair: pair[1].label)
+        if bucket_id != active_bucket_id
+    )
+    return other
+
+
+def _calendar_profile_survey(
+    bucket_id: str,
+    rng: OverviewCalendarRange,
+    record: UserProfileRecord,
+    operation: PinnedAuthorityOperation,
+    taxpayer: TaxpayerProfile,
+    active: OverviewCalendarSnapshot | None,
+    calendar: OverviewCalendar | None,
+    legal_ref: str | None,
+    notices: tuple[OverviewNoticeSnapshot, ...],
+) -> OverviewCalendarRead:
+    """Project locked, incomplete, and active profiles without reading their private records."""
+    from ..application.workflow.profile_bucket_scan import list_profile_buckets
+    from ..domain.user_profile.values import ProfileSetupState
+
+    pointers = list_profile_buckets()
+    own_pointer = pointers.get(bucket_id)
+    other = _calendar_other_profiles(bucket_id, pointers)
+    incomplete = record.setup_state is not ProfileSetupState.COMPLETE
+    return OverviewCalendarRead(
+        survey=OverviewCalendarSurveySnapshot(
+            from_date=rng.from_date,
+            to_date=rng.to_date,
+            active_profile_id=bucket_id if active is not None else None,
+            active_label=own_pointer.label if own_pointer is not None and active is not None else None,
+            active_calendar=active,
+            locked=other,
+            setup_incomplete=(
+                (OverviewLockedProfileSnapshot(profile_id=own_pointer.bucket_id, label=own_pointer.label),)
+                if incomplete and own_pointer is not None
+                else ()
+            ),
+        ),
+        notices=notices,
+        deemed_served_legal_ref=legal_ref,
+        refusal_requirements=(
+            _refusal_requirements(
+                operation=operation,
+                taxpayer=taxpayer,
+                taxpayer_model_declared=calendar.taxpayer_model_declared,
+                warning_codes=tuple(warning.code for warning in calendar.warnings),
+            )
+            if active is not None and calendar is not None
+            else ()
+        ),
+    )
+
+
+def _calendar_notice_snapshots(notices: tuple[Notice | None, ...]) -> tuple[OverviewNoticeSnapshot, ...]:
+    """Keep every available calendar notice in source order without changing its facts."""
+    return tuple(OverviewNoticeSnapshot.from_notice(notice) for notice in notices if notice is not None)

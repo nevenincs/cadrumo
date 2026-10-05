@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#synthetic-fixture-primitive-encoding-discipline'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:2474e395b934cab18f9bde17021c4ab8d3e97132a6484779963e0f0996d297ab'
+modified: '2026-10-03'
+body_hash: 'sha256:4b03551dadb95a85710aa3bbd402b65f9b0bca944aa0ac13fac3cdd07d33d970'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
@@ -221,9 +221,9 @@ Reject for three reasons:
   surface (separate ADR
   `2026-06-03-fichero-boe-golden-sha-contract-shape-adr`).
 
-## Status
+## Adoption history
 
-Accepted. The discipline binds every new synthetic fixture and every
-remediated pre-existing one. The M303-specific synthetic generator spec
+The discipline binds every new synthetic fixture and every remediated
+pre-existing one. The M303-specific synthetic generator spec
 (`2026-06-03-m303-synthetic-generator-primitive-spec-adr`) is the first
 concrete application.

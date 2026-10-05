@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol
@@ -13,45 +11,29 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
-from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.period import Period
-from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
 from .iva_remote_state import capture_iva_compensation_wallet
 from .iva_remote_state_ports import IvaRemoteStatePort
+from .live_operation_execution import (
+    own_provider_browser,
+    publish_live_capture_report,
+    require_exact_profile_worker,
+    track_capture_session,
+)
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import IvaWalletCaptureReport
-from .session import LiveSessionWriteReceipt
 
 IVA_WALLET_CAPTURE_DEFINITION_ID = "live.iva-wallet.capture"
 _PHASES = ("iva-wallet.preflight", "iva-wallet.acquire", "iva-wallet.result")
@@ -101,7 +83,12 @@ class IvaWalletCaptureComposition(Protocol):
         ...
 
 
-IvaWalletCaptureCompositionFactory = Callable[[], IvaWalletCaptureComposition]
+class IvaWalletCaptureCompositionFactory(Protocol):
+    """Compose the wallet capture bundle under its held authority operation."""
+
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> IvaWalletCaptureComposition:
+        """Return the exact worker-local wallet composition."""
+        ...
 
 
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
@@ -144,18 +131,15 @@ class IvaWalletCaptureExecutor:
     ) -> str:
         """Capture and persist one wallet report with exact-profile authority."""
         payload = request.payload
-        profile_id = canonical_profile_bucket_id(payload.profile_id)
-        if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         period = Period.from_year_and_code(payload.target_year, payload.target_period)
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory()
-        resources = self._browser_resources_factory()
-        context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
-        await context.events.effect(OperationEffect.UNKNOWN)
-        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        composition = self._composition_factory(operation=context.authority_operation)
+        resources = await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_PHASES[1])
+        session_receipt = await track_capture_session(context, may_write=True)
         with resources.activate():
             report = await capture_iva_compensation_wallet(
                 ports=composition.iva_remote_state_port,
@@ -169,10 +153,9 @@ class IvaWalletCaptureExecutor:
             )
         if report.target_year != payload.target_year or report.target_period != period:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        await context.events.phase(_PHASES[2])
-        await context.events.effect(OperationEffect.UPDATED)
-        async with context.cancellation.irreversible_section():
-            return await context.operands.put(report, written_at=now())
+        return await publish_live_capture_report(
+            context, report, result_phase=_PHASES[2], effect=OperationEffect.UPDATED
+        )
 
 
 def build_iva_wallet_capture_definition(
@@ -185,34 +168,14 @@ def build_iva_wallet_capture_definition(
     def build() -> IvaWalletCaptureExecutor:
         return IvaWalletCaptureExecutor(composition_factory, browser_resources_factory, provider_preflight)
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=IVA_WALLET_CAPTURE_DEFINITION_ID,
         request_type=IvaWalletCaptureRequest,
         result_type=IvaWalletCaptureReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=IvaWalletCaptureRequest,
-            executor_type=IvaWalletCaptureExecutor,
-            build=build,
-        ),
+        executor_type=IvaWalletCaptureExecutor,
+        build=build,
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -225,25 +188,16 @@ def resolve_iva_wallet_capture_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     period = Period.from_year_and_code(request.payload.target_year, request.payload.target_period)
-    resolved = resolve_ledger_read_access(
+    return resolve_ledger_commit_access(
         request, context, profile_id=request.payload.profile_id, periods=frozenset({period})
     )
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
 
 
 def build_iva_wallet_capture_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind request, public report and scoped profile access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=IvaWalletCaptureRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=IvaWalletCapturePublicResultV1
-        ),
+        public_result_type=IvaWalletCapturePublicResultV1,
         result_projector=_project_result,
         access_resolver=resolve_iva_wallet_capture_access,
     )

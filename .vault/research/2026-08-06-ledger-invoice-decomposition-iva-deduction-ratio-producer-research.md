@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#ledger-invoice-decomposition'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:505b550f7f78a4502a33e38da5016e0859028056202fa07acc84076b06b8fc05'
-related:
-  - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
+body_hash: 'sha256:67177ccb78c4327baa31b8d1592465b922c4ef8bbf1afb7f096904f6cad499ff'
+related: []
 ---
 
 # `ledger-invoice-decomposition` research: `iva_deduction_ratio producer design (open, unresolved)`
@@ -142,10 +141,10 @@ question for whichever ADR settles this, not answered here.
 ## Sources
 
 - `src/cadrumo/domain/prorrata_register/__init__.py:147-211,415-423` — `ProrrataRegisterEntry`, `ProrrataRegister.is_sectorized`.
-- `src/cadrumo/core/_prorrata_register.py:39-60` — `ProrrataRegisterRegime` members and their documented meaning.
-- `src/cadrumo/application/aggregation/_iva_ledger.py:640-661,826-868,871-897` — `_active_prorrata_apportionment`, `_sector_scoped_apportionment`, and the `None`-means-full-deduction consumer.
-- `src/cadrumo/application/aggregation/_renta_ledger.py:299,300,315-318` — `activity_key` and the `modelo` parameter selecting M100 vs M130 deductibility rules.
-- `src/cadrumo/application/calculations/_prorrata_regularizacion.py` — the annual settlement path producing `definitive_percentage`.
-- `src/cadrumo/domain/censo/_certificado.py:56` — the bare `epigrafe_iae: str`, no derived IVA-exemption classification.
-- `src/cadrumo/domain/renta/_ledger_expenses.py` — `RentaDeductibilityContext.iva_deduction_ratio` and its `None`-means-not-evaluated contract, established alongside the #51 fix this document follows up on.
+- the former source file — `ProrrataRegisterRegime` members and their documented meaning.
+- the former source file — `_active_prorrata_apportionment`, `_sector_scoped_apportionment`, and the `None`-means-full-deduction consumer.
+- the former source file — `activity_key` and the `modelo` parameter selecting M100 vs M130 deductibility rules.
+- the former source file — the annual settlement path producing `definitive_percentage`.
+- the former source file — the bare `epigrafe_iae: str`, no derived IVA-exemption classification.
+- the former source file — `RentaDeductibilityContext.iva_deduction_ratio` and its `None`-means-not-evaluated contract, established alongside the #51 fix this document follows up on.
 - `src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf.extracted.md:19810-19947` — AEAT Manual práctico Renta 2024 médico radiólogo caso práctico, the wholly-exempt worked example motivating Finding C.

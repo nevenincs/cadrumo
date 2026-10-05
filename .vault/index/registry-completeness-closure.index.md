@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-30'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:17c8b6198aa980ea0a84c087d735d806ec956ec71e123827a11441796363502a'
+body_hash: 'sha256:affef1be6b59ac785ed76320b87637b0b6591cfd4e0025258b939b07cf3c738b'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
-  - '[[2026-08-24-registry-completeness-closure-W01-P01-summary]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
-  - '[[2026-08-24-registry-completeness-closure-ledger]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-source-connectivity-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference]]'
@@ -28,7 +26,6 @@ related:
   - '[[2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-763-design-era-and-filing-boundary-reference]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-840-record-terminator-and-design-extent-reference]]'
-  - '[[2026-08-24-registry-completeness-closure-plan]]'
   - '[[2026-08-24-registry-completeness-closure-redeclaration-rag-audit]]'
   - '[[2026-08-24-registry-completeness-closure-research]]'
   - '[[2026-08-24-registry-completeness-closure-s01-schema-family-coverage-review-audit]]'
@@ -137,8 +134,9 @@ related:
   - '[[2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit]]'
   - '[[2026-08-25-registry-completeness-closure-tracker-ownership-correction-audit]]'
   - '[[2026-08-26-registry-completeness-closure-s87-two-channel-cutover-review-audit]]'
-  - '[[2026-08-26-registry-completeness-closure-s88-locale-review-audit]]'
   - '[[2026-08-29-registry-completeness-closure-gate-staleness-sweep-audit]]'
+  - '[[2026-10-05-registry-completeness-closure-native-and-communication-proof-adr]]'
+  - '[[2026-10-05-registry-completeness-closure-native-and-communication-proof-research]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -151,6 +149,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 - `2026-08-24-registry-completeness-closure-adr` - `registry-completeness-closure` adr: `one derived release predicate for shipped registry completeness` | (**status:** `accepted`)
 - `2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr` - `registry-completeness-closure` adr: `S33 two-channel filing export proof` | (**status:** `accepted`)
+- `2026-10-05-registry-completeness-closure-native-and-communication-proof-adr` - `registry-completeness-closure` adr: `Prove existing communication and native XML exports through their production owners` | (**status:** `proposed`)
 
 ### audit
 
@@ -258,17 +257,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit` - `registry-completeness-closure` audit: `S35 source-casilla predecessor reconciliation`
 - `2026-08-25-registry-completeness-closure-tracker-ownership-correction-audit` - `registry-completeness-closure` audit: superseded tracker ownership correction
 - `2026-08-26-registry-completeness-closure-s87-two-channel-cutover-review-audit` - `registry-completeness-closure` audit: `s87 two channel cutover review`
-- `2026-08-26-registry-completeness-closure-s88-locale-review-audit` - `registry-completeness-closure` audit: `s88 locale review`
 - `2026-08-29-registry-completeness-closure-gate-staleness-sweep-audit` - `registry-completeness-closure` audit: `gate staleness sweep`
-
-### exec
-
-- `2026-08-24-registry-completeness-closure-W01-P01-summary` - `registry-completeness-closure` `W01.P01` summary
-- `2026-08-24-registry-completeness-closure-ledger` - `registry-completeness-closure` ledger
-
-### plan
-
-- `2026-08-24-registry-completeness-closure-plan` - `registry-completeness-closure` plan
 
 ### reference
 
@@ -295,3 +284,4 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 - `2026-08-24-registry-completeness-closure-research` - `registry-completeness-closure` research: `shipped corpus closure boundary`
 - `2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-research` - `registry-completeness-closure` research: `S33 two-channel filing export proof research`
+- `2026-10-05-registry-completeness-closure-native-and-communication-proof-research` - `registry-completeness-closure` research: `Production proof boundaries for communication and native XML export`

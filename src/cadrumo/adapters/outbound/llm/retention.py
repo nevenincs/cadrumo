@@ -1,8 +1,8 @@
 """Canonical two-stage retention selection for the LLM secure-object stores.
 
 The response cache (:class:`~adapters.persistence.llm.cache.LLMCache`), the usage
-ledger (:class:`~adapters.persistence.llm.usage.UsageRecorder`), and the run-telemetry
-recorder (:class:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder`) each bound
+ledger (:class:`~adapters.persistence.llm.usage.UsageRecorder`), and the run-record
+recorder (:class:`~adapters.persistence.llm.run_records.LLMRunRecorder`) each bound
 their store under one operational obligation: an age cutoff, then an
 oldest-first record-count cap. The namespaces, the settings that supply the
 bounds, and the record timestamp field differ per store by design -- the cache
@@ -46,7 +46,7 @@ def select_retention_removal_keys[RecordT](
             the cutoff, the oldest excess survivors are selected too.
         timestamp: Projection returning the record's retention timestamp --
             ``created_at`` for cache and usage records, ``started_at`` for run
-            telemetry.
+            records.
 
     Returns:
         Object keys to delete, age-expired first then count-capped. The two

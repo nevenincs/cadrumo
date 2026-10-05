@@ -12,10 +12,15 @@ from .....application.user_profile.custody_ports import (
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,
 )
+from ..crypto.aead import EncryptedBlob, decrypt_record
 from ..custody.capsule_records import ProfileCustodyCapsuleLabel
 from ..custody.label_head_models import ProfileLabelHead
 from ..custody.label_head_repository import ProfileLabelHeadRepository
+from ..custody.tests.label_head_probe import begin_advance
+from ..errors import DecryptionError
 from ..profile_custody import build_profile_custody_port
+from .local_record_probe import compare_and_replace
+from .passphrase_probe import open_with_passphrase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -27,7 +32,7 @@ def test_local_record_store_preserves_atomic_compare_and_clear_semantics(tmp_pat
 
     store.write(record, b"first", publish_once=True)
     assert store.read(record, maximum_bytes=16) == b"first"
-    store.compare_and_replace(record, expected=b"first", replacement=b"second", maximum_bytes=16)
+    compare_and_replace(store, record, expected=b"first", replacement=b"second", maximum_bytes=16)
     assert store.read_optional(record, maximum_bytes=16) == b"second"
     store.compare_and_clear(record, expected=b"second", maximum_bytes=16)
     assert store.read_optional(record, maximum_bytes=16) is None
@@ -51,6 +56,51 @@ def test_record_crypto_returns_the_application_dto_and_refuses_tampering() -> No
         crypto.decrypt_record(tampered, key=key, associated_data=associated_data)
 
 
+def test_profile_and_storage_blob_wire_contracts_round_trip_through_real_crypto() -> None:
+    crypto = build_profile_custody_port().record_crypto()
+    key = bytes(range(32))
+    associated_data = b"profile-record:blob-boundary-parity"
+
+    for plaintext in (b"", b"synthetic profile-record payload"):
+        application_blob = crypto.encrypt_record(
+            plaintext,
+            key=key,
+            associated_data=associated_data,
+        )
+        wire = application_blob.to_wire()
+
+        assert len(wire) == 12 + 16 + len(plaintext)
+        application_round_trip = ProfileRecordEncryptedBlob.from_wire(wire)
+        storage_round_trip = EncryptedBlob.from_wire(wire)
+
+        assert application_round_trip == application_blob
+        assert application_round_trip.to_wire() == wire
+        assert storage_round_trip.to_wire() == wire
+        assert (
+            crypto.decrypt_record(
+                application_round_trip,
+                key=key,
+                associated_data=associated_data,
+            )
+            == plaintext
+        )
+        assert (
+            decrypt_record(
+                storage_round_trip,
+                key=key,
+                associated_data=associated_data,
+            )
+            == plaintext
+        )
+
+        if not plaintext:
+            assert len(wire) == 28
+            with pytest.raises(ProfileRecordCryptoError, match="payload too short"):
+                ProfileRecordEncryptedBlob.from_wire(wire[:-1])
+            with pytest.raises(DecryptionError, match="payload too short"):
+                EncryptedBlob.from_wire(wire[:-1])
+
+
 def test_passphrase_crypto_returns_the_application_dto_and_refuses_tampering() -> None:
     crypto = build_profile_custody_port().record_crypto()
     associated_data = b"profile-bundle:test"
@@ -62,7 +112,8 @@ def test_passphrase_crypto_returns_the_application_dto_and_refuses_tampering() -
 
     assert type(sealed) is ProfilePassphraseEncryptedRecord
     assert (
-        crypto.open_with_passphrase(
+        open_with_passphrase(
+            crypto,
             sealed.blob,
             passphrase=b"a real operator passphrase 123",
             parameters=sealed.parameters,
@@ -76,7 +127,8 @@ def test_passphrase_crypto_returns_the_application_dto_and_refuses_tampering() -
         ciphertext=sealed.blob.ciphertext[:-1] + bytes((sealed.blob.ciphertext[-1] ^ 1,)),
     )
     with pytest.raises(ProfileRecordCryptoError, match="decryption failed"):
-        crypto.open_with_passphrase(
+        open_with_passphrase(
+            crypto,
             tampered,
             passphrase=b"a real operator passphrase 123",
             parameters=sealed.parameters,
@@ -113,11 +165,7 @@ def test_label_head_caller_explicitly_recovers_then_verifies_or_publishes(tmp_pa
         previous_label_digest=initial.content_digest,
     )
     repository = ProfileLabelHeadRepository(root=tmp_path)
-    repository.begin_advance(
-        current_head=initial_head,
-        current_label=initial,
-        replacement_label=replacement,
-    )
+    begin_advance(repository, current_head=initial_head, current_label=initial, replacement_label=replacement)
 
     recovered_head = port.verify_or_recover_initial_label_head(
         label=replacement,

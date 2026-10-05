@@ -94,7 +94,7 @@ def _seed_prior_year_percentage(obs_repo: CalculationObservationRepository, *, p
             source_kind="aeat_sede_justificante",
             source_headers=(
                 ObservedHeaderFact(
-                    header_key="declaration_type",
+                    header_key="filing.result_disposition",
                     value="I",
                     source_artefact_kind="submitted_file",
                     source_locator="test:prorrata-prior-declaration-type",

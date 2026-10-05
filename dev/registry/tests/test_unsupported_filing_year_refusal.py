@@ -25,6 +25,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.tests.filing_year_projection import project_filing_year
 
 from ..compiler.authority import compiled_bundled_authority
 
@@ -40,7 +41,7 @@ def _declared_years() -> tuple[int, ...]:
 def test_every_declared_year_is_admitted() -> None:
     """Anti-tautology: a guard that refused everything would pass the refusal proof below."""
     for year in _declared_years():
-        assert compiled_bundled_authority().project_filing_year(year) == year
+        assert project_filing_year(compiled_bundled_authority(), year) == year
 
 
 def test_filing_year_admission_delegates_to_the_declaration() -> None:
@@ -62,7 +63,7 @@ def test_filing_year_admission_delegates_to_the_declaration() -> None:
     projected: dict[int, int | None] = {}
     for year in probed:
         try:
-            projected[year] = authority.project_filing_year(year)
+            projected[year] = project_filing_year(authority, year)
         except RegistrySnapshotError:
             projected[year] = None
 
@@ -76,7 +77,7 @@ def test_a_year_below_the_declared_window_refuses() -> None:
     undeclared = min(_declared_years()) - 1
 
     with pytest.raises(RegistrySnapshotError, match=f"filing year {undeclared} is outside"):
-        compiled_bundled_authority().project_filing_year(undeclared)
+        project_filing_year(compiled_bundled_authority(), undeclared)
 
 
 def test_a_year_above_the_horizon_is_admitted_while_no_hard_ceiling_is_declared() -> None:
@@ -93,7 +94,7 @@ def test_a_year_above_the_horizon_is_admitted_while_no_hard_ceiling_is_declared(
     assert declaration is not None
     assert declaration.hard_ceiling is None, "this proof assumes the bundled span is open above its horizon"
 
-    assert compiled_bundled_authority().project_filing_year(declaration.horizon + 1) == declaration.horizon
+    assert project_filing_year(compiled_bundled_authority(), declaration.horizon + 1) == declaration.horizon
 
 
 def test_a_declared_hard_ceiling_closes_the_span_above_the_horizon() -> None:
@@ -111,7 +112,7 @@ def test_the_refusal_names_the_span_it_would_accept() -> None:
     undeclared = min(_declared_years()) - 1
 
     with pytest.raises(RegistrySnapshotError) as excinfo:
-        compiled_bundled_authority().project_filing_year(undeclared)
+        project_filing_year(compiled_bundled_authority(), undeclared)
 
     listed = str(excinfo.value)
     assert str(min(_declared_years())) in listed, (

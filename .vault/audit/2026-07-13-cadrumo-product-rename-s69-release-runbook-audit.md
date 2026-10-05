@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s69-release-runbook'
 date: '2026-07-13'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:71edd005ecc0dc08dfb507a30ea65b80c5a8fe916e9faa7ddfa0232e855f2b94'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s69-release-runbook` audit: `Cadrumo product rename S69 release runbook audit`

@@ -7,10 +7,14 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from dev.audit.unreachable_code import UnreachableCodeOutcome, run_unreachable_code_scan
+from dev.audit.unreachable_code import run_unreachable_code_scan
+from dev.audit.unreachable_models import Confidence, UnreachableCodeOutcome
+from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
+
+from .source_import_analysis import module_name_for, resolve_relative_import
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PACKAGE_ROOT = REPO_ROOT / "src" / "cadrumo"
+_PACKAGE_ROOT = REPO_ROOT / PRODUCT_PACKAGE
 
 
 @dataclass(frozen=True, order=True, slots=True)
@@ -54,12 +58,13 @@ def _declared_exports(tree: ast.Module) -> tuple[str, ...]:
     return ()
 
 
-def _imported_pairs(tree: ast.Module) -> set[tuple[str, str]]:
+def _imported_pairs(tree: ast.Module, module: str, is_package: bool) -> set[tuple[str, str]]:
     pairs: set[tuple[str, str]] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module:
-            tail = node.module.rsplit(".", 1)[-1]
-            pairs.update((tail, alias.name) for alias in node.names)
+        if isinstance(node, ast.ImportFrom):
+            base = resolve_relative_import(module, is_package, node.level, node.module)
+            if base:
+                pairs.update((base, alias.name) for alias in node.names)
     return pairs
 
 
@@ -80,24 +85,25 @@ def find_unconsumed(
     trees: dict[Path, ast.Module] = {}
     unread: list[str] = []
     for path in sorted(root.rglob("*.py")):
-        if "__pycache__" in path.parts or "tests" in path.parts or path.name.startswith("test_"):
+        if not is_production_source(path, root=root):
             continue
         try:
-            trees[path] = ast.parse(path.read_text(encoding="utf-8"))
-        except (OSError, SyntaxError):
-            unread.append(path.relative_to(root).as_posix())
+            trees[path] = ast.parse(path.read_bytes(), filename=str(path))
+        except (OSError, SyntaxError, UnicodeDecodeError) as error:
+            unread.append(f"{path.relative_to(root).as_posix()}: {type(error).__name__}: {error}")
     if unread:
         raise RuntimeError(f"unconsumed-export scan unreadable for {len(unread)} file(s): {unread}")
 
     consumed: set[tuple[str, str]] = set()
-    for tree in trees.values():
-        consumed.update(_imported_pairs(tree))
+    for path, tree in trees.items():
+        consumed.update(_imported_pairs(tree, module_name_for(path, src_root=root.parent), path.name == "__init__.py"))
     return tuple(
         sorted(
             UnconsumedExport(path.relative_to(root).as_posix(), name)
             for path, tree in trees.items()
             for name in _declared_exports(tree)
-            if (path.stem, name) not in consumed and (_audit_key(path, root), name) in unused
+            if (module_name_for(path, src_root=root.parent), name) not in consumed
+            and (_audit_key(path, root), name) in unused
         ),
     )
 
@@ -107,7 +113,11 @@ def run_gate(root: Path = _PACKAGE_ROOT) -> UnconsumedExportVerdict:
     result = run_unreachable_code_scan(REPO_ROOT)
     if result.outcome is UnreachableCodeOutcome.ERROR:
         raise RuntimeError(f"reachability scan unavailable, coverage unproven: {result.reason}")
-    unused = {(str(finding.path).replace("\\", "/"), finding.name) for finding in result.symbols}
+    unused = {
+        (str(finding.path).replace("\\", "/"), finding.name)
+        for finding in result.symbols
+        if finding.confidence is Confidence.EXACT
+    }
     return UnconsumedExportVerdict(find_unconsumed(root, unused))
 
 

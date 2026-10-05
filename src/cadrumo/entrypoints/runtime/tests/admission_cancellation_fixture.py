@@ -13,6 +13,7 @@ from typing import override
 
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import lease, worker_profiles
 from cadrumo.adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
+from cadrumo.adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.composition import OperationComposedServices
@@ -29,7 +30,7 @@ from cadrumo.application.runtime.worker_authorization import (
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
-from cadrumo.application.user_profile.operations import ProfileFieldMutationOperationRequest
+from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.config import override_settings
@@ -68,13 +69,15 @@ class FaultAuthorizationClient(WorkerAuthorizationClient):
 
     @override
     @asynccontextmanager
-    async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[None]:
+    async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         if isinstance(request, WorkerResponseScopeRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         action = request.request.action
         self.held.add(action)
         try:
-            yield
+            yield WorkerAuthorizationLease(
+                identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
+            )
         finally:
             self.held.remove(action)
 
@@ -129,6 +132,9 @@ async def _exercise_composed(tmp_path: Path) -> None:
                 ),
                 idempotency_key="cancelled-admission",
             )
+            # Finish fixture startup before timing the journal cancellation
+            # boundary; lazy registry composition can outlast its pause budget.
+            host._composed()
             submitting = asyncio.create_task(
                 host.submit(session_id=session.session_id, frontend=OperationFrontendProjection.MCP, request=request)
             )

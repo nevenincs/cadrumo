@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:5e28f139908fd0806d5da3382625b043fc49b87d034cff36638a66e62359de8b'
+modified: '2026-10-03'
+body_hash: 'sha256:dad11056006ec2358f9be379ab48b628e3e3f51c8ad5e14c8b991cfe54ebddde'
 related:
   - "[[2026-06-01-docs-educational-surface-adr]]"
 ---
@@ -34,12 +34,12 @@ on 2026-06-10; all RAG queries ran through the resident service
 ### F1. The shipped docs already own the right UX slot, but search is lexical-only
 
 - The docs theme ships a custom Ctrl/Cmd-K command palette (`initPalette`,
-  `docs/_static/aeat-docs.js` lines 214-360, already committed). It indexes
+  the former source file lines 214-360, already committed). It indexes
   **only** the rendered sidebar nav tree plus on-page TOC anchors
   (`navIndex()`), scores prefix/word/substring matches client-side, and
   appends a "Search the docs for ..." row that deep-links to Sphinx's stock
   `search.html?q=` full-text fallback. The sidebar trigger is
-  `docs/_templates/sidebar/aeat-search.html` (registered first in
+  the former source file (registered first in
   `html_sidebars`, `docs/conf.py:252-259`).
 - Sphinx/Furo ships the stock precompiled client-side full-text index
   (`searchindex.js`, ~1.54 MB) with **English-only stemming** — Spanish tax
@@ -56,7 +56,7 @@ on 2026-06-10; all RAG queries ran through the resident service
 
 ### F2. Hand-maintained terminology exists in at least four unsynchronised stores
 
-- `docs/glossary.md` — 114 lines, 26 hand-authored deflist entries. No gate
+- the former source file — 114 lines, 26 hand-authored deflist entries. No gate
   ties it to the registry, the `Modelo` enum, the locale catalogue, or the
   CLI tree; nothing reds when a term goes stale or new shipped vocabulary
   (IVA categories, carry/previous_filing, evidencia, recargo de equivalencia)
@@ -70,7 +70,7 @@ on 2026-06-10; all RAG queries ran through the resident service
   Agencia Estatal de Administración Tributaria" expanded by hand in ~12
   files. `docs/how-to/profile-setup.md` alone carries 51 deflist entries
   hand-mirroring typed enums, registry data, and locale help strings;
-  `docs/how-to/filing-periods.md` hand-enumerates the period-token closed set
+  the former source file hand-enumerates the period-token closed set
   that exists as a core enum.
 - Vault-side (unshipped): the 849-line Spanish-tax glossary reference with
   per-entry BOE/AEAT citations, and the 294-line quad-lingual i18n glossary
@@ -233,7 +233,7 @@ established registry authoring-compiler pattern:
    targets, legal grounding) consumed by the existing Ctrl-K palette —
    palette answers term queries first (definition card + jump targets), nav
    titles second, stock full-text third; (b) a **generated glossary page**
-   replacing `docs/glossary.md`, rendered from the same records (gitignored,
+   replacing the former source file, rendered from the same records (gitignored,
    regenerated per build, exactly like the CLI reference, honouring the
    user-docs language rules); (c) optionally a Sphinx-search synonym
    injection so the stock index also benefits from the rings.
@@ -285,7 +285,7 @@ the dev RAG index needs the F4 gaps closed:
 - Palette contract: how far the term card goes (definition + links vs
   rendered legal refs) and whether the artifact is sharded for page-load
   budget (26-entry glossary today vs thousands of term records).
-- Whether the generated glossary fully deletes `docs/glossary.md` in the
+- Whether the generated glossary fully deletes the former source file in the
   same change (no-legacy rule says yes — no parallel hand-written copy may
   survive).
 - Casilla enrolment depth: all 18,885 vs per-modelo curated subsets vs
@@ -506,9 +506,9 @@ casilla descriptions).
   docs pipeline, RAG architecture, corpus inventory, RAG index coverage
   audit), grounded via the resident RAG service (`--port 8766 --timeout 30`)
   and confirmed with `rg`/direct reads.
-- `docs/conf.py`, `docs/_static/aeat-docs.js`, `dev/docs/cli_reference.py`,
+- `docs/conf.py`, the former source file, `dev/docs/cli_reference.py`,
   `dev/docs/apidocs/`, `dev/docs/tests/test_docs_build.py`,
-  `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
+
 - Installed `vaultspec_rag` 0.2.17: `embeddings.py`, `config.py`,
   `store.py`, `search/_searcher.py`, `indexer/_chunking.py`,
   `indexer/_codebase_indexer.py`, `indexer/_chunk_worker.py`;

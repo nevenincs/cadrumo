@@ -1,0 +1,71 @@
+{
+  "abi": 1,
+  "paths": {
+    "stdlib": "python.zip",
+    "packages": "cadrumo/site-packages",
+    "native": "bin",
+    "authority": "data/authority",
+    "docs": "docs"
+  },
+  "files": {
+    "path_file": "cadrumo/python.pth",
+    "build_metadata": "data/build.json",
+    "native_manifest": "data/native-modules.json",
+    "package_manifest": "data/package-manifest.json",
+    "python_license": "docs/licenses/CPython.txt"
+  },
+  "stdlib_exclude": [
+    "site-packages",
+    "__pycache__",
+    "test",
+    "tests",
+    "idlelib",
+    "tkinter",
+    "turtledemo",
+    "ensurepip"
+  ],
+  "overrides": [
+    "CADRUMO_EXTERNAL_BIN_DIRS"
+  ],
+  "entrypoints": {
+    "aeat": "CADRUMO command line",
+    "cadrumo-mcp": "CADRUMO MCP server",
+    "cadrumo-runtime": "CADRUMO local runtime"
+  },
+  "user_docs": {
+    "directory": "user",
+    "manifest": "manifest.json",
+    "entry": "index.html",
+    "search": "pagefind/pagefind.js",
+    "languages": [
+      "en",
+      "es",
+      "ca",
+      "hu"
+    ],
+    "media_types": {
+      "names": {
+        "pagefind-entry.json": "application/json"
+      },
+      "extensions": {
+        "html": "text/html; charset=utf-8",
+        "css": "text/css; charset=utf-8",
+        "js": "text/javascript; charset=utf-8",
+        "mjs": "text/javascript; charset=utf-8",
+        "json": "application/json",
+        "woff2": "font/woff2",
+        "svg": "image/svg+xml",
+        "png": "image/png",
+        "wasm": "application/wasm",
+        "pf_meta": "application/octet-stream",
+        "pf_index": "application/octet-stream",
+        "pf_fragment": "application/octet-stream",
+        "pf_filter": "application/octet-stream",
+        "pagefind": "application/octet-stream"
+      }
+    }
+  },
+  "platforms": {
+    "windows-x64": "platforms/windows-x64.json"
+  }
+}

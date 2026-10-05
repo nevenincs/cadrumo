@@ -42,32 +42,60 @@ def test_registry_formula_runtime_rejects_non_decimal_input(
 def test_registry_formula_runtime_rejects_non_string_input_key_at_entry(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    with pytest.raises(RegistryValidationError, match=r"input keys must be canonical casilla\.id strings"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"input keys must be canonical casilla\.id strings",
+    ) as refused:
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
-            inputs={1: Decimal("1")},
+            inputs={1: Decimal("1"), "bad key": Decimal("2")},
             date_context={"filing_period": date(2026, 3, 31)},
         )
+    assert refused.value.translated_message == "errors.calc.unknown_input_casillas"
+    assert refused.value.context == {"casilla_ids": "1"}
+
+
+def test_registry_formula_runtime_aggregates_malformed_input_keys_with_numeric_identity(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    with pytest.raises(RegistryValidationError) as refused:
+        calculate_registry_snapshot(
+            committed_modelo_130_snapshot,
+            inputs={"bad key": Decimal("1"), "also bad": Decimal("2")},
+            date_context={"filing_period": date(2026, 3, 31)},
+        )
+    assert refused.value.translated_message == "errors.calc.unknown_input_casillas"
+    assert refused.value.context == {"casilla_ids": "also bad,bad key"}
 
 
 def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    with pytest.raises(RegistryValidationError, match=r"text_input keys must be canonical casilla\.id strings"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"text_input keys must be canonical casilla\.id strings",
+    ) as refused:
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={},
-            text_inputs={1: "general"},
+            text_inputs={1: "general", "bad key": "general"},
             date_context={"filing_period": date(2026, 3, 31)},
         )
+    assert refused.value.translated_message == "errors.calc.unknown_text_input_casillas"
+    assert refused.value.context == {"casilla_ids": "1"}
 
-    with pytest.raises(RegistryValidationError, match=r"text_input keys must be canonical casilla\.id strings"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"text_input keys must be canonical casilla\.id strings",
+    ) as refused:
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={},
-            text_inputs={"bad key": "general"},
+            text_inputs={"bad key": "general", "also bad": "other"},
             date_context={"filing_period": date(2026, 3, 31)},
         )
+    assert refused.value.translated_message == "errors.calc.unknown_text_input_casillas"
+    assert refused.value.context == {"casilla_ids": "also bad,bad key"}
 
 
 def test_validated_text_inputs_strip_operator_whitespace_before_runtime_use() -> None:

@@ -15,7 +15,7 @@ from ...application.ledger.confirmation_gate import confirmation_blockers
 from ...application.ledger.consent_withdrawal import ConsentedDispatch, survey_cloud_consent
 from ...application.ledger.country_vocabulary_advisory import country_vocabulary_advisory
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ...application.ledger.evidence_followup_operation import (
+from ...application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,

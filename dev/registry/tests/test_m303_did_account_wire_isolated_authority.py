@@ -45,10 +45,10 @@ from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
 )
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
 from cadrumo.domain.calculations.registry.schema_exports import (
@@ -139,6 +139,15 @@ _REVISION_ID = "2026-y-siguientes"
 _TAXPAYER_TAX_ID = "12345678Z"
 _REFUND_IBAN = "GB82WEST12345698765432"
 _CHARGE_IBAN = "ES9121000418450200051332"
+_REFUND_ACCOUNT = RefundAccount(
+    iban=_REFUND_IBAN,
+    swift_bic="DEUTDEFF",
+    bank_name="Refund Bank",
+    bank_address="Refund Street 1",
+    bank_city="Berlin",
+    bank_country_code="DE",
+)
+_CHARGE_ACCOUNT = ChargeAccount(iban=_CHARGE_IBAN)
 _LEGAL_REFS = (
     '"ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", '
     '"ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"'
@@ -623,8 +632,8 @@ def _m303_did_producer_snapshot(
         model_profile=iva_profile,
         elections=_elections(disposition),
         amendment_evidence=None,
-        refund_account=iva_profile.refund_account,
-        charge_account=iva_profile.charge_account,
+        refund_account=_REFUND_ACCOUNT,
+        charge_account=_CHARGE_ACCOUNT,
         m303_filing_facts=_m303_filing_facts(
             period,
             registry_snapshot=registry_snapshot,
@@ -644,15 +653,6 @@ def _taxpayer_profile() -> TaxpayerProfile:
             "cash_accounting_regime_enrolled": False,
             "voluntary_sii_enrolled": False,
             "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
-            "refund_account": {
-                "iban": _REFUND_IBAN,
-                "swift_bic": "DEUTDEFF",
-                "bank_name": "Refund Bank",
-                "bank_address": "Refund Street 1",
-                "bank_city": "Berlin",
-                "bank_country_code": "DE",
-            },
-            "charge_account": {"iban": _CHARGE_IBAN},
         },
     )
 

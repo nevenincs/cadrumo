@@ -23,7 +23,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
     derive_withholding_recognition,
 )
-from cadrumo.application.modelo.invoice_withholding_capture_operation import ModeloInvoiceWithholdingCaptureRequest
+from cadrumo.application.modelo.invoice_withholding_capture_contracts import ModeloInvoiceWithholdingCaptureRequest
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now

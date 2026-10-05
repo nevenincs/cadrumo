@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:79fa0f9bc5c53d9c1cd6f6b33c93eea2ed981103c4a30c692948ff8654b0be22'
+body_hash: 'sha256:c76e21b929651d7ef3e34d80cdfc666ccf0b6d064a6ae719d31e72af664bc6e1'
 related: []
 ---
 
@@ -27,7 +27,6 @@ bundled AEAT design corpus directly, never a transcribed number.
 
 ### The generic gate already exists and is landed red, deliberately
 
-`src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`
 implements the property with no modelo-specific code: for every exporting
 revision, take the published AEAT designs its `period_selector` claims, and
 require every pair of them to agree on the offset of every box (or page length)
@@ -160,18 +159,15 @@ reported as a gap, not a clean result.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`
   — the landed gate; its failure text is the live specification of the boundary
   set and should be re-run rather than quoted from memory.
-- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/revision.toml`,
-  `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml`,
-  `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0002-export-layout.part-001.toml:391-394`
+
   (casilla `01`, `offset = 169`) and `:513-516` (casilla `166`, `offset = 974`).
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/revision.toml`.
+
 - `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2019-2023/revision.toml`,
   `.../2024-y-siguientes/revision.toml`, and each revision's `export/*.toml`
   (casilla `03`, `offset = 141` vs `offset = 139`).
-- `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/revision.toml`.
+
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_{303,390,123,200,202,130,115,111,349}/files/*.extracted.md`
   — the bundled AEAT record-design corpus, parsed programmatically, never
   transcribed.

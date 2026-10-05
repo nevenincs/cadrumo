@@ -37,7 +37,7 @@ from ....core.operations import OperationEffect, profile_operation_subject
 from .. import _modelo_reconcile_cli as handler
 from .. import runtime_modelo_reconciliation_import as bridge
 from .._payloads_modelo_reconcile import ModeloReconcileResult
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -172,6 +172,8 @@ def test_import_handler_renders_registered_declaration_report(
     assert isinstance(result, ModeloReconcileResult)
     assert result.work_unit_id == _WORK_UNIT_ID
     assert result.bucket_id == str(_PROFILE)
+    assert result.calculation_revision_id is None
+    assert result.registry_snapshot_ref is None
     assert result.source_kind is ModeloReconciliationEvidenceKind.DECLARATION
     assert result.source_path == source_path
     assert result.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -184,6 +186,7 @@ def test_import_handler_renders_registered_declaration_report(
     assert rendered["lines"] == (
         f"work_unit_id\t{_WORK_UNIT_ID}",
         f"bucket\t{_PROFILE}",
+        "calculation_revision_id\tunknown",
         "source_kind\tdeclaration",
         f"source_path\t{source_path}",
         "verdict\tmismatches",

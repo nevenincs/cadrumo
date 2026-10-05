@@ -116,7 +116,7 @@ class WorkflowAbortSignalError(WorkflowError):  # internal control-flow signal, 
     :class:`application.workflow.run_models.WorkflowResult`. Subclasses
     :class:`WorkflowError` so the project-wide error-hierarchy rule
     still holds and the registry can bind a stable
-    ``INTERNAL_WORKFLOW_ABORT_SIGNAL`` code for telemetry.
+    ``INTERNAL_WORKFLOW_ABORT_SIGNAL`` code for records.
 
     Attributes:
         reason: The :class:`WorkflowAbortReason` that classifies the bailout.

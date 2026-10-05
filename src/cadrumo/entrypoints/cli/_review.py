@@ -7,10 +7,12 @@ import typer
 
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.review.enums import ReviewState
-from ...application.review.read_operation import (
+from ...application.review.read_contracts import (
     ReviewQueueReadRequest,
-    ReviewQueueRowProjection,
     ReviewViewReadRequest,
+)
+from ...application.review.read_projections import (
+    ReviewQueueRowProjection,
 )
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.external_constants import OutputLanguage

@@ -23,6 +23,7 @@ from cadrumo.application.user_profile.access_contracts import (
     Availability,
     DisclosureCategory,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -30,7 +31,6 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.access_policy import evaluate_operation_access
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationReceiptProjection,
@@ -42,7 +42,9 @@ from cadrumo.application.user_profile.automation_operations import (
     AutomationOperationRequest,
     build_automation_operation_definitions,
     build_automation_operation_registrations,
+    resolve_automation_human_access,
 )
+from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.core.operations import profile_operation_subject
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -159,6 +161,31 @@ def test_reviewed_decisions_require_the_digest_before_authorization(definition_i
     assert refusal.value.reason is AccessDenialCode.OPERATION_DENIED
 
 
+def test_result_without_a_registered_result_schema_is_unavailable() -> None:
+    registry = _registry()
+    profile_id = uuid4()
+    definition_id = AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
+    request = OperationRequest(
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        payload=AutomationOperationRequest(profile_id=profile_id, request_id=uuid4()),
+    )
+    contract = registry.lookup_public_contract(definition_id).model_copy(update={"result_schema": None})
+    with pytest.raises(ProfileAccessRefusedError) as refusal:
+        resolve_automation_human_access(
+            request,
+            OperationAccessContext(
+                profile_id=profile_id,
+                destination_id=uuid4(),
+                action=AccessAction.RESULT,
+                frontend=OperationFrontendProjection.CLI,
+                contract=contract,
+                published_authority=Availability.AVAILABLE,
+            ),
+        )
+    assert refusal.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
 def test_live_api_key_cannot_decline_a_reviewed_request() -> None:
     registry = _registry()
     profile_id, destination_id = uuid4(), uuid4()
@@ -257,7 +284,7 @@ def test_live_api_key_cannot_decline_a_reviewed_request() -> None:
                 login_id="login-a",
                 os_owner_id=binding.os_owner_id,
                 active=True,
-                locked=False,
+                lock_state=OsLockState.UNLOCKED,
                 unattended=LoginEligibility.ELIGIBLE,
                 credential_facilities=Availability.AVAILABLE,
             ),

@@ -24,7 +24,7 @@ from typing import Any, cast
 import pytest
 
 from ....adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
-from ....application.live.filed_data_capture import (
+from ....application.live.filed_history_discovery import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryReport,
     filed_history_discovery_report,

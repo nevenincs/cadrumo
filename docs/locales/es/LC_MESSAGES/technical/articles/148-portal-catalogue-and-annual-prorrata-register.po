@@ -1,0 +1,808 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 18:55+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:1
+msgid "portal catalogue and annual prorrata register"
+msgstr "catálogo de portales y registro anual de prorrata"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Descripción técnica general](../architecture.md) · [Índice de "
+"artículos](catalogue.md) · [Instantánea y guía de lectura](../reading-"
+"guide.md)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Esta página describe la instantánea analizada del código fuente. Sus "
+"hallazgos y limitaciones no certifican la rama actual."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:7
+msgid ""
+"**Report:** `STAGE-2-148` · **Topic:** [Business and taxpayer "
+"domain](../topics/business-and-taxpayer-domain.md)"
+msgstr ""
+"**Informe:** `STAGE-2-148` · **Tema:** [Dominio empresarial y del "
+"contribuyente](../topics/business-and-taxpayer-domain.md)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:10
+msgid "Scope"
+msgstr "Ámbito"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:12
+msgid ""
+"This chunk covers 55 files, 3,252 manifest-counted lines, 133,407 bytes, "
+"and 30,892 measured tokens. All seven bounded pages were read through "
+"their listed ranges. This is static inspection only; I did not import or "
+"execute the application, modify `src/`, run tests, or verify AEAT "
+"destinations or legal content externally."
+msgstr ""
+"Este bloque abarca 55 archivos, 3,252 líneas contadas en el manifiesto, "
+"133,407 bytes y 30,892 tokens medidos. Se leyeron las siete páginas "
+"acotadas a través de sus intervalos enumerados. Es exclusivamente una "
+"inspección estática; no importé ni ejecuté la aplicación, modifiqué "
+"`src/`, ejecuté pruebas ni verifiqué externamente destinos AEAT o "
+"contenido legal."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:14
+msgid "Product capabilities"
+msgstr "Capacidades del producto"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:16
+msgid ""
+"The notifications domain defines a typed, read-only reading for AEAT "
+"sanction/liquidation documents. It preserves the document’s identifiers, "
+"printed amounts, optional reductions, digest, and the distinction between"
+" an absent reduction and a printed zero. It computes the sum of the "
+"reductions that were actually supplied notification reading "
+"(`src/cadrumo/domain/notifications/sancion.py`)."
+msgstr ""
+"El dominio de notificaciones define una lectura tipada de solo lectura "
+"para documentos AEAT de sanciones y liquidaciones. Conserva "
+"identificadores del documento, importes impresos, reducciones opcionales,"
+" resumen y la distinción entre una reducción ausente y un cero impreso. "
+"Calcula la suma de las reducciones realmente suministradas. Lectura de "
+"notificaciones (`src/cadrumo/domain/notifications/sancion.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:18
+msgid ""
+"The portals domain is a declarative catalogue, not a browser or filing "
+"client. It describes authentication gateways, tax procedures, borrador "
+"services, consultation pages, payments, and reference pages. Each entry "
+"binds a stable portal enum to a configured host, URL, category, accepted "
+"auth methods, URL-stability tier, translation keys, and active/retired "
+"lifecycle metadata. The catalogue includes the retired Modelo 037 entry "
+"pointing to Modelo 036 and separate entries for Renta Web, Pre303, filing"
+" forms, payments, notifications, and expediente/document consultation "
+"taxonomy (`src/cadrumo/domain/portals/categories.py`) retired Modelo 037 "
+"entry "
+"(`src/cadrumo/domain/portals/_entries/portal_m037_censal_simplificada.py`)"
+" portal metadata (`src/cadrumo/domain/portals/metadata.py`)."
+msgstr ""
+"El dominio de portales es un catálogo declarativo, no un navegador ni "
+"cliente de presentación. Describe accesos de autenticación, "
+"procedimientos tributarios, servicios de borradores, páginas de consulta,"
+" pagos y páginas de referencia. Cada entrada vincula una enumeración "
+"estable de portal con servidor configurado, URL, categoría, métodos "
+"aceptados de autenticación, nivel de estabilidad de URL, claves de "
+"traducción y metadatos de ciclo de vida activo o retirado. El catálogo "
+"incluye la entrada retirada del Modelo 037 que apunta al Modelo 036 y "
+"entradas separadas para Renta Web, Pre303, formularios de presentación, "
+"pagos, notificaciones y consulta de expedientes y documentos. Taxonomía "
+"(`src/cadrumo/domain/portals/categories.py`), Entrada retirada del Modelo"
+" 037 "
+"(`src/cadrumo/domain/portals/_entries/portal_m037_censal_simplificada.py`),"
+" Metadatos de portales (`src/cadrumo/domain/portals/metadata.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:20
+msgid ""
+"Entry construction resolves hosts and portal paths through centralized "
+"external constants and validates URLs as HTTPS. Individual metadata "
+"checks host equality, anonymous-auth exclusivity, filing/censo path "
+"shape, and retired/replacement consistency. Import-time registry assembly"
+" checks unique entries, complete enum coverage, key-to-entry identity, "
+"and valid `replaced_by` links. Lookups support one portal, category "
+"listings, and filing/borrador portals linked to a modelo through "
+"validated registry application links entry builder "
+"(`src/cadrumo/domain/portals/_entries/common.py`) single-entry checks "
+"(`src/cadrumo/domain/portals/metadata.py`) registry assembly "
+"(`src/cadrumo/domain/portals/registry.py`) modelo portal lookup "
+"(`src/cadrumo/domain/portals/registry.py`)."
+msgstr ""
+"La construcción de entradas resuelve servidores y rutas de portales "
+"mediante constantes externas centralizadas y valida las URL como HTTPS. "
+"Las comprobaciones individuales de metadatos verifican igualdad del "
+"servidor, exclusividad de autenticación anónima, forma de rutas de "
+"presentación y censo y coherencia de retirada y sustitución. El "
+"ensamblaje del registro al importar comprueba entradas únicas, cobertura "
+"completa de la enumeración, identidad entre clave y entrada y enlaces "
+"`replaced_by` válidos. Las consultas admiten un portal, listados por "
+"categoría y portales de presentación o borradores vinculados a un modelo "
+"mediante enlaces de aplicación validados del registro. Constructor de "
+"entradas (`src/cadrumo/domain/portals/_entries/common.py`), "
+"Comprobaciones individuales de entradas "
+"(`src/cadrumo/domain/portals/metadata.py`), Ensamblaje del registro "
+"(`src/cadrumo/domain/portals/registry.py`), Consulta de portales de "
+"modelos (`src/cadrumo/domain/portals/registry.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:22
+msgid ""
+"The prorrata register stores provisional and settled percentages per "
+"exercise and sector, the evidence/provenance for the provisional value, "
+"the annual volumes behind a definitive percentage, transition evidence "
+"for opting into or revoking special prorrata, operator-declared "
+"differentiated sectors, and evidence-carrying activity rows. Its "
+"precedence resolver selects an authorized or activity-start provisional "
+"percentage ahead of a carried prior definitive percentage and returns an "
+"explicit unresolved result if no candidate has a percentage. Coverage "
+"helpers require the explicit whole-entity entry plus every declared "
+"sector and, when the regime applies, the five official activity slots "
+"register entry models "
+"(`src/cadrumo/domain/prorrata_register/register.py`) precedence resolver "
+"(`src/cadrumo/domain/prorrata_register/register.py`) coverage helpers "
+"(`src/cadrumo/domain/prorrata_register/register.py`)."
+msgstr ""
+"El registro de prorrata almacena porcentajes provisionales y liquidados "
+"por ejercicio y sector, pruebas y procedencia del valor provisional, "
+"volúmenes anuales que sustentan un porcentaje definitivo, pruebas de "
+"transición para optar por prorrata especial o revocarla, sectores "
+"diferenciados declarados por el operador y filas de actividades "
+"portadoras de pruebas. Su resolvedor de precedencia selecciona un "
+"porcentaje provisional autorizado o de inicio de actividad antes que un "
+"porcentaje definitivo anterior arrastrado y devuelve un resultado "
+"explícito sin resolver si ningún candidato tiene porcentaje. Los "
+"auxiliares de cobertura exigen la entrada explícita de toda la entidad "
+"más cada sector declarado y, cuando se aplica el régimen, las cinco "
+"posiciones oficiales de actividades. Modelos de entradas del registro "
+"(`src/cadrumo/domain/prorrata_register/register.py`), Resolvedor de "
+"precedencia (`src/cadrumo/domain/prorrata_register/register.py`), "
+"Auxiliares de cobertura "
+"(`src/cadrumo/domain/prorrata_register/register.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:24
+msgid "How it works and knowledge"
+msgstr "Funcionamiento y conocimiento"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:26
+msgid ""
+"Portal identifiers and the entry tuple are authored locally; hostnames, "
+"filing paths, and the mappings from modelos to portals are supplied by "
+"external constants and the calculation registry. The registry sorts "
+"results for deterministic consumers and omits CENSO entries from the "
+"filing-dispatch query, while callers can list that category directly. The"
+" package documentation explicitly places live reads, writing, signing, "
+"and payment in application/adapter layers, outside this metadata contract"
+" portal scope boundary (`src/cadrumo/domain/portals/__init__.py`) "
+"registry-bound links (`src/cadrumo/domain/portals/registry.py`)."
+msgstr ""
+"Los identificadores de portales y la tupla de entradas se definen "
+"localmente; los nombres de servidores, rutas de presentación y "
+"correspondencias entre modelos y portales los suministran constantes "
+"externas y el registro de cálculos. El registro ordena resultados para "
+"consumidores deterministas y omite entradas CENSO de la consulta de "
+"despacho de presentaciones, mientras que los llamadores pueden listar esa"
+" categoría directamente. La documentación del paquete sitúa "
+"explícitamente lecturas en vivo, escritura, firma y pago en capas de "
+"aplicación y adaptadores, fuera de este contrato de metadatos. Límite del"
+" ámbito de portales (`src/cadrumo/domain/portals/__init__.py`), Enlaces "
+"vinculados al registro (`src/cadrumo/domain/portals/registry.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:28
+msgid ""
+"The prorrata register keeps taxpayer facts rather than statutory "
+"constants. Regime names, provenance types, transition kinds, sector "
+"letters, and their precedence are resolved from registry-owned catalogue "
+"helpers. It validates duplicate `(ejercicio, sector)` entries, duplicate "
+"sector definitions, duplicate activity identities/slots, interrupted-year"
+" field coupling, transition evidence consistency, and completeness "
+"helpers. Annual definitive arithmetic is delegated to the separate IVA "
+"calculation substrate; this module is the durable cross-period record and"
+" precedence selector registry-owned prorrata vocabulary "
+"(`src/cadrumo/domain/prorrata_register/register.py`) register uniqueness "
+"and transition checks "
+"(`src/cadrumo/domain/prorrata_register/register.py`) delegated "
+"calculation boundary "
+"(`src/cadrumo/domain/prorrata_register/__init__.py`)."
+msgstr ""
+"El registro de prorrata conserva hechos de contribuyentes en lugar de "
+"constantes normativas. Los nombres de regímenes, tipos de procedencia, "
+"tipos de transiciones, letras de sectores y su precedencia se resuelven "
+"desde auxiliares de catálogos del registro. Valida entradas duplicadas "
+"`(ejercicio, sector)`, definiciones duplicadas de sectores, identidades y"
+" posiciones duplicadas de actividades, acoplamiento de campos de años "
+"interrumpidos, coherencia de pruebas de transición y auxiliares de "
+"integridad. La aritmética definitiva anual se delega al sustrato separado"
+" de cálculo IVA; este módulo es el registro duradero entre períodos y "
+"selector de precedencia. Vocabulario de prorrata del registro "
+"(`src/cadrumo/domain/prorrata_register/register.py`), Comprobaciones de "
+"unicidad del registro y transiciones "
+"(`src/cadrumo/domain/prorrata_register/register.py`), Límite de cálculo "
+"delegado (`src/cadrumo/domain/prorrata_register/__init__.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:30
+msgid ""
+"Other domain row types keep filing input structured: M232 materializes "
+"row slots from the selected mapping, M349 separates NIF prefix from the "
+"exported number and checks GB/XI transition rules, M347 aggregates annual"
+" amounts by counterparty before applying its dated threshold, and M210 "
+"requires compatible grouped-renta facts. The reduction calculators for "
+"pension withdrawals and SAL/SLL reserve contributions take their "
+"parameters from the shared governed-fact context rather than duplicating "
+"those values in portal or register data M232 materialization "
+"(`src/cadrumo/domain/modelos/m232_row_materialisation.py`) M349 context "
+"and export (`src/cadrumo/domain/modelos/row_models.py`) M347 aggregate "
+"threshold (`src/cadrumo/domain/modelos/row_models.py`) fact context "
+"(`src/cadrumo/domain/modelos/modelo_fact_context.py`)."
+msgstr ""
+"Otros tipos de filas del dominio mantienen estructurada la entrada de "
+"presentación: M232 materializa posiciones de filas desde la "
+"correspondencia seleccionada, M349 separa el prefijo NIF del número "
+"exportado y comprueba reglas de transición GB/XI, M347 agrega importes "
+"anuales por contraparte antes de aplicar su umbral fechado y M210 exige "
+"hechos compatibles de rentas agrupadas. Las calculadoras de reducciones "
+"por rescates de pensiones y aportaciones a reservas SAL/SLL toman sus "
+"parámetros del contexto compartido de hechos gobernados en lugar de "
+"duplicar esos valores en datos de portales o registros. Materialización "
+"M232 (`src/cadrumo/domain/modelos/m232_row_materialisation.py`), Contexto"
+" y exportación M349 (`src/cadrumo/domain/modelos/row_models.py`), Umbral "
+"agregado M347 (`src/cadrumo/domain/modelos/row_models.py`), Contexto de "
+"hechos (`src/cadrumo/domain/modelos/modelo_fact_context.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:32
+msgid "Security and implementation assessment"
+msgstr "Valoración de seguridad e implementación"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:34
+msgid ""
+"Central host resolution and HTTPS/host checks constrain portal metadata "
+"to configured host families. The enum-to-entry coverage check makes a "
+"newly added portal impossible to silently omit from the catalogue. The "
+"records include auth-method descriptions, but they do not enforce "
+"authentication or authorize a live action; those decisions remain at the "
+"access-gate and application boundary host resolution "
+"(`src/cadrumo/domain/portals/hosts.py`) portal integrity refusals "
+"(`src/cadrumo/domain/portals/errors.py`)."
+msgstr ""
+"La resolución central de servidores y las comprobaciones HTTPS y de "
+"servidor restringen los metadatos de portales a familias configuradas de "
+"servidores. La comprobación de cobertura de enumeración a entrada impide "
+"omitir silenciosamente del catálogo un portal recién añadido. Los "
+"registros incluyen descripciones de métodos de autenticación, pero no "
+"imponen autenticación ni autorizan una acción en vivo; esas decisiones "
+"siguen en el límite del control de acceso y de aplicación. Resolución de "
+"servidores (`src/cadrumo/domain/portals/hosts.py`), Rechazos de "
+"integridad de portales (`src/cadrumo/domain/portals/errors.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:36
+msgid ""
+"The provisional prorrata resolver keeps “unknown” separate from zero, "
+"which prevents a missing historical percentage from becoming a guessed "
+"deduction rate. One local ambiguity remains: if two candidates have the "
+"same highest-precedence provenance but different percentages, "
+"`resolve_provisional_percentage` retains whichever appears first because "
+"it replaces the winner only for a strictly higher rank. The result is "
+"therefore input-order dependent for that case; the producer should "
+"guarantee at most one candidate per winning provenance or the resolver "
+"should reject conflicting peers winner selection "
+"(`src/cadrumo/domain/prorrata_register/register.py`)."
+msgstr ""
+"El resolvedor de prorrata provisional mantiene «desconocido» separado de "
+"cero, impidiendo que un porcentaje histórico ausente se convierta en un "
+"tipo de deducción adivinado. Queda una ambigüedad local: si dos "
+"candidatos tienen la misma procedencia de máxima precedencia pero "
+"porcentajes distintos, `resolve_provisional_percentage` conserva el que "
+"aparece primero porque solo sustituye al ganador por un rango "
+"estrictamente superior. Por tanto, en ese caso el resultado depende del "
+"orden de entrada; el productor debería garantizar como máximo un "
+"candidato por procedencia ganadora o el resolvedor debería rechazar "
+"candidatos iguales en rango pero contradictorios. Selección del ganador "
+"(`src/cadrumo/domain/prorrata_register/register.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:38
+msgid ""
+"Two evidence strings have only length constraints rather than nonblank "
+"validation: `ProrrataActivityRow.evidence_reference` and "
+"`ProrrataRegisterEntry.authorisation_reference` can accept whitespace-"
+"only values under their current field declarations. Transition evidence "
+"does explicitly reject whitespace-only references. If these are treated "
+"as durable proof locators, align their validators so an empty-looking "
+"reference does not satisfy evidence coupling activity reference "
+"(`src/cadrumo/domain/prorrata_register/register.py`) authorisation "
+"reference (`src/cadrumo/domain/prorrata_register/register.py`) transition"
+" reference validation "
+"(`src/cadrumo/domain/prorrata_register/register.py`)."
+msgstr ""
+"Dos cadenas probatorias solo tienen restricciones de longitud en lugar de"
+" validación de contenido no vacío: "
+"`ProrrataActivityRow.evidence_reference` y "
+"`ProrrataRegisterEntry.authorisation_reference` pueden aceptar valores "
+"formados solo por espacios en blanco bajo sus declaraciones actuales de "
+"campos. Las pruebas de transición sí rechazan explícitamente referencias "
+"formadas solo por espacios. Si se tratan como localizadores duraderos de "
+"pruebas, alinea sus validadores para que una referencia aparentemente "
+"vacía no satisfaga el acoplamiento probatorio. Referencia de actividad "
+"(`src/cadrumo/domain/prorrata_register/register.py`), Referencia de "
+"autorización (`src/cadrumo/domain/prorrata_register/register.py`), "
+"Validación de referencias de transición "
+"(`src/cadrumo/domain/prorrata_register/register.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:40
+msgid ""
+"The M232 mapping and M349 NIF-format helper use `today_madrid()` when "
+"selecting some registry declarations, while related M349 prefix "
+"validation accepts an explicit filing year/period. Confirm that workflows"
+" only use those current-date helpers for current filings or provide a "
+"filing coordinate when historical correction is needed. No tests are "
+"included in the assigned chunk, and static inspection cannot confirm "
+"external URL freshness or the correctness of current published tax "
+"instructions M232 date choice "
+"(`src/cadrumo/domain/modelos/m232_row_materialisation.py`) M349 NIF date "
+"choice (`src/cadrumo/domain/modelos/row_models.py`)."
+msgstr ""
+"La correspondencia M232 y el auxiliar de formatos NIF M349 usan "
+"`today_madrid()` al seleccionar algunas declaraciones del registro, "
+"mientras que la validación relacionada de prefijos M349 acepta un año y "
+"período explícitos de presentación. Confirma que los flujos solo usen "
+"esos auxiliares de fecha actual para presentaciones actuales o "
+"proporcionen una coordenada de presentación cuando se necesite corrección"
+" histórica. El bloque asignado no incluye pruebas y la inspección "
+"estática no puede confirmar la actualidad de URL externas ni la "
+"corrección de instrucciones fiscales publicadas actuales. Elección de "
+"fecha M232 (`src/cadrumo/domain/modelos/m232_row_materialisation.py`), "
+"Elección de fecha NIF M349 (`src/cadrumo/domain/modelos/row_models.py`)."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:42
+msgid "Dependencies and follow-up"
+msgstr "Dependencias y seguimiento"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:44
+msgid ""
+"Keep portal host/path constants and model-to-portal application links "
+"synchronized with the curated entries; confirm retired entries retain "
+"useful historical links. Ensure prorrata seeding does not submit "
+"competing same-precedence candidates, reject blank authority/evidence "
+"locators, and apply the intended filing-period date for historical "
+"M232/M349 work. Confirm application code treats this package as metadata "
+"and uses the distinct live-access gates before remote navigation or "
+"actions."
+msgstr ""
+"Mantén sincronizadas las constantes de servidores y rutas de portales y "
+"los enlaces de aplicación entre modelos y portales con las entradas "
+"mantenidas; confirma que las entradas retiradas conserven enlaces "
+"históricos útiles. Asegúrate de que la inicialización de prorrata no "
+"envíe candidatos competidores de igual precedencia, rechaza localizadores"
+" vacíos de autoridad o pruebas y aplica la fecha prevista del período de "
+"presentación para trabajo histórico M232/M349. Confirma que el código de "
+"aplicación trate este paquete como metadatos y use los controles "
+"diferenciados de acceso en vivo antes de navegación o acciones remotas."
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:46
+msgid "Complete assigned-file coverage"
+msgstr "Cobertura completa de los archivos asignados"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:48
+msgid "notifications/__init__.py (`src/cadrumo/domain/notifications/__init__.py`)"
+msgstr "notifications/__init__.py (`src/cadrumo/domain/notifications/__init__.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:49
+msgid "notifications/sancion.py (`src/cadrumo/domain/notifications/sancion.py`)"
+msgstr "notifications/sancion.py (`src/cadrumo/domain/notifications/sancion.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:50
+msgid "portals/__init__.py (`src/cadrumo/domain/portals/__init__.py`)"
+msgstr "portals/__init__.py (`src/cadrumo/domain/portals/__init__.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:51
+msgid ""
+"portals/_entries/__init__.py "
+"(`src/cadrumo/domain/portals/_entries/__init__.py`)"
+msgstr ""
+"portals/_entries/__init__.py "
+"(`src/cadrumo/domain/portals/_entries/__init__.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:52
+msgid ""
+"portals/_entries/common.py "
+"(`src/cadrumo/domain/portals/_entries/common.py`)"
+msgstr ""
+"portals/_entries/common.py "
+"(`src/cadrumo/domain/portals/_entries/common.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:53
+msgid ""
+"portals/_entries/portal_calendario_contribuyente.py "
+"(`src/cadrumo/domain/portals/_entries/portal_calendario_contribuyente.py`)"
+msgstr ""
+"portals/_entries/portal_calendario_contribuyente.py "
+"(`src/cadrumo/domain/portals/_entries/portal_calendario_contribuyente.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:54
+msgid ""
+"portals/_entries/portal_cert_selection.py "
+"(`src/cadrumo/domain/portals/_entries/portal_cert_selection.py`)"
+msgstr ""
+"portals/_entries/portal_cert_selection.py "
+"(`src/cadrumo/domain/portals/_entries/portal_cert_selection.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:55
+msgid ""
+"portals/_entries/portal_cert_validation_rest.py "
+"(`src/cadrumo/domain/portals/_entries/portal_cert_validation_rest.py`)"
+msgstr ""
+"portals/_entries/portal_cert_validation_rest.py "
+"(`src/cadrumo/domain/portals/_entries/portal_cert_validation_rest.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:56
+msgid ""
+"portals/_entries/portal_clave_gestiones.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_gestiones.py`)"
+msgstr ""
+"portals/_entries/portal_clave_gestiones.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_gestiones.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:57
+msgid ""
+"portals/_entries/portal_clave_idp_root.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_idp_root.py`)"
+msgstr ""
+"portals/_entries/portal_clave_idp_root.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_idp_root.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:58
+msgid ""
+"portals/_entries/portal_clave_sede_entry.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_sede_entry.py`)"
+msgstr ""
+"portals/_entries/portal_clave_sede_entry.py "
+"(`src/cadrumo/domain/portals/_entries/portal_clave_sede_entry.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:59
+msgid ""
+"portals/_entries/portal_consulta_pagos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_consulta_pagos.py`)"
+msgstr ""
+"portals/_entries/portal_consulta_pagos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_consulta_pagos.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:60
+msgid ""
+"portals/_entries/portal_dnie_sede_entry.py "
+"(`src/cadrumo/domain/portals/_entries/portal_dnie_sede_entry.py`)"
+msgstr ""
+"portals/_entries/portal_dnie_sede_entry.py "
+"(`src/cadrumo/domain/portals/_entries/portal_dnie_sede_entry.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:61
+msgid ""
+"portals/_entries/portal_domiciliacion_bancaria.py "
+"(`src/cadrumo/domain/portals/_entries/portal_domiciliacion_bancaria.py`)"
+msgstr ""
+"portals/_entries/portal_domiciliacion_bancaria.py "
+"(`src/cadrumo/domain/portals/_entries/portal_domiciliacion_bancaria.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:62
+msgid ""
+"portals/_entries/portal_m036_censal.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m036_censal.py`)"
+msgstr ""
+"portals/_entries/portal_m036_censal.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m036_censal.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:63
+msgid ""
+"portals/_entries/portal_m037_censal_simplificada.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m037_censal_simplificada.py`)"
+msgstr ""
+"portals/_entries/portal_m037_censal_simplificada.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m037_censal_simplificada.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:64
+msgid ""
+"portals/_entries/portal_m100_renta.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m100_renta.py`)"
+msgstr ""
+"portals/_entries/portal_m100_renta.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m100_renta.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:65
+msgid ""
+"portals/_entries/portal_m111_retenciones_trabajo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m111_retenciones_trabajo.py`)"
+msgstr ""
+"portals/_entries/portal_m111_retenciones_trabajo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m111_retenciones_trabajo.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:66
+msgid ""
+"portals/_entries/portal_m115_retenciones_arrendamientos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m115_retenciones_arrendamientos.py`)"
+msgstr ""
+"portals/_entries/portal_m115_retenciones_arrendamientos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m115_retenciones_arrendamientos.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:67
+msgid ""
+"portals/_entries/portal_m123_retenciones_capital.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m123_retenciones_capital.py`)"
+msgstr ""
+"portals/_entries/portal_m123_retenciones_capital.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m123_retenciones_capital.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:68
+msgid ""
+"portals/_entries/portal_m130_pago_fraccionado_ed.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m130_pago_fraccionado_ed.py`)"
+msgstr ""
+"portals/_entries/portal_m130_pago_fraccionado_ed.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m130_pago_fraccionado_ed.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:69
+msgid ""
+"portals/_entries/portal_m131_pago_fraccionado_eo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m131_pago_fraccionado_eo.py`)"
+msgstr ""
+"portals/_entries/portal_m131_pago_fraccionado_eo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m131_pago_fraccionado_eo.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:70
+msgid ""
+"portals/_entries/portal_m180_resumen_arrendamientos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m180_resumen_arrendamientos.py`)"
+msgstr ""
+"portals/_entries/portal_m180_resumen_arrendamientos.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m180_resumen_arrendamientos.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:71
+msgid ""
+"portals/_entries/portal_m190_resumen_trabajo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m190_resumen_trabajo.py`)"
+msgstr ""
+"portals/_entries/portal_m190_resumen_trabajo.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m190_resumen_trabajo.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:72
+msgid ""
+"portals/_entries/portal_m193_resumen_capital.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m193_resumen_capital.py`)"
+msgstr ""
+"portals/_entries/portal_m193_resumen_capital.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m193_resumen_capital.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:73
+msgid ""
+"portals/_entries/portal_m200_sociedades_anual.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m200_sociedades_anual.py`)"
+msgstr ""
+"portals/_entries/portal_m200_sociedades_anual.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m200_sociedades_anual.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:74
+msgid ""
+"portals/_entries/portal_m202_sociedades_fraccionado.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m202_sociedades_fraccionado.py`)"
+msgstr ""
+"portals/_entries/portal_m202_sociedades_fraccionado.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m202_sociedades_fraccionado.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:75
+msgid ""
+"portals/_entries/portal_m232_vinculadas.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m232_vinculadas.py`)"
+msgstr ""
+"portals/_entries/portal_m232_vinculadas.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m232_vinculadas.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:76
+msgid ""
+"portals/_entries/portal_m303_iva_autoliquidacion.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m303_iva_autoliquidacion.py`)"
+msgstr ""
+"portals/_entries/portal_m303_iva_autoliquidacion.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m303_iva_autoliquidacion.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:77
+msgid ""
+"portals/_entries/portal_m347_operaciones_terceros.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m347_operaciones_terceros.py`)"
+msgstr ""
+"portals/_entries/portal_m347_operaciones_terceros.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m347_operaciones_terceros.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:78
+msgid ""
+"portals/_entries/portal_m349_intracomunitarias.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m349_intracomunitarias.py`)"
+msgstr ""
+"portals/_entries/portal_m349_intracomunitarias.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m349_intracomunitarias.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:79
+msgid ""
+"portals/_entries/portal_m369_oss_ioss.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m369_oss_ioss.py`)"
+msgstr ""
+"portals/_entries/portal_m369_oss_ioss.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m369_oss_ioss.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:80
+msgid ""
+"portals/_entries/portal_m390_resumen_iva.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m390_resumen_iva.py`)"
+msgstr ""
+"portals/_entries/portal_m390_resumen_iva.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m390_resumen_iva.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:81
+msgid ""
+"portals/_entries/portal_m720_bienes_extranjero.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m720_bienes_extranjero.py`)"
+msgstr ""
+"portals/_entries/portal_m720_bienes_extranjero.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m720_bienes_extranjero.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:82
+msgid ""
+"portals/_entries/portal_m840_iae.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m840_iae.py`)"
+msgstr ""
+"portals/_entries/portal_m840_iae.py "
+"(`src/cadrumo/domain/portals/_entries/portal_m840_iae.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:83
+msgid ""
+"portals/_entries/portal_mi_area_personal.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mi_area_personal.py`)"
+msgstr ""
+"portals/_entries/portal_mi_area_personal.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mi_area_personal.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:84
+msgid ""
+"portals/_entries/portal_mis_documentos_pendientes_firma.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_documentos_pendientes_firma.py`)"
+msgstr ""
+"portals/_entries/portal_mis_documentos_pendientes_firma.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_documentos_pendientes_firma.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:85
+msgid ""
+"portals/_entries/portal_mis_expedientes.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_expedientes.py`)"
+msgstr ""
+"portals/_entries/portal_mis_expedientes.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_expedientes.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:86
+msgid ""
+"portals/_entries/portal_mis_notificaciones.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_notificaciones.py`)"
+msgstr ""
+"portals/_entries/portal_mis_notificaciones.py "
+"(`src/cadrumo/domain/portals/_entries/portal_mis_notificaciones.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:87
+msgid ""
+"portals/_entries/portal_pago_autoliquidacion_cuenta.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_cuenta.py`)"
+msgstr ""
+"portals/_entries/portal_pago_autoliquidacion_cuenta.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_cuenta.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:88
+msgid ""
+"portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py`)"
+msgstr ""
+"portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:89
+msgid ""
+"portals/_entries/portal_pago_liquidaciones_deudas.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_liquidaciones_deudas.py`)"
+msgstr ""
+"portals/_entries/portal_pago_liquidaciones_deudas.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pago_liquidaciones_deudas.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:90
+msgid ""
+"portals/_entries/portal_pre303_ayuda.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pre303_ayuda.py`)"
+msgstr ""
+"portals/_entries/portal_pre303_ayuda.py "
+"(`src/cadrumo/domain/portals/_entries/portal_pre303_ayuda.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:91
+msgid ""
+"portals/_entries/portal_presentar_consultar_index.py "
+"(`src/cadrumo/domain/portals/_entries/portal_presentar_consultar_index.py`)"
+msgstr ""
+"portals/_entries/portal_presentar_consultar_index.py "
+"(`src/cadrumo/domain/portals/_entries/portal_presentar_consultar_index.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:92
+msgid ""
+"portals/_entries/portal_renta_web_borrador.py "
+"(`src/cadrumo/domain/portals/_entries/portal_renta_web_borrador.py`)"
+msgstr ""
+"portals/_entries/portal_renta_web_borrador.py "
+"(`src/cadrumo/domain/portals/_entries/portal_renta_web_borrador.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:93
+msgid ""
+"portals/_entries/portal_sede_root.py "
+"(`src/cadrumo/domain/portals/_entries/portal_sede_root.py`)"
+msgstr ""
+"portals/_entries/portal_sede_root.py "
+"(`src/cadrumo/domain/portals/_entries/portal_sede_root.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:94
+msgid "portals/categories.py (`src/cadrumo/domain/portals/categories.py`)"
+msgstr "portals/categories.py (`src/cadrumo/domain/portals/categories.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:95
+msgid "portals/codes.py (`src/cadrumo/domain/portals/codes.py`)"
+msgstr "portals/codes.py (`src/cadrumo/domain/portals/codes.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:96
+msgid "portals/errors.py (`src/cadrumo/domain/portals/errors.py`)"
+msgstr "portals/errors.py (`src/cadrumo/domain/portals/errors.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:97
+msgid "portals/hosts.py (`src/cadrumo/domain/portals/hosts.py`)"
+msgstr "portals/hosts.py (`src/cadrumo/domain/portals/hosts.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:98
+msgid "portals/metadata.py (`src/cadrumo/domain/portals/metadata.py`)"
+msgstr "portals/metadata.py (`src/cadrumo/domain/portals/metadata.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:99
+msgid "portals/registry.py (`src/cadrumo/domain/portals/registry.py`)"
+msgstr "portals/registry.py (`src/cadrumo/domain/portals/registry.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:100
+msgid ""
+"prorrata_register/__init__.py "
+"(`src/cadrumo/domain/prorrata_register/__init__.py`)"
+msgstr ""
+"prorrata_register/__init__.py "
+"(`src/cadrumo/domain/prorrata_register/__init__.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:101
+msgid ""
+"prorrata_register/protocols.py "
+"(`src/cadrumo/domain/prorrata_register/protocols.py`)"
+msgstr ""
+"prorrata_register/protocols.py "
+"(`src/cadrumo/domain/prorrata_register/protocols.py`)"
+
+#: ../../technical/articles/148-portal-catalogue-and-annual-prorrata-register.md:102
+msgid ""
+"prorrata_register/register.py "
+"(`src/cadrumo/domain/prorrata_register/register.py`)"
+msgstr ""
+"prorrata_register/register.py "
+"(`src/cadrumo/domain/prorrata_register/register.py`)"

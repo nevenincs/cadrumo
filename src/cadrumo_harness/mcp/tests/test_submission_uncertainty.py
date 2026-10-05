@@ -7,15 +7,17 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
-from cadrumo.application.auth.read_operation import AUTH_READ_OPERATION_DEFINITION_ID
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import RuntimeOperationSubmit, RuntimeOperationSubmitted
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.operations import profile_operation_subject
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

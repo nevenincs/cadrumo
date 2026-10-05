@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#docs-sequence-static-reasons'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:e34e96ba7b7fb4df8d3a46469761d3088772307faa0cb02effdc939502da3a0d'
+modified: '2026-10-03'
+body_hash: 'sha256:94be109ac6b516df5dc0c9313e3041577b41a175cce9137f08a1ac82737e33d3'
 related: []
 ---
 
@@ -56,8 +56,7 @@ page whose sandbox does. Blocked-ness there is a property of the pair
 ### The comparison used by a reproducibility probe must be the golden's own
 
 A raw byte comparison of two runs is STRICTER than the pipeline and manufactures
-false instabilities. `normalise_text_output` in
-`dev/docs/sequences/_golden_store.py:271` tokenises three roots — sandbox storage
+false instabilities. `normalise_text_output`  tokenises three roots — sandbox storage
 root, workdir, repository checkout root — and replaces the values in
 `GOLDEN_MASK_FIELDS`. A probe must compare post-normalisation output or it will
 report a per-run temp path that the golden would never have held. During this
@@ -73,7 +72,7 @@ golden unmasked.
 
 Separately, the path normaliser is deliberately value-anchored on the exact known
 roots so it can never over-mask an unrelated operator path
-(`dev/docs/sequences/_golden_store.py:104`). A path emitted as a SIBLING of the
+. A path emitted as a SIBLING of the
 sandbox storage root is consequently passed through verbatim, carrying the
 per-run temp directory into the golden. The normaliser is behaving exactly as
 designed; the frame is what does not fit. Widening either surface is a masking
@@ -209,14 +208,14 @@ that trade-off needs numbers the ADR should demand.
 
 ## Sources
 
-- `dev/docs/sequences/_schema.py` — the `StaticBlocker` taxonomy, including
+- the former source file — the `StaticBlocker` taxonomy, including
   `NONDETERMINISTIC_OUTPUT` and `SANDBOX_POSTURE`, added for the two classes
   above; `LIVE_AEAT` carries the corrected criterion.
-- `dev/docs/sequences/_golden_store.py:104` — `_path_replacements`, the
+- the former source file — `_path_replacements`, the
   value-anchored root tokenisation.
-- `dev/docs/sequences/_golden_store.py:271` — `normalise_text_output`, the
+- the former source file — `normalise_text_output`, the
   comparison a reproducibility probe must use.
-- `dev/docs/sequences/_runner.py:263` — `_live_aeat_tokens`, the fail-closed argv
+- the former source file — `_live_aeat_tokens`, the fail-closed argv
   scan; refusal at `_refuse_live_frames`.
 - `dev/docs/sequences/__main__.py` — `refresh_sequences` and `check_sequences`,
   the one-run write and the compare-against-committed paths.

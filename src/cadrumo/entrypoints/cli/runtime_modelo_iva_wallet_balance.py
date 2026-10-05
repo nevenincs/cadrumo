@@ -12,15 +12,12 @@ from ...application.modelo.iva_wallet_balance_operation import (
     ModeloIvaWalletBalanceProjection,
     ModeloIvaWalletBalanceRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,13 +60,7 @@ def read_modelo_iva_wallet_balance_for_cli(
         ):
             raise ValueError("IVA wallet balance result disagrees with its settled receipt")
     except Exception:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return ModeloIvaWalletBalanceRead(completion=completed, projection=projection)
 
 

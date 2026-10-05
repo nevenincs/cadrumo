@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cross-domain-continuity'
 date: '2026-07-01'
-modified: '2026-08-15'
-body_hash: 'sha256:9b013311cff60fe419e52959346beb399cec2b8ec68a455851435cc3453a653b'
+modified: '2026-10-03'
+body_hash: 'sha256:81d194bab33649446cc1eb94ac5fc0b33ee34b7cfc5e0a6a8e8ce61f6b7fa81f'
 related: []
 ---
 
@@ -12,62 +12,62 @@ related: []
 
 ## Scope
 
-- Reviewed W09.P41.S323 changes to `src/aeat/domain/user_profile/_schema.py`, `src/aeat/_data/registry/aeat/user_profile/schema.toml`, and focused user-profile schema tests.
+- Reviewed W09.P41.S323 changes to the retired module, the retired data file, and focused user-profile schema tests.
 - Checked that the change remains schema-only for attribution-entity socios and does not implement the later `atribucion_member` resolver or M100 cross-profile linkage.
 - Checked validation evidence from focused user-profile tests, touched-file ruff, vault plan check, and path-scoped diff check.
-- Reviewed W09.P41.S410 changes to `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/deadline_windows/0003-modelo-202-2025-3p.toml`, `src/aeat/_data/registry/aeat/legal/tax-framework.toml`, `src/aeat/_data/corpus/aeat_official/calendars/files/calendario-contribuyente-2025.pdf`, and `src/aeat/domain/calculations/registry/tests/test_modelo_202_deadline_windows.py`.
+- Reviewed W09.P41.S410 changes to the retired data file, the retired data file, `src/aeat/_data/corpus/aeat_official/calendars/files/calendario-contribuyente-2025.pdf`, and the retired test.
 - Checked that the 2025 `3P` direct-debit cutoff uses the year-specific AEAT 2025 contributor calendar, not only the general Modelo 202 instructions.
 - Checked validation evidence from focused Modelo 202 tests, touched-file ruff, plan check, source-resolution, and corpus fingerprint verification.
-- Reviewed W04.P19.S398 changes to `src/aeat/domain/calculations/registry/tests/test_modelo_131_regulatory_floor_predicate.py`.
+- Reviewed W04.P19.S398 changes to the retired test.
 - Checked that S398 closes on the shipped M131 `C01 -> C02` advisory predicate across all revisions, not on the rolled-back `C01 -> C07` predicate shape.
 - Checked validation evidence from focused Modelo 131 registry tests, authority-backed application advisory tests, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P41.S297 changes to `src/aeat/application/modelo/_calculation_actions.py` and `src/aeat/application/modelo/tests/test_modelo_131_data_base_binding_projection.py`.
+- Reviewed W09.P41.S297 changes to the retired module and the retired test.
 - Checked that S297 projects only M131 datos-base fixed-record bindings into liquidation casillas `01` and `02`, preserves the official no-datos-base casilla `04` branch, and does not globally project arbitrary manual fixed-record bindings.
 - Checked validation evidence from focused Modelo 131 registry/advisory/application tests, touched-file ruff, reviewer output, and RAG/reference grounding.
-- Reviewed W09.P41.S292 current CLI provenance surfaces and `src/aeat/entrypoints/cli/tests/test_modelo_verification_report_view.py`.
+- Reviewed W09.P41.S292 current CLI provenance surfaces and the retired test.
 - Checked that persisted `CalculationRevision.observations` are already exposed with `formula_id`, `legal_refs`, and `source_refs` through JSON revision payloads and the dedicated `work observations` sibling command.
 - Checked validation evidence from focused CLI provenance integration tests, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S294 changes to `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
+- Reviewed W09.P45.S294 changes to the retired test.
 - Checked that the regression uses the real `ledger import` CLI path, a real CSV dry run, and the current canonical period grammar `--period 1T --year 2026`.
 - Checked validation evidence from the focused ledger period grammar integration run, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S295 changes to `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py` and the four locale files.
+- Reviewed W09.P45.S295 changes to the retired test and the four locale files.
 - Checked that the current D5 profile-import behavior remains identity-preserving, while operator text now distinguishes UUID collision from label collision and no longer describes `--label` as fresh-copy creation.
 - Checked validation evidence from focused profile-import integration tests, touched-file ruff, locale scaffold/audit, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S239 changes to `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
+- Reviewed W09.P45.S239 changes to the retired test.
 - Checked that the broader historical ledger-import period testimonial is closed against the current canonical grammar: `--period 1T --year 2024` accepts, historical combined forms refuse, and bare `1T` without `--year` refuses on `ledger import`.
 - Checked validation evidence from targeted ledger-import period tests, the full ledger period grammar file, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S312 changes to `src/aeat/application/aggregation/_iva_ledger.py`, `src/aeat/application/ledger/_preflight.py`, focused preflight tests, and locale catalogues.
+- Reviewed W09.P45.S312 changes to the retired module, the retired module, focused preflight tests, and locale catalogues.
 - Checked that the W05.P24 D5 reject reasons are now live through ledger preflight and all supported locales, rather than remaining Hungarian-only scaffold extras.
 - Checked validation evidence from focused ledger preflight tests, original intracom/export aggregation tests, locale scaffold/audit, placeholder parity, touched-file ruff, diff check, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S303 changes to `src/aeat/application/wizard/_commands.py`, `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`, and profile-validation locale leaves.
+- Reviewed W09.P45.S303 changes to the retired module, the retired test, and profile-validation locale leaves.
 - Checked that profile-create wizard validation now catches pydantic `ValidationError` before the generic CLI boundary and renders concrete `--flag` details for the joint-taxation missing-spouse case.
 - Checked validation evidence from the focused Rosa regression, the full profile lifecycle CLI module, touched-file ruff, locale scaffold/audit, direct isolated CLI output, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S283 as a no-code closure against the retired `src/aeat/diagnostics/profile.py` target.
+- Reviewed W09.P45.S283 as a no-code closure against the retired module target.
 - Checked that `aeat.diagnostics` was removed as an unapproved production package, the last pre-delete profile implementation already used `tr("cli.diagnostics.profile.errors.*")`, and current approved diagnostics/profile-adjacent modules do not contain the targeted `BadParameter` residual.
 - Checked validation evidence from source/history searches, retired-surface tests, feature-scoped vault checks, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S284 changes to `src/aeat/application/wizard/_commands.py` and focused wizard/profile CLI tests.
+- Reviewed W09.P45.S284 changes to the retired module and focused wizard/profile CLI tests.
 - Checked that retired `aeat.diagnostics` secure-object code is not restored, locale CLI audit/scaffold output was already localized, and root `--version` remains the intentional machine-format semver path.
 - Checked that wizard success text rows now localize `profile`, `status`, `active_profile`, and `next` labels while JSON payload keys and notice shape remain unchanged.
 - Checked validation evidence from focused wizard tests, focused profile-create/edit CLI integration tests, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S236 changes to `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
+- Reviewed W09.P45.S236 changes to the retired test.
 - Checked that fresh `modelo work create` without `--revision` binds through the live registry authority for the supplied Modelo 131 year and period, while adjacent coverage preserves visible-target reuse and explicit revision mismatch refusal.
 - Checked validation evidence from focused modelo work UX integration tests, touched-file ruff, reviewer output, and RAG grounding.
 - Reviewed W09.P45.S237 as a no-code closure against current ledger classify/list/view/review/status behavior.
 - Checked that current classify validation no longer falls through to the generic `config repair` boundary, status emits concrete `readiness_issue` rows, and the Taller Norte transcript shows same-profile status, list, review, classify, and follow-up ready status.
 - Checked validation evidence from focused ledger classify/review/list/view integration tests, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S238 changes to `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`, focused Modelo bindings CLI tests, the missing-filter fixture test, and locale catalogues.
+- Reviewed W09.P45.S238 changes to the retired module, focused Modelo bindings CLI tests, the missing-filter fixture test, and locale catalogues.
 - Checked that unscoped `modelo bindings list` output remains available for discovery but now warns through the shared typed `notices` channel and text output before operators copy binding ids into `work calculate`.
 - Checked validation evidence from focused bindings CLI tests, schema conformance tests, placeholder parity, locale scaffold/audit, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S293 as a no-production closure against current missing-required verification finding language behavior and `src/aeat/application/modelo/tests/test_verification_finding_language.py`.
+- Reviewed W09.P45.S293 as a no-production closure against current missing-required verification finding language behavior and the retired test.
 - Checked that current `_missing_required_casilla_finding` already renders through `tr()` and that the new regression switches a real active-profile language from Catalan to Spanish against a real Modelo 130 registry casilla definition.
 - Checked validation evidence from the new focused application test, existing missing-required localization/provenance tests, touched-file ruff, reviewer output, and RAG grounding.
 - Reviewed W09.P45.S231 as a no-production closure against current `--retencion-observation` schema validation behavior and focused CLI boundary tests.
 - Checked that `_parse_typed_cli_observations` already catches pydantic validation and raises `typer.BadParameter` with flag and field detail before the generic command boundary can suggest `aeat config repair`.
 - Checked validation evidence from focused Modelo typed-observation and error-boundary integration tests, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S229 changes to `src/aeat/entrypoints/cli/_overview.py` and `src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+- Reviewed W09.P45.S229 changes to the retired module and the retired test.
 - Checked that `overview calendar` now registers `--output-language` and `--language` using the real `OutputLanguage` authority and activates the override before date parsing, active-profile lookup, and all-profiles dispatch.
 - Checked validation evidence from focused overview calendar CLI integration tests, touched-file ruff, reviewer output, and RAG grounding.
-- Reviewed W09.P45.S224 changes to `src/aeat/adapters/inbound/financial/providers/_csv.py`, provider CSV tests, and focused ledger import UX tests.
+- Reviewed W09.P45.S224 changes to the retired module, provider CSV tests, and focused ledger import UX tests.
 - Checked that missing and blank CSV currency still default to the configured default currency, while malformed nonblank currency is refused at import with row and column context before `RawTransaction` or `LedgerTransactionPayload` validation can leak.
 - Checked validation evidence from focused CSV provider tests, focused ledger import UX integration tests, touched-file ruff, reviewer output, and RAG grounding.
 - Reviewed W09.P45.S222 changes to financial-provider date parsing, CSV row error wrapping, localized financial error leaves, and focused ledger import UX tests.

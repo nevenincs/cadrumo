@@ -110,7 +110,7 @@ def _runtime_build_hook_base() -> Any:
 if TYPE_CHECKING:
 
     class _CustomBuildHookBase(BuildHookInterface[BuilderConfig]):
-        """Static view of the current Hatchling hook protocol."""
+        """Static view of the installed Hatchling hook protocol."""
 else:
     _CustomBuildHookBase = _runtime_build_hook_base()
 

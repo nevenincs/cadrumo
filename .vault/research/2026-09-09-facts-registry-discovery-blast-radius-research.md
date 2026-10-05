@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:642ee51e2a5d995eb4ac7fabf1ce3716245bbea87390512048550536d084aaab'
+body_hash: 'sha256:4aa2a5a2641fc421c60d97f43fb8aad3c70c9f686be697e32c6bd3d3f42be0a7'
 related: []
 ---
 
@@ -25,22 +25,20 @@ candidate from static analysis, not a claim of exhaustive coverage.
 `src/cadrumo/core/external_constants.py:531` through
 `src/cadrumo/core/external_constants.py:822` declares at least 35 candidate
 scalar or scheduled legal facts and four modelo classification groups.
-`src/cadrumo/external_constants.toml:1` configures endpoints and paths; it does
+the former source file configures endpoints and paths; it does
 not supply those legal values.
 
 ### Several Python values bypass data that already carries the same fact
 
-Runtime reads the Python Modelo 347 threshold at
-`src/cadrumo/application/aggregation/_counterpart.py:334`, while the revisioned
+Runtime reads the Python Modelo 347 threshold , while the revisioned
 registry declares `3005.06` at
-`src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/parameters/0001-threshold.toml:9`
+
 and
-`src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/parameters/0001-threshold.toml:9`.
+
 The article 7.p cap and maritime coefficient occur in
 `src/cadrumo/_data/registry/aeat/categories/trabajador_del_mar.toml:23`, but
 `src/cadrumo/domain/renta/maritime_exemption.py:279` consumes Python constants.
-Modelo 100 holds revisioned maternity parameters at
-`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0067-renta-2025-maternidad-art-81-1.toml:1`, while
+Modelo 100 holds revisioned maternity parameters , while
 `src/cadrumo/application/modelo/profile_binding.py:390` selects behavior using
 a static cutoff.
 
@@ -48,8 +46,7 @@ a static cutoff.
 
 `src/cadrumo/domain/invoices/enums.py:33` encodes IVA slots 0, 2, 4, 5, 7.5,
 10, and 21 as enum strings and returns the operative percentage at
-`src/cadrumo/domain/invoices/enums.py:212`. The dated schedule exists at
-`src/cadrumo/_data/registry/aeat/iva/rates.toml:14`. Static regulatory
+`src/cadrumo/domain/invoices/enums.py:212`. The dated schedule exists . Static regulatory
 projections also occur in `src/cadrumo/core/irnr.py:211`,
 `src/cadrumo/domain/contribuyente/renta_codes.py:18`,
 `src/cadrumo/core/result_disposition.py:113`, and
@@ -69,7 +66,7 @@ constant, and extraction logic.
 ### Resolution is fragmented even when the data is sound
 
 Revision parameters use the calculation registry; global legal parameters use
-`src/cadrumo/domain/calculations/registry/loader.py:121`; IVA rates use
+the former source file; IVA rates use
 `src/cadrumo/domain/iva/rates.py:46`; categories use
 `src/cadrumo/domain/categories/registry.py:53`; treaties use
 `src/cadrumo/domain/calculations/registry/convenio.py:204`; and authorisation
@@ -101,14 +98,12 @@ with provenance.
 ### Retirement ledger: direct consumers must lose static imports
 
 The M347 duplicate paths in
-`src/cadrumo/domain/calculations/registry/_m347_threshold.py:23`,
-`src/cadrumo/application/aggregation/_counterpart.py:329`,
+
 `src/cadrumo/domain/modelos/row_models.py:1067`, and
 `src/cadrumo/application/modelo/calculate_input.py:566` must converge before
 the declarations disappear. Other rewiring targets include
 `src/cadrumo/domain/calculations/registry/applicability_modelo202.py:118`,
-`src/cadrumo/application/modelo/_art20_advisory.py:76`,
-`src/cadrumo/application/modelo/_art52_advisory.py:117`,
+
 `src/cadrumo/domain/renta/maritime_exemption.py:242`,
 `src/cadrumo/domain/deadlines/models.py:817`, the descendant and family modules
 under `src/cadrumo/domain/contribuyente`,
@@ -127,20 +122,19 @@ After an authority provider owns typed rows, date and selector resolution,
 overlap refusal, evidence closure, fingerprints, and invalidation, delete the
 raw parser and cache lane in `src/cadrumo/domain/iva/rates.py:46` through
 `src/cadrumo/domain/iva/rates.py:279` and relocate then delete
-`src/cadrumo/_data/registry/aeat/iva/rates.toml` from its old authority path.
-`IvaRateTableRepository` in
-`src/cadrumo/core/resources/_repos/iva_rate_tables.py:17` is deleted if the
+the former source file from its old authority path.
+`IvaRateTableRepository`  is deleted if the
 authority cache replaces it; otherwise it survives only as a TOML-unaware thin
 facade.
 
 Apply the same condition to `load_recargo_rate_table`, its cache, hydration,
 reference coercion, and overlap functions in
 `src/cadrumo/domain/iva/recargo_equivalencia.py:198`, and to
-`src/cadrumo/_data/registry/aeat/iva/recargo-rates.toml`. Preserve the public
+the former source file. Preserve the public
 record and lookup contracts as provider projections until their callers have
 migrated.
 
-Delete `src/cadrumo/domain/iva/_grounding.py:39` only after facts validation
+Delete the former source file only after facts validation
 owns the evidence checks for rates, recargo, the IVA catalogue, place of
 supply, and verification codes. It is currently an independent catalogue,
 fingerprint, and citation-validation path.
@@ -156,15 +150,14 @@ wire taxonomy must not be renumbered as a side effect.
 
 ### Retirement ledger: legal-only loaders retire only after their last caller
 
-`load_legal_parameters_only` in
-`src/cadrumo/domain/calculations/registry/loader.py:121` is a conditional
+`load_legal_parameters_only`  is a conditional
 retirement API. Its current callers include IVA recargo, transaction retention
 rates, activity-selector code sets, and objective-estimation advisory logic.
 It can disappear only after the provider represents both scalar rates and
 classification sets without duplicating the existing legal TOML authority.
 
 The raw parser/cache portions of `src/cadrumo/domain/categories/registry.py:53`,
-`src/cadrumo/domain/iva/catalogue.py:38`, and
+the former source file, and
 `src/cadrumo/domain/iva/place_of_supply.py:187` are conditional targets when
 their structured families are enrolled. Their public domain resolution
 facades remain. `src/cadrumo/domain/auth/apoderamientos/catalogue.py:76` does
@@ -192,17 +185,14 @@ classified before any deletion.
 
 - `src/cadrumo/core/external_constants.py:531`
 - `src/cadrumo/core/external_constants.py:822`
-- `src/cadrumo/external_constants.toml:1`
-- `src/cadrumo/application/aggregation/_counterpart.py:334`
-- `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/parameters/0001-threshold.toml:9`
-- `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/parameters/0001-threshold.toml:9`
+
 - `src/cadrumo/_data/registry/aeat/categories/trabajador_del_mar.toml:23`
 - `src/cadrumo/domain/renta/maritime_exemption.py:279`
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0067-renta-2025-maternidad-art-81-1.toml:1`
+
 - `src/cadrumo/application/modelo/profile_binding.py:390`
 - `src/cadrumo/domain/invoices/enums.py:33`
 - `src/cadrumo/domain/invoices/enums.py:212`
-- `src/cadrumo/_data/registry/aeat/iva/rates.toml:14`
+
 - `src/cadrumo/core/irnr.py:211`
 - `src/cadrumo/domain/contribuyente/renta_codes.py:18`
 - `src/cadrumo/core/result_disposition.py:113`
@@ -211,7 +201,7 @@ classified before any deletion.
 - `src/cadrumo/application/modelo/profile_binding.py:857`
 - `src/cadrumo/application/calculations/m303_regimen_simplificado.py:127`
 - `src/cadrumo/domain/contribuyente/inventory/valuation.py:121`
-- `src/cadrumo/domain/calculations/registry/loader.py:121`
+
 - `src/cadrumo/domain/iva/rates.py:46`
 - `src/cadrumo/domain/categories/registry.py:53`
 - `src/cadrumo/domain/calculations/registry/convenio.py:204`

@@ -13,11 +13,32 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Final
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 UTF_8: Final[str] = "utf-8"
+
+# Standalone dev commands may not run from an editable installation. Make the
+# checkout's source package importable before dev tooling reaches its storage
+# path authority.
+_SOURCE_ROOT = REPO_ROOT / "src"
+if _SOURCE_ROOT.is_dir() and str(_SOURCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SOURCE_ROOT))
+
+from cadrumo.core.storage_environment import prepare_temporary_directory, tool_storage_environment  # noqa: E402
+
+# Every standalone dev entrypoint that imports this module gets the same
+# overrideable build/cache paths and a controlled stdlib temp root. Pytest's
+# run bootstrap narrows TEMP to per-run scratch before tests execute; nested
+# processes keep that binding instead of widening it here.
+os.environ.update(tool_storage_environment())
+sys.pycache_prefix = os.environ["PYTHONPYCACHEPREFIX"]
+if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
+    _TEMP_ROOT = prepare_temporary_directory()
+    os.environ.update({"TEMP": str(_TEMP_ROOT), "TMP": str(_TEMP_ROOT), "TMPDIR": str(_TEMP_ROOT)})
+    tempfile.tempdir = str(_TEMP_ROOT)
 
 AUTHORITY_ROOT_ENV: Final[str] = "CADRUMO_AUTHORITY_ROOT"
 """Environment variable naming the directory holding the published authority."""

@@ -92,6 +92,7 @@ def test_prepared_export_recovers_at_original_absolute_path_after_cwd_change(
             prepared = prepare_profile_export(
                 _request(Path("portable.bundle")),
                 journal=repository,
+                authority_operation=authority,
                 profile_decode_context=decode,
                 authorized_profile_id=profile_id,
             )
@@ -125,6 +126,7 @@ def test_relative_export_request_publishes_to_anchored_destination(
         with bundled_indexed_authority().operation() as authority:
             result = export_profile_bundle(
                 _request(Path("portable.bundle")),
+                authority_operation=authority,
                 profile_decode_context=authority.profile_decode_context(),
                 authorized_profile_id=profile_id,
             )
@@ -180,6 +182,7 @@ def test_unresolved_same_identity_cannot_replace_the_only_staged_journal(
         with bundled_indexed_authority().operation() as authority, pytest.raises(ProfileExportError) as refused:
             export_profile_bundle(
                 _request(first / "legacy.bundle"),
+                authority_operation=authority,
                 profile_decode_context=authority.profile_decode_context(),
                 authorized_profile_id=profile_id,
             )

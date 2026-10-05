@@ -20,7 +20,11 @@ from ...application.runtime.profile_worker import (
     ProfileWorkerSubmissionChunkRequest,
     ProfileWorkerSubmissionFinishRequest,
 )
-from ...application.runtime.submission_payload import SUBMISSION_PAYLOAD_TIMEOUT_SECONDS, SubmissionPayloadBuffer
+from ...application.runtime.submission_payload import (
+    SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
+    FinancialOperandInputDescriptor,
+    SubmissionPayloadBuffer,
+)
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 
 _MAX_UPLOADS = 2
@@ -36,6 +40,7 @@ class StagedSubmission:
     subject_ref: OperationReference
     payload_json: str = field(repr=False)
     idempotency_key: str | None = field(repr=False)
+    financial_input: bool = False
 
 
 @dataclass(slots=True)
@@ -47,6 +52,7 @@ class _Upload:
     subject_ref: OperationReference
     idempotency_key: str | None = field(repr=False)
     expires_at: float
+    financial_input: bool
     buffer: SubmissionPayloadBuffer
 
 
@@ -75,6 +81,7 @@ class WorkerSubmissionStaging:
             idempotency_key=request.idempotency_key,
             expires_at=self._clock() + SUBMISSION_PAYLOAD_TIMEOUT_SECONDS,
             buffer=SubmissionPayloadBuffer(request.descriptor),
+            financial_input=isinstance(request.descriptor, FinancialOperandInputDescriptor),
         )
 
     def append(self, request: ProfileWorkerSubmissionChunkRequest) -> None:
@@ -102,6 +109,7 @@ class WorkerSubmissionStaging:
             subject_ref=upload.subject_ref,
             payload_json=payload_json,
             idempotency_key=upload.idempotency_key,
+            financial_input=upload.financial_input,
         )
 
     def abort(self, request: ProfileWorkerSubmissionAbortRequest) -> None:

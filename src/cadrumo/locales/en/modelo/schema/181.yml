@@ -35,6 +35,10 @@ modelo:
               label: Duration of the transaction in months
             fecha-operacion:
               label: Transaction date
+            iban-codigo-pais:
+              label: Country code of the operation IBAN
+            iban-digitos-control:
+              label: Check digits of the operation IBAN
             identificacion-operacion:
               label: Identifier of the loan, credit or other financial transaction
             importe-amortizacion-capital:
@@ -55,6 +59,38 @@ modelo:
               label: Total interest paid during the year
             importe-total-saldos-pendientes:
               label: Total balances outstanding at 31 December
+            inmueble-bloque:
+              label: Property block
+            inmueble-calificador-numero:
+              label: Property house-number qualifier
+            inmueble-codigo-municipio:
+              label: Property municipality code
+            inmueble-codigo-postal:
+              label: Property postal code
+            inmueble-codigo-provincia:
+              label: Property province code
+            inmueble-complemento:
+              label: Property address complement
+            inmueble-escalera:
+              label: Property stairway
+            inmueble-localidad:
+              label: Property locality
+            inmueble-municipio:
+              label: Property municipality
+            inmueble-nombre-via:
+              label: Property street name
+            inmueble-numero-casa:
+              label: Property house number
+            inmueble-planta:
+              label: Property floor
+            inmueble-portal:
+              label: Property entrance
+            inmueble-puerta:
+              label: Property door
+            inmueble-tipo-numeracion:
+              label: Property numbering type
+            inmueble-tipo-via:
+              label: Property street type
             intereses-indemnizatorios:
               label: Compensatory interest
             numero-identificativo-anterior:
@@ -93,8 +129,12 @@ modelo:
               label: Transaction type
             valor-tasacion-inmueble:
               label: Appraised value of the property pledged as security
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Supplementary return
             x-chim6r1ecll6asj3d5hmiro:
               label: Filing year to which the return relates
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: Replacement return
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Return type (original / substitute / supplementary)
           field:

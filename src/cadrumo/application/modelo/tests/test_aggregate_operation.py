@@ -28,11 +28,13 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
+from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...aggregation.retenciones import RetencionObservation
 from ...aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor, aggregate_per_modelo
+from ...aggregation.tests.withholding_filer_profile_support import withholding_filer_cadence
 from ...aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
     WithholdingWindowBaseline,
@@ -52,21 +54,20 @@ from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..aggregate_operation import (
+from ..aggregate_contracts import (
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
     MODELO_AGGREGATE_UNSUPPORTED_MODELO_REFUSAL_CODE,
+)
+from ..aggregate_operation import (
     ModeloAggregateExecutor,
-    ModeloAggregateOperationPorts,
-    ModeloAggregateOperationPortsFactory,
-    ModeloAggregateOperationRequest,
-    ModeloAggregateProjection,
-    ModeloAggregateReport,
     build_modelo_aggregate_operation_definition,
     build_modelo_aggregate_operation_registration,
-    project_modelo_aggregate_result,
     resolve_modelo_aggregate_access,
 )
+from ..aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
+from ..aggregate_projection import ModeloAggregateProjection, ModeloAggregateReport, project_modelo_aggregate_result
 from ..aggregate_public import PublicModeloAggregateCommand
+from ..aggregate_request import ModeloAggregateOperationRequest
 from .withholding_window_operation_test_support import WithholdingWindowServiceFixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -192,6 +193,34 @@ class _RetencionRepository:
         raise AssertionError("the periodic aggregate must not read historical observations")
 
 
+class _PercepcionRepository:
+    def __init__(self, annual: tuple[WithholdingObservation, ...] = ()) -> None:
+        self.annual = annual
+        self.annual_loads: list[tuple[str, int]] = []
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[WithholdingObservation, ...]:
+        raise AssertionError("an annual summary composes its periodic windows, not a window of its own")
+
+    def load_annual_source_observations(
+        self, source_modelo: str, filing_year: int
+    ) -> tuple[WithholdingObservation, ...]:
+        self.annual_loads.append((source_modelo, filing_year))
+        return self.annual
+
+    def replace_observations(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observations: Sequence[WithholdingObservation],
+        source_kind: AggregationCaptureKind,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> None:
+        raise AssertionError("the aggregate read must not replace observations")
+
+
 class _WindowService(WithholdingWindowServiceFixture):
     def __init__(self, *, generation: int = 0, observations: tuple[RetencionObservation, ...] = ()) -> None:
         super().__init__(baseline=_BASELINE, generation=generation, observations=observations)
@@ -202,11 +231,13 @@ def _ports(
     observations: tuple[RetencionObservation, ...] = (),
     window_service: _WindowService | None = None,
     transaction_repository: _TransactionRepository | None = None,
+    percepciones: _PercepcionRepository | None = None,
 ) -> ModeloAggregateOperationPorts:
     return ModeloAggregateOperationPorts(
         profile_id=str(_PROFILE),
         transaction_catalogue_repository=transaction_repository or _TransactionRepository(),
         retencion_observation_repository=_RetencionRepository(observations),
+        percepcion_observation_repository=percepciones or _PercepcionRepository(),
         withholding_observation_service=window_service or _WindowService(observations=observations),
     )
 
@@ -316,7 +347,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
         retencion_amount=Decimal("15.00"),
         accrued_on="2025-01-15",
     )
-    with pytest.raises(ValidationError, match="reads stored retención observations"):
+    with pytest.raises(ValueError, match="read from storage"):
         ModeloAggregateOperationRequest.from_inputs(
             profile_id=_PROFILE,
             command=_command().model_copy(update={"retencion_observations": (observation,)}),
@@ -355,16 +386,6 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
 
 
 def test_public_command_round_trips_each_supported_observation_family() -> None:
-    retencion = RetencionObservation(
-        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-        source_object_id="1" * 64,
-        perceptor_nif="11111111H",
-        perceptor_name="Private retención recipient",
-        scheme=RetencionScheme("actividades_profesionales"),
-        taxable_base=Decimal("100.25"),
-        retencion_amount=Decimal("15.04"),
-        accrued_on="2025-01-15",
-    )
     counterpart = CounterpartObservation(
         source_kind=BindingSourceKind.PAYABLE_INVOICE,
         source_object_id="invoice-1",
@@ -380,18 +401,20 @@ def test_public_command_round_trips_each_supported_observation_family() -> None:
     foreign_asset = ForeignAssetIngestObservation(
         source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         source_object_id="evidence-1",
+        asset_ref="m720a_" + "e" * 32,
         asset_class=ForeignAssetClass.ACCOUNT,
         asset_external_id="bank-account-1",
         country="FR",
         issuer_or_institution="Bank",
-        valuation_eur=Decimal("50000.50"),
+        valuation_amount=Decimal("50000.50"),
+        currency_code="USD",
+        valuation_event=M720ValuationEvent.EXTINCTION,
+        valuation_event_date="2025-06-13",
         acquisition_date="2024-06-30",
-        held_at_year_end=True,
     )
     command = PerModeloAggregationCommand(
         modelo="347",
         period=_PERIOD,
-        retencion_observations=(retencion,),
         counterpart_observations=(counterpart,),
         foreign_asset_observations=(foreign_asset,),
     )
@@ -414,6 +437,7 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
         profile_id=str(_PROFILE),
         transaction_catalogue_repository=transaction_repository,
         retencion_observation_repository=retenciones,
+        percepcion_observation_repository=_PercepcionRepository(),
         withholding_observation_service=window_service,
     )
     executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
@@ -423,6 +447,7 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     result_ref = asyncio.run(executor.execute(request, context))
 
@@ -439,8 +464,111 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
     assert projection.observation_count == 0
     assert projection.period == PublicPeriod.from_period(_PERIOD)
     assert projection.withholding_window is not None
+    assert projection.clave_breakdown == ()
+    assert projection.absent_source_families == ()
+    assert projection.calculation_revision_id is None
     serialized = projection.model_dump(mode="json")
     assert not {"perceptor_nif", "perceptor_name", "taxable_base", "retencion_amount", "observations"} & set(serialized)
+
+
+_ANNUAL_PERIOD = Period.from_year_and_code(2025, "0A")
+
+
+def _percepcion(source_id: str, nif: str, clave: str) -> WithholdingObservation:
+    return WithholdingObservation(
+        source_id=source_id,
+        perceptor_tax_id=nif,
+        transaction_date=date(2025, 2, 1),
+        clave=RetencionClave.from_registry(clave),
+        percibido_dinerario=Decimal("1000.00"),
+        retencion_practicada=Decimal("150.00"),
+        incapacity_cash_perception=Decimal("0"),
+        incapacity_cash_withholding=Decimal("0"),
+        incapacity_kind_value=Decimal("0"),
+        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+        incapacity_kind_repercutido=Decimal("0"),
+        foral_retention_estatal=Decimal("0"),
+        foral_retention_navarra=Decimal("0"),
+        foral_retention_araba=Decimal("0"),
+        foral_retention_gipuzkoa=Decimal("0"),
+        foral_retention_bizkaia=Decimal("0"),
+        base_retenciones=Decimal("1000.00"),
+    )
+
+
+def _run_annual_190(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    percepciones: _PercepcionRepository,
+) -> tuple[ModeloAggregateProjection, _Events]:
+    events = _Events()
+    operands = _Operands()
+    window_service = _WindowService()
+    ports = _ports(window_service=window_service, percepciones=percepciones)
+    executor = ModeloAggregateExecutor(cast(ModeloAggregateOperationPortsFactory, cast(object, lambda **_kw: ports)))
+    context = _executor_context(events, operands, authority_operation=authority_operation)
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
+    )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    # The bucket's stored profile is outside this unit; resolve an ordinary filer canonically instead.
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.load_bucket_withholding_filer_cadence",
+        lambda *, bucket_id, filing_year, operation: withholding_filer_cadence(operation, filing_year=filing_year),
+    )
+
+    asyncio.run(executor.execute(_request(command=_command(modelo="190", period=_ANNUAL_PERIOD)), context))
+
+    report = operands.values[0]
+    assert isinstance(report, ModeloAggregateReport)
+    projection = project_modelo_aggregate_result(report, _terminal_receipt(effect=OperationEffect.NONE))
+    assert isinstance(projection, ModeloAggregateProjection)
+    assert window_service.reads == []
+    return projection, events
+
+
+def test_annual_summary_projects_the_per_clave_rows_its_calculation_reads(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Modelo 190 composes the year's Modelo 111 detail and reports it per clave without perceptor identities."""
+    percepciones = _PercepcionRepository(
+        (
+            _percepcion("row-1", "11111111H", "A"),
+            _percepcion("row-2", "22222222J", "A"),
+            _percepcion("row-3", "33333333P", "G"),
+        )
+    )
+
+    projection, events = _run_annual_190(monkeypatch, authority_operation, percepciones)
+
+    assert percepciones.annual_loads == [("111", 2025)]
+    assert events.effects == [OperationEffect.NONE]
+    assert projection.outcome == "aggregated"
+    assert projection.absent_source_families == ()
+    assert projection.calculation_revision_id is not None
+    assert [
+        (row.clave, row.percepcion_count, row.percibido_total.decimal, row.retencion_total.decimal)
+        for row in projection.clave_breakdown or ()
+    ] == [("A", 2, "2000.00", "300.00"), ("G", 1, "1000.00", "150.00")]
+    serialized = projection.model_dump_json()
+    assert "11111111H" not in serialized
+    assert "row-1" not in serialized
+
+
+def test_annual_summary_without_stored_rows_names_the_absent_family_instead_of_a_zero(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """An empty composition is reported as missing data, not as a proven zero."""
+    percepciones = _PercepcionRepository()
+
+    projection, _events = _run_annual_190(monkeypatch, authority_operation, percepciones)
+
+    assert percepciones.annual_loads == [("111", 2025)]
+    assert projection.clave_breakdown == ()
+    assert projection.absent_source_families == (BindingSourceKind.WITHHOLDING,)
+    assert projection.calculation_revision_id is not None
 
 
 def _snapshot_observation() -> RetencionObservation:
@@ -471,6 +599,7 @@ def test_read_aggregate_retains_rows_and_generation_from_prepared_snapshot(
     monkeypatch.setattr(
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
         result = aggregate_per_modelo(command, operation=operation)
@@ -525,6 +654,7 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
 
     def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
@@ -596,6 +726,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
 
     class _Producer:
@@ -655,11 +786,13 @@ def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
             catalogue_read_revision_id="b" * 64,
         ),
         cadence=object(),
+        calculation_rows=None,
     )
     monkeypatch.setattr(
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
         lambda: str(_PROFILE),
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
 
     result = asyncio.run(executor.execute(request, context))
@@ -694,6 +827,7 @@ def test_canonically_invalid_public_ledger_operands_refuse_before_capture(
     monkeypatch.setattr(
         "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     result = asyncio.run(executor.execute(request, context))
 

@@ -36,6 +36,11 @@ class ParsedLedgerRowProtocol(Protocol):
         """Return the authoritative flow direction for this row."""
         ...
 
+    @property
+    def own_account_id(self) -> str | None:
+        """Return the own bank account the row is bound to, if any."""
+        ...
+
 
 @runtime_checkable
 class ProviderValidationProtocol(Protocol):
@@ -133,7 +138,10 @@ class RevisionGuardedTransactionCatalogueCoCommitWriterProtocol(
         expected_revision_id: str,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Atomically persist only if the full loaded snapshot still matches."""
+        """Atomically persist only if the full loaded snapshot still matches.
+
+        Parameter types: ``catalogue`` (:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`).
+        """
         ...
 
 

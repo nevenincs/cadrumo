@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#calculation-truth-registry'
 date: '2026-07-12'
-modified: '2026-08-15'
-body_hash: 'sha256:4cb745bd3a24644268b928a58218f32a28947dd85b90689e22e6b777c03e7083'
+modified: '2026-10-03'
+body_hash: 'sha256:d885ed12d670f635d01f6bc6a70388952d2ab0c522ae9fa69f02b847a28687be'
 related:
   - "[[2026-07-12-calculation-truth-registry-plan]]"
 ---
@@ -45,14 +45,7 @@ validated snapshots, temporal selection, legal/source validation, typed
 relations, export structures, parity classifications, and remote-state guards;
 it is not the legacy checklist's originally proposed `registry/aeat/` layout.
 
-`src/aeat/application/live/_filed_data_capture.py` and
-`src/aeat/adapters/outbound/aeat/sede/_declarations.py` provide guarded,
-read-only filed-declaration capture. They require a verified authenticated
-session and persist sensitive evidence through the secure storage substrate;
-they do not manufacture a filed declaration, submitted artefact, or sanitized
-fixture. That grounds why a row may depend on external evidence, but the
-evidence-gated category below remains a lexical full-bullet signal rather than
-a per-row external-blocker adjudication.
+They require a verified authenticated session and persist sensitive evidence through the secure storage substrate; they do not manufacture a filed declaration, submitted artefact, or sanitized fixture. That grounds why a row may depend on external evidence, but the evidence-gated category below remains a lexical full-bullet signal rather than a per-row external-blocker adjudication.
 
 The accepted central-registry ADR remains the governing architecture. The
 current source alone cannot prove that a legacy unchecked row was delivered.

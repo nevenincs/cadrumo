@@ -6,12 +6,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from types import MappingProxyType
 from typing import Final
 
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingPolicy,
+    require_resolved_mapping_fact,
+    string_mapping_entries,
+)
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "Lorca reduction fact"
@@ -46,15 +51,7 @@ class LorcaReductionDefinition:
     section: str
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("Lorca reduction entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate Lorca reduction key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
 def _single_evidence(values: tuple[str, ...], label: str) -> str:
@@ -96,18 +93,14 @@ def _resolve_entries(
     effective_date: date,
     authority: GovernedFactSource,
 ) -> tuple[Mapping[str, str], str, str, tuple[str, ...]]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
+    resolved = require_resolved_mapping_fact(
+        authority,
+        MappingFactQuery(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date),
+        subject=_ENTRIES_POLICY.subject,
     )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("Lorca reduction fact must resolve as a mapping fact")
     source_ref = _single_evidence(resolved.source_refs, "source reference")
     return (
-        _mapping_entries(resolved),
+        string_mapping_entries(resolved, policy=_ENTRIES_POLICY),
         _single_evidence(resolved.legal_refs, "legal reference"),
         source_ref,
         _required_text(resolved, source_ref=source_ref),
@@ -120,9 +113,7 @@ def resolve_lorca_reduction(
     authority: GovernedFactSource | None = None,
 ) -> LorcaReductionDefinition:
     """Resolve the Lorca reduction through the selected facts authority."""
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("Lorca reduction requires an explicit authority operation or scope")
+    selected = require_governed_fact_authority(authority, subject="Lorca reduction")
     entries, legal_ref, source_ref, required_text = _resolve_entries(
         effective_date=effective_date,
         authority=selected,

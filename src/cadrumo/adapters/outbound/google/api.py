@@ -11,13 +11,14 @@ instead of endpoint-specific ``HttpError`` strings.
 
 from __future__ import annotations
 
-import json
-from typing import TYPE_CHECKING, Protocol, cast
+from enum import StrEnum
+from typing import TYPE_CHECKING, NoReturn, Protocol, cast
 
 from ....application.operator_actions.models import PreconditionVerdict
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
+from ....core.google_http_error import google_http_status, google_quota_marker
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.type_guards import is_object_dict, is_object_list
+from ....core.type_guards import is_object_dict
 from ..storage.errors import (
     OutboundStorageError,
     OutboundStorageNetworkError,
@@ -25,18 +26,29 @@ from ..storage.errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
+from ._preconditions import google_terminal_refusal
+from .sign_in_state import ended_grant_refusal
 
 if TYPE_CHECKING:
     import httplib2
+    from google.auth.credentials import Credentials
+    from googleapiclient._apis.drive.v3.resources import DriveResource
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource
     from googleapiclient.http import HttpMock
 
 _GOOGLE_API_NUM_RETRIES = 3
-_RATE_LIMIT_MARKERS = {
-    "rateLimitExceeded",
-    "userRateLimitExceeded",
-    "RATE_LIMIT_EXCEEDED",
-    "RESOURCE_EXHAUSTED",
-}
+
+
+class RequestRetryPolicy(StrEnum):
+    """Whether a request may be re-sent after a transient failure.
+
+    The Google client re-sends a request whose response was lost, so a retried
+    create can apply twice. Every call names its policy; only a request whose
+    repetition leaves the same remote state may be ``REPLAY_SAFE``.
+    """
+
+    REPLAY_SAFE = "replay_safe"
+    SINGLE_ATTEMPT = "single_attempt"
 
 
 def _external_verdict(condition_id: str, **facts: object) -> PreconditionVerdict:
@@ -55,6 +67,50 @@ def _external_verdict(condition_id: str, **facts: object) -> PreconditionVerdict
             else NoRecoveryOutcome.OPERATOR_DECISION
         ),
     )
+
+
+def _refuse_missing_googleapiclient(
+    exc: ImportError, *, service_name: str, version: str, condition_id: str
+) -> NoReturn:
+    """Refuse, naming the service, when the optional discovery client is absent."""
+    error = OutboundStorageNetworkError(
+        f"googleapiclient not importable: {exc}",
+        translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
+    )
+    raise google_terminal_refusal(
+        error,
+        condition_id=condition_id,
+        facts={
+            "client_available": False,
+            "dependency": "google_api_python_client",
+            "service_name": service_name,
+            "service_version": version,
+        },
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.SAFETY,
+    ) from exc
+
+
+# `google-api-python-client-stubs` types `build` per (service, version) LITERAL,
+# so each service spells its own literals; only the import guard is shared. The
+# caller names the terminal condition because each adapter owns its own closed
+# condition set.
+def drive_v3_service(credentials: Credentials, *, unavailable_condition_id: str) -> DriveResource:
+    """Build the Drive v3 service, refusing when the optional client is not installed."""
+    try:
+        from googleapiclient.discovery import build
+    except ImportError as exc:
+        _refuse_missing_googleapiclient(exc, service_name="drive", version="v3", condition_id=unavailable_condition_id)
+    return build("drive", "v3", credentials=credentials, cache_discovery=False)
+
+
+def sheets_v4_service(credentials: Credentials, *, unavailable_condition_id: str) -> SheetsResource:
+    """Build the Sheets v4 service, refusing when the optional client is not installed."""
+    try:
+        from googleapiclient.discovery import build
+    except ImportError as exc:
+        _refuse_missing_googleapiclient(exc, service_name="sheets", version="v4", condition_id=unavailable_condition_id)
+    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
 class _ExecutableRequest[ResponseBodyT](Protocol):
@@ -80,11 +136,16 @@ class _ExecutableRequest[ResponseBodyT](Protocol):
     ) -> ResponseBodyT: ...
 
 
-def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *, action: str) -> ResponseBodyT:
+def execute_request[ResponseBodyT](
+    request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
+) -> ResponseBodyT:
     """Execute a google-api-python-client request, translating failures.
 
-    Runs ``request.execute(num_retries=3)`` and returns the decoded JSON
-    payload unchanged. HTTP 401/403 responses become
+    Runs ``request.execute`` with the client's transient-failure retries for a
+    ``REPLAY_SAFE`` request and a single attempt for a ``SINGLE_ATTEMPT`` one,
+    and returns the decoded JSON payload unchanged. A failed single attempt
+    that carries no definitive HTTP refusal leaves the remote effect unknown;
+    the resulting network error says so. HTTP 401/403 responses become
     :exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError`, HTTP
     404 responses become
     :exc:`~adapters.outbound.storage.errors.OutboundStorageNotFoundError`, HTTP
@@ -94,17 +155,23 @@ def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *
     :exc:`~adapters.outbound.storage.errors.OutboundStorageNetworkError`. A typed
     :exc:`~adapters.outbound.storage.errors.OutboundStorageError` raised by a
     nested call is re-raised unchanged so ownership and validation refusals are
-    never re-wrapped as network errors.
+    never re-wrapped as network errors. A credential refresh that Google
+    answers by ending the grant becomes
+    :exc:`~adapters.outbound.google.errors.GoogleAuthSignInRequiredError`; the
+    request it was for has not taken effect, so no uncertainty is reported.
 
     Args:
         request: A google-api-python-client request object exposing
             ``execute()``.
         action: Stable action label used in error messages and context.
+        retry: Whether the request may be re-sent after a transient failure.
 
     Returns:
         The deserialised API response payload.
 
     Raises:
+        :exc:`~adapters.outbound.google.errors.GoogleAuthSignInRequiredError`:
+            When Google reports the stored grant as revoked or expired.
         :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: Re-raised
             unchanged when a nested call already raised a typed
             outbound-storage error.
@@ -119,7 +186,7 @@ def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *
             any other transport or unmapped HTTP failure.
     """
     try:
-        result = request.execute(num_retries=_GOOGLE_API_NUM_RETRIES)
+        result = request.execute(num_retries=_GOOGLE_API_NUM_RETRIES if retry is RequestRetryPolicy.REPLAY_SAFE else 0)
         if not is_object_dict(result):
             raise OutboundStorageNetworkError(
                 f"Google {action} returned a non-mapping response body",
@@ -133,12 +200,20 @@ def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *
     except OutboundStorageError:
         raise
     except Exception as exc:
+        ended_grant = ended_grant_refusal(exc, action=action)
+        if ended_grant is not None:
+            raise ended_grant from exc
         _raise_mapped_google_http_error(exc, action=action)
+        effect_uncertain = retry is RequestRetryPolicy.SINGLE_ATTEMPT
         raise OutboundStorageNetworkError(
             f"Google {action} failed: {exc}",
-            context={"action": action},
+            context={"action": action, "effect_uncertain": effect_uncertain},
             translated_message="adapters.google.calc_sheets.errors.api_call_failed",
-            precondition_verdict=_external_verdict("google.api.transport_unavailable", action=action),
+            precondition_verdict=_external_verdict(
+                "google.api.transport_unavailable",
+                action=action,
+                **({"effect_uncertain": True} if effect_uncertain else {}),
+            ),
         ) from exc
 
 
@@ -152,8 +227,8 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
 
     if not isinstance(exc, HttpError):
         return
-    status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
-    quota_marker = _quota_marker(exc)
+    status = google_http_status(exc)
+    quota_marker = google_quota_marker(exc)
     if status == 429 or (status == 403 and quota_marker is not None):
         raise OutboundStorageQuotaError(
             f"Google {action} exhausted quota (HTTP {status}): {exc}",
@@ -180,54 +255,3 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
             translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
             precondition_verdict=_external_verdict("google.api.target_not_found", action=action),
         ) from exc
-
-
-def _quota_markers_from_entries(entries: object) -> tuple[str, ...]:
-    """Collect string ``reason`` markers from one Google error-entry list."""
-    markers: list[str] = []
-    if not is_object_list(entries):
-        return ()
-    for entry in entries:
-        if not is_object_dict(entry):
-            continue
-        reason = entry.get("reason")
-        if isinstance(reason, str):
-            markers.append(reason)
-    return tuple(markers)
-
-
-def _quota_markers_from_payload(payload: object) -> tuple[str, ...]:
-    """Collect quota markers from the structured Google error payload."""
-    if not is_object_dict(payload):
-        return ()
-    raw_error = payload.get("error")
-    if not is_object_dict(raw_error):
-        return ()
-    markers: list[str] = []
-    status = raw_error.get("status")
-    if isinstance(status, str):
-        markers.append(status)
-    markers.extend(_quota_markers_from_entries(raw_error.get("errors")))
-    markers.extend(_quota_markers_from_entries(raw_error.get("details")))
-    return tuple(markers)
-
-
-def _quota_marker(error: Exception) -> str | None:
-    """Return a recognised quota marker from a Google ``HttpError`` payload.
-
-    Google may signal quota exhaustion through an HTTP 429 status, a 403 with
-    ``error.status=RESOURCE_EXHAUSTED``, or nested ``reason`` fields such as
-    ``rateLimitExceeded``.
-    :func:`~adapters.outbound.google.api.execute_request` uses this helper
-    to route those 403 responses to
-    :exc:`~adapters.outbound.storage.errors.OutboundStorageQuotaError` instead of
-    the generic permission refusal.
-    """
-    content = getattr(error, "content", b"")
-    body = content.decode("utf-8", errors="replace") if isinstance(content, bytes) else str(content)
-    try:
-        payload = json.loads(body)
-    except json.JSONDecodeError:
-        return None
-
-    return next((marker for marker in _quota_markers_from_payload(payload) if marker in _RATE_LIMIT_MARKERS), None)

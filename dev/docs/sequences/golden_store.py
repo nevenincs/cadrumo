@@ -255,6 +255,16 @@ class GoldenFrame(BaseModel):
 
     @model_validator(mode="after")
     def _streams_are_coherent(self) -> GoldenFrame:
+        self._validate_setup_output()
+        if (self.envelope is None) != (self.envelope_source is None):
+            raise ValueError("'envelope' and 'envelope_source' are set together or not at all")
+        if self.envelope_source == "stdout" and self.text is not None:
+            raise ValueError("stdout carried the envelope; 'text' must be None")
+        if self.envelope_source == "stderr" and self.stderr_text is not None:
+            raise ValueError("stderr carried the envelope; 'stderr_text' must be None")
+        return self
+
+    def _validate_setup_output(self) -> None:
         if self.kind is FrameKind.SETUP and (
             self.envelope is not None
             or self.envelope_source is not None
@@ -265,13 +275,6 @@ class GoldenFrame(BaseModel):
                 "a setup frame records only its argv, exit code and captures; this golden stores "
                 "setup output, so it predates the current golden layout",
             )
-        if (self.envelope is None) != (self.envelope_source is None):
-            raise ValueError("'envelope' and 'envelope_source' are set together or not at all")
-        if self.envelope_source == "stdout" and self.text is not None:
-            raise ValueError("stdout carried the envelope; 'text' must be None")
-        if self.envelope_source == "stderr" and self.stderr_text is not None:
-            raise ValueError("stderr carried the envelope; 'stderr_text' must be None")
-        return self
 
 
 class SequenceGolden(BaseModel):
@@ -435,18 +438,7 @@ def mask_host_conditional_details(document: object) -> object:
     with the stored artifact.
     """
     if isinstance(document, Mapping):
-        masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
-        row_id = _host_conditional_row_id(document)
-        if row_id is not None:
-            if isinstance(document.get("detail"), str):
-                masked["detail"] = MASK_SENTINEL
-            facts = document.get("facts")
-            if isinstance(facts, Mapping):
-                masked["facts"] = {
-                    str(key): (MASK_SENTINEL if (row_id, str(key)) in _VOLATILE_HOST_FACT_COORDINATES else value)
-                    for key, value in facts.items()
-                }
-        return masked
+        return _mask_host_conditional_mapping(document)
     if isinstance(document, list | tuple):
         return [mask_host_conditional_details(item) for item in document]
     return document
@@ -698,3 +690,18 @@ def read_golden(
             f"hand-edited; regenerate it with: "
             f"{refresh_invocation(sequence_id=sequence_id)}\n{exc}",
         ) from exc
+
+
+def _mask_host_conditional_mapping(document: Mapping[str, object]) -> dict[str, object]:
+    masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
+    row_id = _host_conditional_row_id(document)
+    if row_id is not None:
+        if isinstance(document.get("detail"), str):
+            masked["detail"] = MASK_SENTINEL
+        facts = document.get("facts")
+        if isinstance(facts, Mapping):
+            masked["facts"] = {
+                str(key): (MASK_SENTINEL if (row_id, str(key)) in _VOLATILE_HOST_FACT_COORDINATES else value)
+                for key, value in facts.items()
+            }
+    return masked

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:c5916e8357bb077523d73c0b798baec97a88a34ba50e450ff9b5ef1ce29c1de3'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S62 Projection Declaration Authority Audit`

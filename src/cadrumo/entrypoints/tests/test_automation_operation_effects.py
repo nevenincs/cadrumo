@@ -15,12 +15,12 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, SecretBytes
 
-from cadrumo.adapters.persistence.operations.financial_operand_custody import (
-    OperationFinancialOperandCustodyFilesystemRepository,
-)
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.adapters.persistence.operations.typed_financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyFilesystemRepository,
+)
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     NOW,
     PROFILE_INPUT,
@@ -39,7 +39,6 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentReceipt,
     EnrollmentStage,
 )
-from cadrumo.application.user_profile.automation_execution import ThreadedAutomationAdministration
 from cadrumo.application.user_profile.automation_operations import (
     AutomationAdministrationExecutor,
     AutomationOperationRequest,
@@ -47,6 +46,7 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.automation_administration_test_support import ThreadedAutomationAdministration
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -58,7 +58,7 @@ def _services(
     execution_authority: OperationExecutionAuthority | None = None,
 ) -> tuple[OperationComposedServices, OperationJournalRepository, OperationSecureReferenceStore]:
     registry = build_production_operation_registry(
-        automation_administration_factory=lambda _context, _profile: ThreadedAutomationAdministration(subject.service)
+        automation_administration_factory=lambda _identity, _profile: ThreadedAutomationAdministration(subject.service)
     )
     journal = OperationJournalRepository(storage_root=subject.store.root / "operations")
     operands = operation_secure_reference_repository()
@@ -76,7 +76,7 @@ def _services(
         lease_duration=timedelta(minutes=10),
         execution_timeout=timedelta(minutes=5),
         cleanup_timeout=timedelta(seconds=20),
-        financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
+        typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
             root=subject.store.root / "financial"
         ),
         execution_authority=execution_authority,

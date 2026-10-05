@@ -11,6 +11,7 @@ import pytest
 from dev.deploy import docs_asset_delivery, r2_objects
 from dev.deploy.docs_asset_delivery import verify_inventory
 from dev.deploy.docs_asset_manifest import LANGUAGES, asset_layout, build_manifest, delivery_config, verify_bytes
+from dev.deploy.docs_delivery_contracts import RELEASE_HEADER, DeliveryCredentials
 from dev.deploy.r2_objects import R2Bucket, deployment_lock
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -135,7 +136,7 @@ def test_manifest_cannot_escape_recovery_directory(tmp_path: Path, unsafe: str) 
 def test_failed_public_verification_restores_previous_deployment(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from dev.deploy import docs_static_site as publisher
+    from dev.deploy import docs_delivery_activation as publisher
     from dev.deploy.cloudflare_api import CloudflareAccount
 
     document = fixture_release(tmp_path)
@@ -159,7 +160,7 @@ def test_failed_public_verification_restores_previous_deployment(
     monkeypatch.setattr(publisher, "_verify_public_delivery", verify)
     monkeypatch.setattr(publisher, "restore_version", lambda _account, version: calls.append("restore:" + version))
     monkeypatch.setattr(publisher, "_restore_routes", lambda *_args: calls.append("routes-restored"))
-    credentials = publisher.DeliveryCredentials(
+    credentials = DeliveryCredentials(
         CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
     )
     with pytest.raises(ValueError, match="public response failed"):
@@ -169,7 +170,7 @@ def test_failed_public_verification_restores_previous_deployment(
 
 
 def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from dev.deploy import docs_static_site as publisher
+    from dev.deploy import docs_delivery_activation as publisher
     from dev.deploy.cloudflare_api import CloudflareAccount
 
     calls: list[str] = []
@@ -179,7 +180,7 @@ def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatc
         raise ValueError("candidate failed")
 
     monkeypatch.setattr(publisher, "_verify_candidate", refuse)
-    credentials = publisher.DeliveryCredentials(
+    credentials = DeliveryCredentials(
         CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
     )
     with pytest.raises(ValueError, match="candidate failed"):
@@ -188,13 +189,13 @@ def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatc
 
 
 def test_cutover_waits_for_static_even_when_release_identity_is_unchanged(monkeypatch: pytest.MonkeyPatch) -> None:
-    from dev.deploy import docs_static_site as publisher
+    from dev.deploy import docs_delivery_probe as publisher
 
     responses = iter(
         [
-            (200, {publisher.RELEASE_HEADER: RELEASE}),
-            (200, {publisher.RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
-            (200, {publisher.RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
+            (200, {RELEASE_HEADER: RELEASE}),
+            (200, {RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
+            (200, {RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
         ]
     )
     monkeypatch.setattr(publisher, "_endpoint_response", lambda _url: next(responses))

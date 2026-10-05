@@ -1,0 +1,649 @@
+schema_version = 1
+fragment_id = "numeric-representation-19"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-13"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - Dividendos y participaciones en beneficios, no integrados en el IRPF [31]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-14"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - Parte de la base imponible del ahorro del IRPF [32]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-15"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - Límite conjunto de cuotas del Impuesto sobre el Patrimonio y del IRPF [33]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-16"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF [34]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-17"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo ganancias y pérdidas patrimoniales... [35]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-18"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - Parte cuota íntegra del Impuesto sobre el Patrimonio susceptible de limitación [36]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-19"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - Suma de cuotas a efectos del límite conjunto [37]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-20"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - a) Exceso [38]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-21"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra del Impuesto sobre el Patrimonio [39]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-22"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Total cuota íntegra - Total cuota íntegra [40]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 2
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-23"
+decision_statement = "The four-position effective average tax rate carries two whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact tax-rate slot; it is not a participation percentage or a monetary amount. Exact source meaning: (6) Liquidación - Deducción impuestos extranjero - Tipo medio efectivo de gravamen [TM]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-24"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Deducción impuestos extranjero - Impuestos efectivamente satisfechos en el extranjero [a]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-25"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Deducción impuestos extranjero - Parte de la base liquidable gravada en el extranjero [b]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-26"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Deducción impuestos extranjero - Importe de la deducción [41]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-27"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes y derechos en Ceuta y Melilla [42]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-28"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional. corresponde dichos bienes y derechos [43]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-29"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación: \"75 % casilla [43]\"    [44]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-30"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Cuota minorada - Cuota minorada ( [40] - [41] - [44] )    [45]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-31"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Deducciones y bonificaciones autonómicas - Deducciones autonómicas - Importe total con derecho a deducción [48]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2022-714-10-row-32"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Deducciones y bonificaciones autonómicas - Deducciones autonómicas - Importe aplicado [49]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[design_identity]
+modelo = "714"
+source_ref = "aeat-dr-714-2022"
+source_sha256 = "b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925"
+design_epoch = "2022"

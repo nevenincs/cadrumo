@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:e19cf13d0cf995fd0befa1c837c07b789e7ac0a37733719e48567b59b9c1532e'
+modified: '2026-10-03'
+body_hash: 'sha256:22b668d87a61183c190d3e32a495db9bf3e6799c79eaa33530bc6286b3acb029'
 related: []
 ---
 
@@ -29,8 +29,8 @@ The new help strings were scaffolded and set with `python -m aeat.locales`.
 
 ## S242-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/operator_surface/_help.py src/aeat/application/operator_surface/test_contract.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/operator_surface/test_contract.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-140` as `manifest-discovery`.

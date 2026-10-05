@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import replace
 from datetime import date
-from decimal import Decimal
 from uuid import UUID
 
 from ..adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
@@ -21,6 +20,7 @@ from ..core.bucket_pointer import require_active_bucket_id
 from ..core.errors.hierarchy import CadrumoError
 from ..core.field_role import FieldRole
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..domain.currency.models import EurRateLookup
 
 
 class _AdmittedRateProvider:
@@ -34,9 +34,9 @@ class _AdmittedRateProvider:
     def rate_source_id(self) -> str:
         return self._provider.rate_source_id
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
         self._admit()
-        return self._provider.get_eur_rate(currency, rate_date)
+        return self._provider.lookup_eur_rate(currency, rate_date)
 
 
 def build_invoice_intake_ports(

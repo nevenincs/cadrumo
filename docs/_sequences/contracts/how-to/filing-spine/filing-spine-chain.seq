@@ -1,12 +1,12 @@
 :seed: iva-evidence-2026
-@step Create the work unit for the filing target.
+@step Create the declaration for the filing target.
 aeat app modelo work create --modelo 303 --year 2026 --period 1T
-@step Calculate the quarter's IVA from the classified ledger.
+@step Calculate the quarter's VAT from the classified records.
 aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
-@step Verify the calculated draft.
+@step Check the calculated draft.
 aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
-@step Export the fichero-BOE file. Its envelope carries Cadrumo's all-zero development software identity, so AEAT will not accept it for presentation.
+@step Export the file in the official record format. Its envelope carries Cadrumo's all-zero development software identity, so AEAT will not accept it for presentation.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303.boe
 @expect exit_code == 0
 @expect result.software_identity_grade == "development_mock"

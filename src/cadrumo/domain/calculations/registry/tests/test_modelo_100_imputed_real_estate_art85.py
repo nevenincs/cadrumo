@@ -11,7 +11,7 @@ import pytest
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -57,9 +57,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
     if year == 2024:
         values.update(
             {
-                "renta-profile-guarderia-gastos-reales": Decimal("0"),
                 "renta-profile-incremento-guarderia": Decimal("0"),
-                "renta-profile-descendientes-guarderia": Decimal("0"),
                 "renta-profile-cotizaciones-ss-madre": Decimal("0"),
                 # The maternity deducción's own profile fact, neutral zero for
                 # the same reason as its four siblings above: this scenario is

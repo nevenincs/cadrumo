@@ -28,11 +28,11 @@ from .._app_live import (
 )
 from .._app_live_auth_preflight import _live_auth_preflight_lines
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
-from .._command_runtime import build_command_subtree
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import CommandSpecGraph
+from ..command_graph import CommandSpecGraph
 from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID
 from .cli_runner import invoke_cached_cli
+from .command_runtime_support import build_command_subtree
 
 #: The world every case here starts from, seeded once and copied per test.
 #:

@@ -2,34 +2,26 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.google_credential_source import GoogleCredentialSourceKind
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationIdentity, OperationRevision
+from ..operations.registry import OperationSchemaBindingV1
 from .google_configuration_operation_refusal import GoogleConfigurationRefusalProjection
 
-GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID = "config.google.credential-source.set"
-GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID = "config.google.credential-source.view"
-GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID = "config.google.folder.set"
 GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID = "config.google.folder.view"
 GOOGLE_LOGIN_OPERATION_DEFINITION_ID = "config.google.login"
 GOOGLE_LOGOUT_OPERATION_DEFINITION_ID = "config.google.logout"
 GOOGLE_PROBE_OPERATION_DEFINITION_ID = "config.google.probe"
-GOOGLE_REGISTER_OPERATION_DEFINITION_ID = "config.google.register"
 GOOGLE_STATUS_OPERATION_DEFINITION_ID = "config.google.status"
-GOOGLE_REGISTER_INPUT_KIND = "google.oauth-client-json"
 GOOGLE_CONSENT_PRESENTATION_CODE = "google.consent.terminal-required"
-GOOGLE_CONFIGURATION_EXPORT_DISABLED_CODE = "REFUSED_GOOGLE_CONFIGURATION_EXPORT_DISABLED"
 _Text = Annotated[str, Field(max_length=65_536)]
-_Input = Annotated[str, Field(max_length=16_384)]
 
 
 class GoogleConfigurationExportDisabledError(CadrumoError):
@@ -43,39 +35,16 @@ class GoogleProfileRequest(BaseModel):
     profile_id: UUID
 
 
-class GoogleCredentialSourceSetRequest(GoogleProfileRequest):
-    """Original options, validated by the existing credential-source constructor."""
-
-    kind: GoogleCredentialSourceKind
-    target_principal: _Input | None = None
-    scopes: tuple[_Input, ...] = ()
-    delegates: tuple[_Input, ...] = ()
-    subject: _Input | None = None
-    lifetime_seconds: int | None = None
-
-
-class GoogleCredentialSourceViewRequest(GoogleProfileRequest):
-    """Read persisted selection with the canonical OAuth Desktop default."""
-
-
-class GoogleFolderSetRequest(GoogleProfileRequest):
-    """Original root-folder text, retaining canonical whitespace normalization."""
-
-    folder_id: _Input
-
-
 class GoogleFolderViewRequest(GoogleProfileRequest):
-    """Read persisted root-folder configuration."""
+    """Read the root folder created for the profile."""
 
 
 class GoogleLoginRequest(GoogleProfileRequest):
-    """Consent or the current metadata-only refresh inspection."""
-
-    refresh_only: bool = False
+    """Sign in through the browser consent flow and create the profile's root folder."""
 
 
 class GoogleLogoutRequest(GoogleProfileRequest):
-    """Delete the session while preserving client and folder configuration."""
+    """Delete the session while preserving the folder configuration."""
 
 
 class GoogleProbeRequest(GoogleProfileRequest):
@@ -84,69 +53,17 @@ class GoogleProbeRequest(GoogleProfileRequest):
     read_only: bool = False
 
 
-class GoogleRegisterRequest(GoogleProfileRequest):
-    """Source provenance and digest; JSON bytes use the protected secret channel."""
-
-    client_json_path: Annotated[str, Field(min_length=1, max_length=4096)]
-    client_json_sha256: ContentDigest
-
-    @model_validator(mode="after")
-    def _absolute_source(self) -> Self:
-        if not Path(self.client_json_path).is_absolute():
-            raise ValueError("Google client JSON source must be absolute")
-        return self
-
-
 class GoogleStatusRequest(GoogleProfileRequest):
-    """Inspect registered client and non-secret session metadata."""
+    """Inspect non-secret session metadata."""
 
 
 type GoogleConfigurationRequest = (
-    GoogleCredentialSourceSetRequest
-    | GoogleCredentialSourceViewRequest
-    | GoogleFolderSetRequest
-    | GoogleFolderViewRequest
-    | GoogleLoginRequest
-    | GoogleLogoutRequest
-    | GoogleProbeRequest
-    | GoogleRegisterRequest
-    | GoogleStatusRequest
+    GoogleFolderViewRequest | GoogleLoginRequest | GoogleLogoutRequest | GoogleProbeRequest | GoogleStatusRequest
 )
 
 
-class GoogleCredentialSourceProjection(BaseModel):
-    """Complete non-secret source configuration used by the existing human output."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    kind: GoogleCredentialSourceKind
-    target_principal: _Text | None = None
-    target_scopes: tuple[_Text, ...] = ()
-    delegates: tuple[_Text, ...] = ()
-    subject: _Text | None = None
-    lifetime_s: int | None = None
-
-
-class GoogleCredentialSourceSetProjection(GoogleCredentialSourceProjection):
-    """Saved selection without ADC discovery or token exchange."""
-
-
-class GoogleCredentialSourceViewProjection(GoogleCredentialSourceProjection):
-    """Persisted/default selection plus its configuration-presence fact."""
-
-    configured: bool
-
-
-class GoogleFolderSetProjection(BaseModel):
-    """Acknowledged canonical root-folder configuration."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    root_folder_id: _Text
-
-
 class GoogleFolderViewProjection(BaseModel):
-    """Persisted root-folder presence and complete orientation value."""
+    """Whether a root folder has been created for the profile, and its ID."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -155,13 +72,13 @@ class GoogleFolderViewProjection(BaseModel):
 
 
 class GoogleLoginProjection(BaseModel):
-    """Canonical linked account and scopes; tokens have no public field."""
+    """Canonical linked account, scopes and created root folder; tokens have no public field."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    mode: Literal["consent", "refresh-only"]
     account_email: _Text
     granted_scopes: tuple[_Text, ...] = ()
+    root_folder_id: _Text
 
 
 class GoogleLogoutProjection(BaseModel):
@@ -171,7 +88,6 @@ class GoogleLogoutProjection(BaseModel):
     profile_id: UUID
     token_removed: bool
     metadata_removed: bool
-    client_preserved: Literal[True] = True
 
 
 class GoogleProbeProjection(BaseModel):
@@ -188,39 +104,22 @@ class GoogleProbeProjection(BaseModel):
     detail: _Text = ""
 
 
-class GoogleRegisterProjection(BaseModel):
-    """Only the client/project orientation fields from the registered secret."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    client_id: _Text
-    project_id: _Text
-
-
 class GoogleStatusProjection(BaseModel):
-    """Whole current client/session inspection without credential material."""
+    """The stored sign-in as it was recorded, without credential material."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    client_registered: bool
-    client_id: _Text | None = None
     session_present: bool
     account_email: _Text | None = None
     granted_scopes: tuple[_Text, ...] = ()
     issued_at: _Text | None = None
-    last_refresh_at: _Text | None = None
-    reauth_required: bool | None = None
 
 
 type GoogleConfigurationProjection = (
-    GoogleCredentialSourceSetProjection
-    | GoogleCredentialSourceViewProjection
-    | GoogleFolderSetProjection
-    | GoogleFolderViewProjection
+    GoogleFolderViewProjection
     | GoogleLoginProjection
     | GoogleLogoutProjection
     | GoogleProbeProjection
-    | GoogleRegisterProjection
     | GoogleStatusProjection
 )
 
@@ -242,6 +141,31 @@ class GoogleConfigurationOutcome(BaseModel):
         elif self.refusal is None or self.result is not None or self.refusal.profile_id != self.profile_id:
             raise ValueError("Google refusal requires its exact closed profile detail")
         return self
+
+
+GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]]] = {
+    GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: (GoogleFolderViewRequest, GoogleFolderViewProjection),
+    GOOGLE_LOGIN_OPERATION_DEFINITION_ID: (GoogleLoginRequest, GoogleLoginProjection),
+    GOOGLE_LOGOUT_OPERATION_DEFINITION_ID: (GoogleLogoutRequest, GoogleLogoutProjection),
+    GOOGLE_PROBE_OPERATION_DEFINITION_ID: (GoogleProbeRequest, GoogleProbeProjection),
+    GOOGLE_STATUS_OPERATION_DEFINITION_ID: (GoogleStatusRequest, GoogleStatusProjection),
+}
+GOOGLE_CONFIGURATION_REQUEST_TYPES = (
+    GoogleFolderViewRequest,
+    GoogleLoginRequest,
+    GoogleLogoutRequest,
+    GoogleProbeRequest,
+    GoogleStatusRequest,
+)
+
+
+class GoogleConfigurationExecutionResult(BaseModel):
+    """Encrypted complete result bound to the actual invocation and effect."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    identity: OperationIdentity
+    projection: GoogleConfigurationOutcome
+    effect: Literal["none", "updated", "partial", "unknown"]
 
 
 class GoogleConsentProposal(BaseModel):
@@ -278,19 +202,30 @@ class GoogleConsentResponse(BaseModel):
     intent: OperationResponseIntentValue
 
 
+GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id=GOOGLE_LOGIN_OPERATION_DEFINITION_ID + ".review",
+    schema_version=1,
+    model_type=GoogleConsentReviewProjection,
+)
+GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id=GOOGLE_LOGIN_OPERATION_DEFINITION_ID + ".response",
+    schema_version=1,
+    model_type=GoogleConsentResponse,
+)
+
+
 __all__ = [
-    "GOOGLE_CONFIGURATION_EXPORT_DISABLED_CODE",
+    "GOOGLE_CONFIGURATION_CONTRACTS",
+    "GOOGLE_CONFIGURATION_REQUEST_TYPES",
     "GOOGLE_CONSENT_PRESENTATION_CODE",
-    "GOOGLE_CREDENTIAL_SOURCE_SET_OPERATION_DEFINITION_ID",
-    "GOOGLE_CREDENTIAL_SOURCE_VIEW_OPERATION_DEFINITION_ID",
-    "GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID",
+    "GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING",
+    "GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING",
     "GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID",
     "GOOGLE_LOGIN_OPERATION_DEFINITION_ID",
     "GOOGLE_LOGOUT_OPERATION_DEFINITION_ID",
     "GOOGLE_PROBE_OPERATION_DEFINITION_ID",
-    "GOOGLE_REGISTER_INPUT_KIND",
-    "GOOGLE_REGISTER_OPERATION_DEFINITION_ID",
     "GOOGLE_STATUS_OPERATION_DEFINITION_ID",
+    "GoogleConfigurationExecutionResult",
     "GoogleConfigurationExportDisabledError",
     "GoogleConfigurationOutcome",
     "GoogleConfigurationProjection",
@@ -298,13 +233,6 @@ __all__ = [
     "GoogleConsentProposal",
     "GoogleConsentResponse",
     "GoogleConsentReviewProjection",
-    "GoogleCredentialSourceProjection",
-    "GoogleCredentialSourceSetProjection",
-    "GoogleCredentialSourceSetRequest",
-    "GoogleCredentialSourceViewProjection",
-    "GoogleCredentialSourceViewRequest",
-    "GoogleFolderSetProjection",
-    "GoogleFolderSetRequest",
     "GoogleFolderViewProjection",
     "GoogleFolderViewRequest",
     "GoogleLoginProjection",
@@ -314,8 +242,6 @@ __all__ = [
     "GoogleProbeProjection",
     "GoogleProbeRequest",
     "GoogleProfileRequest",
-    "GoogleRegisterProjection",
-    "GoogleRegisterRequest",
     "GoogleStatusProjection",
     "GoogleStatusRequest",
 ]

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#ci-runner-standardization'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ace3c904e6925f8321ebaeac192da3214ba65d21b8adc8bf0f77d4557d5e47e'
+body_hash: 'sha256:cfa99fbab434042c3e0debf77c79921130470c0d1460412a15e4dbe38dd2c0b6'
 related: []
 ---
 
@@ -196,7 +196,7 @@ for it finds nothing.
 
 Retracting the substance of `provisioning-source-divergence`. That finding claimed the
 provisioning script "is not tracked in any repository". It is. The repository carries
-`dev/runners/runner-entry-linux.sh` plus a long `dev/runners/README.md` that documents
+The retired script plus a long the retired document that documents
 the container topology, the entrypoint-in-the-volume rule, the exit-127 outage that
 taught it, the tool-durability rule, and the restart discipline.
 

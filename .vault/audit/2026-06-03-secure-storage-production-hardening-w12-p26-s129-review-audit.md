@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:347a88ac6ac71b77c073dae2692a3b77e65d2fab8b041c4989034222a9150777'
+modified: '2026-10-03'
+body_hash: 'sha256:c01f2327be8f037cb49dd0b4ae71d91e96c4b127516554ef0ea667f8e7f90695'
 related: []
 ---
 
@@ -20,8 +20,8 @@ The only settings signal in the reviewed module is the Drive vault folder name r
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_calc_sheets_apply.py src/aeat/adapters/outbound/google/test_calc_sheets_pull_typing.py src/aeat/adapters/outbound/google/test_calc_sheets_row_set_headers.py src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py` passed with 19 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/_calc_sheets_apply.py src/aeat/adapters/outbound/google/test_calc_sheets_apply.py src/aeat/adapters/outbound/google/test_calc_sheets_pull_typing.py src/aeat/adapters/outbound/google/test_calc_sheets_row_set_headers.py src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py` passed.
+- the historical check passed with 19 tests.
+- the historical check passed.
 - A source scan found no naked environment reads, DB route setup, secure-object repository constructors, local storage provider constructors, or direct local file read/write calls in `_calc_sheets_apply.py`.
 
 Disposition: close `AFR-027` as `remote-mirror`.

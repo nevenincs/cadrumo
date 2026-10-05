@@ -8,6 +8,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
+from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -26,7 +27,7 @@ def _cross_period_dependency_legal_refs() -> tuple[LegalRefId, ...]:
     """Return the published LGT anchors for declarations and self-assessments."""
     with bundled_indexed_authority().operation() as operation:
         references = {
-            reference_id: operation.legal_reference(reference_id) for reference_id in operation.legal_reference_ids()
+            reference_id: operation.legal_reference(reference_id) for reference_id in legal_reference_ids(operation)
         }
     refs = tuple(
         dict.fromkeys(

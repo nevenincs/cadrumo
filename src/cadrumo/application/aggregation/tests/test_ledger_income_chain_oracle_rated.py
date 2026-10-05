@@ -107,7 +107,6 @@ _CASH = _TOTAL - _RETENCION
 
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
-_TAXABLE_BASE_BINDING = "modelo-130-actividad-economica-ingresos-taxable-base-cumulative"
 
 _FILING_YEAR = 2026
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
@@ -230,7 +229,6 @@ def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None
     assert resolved[_INGRESOS_BINDING] == _BASE
     assert resolved[_INGRESOS_BINDING] != _TOTAL, "IVA repercutido is not an ingreso of the issuer"
     assert resolved[_INGRESOS_BINDING] != _CASH, "casilla 01 is pre-retencion, not what the bank credited"
-    assert resolved[_TAXABLE_BASE_BINDING] == _BASE
 
 
 def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_figure() -> None:
@@ -315,7 +313,6 @@ def test_the_unrecorded_invoice_over_declares_casilla_01_and_loses_its_credit() 
     assert resolved[_INGRESOS_BINDING] == _CASH
     assert resolved[_INGRESOS_BINDING] - _BASE == Decimal("60.00")
     assert resolved[_RETENCIONES_BINDING] == Decimal("0")
-    assert resolved[_TAXABLE_BASE_BINDING] == Decimal("0")
     assert partition.unresolved_observations == (observation,)
     assert partition.inferred_total == Decimal("0"), (
         "nothing was reconstructed here, so there is no excluded amount to report"
@@ -323,13 +320,12 @@ def test_the_unrecorded_invoice_over_declares_casilla_01_and_loses_its_credit() 
 
 
 def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> None:
-    """The cash-fallback contribution fires the advisory, naming both facts.
+    """The cash-fallback contribution fires the advisory, naming the disturbed fact.
 
     The fallback is deliberately kept -- dropping the row would under-declare
     by its whole value, strictly worse than mis-measuring it -- so visibility
-    is the entire safeguard. The screen must name the row and both base-reading
-    facts it disturbed: cash folded into ``ingresos_integros_sum`` AND nothing
-    contributed to ``taxable_base_sum``.
+    is the entire safeguard. The screen must name the row and the only
+    base-reading fact M130 declares: cash folded into ``ingresos_integros_sum``.
     """
     revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=False)
@@ -338,7 +334,7 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
 
     assert len(screened.observations) == 1
     assert screened.observations[0].target_casilla_id == M130_INGRESOS_CASILLA
-    assert screened.facts == frozenset({"ingresos_integros_sum", "taxable_base_sum"})
+    assert screened.facts == frozenset({"ingresos_integros_sum"})
 
 
 # --------------------------------------------------------------------------- #

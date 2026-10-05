@@ -51,9 +51,15 @@ from ...compiler.validate_export_field_widths import (
     validate_draft_field_slot_width,
 )
 from ...compiler.validator import RegistryValidator
+from ...form_layout.generator import generate_revision_layout
+from ...record_design_labels import DATA_ROOT
 from ...tests.profile_schema_support import load_user_profile_schema
 from ..coverage import build_model_law_coverage_ledger
-from ..loader_directory_mode_support import write_fragmented_modelo_from_text
+from ..loader_directory_mode_support import (
+    standard_manifest_text,
+    standard_revision_preamble_text,
+    write_fragmented_modelo_from_text,
+)
 from ..registry_schema_support import (
     NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
 )
@@ -103,7 +109,8 @@ def _committed_modelo_text() -> str:
 
 def _load_modelo_text(root: Path, text: str) -> ModeloDefinition:
     """Compile one whole-modelo TOML text through the directory-mode loader."""
-    return load_modelo_directory(write_fragmented_modelo_from_text(root / "130", text))
+    target = root / "isolated-registry" / "modelos" / "130"
+    return load_modelo_directory(write_fragmented_modelo_from_text(target, text))
 
 
 def _with_first_export_field(revision: ModeloRevision, field: ExportFieldDefinition) -> ModeloRevision:
@@ -175,7 +182,16 @@ def _validate_modelo(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -
 
 
 def _validate_revision(modelo: ModeloDefinition, catalogues: RegistryCatalogues, revision: ModeloRevision) -> None:
-    _validate_modelo(_with_revision(modelo, revision), catalogues)
+    """Validate an edited revision after regenerating its generator-owned form layout.
+
+    The layout is pinned to the revision facts it was generated from, so an
+    edit that moves an export field or casilla leaves it stale until the
+    generator runs again. Regenerating here, exactly as the generator's CLI
+    would after the edit, keeps each test measuring only its own declaration.
+    """
+    generated = generate_revision_layout(str(modelo.id), revision, sources=catalogues.sources, data_root=DATA_ROOT)
+    layouts = () if generated.layout is None else (generated.layout,)
+    _validate_modelo(_with_revision(modelo, revision.model_copy(update={"form_layouts": layouts})), catalogues)
 
 
 def _with_binding(revision: ModeloRevision, binding: BindingDefinition) -> ModeloRevision:
@@ -367,13 +383,16 @@ def test_modelo_file_rejects_local_source_catalogue(tmp_path: Path) -> None:
 
 
 def test_modelo_file_rejects_empty_filing_grade_evidence(tmp_path: Path) -> None:
+    manifest = standard_manifest_text("minimal legal evidence fixture")
+    revision = standard_revision_preamble_text()
+    text = manifest + revision
     mutated, replacements = re.subn(
-        r"legal_refs = \[[^\]]+\]",
+        r'(?m)^legal_refs = \["ley-58-2003:art-29"\]$',
         "legal_refs = []",
-        _committed_modelo_text(),
+        text,
         count=1,
     )
-    assert replacements == 1, "M130 fixture must contain at least one legal_refs list"
+    assert replacements == 1, "minimal typed fixture must contain its modelo-level legal evidence"
 
     with pytest.raises(RegistryLoadError, match="too_short"):
         _load_modelo_text(tmp_path, mutated)

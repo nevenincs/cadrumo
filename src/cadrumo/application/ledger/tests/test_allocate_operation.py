@@ -259,7 +259,7 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
         events=events,
         operands=operands,
     )
-    monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation, "_operation_result", lambda _profile_id, _result: projection)
 
     def update(**kwargs: object) -> SimpleNamespace:

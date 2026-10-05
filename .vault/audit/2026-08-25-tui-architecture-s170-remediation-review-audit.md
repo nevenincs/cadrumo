@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:31857f1727fe8fe77f6fd7be96760ad2abd2395b538a491f8a2f86b136bd928c'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s170-selector-convergence-audit]]"
 ---
 

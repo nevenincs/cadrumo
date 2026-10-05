@@ -60,7 +60,7 @@ def _ports(resolver: _ProviderResolverFake) -> LedgerImportPorts:
 
 def test_ledger_provider_id_enum_contract() -> None:
     """LedgerProviderID covers every operator-facing dispatch value."""
-    expected = {"auto", "csv", "ofx", "qfx", "xlsx", "excel", "n26", "pdf", "pdf-n26"}
+    expected = {"auto", "csv", "ofx", "qfx", "xlsx", "xls", "pdf-n26"}
     actual = {provider.value for provider in LedgerProviderID}
     assert actual == expected
     for member in LedgerProviderID:

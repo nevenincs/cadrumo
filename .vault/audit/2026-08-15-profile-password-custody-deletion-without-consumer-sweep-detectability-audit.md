@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f30e7c0c736d94172324a9bb2543c2282be3e1180a484a8864d0b12af72fb21'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+body_hash: 'sha256:b83083af7015758795ea53597abd0b11527aee33fcd483dfb5169005e7fc8111'
+related: []
 ---
 
 # `profile-password-custody` audit: `deletion without consumer sweep detectability`
@@ -53,7 +52,7 @@ which means whole-tree rather than changed-file, and in CI as `just
 check-types`.
 
 The full-corpus collectability proof at
-`src/cadrumo/tests/test_full_corpus_collectability_harness.py` covers the
+The retired test covers the
 runtime side, including dynamic `importlib` targets the type checker cannot
 see. It is mutation-tested — `test_detector_reports_a_module_it_cannot_import`
 and `test_detector_reports_every_broken_module_not_only_the_first` in its
@@ -95,7 +94,7 @@ functionally inert for this purpose.
 
 `26ba385a83` ("refactor(user_profile): fold the setup package into
 user_profile, continue registry sweep") deleted `src/cadrumo/application/setup/`
-and `src/cadrumo/application/filing/_m303_prorrata_activity_rows.py`. The
+and the retired module. The
 generated stubs `docs/api/cadrumo.application.setup*.rst` and
 `docs/api/cadrumo.application.filing._m303_prorrata_activity_rows.rst`, and
 their toctree entries, survived that commit. They were removed only in
@@ -104,8 +103,8 @@ catch-up". Between the two, the nitpicky `-n -W` documentation build carried
 stubs for deleted modules — the exact hard-crash shape the documentation rule
 names.
 
-The same commit left `dev/quality/error_code_default_recovery_rehoming.toml`
-and `dev/quality/fixture_ownership.toml` naming deleted source paths. Both were
+The same commit left the retired data file
+and the retired data file naming deleted source paths. Both were
 still dangling at `f964f2062a`, a full day later. These are string references,
 not imports: no type checker and no collection run reads them.
 
@@ -137,8 +136,8 @@ as clean half the time.
 
 ## Recommendations
 
-Families 8 and 9 in `dev/quality/import_hygiene_scan.py` implement the ruling
-and are gated in `src/cadrumo/tests/test_import_edge_integrity_gate.py`, which
+Families 8 and 9 in the retired module implement the ruling
+and are gated in the retired test, which
 is a new module rather than an extension of the existing import-hygiene gate
 because appending them broke that file through its declared size ceiling.
 Family 8 holds a hard zero over first-party import targets; family 9 holds a

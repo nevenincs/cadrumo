@@ -2,37 +2,26 @@
 
 from __future__ import annotations
 
-import math
-import time
 from dataclasses import dataclass
 from functools import cache
-from uuid import uuid4
+from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
-from ...application.operations.frontend_requests import (
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
-    OperationResultProjectionRefusalV1,
-    OperationResultProjectionRequestV1,
-    OperationResultProjectionSuccessV1,
-)
+from ...application.operations.frontend_requests import OperationResultProjectionSuccessV1
 from ...application.operations.models import OperationId
-from ...application.operations.registry import OperationPublicDefinitionRegistrationV1
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.runtime.operation_access import (
-    RuntimeOperationAcknowledged,
-    RuntimeOperationControl,
-    RuntimeOperationObserve,
-    RuntimeOperationObserved,
-    RuntimeOperationProjected,
-    RuntimeOperationResult,
-    RuntimeOperationSubmit,
-    RuntimeOperationSubmitted,
+from ...application.operations.registry import (
+    OperationPublicDefinitionContractV1,
+    OperationPublicDefinitionRegistrationV1,
 )
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import bounded_deadline_after
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from ...application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationProjection,
@@ -48,17 +37,22 @@ from ...application.user_profile.operations import (
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
-    build_user_profile_operation_registrations,
 )
 from ...core.errors.hierarchy import CadrumoError
-from ...core.hashing import canonical_json_bytes
 from ...core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from .frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from .frontend_client import RuntimeFrontendClient
+from .frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
+from .operation_run_error_context import operation_run_error_context
+from .operation_settlement import (
+    PinnedConnection,
+    read_settled_result_bytes,
+    start_and_await_terminal,
+    submit_operation,
+)
 
 type ProfileMutationRequest = (
     ProfileFieldMutationOperationRequest
@@ -91,7 +85,6 @@ _SUPPORTED_REQUEST_TYPES: tuple[type[BaseModel], ...] = (
     ProfileRepeatableRowRemoveOperationRequest,
     ProfileCompleteSetupOperationRequest,
 )
-_MAX_TIMEOUT_SECONDS = 120.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,14 +112,12 @@ class ProfileMutationRunError(CadrumoError):
         self.reason = code
         self._terminal_condition = terminal_condition
         self._effect = effect
-        context = {
-            "reason": code,
-            "operation_id": str(operation_id),
-            "effect": effect.value if effect else "unknown",
-        }
-        if terminal_condition is not None:
-            context["terminal_condition"] = terminal_condition.value
-        super().__init__(code, context=context)
+        super().__init__(
+            code,
+            context=operation_run_error_context(
+                code=code, operation_id=operation_id, terminal_condition=terminal_condition, effect=effect
+            ),
+        )
 
     @property
     def terminal_condition(self) -> OperationTerminalCondition | None:
@@ -160,27 +151,6 @@ def _registration(request_type: type[BaseModel]) -> OperationPublicDefinitionReg
     return registration
 
 
-def _deadline(timeout: float) -> float:
-    if not math.isfinite(timeout) or not 0 < timeout <= _MAX_TIMEOUT_SECONDS:
-        raise ValueError("profile mutation timeout must be finite and at most 120 seconds")
-    return time.monotonic() + timeout
-
-
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
-
-
-def _failure_code(error: Exception) -> str:
-    if isinstance(error, RuntimeFrontendRefusedError):
-        return error.reason
-    if isinstance(error, RuntimeRefusalError):
-        return error.reason.value
-    return RuntimeRefusalCode.UNAVAILABLE.value
-
-
 def run_profile_mutation(
     client: RuntimeFrontendClient,
     request: ProfileMutationRequest,
@@ -196,78 +166,29 @@ def run_profile_mutation(
     observation. ``terminal_condition`` and ``effect`` are populated only when
     a valid terminal observation was actually received.
     """
-    if type(request) not in _SUPPORTED_REQUEST_TYPES:
-        raise TypeError("unsupported profile mutation request type")
-    if request.profile_id != client.profile_id:
-        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
-    deadline = _deadline(timeout)
-    registration = _registration(type(request))
-    contract = client.contract(registration.contract.definition_id, deadline=deadline)
-    if contract != registration.contract or contract.result_schema is None:
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    session_id = client.session_id
-    profile_id = client.profile_id
+    deadline, registration, contract = _profile_mutation_contract(client, request, timeout)
+    pinned = PinnedConnection.of(client)
+    profile_id = pinned.profile_id
     subject_ref = profile_operation_subject(str(profile_id))
-    submitted = client.operation(
-        RuntimeOperationSubmit(
-            request_id=uuid4(),
-            profile_id=profile_id,
-            session_id=session_id,
-            definition_id=contract.definition_id,
-            subject_ref=subject_ref,
-            payload_json=request.model_dump_json(),
-            idempotency_key=idempotency_key,
-        ),
+    submitted = submit_operation(
+        client,
+        pinned,
+        definition_id=contract.definition_id,
+        subject_ref=subject_ref,
+        payload_json=request.model_dump_json(),
         deadline=deadline,
+        idempotency_key=idempotency_key,
     )
-    if not isinstance(submitted, RuntimeOperationSubmitted):
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     operation_id = submitted.receipt.operation_id
     condition: OperationTerminalCondition | None = None
     effect: OperationEffect | None = None
     try:
         if submitted.receipt.secret_requirement is not None:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        started = client.operation(
-            RuntimeOperationControl(
-                action="operation_start",
-                request_id=uuid4(),
-                profile_id=profile_id,
-                session_id=session_id,
-                operation_id=operation_id,
-            ),
-            deadline=deadline,
+        projection = start_and_await_terminal(
+            client, pinned, operation_id, contract=contract, subject_ref=subject_ref, deadline=deadline
         )
-        if not isinstance(started, RuntimeOperationAcknowledged) or started.operation_id != operation_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        while True:
-            _remaining(deadline)
-            observed = client.operation(
-                RuntimeOperationObserve(
-                    request_id=uuid4(),
-                    profile_id=profile_id,
-                    session_id=session_id,
-                    observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=1),
-                ),
-                deadline=deadline,
-            )
-            if not isinstance(observed, RuntimeOperationObserved):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            observation = observed.observation
-            if not isinstance(observation, OperationObservationSuccessV1):
-                raise RuntimeFrontendRefusedError(observation.code.value)
-            projection = observation.projection
-            if (
-                projection.operation_id != operation_id
-                or projection.definition_id != contract.definition_id
-                or projection.subject_ref != subject_ref
-                or projection.definition_contract != contract
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            if projection.lifecycle is OperationLifecycle.TERMINAL:
-                condition, effect = projection.terminal_condition, projection.effect
-                break
-            time.sleep(min(0.02, _remaining(deadline)))
+        condition, effect = projection.terminal_condition, projection.effect
         if condition is not OperationTerminalCondition.SUCCEEDED:
             raise ProfileMutationRunError(
                 operation_id=operation_id,
@@ -277,44 +198,9 @@ def run_profile_mutation(
                 terminal_condition=condition,
                 effect=effect,
             )
-        result = client.operation(
-            RuntimeOperationResult(
-                request_id=uuid4(),
-                profile_id=profile_id,
-                session_id=session_id,
-                result=OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=projection.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-            ),
-            deadline=deadline,
-        )
-        if (
-            not isinstance(result, RuntimeOperationProjected)
-            or result.operation_id != operation_id
-            or result.projection_kind != "result"
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if result.document.get("outcome") == "refused":
-            refused = OperationResultProjectionRefusalV1.model_validate_json(canonical_json_bytes(result.document))
-            raise RuntimeFrontendRefusedError(refused.code.value)
-        success = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(
-            canonical_json_bytes(result.document)
-        )
-        expected_type = next(
-            binding.model_type for binding in registration.schema_bindings if binding.identity == contract.result_schema
-        )
-        if (
-            success.result_schema != contract.result_schema
-            or success.definition_contract_digest != contract.definition_contract_digest
-            or type(success.projection) is not expected_type
-            or success.projection.profile_id != profile_id
-            or success.projection.record_revision < request.expected_revision
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        return ProfileMutationCompletion(operation_id=operation_id, projection=success.projection, effect=effect)
+        encoded = read_settled_result_bytes(client, operation_id, projection, contract, deadline=deadline)
+        accepted = _validated_profile_mutation_projection(encoded, registration, contract, request, profile_id)
+        return ProfileMutationCompletion(operation_id=operation_id, projection=accepted, effect=effect)
     except ProfileMutationRunError:
         raise
     except Exception as error:
@@ -322,10 +208,60 @@ def run_profile_mutation(
             error = RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         raise ProfileMutationRunError(
             operation_id=operation_id,
-            code=_failure_code(error),
+            code=frontend_failure_code(error),
             terminal_condition=condition,
             effect=effect,
         ) from error
 
 
 __all__ = ["ProfileMutationCompletion", "ProfileMutationRequest", "ProfileMutationRunError", "run_profile_mutation"]
+
+
+def _profile_mutation_contract(
+    client: RuntimeFrontendClient, request: ProfileMutationRequest, timeout: float
+) -> tuple[float, OperationPublicDefinitionRegistrationV1, OperationPublicDefinitionContractV1]:
+    """Validate the exact supported request and acquire its canonical mutation contract."""
+    if type(request) not in _SUPPORTED_REQUEST_TYPES:
+        raise TypeError("unsupported profile mutation request type")
+    if request.profile_id != client.profile_id:
+        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
+    deadline = bounded_deadline_after(timeout, subject="profile mutation")
+    registration = _registration(type(request))
+    contract = client.contract(registration.contract.definition_id, deadline=deadline)
+    if contract != registration.contract or contract.result_schema is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return deadline, registration, contract
+
+
+def _validated_profile_mutation_projection(
+    encoded: bytes,
+    registration: OperationPublicDefinitionRegistrationV1,
+    contract: OperationPublicDefinitionContractV1,
+    request: ProfileMutationRequest,
+    profile_id: UUID,
+) -> ProfileMutationOperationProjection:
+    """Require a typed settled result for the addressed profile and expected revision."""
+    success = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(encoded)
+    expected_type = next(
+        binding.model_type for binding in registration.schema_bindings if binding.identity == contract.result_schema
+    )
+    if not _profile_mutation_result_is_current(success, contract, expected_type, profile_id, request.expected_revision):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return success.projection
+
+
+def _profile_mutation_result_is_current(
+    success: OperationResultProjectionSuccessV1[ProfileMutationProjection],
+    contract: OperationPublicDefinitionContractV1,
+    expected_type: type[BaseModel],
+    profile_id: UUID,
+    expected_revision: int,
+) -> bool:
+    """Require the schema, exact projection class, profile, and minimum admitted revision."""
+    return not (
+        success.result_schema != contract.result_schema
+        or success.definition_contract_digest != contract.definition_contract_digest
+        or type(success.projection) is not expected_type
+        or success.projection.profile_id != profile_id
+        or success.projection.record_revision < expected_revision
+    )

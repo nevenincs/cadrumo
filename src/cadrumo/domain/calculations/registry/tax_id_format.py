@@ -12,9 +12,10 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, SpanishTaxIdFormat
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.time.clock import today_madrid
+from .facts.payloads import GovernedFactFamily, MappingFactPayload
 from .facts.resolution import MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
-from .facts.schema import GovernedFactCatalogue, GovernedFactFamily, MappingFactPayload
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.schema import GovernedFactCatalogue
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 TAX_ID_FORMAT_FACT_ID: Final = "spanish-tax-identifier-format"
@@ -36,8 +37,8 @@ def _declarations_from_payload(payload: MappingFactPayload) -> dict[str, str]:
     return declarations
 
 
-def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishTaxIdFormat:
-    """Build the typed format from a complete fact mapping, without defaults."""
+def _require_tax_id_declarations(declarations: Mapping[str, str]) -> str:
+    """Validate the complete declared key set and return the N.I.E. leaders."""
     if any(
         not isinstance(key, str) or not isinstance(value, str)
         for key, value in ((_runtime_object(key), _runtime_object(value)) for key, value in declarations.items())
@@ -66,16 +67,30 @@ def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishT
     unknown = sorted(declarations.keys() - expected)
     if unknown:
         raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} has unknown declarations: {unknown!r}")
+    return nie_leaders
+
+
+def _tax_id_widths(declarations: Mapping[str, str]) -> tuple[int, int, int]:
     try:
         width = int(declarations["tax_id.width"])
         prefixed_width = int(declarations["tax_id.country_prefixed_width"])
         strip_width = int(declarations["tax_id.country_prefix_strip_width"])
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} width declarations must be decimal integers") from exc
+    return width, prefixed_width, strip_width
+
+
+def _nie_prefix_substitutions(declarations: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
     prefix = "tax_id.check.nie_prefix."
-    substitutions = tuple(
+    return tuple(
         sorted((key.removeprefix(prefix), value) for key, value in declarations.items() if key.startswith(prefix))
     )
+
+
+def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishTaxIdFormat:
+    """Build the typed format from a complete fact mapping, without defaults."""
+    _require_tax_id_declarations(declarations)
+    width, prefixed_width, strip_width = _tax_id_widths(declarations)
     return SpanishTaxIdFormat(
         width=width,
         country_prefix=str(declarations["tax_id.country_prefix"]),
@@ -85,7 +100,7 @@ def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishT
         nie_leaders=str(declarations["tax_id.leaders.nie"]),
         cif_leaders=str(declarations["tax_id.leaders.cif"]),
         nif_letters=str(declarations["tax_id.check.nif_letters"]),
-        nie_prefix_substitutions=substitutions,
+        nie_prefix_substitutions=_nie_prefix_substitutions(declarations),
         cif_digit_only_kinds=str(declarations["tax_id.check.cif_digit_only_kinds"]),
         cif_letter_only_kinds=str(declarations["tax_id.check.cif_letter_only_kinds"]),
         cif_letter_table=str(declarations["tax_id.check.cif_letter_table"]),
@@ -132,9 +147,7 @@ def tax_id_format_value(
     authority: GovernedFactSource | None = None,
 ) -> str:
     """Resolve one declaration through the established runtime authority."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Spanish tax-ID format")
     resolved = tax_id_format(selected_authority, effective_date=effective_date or today_madrid())
     values = {
         "tax_id.width": str(resolved.width),
@@ -162,9 +175,7 @@ def runtime_tax_id_format(
     authority: GovernedFactSource | None = None,
 ) -> SpanishTaxIdFormat:
     """Resolve the format from the established authority operation or scope."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Spanish tax-ID format")
     return tax_id_format(selected_authority, effective_date=effective_date or today_madrid())
 
 

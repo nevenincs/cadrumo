@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:4460fb86cfe14fd7345c8861ba5f0bd577484f2dfb732340d95d96fb787dad1d'
+modified: '2026-10-03'
+body_hash: 'sha256:0d78669d8a9d1fbf66940f5497680fbf83f178d10788c70a191f8db60b7aac91'
 related: []
 ---
 
@@ -18,7 +18,7 @@ Resolution: the package docstring now names the runtime/master-key session bound
 
 ## S149-002 | PASS | Public surface drift is guarded by real imports
 
-`src/aeat/adapters/persistence/storage/test_smoke.py` already verified that every `__all__` name resolves. The new guard asserts that the critical runtime, master-key, and namespace symbols are present in both `__all__` and the package namespace.
+The retired test already verified that every `__all__` name resolves. The new guard asserts that the critical runtime, master-key, and namespace symbols are present in both `__all__` and the package namespace.
 
 This is not a tautological business-logic test: it protects the architectural import boundary for consumers and fails if future edits remove these accepted public symbols.
 
@@ -28,10 +28,10 @@ No schema, encryption, route selection, master-key derivation, or secure-object 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_smoke.py src/aeat/adapters/persistence/storage/test_namespace_registry.py -k "public_surface or runtime_master_key or secure_object_logical_path"` passed with 3 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/__init__.py src/aeat/adapters/persistence/storage/test_smoke.py` passed.
+- The historical check passed with 3 selected tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
-- `git diff --check -- src/aeat/adapters/persistence/storage/__init__.py src/aeat/adapters/persistence/storage/test_smoke.py` passed with only the existing CRLF normalization warning.
+- The historical diff check passed with only the existing CRLF normalization warning.
 - Subagent reviewer Gibbs reported no findings. Residual scope note: this guard pins the critical runtime/master-key/namespace boundary, not the full storage `__all__` inventory.
 
 Disposition: close `AFR-047` as `runtime-default`.

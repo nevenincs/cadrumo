@@ -4,8 +4,8 @@ import sys
 
 from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.login import RuntimeLoginEvidence
-from .posix import PosixRuntimeChannel
-from .windows import WindowsRuntimeChannel
+from .posix_channel import PosixRuntimeChannel
+from .windows_channel import WindowsRuntimeChannel
 
 
 def capture_runtime_login(channel: RuntimeByteChannel) -> RuntimeLoginEvidence:

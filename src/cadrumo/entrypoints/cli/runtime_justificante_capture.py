@@ -12,16 +12,13 @@ from ...application.live.justificante_capture_operation import (
     JustificanteCapturePublicResultV1,
     JustificanteCaptureRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
-from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_deadlines import provider_login_settlement_seconds
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,18 +27,6 @@ class JustificanteCaptureRead:
 
     completion: RegisteredOperationCompletion[JustificanteCapturePublicResultV1]
     projection: JustificanteCapturePublicResultV1
-
-
-def _invalid_frame(
-    completed: RegisteredOperationCompletion[JustificanteCapturePublicResultV1],
-) -> CliRefusedBoundaryError:
-    return submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def capture_justificante_for_cli(
@@ -72,23 +57,15 @@ def capture_justificante_for_cli(
         request_version=1,
         result_version=1,
         timeout=120,
+        settlement_timeout=provider_login_settlement_seconds(after_login=120),
     )
     try:
         projection = completed.projection
         if not isinstance(projection, JustificanteCapturePublicResultV1):
             raise ValueError("justificante capture projection has an invalid type")
-        if (
-            str(projection.bucket_id) != str(profile_id)
-            or str(projection.modelo) != modelo
-            or projection.filing_year != year
-            or str(projection.period) != request.period
-        ):
+        if _justificante_capture_scope_invalid(projection, profile_id, modelo, year, request):
             raise ValueError("justificante capture result does not match its submitted scope")
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.refusal_code is not None
-            or completed.effect is not OperationEffect.UPDATED
-        ):
+        if _justificante_capture_receipt_invalid(completed):
             raise ValueError("justificante capture result disagrees with its settled receipt")
         if (
             projection.calendar_evidence_available != projection.justificante_metadata_registered
@@ -97,8 +74,35 @@ def capture_justificante_for_cli(
         ):
             raise ValueError("justificante capture result contains inconsistent evidence flags")
     except Exception:
-        raise _invalid_frame(completed) from None
+        raise invalid_completion_error(completed) from None
     return JustificanteCaptureRead(completion=completed, projection=projection)
 
 
 __all__ = ["JustificanteCaptureRead", "capture_justificante_for_cli"]
+
+
+def _justificante_capture_scope_invalid(
+    projection: JustificanteCapturePublicResultV1,
+    profile_id: UUID,
+    modelo: str,
+    year: int,
+    request: JustificanteCaptureRequest,
+) -> bool:
+    """Correlate captured filing evidence with the exact requested profile and declaration coordinates."""
+    return (
+        str(projection.bucket_id) != str(profile_id)
+        or str(projection.modelo) != modelo
+        or projection.filing_year != year
+        or (str(projection.period) != request.period)
+    )
+
+
+def _justificante_capture_receipt_invalid(
+    completed: RegisteredOperationCompletion[JustificanteCapturePublicResultV1],
+) -> bool:
+    """Require the successful mutation receipt without a refusal code."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.UPDATED
+    )

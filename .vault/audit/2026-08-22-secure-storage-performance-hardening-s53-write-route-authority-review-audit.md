@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f135dec1d00d672eb807e667d8caec9c072bdf84699d264e339e550e91894731'
-related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
+body_hash: 'sha256:ba015a30f2b743e97cb7d8d66b771948a6999c10c3d0e97464fc5aff533271d1'
+related: []
 ---
 
 # `secure-storage-performance-hardening` audit: `S53 write-route authority review`
@@ -59,13 +58,7 @@ high finding is closed.
 
 ### s53-write-route-authority-review | medium | Deleted leaf-refusal heuristic remains declared in quality metadata
 
-The production `_delegates_to_leaf_refusal` mutation heuristic was deleted,
-but `dev/quality/modelo_branch_classification.toml` still declares its former
-`storage_write_policy.py` branch and selector. This is a stale consumer of the
-retired legacy mechanism and makes the branch-classification authority claim a
-live M210 decision site that no longer exists. Delete that complete branch
-record and run its owning quality gate so the required legacy deletion is
-truthful beyond production imports.
+This is a stale consumer of the retired legacy mechanism and makes the branch-classification authority claim a live M210 decision site that no longer exists. Delete that complete branch record and run its owning quality gate so the required legacy deletion is truthful beyond production imports.
 
 ### s53-write-route-authority-review | resolved | Retired heuristic metadata is absent
 

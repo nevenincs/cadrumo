@@ -45,7 +45,6 @@ from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
 from ..calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ..calculations.observations_repository import (
-    CalculationObservationRepositoryProtocol,
     ObservationEnvelopePayload,
 )
 from ..calculations.revision_carry_gate import revision_carry_outcome
@@ -110,26 +109,6 @@ class _PriorSettlementObservation:
     captured_at: datetime
 
 
-def evaluate_carried_prior_definitiva_seed(
-    *,
-    ejercicio: int,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    operation: PinnedAuthorityOperation,
-    sector_id: str | None = None,
-) -> ProrrataPriorDefinitivaSeedEvaluation:
-    """Evaluate the carried-prior-definitive seed and surface findings.
-
-    Divergent or unreconfirmable revision stamps produce a blocking
-    ``registry_revision_divergence`` finding and no seed.
-    """
-    return evaluate_carried_prior_definitiva_seed_from_observations(
-        ejercicio=ejercicio,
-        observations=tuple(observation_repository.iter_modelo(Modelo("303").value)),
-        operation=operation,
-        sector_id=sector_id,
-    )
-
-
 def evaluate_carried_prior_definitiva_seed_from_observations(
     *,
     ejercicio: int,
@@ -165,30 +144,6 @@ def evaluate_carried_prior_definitiva_seed_from_observations(
             findings=(),
         )
     return ProrrataPriorDefinitivaSeedEvaluation(seed=None, findings=())
-
-
-def cross_check_prorrata_entry_against_prior_observation(
-    entry: ProrrataRegisterEntry,
-    *,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    operation: PinnedAuthorityOperation,
-) -> tuple[ProrrataSeedFinding, ...]:
-    """Cross-check a register entry against the prior definitive observation.
-
-    A carried-prior-definitive entry must match the prior Modelo 303 settlement
-    observation because art. 105.Uno is the normal carry rule. AEAT-authorised
-    and inicio-de-actividades entries are regulated alternatives: when they
-    differ from the prior definitive, the difference is surfaced as a
-    non-blocking notice that names the provenance rather than being silenced.
-    """
-    if entry.provisional_percentage is None or entry.provisional_provenance is None:
-        return ()
-
-    return cross_check_prorrata_entry_against_observations(
-        entry,
-        observations=tuple(observation_repository.iter_modelo(Modelo("303").value)),
-        operation=operation,
-    )
 
 
 def cross_check_prorrata_entry_against_observations(
@@ -424,6 +379,4 @@ __all__ = [
     "ProrrataPriorDefinitivaSeed",
     "ProrrataPriorDefinitivaSeedEvaluation",
     "ProrrataSeedFinding",
-    "cross_check_prorrata_entry_against_prior_observation",
-    "evaluate_carried_prior_definitiva_seed",
 ]

@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:78b6cc0de47aa1ec7bb32ed3fd99edae6cda4968bd68a6d2a1cb41c25b6e84e3'
 related:
   - "[[2026-08-12-aeat-export-fragment-generator-authority-dp30302-projection-declaration-deficit-audit]]"
-  - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
 
 # `aeat-export-fragment-generator-authority` reference: `m303 2023 epoch semantic home assignments`

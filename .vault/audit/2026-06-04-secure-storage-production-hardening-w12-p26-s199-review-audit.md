@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:5af7684c099b3ad598f0e04e52ff48a9d4d08887f0b35f5ad2fe34eb18e0f1fa'
+modified: '2026-10-03'
+body_hash: 'sha256:0b5c3d2da884fab16627f985513aa8f130eeefcc5596e3f725744da446feacc0'
 related: []
 ---
 
@@ -45,17 +45,17 @@ Locale work was not required.
 
 ## S199-004 | HONEST DEBT | Existing provider-orchestration tests still use stand-ins
 
-`src/aeat/application/auth/test_ensure_session.py` still contains an inherited
+The retired test still contains an inherited
 duck-typed provider stand-in and pyright/pyrefly ignore comments. This S199
 slice did not expand that debt. It remains outside the storage-key fix and
 should be retired under a separate auth-provider protocol narrowing step.
 
 Validation:
 
-- `$env:PYTHONPATH='src'; uv run --no-sync ruff check src/aeat/core/auth_session_keys.py src/aeat/application/auth/_sessions.py src/aeat/application/auth/test_sessions_storage_state_paths.py src/aeat/application/auth/test_persisted_session_metadata.py src/aeat/adapters/outbound/aeat/auth/_authenticator.py src/aeat/adapters/outbound/aeat/auth/_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_authenticator.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py src/aeat/adapters/outbound/aeat/auth/test_clave_movil_live.py` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/auth/test_operator.py src/aeat/application/auth/test_operator_storage_session.py src/aeat/application/auth/test_sessions_storage_state_paths.py src/aeat/application/auth/test_persisted_session_metadata.py` passed with 33 tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/auth/test_session_store_roundtrip.py src/aeat/adapters/outbound/aeat/auth/test_authenticator.py::test_authenticate_falls_back_after_stale_persisted_session src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::TestProbePersistedSession::test_probe_uses_existing_encrypted_session_without_invalidating_on_failure` passed with 3 tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::test_auth_browser_action_policy_allows_configured_own_name_representation_action src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::test_auth_browser_action_policy_rejects_unclassified_representation_action src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py::TestAuthenticateFresh::test_initial_selector_navigation_timeout_is_typed` passed with 3 tests.
+- the historical check passed.
+- the historical check passed with 33 tests.
+- the historical check passed with 3 tests.
+- the historical check passed with 3 tests.
 
 Reviewer note: subagent review remains unavailable because the reviewer agent hit
 the account usage limit earlier in this run. Host review found no remaining

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Never
 from uuid import UUID
 
 import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.evidence_followup_operation import (
+from ...application.ledger.evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
@@ -37,12 +36,10 @@ from .ledger_business_payloads import (
     EvidenceConsentListResult,
     EvidenceReviewListResult,
 )
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context) -> RuntimeFrontendClient:
@@ -51,22 +48,13 @@ def _client(ctx: typer.Context) -> RuntimeFrontendClient:
     return require_profile_client(ctx, expected_profile_id=expected_profile_id)
 
 
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
-
-
 def _submit[ProjectionT: BaseModel](
     ctx: typer.Context,
     request: BaseModel,
     *,
     definition_id: str,
     result_type: type[ProjectionT],
+    result_version: int,
 ) -> RegisteredOperationCompletion[ProjectionT]:
     """Submit one request through the exact active-profile runtime frontend."""
     profile_id = getattr(request, "profile_id", None)
@@ -82,7 +70,7 @@ def _submit[ProjectionT: BaseModel](
         subject_ref=profile_operation_subject(str(profile_id)),
         result_type=result_type,
         request_version=1,
-        result_version=1,
+        result_version=result_version,
         timeout=120,
     )
 
@@ -100,7 +88,7 @@ def _require_success[ProjectionT: BaseModel](
         or completed.refusal_code is not None
         or getattr(projection, "profile_id", None) != profile_id
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     # `_submit` binds the definition and exact subject; run_registered_operation
     # checks them against the runtime contract and terminal observation before
     # creating this completion.
@@ -115,13 +103,14 @@ def run_ledger_evidence_attachment_queue(ctx: typer.Context) -> AttachmentReview
         LedgerEvidenceAttachmentQueueRequest(profile_id=client.profile_id),
         definition_id=LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceAttachmentQueueProjection,
+        result_version=1,
     )
     projection = _require_success(
         completed,
         profile_id=client.profile_id,
     )
     if projection.count != len(projection.rows) or any(not row.pending_review for row in projection.rows):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return AttachmentReviewQueueResult.model_validate(
         {
             "bucket_id": str(client.profile_id),
@@ -144,13 +133,14 @@ def run_ledger_evidence_attachment_view(
         request,
         definition_id=LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceAttachmentViewProjection,
+        result_version=1,
     )
     projection = _require_success(
         completed,
         profile_id=client.profile_id,
     )
     if projection.item.attachment_id != attachment_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return AttachmentReviewViewResult.model_validate(
         {"bucket_id": str(client.profile_id), **projection.item.model_dump(mode="json")}
     )
@@ -164,6 +154,7 @@ def run_ledger_evidence_consent_list(ctx: typer.Context) -> EvidenceConsentListR
         LedgerEvidenceConsentListRequest(profile_id=client.profile_id),
         definition_id=LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceConsentListProjection,
+        result_version=1,
     )
     projection = _require_success(
         completed,
@@ -171,7 +162,7 @@ def run_ledger_evidence_consent_list(ctx: typer.Context) -> EvidenceConsentListR
     )
     survey = projection.survey
     if any(row.profile_bucket_id != str(client.profile_id) for row in survey.consented_dispatches):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return EvidenceConsentListResult.model_validate(
         {
             "bucket_id": str(client.profile_id),
@@ -206,6 +197,7 @@ def run_ledger_evidence_review_list(
         request,
         definition_id=LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceReviewListProjection,
+        result_version=1,
     )
     projection = _require_success(
         completed,
@@ -214,7 +206,7 @@ def run_ledger_evidence_review_list(
     if tuple(row.evidence_reference for row in projection.rows) != tuple(
         sorted({row.evidence_reference for row in projection.rows})
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return EvidenceReviewListResult.model_validate(
         {
             "bucket_id": str(client.profile_id),
@@ -236,13 +228,14 @@ def run_ledger_evidence_review_view(
         LedgerEvidenceReviewViewRequest(profile_id=client.profile_id, evidence_reference=evidence_reference),
         definition_id=LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceReviewViewProjection,
+        result_version=2,
     )
     projection = _require_success(
         completed,
         profile_id=client.profile_id,
     )
     if projection.evidence_reference != evidence_reference:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 

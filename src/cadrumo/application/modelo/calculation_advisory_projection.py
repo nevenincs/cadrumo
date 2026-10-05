@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from types import MappingProxyType
 from typing import Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -14,6 +15,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ..aggregation.source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
     DIAGNOSTIC_REMEDY_MAX_LENGTH,
@@ -22,6 +24,7 @@ from ..aggregation.source_mesh import (
 )
 from .calculate_input import Modelo202ModalitySummary, ModeloWorkCalculationServiceResult
 from .lifecycle_advisories import ModeloM210PlazoAdvisoryV1
+from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 from .work_plazo import (
     M210PlazoResolution,
     ModeloWorkConditionalRecargoPreview,
@@ -139,6 +142,8 @@ class ModeloWorkDeadlinePostureSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     closes_on: date
+    nominal_closes_on: date
+    holiday_coverage: DeadlineHolidayCoverage
     days_remaining: int | None = Field(default=None, ge=0)
     days_overdue: int | None = Field(default=None, ge=0)
     conditional_recargo_preview: ModeloWorkRecargoPreviewSnapshot | None = None
@@ -148,6 +153,8 @@ class ModeloWorkDeadlinePostureSnapshot(BaseModel):
         """Freeze the already resolved filing deadline posture."""
         return cls(
             closes_on=posture.closes_on,
+            nominal_closes_on=posture.nominal_closes_on,
+            holiday_coverage=posture.holiday_coverage,
             days_remaining=posture.days_remaining,
             days_overdue=posture.days_overdue,
             conditional_recargo_preview=(
@@ -161,6 +168,8 @@ class ModeloWorkDeadlinePostureSnapshot(BaseModel):
         """Restore the canonical one-sided deadline posture."""
         return ModeloWorkDeadlinePosture(
             closes_on=self.closes_on,
+            nominal_closes_on=self.nominal_closes_on,
+            holiday_coverage=self.holiday_coverage,
             days_remaining=self.days_remaining,
             days_overdue=self.days_overdue,
             conditional_recargo_preview=(
@@ -176,8 +185,43 @@ class ModeloWorkDeadlinePostureSnapshot(BaseModel):
         return self
 
 
+class PrintedBoxNumberSnapshot(BaseModel):
+    """The number the revision's form prints for one casilla a diagnostic names."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    casilla_id: CasillaId
+    number: str = Field(min_length=1, max_length=32)
+
+
+def _fallback_recargo_legal_ref(
+    posture: ModeloWorkDeadlinePosture | None, operation: PinnedAuthorityOperation
+) -> str | None:
+    return (
+        modelo_rendering_value("extemporaneous_recargo.legal_ref", authority=operation)
+        if posture is not None and posture.days_overdue is not None and posture.conditional_recargo_preview is None
+        else None
+    )
+
+
+def _diagnostic_printed_box_numbers(
+    named: tuple[CasillaId, ...], boxes: PrintedBoxes | None
+) -> tuple[PrintedBoxNumberSnapshot, ...]:
+    return tuple(
+        PrintedBoxNumberSnapshot(casilla_id=casilla_id, number=number)
+        for casilla_id in named
+        if boxes is not None and (number := boxes.number(str(casilla_id))) is not None
+    )
+
+
 class ModeloCalculationAdvisories(BaseModel):
-    """All calculation-only presentation facts frozen at the admitted writer."""
+    """All calculation-only presentation facts frozen at the admitted writer.
+
+    ``printed_boxes`` holds, for each casilla a diagnostic names, the number
+    the revision's form prints for it, so a frontend without registry access
+    names the same box the editor does. A casilla the form prints no number
+    for is absent and reads as an unnumbered box.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -187,6 +231,7 @@ class ModeloCalculationAdvisories(BaseModel):
     m210_plazo: tuple[ModeloM210PlazoAdvisoryV1, ...]
     deadline: ModeloWorkDeadlinePostureSnapshot | None
     fallback_recargo_legal_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    printed_boxes: tuple[PrintedBoxNumberSnapshot, ...] = ()
 
     @classmethod
     def from_result(
@@ -197,9 +242,18 @@ class ModeloCalculationAdvisories(BaseModel):
     ) -> Self:
         """Capture all advisories under the calculation's pinned registry lease."""
         posture = modelo_work_deadline_posture(result.work_unit, operation=operation)
-        fallback_ref = (
-            modelo_rendering_value("extemporaneous_recargo.legal_ref", authority=operation)
-            if posture is not None and posture.days_overdue is not None and posture.conditional_recargo_preview is None
+        fallback_ref = _fallback_recargo_legal_ref(posture, operation)
+        named = tuple(dict.fromkeys(row.casilla_id for row in result.source_diagnostics if row.casilla_id is not None))
+        boxes = (
+            snapshot_printed_boxes(
+                operation,
+                operation.snapshot(
+                    str(result.work_unit.modelo),
+                    filing_year=result.work_unit.filing_year,
+                    period=result.work_unit.period.registry_token,
+                ),
+            )
+            if named
             else None
         )
         return cls(
@@ -210,11 +264,16 @@ class ModeloCalculationAdvisories(BaseModel):
             m210_plazo=tuple(ModeloM210PlazoAdvisoryV1.from_resolution(row) for row in result.plazo_resolutions),
             deadline=ModeloWorkDeadlinePostureSnapshot.from_posture(posture) if posture is not None else None,
             fallback_recargo_legal_ref=fallback_ref,
+            printed_boxes=_diagnostic_printed_box_numbers(named, boxes),
         )
 
     def to_diagnostics(self) -> tuple[CalculationSourceDiagnostic, ...]:
         """Restore every diagnostic in its original order."""
         return tuple(row.to_diagnostic() for row in self.source_diagnostics)
+
+    def to_printed_boxes(self) -> PrintedBoxes:
+        """Restore the printed numbers of the boxes the diagnostics name."""
+        return PrintedBoxes(numbers=MappingProxyType({str(row.casilla_id): row.number for row in self.printed_boxes}))
 
     def to_modality(self) -> Modelo202ModalitySummary | None:
         """Restore the optional Modelo 202 modality summary."""

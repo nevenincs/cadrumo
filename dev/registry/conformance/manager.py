@@ -653,18 +653,6 @@ class CoverageReport(ConformanceModel):
     modelo_count: int = Field(ge=0)
 
 
-@lru_cache(maxsize=2)
-def _cached_profile(validate: bool) -> RegistryConformanceProfile:
-    """Compose the profile once per process per read mode.
-
-    The registry fold costs seconds; a CLI process reads it once, and a test
-    module invoking several verbs would otherwise pay for it on each. Invalidated
-    by :func:`reset_conformance_cache`, which the governance writer calls after
-    every successful stamp so a re-read never serves a pre-write tree.
-    """
-    return audit_bundled_registry_conformance(validate=validate)
-
-
 @lru_cache(maxsize=1)
 def _cached_locale_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
     """Read shared-catalogue translation coverage for every bundled Modelo."""
@@ -672,13 +660,13 @@ def _cached_locale_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
 
 
 def reset_conformance_cache() -> None:
-    """Drop the memoised registry and locale reads.
+    """Drop the memoised locale reads.
 
     Called by the governance writer after a successful stamp: a report rendered
     from a pre-write profile inside the same process would show the operator the
-    state their own command just replaced.
+    state their own command just replaced. Registry profiles are recomposed on
+    each read; the compiler owns caching against current source inputs.
     """
-    _cached_profile.cache_clear()
     _cached_locale_index.cache_clear()
 
 
@@ -765,7 +753,7 @@ def load_conformance_report(*, validate: bool = True) -> ConformanceReport:
     Returns:
         The projected :class:`ConformanceReport`.
     """
-    profile = _cached_profile(validate)
+    profile = audit_bundled_registry_conformance(validate=validate)
     locale_index, unavailable = _cached_locale_index()
     annual_matrix = build_annual_coordinate_matrix() if validate else None
     return build_conformance_report(
@@ -858,17 +846,8 @@ def build_conformance_report(
     Returns:
         The projected :class:`ConformanceReport`.
     """
-    rows = tuple(
-        _payload_row(row, locale=_locale_coverage(locale_index.get((row.modelo, row.revision)))) for row in profile.rows
-    )
-    classification_by_modelo = {row.modelo: row.modelo_classification_finding_count for row in profile.rows}
-    # Annotated because the axis name is a ``Literal`` union on the audit and a
-    # dict comprehension keeps that narrow key type, which the ``str``-keyed
-    # payload field then refuses.
-    axis_population: dict[str, int] = {item.axis: item.population for item in profile.declared_axis_usage}
-    axis_declarations: dict[str, int] = {item.axis: item.declaration_count for item in profile.declared_axis_usage}
-    unused_axes = tuple(item.axis for item in profile.declared_axis_usage if item.status == "unused")
-
+    rows = _payload_rows(profile, locale_index)
+    axis_population, axis_declarations, unused_axes = _axis_usage_projection(profile)
     return ConformanceReport(
         rows=rows,
         registry_validated=profile.registry_validated,
@@ -879,16 +858,16 @@ def build_conformance_report(
         independent_check_coverage=profile.independent_check_coverage,
         reconciled_casillas=sum(row.reconciled_casillas for row in rows),
         independently_checked_casillas=sum(row.independently_checked_casillas for row in rows),
-        reconciles_nothing_row_count=sum(1 for row in profile.rows if row.reconciles_nothing),
+        reconciles_nothing_row_count=_reconciles_nothing_count(profile),
         grounding_finding_count=profile.grounding_finding_count,
-        modelo_scope_classification_finding_count=sum(classification_by_modelo.values()),
+        modelo_scope_classification_finding_count=_modelo_classification_total(profile),
         required_coverage_gap_row_count=len(profile.required_coverage_gap_rows),
         coverage_unmeasured_row_count=len(profile.coverage_unmeasured_rows),
         unused_declared_axes=unused_axes,
         declared_axis_declarations=axis_declarations,
         declared_axis_population=axis_population,
-        unattributed_oracle_payloads=tuple(_gap_row(item) for item in profile.unattributed_oracle_payloads),
-        unmatched_oracle_evidence=tuple(_gap_row(item) for item in profile.unmatched_oracle_evidence),
+        unattributed_oracle_payloads=_oracle_gap_rows(profile.unattributed_oracle_payloads),
+        unmatched_oracle_evidence=_oracle_gap_rows(profile.unmatched_oracle_evidence),
         bundled_oracle_payload_count=(len(oracle_inventory.evidence) + len(oracle_inventory.unattributed_payloads)),
         scope_diagnostic_count=len(profile.scope_diagnostics),
         unattributed_scope_diagnostic_count=len(profile.unattributed_scope_diagnostics),
@@ -898,6 +877,39 @@ def build_conformance_report(
     )
 
 
+def _payload_rows(
+    profile: RegistryConformanceProfile,
+    locale_index: Mapping[tuple[str, str], Sequence[_SharedModeloLocaleCoverageRecord]],
+) -> tuple[RevisionConformancePayload, ...]:
+    return tuple(
+        _payload_row(row, locale=_locale_coverage(locale_index.get((row.modelo, row.revision)))) for row in profile.rows
+    )
+
+
+def _axis_usage_projection(
+    profile: RegistryConformanceProfile,
+) -> tuple[dict[str, int], dict[str, int], tuple[str, ...]]:
+    # The source audit's axis is a Literal union, while the rendered projection
+    # deliberately stores this dictionary under ordinary string keys.
+    axis_population: dict[str, int] = {item.axis: item.population for item in profile.declared_axis_usage}
+    axis_declarations: dict[str, int] = {item.axis: item.declaration_count for item in profile.declared_axis_usage}
+    unused_axes = tuple(item.axis for item in profile.declared_axis_usage if item.status == "unused")
+    return axis_population, axis_declarations, unused_axes
+
+
+def _reconciles_nothing_count(profile: RegistryConformanceProfile) -> int:
+    return sum(1 for row in profile.rows if row.reconciles_nothing)
+
+
+def _modelo_classification_total(profile: RegistryConformanceProfile) -> int:
+    classification_by_modelo = {row.modelo: row.modelo_classification_finding_count for row in profile.rows}
+    return sum(classification_by_modelo.values())
+
+
+def _oracle_gap_rows(payloads: Sequence[UnattributedOraclePayload]) -> tuple[OraclePayloadGapRow, ...]:
+    return tuple(_gap_row(item) for item in payloads)
+
+
 def build_coverage_report(report: ConformanceReport) -> CoverageReport:
     """Fold a conformance report into one row per tracked conformance axis.
 
@@ -905,11 +917,30 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
     degraded read rather than a zero, because nothing measured them.
     """
     validated = report.registry_validated
-    rows = report.rows
     revisions = report.revision_count
-    modelos = report.modelo_count
+    axes = _revision_coverage_axes(report.rows, revisions)
+    axes.extend(_grounding_coverage_axes(report))
+    axes.extend(_oracle_coverage_axes(report))
+    axes.extend(_governance_coverage_axes(report, revisions, validated))
+    axes.extend(_declared_axis_coverage_axes(report))
+    axes.extend(_locale_coverage_axes(report))
+    axes.append(_axis("registry_scope.diagnostics", "revision", report.scope_diagnostic_count, revisions))
+    return CoverageReport(
+        rows=tuple(axes),
+        registry_validated=validated,
+        revision_count=revisions,
+        modelo_count=report.modelo_count,
+    )
 
-    axes: list[CoverageAxisRow] = [
+
+def _revision_coverage_axes(rows: Sequence[RevisionConformancePayload], revisions: int) -> list[CoverageAxisRow]:
+    return _revision_capability_coverage_axes(rows, revisions) + _revision_export_coverage_axes(rows, revisions)
+
+
+def _revision_capability_coverage_axes(
+    rows: Sequence[RevisionConformancePayload], revisions: int
+) -> list[CoverageAxisRow]:
+    return [
         _axis("revision.calc_grade", "revision", sum(1 for row in rows if row.calc_grade), revisions),
         _axis(
             "revision.verification_expectations",
@@ -929,6 +960,11 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
             sum(1 for row in rows if row.extraction_profiles),
             revisions,
         ),
+    ]
+
+
+def _revision_export_coverage_axes(rows: Sequence[RevisionConformancePayload], revisions: int) -> list[CoverageAxisRow]:
+    return [
         _axis(
             "revision.fixed_width_export",
             "revision",
@@ -941,6 +977,11 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
             sum(1 for row in rows if row.xml_dictionary_export),
             revisions,
         ),
+    ]
+
+
+def _grounding_coverage_axes(report: ConformanceReport) -> list[CoverageAxisRow]:
+    return [
         _axis(
             "external_grounding.independently_checked_casillas",
             "casilla",
@@ -962,9 +1003,14 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
             "external_grounding.revisions_reconciling_nothing",
             "revision",
             report.reconciles_nothing_row_count,
-            revisions,
+            report.revision_count,
             caveat="these revisions make no independent-check claim at all, which is not a claim of zero",
         ),
+    ]
+
+
+def _oracle_coverage_axes(report: ConformanceReport) -> list[CoverageAxisRow]:
+    return [
         _axis(
             "oracle_payloads.unattributed",
             "payload",
@@ -979,12 +1025,21 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
             report.bundled_oracle_payload_count,
             caveat="attributed oracle evidence that reaches no registry revision",
         ),
+    ]
+
+
+def _governance_coverage_axes(
+    report: ConformanceReport,
+    revisions: int,
+    validated: bool,
+) -> list[CoverageAxisRow]:
+    axes = [
         _axis(
             "governance.engineered_by",
             "revision",
             report.engineered_by_declared_count,
             revisions,
-        ),
+        )
     ]
     axes.extend(
         _axis(f"governance.review_status.{status}", "revision", count, revisions)
@@ -1003,7 +1058,11 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
             ),
         ),
     )
-    axes.extend(
+    return axes
+
+
+def _declared_axis_coverage_axes(report: ConformanceReport) -> list[CoverageAxisRow]:
+    return [
         _axis(
             f"declared_axis.{axis}",
             "declaration_site",
@@ -1017,8 +1076,11 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
             ),
         )
         for axis, declarations in sorted(report.declared_axis_declarations.items())
-    )
-    axes.extend(
+    ]
+
+
+def _locale_coverage_axes(report: ConformanceReport) -> list[CoverageAxisRow]:
+    return [
         _axis(
             f"locale.{item.locale}.labels_translated",
             "locale_leaf",
@@ -1027,182 +1089,219 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
             caveat="Spanish is excluded: the official registry casilla label IS the Spanish authority",
         )
         for item in report.locale_axis
-    )
-    axes.append(_axis("registry_scope.diagnostics", "revision", report.scope_diagnostic_count, revisions))
-
-    return CoverageReport(
-        rows=tuple(axes),
-        registry_validated=validated,
-        revision_count=revisions,
-        modelo_count=modelos,
-    )
+    ]
 
 
 def render_report(report: ConformanceReport) -> str:
     """Render the conformance report as greppable ``key=value`` rows."""
-    lines = [
-        _kv_line(
-            "summary",
-            registry_validated=report.registry_validated,
-            revisions=report.revision_count,
-            modelos=report.modelo_count,
-            engineered_by_declared=report.engineered_by_declared_count,
-            independent_check_coverage=report.independent_check_coverage,
-            reconciled_casillas=report.reconciled_casillas,
-            independently_checked_casillas=report.independently_checked_casillas,
-            reconciles_nothing_rows=report.reconciles_nothing_row_count,
-            grounding_findings=report.grounding_finding_count,
-            modelo_scope_classification_findings=report.modelo_scope_classification_finding_count,
-            required_coverage_gap_rows=report.required_coverage_gap_row_count,
-            coverage_unmeasured_rows=report.coverage_unmeasured_row_count,
-            unattributed_oracle_payloads=len(report.unattributed_oracle_payloads),
-            unmatched_oracle_evidence=len(report.unmatched_oracle_evidence),
-            bundled_oracle_payloads=report.bundled_oracle_payload_count,
-            scope_diagnostics=report.scope_diagnostic_count,
-            unattributed_scope_diagnostics=report.unattributed_scope_diagnostic_count,
-            locale_unavailable_modelos=len(report.locale_unavailable_modelos),
-        ),
-    ]
-    lines.extend(
+    lines = [_conformance_summary_line(report)]
+    lines.extend(_conformance_census_lines(report))
+    lines.extend(_conformance_row_lines(report))
+    lines.extend(_annual_matrix_lines(report))
+    lines.extend(_oracle_gap_lines(report))
+    lines.extend(_unused_axis_lines(report))
+    lines.extend(_locale_unavailable_lines(report))
+    lines.append(_reading_note(report))
+    return "\n".join(lines)
+
+
+def _conformance_summary_line(report: ConformanceReport) -> str:
+    return _kv_line(
+        "summary",
+        registry_validated=report.registry_validated,
+        revisions=report.revision_count,
+        modelos=report.modelo_count,
+        engineered_by_declared=report.engineered_by_declared_count,
+        independent_check_coverage=report.independent_check_coverage,
+        reconciled_casillas=report.reconciled_casillas,
+        independently_checked_casillas=report.independently_checked_casillas,
+        reconciles_nothing_rows=report.reconciles_nothing_row_count,
+        grounding_findings=report.grounding_finding_count,
+        modelo_scope_classification_findings=report.modelo_scope_classification_finding_count,
+        required_coverage_gap_rows=report.required_coverage_gap_row_count,
+        coverage_unmeasured_rows=report.coverage_unmeasured_row_count,
+        unattributed_oracle_payloads=len(report.unattributed_oracle_payloads),
+        unmatched_oracle_evidence=len(report.unmatched_oracle_evidence),
+        bundled_oracle_payloads=report.bundled_oracle_payload_count,
+        scope_diagnostics=report.scope_diagnostic_count,
+        unattributed_scope_diagnostics=report.unattributed_scope_diagnostic_count,
+        locale_unavailable_modelos=len(report.locale_unavailable_modelos),
+    )
+
+
+def _conformance_census_lines(report: ConformanceReport) -> list[str]:
+    return [
         _kv_line("census", review_status=status, revisions=count)
         for status, count in sorted(report.review_status_census.items())
-    )
-    for row in report.rows:
-        lines.append(
-            _kv_line(
-                "row",
-                modelo=row.modelo,
-                revision=row.revision,
-                registry_validated=row.registry_validated,
-                review_status=row.review_status,
-                engineered_by=row.engineered_by,
-                # Named EXACTLY as the payload names it, and carrying exactly
-                # what the payload carries. Rendering the joined form under the
-                # key ``reviewed_by`` — while the payload's ``reviewed_by`` held
-                # the raw name — made one key name mean two different things
-                # across two surfaces, and the surface a program reads was the
-                # bare one. No bare reviewer column is emitted here: the joined
-                # form contains the name, so nothing is lost by omitting it.
-                reviewed_by_attribution=row.reviewed_by_attribution,
-                reviewed_at=row.reviewed_at,
-                reviewed_against=row.reviewed_against,
-                calc_grade=row.calc_grade,
-                casillas=row.casillas,
-                formulas=row.formulas,
-                bindings=row.bindings,
-                verification_expectations=row.verification_expectations,
-                extraction_profiles=row.extraction_profiles,
-                completeness_manifest=row.completeness_manifest,
-                fixed_width_export=row.fixed_width_export,
-                xml_dictionary_export=row.xml_dictionary_export,
-                reconciled_casillas=row.reconciled_casillas,
-                declared_grounded_casillas=row.declared_grounded_casillas,
-                independently_checked_casillas=row.independently_checked_casillas,
-                independent_check_coverage=row.independent_check_coverage,
-                grounding_findings=row.grounding_findings,
-                required_coverage_gap_tiers=row.required_coverage_gap_tiers,
-                model_law_authority_scope=row.model_law_authority_scope,
-                modelo_calculation_class=row.modelo_calculation_class,
-                modelo_tax_domain=row.modelo_tax_domain,
-                modelo_scope_classification_findings=row.modelo_scope_classification_findings,
-                scope_diagnostics=row.scope_diagnostics,
-                latest_revision_probed=row.latest_revision_probed,
-                support_probe_describes_this_revision=row.support_probe_describes_this_revision,
-                locale_audited_locales=None if row.locale is None else len(row.locale.audited_locales),
-                locale_labels_required_per_locale=(
-                    None if row.locale is None else row.locale.labels_required_per_locale
-                ),
-                locale_labels_translated=None if row.locale is None else row.locale.labels_translated,
-                locale_complete_locales=None if row.locale is None else row.locale.complete_locales,
-                locale_stale_keys=None if row.locale is None else row.locale.stale_keys,
-                construct_evidence_rows=(None if row.construct_evidence is None else len(row.construct_evidence.rows)),
-                construct_evidence_gaps=(None if row.construct_evidence is None else len(row.construct_evidence.gaps)),
-                construct_evidence_filing_gaps=(
-                    None if row.construct_evidence is None else len(row.construct_evidence.filing_gaps)
-                ),
-                construct_evidence_inspection_gaps=(
-                    None if row.construct_evidence is None else len(row.construct_evidence.inspection_gaps)
-                ),
-                construct_evidence_authority_scope=row.construct_evidence_authority_scope,
-                casilla_provenance_traces=len(row.casilla_provenance),
-            ),
-        )
-    lines.append(
+    ]
+
+
+def _conformance_row_lines(report: ConformanceReport) -> list[str]:
+    return [_conformance_row_line(row) for row in report.rows]
+
+
+def _conformance_row_line(row: RevisionConformancePayload) -> str:
+    fields: dict[str, object] = {
+        "modelo": row.modelo,
+        "revision": row.revision,
+        "registry_validated": row.registry_validated,
+        "review_status": row.review_status,
+        "engineered_by": row.engineered_by,
+        # Named EXACTLY as the payload names it, and carrying exactly what the
+        # payload carries. No bare reviewer column is emitted here: the joined
+        # form contains the name, so nothing is lost by omitting it.
+        "reviewed_by_attribution": row.reviewed_by_attribution,
+        "reviewed_at": row.reviewed_at,
+        "reviewed_against": row.reviewed_against,
+        "calc_grade": row.calc_grade,
+        "casillas": row.casillas,
+        "formulas": row.formulas,
+        "bindings": row.bindings,
+        "verification_expectations": row.verification_expectations,
+        "extraction_profiles": row.extraction_profiles,
+        "completeness_manifest": row.completeness_manifest,
+        "fixed_width_export": row.fixed_width_export,
+        "xml_dictionary_export": row.xml_dictionary_export,
+        "reconciled_casillas": row.reconciled_casillas,
+        "declared_grounded_casillas": row.declared_grounded_casillas,
+        "independently_checked_casillas": row.independently_checked_casillas,
+        "independent_check_coverage": row.independent_check_coverage,
+        "grounding_findings": row.grounding_findings,
+        "required_coverage_gap_tiers": row.required_coverage_gap_tiers,
+        "model_law_authority_scope": row.model_law_authority_scope,
+        "modelo_calculation_class": row.modelo_calculation_class,
+        "modelo_tax_domain": row.modelo_tax_domain,
+        "modelo_scope_classification_findings": row.modelo_scope_classification_findings,
+        "scope_diagnostics": row.scope_diagnostics,
+        "latest_revision_probed": row.latest_revision_probed,
+        "support_probe_describes_this_revision": row.support_probe_describes_this_revision,
+    }
+    fields.update(_locale_row_fields(row))
+    fields.update(_construct_evidence_row_fields(row))
+    return _kv_line("row", **fields)
+
+
+def _locale_row_fields(row: RevisionConformancePayload) -> dict[str, object]:
+    locale = row.locale
+    return {
+        "locale_audited_locales": None if locale is None else len(locale.audited_locales),
+        "locale_labels_required_per_locale": None if locale is None else locale.labels_required_per_locale,
+        "locale_labels_translated": None if locale is None else locale.labels_translated,
+        "locale_complete_locales": None if locale is None else locale.complete_locales,
+        "locale_stale_keys": None if locale is None else locale.stale_keys,
+    }
+
+
+def _construct_evidence_row_fields(row: RevisionConformancePayload) -> dict[str, object]:
+    evidence = row.construct_evidence
+    return {
+        "construct_evidence_rows": None if evidence is None else len(evidence.rows),
+        "construct_evidence_gaps": None if evidence is None else len(evidence.gaps),
+        "construct_evidence_filing_gaps": None if evidence is None else len(evidence.filing_gaps),
+        "construct_evidence_inspection_gaps": None if evidence is None else len(evidence.inspection_gaps),
+        "construct_evidence_authority_scope": row.construct_evidence_authority_scope,
+        "casilla_provenance_traces": len(row.casilla_provenance),
+    }
+
+
+def _annual_matrix_lines(report: ConformanceReport) -> list[str]:
+    matrix = report.annual_matrix
+    lines = [
         _kv_line(
             "annual_matrix",
             registry_validated=report.registry_validated,
-            measured=report.annual_matrix is not None,
-            coordinates=None if report.annual_matrix is None else len(report.annual_matrix.coordinates),
+            measured=matrix is not None,
+            coordinates=None if matrix is None else len(matrix.coordinates),
         ),
-    )
-    if report.annual_matrix is not None:
-        lines.extend(
-            _kv_line(
-                "annual_coordinate",
-                modelo=coordinate.modelo,
-                filing_year=coordinate.filing_year,
-                period=coordinate.period,
-                law_selected_revision=coordinate.law_selected_revision,
-                authority_scope=coordinate.authority_scope,
-                classification=coordinate.classification,
-                provisional=coordinate.provisional,
-                schema_identity_measurement=coordinate.schema_comparison.identity_measurement,
-                schema_printed_form_membership=coordinate.schema_comparison.printed_form_membership,
-                schema_xsd_only_attributes=coordinate.schema_comparison.xsd_only_attributes,
-                schema_identity_divergence_count=coordinate.schema_comparison.identity_divergence_count,
-            )
-            for coordinate in report.annual_matrix.coordinates
+    ]
+    if matrix is None:
+        return lines
+    lines.extend(_annual_coordinate_lines(matrix))
+    lines.extend(_annual_schema_layout_lines(matrix))
+    lines.extend(_annual_classification_lines(matrix))
+    return lines
+
+
+def _annual_coordinate_lines(matrix: ConformanceCoordinateMatrix) -> list[str]:
+    return [
+        _kv_line(
+            "annual_coordinate",
+            modelo=coordinate.modelo,
+            filing_year=coordinate.filing_year,
+            period=coordinate.period,
+            law_selected_revision=coordinate.law_selected_revision,
+            authority_scope=coordinate.authority_scope,
+            classification=coordinate.classification,
+            provisional=coordinate.provisional,
+            schema_identity_measurement=coordinate.schema_comparison.identity_measurement,
+            schema_printed_form_membership=coordinate.schema_comparison.printed_form_membership,
+            schema_xsd_only_attributes=coordinate.schema_comparison.xsd_only_attributes,
+            schema_identity_divergence_count=coordinate.schema_comparison.identity_divergence_count,
         )
-        lines.extend(
-            _kv_line(
-                "annual_schema_layout",
-                modelo=coordinate.modelo,
-                filing_year=coordinate.filing_year,
-                period=coordinate.period,
-                law_selected_revision=coordinate.law_selected_revision,
-                authority_scope=coordinate.authority_scope,
-                layout_id=layout.layout_id,
-                layout_format=layout.layout_format,
-                identity_measurement=layout.identity_measurement,
-                registry_casilla_count=layout.registry_casilla_count,
-                dictionary_entry_count=layout.dictionary_entry_count,
-                dictionary_casilla_count=layout.dictionary_casilla_count,
-                identity_divergence_count=layout.identity_divergence_count,
-                missing_casilla_ids=layout.missing_casilla_ids,
-                extra_casilla_ids=layout.extra_casilla_ids,
-                printed_form_membership=layout.printed_form_membership,
-                xsd_only_attributes=layout.xsd_only_attributes,
-                dictionary_source_ref=layout.dictionary_source_ref,
-                parser_exposed_attributes=layout.parser_exposed_attributes,
-                unmeasured_attributes=layout.unmeasured_attributes,
-                diagnostic=layout.diagnostic,
-            )
-            for coordinate in report.annual_matrix.coordinates
-            for layout in coordinate.schema_comparison.layout_comparisons
+        for coordinate in matrix.coordinates
+    ]
+
+
+def _annual_schema_layout_lines(matrix: ConformanceCoordinateMatrix) -> list[str]:
+    return [
+        _kv_line(
+            "annual_schema_layout",
+            modelo=coordinate.modelo,
+            filing_year=coordinate.filing_year,
+            period=coordinate.period,
+            law_selected_revision=coordinate.law_selected_revision,
+            authority_scope=coordinate.authority_scope,
+            layout_id=layout.layout_id,
+            layout_format=layout.layout_format,
+            identity_measurement=layout.identity_measurement,
+            registry_casilla_count=layout.registry_casilla_count,
+            dictionary_entry_count=layout.dictionary_entry_count,
+            dictionary_casilla_count=layout.dictionary_casilla_count,
+            identity_divergence_count=layout.identity_divergence_count,
+            missing_casilla_ids=layout.missing_casilla_ids,
+            extra_casilla_ids=layout.extra_casilla_ids,
+            printed_form_membership=layout.printed_form_membership,
+            xsd_only_attributes=layout.xsd_only_attributes,
+            dictionary_source_ref=layout.dictionary_source_ref,
+            parser_exposed_attributes=layout.parser_exposed_attributes,
+            unmeasured_attributes=layout.unmeasured_attributes,
+            diagnostic=layout.diagnostic,
         )
-        lines.extend(
-            _kv_line(
-                "annual_coordinate_classification",
-                classification=classification,
-                count=report.annual_matrix.classification_census[classification],
-            )
-            for classification in COORDINATE_CLASSIFICATIONS
+        for coordinate in matrix.coordinates
+        for layout in coordinate.schema_comparison.layout_comparisons
+    ]
+
+
+def _annual_classification_lines(matrix: ConformanceCoordinateMatrix) -> list[str]:
+    return [
+        _kv_line(
+            "annual_coordinate_classification",
+            classification=classification,
+            count=matrix.classification_census[classification],
         )
-    lines.extend(
+        for classification in COORDINATE_CLASSIFICATIONS
+    ]
+
+
+def _oracle_gap_lines(report: ConformanceReport) -> list[str]:
+    return [
         _kv_line("oracle_gap", kind="unattributed_payload", corpus=item.corpus, payload=item.payload_name, gap=item.gap)
         for item in report.unattributed_oracle_payloads
-    )
-    lines.extend(
+    ] + [
         _kv_line("oracle_gap", kind="unmatched_evidence", corpus=item.corpus, payload=item.payload_name, gap=item.gap)
         for item in report.unmatched_oracle_evidence
-    )
-    lines.extend(
+    ]
+
+
+def _unused_axis_lines(report: ConformanceReport) -> list[str]:
+    return [
         _kv_line("unused_axis", axis=axis, population=report.declared_axis_population.get(axis, 0))
         for axis in report.unused_declared_axes
-    )
-    lines.extend(_kv_line("locale_unavailable", modelo=modelo) for modelo in report.locale_unavailable_modelos)
-    lines.append(_reading_note(report))
-    return "\n".join(lines)
+    ]
+
+
+def _locale_unavailable_lines(report: ConformanceReport) -> list[str]:
+    return [_kv_line("locale_unavailable", modelo=modelo) for modelo in report.locale_unavailable_modelos]
 
 
 def render_coverage(coverage: CoverageReport) -> str:
@@ -1446,9 +1545,17 @@ def _render_value(value: object) -> str:
     if isinstance(value, float):
         return f"{value:.4f}"
     if isinstance(value, tuple):
-        items = cast(tuple[object, ...], value)
-        return ",".join(str(item) for item in items) if items else "-"
-    text = str(value)
+        return _render_tuple_value(cast(tuple[object, ...], value))
+    return _render_text_value(str(value))
+
+
+def _render_tuple_value(items: tuple[object, ...]) -> str:
+    """Render tuple-valued fields as comma-separated values or a true empty list."""
+    return ",".join(str(item) for item in items) if items else "-"
+
+
+def _render_text_value(text: str) -> str:
+    """Quote text values that would otherwise break the key-value row format."""
     if not text or any(character in text for character in ' \t"='):
         return json.dumps(text)
     return text

@@ -7,7 +7,8 @@ from pydantic import ValidationError
 
 from ...calculations.registry.tests.published_authority import leased_profile_create_context
 from ..errors import UserProfileValidationError
-from ..values import ProfileSetupState, UserProfileRecord, UserProfileSnapshot, create_user_profile_record
+from ..values import ProfileSetupState, UserProfileRecord, create_user_profile_record
+from .snapshot_factory import create_user_profile_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
@@ -69,4 +70,4 @@ def test_legacy_lifecycle_fields_are_rejected() -> None:
 
 def test_incomplete_record_cannot_be_snapshotted() -> None:
     with pytest.raises(UserProfileValidationError, match="cannot snapshot an incomplete profile record"):
-        UserProfileSnapshot.from_profile(_incomplete_record(), context=leased_profile_create_context())
+        create_user_profile_snapshot(_incomplete_record(), context=leased_profile_create_context())

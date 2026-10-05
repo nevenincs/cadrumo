@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-08'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:98e7395ce2603a91592eb4bad116e65af70f2dcc86fd604c4b7a6d75fb1d7275'
+body_hash: 'sha256:0fecbcd112b9f2725964f982bd8ba4b123bdbc819179d1abbf414291cb3d8aa6'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -302,26 +302,6 @@ shipped it proves the same arguments re-run, not that the same output emerged.
 
 **Wiring needed.** One diagnostics verb under the existing family, plus a
 decision on whether an operator or only the golden gate should reach it.
-
-### `core/telemetry/_producers.py`
-
-**What it is.** Three producers projecting local signals â€” command invocation,
-error frequency by closed label, LLM run â€” into the allowlisted payload and
-handing them to the consent-gated dispatcher.
-
-**How complete.** 174 lines against 173 test lines, green. Pure projections, no
-network call, no transaction content or profile identity read.
-
-**Why not connected.** UNFINISHED against a declared follow-up. The telemetry
-ADR says the package is deliberately empty of producers until a follow-up wires
-real emit call sites, and that the CLI verbs and transport remain open. The
-producers have since been written; the call sites and transport have not. Note
-this is not a decision that they stay unwired â€” the record says the opposite.
-
-**What it adds.** Little, for the taxpayer. Nothing here discharges an
-obligation or removes a filing risk, and it is default-off with an absolute bar
-in gestor mode, so it adds nothing to a default install. Last in the slice for
-wiring value.
 
 ### Retired: `core/corpus_manifest/_bundle_signing.py`
 

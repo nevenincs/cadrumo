@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:04ac1f4d7d716a269d00e5121c2da6f6d5608f0cfb73b2e733b84cca8fd725ab'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 # `profile-password-custody` audit: `S225 capsule source anchor review`
 

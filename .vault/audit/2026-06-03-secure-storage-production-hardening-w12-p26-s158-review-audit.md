@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:e37155d9d1891dd012c65cdcd80bc84b5cc01f7ccfdfab272c2b3c9a4ba18e07'
+modified: '2026-10-03'
+body_hash: 'sha256:41104af4811cd3b3e25f878c12c5336a30670ff4953d4d692c55deacad3c3a65'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The module derives `keystore` paths from centralized storage hierarchy constants
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_keystore_paths.py src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed with 38 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py src/aeat/adapters/persistence/storage/bucket/_errors.py src/aeat/adapters/persistence/storage/bucket/test_keystore_paths.py src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed.
+- The historical check passed with 38 tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` reported `ca.yml`, `en.yml`, `es.yml`, and `hu.yml` ok.
 - Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw encoding literals, direct settings construction, or direct environment access.
 - Plan state was reconciled after the CLI checked S158 but left `AFR-056` pending; the repaired state is `AFR-056`/`S158` closed and `AFR-057` through `AFR-059` / `S159` through `S161` pending.

@@ -7,7 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Self
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.external_constants import OutputLanguage
@@ -16,7 +16,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest, PrefixedContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.modelo_export_artefact import ModeloExportArtefact
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
@@ -26,7 +26,7 @@ from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ..calculations.observations_repository import PriorDomiciliationElectionProjection
 from ..operations.public_period import PublicPeriod
 from .calculation_report_export import ModeloCalculationReportResult
-from .export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from .export import ModeloExportAccountReference, ModeloExportResult, ModeloIvaWalletDecisionProvenance
 
 
 class ModeloPriorDomiciliationPublicProvenance(BaseModel):
@@ -124,14 +124,16 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     exported_at: datetime
     actor: str = Field(min_length=1, max_length=128)
     bucket_event_id: str = Field(min_length=1, max_length=128)
-    resolved_result_disposition: ResultDisposition
+    resolved_result_disposition: ResultDisposition | None
     payment_election: PaymentElection | None
     refund_election: RefundElection | None
     prior_domiciliation_election: ModeloPriorDomiciliationPublicProvenance
+    selected_account: ModeloExportAccountReference | None = None
     casilla_provenance: tuple[ModeloCasillaProvenance, ...]
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionPublicProvenance | None
     local_evidence_status: str = Field(min_length=1)
     official_evidence_message: str = Field(min_length=1)
+    domiciliation_cutoff_unverified: bool = False
     completeness_unverified: bool
     software_identity_grade: AeatSoftwareIdentityGrade | None
 
@@ -158,6 +160,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             prior_domiciliation_election=ModeloPriorDomiciliationPublicProvenance.from_provenance(
                 result.prior_domiciliation_election
             ),
+            selected_account=result.selected_account,
             casilla_provenance=result.casilla_provenance,
             iva_wallet_decision_provenance=(
                 ModeloIvaWalletDecisionPublicProvenance.from_provenance(result.iva_wallet_decision_provenance)
@@ -166,6 +169,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             ),
             local_evidence_status=result.local_evidence_status,
             official_evidence_message=result.official_evidence_message,
+            domiciliation_cutoff_unverified=result.domiciliation_cutoff_unverified,
             completeness_unverified=result.completeness_unverified,
             software_identity_grade=result.software_identity_grade,
         )
@@ -190,6 +194,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             payment_election=self.payment_election,
             refund_election=self.refund_election,
             prior_domiciliation_election=self.prior_domiciliation_election.to_provenance(),
+            selected_account=self.selected_account,
             casilla_provenance=self.casilla_provenance,
             iva_wallet_decision_provenance=(
                 self.iva_wallet_decision_provenance.to_provenance()
@@ -198,6 +203,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             ),
             local_evidence_status=self.local_evidence_status,
             official_evidence_message=self.official_evidence_message,
+            domiciliation_cutoff_unverified=self.domiciliation_cutoff_unverified,
             completeness_unverified=self.completeness_unverified,
             software_identity_grade=self.software_identity_grade,
         )
@@ -301,6 +307,19 @@ class ModeloExportCompleteness(StrEnum):
     NOT_ASSESSED = "not_assessed"
 
 
+def _export_receipt_summary_differs(
+    result: ModeloExportPublicResultV3, receipt: ModeloFicheroBoePublicReceipt | ModeloCalculationReportPublicReceipt
+) -> bool:
+    """Compare the canonical receipt's revision, destination, bytes, digest and identity grade."""
+    return (
+        receipt.calculation_revision_id != result.calculation_revision_id
+        or receipt.output_path != result.output_path
+        or receipt.byte_size != result.byte_size
+        or receipt.file_sha256 != result.file_sha256
+        or receipt.software_identity_grade != result.software_identity_grade
+    )
+
+
 class ModeloExportPublicResultV3(BaseModel):
     """Evidence that one export happened and what it could establish, without the exported material.
 
@@ -315,7 +334,7 @@ class ModeloExportPublicResultV3(BaseModel):
     render the canonical publication facts through the runtime.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     result_version: int = 3
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
@@ -346,13 +365,7 @@ class ModeloExportPublicResultV3(BaseModel):
         if (self.artefact is not ModeloExportArtefact.FICHERO_BOE) != (self.calculation_report is not None):
             raise ValueError("a calculation-report export result carries exactly its receipt")
         receipt = self.fichero_boe if self.fichero_boe is not None else self.calculation_report
-        if receipt is None or (
-            receipt.calculation_revision_id != self.calculation_revision_id
-            or receipt.output_path != self.output_path
-            or receipt.byte_size != self.byte_size
-            or receipt.file_sha256 != self.file_sha256
-            or receipt.software_identity_grade != self.software_identity_grade
-        ):
+        if receipt is None or _export_receipt_summary_differs(self, receipt):
             raise ValueError("export summary contradicts its canonical receipt")
         return self
 

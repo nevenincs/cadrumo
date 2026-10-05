@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#release-pipeline-full-automation'
 date: '2026-08-03'
-modified: '2026-08-03'
-body_hash: 'sha256:42494e70117aa18a2de1188095af8adc0487c42927eaab812bd217bad4158207'
+modified: '2026-10-03'
+body_hash: 'sha256:27ee0d51c119b6c93d2a7aa12d08e26e0485fafa4e38d5a5c65c853ce427c082'
 related: []
 ---
 
@@ -28,7 +28,7 @@ mandate; there is currently no active goal driving further dispatches.
 
 ## Fixes landed this session (all pushed to `main`, tests green)
 
-In commit order, each independently green on `dev/release/tests/test_release_orchestrator_workflow.py`:
+In commit order, each independently green on the retired test:
 
 1. `59d55d44e2` — give the bump commit a real git identity (bump job had no configured
    `user.name`/`user.email`, so `git commit` failed).
@@ -59,10 +59,8 @@ In commit order, each independently green on `dev/release/tests/test_release_orc
    permanent, expected-looking failure on every single rehearsal with zero diagnostic value. See
    the two new tests `test_a_rehearsal_uses_the_quick_campaign_not_the_full_smoke` and
    `test_a_rehearsal_never_dispatches_the_publication_authority` in
-   `dev/release/tests/test_release_orchestrator_workflow.py`.
 
 All four are pushed; `origin/main` has them. 38/38 tests pass in
-`dev/release/tests/test_release_orchestrator_workflow.py`.
 
 ## Known unresolved structural risk — NOT fixed
 

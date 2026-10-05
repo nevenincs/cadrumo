@@ -29,10 +29,6 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 
 from ..compiler.authority import compile_validated_authority
-from .workbook_parity import (
-    run_registry_workbook_parity,
-    scan_workbook,
-)
 from .workbook_parity_models import (
     SyntheticInputSet,
     WorkbookArtefactReport,
@@ -40,6 +36,8 @@ from .workbook_parity_models import (
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
 )
+from .workbook_parity_scanning import scan_workbook
+from .workbook_parity_workflow import run_registry_workbook_parity
 
 ParityStatus = Literal["match", "mismatch"]
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
@@ -312,32 +310,48 @@ def _as_json_array(value: object) -> list[object] | None:
 
 
 def _diff_paths(left: object, right: object, prefix: str = "") -> tuple[str, ...]:
-    differences: list[str] = []
     left_object = _as_json_object(left)
     right_object = _as_json_object(right)
     if left_object is not None and right_object is not None:
-        keys = sorted(set(left_object) | set(right_object))
-        for key in keys:
-            next_prefix = f"{prefix}.{key}" if prefix else str(key)
-            if key not in left_object:
-                differences.append(f"{next_prefix}: missing from stored tape")
-                continue
-            if key not in right_object:
-                differences.append(f"{next_prefix}: missing from current tape")
-                continue
-            differences.extend(_diff_paths(left_object[key], right_object[key], next_prefix))
-        return tuple(differences)
+        return _diff_object_paths(left_object, right_object, prefix)
     left_array = _as_json_array(left)
     right_array = _as_json_array(right)
     if left_array is not None and right_array is not None:
-        if len(left_array) != len(right_array):
-            differences.append(f"{prefix}: length differs ({len(left_array)} != {len(right_array)})")
-        for index, (left_item, right_item) in enumerate(zip(left_array, right_array, strict=False)):
-            next_prefix = f"{prefix}[{index}]"
-            differences.extend(_diff_paths(left_item, right_item, next_prefix))
-        return tuple(differences)
+        return _diff_array_paths(left_array, right_array, prefix)
     if left != right:
-        differences.append(f"{prefix}: {left!r} != {right!r}")
+        return (f"{prefix}: {left!r} != {right!r}",)
+    return ()
+
+
+def _diff_object_paths(
+    left: dict[str, object],
+    right: dict[str, object],
+    prefix: str,
+) -> tuple[str, ...]:
+    differences: list[str] = []
+    for key in sorted(set(left) | set(right)):
+        next_prefix = f"{prefix}.{key}" if prefix else str(key)
+        if key not in left:
+            differences.append(f"{next_prefix}: missing from stored tape")
+            continue
+        if key not in right:
+            differences.append(f"{next_prefix}: missing from current tape")
+            continue
+        differences.extend(_diff_paths(left[key], right[key], next_prefix))
+    return tuple(differences)
+
+
+def _diff_array_paths(
+    left: list[object],
+    right: list[object],
+    prefix: str,
+) -> tuple[str, ...]:
+    differences: list[str] = []
+    if len(left) != len(right):
+        differences.append(f"{prefix}: length differs ({len(left)} != {len(right)})")
+    for index, (left_item, right_item) in enumerate(zip(left, right, strict=False)):
+        next_prefix = f"{prefix}[{index}]"
+        differences.extend(_diff_paths(left_item, right_item, next_prefix))
     return tuple(differences)
 
 

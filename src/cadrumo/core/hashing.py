@@ -54,13 +54,16 @@ this set makes the string it appears in not a lowercase hex digest.
 _BLAKE2B_DISCRIMINATOR_BYTES: Final[int] = 16
 
 
-def sha256_hex(data: bytes) -> str:
+def sha256_hex(data: bytes | bytearray) -> str:
     """Return the lowercase hex SHA-256 digest of ``data``.
 
     Use this for in-memory payloads once the caller has already chosen the byte
     representation (serialised JSON, string keys, ciphertext, etc.). It does
     not normalise text or domain values. For file-path inputs use
     :func:`sha256_file` or :func:`hash_file`.
+
+    A ``bytearray`` is hashed in place: a caller holding a wipeable secret
+    buffer must not have to copy it into immutable ``bytes`` to fingerprint it.
     """
     return hashlib.sha256(data).hexdigest()
 

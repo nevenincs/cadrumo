@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f43cde95ba8a9361a1209303b18d21a83a2743a4269aadd2d376a88a5c323af0'
-related:
-  - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
+related: []
 ---
 
 # `minimo-descendientes-eligibility` audit: `Semantic-overlap census: one confirmed duplicate, six cleared, and the drift source`

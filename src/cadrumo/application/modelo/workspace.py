@@ -53,9 +53,9 @@ from ...domain.calculations.registry.schema import (
     BindingDefinition,
     FormulaDefinition,
     RegistrySnapshot,
-    SchemaFamilyDispositionDeclaration,
 )
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
+from ...domain.calculations.registry.schema_overrides import SchemaFamilyDispositionDeclaration
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef
@@ -140,8 +140,10 @@ from .workspace_models import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.protocols import VerificationReportCatalogueRepositoryProtocol
     from ..state_projection_ports import StateProjectionReadPorts
     from .calculation_action_ports import CalculationActionPorts
+    from .work_review import ModeloWorkReview
 
 from .workspace_producers import (
     MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
@@ -151,8 +153,10 @@ from .workspace_producers import (
     MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceBoundedReviewPortV1,
     ModeloWorkspaceCalculationPortV1,
     ModeloWorkspaceContributingProjectionV1,
+    ModeloWorkspaceCurrentEpochPortV1,
     ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
     ModeloWorkspaceLocaleCatalogueBatchPortV1,
@@ -1438,7 +1442,7 @@ def resolve_static_inspection_result(
     output_language: OutputLanguage,
     page_size: int = 200,
     cursor: ModeloWorkspaceCursorV1 | None = None,
-) -> ModeloWorkspaceStaticInspectionResultV1:
+) -> ModeloWorkspaceStaticInspectionResultV1 | ModeloWorkspaceRefusedResultV1:
     """Assemble the complete, single-page STATIC_INSPECTION result for one target.
 
     ``page_size`` defaults to 200, the schema facet's own maximum page size
@@ -1452,7 +1456,9 @@ def resolve_static_inspection_result(
     capture's inspection: schema identity, locale summary, evidence horizon,
     family dispositions, contributors, baseline, the five-kind schema_facet,
     the fixed work_review facet, and the capability denominator. No second
-    registry or work read occurs anywhere in this function.
+    registry or work capture occurs anywhere in this function; the one second
+    read is the currentness pass, which re-reads each contributor's coordinate
+    and refuses as ``WORKSPACE_CHANGED`` when any of them moved.
     """
     if cursor is not None and cursor.facet is not ModeloWorkspaceFacetName.SCHEMA:
         raise ModeloWorkspaceStaleCursorError(
@@ -1491,12 +1497,36 @@ def resolve_static_inspection_result(
     schema_identity = resolve_static_inspection_schema_identity(inspection)
     locale = capture_modelo_workspace_locale_summary(resolved_target, output_language=output_language)
     locale_key = revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id)
-    locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
+    locale_port = ModeloWorkspaceLocaleCataloguePortV1(
         translation_key=locale_key,
         locale=output_language.value,
-    ).capture_projection_with_epoch()
+    )
+    locale_capture = locale_port.capture_projection_with_epoch()
     field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=inspection)
     field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
+
+    # The work and registry ports are rebuilt from the same inputs the capture
+    # helper used; only their current-coordinate reads are exercised here.
+    work_port = ModeloWorkspaceWorkPortV1(
+        request=modelo_work_selector_request_for_target(target, bucket_id=bucket_id),
+        catalogue_repository=catalogue_repository,
+        mode=ModeloWorkSelectionMode.VISIBLE_OR_EXACT,
+    )
+    registry_port = ModeloWorkspaceRegistryPortV1(
+        authority=authority,
+        modelo_id=resolved_modelo,
+        filing_year=resolved_filing_year,
+        period=resolved_period.registry_token,
+    )
+    if not contributors_still_current(
+        (
+            (work_port, work_capture.epoch),
+            (registry_port, registry_capture.epoch),
+            (locale_port, locale_capture.epoch),
+            (field_manifest_port, field_manifest_capture.epoch),
+        )
+    ):
+        return workspace_changed_refusal(target, resolved_target)
 
     baseline = resolve_static_inspection_baseline(
         resolved_target,
@@ -1579,7 +1609,7 @@ def resolve_static_inspection_result(
 # The refusal codes and the errors are therefore disjoint: nothing is reported
 # both ways, and no outcome is reported neither way.
 
-_GRADED_SNAPSHOT_RESPONSIBLE_OWNER = "modelo.workspace"
+_WORKSPACE_RESPONSIBLE_OWNER = "modelo.workspace"
 
 _GRADED_SNAPSHOT_PAGINATED_FACETS = frozenset(
     {
@@ -1588,19 +1618,6 @@ _GRADED_SNAPSHOT_PAGINATED_FACETS = frozenset(
         ModeloWorkspaceFacetName.PROVENANCE,
     }
 )
-
-GRADED_SNAPSHOT_WORK_REVIEW_FACET = ModeloWorkspaceWorkReviewFacetV1(
-    disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
-    review=None,
-)
-"""GRADED_SNAPSHOT does not read the bounded-review producer, so it declares the
-review unmeasured rather than assembling one of its own.
-
-Separate from ``STATIC_INSPECTION_WORK_REVIEW_FACET`` despite holding the same
-value: the two constants record different reasons, and folding them into one
-would make a later change to either admission's review posture silently change
-the other's.
-"""
 
 
 class ModeloWorkspaceMaterializationProvenanceMissingError(CadrumoError):
@@ -1611,6 +1628,52 @@ class ModeloWorkspaceMaterializationProvenanceMissingError(CadrumoError):
     value without one is a corrupt revision, not a state the operator can
     resolve by acting.
     """
+
+
+def contributors_still_current(
+    reads: Sequence[tuple[ModeloWorkspaceCurrentEpochPortV1, ModeloWorkspaceEpochV1]],
+) -> bool:
+    """Whether every contributor still stands where its capture found it.
+
+    The second pass of an admission. Each capture is internally stable, but the
+    captures are taken one after another, so a write landing between two of
+    them would mint a baseline from contributors describing different states.
+    Every owner re-reads its current coordinate after the last capture, and a
+    baseline is minted only when all of them still match.
+    """
+    for port, captured in reads:
+        try:
+            captured.require_current(port.read_current_epoch())
+        except ValueError:
+            return False
+    return True
+
+
+def workspace_changed_refusal(
+    requested_target: ModeloWorkspaceTargetV1,
+    selected_target: ModeloWorkspaceResolvedTargetV1 | None,
+) -> ModeloWorkspaceRefusedResultV1:
+    """Refuse an admission whose contributors moved before its second pass.
+
+    Nothing about the taxpayer's data is wrong; it changed while it was being
+    read, so the remedy is to read it again. A caller may do that a bounded
+    number of times and must say so when the data will not hold still.
+    """
+    return ModeloWorkspaceRefusedResultV1(
+        refusal=ModeloWorkspaceDomainRefusalV1(
+            code=ModeloWorkspaceRefusalCode.WORKSPACE_CHANGED,
+            boundary="admission",
+            capability=None,
+            requested_target=requested_target,
+            selected_target=selected_target,
+            facts=(),
+            evidence=(),
+            responsible_owner=_WORKSPACE_RESPONSIBLE_OWNER,
+            reconsideration_condition="read the declaration again; its stored data changed while it was being read",
+            source_disposition=None,
+            recovery_action=None,
+        )
+    )
 
 
 def graded_snapshot_refusal(
@@ -1642,7 +1705,7 @@ def graded_snapshot_refusal(
             selected_target=selected_target,
             facts=facts,
             evidence=evidence,
-            responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
+            responsible_owner=_WORKSPACE_RESPONSIBLE_OWNER,
             reconsideration_condition=reconsideration_condition,
             source_disposition=source_disposition,
             recovery_action=recovery_action,
@@ -1723,17 +1786,15 @@ def graded_snapshot_evidence_horizon(snapshot: RegistrySnapshot) -> ModeloWorksp
 
 
 def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
-    """Return the six contributor identities GRADED_SNAPSHOT actually reads.
+    """Return the seven contributor identities GRADED_SNAPSHOT reads.
 
     The four STATIC_INSPECTION reads (registry, work, locale_catalogue,
     field_manifest) plus CALCULATION, which supplies the materialization and
-    provenance facets, and READINESS, which supplies the readiness projection.
-
-    BOUNDED_REVIEW is deliberately absent: this admission does not assemble a
-    work review, and it says so through
-    :data:`GRADED_SNAPSHOT_WORK_REVIEW_FACET` rather than by listing a
-    contributor it never captures. A contributor named here but never captured
-    would corrupt the epoch digest every facet revalidates against.
+    provenance facets, READINESS, which supplies the readiness projection, and
+    BOUNDED_REVIEW, which supplies the work review the Results and Verification
+    destinations partition and report from. Every contributor named here is
+    captured exactly once per admission; one named but never captured would
+    corrupt the epoch digest every facet revalidates against.
     """
     return tuple(
         sorted(
@@ -1742,6 +1803,7 @@ def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1
                 MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1.contributor,
+                MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1.contributor,
                 MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1.contributor,
             ),
@@ -2002,6 +2064,7 @@ def graded_snapshot_modelo_workspace_capabilities(
     resolved_target: ModeloWorkspaceResolvedTargetV1,
     *,
     calculation_revision: CalculationRevision,
+    review: ModeloWorkReview,
     readiness: ProjectionModeloReadiness,
 ) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
     """Return the complete GRADED_SNAPSHOT capability denominator.
@@ -2016,10 +2079,11 @@ def graded_snapshot_modelo_workspace_capabilities(
       revision belongs to this target's own work unit, which reads the
       calculate producer's own persisted object rather than inferring
       "materialized" from non-empty values.
-    * ``VERIFICATION_READINESS`` is ``AVAILABLE`` when that same revision's
-      state is ``VERIFICADO_COMPLETO``, a state the record only reaches with
-      its ``verified_at``/``verified_by`` stamps present -- a separately
-      stamped verdict from the verify producer.
+    * ``VERIFICATION_READINESS`` is owned by the bounded review, as in a
+      static inspection, and is ``AVAILABLE`` when the review reports that
+      same revision in state ``VERIFICADO_COMPLETO``, a state the record only
+      reaches with its ``verified_at``/``verified_by`` stamps present -- a
+      separately stamped verdict from the verify producer.
     * ``FILING_DRAFT_READINESS`` reads the READINESS producer's own ``ready``
       verdict for this exact target. ``ready`` false is ``UNMEASURED`` rather
       than ``REFUSED``: the producer measured and found the target not ready,
@@ -2033,15 +2097,18 @@ def graded_snapshot_modelo_workspace_capabilities(
         resolved_target: The target every row is pinned to.
         calculation_revision: The captured
             :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
-            whose own persisted state settles the two calculate-side answers.
+            whose own persisted state settles the materialization answer.
+        review: The captured work review, which settles verification readiness.
         readiness: The readiness producer's own verdict for this target.
 
     Returns:
         The complete capability denominator, one row per capability.
     """
     calculation_available = calculation_revision.work_unit_id == resolved_target.work_unit_id
-    verification_available = calculation_available and (
-        calculation_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    verification_available = (
+        calculation_available
+        and review.calculation_revision_id == calculation_revision.calculation_revision_id
+        and review.lifecycle_state is CalculationRevisionState.VERIFICADO_COMPLETO
     )
     counts = graded_snapshot_schema_family_member_counts(snapshot)
     dispositions: tuple[
@@ -2062,7 +2129,7 @@ def graded_snapshot_modelo_workspace_capabilities(
         ),
         (
             ModeloWorkspaceCapabilityName.VERIFICATION_READINESS,
-            MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+            MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
             ModeloWorkspaceCapabilityDisposition.AVAILABLE
             if verification_available
             else ModeloWorkspaceCapabilityDisposition.UNMEASURED,
@@ -2088,6 +2155,37 @@ def graded_snapshot_modelo_workspace_capabilities(
     )
 
 
+def _require_graded_snapshot_cursor(cursor: ModeloWorkspaceCursorV1 | None) -> None:
+    """Require a paginated graded facet before any contributor is captured."""
+    if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
+        raise ModeloWorkspaceStaleCursorError(
+            "graded snapshot paginates the schema, materialization and provenance facets; "
+            f"cursor names {cursor.facet.value}"
+        )
+
+
+def _require_graded_registry_snapshot(registry_projection: ModeloWorkspaceRegistryProjectionV1) -> RegistrySnapshot:
+    """Require the one captured registry snapshot before resolving its revision axes."""
+    snapshot = registry_projection.snapshot
+    if snapshot is None:
+        raise ModeloWorkspaceAbsentRegistryProjectionError(
+            "registry capture returned no snapshot for the resolved revision",
+        )
+
+    return snapshot
+
+
+def _require_graded_readiness(readiness_reports: tuple[ProjectionModeloReadiness, ...]) -> ProjectionModeloReadiness:
+    """Require the exact target readiness report from its one captured result."""
+    if not readiness_reports:
+        raise ModeloWorkspaceAbsentReadinessProjectionError(
+            "readiness capture returned no report for the resolved target",
+        )
+    readiness = readiness_reports[0]
+
+    return readiness
+
+
 def resolve_graded_snapshot_result(
     target: ModeloWorkspaceTargetV1,
     *,
@@ -2095,6 +2193,7 @@ def resolve_graded_snapshot_result(
     bucket_id: str,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_ports: CalculationActionPorts,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
     readiness_read_ports: StateProjectionReadPorts,
     operation: PinnedAuthorityOperation,
     output_language: OutputLanguage,
@@ -2105,8 +2204,8 @@ def resolve_graded_snapshot_result(
 
     Mirrors :func:`resolve_static_inspection_result`'s discipline: WORK is
     captured exactly once, REGISTRY exactly once from WORK's own resolved
-    coordinate rather than from the target's raw operands, and CALCULATION and
-    READINESS exactly once each. ``operation`` serves as both the registry
+    coordinate rather than from the target's raw operands, and CALCULATION,
+    BOUNDED_REVIEW and READINESS exactly once each. ``operation`` serves as both the registry
     authority and the pinned authority the calculation and readiness producers
     read through, so every contributor sees one generation of the registry.
 
@@ -2126,21 +2225,18 @@ def resolve_graded_snapshot_result(
       target the operator is being sent back to -- a graded read needs that
       capture anyway, so nothing is read that a success would not have read.
 
-    ``work_review`` is :data:`GRADED_SNAPSHOT_WORK_REVIEW_FACET`: this
-    admission reads no bounded-review producer and declares the review
-    unmeasured rather than assembling one of its own.
+    ``work_review`` carries the canonical review the bounded-review producer
+    built for the resolved work unit, so the destinations read the same review
+    the command line emits rather than assembling one of their own.
     """
-    if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
-        raise ModeloWorkspaceStaleCursorError(
-            "graded snapshot paginates the schema, materialization and provenance facets; "
-            f"cursor names {cursor.facet.value}"
-        )
+    _require_graded_snapshot_cursor(cursor)
 
-    work_capture = ModeloWorkspaceWorkPortV1(
+    work_port = ModeloWorkspaceWorkPortV1(
         request=modelo_work_selector_request_for_target(target, bucket_id=bucket_id),
         catalogue_repository=catalogue_repository,
         mode=ModeloWorkSelectionMode.VISIBLE_OR_EXACT,
-    ).capture_projection_with_epoch()
+    )
+    work_capture = work_port.capture_projection_with_epoch()
     resolution = work_capture.projection
     resolved_modelo, resolved_filing_year, resolved_period = _resolved_obligation(resolution)
 
@@ -2170,14 +2266,15 @@ def resolve_graded_snapshot_result(
             ),
         )
 
+    registry_port = ModeloWorkspaceRegistryPortV1(
+        authority=operation,
+        modelo_id=resolved_modelo,
+        filing_year=resolved_filing_year,
+        period=resolved_period.registry_token,
+        grade=required_grade,
+    )
     try:
-        registry_capture = ModeloWorkspaceRegistryPortV1(
-            authority=operation,
-            modelo_id=resolved_modelo,
-            filing_year=resolved_filing_year,
-            period=resolved_period.registry_token,
-            grade=required_grade,
-        ).capture_projection_with_epoch()
+        registry_capture = registry_port.capture_projection_with_epoch()
     except RegistryValidationError as exc:
         failure = exc.registry_failure
         if failure is None or failure.condition is not RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT:
@@ -2203,11 +2300,7 @@ def resolve_graded_snapshot_result(
         )
 
     registry_projection = registry_capture.projection
-    snapshot = registry_projection.snapshot
-    if snapshot is None:
-        raise ModeloWorkspaceAbsentRegistryProjectionError(
-            "registry capture returned no snapshot for the resolved revision",
-        )
+    snapshot = _require_graded_registry_snapshot(registry_projection)
 
     axes = resolve_modelo_workspace_revision_axes(resolution, registry_projection=registry_projection)
     resolved_target = ModeloWorkspaceResolvedTargetV1(
@@ -2252,13 +2345,31 @@ def resolve_graded_snapshot_result(
             ),
         )
 
-    calculation_capture = ModeloWorkspaceCalculationPortV1(
+    calculation_port = ModeloWorkspaceCalculationPortV1(
         calculation_revision_id=calculation_revision_id,
         ports=calculation_ports,
-    ).capture_projection_with_epoch()
+    )
+    calculation_capture = calculation_port.capture_projection_with_epoch()
     calculation_revision = calculation_capture.projection
 
-    readiness_capture = ModeloWorkspaceReadinessPortV1(
+    review_port = ModeloWorkspaceBoundedReviewPortV1(
+        bucket_id=resolved_target.bucket_id,
+        modelo=resolved_target.modelo,
+        filing_year=resolved_target.filing_year,
+        period=resolved_target.period,
+        operation=operation,
+        work_unit_repository=catalogue_repository,
+        calculation_repository=calculation_ports.calculation_repository,
+        verification_repository=verification_repository,
+    )
+    review_capture = review_port.capture_projection_with_epoch()
+    review = review_capture.projection
+    if review.work_unit_id != resolved_target.work_unit_id:
+        raise InternalInvariantError(
+            "the bounded review resolved a different work unit than the graded admission it contributes to"
+        )
+
+    readiness_port = ModeloWorkspaceReadinessPortV1(
         requests=(
             ModeloReadinessRequest(
                 modelo=str(resolved_target.modelo),
@@ -2270,21 +2381,33 @@ def resolve_graded_snapshot_result(
         active_profile_id=resolved_target.bucket_id,
         read_ports=readiness_read_ports,
         operation=operation,
-    ).capture_projection_with_epoch()
+    )
+    readiness_capture = readiness_port.capture_projection_with_epoch()
     readiness_reports = readiness_capture.projection.reports
-    if not readiness_reports:
-        raise ModeloWorkspaceAbsentReadinessProjectionError(
-            "readiness capture returned no report for the resolved target",
-        )
-    readiness = readiness_reports[0]
+    readiness = _require_graded_readiness(readiness_reports)
 
     schema_identity = resolve_graded_snapshot_schema_identity(snapshot)
     locale = capture_modelo_workspace_locale_summary(resolved_target, output_language=output_language)
-    locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
+    locale_port = ModeloWorkspaceLocaleCataloguePortV1(
         translation_key=revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id),
         locale=output_language.value,
-    ).capture_projection_with_epoch()
-    field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=snapshot).capture_projection_with_epoch()
+    )
+    locale_capture = locale_port.capture_projection_with_epoch()
+    field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=snapshot)
+    field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
+
+    if not contributors_still_current(
+        (
+            (work_port, work_capture.epoch),
+            (registry_port, registry_capture.epoch),
+            (locale_port, locale_capture.epoch),
+            (field_manifest_port, field_manifest_capture.epoch),
+            (calculation_port, calculation_capture.epoch),
+            (review_port, review_capture.epoch),
+            (readiness_port, readiness_capture.epoch),
+        )
+    ):
+        return workspace_changed_refusal(target, resolved_target)
 
     captures = (
         work_capture,
@@ -2292,6 +2415,7 @@ def resolve_graded_snapshot_result(
         locale_capture,
         field_manifest_capture,
         calculation_capture,
+        review_capture,
         readiness_capture,
     )
     baseline = resolve_graded_snapshot_baseline(
@@ -2365,12 +2489,16 @@ def resolve_graded_snapshot_result(
         schema_facet=schema_facet,
         materialization_facet=materialization_facet,
         provenance_facet=provenance_facet,
-        work_review=GRADED_SNAPSHOT_WORK_REVIEW_FACET,
+        work_review=ModeloWorkspaceWorkReviewFacetV1(
+            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+            review=review,
+        ),
         readiness=readiness,
         capabilities=graded_snapshot_modelo_workspace_capabilities(
             snapshot,
             resolved_target,
             calculation_revision=calculation_revision,
+            review=review,
             readiness=readiness,
         ),
     )

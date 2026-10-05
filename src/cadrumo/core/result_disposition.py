@@ -35,6 +35,14 @@ Grounded verbatim from the bundled official diseños
   N (Negativa/Sin actividad/Resultado cero)".
 - M210: casilla 31 "Resultado de la autoliquidación"; positive is ingreso,
   zero is cuota cero, and negative is solicitud de devolución.
+
+The quarter decides a negative instalment result, per the bundled official
+instructions (``_data/corpus/aeat_official/instructions/modelo_130`` and
+``modelo_131``, sections "(5) A deducir" and "(6) Negativa"): a negative
+result of the 1st, 2nd or 3rd quarter is "A deducir" (``B``) from later
+instalments of the same year, while a negative result of the 4th quarter, like
+a zero one, is "Negativa" (``N``). Modelo 130 reads its casilla 19, Modelo 131
+its casilla 15.
 """
 
 from __future__ import annotations
@@ -46,8 +54,10 @@ from enum import StrEnum
 from typing import Final
 
 from .casilla_id import CasillaId, validated_casilla_id
+from .casilla_value_absence import AbsentCasillaReading
 from .errors.hierarchy import CoreValidationError
 from .modelo import Modelo
+from .period import Period, StandardPeriodCode
 
 
 class ResultDisposition(StrEnum):
@@ -108,6 +118,26 @@ class _DispositionSpec:
     result_casilla_ids: tuple[CasillaId, ...]
     negative: ResultDisposition
     zero: ResultDisposition
+    declared: frozenset[ResultDisposition]
+    """The closed code set the diseño's "Tipo de declaración" note declares.
+
+    It decides which operator elections a modelo admits (``U`` is admissible
+    only where it is declared here), and it must contain every code the spec
+    can derive.
+    """
+    final_quarter_negative: ResultDisposition | None = None
+    """The code for a negative result of the year's last quarter, where it differs from ``negative``."""
+
+    def __post_init__(self) -> None:
+        derivable = {ResultDisposition.INGRESO, self.negative, self.zero}
+        if self.final_quarter_negative is not None:
+            derivable.add(self.final_quarter_negative)
+        undeclared = sorted(code.value for code in derivable - self.declared)
+        if undeclared:
+            raise CoreValidationError(
+                f"result disposition spec derives undeclared codes {', '.join(undeclared)}",
+                context={"undeclared_codes": ", ".join(undeclared)},
+            )
 
 
 _M303_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
@@ -132,43 +162,108 @@ _M210_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
 )
 
 
+#: Each modelo's closed "Tipo de declaración" code set, verbatim from the
+#: diseño notes quoted in this module's docstring. Modelo 131 shares the 130
+#: set; Modelos 115, 123 and 202 share the 111 set.
+_M303_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.COMPENSACION,
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.DOMICILIACION,
+        ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
+        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+    },
+)
+_M130_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.RESULTADO_A_DEDUCIR,
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.DOMICILIACION,
+    },
+)
+_M111_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.DOMICILIACION,
+    },
+)
+_M200_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.RENUNCIA_DEVOLUCION,
+        ResultDisposition.DOMICILIACION,
+        ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
+        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+    },
+)
+_M210_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+    },
+)
+
+
 #: Per-modelo disposition spec, grounded in each bundled diseño's "Tipo de
 #: declaración" note and the registry's result-casilla ``semantic_role``. Modelos
-#: absent from this table return ``None`` and the caller applies a documented
-#: fallback rather than a guessed mapping.
+#: absent from this table and from :data:`_FIXED_DISPOSITION` derive ``None``; the
+#: application resolver refuses one whose layout declares the header and records
+#: no disposition for the rest.
 _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
     # IVA: credit is a compensar (C). Result casilla 71 "Resultado final".
     Modelo("303"): _DispositionSpec(
         result_casilla_ids=(_M303_RESULT_CASILLA,),
         negative=ResultDisposition.COMPENSACION,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M303_DECLARED,
     ),
-    # IRPF pago fraccionado: a negative result is "resultado a deducir" (B), not C.
+    # IRPF pago fraccionado: a negative result of quarters 1 to 3 is "a deducir"
+    # (B), not C; in the 4th quarter it is "negativa" (N). Instructions of
+    # Modelo 130, sections (5) A deducir and (6) Negativa, on casilla 19.
     Modelo("130"): _DispositionSpec(
         result_casilla_ids=(_M130_RESULT_CASILLA,),
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
+        final_quarter_negative=ResultDisposition.NEGATIVA,
+        declared=_M130_DECLARED,
     ),
+    # Instructions of Modelo 131, sections (5) A deducir and (6) Negativa, on casilla 15.
     Modelo("131"): _DispositionSpec(
         result_casilla_ids=(_M131_RESULT_CASILLA,),
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
+        final_quarter_negative=ResultDisposition.NEGATIVA,
+        declared=_M130_DECLARED,
     ),
     # Retenciones: only I/N (no credit code). "Resultado a ingresar" casilla.
     Modelo("111"): _DispositionSpec(
         result_casilla_ids=(_M111_RESULT_CASILLA,),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     Modelo("115"): _DispositionSpec(
         result_casilla_ids=(_M115_RESULT_CASILLA,),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     Modelo("123"): _DispositionSpec(
         result_casilla_ids=(_M123_RESULT_CASILLA, _M123_2019_2023_RESULT_CASILLA),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     # IS annual: credit is a devolución (D), not C. Result casilla
     # DP200014B:00599 (semantic_role is_resultado_ingresar_o_devolver, Estado),
@@ -178,6 +273,7 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         result_casilla_ids=(_M200_RESULT_CASILLA,),
         negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M200_DECLARED,
     ),
     # IS pago fraccionado: only I/N. Result is the active modality's "a ingresar"
     # casilla — 40.2 -> 03, 40.3 -> 34; both are >= 0 and exactly one is non-zero.
@@ -185,6 +281,7 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         result_casilla_ids=(_M202_402_RESULT_CASILLA, _M202_403_RESULT_CASILLA),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M111_DECLARED,
     ),
     # IRNR autoliquidación: casilla 31 is signed; a negative result requests
     # devolución and zero is the declared cuota-cero disposition.
@@ -192,7 +289,17 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         result_casilla_ids=(_M210_RESULT_CASILLA,),
         negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,
+        declared=_M210_DECLARED,
     ),
+}
+
+
+#: Modelos whose disposition the design fixes rather than the result deriving.
+#: Modelo 360 is a refund application: its design section 4 is "Devolución
+#: solicitada" and its layout has no "Tipo de declaración" slot, so DEVOLUCION
+#: is never rendered but still drives the account gate, receipts and events.
+_FIXED_DISPOSITION: dict[str, ResultDisposition] = {
+    Modelo("360"): ResultDisposition.DEVOLUCION,
 }
 
 
@@ -270,6 +377,21 @@ def result_disposition_requires_bank_account(disposition: ResultDisposition) -> 
     return disposition in _BANK_ACCOUNT_DISPOSITIONS
 
 
+def result_disposition_declares(modelo: str, disposition: ResultDisposition) -> bool:
+    """Return whether ``modelo``'s diseño declares ``disposition`` as a "Tipo de declaración" code.
+
+    An operator election such as ``U`` (domiciliación) is admissible only for
+    a modelo whose closed code set declares it. A modelo without a codified
+    spec declares nothing, so every election on it is refused rather than
+    guessed.
+    """
+    fixed = _FIXED_DISPOSITION.get(modelo)
+    if fixed is not None:
+        return disposition is fixed
+    spec = _DISPOSITION_SPEC.get(modelo)
+    return spec is not None and disposition in spec.declared
+
+
 def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
     """Return the canonical result ``casilla.id`` values for ``modelo``.
 
@@ -284,8 +406,10 @@ def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
     return spec.result_casilla_ids
 
 
-def derive_result_disposition(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> ResultDisposition | None:
-    """Derive the fichero result disposition for ``modelo`` from its computed result.
+def derive_result_disposition(
+    modelo: str, casilla_values: Mapping[CasillaId, Decimal], *, period: Period
+) -> ResultDisposition | None:
+    """Derive the fichero result disposition for ``modelo`` from its computed result in ``period``.
 
     Sums the modelo's final-result casilla(s) from ``casilla_values`` and maps the
     sign to the modelo's diseño-grounded code. ``casilla_values`` must contain
@@ -295,13 +419,20 @@ def derive_result_disposition(modelo: str, casilla_values: Mapping[CasillaId, De
 
     - ``> 0`` → :attr:`ResultDisposition.INGRESO` (``I``) for every modelo.
     - ``< 0`` → the modelo's credit code (C for M303 IVA, B for M130/M131 IRPF
-      pagos fraccionados; N for retenciones, which cannot go sub-zero in practice).
+      pagos fraccionados in quarters 1 to 3 and N in the 4th; N for retenciones,
+      which cannot go sub-zero in practice).
     - ``== 0`` (or the casilla absent) → the modelo's zero code (``N``).
 
+    A modelo whose design fixes its disposition (Modelo 360, always
+    :attr:`ResultDisposition.DEVOLUCION`) returns that code whatever the values.
+
     Returns the derived :class:`ResultDisposition`, or ``None`` for a modelo
-    without a codified spec, so the caller applies a documented fallback rather
-    than a guessed disposition.
+    without a codified spec, so the caller refuses or records no disposition
+    rather than guessing one.
     """
+    fixed = _FIXED_DISPOSITION.get(modelo)
+    if fixed is not None:
+        return fixed
     result = canonical_result_amount(modelo, casilla_values)
     if result is None:
         return None
@@ -309,6 +440,8 @@ def derive_result_disposition(modelo: str, casilla_values: Mapping[CasillaId, De
     if result > 0:
         return ResultDisposition.INGRESO
     if result < 0:
+        if spec.final_quarter_negative is not None and period.standard_code is StandardPeriodCode.Q4:
+            return spec.final_quarter_negative
         return spec.negative
     return spec.zero
 
@@ -325,7 +458,13 @@ def canonical_result_amount(modelo: str, casilla_values: Mapping[CasillaId, Deci
     if spec is None:
         return None
     _reject_non_result_casilla_values(modelo, spec, casilla_values)
-    return sum((casilla_values.get(casilla_id, Decimal("0")) for casilla_id in spec.result_casilla_ids), Decimal("0"))
+    return sum(
+        (
+            AbsentCasillaReading.RESULT_CASILLA_ALTERNATIVE.read(casilla_values, casilla_id)
+            for casilla_id in spec.result_casilla_ids
+        ),
+        Decimal("0"),
+    )
 
 
 def _reject_non_result_casilla_values(
@@ -355,6 +494,7 @@ __all__ = [
     "canonical_result_amount",
     "derive_result_disposition",
     "result_disposition_casilla_ids",
+    "result_disposition_declares",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
 ]

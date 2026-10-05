@@ -32,8 +32,9 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
-from cadrumo_harness.mcp import server as mcp_server
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp import authority_query as mcp_authority
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -114,7 +115,7 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_query(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    canonical_query = mcp_server.registry_describe_modelo_for_registry_scope
+    canonical_query = mcp_authority.registry_describe_modelo_for_registry_scope
     observed_pins: list[AuthorityGenerationPin] = []
 
     def record_pin_and_run_query(
@@ -134,7 +135,7 @@ async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_
             operation=operation,
         )
 
-    monkeypatch.setattr(mcp_server, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
+    monkeypatch.setattr(mcp_authority, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         result = await adapter.call(
@@ -222,7 +223,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
     second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
     first = publish_authority_artifact(first_artifact)
     authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
-    canonical_query = mcp_server.registry_support_matrix
+    canonical_query = mcp_authority.registry_support_matrix
     with authority.operation() as initial:
         first_pin = initial.pin()
         expected = canonical_query(operation=initial).model_dump(mode="json")
@@ -235,7 +236,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         return canonical_query(operation=operation)
 
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
-    monkeypatch.setattr(mcp_server, "registry_support_matrix", cut_over_and_query)
+    monkeypatch.setattr(mcp_authority, "registry_support_matrix", cut_over_and_query)
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
@@ -247,7 +248,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
                 "reader_incarnation": first_pin.reader_incarnation,
                 "report": expected,
             }
-            monkeypatch.setattr(mcp_server, "registry_support_matrix", canonical_query)
+            monkeypatch.setattr(mcp_authority, "registry_support_matrix", canonical_query)
             current = await client.call_tool("authority", {"query": "support"})
             assert current.is_error is False
             assert isinstance(current.structured_content, dict)

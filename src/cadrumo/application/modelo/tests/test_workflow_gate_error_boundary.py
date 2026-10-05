@@ -163,12 +163,12 @@ def test_gate_error_json_envelope_context_is_all_strings() -> None:
     assert "WorkflowStep(" not in payload
 
 
-def test_gate_error_retains_result_for_internal_telemetry() -> None:
-    """The live result stays reachable for telemetry — just not via context.
+def test_gate_error_retains_result_for_internal_diagnostics() -> None:
+    """The live result stays reachable for diagnostics — just not via context.
 
     The fix moves ``result`` from a public instance attribute to a
     property so the ``vars(error)`` context merge skips it. Internal
-    callers (run persistence, telemetry) must still reach the object.
+    callers (run persistence, diagnostics) must still reach the object.
     """
 
     result = _aborted_result()

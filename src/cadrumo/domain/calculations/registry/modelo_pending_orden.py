@@ -34,7 +34,7 @@ from pydantic import BeforeValidator, Field, model_validator
 
 from ....core.filing_year import FilingYear
 from .errors import RegistryValidationError
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import LegalRefId
 from .schema_base import MANIFEST_ONLY, RegistryModel, coerce_enum_member
 
@@ -94,9 +94,7 @@ def pending_orden_vocabulary(*, authority: GovernedFactSource | None = None) -> 
     from .facts.resolution import MappingFactQuery, ResolvedMappingFact
     from .schema_base import DateAxis
 
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("pending Orden vocabulary requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="pending Orden vocabulary")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_PENDING_ORDEN_VOCABULARY_FACT_ID,

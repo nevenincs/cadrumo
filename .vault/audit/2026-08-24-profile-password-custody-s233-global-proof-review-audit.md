@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:55dc5bed44a2285fc2978e05ea0a9748f0ef17bbc7dc1b0f81a658787a8eed76'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 # `profile-password-custody` audit: `s233 global proof review`
 

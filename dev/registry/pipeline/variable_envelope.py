@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from typing import Final
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -43,6 +43,7 @@ from dev.registry.compiler.record_design_schema import RecordDesignAuxiliaryEnve
 
 from .record_design_intermediate import (
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,
+    RecordDesignIntermediateCompositeRelativeClosing,
     RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignIntermediateSource,
@@ -115,7 +116,8 @@ def compile_auxiliary_envelope_header_definition(
 #: The relative closing identifier every standard design prints, as its own
 #: source content: ``</T`` + modelo + discriminant + year + period + record type.
 #:
-#: TWO official spellings, both admitted. Most designs print the year and period
+#: Official year placeholders AAAA and EEEE, or a concrete four-digit exercise.
+#: Most designs print the year and period
 #: as the literal ``AAAAPP`` placeholders (``"</T3080AAAAPP0000>"``); Modelos 151
 #: and 200 print their own exercise concretely instead
 #: (``"</T151020230A0000>"``), exactly as they do in the composed opening tag.
@@ -124,7 +126,7 @@ def compile_auxiliary_envelope_header_definition(
 #: asserted is everything the grammar fixes: the tag, the modelo, the
 #: discriminant, the record type, and the exact eighteen-byte width.
 _CLOSER_RE: Final[re.Pattern[str]] = re.compile(
-    r'^"</T(?P<modelo>\d{3})(?P<discriminant>.)(?:AAAA|\d{4})(?:PP|..)(?P<record_type>0000>)"$',
+    r'^"</T(?P<modelo>\d{3})(?P<discriminant>.)(?:AAAA|EEEE|\d{4})(?:PP|..)(?P<record_type>0000>)"$',
 )
 _CLOSER_EXTENT: Final[int] = 18
 
@@ -160,6 +162,7 @@ _PREFIX_LITERAL_BY_ROLE: Final[dict[FilingEnvelopePrefixRole, str]] = {
 _FILLER_ROLES: Final[frozenset[FilingEnvelopePrefixRole]] = frozenset(
     {
         FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+        FilingEnvelopePrefixRole.BETWEEN_LANGUAGE_PROGRAM_FILLER,
         FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER,
         FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER,
     },
@@ -213,14 +216,21 @@ def compile_filing_envelope_definition(
         source_sha256=semantic.source_sha256,
         record_identity=semantic.record_identity,
         prefix_fields=tuple(
-            FilingEnvelopePrefixFieldDeclaration(role=semantic_field.role, length=parser_field.length)
+            FilingEnvelopePrefixFieldDeclaration(
+                role=semantic_field.role,
+                length=parser_field.length,
+                casilla_id=semantic_field.casilla_id,
+            )
             for semantic_field, parser_field in zip(semantic.prefix_fields, envelope.prefix_fields, strict=True)
         ),
         prefix_extent=envelope.prefix_extent,
         body_record_ids=tuple(body_record_ids),
-        product_identity_requirement="aeat-product-software-identity-v1",
+        product_identity_requirement=(
+            None if semantic.source_ref == "aeat-dr-369-2021" else "aeat-product-software-identity-v1"
+        ),
         closer_derivation=FilingEnvelopeCloserDerivation.RELATIVE_CLOSER_V1,
         total_derivation=FilingEnvelopeTotalDerivation.EMITTED_BYTE_TOTAL_V1,
+        record_terminator=_source_record_terminator(envelope, source=source),
     )
 
 
@@ -256,6 +266,7 @@ def validate_variable_envelope(
         _require_source_content(modelo, semantic_field.role, parser_field)
     _require_body_anchor(semantic, envelope)
     _require_relative_closer(semantic, envelope, modelo=modelo)
+    _source_record_terminator(envelope, source=source)
     _require_total_anchor(semantic, envelope)
     declared_body_record_ids = tuple(semantic.body_record_ids)
     actual_body_record_ids = tuple(body_record_ids)
@@ -264,6 +275,55 @@ def validate_variable_envelope(
             "variable envelope body records must match the exact reviewed source order; "
             f"declared={declared_body_record_ids!r}, actual={actual_body_record_ids!r}",
         )
+
+
+def _source_record_terminator(
+    envelope: RecordDesignIntermediateVariableEnvelope,
+    *,
+    source: RecordDesignIntermediateSource,
+) -> Literal["crlf"] | None:
+    """Admit only the trailing CRLF row printed in the pinned 2016 M232 design."""
+    reviewed_source = (
+        source.source_ref == "aeat-dr-232-2016"
+        and source.source_sha256 == "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad"
+        and envelope.record_identity == "DR23200"
+        and envelope.sheet == "DR23200"
+    )
+    marker = envelope.terminator
+    if not reviewed_source:
+        if marker is not None:
+            raise RegistryValidationError("variable envelope has an unreviewed trailing record terminator")
+        return None
+    if not isinstance(envelope.closing, RecordDesignIntermediateRelativeSuffixMarker):
+        raise RegistryValidationError("reviewed M232 record terminator requires one relative closer")
+    if (
+        marker is None
+        or (
+            marker.source_row,
+            marker.source_cell,
+            marker.ordinal,
+            marker.offset,
+            marker.length,
+            marker.aeat_type,
+            marker.normalized_description,
+            marker.validation,
+            marker.content,
+        )
+        != (
+            21,
+            "A21",
+            16,
+            "***",
+            2,
+            "An",
+            "Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)",
+            None,
+            None,
+        )
+        or (envelope.closing.source_row, envelope.closing.ordinal) != (20, 15)
+    ):
+        raise RegistryValidationError("reviewed M232 record terminator differs from exact source row A21")
+    return "crlf"
 
 
 def _require_same_anchor(
@@ -299,25 +359,87 @@ def _require_source_content(
     parser_field: RecordDesignIntermediateField,
 ) -> None:
     """Prove one prefix row's official content against the shared grammar."""
+    # Some workbooks label the same quoted literal explicitly. Removing only
+    # that label still compares the complete quoted cell, so alternatives and
+    # qualifications cannot inherit a constant's reading.
+    content = parser_field.content
+    if content is not None:
+        content = content.removeprefix("Constante ")
     if role is FilingEnvelopePrefixRole.MODELO:
-        if parser_field.content != f'"{modelo}"':
-            raise RegistryValidationError(
-                f"variable envelope modelo row carries {parser_field.content!r}, not the reviewed "
-                f"design modelo {modelo!r}",
-            )
+        _require_modelo_content(modelo, content, parser_field)
         return
     if role is FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG:
         _require_composed_opening_tag(modelo, parser_field)
         return
-    if role in _FILLER_ROLES:
-        if parser_field.content not in _FILLER_CONTENT:
-            raise RegistryValidationError(
-                f"variable envelope {role.value} is reviewed as a reserved span but its official content "
-                f"is {parser_field.content!r}, not a blank cell or 'BLANCOS'",
-            )
+    if role is FilingEnvelopePrefixRole.LANGUAGE:
+        _require_language_content(modelo, parser_field)
         return
+    if role in _FILLER_ROLES:
+        _require_filler_content(role, parser_field)
+        return
+    if modelo == "369" and role in {
+        FilingEnvelopePrefixRole.PRE_DECLARANT_FILLER,
+        FilingEnvelopePrefixRole.POST_DECLARANT_FILLER,
+    }:
+        _require_m369_declarant_filler_content(parser_field)
+        return
+    if modelo == "369" and role is FilingEnvelopePrefixRole.DECLARANT_TAX_ID:
+        _require_m369_declarant_tax_id_content(parser_field)
+        return
+    _require_fixed_prefix_literal_content(role, content, parser_field)
+
+
+def _require_modelo_content(
+    modelo: str,
+    content: str | None,
+    parser_field: RecordDesignIntermediateField,
+) -> None:
+    if content != f'"{modelo}"':
+        raise RegistryValidationError(
+            f"variable envelope modelo row carries {parser_field.content!r}, not the reviewed design modelo {modelo!r}",
+        )
+
+
+def _require_language_content(modelo: str, parser_field: RecordDesignIntermediateField) -> None:
+    if (
+        modelo not in {"604", "714"}
+        or parser_field.offset != 53
+        or parser_field.length != 1
+        or parser_field.normalized_description != "Idioma de la declaración (**)"
+        or parser_field.content != '"E", "C", "G", "V"'
+    ):
+        raise RegistryValidationError("envelope language differs from the exact official E/C/G/V source slot")
+
+
+def _require_filler_content(role: FilingEnvelopePrefixRole, parser_field: RecordDesignIntermediateField) -> None:
+    if parser_field.content not in _FILLER_CONTENT:
+        raise RegistryValidationError(
+            f"variable envelope {role.value} is reviewed as a reserved span but its official content "
+            f"is {parser_field.content!r}, not a blank cell or 'BLANCOS'",
+        )
+
+
+def _require_m369_declarant_filler_content(parser_field: RecordDesignIntermediateField) -> None:
+    if parser_field.content != "Blancos" or parser_field.normalized_description != "Reservado":
+        raise RegistryValidationError("M369 declarant envelope filler differs from its exact official source row")
+
+
+def _require_m369_declarant_tax_id_content(parser_field: RecordDesignIntermediateField) -> None:
+    if (
+        parser_field.content is not None
+        or parser_field.normalized_description != "NIF del titular"
+        or parser_field.length != 9
+    ):
+        raise RegistryValidationError("M369 declarant NIF differs from its exact official source row")
+
+
+def _require_fixed_prefix_literal_content(
+    role: FilingEnvelopePrefixRole,
+    content: str | None,
+    parser_field: RecordDesignIntermediateField,
+) -> None:
     expected = _PREFIX_LITERAL_BY_ROLE.get(role)
-    if expected is not None and parser_field.content != expected:
+    if expected is not None and content != expected:
         raise RegistryValidationError(
             f"variable envelope {role.value} conflicts with exact official content: "
             f"expected={expected!r}, actual={parser_field.content!r}",
@@ -392,11 +514,27 @@ def _require_relative_closer(
     modelo: str,
 ) -> None:
     closing = envelope.closing
+    if isinstance(closing, RecordDesignIntermediateCompositeRelativeClosing):
+        _require_m369_composite_closer(semantic, envelope, modelo=modelo)
+        return
     if not isinstance(closing, RecordDesignIntermediateRelativeSuffixMarker):
         raise RegistryValidationError(
             f"variable envelope {semantic.record_identity!r} requires one uncomposed "
             f"{_CLOSER_EXTENT}-byte relative closer",
         )
+    _require_relative_suffix_anchor(semantic, envelope, closing)
+    if _is_exact_m341_missing_t_closer(semantic, envelope, modelo=modelo) or _is_exact_m309_missing_t_closer(
+        semantic, envelope, modelo=modelo
+    ):
+        return
+    _require_standard_relative_closer(semantic, closing, modelo=modelo)
+
+
+def _require_relative_suffix_anchor(
+    semantic: VariableEnvelopeSemantic,
+    envelope: RecordDesignIntermediateVariableEnvelope,
+    closing: RecordDesignIntermediateRelativeSuffixMarker,
+) -> None:
     anchor = semantic.closer_anchor
     expected = (
         anchor.sheet,
@@ -417,23 +555,176 @@ def _require_relative_closer(
             f"variable envelope {semantic.record_identity!r} relative closer does not match its exact "
             f"{_CLOSER_EXTENT}-byte source anchor",
         )
+
+
+def _require_standard_relative_closer(
+    semantic: VariableEnvelopeSemantic,
+    closing: RecordDesignIntermediateRelativeSuffixMarker,
+    *,
+    modelo: str,
+) -> None:
     match = _CLOSER_RE.match(closing.content or "")
     if match is None:
         raise RegistryValidationError(
             f"variable envelope {semantic.record_identity!r} relative closer {closing.content!r} is not the "
             f"official </T + modelo + discriminant + ejercicio + periodo + tipo + > identifier",
         )
-    if match.group("modelo") != modelo:
+    _require_relative_closer_modelo(semantic, match.group("modelo"), modelo)
+    _require_relative_closer_discriminant(semantic, match.group("discriminant"))
+
+
+def _require_relative_closer_modelo(semantic: VariableEnvelopeSemantic, actual: str, modelo: str) -> None:
+    if actual != modelo:
         raise RegistryValidationError(
             f"variable envelope {semantic.record_identity!r} relative closer names modelo "
-            f"{match.group('modelo')!r}, not the reviewed design modelo {modelo!r}",
+            f"{actual!r}, not the reviewed design modelo {modelo!r}",
         )
-    if match.group("discriminant") != _DISCRIMINANT:
+
+
+def _require_relative_closer_discriminant(semantic: VariableEnvelopeSemantic, actual: str) -> None:
+    if actual != _DISCRIMINANT:
         raise RegistryValidationError(
             f"variable envelope {semantic.record_identity!r} relative closer carries discriminant "
-            f"{match.group('discriminant')!r}; only the shared-grammar {_DISCRIMINANT!r} is compiled "
+            f"{actual!r}; only the shared-grammar {_DISCRIMINANT!r} is compiled "
             "without its own adjudication",
         )
+
+
+def _is_exact_m341_missing_t_closer(
+    semantic: VariableEnvelopeSemantic,
+    envelope: RecordDesignIntermediateVariableEnvelope,
+    *,
+    modelo: str,
+) -> bool:
+    """Reconcile one printed 17-character typo against its 18-byte source row."""
+    closing = envelope.closing
+    if not isinstance(closing, RecordDesignIntermediateRelativeSuffixMarker):
+        return False
+    if modelo != "341" or semantic.source_ref != "aeat-dr-341-2016":
+        return False
+    if semantic.source_sha256 != "7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600":
+        raise RegistryValidationError("modelo 341 closer adjudication source digest changed")
+    if (
+        envelope.sheet,
+        envelope.record_identity,
+        closing.source_row,
+        closing.source_cell,
+        closing.ordinal,
+        closing.offset,
+        closing.length,
+        closing.aeat_type,
+        closing.normalized_description,
+        closing.content,
+    ) != (
+        "M34100",
+        "M34100",
+        20,
+        "A20",
+        15,
+        "***",
+        18,
+        "An",
+        "Constante. </T3410+Ejercicio+periodo+0000>",
+        '"</3410AAAAPP0000>"',
+    ):
+        raise RegistryValidationError("modelo 341 closer adjudication no longer matches its exact printed row")
+    return True
+
+
+_M309_MISSING_T_CLOSER_SOURCE_DIGESTS: Final[dict[str, str]] = {
+    "aeat-dr-309-2018": "7f46a0301f27345c19530a6a12acfa976ab5b60a67e563afa68277c12f2b07a8",
+    "aeat-dr-309-2023": "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
+}
+
+
+def _is_exact_m309_missing_t_closer(
+    semantic: VariableEnvelopeSemantic,
+    envelope: RecordDesignIntermediateVariableEnvelope,
+    *,
+    modelo: str,
+) -> bool:
+    """Adjudicate only two verified M309 rows whose own description supplies the missing T.
+
+    Both official workbooks state an 18-byte closer and describe
+    ``</T3090+Ejercicio+periodo+0000>``, but their Contenido cell omits the T.
+    Their opening row states ``<T``. The source bytes and parser output remain
+    unchanged; every other closer still passes the ordinary grammar or refuses.
+    """
+    closing = envelope.closing
+    if not isinstance(closing, RecordDesignIntermediateRelativeSuffixMarker):
+        return False
+    expected_digest = _M309_MISSING_T_CLOSER_SOURCE_DIGESTS.get(str(semantic.source_ref))
+    if modelo != "309" or expected_digest is None:
+        return False
+    if semantic.source_sha256 != expected_digest:
+        raise RegistryValidationError("modelo 309 closer adjudication source digest changed")
+    if (
+        envelope.sheet,
+        envelope.record_identity,
+        closing.source_row,
+        closing.source_cell,
+        closing.ordinal,
+        closing.offset,
+        closing.length,
+        closing.aeat_type,
+        closing.normalized_description,
+        closing.validation,
+        closing.content,
+    ) != (
+        "M30900",
+        "M30900",
+        20,
+        "A20",
+        15,
+        "***",
+        18,
+        "An",
+        "Constante. </T3090+Ejercicio+periodo+0000>",
+        None,
+        '"</3090AAAAPP0000>"',
+    ):
+        raise RegistryValidationError("modelo 309 closer adjudication no longer matches its exact printed row")
+    return True
+
+
+def _require_m369_composite_closer(
+    semantic: VariableEnvelopeSemantic,
+    envelope: RecordDesignIntermediateVariableEnvelope,
+    *,
+    modelo: str,
+) -> None:
+    """Prove six official relative rows spell the same derived eighteen bytes."""
+    closing = envelope.closing
+    if not isinstance(closing, RecordDesignIntermediateCompositeRelativeClosing):
+        raise RegistryValidationError("M369 composite closer requires six parser-owned rows")
+    if (
+        modelo != "369"
+        or semantic.source_ref != "aeat-dr-369-2021"
+        or semantic.source_sha256 != "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
+        or envelope.record_identity != "T3690 Estruc. gral"
+    ):
+        raise RegistryValidationError("composite relative closer is not the reviewed M369 source")
+    parts = closing.parts
+    if tuple(
+        (part.source_row, part.source_cell, part.ordinal, part.offset, part.length, part.content) for part in parts
+    ) != (
+        (17, "A17", 11, 1, 3, 'Constante "</T"'),
+        (18, "A18", 12, 4, 3, 'Constante "369"'),
+        (19, "A19", 13, 7, 1, 'Constante "0"'),
+        (20, "A20", 14, 8, 4, None),
+        (21, "A21", 15, 12, 2, '["1T".."4T"] (para trimestrales)\n["01", "02".."12"] (para mensuales)'),
+        (22, "A22", 16, 14, 5, '"0000>"'),
+    ):
+        raise RegistryValidationError("M369 six-part relative closer differs from exact official geometry or content")
+    anchor = semantic.closer_anchor
+    if (
+        anchor.sheet,
+        anchor.source_row,
+        anchor.source_cell,
+        anchor.ordinal,
+        anchor.record_identity,
+    ) != (envelope.sheet, 17, "A17", "11", envelope.record_identity):
+        raise RegistryValidationError("M369 composite closer anchor does not name its first official row")
 
 
 def _require_total_anchor(
@@ -450,5 +741,5 @@ def _require_total_anchor(
     if (expected.source_row, expected.source_cell, expected.label, expected.length) != actual:
         raise RegistryValidationError(
             f"variable envelope {semantic.record_identity!r} total anchor does not match the parser "
-            "Variable total marker",
+            "stated or absent total marker",
         )

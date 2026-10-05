@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#calculation-chain-integrity'
 date: '2026-08-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:c6c322be613dbd140ec0d260c31e2baa30acb67916716b16b9b350c002eed4ac'
 related:
-  - "[[2026-08-07-calculation-chain-integrity-plan]]"
   - "[[2026-07-26-multi-activity-profile-reference]]"
   - "[[2026-07-26-multi-activity-profile-adr]]"
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"

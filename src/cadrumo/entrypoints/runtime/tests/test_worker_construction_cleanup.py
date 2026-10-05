@@ -33,7 +33,7 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessState,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
-from cadrumo.application.user_profile.session_authority import SessionAuthorityFacts
+from cadrumo.application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from cadrumo.core.time.clock import now
 
 from .. import session_owner

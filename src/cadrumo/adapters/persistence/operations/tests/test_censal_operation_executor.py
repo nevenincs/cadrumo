@@ -37,16 +37,12 @@ from cadrumo.application.operations.interactions import (
     OperationRejectResponse,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.projection_services import (
     OperationResultProjectionService,
     OperationReviewProjectionService,
 )
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationRegistry,
-    operation_public_schema_reference,
-)
+from cadrumo.application.operations.registry import OperationRegistry, operation_public_schema_reference
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.censal_observation import (
@@ -72,10 +68,7 @@ from cadrumo.application.user_profile.censal_operation import (
 )
 from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
@@ -84,6 +77,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import governed_fa
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .supervision_support import run_to_settlement
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -102,6 +96,7 @@ def _test_censal_operation_definition() -> OperationDefinition:
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=fetch_censal_datos,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
@@ -284,6 +279,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=fetch_censal_datos,
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquire,
         )
         owner = censal_supervisor(
@@ -405,6 +401,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
                 ),
                 owner="6" * 64,
@@ -478,6 +475,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
                     apply=competing_write_then_stale,
                 ),
@@ -536,6 +534,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
                     apply=commit_then_fail,
                 ),
@@ -603,6 +602,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
                 browser_session_factory=default_browser_session_factory,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=fetch_censal_datos,
+                provider_preflight=lambda _profile_id, _operation: None,
                 acquire=acquire,
                 before_irreversible_section=hold_before_entry,
             ),

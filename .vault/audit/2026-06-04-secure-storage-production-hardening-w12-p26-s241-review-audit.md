@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:c9f4b8d439624693c57241c21cc890af96ec23dfcd93a13f5db7218b4ba1c947'
+modified: '2026-10-03'
+body_hash: 'sha256:6336cf99cd19f1a19677e0ac8ceaa670acf06990f868a35ef0d7e311d925f276'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S241-001 | INFO | CRUD contract row reclassified away from plaintext-exception
 
-`src/aeat/application/operator_surface/_crud_contract.py` defines enums, Pydantic models, validation rules, and lookup helpers for operator-facing mutating noun-group shape. It has no `Path` usage, no file I/O, no repository construction, no settings or environment access, no remote provider access, no logging/printing, and no exception swallowing.
+The retired module defined enums, Pydantic models, validation rules, and lookup helpers for operator-facing mutating noun-group shape. It has no `Path` usage, no file I/O, no repository construction, no settings or environment access, no remote provider access, no logging/printing, and no exception swallowing.
 
 The relevant secure-storage signal is the documented bucket event suffix manifest, not a plaintext file boundary. The row should therefore close as `manifest-discovery`, owned by the manifest-discovery closeout track.
 

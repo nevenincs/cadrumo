@@ -81,7 +81,11 @@ class TransactionCatalogueReadAdapter(TransactionCatalogueReader):
 def build_invoice_catalogue_read_ports(
     *, bucket_id: str, objects: SecureObjectRepository | None = None
 ) -> InvoiceCatalogueReadPorts:
-    """Bind both encrypted catalogue repositories to one profile bucket."""
+    """Bind both encrypted catalogue repositories to one profile bucket.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     normalized_bucket_id = bucket_id.strip()
     objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return InvoiceCatalogueReadPorts(

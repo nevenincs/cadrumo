@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m210-plazo-keying'
 date: '2026-07-09'
-modified: '2026-08-24'
-body_hash: 'sha256:cda72b01018b8cd6bcefcc9e10065856cddc5cd34462573cb13e9f01927cac79'
+modified: '2026-10-03'
+body_hash: 'sha256:59e6a0fc97e188fc37b5805db71ea9d63eec2602641e79089aee72bee17d7d34'
 related:
   - "[[2026-07-10-m210-irnr-phase-2-engine-adr]]"
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
@@ -220,13 +220,13 @@ the typed qualifier schema, grounded annual window rows, post-calculation
 resolver and typed `Notice` projection.
 
 **Code-surface footprint** (for the implementation plan):
-- `src/cadrumo/core/_result_disposition.py` and `src/cadrumo/core/_irnr.py` - reuse
+- the former source file and the former source file - reuse
   `ResultDisposition` and the official M210 tipo-renta code authority; add no duplicate enum.
-- `src/cadrumo/domain/calculations/registry/_schema.py` - two optional qualifier
+- the former source file - two optional qualifier
   fields on `DeadlineWindowDefinition` (default `None`).
 - `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/deadline_windows/`
   - the four annual resultado/tipo window rows (art-5 grounded).
-- `src/cadrumo/domain/deadlines/_plazo.py` (+ a new resultado/tipo-aware resolver
+- the former source file (+ a new resultado/tipo-aware resolver
   entry point in `domain/deadlines/`) - post-calculation annual-plazo resolution.
 - `src/cadrumo/application/modelo/` (calculate/verify emit) +
   `core/json_contract.Notice` - the post-calculation plazo advisory.

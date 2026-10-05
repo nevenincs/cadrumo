@@ -6,13 +6,14 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import cast
+from uuid import UUID
 
 import typer
 
 from ...application.ledger.actions_common import display_decimal
 from ...application.ledger.models import ManualLedgerTransactionPatch
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
-from ...application.ledger.update_operation import (
+from ...application.ledger.update_contracts import (
     LEDGER_UPDATE_OPERATION_DEFINITION_ID,
     LEDGER_UPDATE_VALIDATION_REFUSAL_CODE,
     LedgerUpdateOperationResult,
@@ -20,10 +21,54 @@ from ...application.ledger.update_operation import (
     LedgerUpdatePatchField,
     LedgerUpdateRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
+
+
+def ledger_update_validation_refusal(
+    completed: RegisteredOperationCompletion[LedgerUpdateOperationResult], profile_id: UUID
+) -> LedgerUpdateOperationResult | None:
+    """Ledger update validation refusal."""
+    projection = completed.projection
+    if projection.outcome == "validation_error":
+        invalid_refusal = (
+            completed.terminal_condition is not OperationTerminalCondition.REFUSED
+            or completed.refusal_code != LEDGER_UPDATE_VALIDATION_REFUSAL_CODE
+            or completed.effect is not OperationEffect.NONE
+            or projection.profile_id != profile_id
+            or not projection.validation_messages
+        )
+        if invalid_refusal:
+            raise invalid_completion_error(completed)
+        return projection
+    return None
+
+
+def require_ledger_update_correlation(
+    completed: RegisteredOperationCompletion[LedgerUpdateOperationResult],
+    profile_id: UUID,
+    transaction_id: str,
+    worker_patch: LedgerUpdatePatch,
+    patch_fields: tuple[LedgerUpdatePatchField, ...],
+    transaction: LedgerTransactionProjection,
+) -> None:
+    """Require ledger update correlation."""
+    projection = completed.projection
+    expected_effect = OperationEffect.UPDATED if projection.bucket_event_ids else OperationEffect.NONE
+    prefix = transaction_id.strip().lower()
+    invalid = (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or projection.profile_id != profile_id
+        or not transaction.transaction_id.startswith(prefix)
+        or not _matches_patch(worker_patch, patch_fields, transaction, projection)
+    )
+    if invalid:
+        raise invalid_completion_error(completed)
 
 
 def run_ledger_update(
@@ -60,51 +105,15 @@ def run_ledger_update(
         allow_refusal_detail=True,
     )
     projection = completed.projection
-    if projection.outcome == "validation_error":
-        invalid_refusal = (
-            completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.refusal_code != LEDGER_UPDATE_VALIDATION_REFUSAL_CODE
-            or completed.effect is not OperationEffect.NONE
-            or projection.profile_id != client.profile_id
-            or not projection.validation_messages
-        )
-        if invalid_refusal:
-            raise submitted_operation_error(
-                completed.operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=completed.terminal_condition,
-                effect=completed.effect,
-                refusal_code=completed.refusal_code,
-            )
-        return projection
+    if (refused := ledger_update_validation_refusal(completed, client.profile_id)) is not None:
+        return refused
 
     transaction = projection.transaction
     if transaction is None or projection.review_status is None:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
-    expected_effect = OperationEffect.UPDATED if projection.bucket_event_ids else OperationEffect.NONE
-    prefix = transaction_id.strip().lower()
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or projection.profile_id != client.profile_id
-        or not transaction.transaction_id.startswith(prefix)
-        or not _matches_patch(worker_patch, patch_fields, transaction, projection.group_label)
+        raise invalid_completion_error(completed)
+    require_ledger_update_correlation(
+        completed, client.profile_id, transaction_id, worker_patch, patch_fields, transaction
     )
-    if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
     return projection
 
 
@@ -125,37 +134,44 @@ def _matches_patch(
     patch: LedgerUpdatePatch,
     fields: tuple[LedgerUpdatePatchField, ...],
     transaction: LedgerTransactionProjection,
-    group_label: str | None,
+    projection: LedgerUpdateOperationResult,
 ) -> bool:
-    """Correlate every projected fact whose canonical meaning is in the request."""
+    """Correlate every selected patch field with its projected canonical meaning."""
     for field in fields:
         value = getattr(patch, field)
-        if field == "booked_date" and transaction.booked_date != value:
+        if field == "own_account_id":
+            if projection.own_account_id != value:
+                return False
+        elif not ledger_update_field_matches(field, value, transaction, projection.group_label):
             return False
-        if field == "value_date" and transaction.value_date != value:
-            return False
-        if field == "amount" and transaction.amount != value:
-            return False
-        if field == "direction" and transaction.direction != value:
-            return False
-        if field == "currency" and (value is None or transaction.currency != value):
-            return False
-        if field == "counterparty" and transaction.counterparty != (value or ""):
-            return False
-        if field == "description" and transaction.description != value:
-            return False
-        if field == "taxable_base" and transaction.taxable_base != value:
-            return False
-        if field == "iva_rate" and transaction.iva_rate != value:
-            return False
-        if field == "iva_amount" and transaction.iva_amount != value:
-            return False
-        if field == "irpf_category" and transaction.irpf_category != value:
-            return False
-        if field == "notes" and transaction.notes != (value or ""):
-            return False
-        if field == "group_label" and group_label != value:
-            return False
+    return True
+
+
+def ledger_update_field_matches(
+    field: LedgerUpdatePatchField,
+    value: object,
+    transaction: LedgerTransactionProjection,
+    group_label: str | None,
+) -> bool:
+    """Compare nullable text, required currency, grouping, or a direct wire field."""
+    if field == "currency":
+        return value is not None and transaction.currency == value
+    if field in {"counterparty", "notes"}:
+        return bool(getattr(transaction, field) == (value or ""))
+    if field == "group_label":
+        return group_label == value
+    if field in {
+        "booked_date",
+        "value_date",
+        "amount",
+        "direction",
+        "description",
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "irpf_category",
+    }:
+        return bool(getattr(transaction, field) == value)
     return True
 
 

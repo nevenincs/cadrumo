@@ -39,20 +39,18 @@ payload fields they control.
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..errors.hierarchy import pydantic_validation_boundary
 from ..identity.aeat_box import AeatBoxNumber
 from ..identity.digest import ContentDigest, ContentDigestOrAbsent
 from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..time.utc import validate_utc_aware
+from ..time.utc import UtcInstant
 
 #: Canonical shape of a run identifier: 16 lowercase hex characters, the form
-#: minted by :func:`core.observability.context._mint_run_id`. Declared once here
+#: carried by :class:`RunTrace`. Declared once here
 #: so the observability records, the workflow link, and the on-disk run-directory
 #: guard in :mod:`core.observability.store` describe one identity rather than
 #: several independent conventions.
@@ -320,26 +318,6 @@ class RunEventPayload(BaseModel):
         return self
 
 
-def _require_tz_aware(value: datetime) -> datetime:
-    """Reject naive or non-UTC datetimes at the pydantic boundary.
-
-    The sort in :func:`cadrumo.core.observability.store.iter_runs` crashes with
-    ``TypeError: can't compare offset-naive and offset-aware datetimes``
-    if the runs directory mixes both shapes. Every writer inside the
-    observability layer constructs datetimes with ``tzinfo=UTC``, but a
-    hand-edited or externally-produced ``trace.json`` could slip a
-    naive timestamp past strict validation unless this gate enforces
-    timezone awareness up front.
-
-    Args:
-        value: Datetime to validate.
-
-    Returns:
-        The same datetime, unmodified, when it is UTC-aware.
-    """
-    return validate_utc_aware(value)
-
-
 class RunEvent(BaseModel):
     """A single observability event captured during a run.
 
@@ -358,15 +336,8 @@ class RunEvent(BaseModel):
     step_id: str
     kind: RunEventKind
     payload: RunEventPayload
-    timestamp: datetime
+    timestamp: UtcInstant
     module: str
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_tz_aware_timestamp(self) -> RunEvent:
-        """Reject naive ``timestamp`` values; see :func:`_require_tz_aware`."""
-        _require_tz_aware(self.timestamp)
-        return self
 
 
 class RunTrace(BaseModel):
@@ -393,23 +364,14 @@ class RunTrace(BaseModel):
     model_config = _STRICT_FROZEN
 
     run_id: RunId
-    started_at: datetime
-    finished_at: datetime | None
+    started_at: UtcInstant
+    finished_at: UtcInstant | None
     entrypoint: str
     arguments: tuple[ArgumentRecord, ...]
     corpus_sha256: ContentDigest
     db_sha256: ContentDigest
     cert_fingerprint: ContentDigestOrAbsent
     outcome: RunOutcome
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_tz_aware_timestamps(self) -> RunTrace:
-        """Reject naive ``started_at`` / ``finished_at``."""
-        _require_tz_aware(self.started_at)
-        if self.finished_at is not None:
-            _require_tz_aware(self.finished_at)
-        return self
 
 
 __all__ = [

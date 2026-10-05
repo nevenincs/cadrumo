@@ -36,6 +36,27 @@ from .scenario import (
 _CLIENT_NIF: Final[str] = "A58818501"
 
 
+def _observe_annual_calculation_values(
+    calculation: dict[str, Any], year: int, annual_oracle: AnnualOracle | None
+) -> dict[str, str]:
+    """Observe annual calculation values."""
+    values = calculation.get("casilla_values")
+    if not isinstance(values, dict):
+        raise JourneyError("Modelo 100 returned no casilla map")
+    annual = annual_oracle or build_scenario(year).annual_oracle
+    expected = {
+        "0171": _money(annual.activity_income),
+        "0218": _money(annual.deductible_expenses),
+        "0220": _money(annual.deductible_expenses),
+        "0224": _money(annual.activity_net_income),
+        "0604": _money(annual.m130_payments),
+    }
+    actual = {casilla: _money(Decimal(str(values.get(casilla)))) for casilla in expected}
+    if actual != expected:
+        raise JourneyError(f"Modelo 100 annual oracle mismatch: expected {expected}, got {actual}")
+    return actual
+
+
 class JourneyError(RuntimeError):
     """A public CLI command or acceptance assertion failed."""
 
@@ -473,20 +494,7 @@ def calculate_m100(
             "diagnostic_code": error.get("code") if isinstance(error, dict) else None,
         }
     calculation = command_result(calculated)
-    values = calculation.get("casilla_values")
-    if not isinstance(values, dict):
-        raise JourneyError("Modelo 100 returned no casilla map")
-    annual = annual_oracle or build_scenario(year).annual_oracle
-    expected = {
-        "0171": _money(annual.activity_income),
-        "0218": _money(annual.deductible_expenses),
-        "0220": _money(annual.deductible_expenses),
-        "0224": _money(annual.activity_net_income),
-        "0604": _money(annual.m130_payments),
-    }
-    actual = {casilla: _money(Decimal(str(values.get(casilla)))) for casilla in expected}
-    if actual != expected:
-        raise JourneyError(f"Modelo 100 annual oracle mismatch: expected {expected}, got {actual}")
+    actual = _observe_annual_calculation_values(calculation, year, annual_oracle)
     revision_id = str(calculation["calculation_revision_id"])
     verification = cli.run(
         ("app", "modelo", "work", "verify", revision_id, "--by", "income-acceptance"),

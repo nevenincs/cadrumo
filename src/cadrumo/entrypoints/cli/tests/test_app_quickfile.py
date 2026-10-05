@@ -15,11 +15,11 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from ....application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
 from ....application.modelo.quickfile_operation_contracts import (
-    QuickfileProjection,
     QuickfileReadinessSummary,
     QuickfileStageError,
     QuickfileStageSnapshot,
 )
+from ....application.modelo.quickfile_operation_projections import QuickfileProjection
 from ....application.operations.public_period import PublicPeriod
 from ....core.errors.error_codes import get_registered_error_code_by_code
 from ....core.json_contract import Notice, NoticeSeverity

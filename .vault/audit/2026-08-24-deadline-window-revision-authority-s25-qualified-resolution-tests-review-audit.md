@@ -3,23 +3,17 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b8a74e97b7cb2bbe1fd1ca5ac7abe1157b7983d72ad993051a44a1e87ea4c97'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
+body_hash: 'sha256:f6b432978e3617ba64fccf5c42077efb6b97ad8c4cdc3c001cd80018e1dcab45'
+related: []
 ---
 
 # `deadline-window-revision-authority` audit: `s25 qualified resolution tests review`
 
 ## Scope
 
-Reviewed approved step `W03.P10.S25` against the deadline authority ADR,
-research, reference, and plan. The review covered the complete diff in
-`src/cadrumo/domain/deadlines/tests/test_plazo_resolution.py`, the canonical
-matcher in `src/cadrumo/domain/deadlines/_plazo.py`, and semantic discovery for
-parallel deadline resolvers or qualifier vocabularies. Focused pytest and Ruff
-both passed.
+Reviewed approved step `W03.P10.S25` against the deadline authority ADR, research, reference, and plan. Focused pytest and Ruff both passed.
 
 ## Findings
 

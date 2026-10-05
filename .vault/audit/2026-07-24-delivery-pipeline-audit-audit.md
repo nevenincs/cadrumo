@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#delivery-pipeline-audit'
 date: '2026-07-24'
-modified: '2026-07-24'
-body_hash: 'sha256:dad308c3f28bdb475d08df9e94b835232742450d2ed35d35c9b72a3a7f6f06ee'
+modified: '2026-10-03'
+body_hash: 'sha256:8fce926b918f7015b6d52c80967c7acc5c30b310d5c70b50dc39d22705ac7485'
 related: []
 ---
 
@@ -46,7 +46,7 @@ oracles must be re-run against the cohort before the next publication.
 
 ### real-client-session-shipped-unscanned | high | operator session JSON shipped verbatim into public claude-* rows — FIXED
 
-`dev/packaging/emit_real_client_evidence.py` passed operator-supplied
+The retired module passed operator-supplied
 session JSON to public release rows with no secret scan; an embedded
 email/token/session id would have published uncaught. Fixed: fail-closed
 secret scan (token-shaped strings, emails) before minting. Residual low:
@@ -89,7 +89,7 @@ plus workdir cleanup); workspace roots now scrubbed from evidence.
 
 ### structure-and-naming-hygiene | medium | dead lane, orphaned generator, plan-step tags in shipped CI identifiers — FIXED
 
-`dev/packaging/smoke_plugin_validate.py` deleted as a superseded dead lane;
+The retired module deleted as a superseded dead lane;
 the manual corpus-text extractor gained a `just` re-run path; the
 `cadrumo-s24`/`cadrumo-s20` plan-step scratch-root names were renamed to
 semantic homebrew/scoop names in lockstep across the workflows and all
@@ -162,7 +162,7 @@ the literal install commands render.
 
 Deferred decisions surfaced but not taken here: whether to retire
 `pypi-upload.yml` outright once Gate 3 is armed (hardened for now);
-whether `dev/packaging/sync_aeat_record_design_corpus.py` moves to a
+whether the retired module moves to a
 corpus-owned home; whether the data-companion Development Status
 classifiers (Alpha vs the root Beta) and the MCPB author string are
 intentional.

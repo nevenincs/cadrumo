@@ -11,12 +11,12 @@ from pydantic import BaseModel
 
 from ...core.operations import OperationInteractionKind
 from ._execution_context import DefinitionBoundContext
-from .financial_operand_submission import BoundTransientFinancialOperandAccess
 from .interactions import OperationInteractionRequest, OperationPendingInteraction
 from .models import OperationIdentity
 from .persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from .projection_services import OperationResponseAuthorityIssuer
 from .secret_submission import BoundEphemeralSecretAccess
+from .typed_financial_operand_context import BoundTypedFinancialOperandAccess
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -101,7 +101,7 @@ class SupervisorExecutorContext:
         authority_operation: PinnedAuthorityOperation,
         operands: OperationSecureReferenceStore | None,
         ephemeral_secret: BoundEphemeralSecretAccess,
-        financial_operand: BoundTransientFinancialOperandAccess,
+        typed_financial_operand: BoundTypedFinancialOperandAccess | None = None,
         clock: Callable[[], datetime],
         response_authority_issuer: OperationResponseAuthorityIssuer | None,
         response_token_factory: Callable[[], str],
@@ -114,7 +114,9 @@ class SupervisorExecutorContext:
         self.events = context.events
         self._operands = operands
         self.ephemeral_secret = ephemeral_secret
-        self.financial_operand = financial_operand
+        self.typed_financial_operand = typed_financial_operand or BoundTypedFinancialOperandAccess(
+            broker=None, declaration=None, requirement=None
+        )
         self.cleanup = context.cleanup
         self.interactions = _SupervisorInteractionAccess(
             request_pending=context.interactions.request,

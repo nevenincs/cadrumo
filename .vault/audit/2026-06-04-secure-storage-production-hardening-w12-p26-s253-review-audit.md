@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d9426992d39156744d422f47c82cb787cf304e310bddd5778ed981bd9928960a'
+modified: '2026-10-03'
+body_hash: 'sha256:147f01da3e431262542b314162efc30b1b00519040f86bce1f83377d29f74541'
 related: []
 ---
 
@@ -20,8 +20,8 @@ The contract names still describe backend workspace initialization for the atomi
 
 ## S253-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/setup/_contracts.py src/aeat/application/setup/test_contracts_output_language_roundtrip.py src/aeat/application/setup/test_service_provisions_bucket.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/setup/test_contracts_output_language_roundtrip.py src/aeat/application/setup/test_service_provisions_bucket.py` passed with 8 tests.
+- the historical check passed.
+- the historical check passed with 8 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-151` as `manifest-discovery` with no code change.

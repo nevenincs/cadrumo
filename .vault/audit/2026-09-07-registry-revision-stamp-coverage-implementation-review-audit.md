@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-revision-stamp-coverage'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:90925ea38cd5e55faf7cade6ef145cd06e8bdf3adecb723c674da7fc894b8d4a'
 related:
   - "[[2026-09-07-registry-revision-stamp-coverage-adr]]"
-  - "[[2026-09-07-registry-revision-stamp-coverage-plan]]"
 ---
 
 # `registry-revision-stamp-coverage` audit: `implementation review`

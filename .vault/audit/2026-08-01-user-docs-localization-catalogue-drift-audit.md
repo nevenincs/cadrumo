@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#user-docs-localization'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a1c8bc7b493b5bae9adb0c818ef3e2ca2350a00f1b5800529a15992aa59f83eb'
 related:
   - "[[2026-07-18-user-docs-localization-adr]]"
-  - "[[2026-08-01-user-docs-search-consolidation-adr]]"
 ---
 
 # `user-docs-localization` audit: `translation catalogues were complete against stale source: the masked drift, the tracked backlog, and the gate lesson`

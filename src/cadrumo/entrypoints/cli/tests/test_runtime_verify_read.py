@@ -13,10 +13,7 @@ import typer
 from pydantic import BaseModel
 
 from ....application.live.verify import VerifySurface
-from ....application.live.verify_read_operation import (
-    VERIFY_LATEST_DEFINITION_ID,
-    VERIFY_LIST_DEFINITION_ID,
-    VERIFY_VIEW_DEFINITION_ID,
+from ....application.live.verify_read_contracts import (
     VerifyLatestPublicResultV1,
     VerifyLatestRequest,
     VerifyListPublicResultV1,
@@ -25,12 +22,18 @@ from ....application.live.verify_read_operation import (
     VerifyObservationSummaryPublicV1,
     VerifyViewRequest,
 )
+from ....application.live.verify_read_operation import (
+    VERIFY_LATEST_DEFINITION_ID,
+    VERIFY_LIST_DEFINITION_ID,
+    VERIFY_VIEW_DEFINITION_ID,
+)
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .. import runtime_profile_operation as profile_operation
 from .. import runtime_verify_read as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -109,7 +112,7 @@ def _bind(
             refusal_code=refusal_code,
         )
 
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
+    monkeypatch.setattr(profile_operation, "run_registered_operation", submit)
     return submitted, bound_profiles
 
 

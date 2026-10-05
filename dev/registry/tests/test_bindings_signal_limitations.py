@@ -16,7 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from ..bindings import _python_binding_references, audit
+from ..binding_signal.consumer_audit import python_binding_references
+from ..bindings import audit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -39,7 +40,7 @@ def test_missing_python_scan_root_is_reported_not_counted_as_no_references(tmp_p
         encoding="utf-8",
     )
 
-    rows, limitations = _python_binding_references(tmp_path, frozenset({"m303-2024-iva-devengado"}))
+    rows, limitations = python_binding_references(tmp_path, frozenset({"m303-2024-iva-devengado"}))
 
     assert [str(row["binding_id"]) for row in rows] == ["m303-2024-iva-devengado"]
     missing = [item for item in limitations if item["code"] == "PYTHON_BINDING_REFERENCE_ROOT_MISSING"]
@@ -51,7 +52,7 @@ def test_present_python_scan_roots_report_no_scope_limitation(tmp_path: Path) ->
     for relative in ("src/cadrumo", "dev/registry"):
         (tmp_path / relative).mkdir(parents=True)
 
-    _rows, limitations = _python_binding_references(tmp_path, frozenset({"m303-2024-iva-devengado"}))
+    _rows, limitations = python_binding_references(tmp_path, frozenset({"m303-2024-iva-devengado"}))
 
     assert [item["code"] for item in limitations] == []
 

@@ -3,15 +3,16 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d03b35269ec89850db04d84905b0131e5b10feb3b3837640396367f20a72a979'
+body_hash: 'sha256:05c153a81923fbf6b7acdb129a2e12305994e8b59659a88d23f5c9c9b44ce922'
 related: []
 ---
-
 # `registry-legal-grounding-windows` audit: parameters whose cited clause omits the amount
 
-## What was checked
+## Scope
+
+### What was checked
 
 `aeat-calculation-grounding` requires a value's cited provision to be
 "consistent with the value -- the corpus clause states the number encoded". A
@@ -27,7 +28,9 @@ far and is recorded here so it is not re-derived.
 where derived `fixed_addition` cumulants need not appear in the statute. 20 have
 no encoded number anywhere in the cited corpus; those are the subject below.
 
-## The class
+## Findings
+
+### The class
 
 A parameter's `legal_refs` chain resolves to a provision whose text does not
 state the amount the parameter encodes, while the amount itself is verified
@@ -35,7 +38,7 @@ through some other channel. The value is right; the legal chain does not reach
 it. These are citation defects, not numeric ones -- the distinction is kept
 deliberately, because conflating them would overstate every entry here.
 
-### Repaired
+#### Repaired
 
 `modelo-347-tercero-anual-threshold-eur` (both revisions) cited
 `orden-eha-3012-2008:art-1`, which approves the modelo and states no figure; its
@@ -45,7 +48,7 @@ fixes the amount, was already catalogued and corpus-backed, and its own note and
 (2008-01-01, open) covers both revisions. Added as the establishing provision and
 the file comment corrected in `6bbc14045e`; the registry still loads.
 
-### Open -- no in-repo provision states the amount
+#### Open -- no in-repo provision states the amount
 
 `modelo-360-quarterly-refund-threshold-eur` (400,00) and
 `modelo-360-annual-refund-threshold-eur` (50,00) cite
@@ -63,7 +66,7 @@ denies a taxpayer money they are owed -- the over-payment direction that, per
 the framework documentation article for operaciones vinculadas, whose bundled
 text does not state the figure.
 
-### Open -- year-mismatched legal chain
+#### Open -- year-mismatched legal chain
 
 `renta-2022-minimo-descendientes-madrid-{primer-hijo,segundo-hijo,menor-tres-anos}`
 encode 2.498,40 / 2.810,70 / 2.914,80 and cite `madrid-dl-1-2010:art-2`, whose
@@ -76,7 +79,7 @@ catalogue entry with one corpus_ref is serving six filing years whose amounts
 differ, and only the source-citation channel is year-correct. The 2023, 2024 and
 2025 siblings pass precisely because the pinned corpus is their year.
 
-### Not yet examined
+#### Not yet examined
 
 `m303-modulos-iva-dificil-justificacion-forfait` (six revisions),
 `renta-2025-ric-*` (three), `renta-{2024,2025}-imputacion-inmobiliaria-year-days`
@@ -84,19 +87,7 @@ differ, and only the source-citation channel is year-correct. The 2023, 2024 and
 likely structural constants rather than legislated amounts; each still needs
 reading before being called sound.
 
-## Remediation
-
-For M360 and M232, catalogue the provision that fixes the amount and point its
-`corpus_ref` at official text -- taking the LAST version from any consolidated
-payload, asserting the amending norm, and never passing legal text through a
-shell. For the Madrid 2022 rows, the catalogue needs a per-year pinned entry in
-the same shape the LIRPF art. 66/76 redactions already use.
-
-Do not resolve any of these by weakening the `required_text` or by pointing at a
-closer-but-still-silent article: a citation that does not state the number is the
-defect, and a looser one hides it.
-
-## Correction: the counts above were measured with a brittle matcher
+### Correction: the counts above were measured with a brittle matcher
 
 The figures in "What was checked" (333 verified / 92 partial / 20 none) came from
 a STRING matcher that rendered Spanish number formats and searched for them. It
@@ -120,7 +111,7 @@ finding above was hand-verified against the corpus text, so none of them changes
 Probe: `numeric_match.py`. Prefer numeric comparison over string rendering for any
 future corpus check.
 
-## Checked and found SOUND this pass
+### Checked and found SOUND this pass
 
 - **`renta-{2024,2025}-imputacion-inmobiliaria-year-days = 365`.** This looks like
   a leap-year defect: 2024 had 366 days, the M210 IRNR path uses a leap-aware
@@ -143,7 +134,7 @@ future corpus check.
 A numeric matcher cannot see a number spelled in words, so these four were
 absences of the probe, not of the grounding.
 
-## New, low severity: the RIC 80 % is unconsumed and misnamed for what it limits
+### New, low severity: the RIC 80 % is unconsumed and misnamed for what it limits
 
 `renta-2025-ric-reduccion-rate-maximo` has NO formula consumer -- the only
 reference outside its own definition is a drift-detection test. Nothing computes
@@ -160,7 +151,7 @@ name, and the name points at the wrong operation.
 This is also an instance of the unreachable-rung class: a rate parameter no
 formula reads.
 
-## Sharper statement of the autonomic-scale finding
+### Sharper statement of the autonomic-scale finding
 
 The 86 partial matches are almost entirely the autonomic scale tables recorded in
 `2026-08-26-tui-architecture-autonomic-scale-delegating-article-audit`. Their
@@ -172,3 +163,17 @@ every autonomic marginal rate do not appear at all.
 
 So the tables are not partially grounded. They are ungrounded, with incidental
 overlap from a different scale in the same file.
+
+## Recommendations
+
+### Remediation
+
+For M360 and M232, catalogue the provision that fixes the amount and point its
+`corpus_ref` at official text -- taking the LAST version from any consolidated
+payload, asserting the amending norm, and never passing legal text through a
+shell. For the Madrid 2022 rows, the catalogue needs a per-year pinned entry in
+the same shape the LIRPF art. 66/76 redactions already use.
+
+Do not resolve any of these by weakening the `required_text` or by pointing at a
+closer-but-still-silent article: a citation that does not state the number is the
+defect, and a looser one hides it.

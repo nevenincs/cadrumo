@@ -245,18 +245,22 @@ async def test_a_declared_year_selected_in_the_listing_fills_the_dialog() -> Non
 
 @pytest.mark.asyncio
 async def test_a_value_the_service_refuses_is_shown_and_the_page_is_not_repainted() -> None:
-    """A third decimal place reaches the service unrounded and its refusal stays visible."""
+    """A third decimal place reaches the service unrounded and its refusal stays visible.
+
+    Four places are typed because ``12.505`` is also a Spanish thousands grouping,
+    which the canonical decimal grammar refuses before any service sees it.
+    """
     doors = _FakePlantillaMediaDoors()
     screen = _screen(doors)
     opened = screen.overview
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         dialog = await _open_dialog(screen, pilot)
-        _fill(dialog, year="2024", average_workforce="12.505", state=PlantillaMediaState.OBSERVED)
+        _fill(dialog, year="2024", average_workforce="12.5055", state=PlantillaMediaState.OBSERVED)
         dialog.query_one("#btn-plantilla-save", Button).press()
         await wait_until_settled(screen, pilot)
 
-        assert doors.calls[-1] == ("set", (2024, Decimal("12.505"), PlantillaMediaState.OBSERVED))
+        assert doors.calls[-1] == ("set", (2024, Decimal("12.5055"), PlantillaMediaState.OBSERVED))
         assert doors.years == {}
         assert screen.overview == opened
         assert _status(screen).tone == "error"
@@ -293,6 +297,9 @@ async def test_withdrawing_an_undeclared_year_is_refused_without_a_success() -> 
         ("-2024", "3", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.year_not_whole"),
         ("2024", "three", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
         ("2024", "NaN", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "1e1", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "+3", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "1_0", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
         ("2024", "3", None, "flows.manager.plantilla_media.state_required"),
     ],
 )

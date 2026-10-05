@@ -2,8 +2,9 @@
 
 No inference or live provider runs. Only HTTP answers are authored: provider
 clients/parsers, immutable profile workers, encrypted review continuations and
-canonical ledger writes are real. The existing fixture's OS login observations
-and native secret store are synthetic; this is not desktop/custody acceptance.
+canonical ledger writes are real. The shared fixture explicitly enables the
+development session override and uses a synthetic native secret store; this is
+not desktop/custody acceptance.
 """
 
 from __future__ import annotations

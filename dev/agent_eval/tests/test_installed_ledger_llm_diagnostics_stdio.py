@@ -63,6 +63,7 @@ from cadrumo.entrypoints.cli.tests.test_ledger_llm_diagnostics import (
 from cadrumo.entrypoints.ledger_llm_diagnostics_composition import (
     build_ledger_llm_diagnostics_operation_ports,
 )
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
@@ -137,6 +138,7 @@ def _prepare(
 @pytest.mark.anyio
 async def test_installed_mcp_roundtrips_encrypted_ledger_llm_diagnostics(tmp_path: Path) -> None:
     """The installed worker returns stored usage precision and confidence unchanged."""
+    require_os_credential_store()
     native = native_automation_secret_store(_native_backend_for_current_platform())
     with (
         bundled_indexed_authority().operation() as operation,

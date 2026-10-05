@@ -271,7 +271,7 @@
               "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
               "work_unit_state": "borrador"
             },
-            "message": "This active work unit can be calculated.",
+            "message": "This active declaration can be calculated.",
             "severity": "info"
           }
         ],
@@ -341,7 +341,7 @@
               "modelo": "303",
               "period": "1T"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
           },
           {
@@ -353,7 +353,7 @@
               "period": "1T",
               "software_identity_grade": "development_mock"
             },
-            "message": "The file header carries Cadrumo's all-zero development software identity; AEAT will not accept this file for presentation.",
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
             "severity": "warning"
           }
         ],

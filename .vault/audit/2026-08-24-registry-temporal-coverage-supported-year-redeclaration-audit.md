@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:368ce18779e78648f565e1deeb17eae2696b4ecc12140866d2be3e5544ac4265'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `supported filing year canonical-home and redeclaration audit`

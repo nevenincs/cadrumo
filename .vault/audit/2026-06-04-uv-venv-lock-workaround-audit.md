@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:46e752fd97bb9a11d1db9c99ae6b9b3de383abd4783a6ef30c7a710a84469b84'
+modified: '2026-10-03'
+body_hash: 'sha256:13bfffe1211711f5ca64432ee75471d88e4d7ae1e1b312730fd08a5323fa3275'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-research]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'
@@ -41,7 +41,7 @@ The venv was repaired without `uv sync`:
 
 Verification:
 
-- `uv run --no-sync python -c "import aeat"` resolves to `src/aeat/__init__.py`.
+- `uv run --no-sync python -c "import aeat"` resolves to the retired module.
 - `just tooling-doctor` passes.
 - `uv pip check --python .venv/Scripts/python.exe` reports all installed packages
   compatible.

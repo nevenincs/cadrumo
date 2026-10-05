@@ -13,7 +13,7 @@ from mcp.types import CallToolResult
 from pydantic import JsonValue
 
 from cadrumo.adapters.local_runtime import runtime_credentials
-from cadrumo.application.auth.read_operation import (
+from cadrumo.application.auth.auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
     AUTH_READ_RESULT_SCHEMA_ID,
     AuthReadProjection,
@@ -44,7 +44,8 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import NativeApiCliSession, native_api_cli_session
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [

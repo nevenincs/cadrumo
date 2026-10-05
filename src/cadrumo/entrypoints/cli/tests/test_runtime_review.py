@@ -14,21 +14,23 @@ from pydantic import BaseModel
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.operations.models import OperationId
 from ....application.review.enums import ReviewSeverity, ReviewState
-from ....application.review.read_operation import (
+from ....application.review.read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
     REVIEW_VIEW_OPERATION_DEFINITION_ID,
-    ReviewQueueReadProjection,
     ReviewQueueReadRequest,
+    ReviewViewReadRequest,
+)
+from ....application.review.read_projections import (
+    ReviewQueueReadProjection,
     ReviewQueueRowProjection,
     ReviewViewReadProjection,
-    ReviewViewReadRequest,
 )
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import runtime_review as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -256,15 +256,22 @@ class GoldenResult(BaseModel):
     def passed(self) -> bool:
         """True when every assertion dimension held and no failures were recorded."""
         return (
+            self._workflow_dimensions_passed
+            and not any(check.blocks for check in self.narration_faithfulness_checks)
+            and not any(not check.matches for check in self.expected_confirmation_tiers)
+            and not self.failures
+        )
+
+    @property
+    def _workflow_dimensions_passed(self) -> bool:
+        """Require the ordered workflow, skill, and evidence dimensions first."""
+        return (
             self.trajectory_resolves
             and self.lifecycle_ordered
             and self.skill_consistent
             and self.provenance_present
             and self.response_provenance_present
             and self.verification_grounded
-            and not any(check.blocks for check in self.narration_faithfulness_checks)
-            and not any(not check.matches for check in self.expected_confirmation_tiers)
-            and not self.failures
         )
 
 
@@ -676,7 +683,7 @@ class LiveElicitationRecord(BaseModel):
 class LiveTrajectory(BaseModel):
     """The full captured record of one live subagent-persona session.
 
-    The unit the scorer consumes and the telemetry layer persists: every tool
+    The unit the scorer consumes and the recording layer persists: every tool
     call, narration, and elicitation exchange in order of occurrence, plus the
     session identity. ``observed_command_keys`` projects the tool calls onto
     registry command keys for the golden-scenario dimensions that assert over

@@ -58,6 +58,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.live.errors.LiveNifIvaCertificateRequiredError",
+        ErrorCode(
+            code="REFUSED_APPLICATION_LIVE_NIF_IVA_CERTIFICATE_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_application_live_nif_iva_certificate_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.live.errors.LiveIvaSurfaceTimeoutError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE_IVA_SURFACE_TIMEOUT",

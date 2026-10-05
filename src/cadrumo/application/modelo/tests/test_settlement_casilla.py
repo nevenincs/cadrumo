@@ -14,7 +14,9 @@ from ..settlement_casilla import (
     DECLARATION_RESULT_SEMANTIC_ROLES,
     SETTLEMENT_SEMANTIC_ROLES,
     AmbiguousDeclarationResultError,
+    DeclarationResultCasillas,
     declaration_result_casilla_id,
+    declaration_result_casillas,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -118,3 +120,47 @@ def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
     assert _settled_result(unit, revisions, lambda *_: "0670") == "1234.56", (
         "a grounded, computed result must reach the projection"
     )
+
+
+def test_the_declared_type_rule_names_the_result_where_the_modelo_declares_one() -> None:
+    """Modelo 130's "tipo de declaración" is read from box 19, so its result is box 19 by that rule."""
+    selected = declaration_result_casillas("130", _revision("130", 2026, "1T"))
+
+    assert selected == DeclarationResultCasillas(casilla_ids=("19",), by_declared_type=True)
+
+
+def test_the_registry_role_names_the_result_where_no_declared_type_rule_exists() -> None:
+    selected = declaration_result_casillas("100", _revision("100", 2023, "0A"))
+
+    assert selected == DeclarationResultCasillas(casilla_ids=("0670",), by_declared_type=False)
+
+
+def test_an_informative_modelo_has_no_result() -> None:
+    assert declaration_result_casillas("349", _revision("349", 2026, "1T")) is None
+
+
+def test_a_declared_result_box_the_revision_lacks_is_not_named() -> None:
+    """Only the declared boxes the revision defines count; without them the registry's role decides.
+
+    A stub carries a Modelo 130 revision without box 19, a defect the shipped
+    registry does not have, to show the rule never names a box the revision
+    does not define.
+    """
+
+    class _Casilla:
+        def __init__(self, casilla_id: str, role: str | None) -> None:
+            self.id = casilla_id
+            self.semantic_role = role
+
+    class _Revision:
+        id = "rev-without-box-19"
+        casillas = (_Casilla("18", None), _Casilla("0670", "irpf_resultado_declaracion"))
+
+    class _Bare:
+        id = "rev-without-any-result"
+        casillas = (_Casilla("18", None),)
+
+    assert declaration_result_casillas("130", _Revision()) == DeclarationResultCasillas(
+        casilla_ids=("0670",), by_declared_type=False
+    )
+    assert declaration_result_casillas("130", _Bare()) is None

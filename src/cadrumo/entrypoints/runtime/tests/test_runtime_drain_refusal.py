@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.local_runtime.server import RuntimeListener, RuntimeTransportServer
+from cadrumo.adapters.local_runtime.server import RuntimeListener
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.application.runtime.approval_binding import RuntimeApprovalBinding
 from cadrumo.application.runtime.approval_sessions import RuntimeApprovalSessions
@@ -24,10 +24,12 @@ from cadrumo.application.runtime.contracts import (
     RuntimeShutdownIncompleteError,
 )
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
-from cadrumo.application.user_profile.automation_administration import ApprovalSession, AutomationAdministrationService
+from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
+from cadrumo.application.user_profile.automation_approval_session import ApprovalSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.identity.digest import ContentDigest
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 
@@ -294,7 +296,7 @@ def test_server_retry_retains_listener_until_original_profile_thread_settles(tmp
     listener = Listener()
     # The stopped host needs only real listener claim/release ports; no native
     # connection is fabricated or admitted by this portable ownership detector.
-    server = RuntimeTransportServer(
+    server = RetainedRuntimeTransportServer(
         cast(RuntimeListener, listener), product_version="profile-drain-retry", stop=profiles.stop, profiles=profiles
     )
     server.DRAIN_SECONDS = 0.05
@@ -503,11 +505,11 @@ def test_drain_releases_real_prepared_approval_password_proof(tmp_path: Path, *,
             session = actual[0]
             # Inspect real preparation output, without constructing or assigning
             # the password authorization/DEK that the owning service creates.
-            assert session._proof is not None and session._dek is not None
+            assert session.prove_enrollment_approval is not None and session._dek is not None
             result = profiles.drain(deadline=time.monotonic() + 1)
             assert result.uncontained == result.unsettled == ()
             assert profiles._profiles == {}
-            assert session._proof is None and session._dek is None
+            assert session.prove_enrollment_approval is None and session._dek is None
             with pytest.raises(ValueError, match="closed"):
                 session.commit_review()
             assert failures == []

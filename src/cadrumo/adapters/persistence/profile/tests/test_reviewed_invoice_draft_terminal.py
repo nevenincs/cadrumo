@@ -224,17 +224,8 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
 # ── The structural hazard ────────────────────────────────────────────────────
 
 
-def test_the_draft_split_lives_inside_the_reject_branch_not_beside_it() -> None:
-    """The draft check must be nested under the reject test, not a sibling of it.
-
-    The reject branch returns for every reject, so a sibling ``if`` placed after
-    it is unreachable and a sibling placed before it would capture rejects it
-    does not own. Only nesting is correct, and no behavioural test can see the
-    difference on the cases that currently exist.
-
-    Walked as an AST over the dispatch rather than matched against source text,
-    because this module's own prose names both branches.
-    """
+def test_the_draft_split_is_owned_by_the_reject_dispatch() -> None:
+    """The reject branch returns through its helper, which splits draft and transaction subjects."""
     tree = ast.parse(textwrap.dedent(inspect.getsource(execute_reviewed_decision)))
     function = tree.body[0]
     assert isinstance(function, ast.FunctionDef)
@@ -242,12 +233,35 @@ def test_the_draft_split_lives_inside_the_reject_branch_not_beside_it() -> None:
     reject_branches = [node for node in function.body if isinstance(node, ast.If) and "REJECT" in ast.dump(node.test)]
     assert len(reject_branches) == 1, "the reject terminal should be one branch, not several"
 
-    nested = [
+    rejection_calls = [
         node
-        for node in ast.walk(reject_branches[0])
-        if isinstance(node, ast.If) and "ReviewedInvoiceDraft" in ast.dump(node.test)
+        for node in ast.walk(function)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_execute_rejection"
     ]
-    assert nested, (
-        "the draft decline is not nested inside the reject branch. Placed beside it, it is either "
-        "unreachable (after the branch returns) or captures rejects it does not own (before it)."
-    )
+    assert len(rejection_calls) == 1
+    terminal = reject_branches[0].body
+    assert len(terminal) == 1 and isinstance(terminal[0], ast.Return)
+    assert terminal[0].value is rejection_calls[0], "only the reject branch may dispatch the rejection helper"
+
+    module = inspect.getmodule(execute_reviewed_decision)
+    assert module is not None
+    helpers = [
+        node
+        for node in ast.parse(inspect.getsource(module)).body
+        if isinstance(node, ast.FunctionDef) and node.name == "_execute_rejection"
+    ]
+    assert len(helpers) == 1
+    helper = helpers[0]
+    nested = [
+        node for node in helper.body if isinstance(node, ast.If) and "ReviewedInvoiceDraft" in ast.dump(node.test)
+    ]
+    assert len(nested) == 1, "the rejection helper must split draft subjects from transaction subjects"
+    draft_returns = [node for node in ast.walk(nested[0]) if isinstance(node, ast.Return)]
+    assert len(draft_returns) == 1
+    assert isinstance(draft_returns[0].value, ast.Call)
+    assert isinstance(draft_returns[0].value.func, ast.Name)
+    assert draft_returns[0].value.func.id == "_decline_invoice_draft"
+    assert isinstance(helper.body[-1], ast.Return)
+    assert isinstance(helper.body[-1].value, ast.Call)
+    assert isinstance(helper.body[-1].value.func, ast.Name)
+    assert helper.body[-1].value.func.id == "reject_llm_suggestion"

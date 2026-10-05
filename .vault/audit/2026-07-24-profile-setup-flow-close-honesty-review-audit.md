@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#profile-setup-flow'
 date: '2026-07-24'
-modified: '2026-07-24'
-body_hash: 'sha256:d206eac6ce87b344c44c056ea0a18bed50e0125235aae42c0825541f26eba66c'
+modified: '2026-10-03'
+body_hash: 'sha256:ee6fec22a2dd30a15f9a94251bdb28f66df039a5af0a90ddf7bbd2c8fccd8064'
 related:
-  - "[[2026-07-23-profile-setup-flow-plan]]"
-  - "[[2026-07-23-tui-wizard-substrate-plan]]"
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - "[[2026-07-23-tui-wizard-substrate-adr]]"
   - "[[2026-07-23-profile-setup-flow-integration-shape-audit]]"
@@ -55,7 +53,7 @@ verdicts for a shared definition") is unchecked in
 `.vault/plan/2026-07-23-tui-wizard-substrate-plan.md`, and no exec record
 exists for it (`.vault/exec/2026-07-23-tui-wizard-substrate/` has records for
 every other step but none named `S27`). The work itself is done and good:
-`src/cadrumo/application/flows/tests/test_frontend_parity.py` landed in commit
+The retired test landed in commit
 `5ea26c7b0d` ("test(flows): pin scripted, line, and full-screen frontend
 parity") and drives all three real frontends — the scripted driver, the line
 frontend over real `prompt_toolkit` pipe keystrokes, and the full-screen
@@ -101,11 +99,11 @@ green run to confirm it structurally.
 
 ### confirmed-clean-under-reload | confirmed | Two gate runs redded from live peer WIP unrelated to this campaign, both confirmed green on isolated re-run
 
-`src/cadrumo/tests/test_parity.py::test_codebase_to_locale_parity` failed
+the retired test failed
 once ("ca/en/es/hu.yml missing 1 codebase key" each) while
 `git status` showed all four locale catalogues as actively-modified working-tree
 files; a re-run of the same test moments later passed clean. Separately,
-`src/cadrumo/application/wizard/tests/test_wizard_translations_resolve.py::test_every_cli_translation_resolves_in_every_locale`
+the retired test
 failed once on a missing `cli.ledger.check.link_inconsistency_notice` key
 while a large, unrelated set of `src/cadrumo/entrypoints/cli/` files showed as
 actively modified (ledger-campaign work, not this campaign's files); re-run in
@@ -115,7 +113,7 @@ rather than silently discarded.
 
 ### wizard-prompter-singularity-holds | confirmed | The historical third-prompter hazard has a real, non-tautological, passing structural gate
 
-`src/cadrumo/tests/test_wizard_prompter_singularity.py` is exactly the
+The retired test was exactly the
 prevention the project's own `aeat-rag-discovery-mandatory` rule names as
 historically defeated (a hand-copied `_QuestionaryTextPrompter` that caught
 only `OSError` while the real Windows failure mode is not an `OSError`

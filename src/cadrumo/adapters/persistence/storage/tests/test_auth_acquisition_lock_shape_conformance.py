@@ -1,6 +1,6 @@
 """The real auth-acquisition lock file matches its declared grammar shape.
 
-Unlike the LLM usage/telemetry/cache logical paths, ``auth_acquisition_lock``
+Unlike the LLM usage/run-record/cache logical paths, ``auth_acquisition_lock``
 is a real filesystem write: :func:`acquire_auth_acquisition_lock` opens the
 lock file with ``os.open(..., O_CREAT | O_EXCL | O_WRONLY)``. This drives that
 real writer and asserts the real resulting path against the declared grammar.

@@ -9,20 +9,27 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
-from ....domain.attachments.enums import DocumentLinkSource
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.classification import InvoiceKind
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, AccessAllowed, AccessDenied, Availability, DisclosureCategory
+from ...operations.operation_definition import OperationDefinition
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...user_profile.access_contracts import (
+    AccessAction,
+    AccessAllowed,
+    AccessDenialCode,
+    AccessDenied,
+    Availability,
+    DisclosureCategory,
+)
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..batch_ingest import (
     BatchItemResult,
@@ -32,22 +39,21 @@ from ..batch_ingest import (
     batch_item_identity,
     summarise_batch,
 )
-from ..evidence_ingestion_operation import (
+from ..evidence_ingestion_contracts import (
     LedgerEvidenceBatchExecutionResult,
+    LedgerEvidenceBatchProjection,
     LedgerEvidenceBatchRequest,
     LedgerEvidenceBatchSnapshot,
-    LedgerEvidencePullAllExecutionResult,
-    LedgerEvidencePullAllRequest,
-    LedgerEvidencePullExecutionResult,
-    LedgerEvidencePullRequest,
+)
+from ..evidence_ingestion_operation import (
     build_ledger_evidence_ingestion_definitions,
     build_ledger_evidence_ingestion_registrations,
     project_ledger_evidence_ingestion_result,
 )
-from ..persistence_ports import LedgerPersistenceConflictError
+from ..invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ..preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from .bulk_classify_operation_support import PROFILE_ID
-from .evidence_ingestion_operation_support import Subject
+from .evidence_ingestion_operation_support import Subject, unused
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,31 +64,24 @@ def subject(authority_operation: PinnedAuthorityOperation) -> Iterator[Subject]:
         yield Subject(authority_operation)
 
 
-def _definition(subject: Subject, kind: str) -> OperationDefinition:
-    return next(
-        row
-        for row in build_ledger_evidence_ingestion_definitions(subject.compose)
-        if row.definition_id == "ledger.evidence." + kind
-    )
+def _definition(subject: Subject) -> OperationDefinition:
+    (definition,) = build_ledger_evidence_ingestion_definitions(subject.compose)
+    return definition
 
 
-def _run(subject: Subject, payload: BaseModel, kind: str) -> None:
-    definition = _definition(subject, kind)
+def _run(subject: Subject, payload: BaseModel) -> None:
+    definition = _definition(subject)
     request = OperationRequest[BaseModel](
         definition_id=definition.definition_id, subject_ref=profile_operation_subject(str(PROFILE_ID)), payload=payload
     )
     asyncio.run(definition.executor_factory.create().execute(request, subject.context(definition.definition_id)))
 
 
-def test_all_three_real_public_contracts_compile(subject: Subject) -> None:
+def test_the_real_public_contract_compiles(subject: Subject) -> None:
     definitions = build_ledger_evidence_ingestion_definitions(subject.compose)
     registrations = build_ledger_evidence_ingestion_registrations(definitions)
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
-    assert tuple(row.definition_id for row in definitions) == (
-        "ledger.evidence.batch",
-        "ledger.evidence.pull",
-        "ledger.evidence.pull_all",
-    )
+    assert tuple(row.definition_id for row in definitions) == ("ledger.evidence.batch",)
     for definition in definitions:
         assert registry.lookup_public_registration(definition.definition_id).contract.result_schema is not None
         assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
@@ -112,6 +111,16 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
             refusal_code="not_readable" if status == "refused" else None,
             refusal_verdict=verdict if status == "refused" else None,
             needed_inference=letter != "a",
+            label_reading_fallback=(
+                LabelReadingFallback(
+                    cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+                    unread_fields=("supplier_name",),
+                    reader_error_type="LLMBusyError",
+                    failed_condition_id="llm.local_inference.slot_available",
+                )
+                if status == "no_op"
+                else None
+            ),
         )
         for letter, status in cases
     )
@@ -127,6 +136,7 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
     snapshot = LedgerEvidenceBatchSnapshot.from_run(run)
     restored = LedgerEvidenceBatchSnapshot.model_validate_json(snapshot.model_dump_json()).to_run()
     assert restored.model_dump(mode="json") == run.model_dump(mode="json")
+    assert restored.items[1].label_reading_fallback == rows[1].label_reading_fallback
     assert restored.summary == run.summary and restored.any_failed and restored.any_deferred
 
 
@@ -139,7 +149,6 @@ def test_batch_unreadable_source_preserves_none_and_complete_refusal(subject: Su
             source_directory=str(tmp_path),
             direction=InvoiceKind.RECEIVED,
         ),
-        "batch",
     )
     result = subject.operands.values[0]
     assert isinstance(result, LedgerEvidenceBatchExecutionResult)
@@ -168,7 +177,6 @@ def test_batch_relative_sources_keep_breadcrumbs_with_different_worker_cwd(
         LedgerEvidenceBatchRequest(
             profile_id=PROFILE_ID, sources=(source,), source_directory=str(original), direction=InvoiceKind.RECEIVED
         ),
-        "batch",
     )
     result = subject.operands.values[0]
     assert isinstance(result, LedgerEvidenceBatchExecutionResult)
@@ -189,7 +197,6 @@ def test_changed_planned_source_refuses_before_any_custody_write(subject: Subjec
         LedgerEvidenceBatchRequest(
             profile_id=PROFILE_ID, sources=(str(path),), source_directory=str(tmp_path), direction=InvoiceKind.RECEIVED
         ),
-        "batch",
     )
     result = subject.operands.values[0]
     assert isinstance(result, LedgerEvidenceBatchExecutionResult)
@@ -207,13 +214,13 @@ def test_complete_batch_tracks_draft_then_replay_manifest_even_when_row_is_no_op
     request = LedgerEvidenceBatchRequest(
         profile_id=PROFILE_ID, sources=(str(path),), source_directory=str(tmp_path), direction=InvoiceKind.RECEIVED
     )
-    _run(subject, request, "batch")
+    _run(subject, request)
     first = subject.operands.values[0]
     assert isinstance(first, LedgerEvidenceBatchExecutionResult)
     assert first.projection.effect is OperationEffect.UPDATED and first.projection.write_count == 4
     assert subject.drafts.document is not None and len(subject.drafts.document.drafts) == 1
     assert not first.projection.run.to_run().any_failed
-    _run(subject, request, "batch")
+    _run(subject, request)
     second = subject.operands.values[1]
     assert isinstance(second, LedgerEvidenceBatchExecutionResult)
     assert second.projection.run.items[0].status == "no_op"
@@ -234,144 +241,38 @@ def test_batch_swallowed_reader_revocation_still_refuses_and_retains_partial(sub
                 source_directory=str(tmp_path),
                 direction=InvoiceKind.RECEIVED,
             ),
-            "batch",
         )
     assert subject.effects.effects[-1] is OperationEffect.PARTIAL
     assert len(subject.evidence.rows) == 1 and not subject.operands.values and not subject.drafts.document
 
 
-def test_single_pull_preserves_full_mutation_and_separate_real_writer_count(subject: Subject) -> None:
-    _run(
-        subject,
-        LedgerEvidencePullRequest(
-            profile_id=PROFILE_ID,
-            transaction_id=subject.transaction.transaction_id[:12],
-            source=DocumentLinkSource.GOOGLE_DRIVE,
-            reference="synthetic-drive-document",
-            note="retained human note",
-        ),
-        "pull",
-    )
-    result = subject.operands.values[0]
-    assert isinstance(result, LedgerEvidencePullExecutionResult)
-    projection = result.projection
-    # Blob and manifest are separate; transaction and event share one co-commit.
-    assert projection.effect is OperationEffect.UPDATED and projection.write_count == 3
-    assert projection.bucket_event_ids and projection.transaction.transaction_id == projection.transaction_id
-    assert (
-        projection.transaction.attachment_ids
-        and projection.requested_transaction_id == subject.transaction.transaction_id[:12]
-    )
-    assert subject.store.manifests[projection.transaction.attachment_ids[0]].notes == "retained human note"
-    assert not subject.fence.active
-
-
-def test_folder_sweep_retains_order_skipped_and_individual_scope_refusal(subject: Subject) -> None:
-    subject.acquisition.refused.add("second")
-    _run(
-        subject,
-        LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder", note="human note"),
-        "pull_all",
-    )
-    result = subject.operands.values[0]
-    assert isinstance(result, LedgerEvidencePullAllExecutionResult)
-    projection = result.projection
-    assert tuple(row.file_id for row in projection.files) == ("first", "second")
-    assert (
-        projection.total_documents,
-        projection.fetched_count,
-        projection.refused_count,
-        projection.skipped_non_document_count,
-    ) == (2, 1, 1, 3)
-    assert projection.files[1].refusal_reason is not None
-    assert projection.effect is OperationEffect.PARTIAL and projection.write_count == 2
-
-
-@pytest.mark.parametrize(
-    ("mode", "effect"), [("conflict", OperationEffect.PARTIAL), ("uncertain", OperationEffect.UNKNOWN)]
-)
-def test_pull_opened_row_cas_preserves_prior_custody_effect(
-    subject: Subject, mode: str, effect: OperationEffect
-) -> None:
-    """A denied row CAS follows confirmed custody; an uncertain commit stays unknown."""
-    subject.transactions.mode = mode
-    with pytest.raises((LedgerPersistenceConflictError, OSError)):
+def test_foreign_profile_refuses_before_composition(subject: Subject, tmp_path: Path) -> None:
+    with pytest.raises(ProfileAccessRefusedError):
         _run(
             subject,
-            LedgerEvidencePullRequest(
-                profile_id=PROFILE_ID,
-                transaction_id=subject.transaction.transaction_id[:12],
-                source=DocumentLinkSource.GOOGLE_DRIVE,
-                reference="synthetic-drive-document",
+            LedgerEvidenceBatchRequest(
+                profile_id=uuid4(),
+                sources=("private.pdf",),
+                source_directory=str(tmp_path),
+                direction=InvoiceKind.RECEIVED,
             ),
-            "pull",
         )
-    assert subject.effects.effects[-1] is effect and subject.store.blobs
-    assert not subject.operands.values and not subject.fence.active
+    assert subject.before_read is unused and not subject.operands.values
 
 
-def test_folder_all_refused_succeeds_without_local_mutations(subject: Subject) -> None:
-    subject.acquisition.refused.update({"first", "second"})
-    _run(subject, LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder"), "pull_all")
-    result = subject.operands.values[0]
-    assert isinstance(result, LedgerEvidencePullAllExecutionResult)
-    assert result.projection.effect is OperationEffect.NONE and result.projection.write_count == 0
-    assert result.projection.refused_count == 2 and not subject.store.blobs
-
-
-@pytest.mark.parametrize(
-    ("mode", "effect"), [("preparation", OperationEffect.PARTIAL), ("uncertain", OperationEffect.UNKNOWN)]
-)
-def test_actual_blob_then_failure_preserves_partial_or_unknown(
-    subject: Subject, mode: str, effect: OperationEffect
-) -> None:
-    subject.store.fail_manifest_preparation = mode == "preparation"
-    subject.store.fail_after_blob_write = mode == "uncertain"
-    with pytest.raises((ValueError, OSError)):
-        _run(subject, LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder"), "pull_all")
-    assert subject.effects.effects[-1] is effect and subject.store.blobs
-    assert not subject.operands.values and not subject.fence.active
-
-
-def test_folder_authority_revocation_stops_after_prior_confirmed_custody(subject: Subject) -> None:
-    subject.acquisition.revoke_after_first = True
-    with pytest.raises(ProfileAccessRefusedError):
-        _run(subject, LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder"), "pull_all")
-    assert subject.effects.effects[-1] is OperationEffect.PARTIAL
-    assert len(subject.store.blobs) == 1 and not subject.operands.values and not subject.fence.active
-
-
-def test_foreign_profile_refuses_before_composition(subject: Subject) -> None:
-    with pytest.raises(ProfileAccessRefusedError):
-        _run(subject, LedgerEvidencePullAllRequest(profile_id=uuid4(), folder="private-folder"), "pull_all")
-    assert not subject.acquisition.calls and not subject.operands.values
-
-
-@pytest.mark.parametrize("kind", ["batch", "pull", "pull_all"])
-def test_exact_human_all_period_dual_disclosure_policy(subject: Subject, tmp_path: Path, kind: str) -> None:
+def test_exact_human_all_period_dual_disclosure_policy(subject: Subject, tmp_path: Path) -> None:
     definitions = build_ledger_evidence_ingestion_definitions(subject.compose)
     registrations = build_ledger_evidence_ingestion_registrations(definitions)
     registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
-    registration = registry.lookup_public_registration("ledger.evidence." + kind)
-    payload: BaseModel
-    if kind == "batch":
-        payload = LedgerEvidenceBatchRequest(
-            profile_id=POLICY_PROFILE_ID,
-            sources=("private.pdf",),
-            source_directory=str(tmp_path),
-            direction=InvoiceKind.RECEIVED,
-        )
-    elif kind == "pull":
-        payload = LedgerEvidencePullRequest(
-            profile_id=POLICY_PROFILE_ID,
-            transaction_id=subject.transaction.transaction_id,
-            source=DocumentLinkSource.GOOGLE_DRIVE,
-            reference="private-ref",
-        )
-    else:
-        payload = LedgerEvidencePullAllRequest(profile_id=POLICY_PROFILE_ID, folder="private-folder")
+    registration = registry.lookup_public_registration("ledger.evidence.batch")
+    payload = LedgerEvidenceBatchRequest(
+        profile_id=POLICY_PROFILE_ID,
+        sources=("private.pdf",),
+        source_directory=str(tmp_path),
+        direction=InvoiceKind.RECEIVED,
+    )
     request = OperationRequest[BaseModel](
-        definition_id="ledger.evidence." + kind,
+        definition_id="ledger.evidence.batch",
         subject_ref=profile_operation_subject(str(POLICY_PROFILE_ID)),
         payload=payload,
     )
@@ -418,14 +319,23 @@ def test_exact_human_all_period_dual_disclosure_policy(subject: Subject, tmp_pat
         )
 
 
-def test_projection_rejects_terminal_effect_that_hides_real_writes(subject: Subject) -> None:
-    _run(subject, LedgerEvidencePullAllRequest(profile_id=PROFILE_ID, folder="human-folder"), "pull_all")
+def test_projection_rejects_terminal_effect_that_hides_real_writes(subject: Subject, tmp_path: Path) -> None:
+    path = tmp_path / "invoice.pdf"
+    path.write_bytes(b"synthetic structured invoice bytes")
+    subject.structured_refuses = False
+    _run(
+        subject,
+        LedgerEvidenceBatchRequest(
+            profile_id=PROFILE_ID, sources=(str(path),), source_directory=str(tmp_path), direction=InvoiceKind.RECEIVED
+        ),
+    )
     result = subject.operands.values[0]
-    assert isinstance(result, LedgerEvidencePullAllExecutionResult)
+    assert isinstance(result, LedgerEvidenceBatchExecutionResult)
+    assert result.projection.effect is OperationEffect.UPDATED
     receipt = OperationTerminalReceipt(
         identity=OperationIdentity(
             operation_id="a" * 64,
-            definition_id="ledger.evidence.pull_all",
+            definition_id="ledger.evidence.batch",
             subject_ref=profile_operation_subject(str(PROFILE_ID)),
         ),
         revision=1,
@@ -440,3 +350,43 @@ def test_projection_rejects_terminal_effect_that_hides_real_writes(subject: Subj
         project_ledger_evidence_ingestion_result(result, receipt.model_copy(update={"effect": OperationEffect.UPDATED}))
         == result.projection
     )
+
+
+def test_batch_with_a_custody_write_of_unknown_outcome_refuses_and_reports_unknown(
+    subject: Subject, tmp_path: Path
+) -> None:
+    """The batch absorbs the failed row, so the uncertainty has to be raised as the operation's refusal."""
+    path = tmp_path / "invoice.pdf"
+    path.write_bytes(b"synthetic structured invoice bytes")
+    subject.structured_refuses = False
+    # The writer stores the bytes and then loses the acknowledgement: nothing can
+    # say whether the write is durable.
+    subject.store.fail_after_blob_write = True
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        _run(
+            subject,
+            LedgerEvidenceBatchRequest(
+                profile_id=PROFILE_ID,
+                sources=(str(path),),
+                source_directory=str(tmp_path),
+                direction=InvoiceKind.RECEIVED,
+            ),
+        )
+
+    assert refused.value.code.code == "REFUSED_PROFILE_ACCESS"
+    assert refused.value.reason is AccessDenialCode.OPERATION_DENIED
+    assert subject.effects.effects[-1] is OperationEffect.UNKNOWN
+    assert not subject.operands.values
+
+
+def test_a_batch_result_document_cannot_claim_an_uncertain_effect() -> None:
+    """The refusal above exists because a stored result describes certain writes only."""
+    with pytest.raises(ValidationError, match="certain concrete writer outcomes"):
+        LedgerEvidenceBatchProjection(
+            profile_id=PROFILE_ID,
+            direction=InvoiceKind.RECEIVED,
+            run=LedgerEvidenceBatchSnapshot(items=(), unresolved=(), inference_pause=None),
+            write_count=1,
+            effect=OperationEffect.UNKNOWN,
+        )

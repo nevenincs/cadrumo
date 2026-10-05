@@ -16,6 +16,8 @@ from ...application.operations.frontend_requests import (
     OperationResponseControlRequestV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
     OperationReviewProjectionRequestV1,
     OperationReviewProjectionSuccessV1,
 )
@@ -147,26 +149,9 @@ async def _answer_censal_review(
         raise InternalInvariantError("censal reviewed response was refused")
 
 
-def _parse_censal_result_reference(
-    result_ref: str,
-    *,
-    expected_outcome: CensalOperationOutcome,
-) -> CensalOperationResult:
-    """Validate and type the backend result reference after settlement."""
-    prefix, separator, outcome = result_ref.rpartition(":")
-    family, digest_separator, reviewed_digest = prefix.partition(":")
-    if not separator or not digest_separator or family != "censo-review":
-        raise InternalInvariantError("censal reviewed operation returned an invalid result reference")
-    typed_result = CensalOperationResult(
-        outcome=CensalOperationOutcome(outcome),
-        reviewed_proposal_digest=reviewed_digest,
-    )
-    if typed_result.outcome is not expected_outcome:
-        raise InternalInvariantError("censal reviewed operation returned a mismatched outcome")
-    return typed_result
-
-
-def _assert_censal_terminal_success(
+async def _assert_censal_terminal_success(
+    services: OperationComposedServices,
+    operation_id: str,
     observed: OperationObservationSuccessV1,
     *,
     apply: bool,
@@ -182,7 +167,23 @@ def _assert_censal_terminal_success(
         or result_ref is None
     ):
         raise InternalInvariantError("censal reviewed operation did not succeed with its declared effect")
-    _parse_censal_result_reference(result_ref, expected_outcome=expected_outcome)
+    contract = next(
+        definition
+        for definition in services.public_contracts.definitions
+        if definition.definition_id == CENSAL_OPERATION_DEFINITION_ID
+    )
+    assert contract.result_schema is not None
+    result = await services.result.resolve(
+        OperationResultProjectionRequestV1(
+            operation_id=operation_id,
+            terminal_revision=projection.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        ),
+        CensalOperationResult,
+    )
+    if not isinstance(result, OperationResultProjectionSuccessV1) or result.projection.outcome is not expected_outcome:
+        raise InternalInvariantError("censal reviewed operation returned a mismatched outcome")
 
 
 async def _await_censal_settlement(
@@ -196,7 +197,7 @@ async def _await_censal_settlement(
     observed = await _observe(services, operation_id)
     if observed.projection.lifecycle is not OperationLifecycle.TERMINAL:
         raise InternalInvariantError("censal reviewed operation did not settle")
-    _assert_censal_terminal_success(observed, apply=apply)
+    await _assert_censal_terminal_success(services, operation_id, observed, apply=apply)
 
 
 async def review_censal_with_services(

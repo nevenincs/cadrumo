@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import typer
 from pydantic import ValidationError
 
@@ -13,11 +15,12 @@ from ...application.ledger.split_operation import (
     LedgerSplitOperationResult,
     LedgerSplitRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._ledger_support import ledger_validation_bad
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_ledger_split(
@@ -58,26 +61,29 @@ def run_ledger_split(
         timeout=120,
     )
     projection = completed.projection
-    prefix = request.transaction_id
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.UPDATED
-        or projection.profile_id != client.profile_id
-        or not projection.parent_transaction_id.startswith(prefix)
-        or len(projection.child_transaction_ids) != len(request.children)
-        or len(set(projection.child_transaction_ids)) != len(request.children)
-        or projection.parent_transaction_id in projection.child_transaction_ids
-    )
+    invalid = _ledger_split_receipt_invalid(completed, projection, request, client.profile_id)
     if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 
 __all__ = ["run_ledger_split"]
+
+
+def _ledger_split_receipt_invalid(
+    completed: RegisteredOperationCompletion[LedgerSplitOperationResult],
+    projection: LedgerSplitOperationResult,
+    request: LedgerSplitRequest,
+    profile_id: UUID,
+) -> bool:
+    """Require the updated parent, unique children, exact count, and settled profile receipt."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.UPDATED
+        or (projection.profile_id != profile_id)
+        or (not projection.parent_transaction_id.startswith(request.transaction_id))
+        or (len(projection.child_transaction_ids) != len(request.children))
+        or (len(set(projection.child_transaction_ids)) != len(request.children))
+        or (projection.parent_transaction_id in projection.child_transaction_ids)
+    )

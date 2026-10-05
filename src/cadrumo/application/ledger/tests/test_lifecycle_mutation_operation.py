@@ -12,8 +12,9 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....application.ledger import lifecycle_mutation_operation as operation_module
+from ....application.ledger import lifecycle_projections
 from ....application.ledger.action_ports import LedgerActionPorts, LedgerActionPortsFactory
-from ....application.ledger.lifecycle_mutation_operation import (
+from ....application.ledger.lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
     LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
@@ -262,7 +263,11 @@ async def test_canonical_success_is_fenced_and_result_is_published_afterward(
     monkeypatch.setattr(operation_module, method_name + "_manual_transaction", action, raising=False)
     if operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID:
         monkeypatch.setattr(operation_module, "mark_transaction_reviewed_excluded", action)
-    monkeypatch.setattr(operation_module, "_operation_projection", lambda *_args: _projection(operation_id))
+    monkeypatch.setattr(
+        operation_module,
+        "project_lifecycle_mutation_from_action",
+        lambda *_args: _projection(operation_id),
+    )
 
     executor_type = {
         LEDGER_ARCHIVE_OPERATION_DEFINITION_ID: operation_module.LedgerArchiveExecutor,
@@ -439,21 +444,21 @@ def test_terminal_projector_binds_exact_success_and_refusal_receipts() -> None:
         )
 
     assert (
-        operation_module._project_result(
+        lifecycle_projections.project_lifecycle_operation_result(
             success,
             receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
         )
         == success.result
     )
     assert (
-        operation_module._project_result(
+        lifecycle_projections.project_lifecycle_operation_result(
             refused,
             receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE),
         )
         == refused.result
     )
     with pytest.raises(ValueError):
-        operation_module._project_result(
+        lifecycle_projections.project_lifecycle_operation_result(
             success,
             receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
         )

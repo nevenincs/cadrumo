@@ -8,13 +8,11 @@ from typing import Any
 
 import pytest
 
-from ..installed_tui_financial_child import (
-    _N26_HEADER,
-    _open_destination,
-    _transaction_csv,
-    _validate_annual_artifact,
-    required_profile_facts,
-)
+from ..financial_artifacts import _validate_annual_artifact
+from ..financial_contracts import _N26_HEADER
+from ..financial_navigation import _open_destination
+from ..financial_profile import required_profile_facts
+from ..financial_transactions import _transaction_csv
 from ..scenario import build_scenario
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -85,7 +83,7 @@ async def test_palette_selects_the_exact_destination_after_fuzzy_results(monkeyp
     async def available(_pilot: Any, _selector: str, *, polls: int) -> None:
         assert polls == 180
 
-    monkeypatch.setattr("dev.acceptance.income_tax.installed_tui_financial_child.wait_for_public_selector", available)
+    monkeypatch.setattr("dev.acceptance.income_tax.financial_navigation.wait_for_public_selector", available)
     await _open_destination(PilotStub(), query="declarations", expected_selector="#declarations-list")
     assert listing.highlighted == 1
     assert pressed == ["ctrl+p", "enter"]

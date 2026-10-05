@@ -16,22 +16,23 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     AdministrationSubject,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+)
+from cadrumo.application.modelo.work_change_contracts import (
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardRequest,
     ModeloWorkRenamePublicResultV2,
@@ -74,6 +75,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
@@ -82,6 +84,7 @@ from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 
 pytestmark = [
@@ -107,7 +110,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -187,13 +190,13 @@ def _scope(destination_id: UUID) -> AccessScope:
     )
 
 
-def _issue_scoped_key(subject: AdministrationSubject) -> bytes:
+def _issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | None = None) -> bytes:
     requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
     subject.owner.requesting = requester
     subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
         requester=requester, secrets_store=subject.client_native
     )
-    scope = _scope(requester.client_id)
+    scope = _scope(requester.client_id) if scope is None else scope
     facts = subject.owner.current
     assert facts.session is not None
     subject.owner.current = changed(
@@ -288,7 +291,10 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:

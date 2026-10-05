@@ -18,7 +18,7 @@ from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
 )
-from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
@@ -34,6 +34,7 @@ from .schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.facts.variants import GovernedFactVariant
 
 
 def resolve_iva_rate(
@@ -115,29 +116,52 @@ def _in_force_rate_facts(
 ) -> tuple[ResolvedMappingFact, ...]:
     """Resolve every IVA fact variant in force for a member state at one devengo date."""
     fact = operation.governed_fact(IVA_RATE_FACT_ID)
-    candidates = tuple(
+    candidates = _in_force_rate_variants(fact.variants, member_state, on_date)
+    return tuple(_resolved_rate_variant(variant, member_state, on_date, operation=operation) for variant in candidates)
+
+
+def _in_force_rate_variants(
+    variants: tuple[GovernedFactVariant, ...],
+    member_state: EUMemberState,
+    on_date: date,
+) -> tuple[GovernedFactVariant, ...]:
+    return tuple(
         variant
-        for variant in fact.variants
-        if variant.date_axis is DateAxis.DEVENGO_DATE
+        for variant in variants
+        if _rate_variant_is_in_force(variant, on_date) and _rate_variant_matches_member_state(variant, member_state)
+    )
+
+
+def _rate_variant_is_in_force(variant: GovernedFactVariant, on_date: date) -> bool:
+    return (
+        variant.date_axis is DateAxis.DEVENGO_DATE
         and variant.valid_from is not None
         and variant.valid_from <= on_date
         and (variant.valid_to is None or on_date <= variant.valid_to)
-        and {selector.name: selector.value for selector in variant.selectors}.get("member_state") == member_state.value
     )
-    resolved_rates: list[ResolvedMappingFact] = []
-    for variant in candidates:
-        selectors = {selector.name: selector.value for selector in variant.selectors}
-        kind = require_iva_rate_kind(str(selectors["kind"]), effective_date=on_date, authority=operation)
-        resolved_rates.append(
-            resolve_iva_rate(
-                member_state,
-                kind,
-                on_date,
-                rate_role=str(selectors["rate_role"]),
-                operation=operation,
-            )
-        )
-    return tuple(resolved_rates)
+
+
+def _rate_variant_matches_member_state(variant: GovernedFactVariant, member_state: EUMemberState) -> bool:
+    selectors = {selector.name: selector.value for selector in variant.selectors}
+    return selectors.get("member_state") == member_state.value
+
+
+def _resolved_rate_variant(
+    variant: GovernedFactVariant,
+    member_state: EUMemberState,
+    on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ResolvedMappingFact:
+    selectors = {selector.name: selector.value for selector in variant.selectors}
+    kind = require_iva_rate_kind(str(selectors["kind"]), effective_date=on_date, authority=operation)
+    return resolve_iva_rate(
+        member_state,
+        kind,
+        on_date,
+        rate_role=str(selectors["rate_role"]),
+        operation=operation,
+    )
 
 
 def lookup_rate(
@@ -416,9 +440,35 @@ def rate_kinds_for_declared_rate(
     return tuple(matched)
 
 
+def _select_unique_rate_kind(matches: tuple[IvaRateKind, ...]) -> IvaRateKind | None:
+    """Keep the single-match rule pure so every caller shares one cardinality decision."""
+    return matches[0] if len(matches) == 1 else None
+
+
+def unique_rate_kind_for_declared_rate(
+    member_state: EUMemberState,
+    declared_rate: Decimal,
+    on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> IvaRateKind | None:
+    """Return a declared rate's tier only when the dated authority selects exactly one.
+
+    ``rate_kinds_for_declared_rate`` retains all matches because callers may
+    need to inspect every legally applicable tier. Callers that must persist or
+    derive one tier use this stricter projection: no match and more than one
+    distinct tier both refuse as ``None`` rather than choosing by declaration
+    order. The supplied pinned operation and devengo date are passed through
+    unchanged to the canonical resolver.
+    """
+    matches = rate_kinds_for_declared_rate(member_state, declared_rate, on_date, operation=operation)
+    return _select_unique_rate_kind(matches)
+
+
 __all__ = [
     "coexisting_tier_rates",
     "lookup_rate",
     "rate_kinds_for_declared_rate",
     "resolve_iva_rate",
+    "unique_rate_kind_for_declared_rate",
 ]

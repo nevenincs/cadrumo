@@ -10,7 +10,7 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.ledger.add_operation import (
+from ....application.ledger.ledger_add_contracts import (
     LEDGER_ADD_OPERATION_DEFINITION_ID,
     LedgerAddOperationResult,
     LedgerAddRequest,
@@ -21,7 +21,7 @@ from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .. import runtime_ledger_add as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

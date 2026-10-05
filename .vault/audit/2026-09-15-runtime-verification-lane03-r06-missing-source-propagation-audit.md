@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ff13652c6dd8a65263eb14b124dfc9a954525be9749b5112b0ed30d4fbddc43'
+body_hash: 'sha256:916e743a6da874bab6b8f6bcab3a35b901893af4d2cac1112b26b7d6918c15e1'
 related:
   - "[[2026-09-15-runtime-verification-lane03-r05-absence-versus-zero-audit]]"
 ---
@@ -50,7 +50,7 @@ No default, merge, prefill or calculation between resolver and readiness erases 
 
 Observed: `modelo_720_redeclaration_findings` (`src/cadrumo/application/modelo/_m720_redeclaration_gate.py:33`) loads the selected revision, discards `work_unit`, `revision` and `observation_repository`, and returns `()`. It is still called from `verification_actions.py:746`. Commit `ee3d645ce5` (2026-09-12, "refactor(core): consolidate application boundaries and registry authority") replaced the previous implementation; the removed docstring already stated the advisory "cannot fire in production today" because no production caller supplies foreign-asset row evidence. The file is committed and unmodified in the worktree.
 
-Consequence: `modelo_720_redeclaration_advisory_findings` and `modelo_720_prior_baseline_observation` have no production importer, and resolved baseline values feed no casilla, formula or verify finding. The existing test `src/cadrumo/adapters/persistence/profile/tests/test_modelo_720_redeclaration_e2e.py::test_advisory_fires_through_real_verify_for_the_omitted_grown_cuentas_position` fails on this checkout: `AssertionError: expected exactly one re-declaration advisory, got ()`. This is a pre-existing integration gap, not information loss between absence and zero, and it was outside this lane's repair authorisation.
+Consequence: `modelo_720_redeclaration_advisory_findings` and `modelo_720_prior_baseline_observation` have no production importer, and resolved baseline values feed no casilla, formula or verify finding. This is a pre-existing integration gap, not information loss between absence and zero, and it was outside this lane's repair authorisation.
 
 ### l03-r06-f04 | low | Focused consumer-boundary test added and passing
 

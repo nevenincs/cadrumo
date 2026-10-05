@@ -17,9 +17,9 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
@@ -40,7 +40,10 @@ from cadrumo.application.runtime.operation_access import (
 )
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
 from cadrumo.application.runtime.projection_pages import PROJECTION_PAGE_BYTES, ProjectionPageRequest
-from cadrumo.application.runtime.worker_authorization import WorkerAuthorityRequest
+from cadrumo.application.runtime.worker_authorization import (
+    WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
+    WorkerAuthorityRequest,
+)
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.automation_operations import (
@@ -49,8 +52,10 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.period import Period
 
-from .. import profile_connections
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
+from .. import profile_connection_operations
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import ProfileConnection, RuntimeProfileHost
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
@@ -145,8 +150,9 @@ def native_projection_race(tmp_path: Path) -> Generator[_NativeProjectionRace]:
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
+        profiles.prepare_registry()
         barrier = ProjectionWriteBarrier()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             PausedProjectionListener(endpoint, barrier),
             product_version="test",
             stop=stop,
@@ -233,7 +239,7 @@ def test_native_projection_denies_revoke_after_worker_before_parent_guard(
     subject = native_projection_race
     request = subject.request(projection_kind)
     worker_returned, release_parent = Event(), Event()
-    original_prepare = profile_connections.prepare_operation_projection
+    original_prepare = profile_connection_operations.prepare_operation_projection
 
     def pause_after_worker(
         host: RuntimeProfileHost,
@@ -253,7 +259,7 @@ def test_native_projection_denies_revoke_after_worker_before_parent_guard(
     subject.barrier.release.set()  # Observe actual writes without introducing a second pause.
     subject.barrier.enabled.set()
     # Patch only the timing boundary in this isolated fixture, calling its real worker owner.
-    monkeypatch.setattr(profile_connections, "prepare_operation_projection", pause_after_worker)
+    monkeypatch.setattr(profile_connection_operations, "prepare_operation_projection", pause_after_worker)
     reading = subject.pool.submit(subject.raw.operation, request, deadline=time.monotonic() + 10)
     try:
         assert worker_returned.wait(3), "real worker projection did not reach the parent boundary"
@@ -325,8 +331,21 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
         tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
     ) as subject:
         requested = {uuid4() for _ in range(36)}
-        for identity in requested:
-            subject.service.request(identity, subject.proposal)
+        # Add one bounded scope so the public envelope crosses a page while
+        # the complete raw inventory still fits its separate worker IPC budget.
+        bounded_proposal = subject.proposal.model_copy(
+            update={
+                "scope": subject.proposal.scope.model_copy(
+                    update={
+                        "periods": frozenset(Period.from_year_and_code(2024, f"{month:02d}") for month in range(1, 13))
+                    }
+                )
+            }
+        )
+        for index, identity in enumerate(requested):
+            subject.service.request(identity, bounded_proposal if index == 0 else subject.proposal)
+        inventory_bytes = canonical_json_bytes(subject.service.inventory().model_dump(mode="json"))
+        assert len(inventory_bytes) <= WORKER_AUTOMATION_INVENTORY_MAX_BYTES
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
         stop, boot = Event(), uuid4()
@@ -338,7 +357,10 @@ def test_native_paged_inventory_refuses_continuation_after_global_lock(tmp_path:
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:

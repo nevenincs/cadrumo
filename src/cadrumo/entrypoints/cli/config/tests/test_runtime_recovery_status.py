@@ -17,7 +17,7 @@ from .....application.user_profile.recovery_status_operation import (
 )
 from .....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...errors import CliRefusedBoundaryError
-from ...runtime_registered_operation import RegisteredOperationCompletion
+from ...registered_operation_contracts import RegisteredOperationCompletion
 from .. import runtime_recovery_status as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

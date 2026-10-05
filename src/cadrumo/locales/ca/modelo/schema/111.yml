@@ -10,6 +10,36 @@ modelo:
           i d'activitats econòmiques, premis i determinats guanys patrimonials i imputacions
           de renda.
         title: IRPF retencions i ingressos a compte
+      form:
+        page:
+          dr-m11101:
+            heading: Pàgina 1 · Retencions i ingressos a compte
+        row:
+          percep-dinerarias:
+            heading: Percepcions dineràries
+          percep-en-especie:
+            heading: Percepcions en espècie
+          premios-dinerarios:
+            heading: Premis dineraris
+          premios-en-especie:
+            heading: Premis en espècie
+          rendimientos-dinerarios:
+            heading: Rendiments dineraris
+          rendimientos-en-especie:
+            heading: Rendiments en espècie
+        section:
+          contraprest-cesion-dchos-imagen:
+            heading: Contraprestacions per la cessió de drets d'imatge
+          ganancias-patrim-aprovecham-forestales:
+            heading: Guanys patrimonials d'aprofitaments forestals
+          premios:
+            heading: Premis
+          rendim-actividades-economicas:
+            heading: Rendiments d'activitats econòmiques
+          rendim-del-trabajo:
+            heading: Rendiments del treball
+          total-liquidacion:
+            heading: Total de la liquidació
       revision:
         2019-y-siguientes:
           casilla:

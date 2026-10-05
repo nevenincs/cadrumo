@@ -19,20 +19,6 @@ flows:
     select_unknown: 'Tria un dels valors acceptats: %{choices}.'
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
-  login:
-    cancel_button: Cancel·la
-    intro: Tria el perfil que vols obrir i escriu la contrasenya que el protegeix.
-      No es desbloqueja res fins que la contrasenya s'accepti.
-    password_hint: La contrasenya que vas triar en crear aquest perfil. No es pot
-      restablir.
-    password_label: Contrasenya
-    profile_label: Perfil
-    refusal:
-      password_required: Escriu la contrasenya d'aquest perfil.
-      unlock_failed: No s'ha pogut obrir el perfil.
-    section: Perfil i contrasenya
-    title: Inicia la sessió al teu perfil
-    unlock_button: Inicia la sessió
   manager:
     action:
       auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
@@ -88,28 +74,19 @@ flows:
     namespace_detail: detall {number}
     onboarding:
       continue: Continua
-      done: La configuració és completa. Continua a l'àrea de treball o continua afegint
-        detalls opcionals a sota.
       finish: Acaba la configuració
       heading: Configura el teu perfil
-      intro: Aquí només es demanen les respostes necessàries per preparar les teves
-        declaracions. Prem Continua i respon cada pregunta; la resta és opcional i
-        pot esperar.
       progress: '{answered} de {total} respostes obligatòries'
       question: Pregunta {number} de {total} · {section}
-      ready: Ja tens totes les respostes obligatòries. Acaba la configuració per començar
-        a preparar les teves declaracions.
       required_only: Només obligatòries
       search_empty: Cap ajust no coincideix amb «{query}».
       search_placeholder: Cercar ajustos
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} obligatòries
+      section_pending: '! {title} - obligatòries pendents: {missing}'
       sources_summary: Omple el perfil a partir dels registres de l'AEAT o dels teus
         documents en lloc d'escriure'l.
       sources_title: Importa dades (opcional)
-      step: 'Pas {step} de {steps}: {section}'
-      step_finish: 'Pas {step} de {steps}: acabar la configuració'
-      to_workbench: Continua a l'àrea de treball
+      to_workbench: Continua a Inici
     plantilla_media:
       average_workforce: Plantilla mitjana
       list_failed: No s'han pogut llegir els anys declarats. Torna-ho a provar.
@@ -128,8 +105,58 @@ flows:
     rows:
       add: Afegir fila
       remove: Eliminar fila
-      remove_confirm: Voleu eliminar la fila %{row} de la secció %{section}?
+      remove_confirm: Vols eliminar la fila %{row} de la secció %{section}?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Perfil segur creat
+
+        ✓ Dades obligatòries desades
+
+        ✓ Configuració confirmada'
+      answer_required: Completar dades
+      edit_intro: Desplega una secció i selecciona un camp per editar-lo. * Obligatori
+        · Els altres són opcionals. Cada canvi es desa immediatament.
+      get_data_copy: Opcional. Importa les dades disponibles o salta aquest pas i
+        introdueix les dades obligatòries tu mateix. No cal accedir a l'AEAT per acabar
+        la configuració.
+      get_data_title: Obtenir dades
+      nav_get_data: Importar
+      nav_overview: Inici
+      nav_ready: A punt
+      nav_required: Dades *
+      nav_review: Revisar
+      overview_checklist: '✓ Perfil segur creat
+
+        ○ Importar dades o saltar el pas
+
+        ○ Completar les dades obligatòries
+
+        ○ Revisar i acabar'
+      overview_copy: 'El teu perfil segur està creat. Et demanarem només les dades
+        necessàries per configurar-lo i les podràs revisar abans d''acabar. Pots sortir
+        i tornar: cada resposta es desa quan la introdueixes.'
+      overview_title: Resum
+      previous: Anterior
+      ready_copy: Ben fet! El teu perfil està configurat i les respostes estan desades.
+        Continua a Inici per començar a preparar una declaració. Pots editar el perfil
+        en qualsevol moment.
+      ready_title: A punt
+      required_complete: Dades obligatòries completes
+      required_copy: Queden {missing} respostes obligatòries. Continuar et guia per
+        aquestes preguntes. Els camps amb * són obligatoris; les dades opcionals poden
+        esperar.
+      required_title: Obligatoris
+      review_copy: Comprova les dades desades. Desplega una secció per editar-les.
+        Els camps opcionals poden quedar buits. Acabar confirma que el perfil està
+        configurat; cada declaració té les seves pròpies comprovacions.
+      review_missing: Queden {missing} respostes obligatòries per completar. Continuar
+        t'hi porta.
+      review_saved: ✓ Totes les respostes obligatòries estan desades. Les dades opcionals
+        no impedeixen acabar.
+      review_title: Revisar
+      skip_import: Saltar importació
+      start: Començar
+      step: Pas {step} de {steps} · En queden {remaining}
     title: 'Perfil: {profile}'
   modelo_review:
     filter:
@@ -138,9 +165,8 @@ flows:
           atribucion_member: Membre d'atribució de rendes
           bienes_inversion_regularizacion: Regularització de béns d'inversió
           borrador: Esborrany de l'AEAT
-          collectible_invoice: Factura emesa
+          collectible_invoice: Factures emeses
           design_constant: Constant del disseny
-          donativo_donor: Donant
           foreign_asset: Actiu estranger
           gasto193_contributor: Despeses per contribuent (model 193)
           inventory: Existències
@@ -148,25 +174,23 @@ flows:
           iva_wallet_decision: Decisió de saldo d'IVA
           ledger_impatriado_income_aggregation: Totals d'ingressos d'impatriats
           ledger_irnr_income_aggregation: Totals d'ingressos de no residents
-          ledger_iva_aggregation: Totals del llibre d'IVA
-          ledger_oss_aggregation: Totals del llibre OSS
-          ledger_renta_gastos_estimacion_directa_aggregation: Totals de despeses en
-            estimació directa
-          ledger_renta_gastos_pago_fraccionado_aggregation: Totals de despeses del
-            pagament fraccionat
-          ledger_renta_income_aggregation: Totals d'ingressos
-          ledger_transaction: Moviment del llibre
+          ledger_iva_aggregation: Registres d'IVA
+          ledger_oss_aggregation: Registres de vendes OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Registres de despeses
+            (estimació directa)
+          ledger_renta_gastos_pago_fraccionado_aggregation: Registres de despeses
+          ledger_renta_income_aggregation: Registres d'ingressos
+          ledger_transaction: Registre
           m303_regimen_simplificado_annual_summary: Resum règim simplificat (model
             303)
           m347_third_party_operation: Operació amb tercers
+          m349_intracommunity_operation: Operació intracomunitària
           manual_input: Entrada manual
           payable_invoice: Factura rebuda
           previous_filing: Declaració anterior
           profile: Perfil
           prorrata_regularizacion: Regularització de prorrata
           purchase_invoice_evidence: Evidència de factura de compra
-          refund_operation: Operació de reemborsament
-          related_party_operation: Operació vinculada
           relation_prefill: Declaració relacionada
           retenciones_aggregation: Totals de retencions
           withholding: Registre de retenció
@@ -181,6 +205,7 @@ flows:
           cross_period_dependency_unclean: Dependència anterior no neta
           missing_required_casilla: Falta una casella obligatòria
           reconciliation_mismatch: Discrepància de conciliació
+          stale_calculation: Càlcul desactualitzat
         finding_severity:
           blocking: Bloquejant
           warning: Advertiment
@@ -216,116 +241,10 @@ flows:
           alternate_binding: Vincle alternatiu
           formula_binding: Vincle de fórmula
           primary_binding: Vincle principal
-  modelo_select:
-    column:
-      filing_year: Exercici
-      modelo: Model
-      name: Nom
-      period: Període
-      state: Estat
-  modelo_workspace_filing:
-    column:
-      capability: Capacitat
-      disposition: Disposició
-    handoff: La presentació es fa fora d'aquesta aplicació. Construïu, verifiqueu
-      i exporteu aquí, i presenteu vosaltres mateixos davant l'AEAT.
-    state_not_carried: Aquesta pàgina no mostra l'estat ni l'historial de presentació.
-    title: Presentació - model {modelo}
-    why:
-      draft_structural: Cadrumo no pot saber per endavant si l'esborrany de presentació
-        es podrà generar; es comprova en generar-lo.
-    why_line: '{capability}: {why}'
-  modelo_workspace_inputs:
-    column:
-      address: Adreça
-      input_kind: Tipus d'entrada declarat
-      label: Etiqueta
-      value: Valor
-    empty: Aquesta revisió no declara valors materialitzats.
-    input_kind_unmeasured: sense mesurar
-    page_bounded: Es mostren {shown} files d'un conjunt més gran; les restants no
-      són accessibles des d'aquesta lectura.
-    section:
-      unsectioned: Sense secció
-    title: Entrades - model {modelo}
-    values_unmeasured: Aquesta pàgina només mostra l'estructura del formulari; encara
-      no mostra valors calculats.
   modelo_workspace_overview:
-    actions_none: Encara no es pot fer cap pas següent des d'aquest espai de treball.
-    actions_suggested: 'Passos següents suggerits: {actions}'
     column:
-      capability: Capacitat
-      disposition: Disposició
       field: Camp
       value: Valor
-    label:
-      filing_year: Exercici
-      law_selected: Revisió seleccionada per norma
-      modelo: Model
-      period: Període
-      requested_assertion: Asserció de revisió sol·licitada
-      review_status: Estat de revisió
-      stored_assertion: Asserció de revisió emmagatzemada
-      work_state: Estat de la unitat
-      work_unit: Unitat de treball
-    section:
-      address: Adreça
-      capabilities: Capacitats
-      revision: Coordenades de revisió
-    title: Resum - model {modelo}
-    value:
-      no_work_unit: encara sense unitat de treball
-  modelo_workspace_provenance:
-    column:
-      resolver: Resolutor
-      source_ref: Referència d'origen
-      subject: Subjecte
-    empty: Aquest càlcul no ha registrat fonts contribuents.
-    not_applicable: Aquesta pàgina encara no mostra d'on provenen els valors.
-    page_bounded: Es mostren {shown} d'un conjunt més gran. Una font pot aportar moltes
-      files, així que el nombre de files no indica completesa.
-    title: Procedència - model {modelo}
-    value:
-      unattributed: sense atribuir
-  modelo_workspace_results:
-    column:
-      casilla: Casella
-      formula: Fórmula
-      value: Valor
-    empty: Aquest càlcul no ha produït cap casella calculada.
-    not_applicable: 'Aquesta pàgina encara no pot mostrar resultats calculats: no
-      distingeix les caselles calculades de les que omples tu.'
-    page_bounded: Es mostren {shown} files d'un conjunt més gran; les restants no
-      són accessibles des d'aquesta lectura.
-    title: Resultats - model {modelo}
-  modelo_workspace_verification:
-    axis:
-      binding_ready: Vincles preparats
-      ledger_ready: Llibre preparat
-      profile_ready: Perfil preparat
-      ready: Preparat (veredicte del productor)
-      registry_ready: Registre preparat
-    capability_line: 'Verificació: {disposition}'
-    column:
-      axis: Eix
-      casilla: Casella
-      kind: Tipus
-      message: Què s'ha trobat
-      severity: Severitat
-      value: Valor
-    evidence_carried: 'Referències de suport i pas següent: {entries}'
-    evidence_none: Aquesta capacitat de verificació no cita cap referència del registre
-      ni indica cap pas següent realitzable.
-    findings_none: La revisió de treball no ha registrat cap troballa.
-    findings_unmeasured: Aquesta pàgina encara no mostra les troballes de la verificació.
-    readiness_unmeasured: Aquesta pàgina encara no mostra si la declaració està a
-      punt.
-    section:
-      findings: Troballes
-      readiness: Eixos de preparació
-    title: Verificació - model {modelo}
-    value:
-      unmeasured: sense mesurar
   passphrase:
     cancel_button: Cancel·la
     change_button: Canvia la contrasenya
@@ -353,13 +272,14 @@ flows:
   registration:
     confirm_label: Repeteix la contrasenya
     create_button: Crea el perfil
-    intro: 'Tria un nom per a aquest perfil i una contrasenya que el protegeixi. No
-      cal res més: el teu perfil existeix tan bon punt continuïs, i la resta la completes
-      quan vulguis.'
+    intro: Tria un nom i una contrasenya per crear el teu perfil segur. Podràs configurar-ne
+      les dades després.
+    password_help: Protecció i recuperació de la contrasenya
     password_hint: Com a mínim {minimum_length} caràcters. Unes quantes paraules corrents
       seguides són més fàcils de recordar i més difícils d'endevinar que una sola
       paraula curta i complicada.
     password_label: Contrasenya
+    progress: 1 · Crear el teu perfil segur    2 · Configurar les dades
     recovery:
       cancel_button: Cancel·la
       confirm_button: Ja l'he anotat
@@ -378,6 +298,8 @@ flows:
       profile_already_exists: Ja existeix un perfil anomenat '%{profile}'. Tria un
         altre nom, o surt d'aquesta pantalla i inicia la sessió en aquest perfil.
       username_required: Introdueix un nom per a aquest perfil.
+    requirements: El nom i tots dos camps de contrasenya són obligatoris. Pots canviar
+      l'idioma més endavant.
     section: Nom i contrasenya
     strength:
       fair: Raonable.

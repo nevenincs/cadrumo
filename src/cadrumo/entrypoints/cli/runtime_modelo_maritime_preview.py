@@ -3,34 +3,20 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Never
+from uuid import UUID
 
 import typer
-from pydantic import BaseModel
 
 from ...application.modelo.maritime_preview_operation import (
     MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID,
     ModeloMaritimePreviewProjection,
     ModeloMaritimePreviewRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from .runtime_registered_operation import run_registered_operation
 
 
 def preview_modelo_maritime_exemption(
@@ -61,15 +47,26 @@ def preview_modelo_maritime_exemption(
     projection = completed.projection
     values = {row.casilla_id: row.value for row in projection.casilla_values}
     if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-        or projection.profile_id != client.profile_id
+        _maritime_preview_receipt_invalid(completed, projection, client.profile_id)
         or len(values) != len(projection.casilla_values)
         or values != {row.casilla_id: row.value for row in projection.observations}
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
 __all__ = ["preview_modelo_maritime_exemption"]
+
+
+def _maritime_preview_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloMaritimePreviewProjection],
+    projection: ModeloMaritimePreviewProjection,
+    profile_id: UUID,
+) -> bool:
+    """Require a settled read-only preview for the admitted profile."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+        or (projection.profile_id != profile_id)
+    )

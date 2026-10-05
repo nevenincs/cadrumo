@@ -20,7 +20,7 @@ trail from becoming a second copy of the confidentiality problem it exists to
 document.
 
 **It is deliberately not pruned.** Its three sibling LLM stores (cache, usage,
-run-telemetry) are swept by
+run-record) are swept by
 :meth:`~llm.LLMClient._sweep_retention_stores` because they
 are diagnostic and regenerable. This one is neither: a consent withdrawal reads
 it to enumerate which artefacts depend on a cloud read, so an entry aged out of
@@ -68,8 +68,8 @@ class EvidenceConsentLedger:
     :meth:`append` is called from the dispatch choke point and raises on ANY
     failure, so the caller's refusal is the only possible outcome of a failed
     write. That is the opposite of
-    :meth:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder.record`'s
-    best-effort posture, and deliberately: run-telemetry losing a row costs a
+    :meth:`~adapters.persistence.llm.run_records.LLMRunRecorder.record`'s
+    best-effort posture, and deliberately: run-record losing a row costs a
     diagnostic, this losing a row costs the audit trail its completeness claim.
     """
 

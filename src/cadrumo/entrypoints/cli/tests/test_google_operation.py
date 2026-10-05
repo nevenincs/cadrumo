@@ -54,7 +54,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
         ("REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED", "cli.app.modelo.spreadsheet.push.root_folder_required"),
         (
             "REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
-            "adapters.outbound.storage._factory.errors.google_client_missing",
+            "errors.refused.refused_google_client_metadata_unavailable",
         ),
         (
             "REFUSED_GOOGLE_SHEETS_EXPORT_TOKEN_MISSING",
@@ -226,7 +226,7 @@ def test_cli_push_uses_bound_profile_and_registered_export_contract(monkeypatch)
     from ....core.operations import profile_operation_subject
     from .. import modelo_spreadsheet_cli as cli_module
     from .. import runtime_modelo_spreadsheet_push as push_runtime
-    from ..runtime_registered_operation import RegisteredOperationCompletion
+    from ..registered_operation_contracts import RegisteredOperationCompletion
 
     profile_id = UUID("12345678-1234-4234-8234-123456789abc")
     client = cast(RuntimeFrontendClient, cast(object, SimpleNamespace(profile_id=profile_id)))

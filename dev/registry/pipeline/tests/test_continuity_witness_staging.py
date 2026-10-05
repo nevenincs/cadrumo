@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ...compiler.loader import load_modelo_directory
 from .._tree_validation import _load_continuity_metadata_modelo
-from ..candidate_staging import stage_continuity_metadata
+from ..edition_candidate_staging import stage_continuity_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

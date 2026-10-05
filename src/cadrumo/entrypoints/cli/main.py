@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Generator
+from collections.abc import Collection, Generator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import fields, is_dataclass
 from enum import Enum
@@ -30,10 +30,13 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import BaseModel
 
+from ...core.errors.hierarchy import InternalInvariantError
+
 if TYPE_CHECKING:
     from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core.storage_environment import STORAGE_ROOT, storage_directory
 from ...core.type_guards import is_object_collection, is_object_dict
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
@@ -174,7 +177,7 @@ def main() -> None:
                 _admit_authority_at_startup()
             except typer.Exit as exit_request:
                 raise SystemExit(exit_request.exit_code) from None
-            from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
+            from ...core.operator_progress import operator_progress_sink
 
             progress_sink = operator_progress_sink(_emit_operator_progress)
         with _metadata_state_isolation(arguments), progress_sink:
@@ -242,29 +245,25 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
         yield
         return
 
-    keys = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_DATABASE_URL")
+    keys = (STORAGE_ROOT.variable, "CADRUMO_DATABASE_URL")
     saved = {key: os.environ.get(key) for key in keys}
-    # Declared exception to the "every tempfile call passes dir=" storage
-    # provenance discipline: there is no "destination" to anchor on here.
-    # This scope exists so a --help/--version invocation runs against a
-    # throwaway root instead of the operator's real one, which may be
-    # retired or broken -- isolation FROM a root, not production NEAR one.
-    # Anchoring dir= on anything derived from the real root (even a pure,
-    # no-I/O computation like the platform user-data directory) reintroduces
-    # the dependency this scope exists to sever, and could break --help on
-    # exactly the broken-root case it is meant to survive. The OS-default
-    # temp root is the correct home, not a gap. The FILENAME joined onto it
-    # is a different axis: `storage_location` is a pure dict lookup with no
-    # settings/I-O dependency, and `cadrumo.core` is already fully imported
-    # above (`_PRODUCT_IDENTITY`), so reading the taxonomy's declared
-    # root-fallback-database subpath here costs nothing extra and tracks a
-    # future rename instead of drifting from it.
+    # Metadata commands still isolate themselves from the operator's active
+    # database, while their throwaway files follow the configured Cadrumo temp
+    # directory instead of the OS-wide temp directory.
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import storage_location
 
-    with TemporaryDirectory(prefix="cadrumo-cli-metadata-") as temporary_root:
+    temporary_location = storage_location(StorageCategory.TEMPORARY_FILES)
+    if temporary_location.settings_field is None:
+        raise InternalInvariantError("temporary storage location must declare its environment setting")
+    temporary_base = storage_directory(
+        temporary_location.settings_field.upper(),
+        temporary_location.relative_path().as_posix(),
+    )
+    temporary_base.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with TemporaryDirectory(prefix="cadrumo-cli-metadata-", dir=temporary_base) as temporary_root:
         root = Path(temporary_root)
-        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        os.environ[STORAGE_ROOT.variable] = str(root)
         database_filename = storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
         os.environ["CADRUMO_DATABASE_URL"] = f"sqlite:///{(root / database_filename).as_posix()}"
         try:
@@ -277,8 +276,8 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
                     os.environ[key] = value
 
 
-def _emit_operator_progress(progress: object) -> None:
-    """Write an operator progress banner to stderr, keeping stdout pure."""
+async def _emit_operator_progress(progress: object) -> None:
+    """Write an in-process operator progress banner to stderr, keeping stdout pure."""
     from ...core.operator_progress import OperatorProgress
 
     if not isinstance(progress, OperatorProgress):
@@ -302,8 +301,7 @@ def _jsonable_command_surface_value(value: object) -> object:
     if is_object_dict(value):
         return {str(key): _jsonable_command_surface_value(item) for key, item in value.items()}
     if is_object_collection(value):
-        items = (_jsonable_command_surface_value(item) for item in value)
-        return sorted(items, key=str) if isinstance(value, (set, frozenset)) else list(items)
+        return _jsonable_command_surface_collection(value)
     if isinstance(value, BaseModel):
         return _jsonable_command_surface_value(value.model_dump(mode="json"))
     return value
@@ -349,12 +347,7 @@ def _emit_command_surface_manifest() -> None:
 
     payload = {
         "command_schemas": tuple(reference.model_dump(mode="json") for reference in references),
-        "global_flags": tuple(
-            option
-            for parameter in _COMMAND_GRAPH.root().parameters
-            for option in getattr(parameter, "declarations", ())
-            if isinstance(option, str) and option.startswith("-")
-        ),
+        "global_flags": _command_surface_global_flags(),
         "exposable_commands": tuple(
             reference.command for reference in references if is_exposable_command(reference.command)
         ),
@@ -375,3 +368,19 @@ __all__ = [
     "main",
     "resolve_cli_precondition_action",
 ]
+
+
+def _command_surface_global_flags() -> tuple[str, ...]:
+    """Enumerate every root option declaration in command-graph order."""
+    return tuple(
+        option
+        for parameter in _COMMAND_GRAPH.root().parameters
+        for option in getattr(parameter, "declarations", ())
+        if isinstance(option, str) and option.startswith("-")
+    )
+
+
+def _jsonable_command_surface_collection(value: Collection[object]) -> list[object]:
+    """Preserve ordered collections and the existing stable spelling order for sets."""
+    items = (_jsonable_command_surface_value(item) for item in value)
+    return sorted(items, key=str) if isinstance(value, (set, frozenset)) else list(items)

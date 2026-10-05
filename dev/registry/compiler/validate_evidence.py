@@ -16,17 +16,19 @@ from zipfile import BadZipFile
 from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.resources.bundled_data import resolve_companion_binary
+from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
 )
+from dev.registry.compiler.corpus_source_location import CorpusPathEscapeError, locate_corpus_file
 
 if TYPE_CHECKING:
     import pypdfium2
@@ -148,20 +150,14 @@ def _normalise_required_text(text: str) -> str:
 
 
 def _resolve_source_path(source: SourceReference, source_root: Path) -> Path:
-    """Resolve a source path and retain the mirrored-binary fallback."""
-    resolved_root = source_root.expanduser().resolve()
-    source_path = (resolved_root / source.corpus_path).expanduser().resolve()
-    if resolved_root not in source_path.parents and source_path != resolved_root:
-        raise OSError(f"source {source.id!r} escapes source root")
-    if not source_path.is_file():
-        # The command-bearing wheel sheds corpus source binaries; the
-        # mandatory cadrumo_data namespace supplies the same bytes at the
-        # mirrored relative path, keeping required_text verification
-        # byte-identical to a full checkout.
-        companion_path = resolve_companion_binary(*source.corpus_path.split("/"))
-        if companion_path is not None:
-            source_path = companion_path
-    return source_path
+    """Resolve a cited source to the file that holds its bytes."""
+    try:
+        located = locate_corpus_file(source_root, source.corpus_path)
+    except CorpusPathEscapeError as exc:
+        raise OSError(f"source {source.id!r} escapes source root") from exc
+    if located is None:
+        raise FileNotFoundError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
+    return located
 
 
 def _read_source_text(source: SourceReference, source_path: Path, *, source_root: Path | None = None) -> str:
@@ -183,6 +179,29 @@ def _read_source_text(source: SourceReference, source_path: Path, *, source_root
         # it renders, never against the raw bytes.
         return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
     return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
+
+
+def _xlsx_workbook_text(workbook: Workbook, path: str) -> str:
+    cells: list[str] = []
+    text_chars = 0
+    for worksheet in workbook.worksheets:
+        for row in worksheet.iter_rows(values_only=True):
+            for value in row:
+                if value is None:
+                    continue
+                if len(cells) >= _MAX_XLSX_CITATION_CELLS:
+                    raise OSError(
+                        f"XLSX source {path} exceeds the citation extraction cell limit ({_MAX_XLSX_CITATION_CELLS})"
+                    )
+                rendered = str(value)
+                text_chars += len(rendered) + 1
+                if text_chars > _MAX_XLSX_CITATION_TEXT_CHARS:
+                    raise OSError(
+                        f"XLSX source {path} exceeds the citation extraction text limit "
+                        f"({_MAX_XLSX_CITATION_TEXT_CHARS} characters)"
+                    )
+                cells.append(rendered)
+    return "\n".join(cells)
 
 
 def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None = None) -> str:
@@ -212,27 +231,7 @@ def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None =
             warnings.simplefilter("ignore", UserWarning)
             workbook = opener(path)
             try:
-                cells: list[str] = []
-                text_chars = 0
-                for worksheet in workbook.worksheets:
-                    for row in worksheet.iter_rows(values_only=True):
-                        for value in row:
-                            if value is None:
-                                continue
-                            if len(cells) >= _MAX_XLSX_CITATION_CELLS:
-                                raise OSError(
-                                    f"XLSX source {path} exceeds the citation extraction cell limit "
-                                    f"({_MAX_XLSX_CITATION_CELLS})"
-                                )
-                            rendered = str(value)
-                            text_chars += len(rendered) + 1
-                            if text_chars > _MAX_XLSX_CITATION_TEXT_CHARS:
-                                raise OSError(
-                                    f"XLSX source {path} exceeds the citation extraction text limit "
-                                    f"({_MAX_XLSX_CITATION_TEXT_CHARS} characters)"
-                                )
-                            cells.append(rendered)
-                return "\n".join(cells)
+                return _xlsx_workbook_text(workbook, path)
             finally:
                 workbook.close()
     except (InvalidFileException, BadZipFile, KeyError, TypeError, ValueError) as exc:
@@ -258,8 +257,8 @@ def corpus_text_cache_dir() -> Path:
         The directory holding the corpus-text cache file.
     """
     override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
-    if override:
-        return Path(override)
+    if override and override.strip():
+        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("corpus-text")
 
 
@@ -306,6 +305,65 @@ def _persisted_corpus_text(cache_key: str) -> str | None:
         return None
 
 
+def _source_text_cache_key(
+    source: SourceReference,
+    source_path: Path,
+    source_root: Path,
+    source_stat: os.stat_result,
+) -> _SourceTextCacheKey:
+    suffix = source_path.suffix.casefold()
+    extraction_contract = (
+        f"{source.kind}:xlsx-text-v1"
+        if suffix == ".xlsx"
+        else f"{source.kind}:pdf-text-v1"
+        if suffix == ".pdf" and source.kind is not RegistrySourceKind.MANUAL_PDF
+        else source.kind
+    )
+    sidecar_digest = ""
+    if source.kind is RegistrySourceKind.MANUAL_PDF:
+        sidecar = _manual_sidecar_path(source.corpus_path, source_root)
+        if sidecar.is_file():
+            sidecar_digest = sha256_hex(sidecar.read_bytes())
+    return (
+        extraction_contract,
+        str(source_path),
+        str(source.sha256),
+        sidecar_digest,
+        source_stat.st_size,
+        source_stat.st_mtime_ns,
+    )
+
+
+def _lookup_normalised_source_text(
+    source_id: str,
+    source_key: _SourceTextCacheKey,
+    source_text_cache: dict[str, str],
+) -> tuple[bool, str, str]:
+    global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
+    if global_cached is not None:
+        source_text_cache[source_id] = global_cached
+        return True, global_cached, ""
+    cache_key_str = json.dumps(source_key)
+    persisted = _pending_entries.get(cache_key_str) or _persisted_corpus_text(cache_key_str)
+    if persisted is None:
+        return False, "", cache_key_str
+    _NORMALISED_SOURCE_TEXT_CACHE[source_key] = persisted
+    source_text_cache[source_id] = persisted
+    return True, persisted, cache_key_str
+
+
+def _remember_normalised_source_text(
+    source_id: str,
+    source_key: _SourceTextCacheKey,
+    source_text_cache: dict[str, str],
+    cache_key: str,
+    normalised: str,
+) -> None:
+    _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
+    source_text_cache[source_id] = normalised
+    _pending_entries[cache_key] = normalised
+
+
 def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
     """Return page text from an enrolled manual PDF authority.
 
@@ -342,6 +400,50 @@ def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None
         return "\n".join(pages)
     except (pdfium.PdfiumError, OSError, ValueError) as exc:
         raise OSError(f"could not extract text from manual PDF {path}: {exc}") from exc
+
+
+def _procedural_form_source(
+    source: SourceReference | None,
+    valid_from: date,
+    valid_to: date | None,
+) -> SourceReference | None:
+    if source is None or source.authority != "boe" or source.kind != "form_spec":
+        return None
+    if source.applies_from is None or source.applies_from > valid_from:
+        return None
+    if source.applies_to is not None and (valid_to is None or source.applies_to < valid_to):
+        return None
+    return source
+
+
+def _legal_clause_covers_source(
+    legal: LegalReference,
+    source: SourceReference,
+    valid_from: date,
+    valid_to: date | None,
+) -> bool:
+    if legal.authority != "boe" or not legal.article:
+        return False
+    if legal.corpus_ref.partition("#")[0] != source.corpus_path:
+        return False
+    governed_from = legal.governs_periods_from or legal.effective_from
+    governed_to = legal.governs_periods_to if legal.governs_periods_from else legal.effective_to
+    if governed_from > valid_from:
+        return False
+    return governed_to is None or (valid_to is not None and governed_to >= valid_to)
+
+
+def _matching_boe_legal_clauses(
+    source: SourceReference,
+    legal_refs: tuple[str, ...],
+    legal_catalogue: Mapping[str, LegalReference],
+    valid_from: date,
+    valid_to: date | None,
+) -> Iterable[LegalReference]:
+    for legal_id in legal_refs:
+        legal = legal_catalogue.get(legal_id)
+        if legal is not None and _legal_clause_covers_source(legal, source, valid_from, valid_to):
+            yield legal
 
 
 class EvidenceValidator:
@@ -427,26 +529,13 @@ class EvidenceValidator:
         legal_refs = tuple(legal_refs)
         matched: dict[str, LegalReference] = {}
         for ref in refs:
-            source = self._sources.get(ref)
-            if source is None or source.authority != "boe" or source.kind != "form_spec":
+            source = _procedural_form_source(self._sources.get(ref), valid_from, valid_to)
+            if source is None:
                 continue
-            if source.applies_from is None or source.applies_from > valid_from:
-                continue
-            if source.applies_to is not None and (valid_to is None or source.applies_to < valid_to):
-                continue
-            for legal_id in legal_refs:
-                legal = self._legal.get(legal_id)
-                if legal is None or legal.authority != "boe" or not legal.article:
-                    continue
-                if legal.corpus_ref.partition("#")[0] != source.corpus_path:
-                    continue
-                governed_from = legal.governs_periods_from or legal.effective_from
-                governed_to = legal.governs_periods_to if legal.governs_periods_from else legal.effective_to
-                if governed_from > valid_from:
-                    continue
-                if governed_to is not None and (valid_to is None or governed_to < valid_to):
-                    continue
-                matched[legal.id] = legal
+            matched.update(
+                (legal.id, legal)
+                for legal in _matching_boe_legal_clauses(source, legal_refs, self._legal, valid_from, valid_to)
+            )
         return tuple(matched.values())
 
     def validate_source_citations(
@@ -529,44 +618,14 @@ class EvidenceValidator:
         if source_root is None:
             return ""
         source_path = _resolve_source_path(source, source_root)
-        stat = source_path.stat()
-        suffix = source_path.suffix.casefold()
-        extraction_contract = (
-            f"{source.kind}:xlsx-text-v1"
-            if suffix == ".xlsx"
-            else f"{source.kind}:pdf-text-v1"
-            if suffix == ".pdf" and source.kind is not RegistrySourceKind.MANUAL_PDF
-            else source.kind
+        source_key = _source_text_cache_key(source, source_path, source_root, source_path.stat())
+        cache_hit, cached_text, cache_key = _lookup_normalised_source_text(
+            source.id, source_key, self._source_text_cache
         )
-        sidecar_digest = ""
-        if source.kind is RegistrySourceKind.MANUAL_PDF:
-            sidecar = _manual_sidecar_path(source.corpus_path, source_root)
-            if sidecar.is_file():
-                sidecar_digest = sha256_hex(sidecar.read_bytes())
-        source_key = (
-            extraction_contract,
-            str(source_path),
-            str(source.sha256),
-            sidecar_digest,
-            stat.st_size,
-            stat.st_mtime_ns,
-        )
-        global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
-        if global_cached is not None:
-            self._source_text_cache[source.id] = global_cached
-            return global_cached
-
-        # One persisted entry, read by key rather than by loading the whole cache.
-        cache_key_str = json.dumps(source_key)
-        persisted = _pending_entries.get(cache_key_str) or _persisted_corpus_text(cache_key_str)
-        if persisted is not None:
-            _NORMALISED_SOURCE_TEXT_CACHE[source_key] = persisted
-            self._source_text_cache[source.id] = persisted
-            return persisted
-
+        if cache_hit:
+            return cached_text
         normalised = _read_source_text(source, source_path, source_root=source_root)
-
-        _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
-        self._source_text_cache[source.id] = normalised
-        _pending_entries[cache_key_str] = normalised
+        if not cache_key:
+            cache_key = json.dumps(source_key)
+        _remember_normalised_source_text(source.id, source_key, self._source_text_cache, cache_key, normalised)
         return normalised

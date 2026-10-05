@@ -11,12 +11,13 @@ from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.auth_provider import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import reject_duplicate_json_members, reject_json_constant
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -39,12 +40,13 @@ from ..operations.capabilities import (
 )
 from ..operations.models import (
     CredentialFreeOperationRequest,
+    OperationIdentity,
     OperationRequest,
 )
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -72,8 +74,9 @@ AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
 PROFILE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"
 _PROFILE_LOGIN_KIND = "profile.login.passphrase"
 _PROFILE_ROTATION_KIND = "profile.passphrase.rotation"
-_PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
-type ProfileRotationFinalizer = Callable[[OperationExecutorContext, ProfilePassphraseRotationOutcome], Awaitable[None]]
+#: Outer finalizers receive only the invocation identity, never the executor's
+#: supervisor-owned capabilities.
+type ProfileRotationFinalizer = Callable[[OperationIdentity, ProfilePassphraseRotationOutcome], Awaitable[None]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,14 +94,25 @@ class ProfileLoginOperationRequest(CredentialFreeOperationRequest):
 
 
 class AuthConfigureOperationRequest(BaseModel):
-    model_config = _PUBLIC_REQUEST_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: AuthProviderKind
     certificate_path: Path | None = None
+    clave_movil_route: ClaveMovilRoute | None = None
+    expected_profile_revision: int | None = Field(default=None, ge=0)
+    expected_profile_digest: Hex64Str | None = None
+
+    @model_validator(mode="after")
+    def _complete_baseline(self) -> AuthConfigureOperationRequest:
+        if (self.expected_profile_revision is None) != (self.expected_profile_digest is None):
+            raise ValueError("authentication edit requires a complete baseline")
+        if self.clave_movil_route is not None and self.provider is not AuthProviderKind.CLAVE_MOVIL:
+            raise ValueError("Cl@ve Móvil route requires the Cl@ve Móvil provider")
+        return self
 
 
 class AuthSessionAcquireOperationRequest(BaseModel):
-    model_config = _PUBLIC_REQUEST_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: AuthProviderKind | None = None
     fresh: bool = False
@@ -106,7 +120,7 @@ class AuthSessionAcquireOperationRequest(BaseModel):
 
 
 class AuthTeardownOperationRequest(BaseModel):
-    model_config = _PUBLIC_REQUEST_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: AuthProviderKind | None = None
     all_providers: bool = False
@@ -261,7 +275,7 @@ class ProfilePassphraseRotationOperationExecutor:
                         await context.events.effect(OperationEffect.UPDATED)
                         result_ref = await context.operands.put(result, written_at=now())
                         if self._finalize_rotation is not None:
-                            await self._finalize_rotation(context, result)
+                            await self._finalize_rotation(context.identity, result)
                         await context.events.phase("auth.passphrase.settlement")
                         return result_ref
 
@@ -297,6 +311,9 @@ class AuthConfigureOperationExecutor:
                     self._configure,
                     request.payload.provider.value,
                     certificate_path=request.payload.certificate_path,
+                    clave_movil_route=request.payload.clave_movil_route,
+                    expected_profile_revision=request.payload.expected_profile_revision,
+                    expected_profile_digest=request.payload.expected_profile_digest,
                     operator_scope_ports=self._ports.operator_scope_ports,
                     operation=context.authority_operation,
                 )
@@ -305,7 +322,8 @@ class AuthConfigureOperationExecutor:
                 result = AuthConfigureResult.model_validate_json(result.model_dump_json(), strict=True)
                 if result.provider != request.payload.provider.value:
                     raise ValueError("provider configuration returned a different provider")
-                await context.events.effect(OperationEffect.UPDATED)
+                # Selecting the provider and route already configured writes nothing.
+                await context.events.effect(OperationEffect.UPDATED if result.changed else OperationEffect.NONE)
                 await context.events.phase("auth.configure.settlement")
                 return await _result_reference(result, context)
 
@@ -478,7 +496,8 @@ def _definition(
     phases: tuple[str, ...],
     secret_kind: str | None = None,
     request_storage: OperationRequestStoragePolicy = OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-    permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(OperationFrontendProjection),
+    permitted_frontends: frozenset[OperationFrontendProjection] = ALL_OPERATION_FRONTENDS,
+    public_error_detail: bool = False,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -514,6 +533,7 @@ def _definition(
                 lifetime=timedelta(minutes=5),
             )
         ),
+        public_error_detail=public_error_detail,
     )
 
 
@@ -558,6 +578,7 @@ def build_auth_operation_definitions(
             phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
             permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+            public_error_detail=True,
         ),
         _definition(
             definition_id=AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -606,7 +627,7 @@ def build_auth_operation_registrations(
     )
     from .provider_configure_operation_access import (
         AUTH_CONFIGURE_RESULT_SCHEMA_ID,
-        AuthConfigureOperationProjection,
+        AuthConfigurePublicResultV2,
         project_auth_configure_result,
         resolve_auth_configure_access,
     )
@@ -646,8 +667,8 @@ def build_auth_operation_registrations(
                     ),
                     result_schema=OperationSchemaBindingV1.bind(
                         schema_id=AUTH_CONFIGURE_RESULT_SCHEMA_ID,
-                        schema_version=1,
-                        model_type=AuthConfigureOperationProjection,
+                        schema_version=2,
+                        model_type=AuthConfigurePublicResultV2,
                     ),
                     result_projector=project_auth_configure_result,
                     access_resolver=resolve_auth_configure_access,
@@ -669,22 +690,11 @@ def build_auth_operation_registrations(
                     access_resolver=resolve_auth_session_acquire_access,
                 )
                 if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose(
+                else OperationPublicDefinitionRegistrationV1.compose_request_result(
                     definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=definition.request_type,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.result",
-                        schema_version=1,
-                        model_type=(
-                            AuthLogoutResult
-                            if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
-                            else AuthResetResult
-                        ),
-                    ),
+                    public_result_type=AuthLogoutResult
+                    if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
+                    else AuthResetResult,
                     access_resolver=resolve_auth_teardown_access,
                 )
                 if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}

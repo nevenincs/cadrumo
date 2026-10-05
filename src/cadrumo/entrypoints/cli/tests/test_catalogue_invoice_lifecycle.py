@@ -24,7 +24,7 @@ from typing import cast
 import pytest
 from click.testing import Result
 
-from ....application.invoices.catalogue_add_operation import (
+from ....application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
 )
@@ -239,7 +239,9 @@ def test_catalogue_remove_refuses_linked_invoice(authority_operation: PinnedAuth
         assert stored.linked_transaction_ids == (transaction_id,), stored.linked_transaction_ids
 
 
-def test_catalogue_create_refuses_an_omitted_country_code(active_profile_isolated_backend) -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_an_omitted_country_code(tmp_path: Path) -> None:
     """``--country-code`` is mandatory, because it routes both informativas.
 
     Both canonical entry verbs used to default it to ``ES``. The slim verb they
@@ -256,8 +258,8 @@ def test_catalogue_create_refuses_an_omitted_country_code(active_profile_isolate
     design, since the tax id already IS the NIF-IVA for a non-ES country -- so
     the honest remedy is to require the operator to state it.
     """
-    result = invoke_cached_cli(
-        [
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
@@ -265,8 +267,8 @@ def test_catalogue_create_refuses_an_omitted_country_code(active_profile_isolate
             "--invoice-number", "2026-NOCOUNTRY-001",
             "--invoice-date", "2026-03-10",
             "--taxable-base", "100.00", "--iva-rate", "21",
-        ],
-    )  # fmt: skip
+            output_format="text",
+        )  # fmt: skip
 
     assert result.exit_code != 0, result.output
     # Names the missing option rather than failing generically, so the operator
@@ -343,17 +345,17 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
         assert _line_value(result.output, "grand_total") == "1262.00"
 
 
-def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_set(
-    active_profile_isolated_backend,
-) -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_set(tmp_path: Path) -> None:
     """A closed axis must instruct on parse failure, never fail bare.
 
     The option is typed on the enum so click renders the accepted set rather
     than leaving the operator to guess, which is the CLI boundary's job for
     every closed value set.
     """
-    result = invoke_cached_cli(
-        [
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
             "--counterparty-nif", "B12345674",
@@ -363,8 +365,64 @@ def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_s
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--invoice-class", "no-such-class",
-        ],
-    )  # fmt: skip
+            output_format="text",
+        )  # fmt: skip
 
     assert result.exit_code != 0
     assert "RECTIFICATIVA" in result.output
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_records_a_business_premises_lease(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """``invoice add`` stores the lessor's lease facts Modelo 347 relates (RD 1065/2007 art. 34.1.d)."""
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "issued",
+            "--counterparty-nif", "B87654323",
+            "--counterparty-name", "Inquilino Local SL",
+            "--invoice-number", "2026-ALQ-001",
+            "--invoice-date", "2026-03-01",
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--arrendamiento-local-negocio",
+            "--situacion-inmueble", "1",
+            "--referencia-catastral", "9872023VH5797S0001WX",
+            output_format="text",
+        )  # fmt: skip
+        assert result.exit_code == 0, result.output
+        invoice_id = _line_value(result.output, "invoice_id")
+        stored = catalogue_after_password_login(session.profile_id, authority_operation).invoices.get(invoice_id)
+        assert stored is not None
+        lease = stored.business_premises_lease
+        assert lease is not None
+        assert lease.situacion_inmueble == "1"
+        assert lease.referencia_catastral == "9872023VH5797S0001WX"
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_catalogue_create_refuses_a_situacion_outside_the_record_design(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """A situación code the 347 design does not define is refused before anything is written."""
+    with native_invoice_runtime_session(tmp_path, operation_ids=_RUNTIME_OPERATIONS) as session:
+        before = catalogue_after_password_login(session.profile_id, authority_operation)
+        result = session.invoke_password(
+            "app", "ledger", "invoice", "add",
+            "--kind", "issued",
+            "--counterparty-nif", "B87654323",
+            "--counterparty-name", "Inquilino Local SL",
+            "--invoice-number", "2026-ALQ-002",
+            "--invoice-date", "2026-03-01",
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--arrendamiento-local-negocio",
+            "--situacion-inmueble", "7",
+        )  # fmt: skip
+        assert result.exit_code == 2, result.output
+        after = catalogue_after_password_login(session.profile_id, authority_operation)
+        assert len(after.invoices) == len(before.invoices)

@@ -27,6 +27,7 @@ from cadrumo.application.runtime.transport import RuntimeConnectionContext
 from cadrumo.application.user_profile.access_contracts import (
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
@@ -38,7 +39,7 @@ from cadrumo.application.user_profile.automation_lifecycle_service import (
 )
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.runtime.enrollment_connections import RuntimeEnrollmentOffer
+from cadrumo.entrypoints.runtime.enrollment_offer import RuntimeEnrollmentOffer
 from cadrumo.entrypoints.runtime.profile_host import ProfileConnection, RuntimeProfileHost
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -58,7 +59,7 @@ class _Login:
             login_id=self.login_id,
             os_owner_id=self.os_owner_id,
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )

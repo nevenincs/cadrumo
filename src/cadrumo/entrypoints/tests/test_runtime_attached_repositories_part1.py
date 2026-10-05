@@ -26,7 +26,7 @@ from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObs
 from ...adapters.outbound.google import session_store as google_session_store
 from ...adapters.persistence.llm.cache import LLMCache
 from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
-from ...adapters.persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ...adapters.persistence.llm.run_records import LLMRunRecorder
 from ...adapters.persistence.llm.usage import UsageRecorder
 from ...adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -41,6 +41,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
+from ...adapters.persistence.profile.tests.wallet_history import load_decision_history
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ...adapters.persistence.storage.attachment import AttachmentStore
@@ -185,13 +186,12 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
         lambda: build_apoderado_config_repository(bucket_id=_BUCKET_A_ID, settings=load_settings()),
     ),
     ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
-    ("google_oauth_client", lambda: google_session_store.load_client("operator-google")),
     ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),
     ("google_oauth_metadata", lambda: google_session_store.load_metadata("operator-google")),
     ("google_drive_config", lambda: google_session_store.load_drive_config("operator-google")),
     ("llm_cache_stats", lambda: LLMCache(root_dir=Path("runtime-cache")).stats()),
     ("llm_usage_load", lambda: UsageRecorder(root_dir=Path("runtime-usage")).load_records()),
-    ("llm_run_telemetry", lambda: LLMRunTelemetryRecorder(root_dir=Path("runtime-telemetry")).load_records()),
+    ("llm_run_telemetry", lambda: LLMRunRecorder(root_dir=Path("runtime-run-record")).load_records()),
     ("llm_consent_ledger", lambda: EvidenceConsentLedger().load_entries()),
     (
         "review_recipient_registry",
@@ -239,9 +239,8 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
     (
         "iva_wallet_decision_history",
-        lambda: IvaWalletDecisionRepository().load_decision_history(
-            _WALLET_SUBJECT_ID,
-            Period.from_year_and_code(2026, "2T"),
+        lambda: load_decision_history(
+            IvaWalletDecisionRepository(), _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
         ),
     ),
     ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()),
@@ -601,9 +600,8 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         )
         assert IvaWalletDecisionRepository().list_decisions() == ()
         assert (
-            IvaWalletDecisionRepository().load_decision_history(
-                _WALLET_SUBJECT_ID,
-                Period.from_year_and_code(2026, "2T"),
+            load_decision_history(
+                IvaWalletDecisionRepository(), _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
             )
             == ()
         )
@@ -644,7 +642,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         )
         wallet_repo = IvaWalletDecisionRepository()
         decisions = wallet_repo.list_decisions()
-        decision_history = wallet_repo.load_decision_history(_WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
+        decision_history = load_decision_history(wallet_repo, _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
         iva_periods = IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()
         usage = _load_usage_ratios_for_test(bucket_id=_BUCKET_A_ID)
 
@@ -693,10 +691,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
     artefact_b, body_b = _sede_artefact(_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        google_session_store.save_client(profile, google_a[0])
-        google_session_store.save_token(profile, google_a[1])
-        google_session_store.save_metadata(profile, google_a[2])
-        google_session_store.save_drive_config(profile, google_a[3])
+        google_session_store.save_token(profile, google_a[0])
+        google_session_store.save_metadata(profile, google_a[1])
+        google_session_store.save_drive_config(profile, google_a[2])
         cache.write(request, _llm_response(_BUCKET_A_ID))
         usage.record(_usage_record(_BUCKET_A_ID))
         InventoryLedgerRepository().save(
@@ -708,16 +705,15 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         )
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert google_session_store.load_client(profile) is None
+        assert google_session_store.load_token(profile) is None
         assert cache.read(request, LLMProvider.OPENAI, "gpt-test") is None
         assert usage.load_records() == ()
         assert InventoryLedgerRepository().load().ledgers == ()
         with pytest.raises(ExpedienteNotFoundError):
             FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(stored_a.storage_ref or "")
-        google_session_store.save_client(profile, google_b[0])
-        google_session_store.save_token(profile, google_b[1])
-        google_session_store.save_metadata(profile, google_b[2])
-        google_session_store.save_drive_config(profile, google_b[3])
+        google_session_store.save_token(profile, google_b[0])
+        google_session_store.save_metadata(profile, google_b[1])
+        google_session_store.save_drive_config(profile, google_b[2])
         cache.write(request, _llm_response(_BUCKET_B_ID))
         usage.record(_usage_record(_BUCKET_B_ID))
         InventoryLedgerRepository().save(
@@ -735,10 +731,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(
             stored_a.storage_ref or "",
         )
-        assert google_session_store.load_client(profile) == google_a[0]
-        assert google_session_store.load_token(profile) == google_a[1]
-        assert google_session_store.load_metadata(profile) == google_a[2]
-        assert google_session_store.load_drive_config(profile) == google_a[3]
+        assert google_session_store.load_token(profile) == google_a[0]
+        assert google_session_store.load_metadata(profile) == google_a[1]
+        assert google_session_store.load_drive_config(profile) == google_a[2]
 
     assert cached is not None
     assert cached.text == f"runtime attached response {_BUCKET_A_ID}"

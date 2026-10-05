@@ -14,7 +14,6 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -26,13 +25,19 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -52,7 +57,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -121,7 +126,8 @@ def test_installed_cli_rename_and_discard_use_exact_worker_snapshot(tmp_path: Pa
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: native,
         )
-        server = RuntimeTransportServer(
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with ThreadPoolExecutor(max_workers=1) as pool:

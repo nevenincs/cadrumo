@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.modelo.m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     ModeloWorkM303AttestationPublicResultV2,
@@ -10,12 +11,10 @@ from ...application.modelo.m303_attestation_operation import (
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.user_profile.access_contracts import AccessDenialCode
-from ...core.operations import OperationEffect, OperationTerminalCondition
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from ...core.operations import OperationEffect
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_modelo_m303_attestation(
@@ -48,12 +47,7 @@ def run_modelo_m303_attestation(
         or receipt.filing_year != request.period.filing_year
         or completed.effect is not OperationEffect.UPDATED
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 

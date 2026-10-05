@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:9a3a15a022e548a2134ef4b60be8292c6e1035e11e5f14fc56a9944b6fcbd87c'
+modified: '2026-10-03'
+body_hash: 'sha256:91f0b3bed4a919c6da15c6c68d71e8f6e43e6244d5f00d72a176d918e96ec2d2'
 related: []
 ---
 
@@ -44,10 +44,10 @@ typed errors.
 
 ## S353-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/modelos/_calculation_repository.py src/aeat/domain/modelos/test_calculation_repository_roundtrip.py src/aeat/domain/modelos/_runtime_repository.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_calculation_repository_roundtrip.py src/aeat/domain/modelos/test_repository_sensitivity_class.py` passed with 10 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "modelo or s85_runtime"` passed with 10 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py src/aeat/domain/modelos/_calculation_repository.py src/aeat/domain/modelos/test_calculation_repository_roundtrip.py` passed.
+- the historical check passed.
+- the historical check passed with 10 tests.
+- the historical check passed with 10 selected tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - `uv run --no-sync vaultspec-rag search "CalculationRevisionCatalogueRepository secure_objects_for_modelo_bucket runtime bucket FINANCIAL translated persistence error" --type code --port 8766 --max-results 8` returned the repository, runtime helper, and tests.
 

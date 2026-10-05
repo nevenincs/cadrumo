@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 
-from ....core.time.clock import today_madrid
 from ...deadlines.models import IrpfActivityKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _FACT_ID = "m036-activity-selector-catalogue"
@@ -63,50 +64,12 @@ class IrpfActivityKindCatalogue:
         return self.require(value)
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IRPF activity-kind catalogue entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IRPF activity-kind catalogue key {entry.key!r}")
-        entries[entry.key] = entry.value.strip()
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(
+    subject="IRPF activity-kind catalogue", value_whitespace=MappingValueWhitespace.STRIP
+)
 
 
-def _resolve_mapping_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("IRPF activity-kind catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("IRPF activity-kind catalogue requires an explicit authority operation or scope")
-
-
-def _selected_mapping_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or today_madrid()
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        return _bundled_mapping_entries(coordinate)
-    return _resolve_mapping_entries(effective_date=coordinate, authority=authority)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_irpf_activity_kind_catalogue(
@@ -115,7 +78,7 @@ def resolve_irpf_activity_kind_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IrpfActivityKindCatalogue:
     """Resolve activity-kind membership from the M036 selector catalogue."""
-    entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
     selectors_by_token: dict[IrpfActivityKind, list[str]] = {}
     for key, raw_value in entries.items():
         if not key.startswith(_SELECTOR_PREFIX) or not key.endswith(_ACTIVITY_KIND_SUFFIX):

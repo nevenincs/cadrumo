@@ -14,10 +14,9 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
@@ -30,11 +29,18 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from ...adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,7 +61,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -112,7 +118,8 @@ def test_installed_reference_reauthenticates_only_current_exact_native_credentia
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
             endpoint,
             product_version=version("cadrumo"),
             stop=stop,

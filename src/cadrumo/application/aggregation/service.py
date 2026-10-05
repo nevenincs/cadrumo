@@ -37,6 +37,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.invoice_bindings import (
     CollectibleInvoiceProvider,
     M347ThirdPartyOperationProvider,
+    M349IntracommunityOperationProvider,
     PayableInvoiceProvider,
 )
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -195,7 +196,9 @@ def _counterpart_binding(binding: BindingDefinition) -> bool:
     provider = binding.provider
     if isinstance(provider, M347ThirdPartyOperationProvider):
         return True
-    if not isinstance(provider, PayableInvoiceProvider | CollectibleInvoiceProvider):
+    if not isinstance(
+        provider, PayableInvoiceProvider | CollectibleInvoiceProvider | M349IntracommunityOperationProvider
+    ):
         return False
     return provider.grouping in {"operator_clave", "operator_clave_period"}
 

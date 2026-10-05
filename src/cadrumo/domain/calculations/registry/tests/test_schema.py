@@ -139,6 +139,33 @@ def test_casilla_roundtrip_valid_input_kind() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    ("input_kind", "extra"),
+    [
+        ("manual", {}),
+        ("informational", {}),
+        ("computed", {"formula": "test.formula"}),
+        ("projection_only", {}),
+    ],
+)
+def test_casilla_that_is_not_bound_refuses_a_binding(input_kind: str, extra: dict[str, object]) -> None:
+    """A binding on a casilla nothing resolves as bound is a source that never reaches it."""
+    with pytest.raises(ValidationError, match="must not declare binding"):
+        CasillaDefinition.model_validate(
+            {
+                "id": _SCHEMA_CASILLA_ID,
+                "number": "01",
+                "localization_keys": ("test.schema.casilla.label",),
+                "section": ("test",),
+                "input_kind": input_kind,
+                "binding": "test.binding",
+                "legal_refs": (_SCHEMA_LEGAL_ID,),
+                "source_refs": (_SCHEMA_SOURCE_ID,),
+                **extra,
+            },
+        )
+
+
 def test_casilla_rejects_unknown_input_kind() -> None:
     """CasillaDefinition raises ValidationError for an unrecognised input_kind token."""
     with pytest.raises(ValidationError):

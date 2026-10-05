@@ -51,7 +51,8 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 
-from ..frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ..frontend_client import RuntimeFrontendClient
+from ..frontend_client_contracts import RuntimeFrontendRefusedError
 from ..profile_mutations import ProfileMutationRunError
 from ..profile_password_rotation import run_profile_password_rotation
 

@@ -12,7 +12,8 @@ see how each total was reached and adjust a figure if something looks off.
 Your calculation is laid out in Google Sheets with a live formula behind
 every total, so a corrected input recomputes everything that depends on it in
 front of you, and your reviewed edits pull back into the tool once it confirms
-the sheet matches the modelo, revision, year, and period. The offline `.xlsx`
+the sheet matches the modelo, the version of the official form, the year, and
+the period. The offline `.xlsx`
 the tool can also produce carries the same live formulas, but nothing reads an
 edited local workbook back, so it is a local review copy. The walkthrough is
 [Review calculations with Google Sheets](../how-to/review-with-google-sheets.md).
@@ -39,7 +40,7 @@ is what lets each be good at what it does.
 
 Review comes first, while the calculation is still a draft you can change. The
 export file comes after the completeness check described in
-[Editing and verifying a calculation](editing-and-verifying.md), because the
-tool builds it only from a verified or filed version. Producing the export file
+[Editing and checking a calculation](editing-and-verifying.md), because the
+tool builds it only from a checked calculation or one recorded as filed. Producing the export file
 is not the same as filing it; what happens after you have the file is covered in
 [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).

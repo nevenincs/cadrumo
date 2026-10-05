@@ -41,24 +41,26 @@ from ...compiler.loader import (
 )
 from .._export_tree import render_complete_export_tree
 from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
-from .._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from ..candidate_staging import (
-    stage_continuity_metadata,
+from .._tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedHistoricalStaticGeneratedExportTree,
+    validate_generated_export_tree,
 )
 from ..cli import stage_published_modelo
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
-    loader_semantic_digest,
 )
+from ..export_fragment_provenance_projection import loader_semantic_digest
 from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
 from ..joined_record_design import design_view
-from ..render_check import compare_revision_against_committed, parsed_tree_file
+from ..render_check import compare_export_tree_roots, parsed_tree_file
 from ..source_defects import source_defects_for
-from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
+from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos, tree_inheritance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -68,11 +70,26 @@ _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispos
 _RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
 
 
+def test_repaired_historical_m232_tree_is_enrolled_with_its_official_frame() -> None:
+    tree = next(item for item in _GENERATED_TREES if str(item) == "m232-2016-2017")
+    assert (tree.source_ref, tree.epoch, tree.filing_year, tree.period, tree.historical_static) == (
+        "aeat-dr-232-2016",
+        "2016",
+        2016,
+        "0A",
+        True,
+    )
+
+
 def _expected_filing_grade_refusals() -> dict[str, str]:
     """The declared capability controls which targets must refuse a filing snapshot."""
     authority = compiled_bundled_authority()
     expected = {}
     for tree in _GENERATED_TREES:
+        if tree.historical_static:
+            # Its check yields only a source-pinned static inspection. The
+            # ordinary filing-grade/floor refusal is asserted separately.
+            continue
         revision = authority.modelo(tree.modelo).revisions[tree.revision]
         grade = revision.authority_grade or UNDECLARED_REGISTRY_AUTHORITY_GRADE
         if grade is not RegistryAuthorityGrade.FILING:
@@ -88,7 +105,9 @@ _EXPECTED_FILING_GRADE_REFUSALS = _expected_filing_grade_refusals()
 
 def _published_layout(tree: GeneratedExportTree, root: Path) -> ExportLayoutDefinition:
     """Load the committed tree's layout exactly as check mode loads its published witness."""
-    staged = stage_published_modelo(root, modelo=tree.modelo, revision=tree.revision)
+    staged = stage_published_modelo(
+        root, modelo=tree.modelo, revision=tree.revision, inheritance=tree_inheritance(tree)
+    )
     definition = load_modelo_directory(staged or bundled_path("registry", "aeat", "modelos", tree.modelo))
     (layout,) = definition.revisions[tree.revision].export_layouts
     return layout
@@ -211,14 +230,15 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     is not accompanied by a regenerated tree reds here, and so does a hand-edited
     fragment.
 
-    Whether the generator's own `check_generated_export_tree` PASSES is a stronger
-    question, because it validates the candidate through the real registry
-    authority at filing grade. A lower declared capability must refuse at that
-    boundary; a filing-grade target must pass the full check. The expected
-    refusal is selected from current authority rather than a revision roster.
+    The generator's own `check_generated_export_tree` also validates the isolated
+    candidate through the real registry authority. Ordinary targets select at
+    filing grade, and lower capabilities must refuse there. A historical tree
+    below the support floor instead proves the distinct source-pinned static
+    result, with no runtime snapshot or filing admission.
     """
     joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     source_defects = source_defects_for(tree.source_ref)
+    inheritance = tree_inheritance(tree)
     fresh_root = tmp_path / "fresh" / "export"
 
     # The refusal ledger is consulted BEFORE the render, not after it. A tree the
@@ -239,6 +259,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
                 render_profile=render_profile,
                 render_profile_source_evidence=evidence,
                 source_defects=source_defects,
+                inheritance=inheritance,
             )
         assert refusal.refusal_marker in str(refused.value), (
             f"{tree}: render-refusal pin is dormant or its cause changed"
@@ -254,6 +275,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         render_profile=render_profile,
         render_profile_source_evidence=evidence,
         source_defects=source_defects,
+        inheritance=inheritance,
     )
 
     fresh_members = {path.name for path in fresh_root.iterdir()}
@@ -300,10 +322,12 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
 
     if differing:
         disposition = _RECORD_DRIFT_DISPOSITIONS.get(subject)
-        comparison = compare_revision_against_committed(
-            compiled_bundled_authority(),
+        comparison = compare_export_tree_roots(
             modelo=tree.modelo,
             revision=tree.revision,
+            layout_id=tree.layout_id,
+            committed_root=tree.committed,
+            rendered_root=fresh_root,
         )
         if disposition is not None:
             assert disposition.source_ref == tree.source_ref
@@ -338,7 +362,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     )
     # The published layout load must see exactly the target revision, so a
     # multi-revision modelo is staged through the same isolation the CLI uses.
-    published_modelo_root = stage_published_modelo(candidate_root, modelo=tree.modelo, revision=tree.revision)
+    published_modelo_root = stage_published_modelo(
+        candidate_root, modelo=tree.modelo, revision=tree.revision, inheritance=inheritance
+    )
     context = GeneratedExportTreeCheckContext(
         validation=GeneratedExportTreeValidationContext(
             registry_root=registry_root,
@@ -352,6 +378,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             period=tree.period,
             supporting_modelos=supporting_modelos(tree),
             continuity_metadata_modelo_root=continuity_metadata_modelo_root,
+            scope_authority=compiled_bundled_authority(),
+            historical_static_source_ref=tree.source_ref if tree.historical_static else None,
+            inheritance=inheritance,
         ),
         temporary_root=candidate_root,
         target_registry_root=bundled_path("registry", "aeat"),
@@ -379,7 +408,11 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         f"{tree}: check mode now PASSES, so the pending entry {expected!r} is stale -- remove it "
         "from _EXPECTED_FILING_GRADE_REFUSALS and let this gate assert the pass"
     )
-    assert str(checked.candidate.layout.id) == tree.layout_id
+    assert str(checked.candidate.layout.id) == transport.layout_id
+    if tree.historical_static:
+        assert isinstance(checked.candidate, ValidatedHistoricalStaticGeneratedExportTree)
+        assert str(checked.candidate.inspection.revision_id) == tree.revision
+        assert not hasattr(checked.candidate, "snapshot")
 
 
 @pytest.mark.parametrize(

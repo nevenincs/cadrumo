@@ -21,7 +21,7 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import (
@@ -31,7 +31,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_client_credentials 
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
-from cadrumo.application.auth.read_operation import (
+from cadrumo.application.auth.auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
     AuthReadProjection,
     AuthReadRequest,
@@ -58,6 +58,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority_des
 from cadrumo.entrypoints.cli.tests import native_api_cli_support
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
@@ -97,6 +98,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
     tmp_path: Path,
 ) -> None:
     """Closing one stdio adapter retires only its session; revocation fences the next."""
+    require_os_credential_store()
     backend = _native_backend_for_current_platform()
     native_store = native_automation_secret_store(backend)
     assert native_store.backend is backend
@@ -394,6 +396,7 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Actual UTC expiry retires human authority without suspending independent native custody."""
+    require_os_credential_store()
     worker_script = tmp_path / "one-minute-idle-worker.py"
     worker_script.write_text(
         "from cadrumo.core.config import override_settings\n"

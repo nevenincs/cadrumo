@@ -24,23 +24,24 @@ from textual.widgets import Button, Checkbox, Input, Select, SelectionList, Stat
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.automation_decision import run_automation_decision
 from cadrumo.adapters.local_runtime.automation_inventory import read_automation_inventory
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
+from cadrumo.adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
-from cadrumo.adapters.persistence.storage.custody.automation_store import CLIENT_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.auth.read_operation import (
+from cadrumo.application.auth.auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
     AUTH_READ_RESULT_SCHEMA_ID,
     AuthReadProjection,
@@ -68,6 +69,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationSecretStore
@@ -91,11 +93,10 @@ from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.launcher import main
 from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
 from cadrumo.entrypoints.tui.runtime_session import RuntimeRestrictedSessionApp
-from cadrumo.entrypoints.tui.secret.automation_requester import (
-    AutomationRequestOutcome,
-    RuntimeAutomationRequesterScreen,
-)
-from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
+from cadrumo.entrypoints.tui.secret.automation_requester_contracts import AutomationRequestOutcome
+from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
 __all__ = ["authority_operation"]
 
@@ -116,7 +117,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -265,7 +266,7 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(installed_session, "installed_automation_secret_store", lambda: subject.client_native)
@@ -490,18 +491,18 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                             assert submitted is not None and submitted.stage is EnrollmentStage.REQUESTED
                             approval = pool.submit(copy_context().run, approve, submitted.request_id)
                             owner.auxiliary.append(approval)
-                            await _until(pilot, lambda: request.safe_outcome is not None or approval.done(), timeout=45)
+                            await _until(pilot, lambda: request._outcome is not None or approval.done(), timeout=45)
                             if approval.done():
                                 approval.result()
-                            if request.safe_outcome is None:
-                                await _until(pilot, lambda: request.safe_outcome is not None, timeout=45)
+                            if request._outcome is None:
+                                await _until(pilot, lambda: request._outcome is not None, timeout=45)
                             approval_error = await await_cancellation_complete(
                                 asyncio.to_thread(approval.exception, timeout=45),
                                 task_name="grant-result-approval-settlement",
                             )
                             if approval_error is not None:
                                 raise approval_error
-                            outcome = request.safe_outcome
+                            outcome = request._outcome
                             assert outcome is not None and outcome.stage is EnrollmentStage.COMPLETE
                             assert not outcome.uncertain and outcome.request_id == submitted.request_id
                             assert PROFILE_INPUT not in str(
@@ -717,7 +718,7 @@ def test_tui_profile_lock_resumes_only_selected_grant_seen_by_cli(tmp_path: Path
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with override_settings(cadrumo_local_storage_root=storage_root):
@@ -842,7 +843,7 @@ def test_api_reference_tui_refuses_programmatic_administration_but_can_lock_own_
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         factories: list[RuntimeFrontendClient] = []

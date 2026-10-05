@@ -14,6 +14,8 @@ from pydantic import BaseModel
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import (
+    AccessDecision,
+    AccessDenialCode,
     AccessDenied,
     AccessEvaluationContext,
     AccessScope,
@@ -27,7 +29,8 @@ from .access_contracts import (
     SessionKind,
     SessionState,
 )
-from .access_policy import evaluate_session_authority, intersect_scopes
+from .access_policy import intersect_scopes
+from .session_authority_policy import evaluate_session_authority
 
 
 class PublicAutomationGrant(BaseModel):
@@ -121,6 +124,60 @@ def project_access_session(session: AccessSession) -> PublicAccessSession:
     )
 
 
+def _effective_access_scope(
+    *,
+    allowed: bool,
+    session: AccessSession | None,
+    ancestors: tuple[AccessSession, ...],
+    grant: AutomationGrant | None,
+    profile: ProfileAccessState,
+) -> AccessScope:
+    if not allowed or session is None:
+        return intersect_scopes(())
+    scopes = (profile.scope, session.scope, *(item.scope for item in ancestors))
+    if grant is not None and session.kind is not SessionKind.HUMAN:
+        scopes += (grant.scope,)
+    return intersect_scopes(scopes)
+
+
+def _session_status_facts(
+    session: AccessSession | None,
+    profile: ProfileAccessState,
+    context: AccessEvaluationContext,
+) -> tuple[UUID | None, UUID | None, UtcInstant | None, bool, bool]:
+    if session is None:
+        return None, None, None, False, False
+    credential_authenticated = (
+        session.connection_id == context.connection_id
+        and session.runtime_boot_id == context.runtime_boot_id
+        and session.client_id == context.authenticated_client_id
+    )
+    return (
+        session.binding.profile_id,
+        session.session_id,
+        session.expires_at,
+        session.binding == profile.binding,
+        credential_authenticated,
+    )
+
+
+def _grant_status_facts(
+    grant: AutomationGrant | None,
+    context: AccessEvaluationContext,
+) -> tuple[AuthorityState | None, UtcInstant | None, bool]:
+    if grant is None:
+        return None, None, False
+    return (
+        grant.state,
+        grant.expires_at,
+        grant.state is AuthorityState.ACTIVE and grant.valid_from <= context.now < grant.expires_at,
+    )
+
+
+def _status_denial(decision: AccessDecision) -> AccessDenialCode | None:
+    return decision.code if isinstance(decision, AccessDenied) else None
+
+
 def project_access_status(
     *,
     session: AccessSession | None,
@@ -147,30 +204,30 @@ def project_access_status(
         context=context,
     )
     denied = isinstance(decision, AccessDenied)
-    scopes = () if denied or session is None else (profile.scope, session.scope, *(item.scope for item in ancestors))
-    if scopes and grant is not None and session is not None and session.kind is not SessionKind.HUMAN:
-        scopes += (grant.scope,)
-    credential_authenticated = session is not None and (
-        session.connection_id == context.connection_id
-        and session.runtime_boot_id == context.runtime_boot_id
-        and session.client_id == context.authenticated_client_id
+    profile_id, session_id, session_expires_at, profile_bound, credential_authenticated = _session_status_facts(
+        session, profile, context
     )
+    grant_state, grant_expires_at, grant_valid = _grant_status_facts(grant, context)
     return ProfileAccessStatus(
         connected=True,
         credential_authenticated=credential_authenticated,
-        profile_id=None if session is None else session.binding.profile_id,
-        session_id=None if session is None else session.session_id,
-        session_expires_at=None if session is None else session.expires_at,
-        grant_state=None if grant is None else grant.state,
-        grant_expires_at=None if grant is None else grant.expires_at,
-        grant_valid=grant is not None
-        and grant.state is AuthorityState.ACTIVE
-        and grant.valid_from <= context.now < grant.expires_at,
-        profile_bound=session is not None and session.binding == profile.binding,
+        profile_id=profile_id,
+        session_id=session_id,
+        session_expires_at=session_expires_at,
+        grant_state=grant_state,
+        grant_expires_at=grant_expires_at,
+        grant_valid=grant_valid,
+        profile_bound=profile_bound,
         storage=profile.storage,
         automation_custody=profile.automation_custody,
         published_authority=published_authority,
         provider=provider,
-        effective_scope=intersect_scopes(scopes),
-        denial=decision.code if isinstance(decision, AccessDenied) else None,
+        effective_scope=_effective_access_scope(
+            allowed=not denied,
+            session=session,
+            ancestors=ancestors,
+            grant=grant,
+            profile=profile,
+        ),
+        denial=_status_denial(decision),
     )

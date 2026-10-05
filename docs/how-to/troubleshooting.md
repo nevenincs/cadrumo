@@ -36,21 +36,27 @@ inspection reports an unreadable active pointer. Login then asks for that
 profile's passphrase; a headless caller must use an explicit machine secret
 channel instead of placing the passphrase on the command line.
 
-If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
+If no profile exists yet, create one first; see [Set up your taxpayer
+profile](profile-setup.md).
 
 If a profile loads but the numbers look wrong, see the next symptom.
 
 ## The numbers or facts look like someone else's
 
-The wrong profile is active. Each profile keeps its own ledger, calculations, and filings, so a command run under the wrong one shows someone else's data. See which profile is active:
+The wrong profile is active. Each profile keeps its own records, calculations,
+and filings, so a command run under the wrong one shows someone else's data. See
+which profile is active:
 
 ```{cli-sequence} troubleshooting-wrong-profile
 :verify: Confirm the active profile is the one you expect to be working under.
 ```
 
-Log in to the right profile with `aeat config login <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating profiles and moving between them.
+Log in to the right profile with `aeat config login <profile-name>`. [Set up
+your taxpayer profile](profile-setup.md) covers creating profiles and moving
+between them.
 
-## A calculation refuses because the ledger is not ready
+(a-calculation-refuses-because-the-ledger-is-not-ready)=
+## A calculation refuses because your records are not ready
 
 The refusal looks like this:
 
@@ -58,24 +64,24 @@ The refusal looks like this:
 ledger preflight blocks modelo calculation: transaction <id> <reason>: <detail>. Run the ledger preflight for period <period> and resolve its findings before calculating.
 ```
 
-The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`:
+The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT period code (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`:
 
 ```{cli-sequence} troubleshooting-ledger-ready
-:verify: Confirm the ledger preflight and status run for the period you are calculating.
+:verify: Confirm the check of your records and status run for the period you are calculating.
 ```
 
 The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in [Import and manage transactions](import-bank-statements.md), then run the calculation again.
 
 ## A required value is missing
 
-The refusal or the verification finding names the missing item:
+The refusal or the issue from the check names the missing item:
 
 ```text
 Binding <id> has no supplied value.
 Required casilla <id> carries no value.
 ```
 
-A casilla is a numbered box on the official form. A binding is a rule that fills one. List which values are still missing for your form:
+A box (casilla) is a numbered field on the official form. In the message, `Binding` is the rule that fills a box. List which values are still missing for your form:
 
 ```{cli-sequence} troubleshooting-missing-values
 :verify: Confirm the tool lists the values still missing for the form.
@@ -83,19 +89,20 @@ A casilla is a numbered box on the official form. A binding is a rule that fills
 
 Replace the modelo, year, and period with your own. The full workflow for supplying and reviewing values lives in [Review and supply calculation inputs](review-calculation-values.md).
 
-## The period token is rejected
+(the-period-token-is-rejected)=
+## The period code is rejected
 
-Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. Every command takes the year separately with `--year`. [Period tokens and dates](filing-calendar.md#period-tokens-and-dates) explains which form uses which period.
+Use one period grammar everywhere: the AEAT period codes. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. Every command takes the year separately with `--year`. {ref}`Period codes and dates <period-tokens-and-dates>` explains which form uses which period.
 
-Modelo and ledger commands share the same shape - the AEAT token with `--year`:
+Modelo and `ledger` commands share the same shape: the AEAT period code with `--year`:
 
 ```{cli-sequence} troubleshooting-period-grammar
-:verify: Confirm the AEAT token plus --year is accepted across ledger and modelo commands.
+:verify: Confirm the AEAT token plus --year is accepted across records and modelo commands.
 ```
 
-The ledger `--period` commands include `ledger preflight`, `ledger status`,
-`ledger export`, `ledger import`, and `overview status`. Where the year is
-optional, a bare period token is refused with a correction:
+The `ledger` commands that take `--period` are `ledger preflight`, `ledger
+status`, `ledger export`, `ledger import`, and `overview status`. Where the year
+is optional, a bare period code is refused with a correction:
 
 ```text
 Period token '1T' needs a year on this command. Add --year (e.g. --period 1T --year 2024).
@@ -113,11 +120,12 @@ A modelo token that is not valid for the form lists the accepted tokens:
 --period '<token>' is not a valid period token for modelo <modelo>. ... Valid tokens: ...
 ```
 
-Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; use the AEAT token with `--year`.
+Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; use the AEAT period code with `--year`.
 
-## An export refuses because no verified calculation exists
+(an-export-refuses-because-no-verified-calculation-exists)=
+## An export refuses because no checked calculation exists
 
-Exports only work from a calculation that passed verification. Run the verification first - [Verify a filing](verification-reports.md) owns that workflow and explains what the report tells you. The refusal reads `No calculation revision matched the requested selector`, or `The selected calculation revision is not in a usable state for this operation` when the current calculation is still a draft.
+Exports only work from a calculation that passed the check. Run the check first: [Check a draft declaration and act on the issues](verification-reports.md) owns that workflow and explains what the report tells you. The refusal reads `No calculation revision matched the requested selector`, or `The selected calculation revision is not in a usable state for this operation` when the current calculation is still a draft.
 
 ## An export refuses the output path
 
@@ -189,7 +197,7 @@ the full local report, and the secure-object integrity check.
 :verify: Confirm the read-only diagnostics all run and report on your setup and data.
 ```
 
-`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records. `aeat config repair` with no subcommand prints the full local report: package and Python versions, profile and authentication state, the tax rule definitions, and the same secure-object check. If a check fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
+`overview status` reports your profile, records, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records. `aeat config repair` with no subcommand prints the full local report: package and Python versions, profile and authentication state, the tax rule definitions, and the same secure-object check. If a check fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
 
 When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
 
@@ -206,9 +214,12 @@ participation index. Rebuild it first if the lookup appears incomplete:
 :verify: Confirm the participation index rebuilds from the finalized records.
 ```
 
-The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
+The index is a derived cross-reference, safe to regenerate at any time:
+`rebuild` rescans the finalized calculation records and rewrites it. Run it if a
+participation lookup looks incomplete. Rebuilding changes no records or filing
+data.
 
-Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If either refuses because the profile is locked or none is active, log in to the profile first with `aeat config login <profile-name>`.
+Both `participation` verbs read the active profile's encrypted storage, so they need an unlocked profile session. If either refuses because the profile is locked or none is active, log in to the profile first with `aeat config login <profile-name>`.
 
 When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
@@ -216,7 +227,7 @@ When nothing else recovers the problem, and only then, clear the saved progress 
 :verify: Confirm the saved interrupted-command progress is cleared for the unlocked profile.
 ```
 
-It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so log in to the profile first if it refuses because the profile is locked or none is active.
+It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's storage, so log in to the profile first if it refuses because the profile is locked or none is active.
 
 (prepare-a-privacy-safe-support-request)=
 ## Prepare a privacy-safe support request
@@ -226,9 +237,11 @@ When the steps on this page don't resolve the problem, gather this before asking
 - The exact command you ran.
 - The error lines the command printed.
 - The log path and the relevant recent lines from `aeat config repair logs`.
-- Any report or work-unit IDs the output shows.
+- Any report or declaration IDs the output shows.
 
-Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), names, addresses, and file paths that embed your user name. Log lines can contain personal data - read them before pasting.
+Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), names,
+addresses, and file paths that embed your user name. Log lines can contain
+personal data. Read them before pasting.
 
 Take the request to the [project issue tracker](https://github.com/nevenincs/cadrumo/issues).
 
@@ -236,9 +249,10 @@ If a term in an error message is unfamiliar, look it up in the {doc}`glossary </
 
 ## Next steps
 
-- [Quickstart: prepare a modelo filing](quickstart.md) - follow the first local filing path.
-- [Set up your taxpayer profile](profile-setup.md) - create and switch profiles.
-- [Authenticate with AEAT](authenticate-with-aeat.md) - check read-only live access setup.
-- [Read AEAT notifications](check-aeat-notifications.md) - inspect saved DEHú notification snapshots.
-- [How Cadrumo turns your records into a tax file](../explanation/index.md) - what the registry, secure storage, and workflow state are.
-- [CLI reference](../cli/index.rst) - every repair command, flag, and exit code.
+- [Quickstart: prepare a modelo filing](quickstart.md): follow the first local filing path.
+- [Set up your taxpayer profile](profile-setup.md): create and switch profiles.
+- [Authenticate with AEAT](authenticate-with-aeat.md): check read-only live
+  access setup.
+- [Read AEAT notifications](check-aeat-notifications.md): inspect saved DEHú notification snapshots.
+- [How Cadrumo turns your records into a tax file](../explanation/index.md): what the tax rules, secure storage, and workflow state are.
+- [CLI reference](../cli/index.rst): every repair command, flag, and exit code.

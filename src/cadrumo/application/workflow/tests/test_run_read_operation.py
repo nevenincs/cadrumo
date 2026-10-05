@@ -19,6 +19,7 @@ from ...operations.public_period import PublicPeriod
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
 from ...user_profile.access_errors import ProfileAccessRefusedError
+from ..obligation_snapshot import WorkflowObligationSnapshot
 from ..run_models import (
     WorkflowDeadlineContextDetails,
     WorkflowObligationFacts,
@@ -26,7 +27,7 @@ from ..run_models import (
     WorkflowStage,
     WorkflowStep,
 )
-from ..run_projection import WorkflowObligationSnapshot, WorkflowRunSnapshot, validate_run_period_facts
+from ..run_projection import WorkflowRunSnapshot, validate_run_period_facts
 from ..run_read_operation import (
     WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,
     WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,

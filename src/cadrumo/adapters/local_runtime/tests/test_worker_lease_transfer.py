@@ -29,7 +29,13 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 
-from ..framing import MAXIMUM_FRAME_BYTES, read_document, read_profile_status, write_document, write_profile_status
+from ..runtime_frame_io import (
+    MAXIMUM_FRAME_BYTES,
+    read_document,
+    read_profile_status,
+    write_document,
+    write_profile_status,
+)
 from ..worker_lease_transfer import read_worker_lease, write_worker_lease
 from .profile_worker_support import changed, lease
 

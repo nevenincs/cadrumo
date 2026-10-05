@@ -36,14 +36,12 @@ Aggregate facts stored::
 
   renta_family.descendientes_count               int count
 
-The Art. 81.2 guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
-is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
-the calculate-time injector recomputes it from the per-child spend above —
-through the canonical record, so the annual figure and the monthly map are
-weighed by the same Art. 81.2 month rules — and overwrites whatever the index
-holds, precisely so an operator's number can never be substituted for the law's. The
-profile write door refuses that path outright, so projecting it from here would
-refuse the whole batch rather than persist a second, divergent copy.
+No Art. 81.2 guardería aggregate is stored here. The increment the 0613 formula
+reads (``renta_family.incremento_guarderia_{year}``) is a DERIVED path: the
+calculate-time injector recomputes it from the per-child spend above, through the
+canonical record, so the annual figure and the monthly map are weighed by the same
+Art. 81.2 month rules, and overwrites whatever the index holds, so an operator's
+number can never be substituted for the law's.
 """
 
 from __future__ import annotations
@@ -57,7 +55,8 @@ from typing import Final, Literal, TypedDict, TypeIs
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
 from ...core.errors.hierarchy import ProfileAnswerTypeError
-from ...core.identity.tax_id import tax_id_identity_token
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.text_bounds import is_calendar_month
@@ -69,8 +68,9 @@ from ..calculations.registry.descendant_relacion_catalogue import (
 )
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
+from ..calculations.registry.tax_id_format import runtime_tax_id_format
 from .descendant import DescendantInfo
 from .family_types import GuarderiaMonthSpend
 from .guarderia_mensual import (
@@ -146,9 +146,7 @@ familiar at all.
 
 def _disability_band_declarations(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
     """Resolve descendant disability-grade vocabulary from the dated registry fact."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("descendant facts require an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="descendant facts")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_DISABILITY_BAND_FACT_ID,
@@ -401,9 +399,7 @@ def _stored_relacion(
     """
     if raw is None:
         return None
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("descendant facts require an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="descendant facts")
     try:
         return require_descendant_relacion(raw.strip().lower(), authority=authority)
     except (RegistryValidationError, ValueError):
@@ -863,7 +859,6 @@ def parse_descendiente_flag(
     civil_fields = _flag_civil_fields(parts, authority=authority)
     family_fields = _flag_family_fields(parts)
     maternity_fields = _flag_maternity_fields(parts)
-    nif_raw = parts.get("NIF")
 
     return DescendantInfo(
         birth_date=birth_date,
@@ -871,8 +866,26 @@ def parse_descendiente_flag(
         **civil_fields,
         **family_fields,
         **maternity_fields,
-        nif=tax_id_identity_token(nif_raw) if nif_raw else None,
+        nif=_flag_nif(parts.get("NIF"), authority=authority),
     )
+
+
+def _flag_nif(raw: str | None, *, authority: GovernedFactSource | None) -> str | None:
+    """Admit a descendant NIF only when the canonical identity authority accepts it.
+
+    The record itself checks only the width, so this door is where the
+    checksum is enforced, exactly as the wizard's descendant page enforces it.
+    The refusal names the key and never echoes the identifier.
+    """
+    if not raw:
+        return None
+    try:
+        return validate_spanish_tax_id(raw, runtime_tax_id_format(authority=authority))
+    except IdentityError as exc:
+        raise ProfileAnswerTypeError(
+            "NIF is not a valid Spanish NIF, NIE or CIF",
+            context={"key": "NIF"},
+        ) from exc
 
 
 def _flag_civil_fields(
@@ -922,8 +935,19 @@ def _flag_family_fields(parts: dict[str, str]) -> _FamilyFields:
 
 def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
     meses_raw = parts.get("MESES_TRABAJO")
+    alta_posterior_nacimiento_mes, segundo_ciclo_infantil_inicio_mes = _flag_maternity_months(parts)
+    gastos_guarderia_euros, gastos_guarderia_mensuales = _flag_guarderia_spend(parts)
+    return {
+        "meses_madre_trabajo": parse_meses_trabajo(meses_raw, field="MESES_TRABAJO") if meses_raw is not None else (),
+        "alta_posterior_nacimiento_mes": alta_posterior_nacimiento_mes,
+        "segundo_ciclo_infantil_inicio_mes": segundo_ciclo_infantil_inicio_mes,
+        "gastos_guarderia_euros": gastos_guarderia_euros,
+        "gastos_guarderia_mensuales": gastos_guarderia_mensuales,
+    }
+
+
+def _flag_maternity_months(parts: dict[str, str]) -> tuple[int | None, int | None]:
     alta_posterior_raw = parts.get("ALTA_POSTERIOR_MES")
-    segundo_ciclo_raw = parts.get("SEGUNDO_CICLO_INFANTIL_INICIO_MES")
     alta_posterior_nacimiento_mes = (
         _flag_integer(alta_posterior_raw, key="ALTA_POSTERIOR_MES") if alta_posterior_raw is not None else None
     )
@@ -932,6 +956,7 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
             f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_nacimiento_mes!r}",
             context={"key": "ALTA_POSTERIOR_MES"},
         )
+    segundo_ciclo_raw = parts.get("SEGUNDO_CICLO_INFANTIL_INICIO_MES")
     segundo_ciclo_infantil_inicio_mes = (
         _flag_integer(segundo_ciclo_raw, key="SEGUNDO_CICLO_INFANTIL_INICIO_MES")
         if segundo_ciclo_raw is not None
@@ -942,6 +967,10 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
             f"SEGUNDO_CICLO_INFANTIL_INICIO_MES must be 1-12; got {segundo_ciclo_infantil_inicio_mes!r}",
             context={"key": "SEGUNDO_CICLO_INFANTIL_INICIO_MES"},
         )
+    return alta_posterior_nacimiento_mes, segundo_ciclo_infantil_inicio_mes
+
+
+def _flag_guarderia_spend(parts: dict[str, str]) -> tuple[int, tuple[GuarderiaMonthSpend, ...]]:
     gastos_raw = parts.get("GASTOS_GUARDERIA")
     gastos_guarderia_euros = _flag_integer(gastos_raw, key="GASTOS_GUARDERIA") if gastos_raw is not None else 0
     if gastos_guarderia_euros < 0:
@@ -960,13 +989,7 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
             "so drop GASTOS_GUARDERIA rather than stating the same spend twice.",
             context={"refusal": "guarderia_spend_shapes", "key": "GASTOS_GUARDERIA_MENSUAL"},
         )
-    return {
-        "meses_madre_trabajo": parse_meses_trabajo(meses_raw, field="MESES_TRABAJO") if meses_raw is not None else (),
-        "alta_posterior_nacimiento_mes": alta_posterior_nacimiento_mes,
-        "segundo_ciclo_infantil_inicio_mes": segundo_ciclo_infantil_inicio_mes,
-        "gastos_guarderia_euros": gastos_guarderia_euros,
-        "gastos_guarderia_mensuales": gastos_guarderia_mensuales,
-    }
+    return gastos_guarderia_euros, gastos_guarderia_mensuales
 
 
 __all__ = [

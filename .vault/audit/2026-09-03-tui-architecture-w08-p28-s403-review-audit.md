@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5fa2cf2f10afc1b9a0d23be539c77e2f3b2e5905c63276d4d381c608c19ab9a6'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 
 # `tui-architecture` audit: `w08 p28 s403 review`

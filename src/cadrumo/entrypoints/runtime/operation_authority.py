@@ -11,16 +11,25 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, SecretBytes
 
-from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient, WorkerAuthorizationLease
+from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     ProfilePassphraseRotationOperationRequest,
 )
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import (
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    resolve_operation_access,
+)
 from ...application.operations.models import OperationId, OperationIdentity, OperationRequest
 from ...application.operations.provenance import OperationAdmissionProvenance
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from ...application.runtime.approval_binding import RuntimeApprovalBinding
 from ...application.runtime.worker_authorization import (
     WorkerAuthorityRequest,
@@ -37,13 +46,13 @@ from ...application.user_profile.access_contracts import (
     SessionKind,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
-from ...application.user_profile.access_policy import operation_scope_refusal
 from ...application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from ...application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
 )
+from ...application.user_profile.operation_access_policy import operation_scope_refusal
 from ...application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ...application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
@@ -253,30 +262,60 @@ class ProfileWorkerOperationAuthority:
         self, identity: OperationIdentity, action: AccessAction, binding: WorkerOperationBinding
     ) -> WorkerAuthorityRequest:
         request = binding.request
+        self._require_binding_identity(identity, request)
+        lease = self.custody.require(binding.session_id)
+        contract = self._public_contract(request.definition_id)
+        provenance = self._require_invocation_provenance(identity, request, action, binding.provenance)
+        resolution = self._resolve_access(request, action, binding, lease, contract, provenance)
+        self._require_current_scope(action, resolution, provenance)
+        return self._authorization_request(identity, action, lease, resolution)
+
+    @staticmethod
+    def _require_binding_identity(identity: OperationIdentity, request: OperationRequest[BaseModel]) -> None:
         if identity.definition_id != request.definition_id or identity.subject_ref != request.subject_ref:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        lease = self.custody.require(binding.session_id)
+
+    def _public_contract(self, definition_id: str) -> OperationPublicDefinitionContractV1:
         try:
-            contract = self.registry.lookup_public_contract(request.definition_id)
+            return self.registry.lookup_public_contract(definition_id)
         except KeyError:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
-        provenance = binding.provenance
-        if action is not AccessAction.SUBMIT:
-            if (
-                provenance is None
-                or provenance.profile_binding.profile_id != self.custody.identity.binding.profile_id
-                or provenance.authority_generation != self._authority_operation.generation.logical_generation
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            try:
-                provenance.require_invocation(identity, request)
-            except ValueError:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
+
+    def _require_invocation_provenance(
+        self,
+        identity: OperationIdentity,
+        request: OperationRequest[BaseModel],
+        action: AccessAction,
+        provenance: OperationAdmissionProvenance | None,
+    ) -> OperationAdmissionProvenance | None:
+        if action is AccessAction.SUBMIT:
+            return provenance
+        if (
+            provenance is None
+            or provenance.profile_binding.profile_id != self.custody.identity.binding.profile_id
+            or provenance.authority_generation != self._authority_operation.generation.logical_generation
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        try:
+            provenance.require_invocation(identity, request)
+        except ValueError:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
+        return provenance
+
+    def _resolve_access(
+        self,
+        request: OperationRequest[BaseModel],
+        action: AccessAction,
+        binding: WorkerOperationBinding,
+        lease: AccessSession,
+        contract: OperationPublicDefinitionContractV1,
+        provenance: OperationAdmissionProvenance | None,
+    ) -> ResolvedOperationAccess:
         # Resolving persisted scope can decode governed facts before the
         # execution guard is entered. It uses the same retained publication
         # as execution, including repository validation of calculation rows.
         with validating_governed_facts(self._authority_operation):
-            resolution = resolve_operation_access(
+            return resolve_operation_access(
                 registry=self.registry,
                 request=request,
                 context=OperationAccessContext(
@@ -290,20 +329,37 @@ class ProfileWorkerOperationAuthority:
                     authority_operation=self._authority_operation,
                 ),
             )
-        if action is not AccessAction.SUBMIT:
-            if provenance is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            if action in {AccessAction.START, AccessAction.RESUME, AccessAction.COMMIT, AccessAction.RESPOND}:
-                # Historical reads use fresh current disclosure authority. Old
-                # credential generations must not execute again implicitly,
-                # but they do not revoke the profile's own persisted history.
-                if provenance.profile_binding != self.custody.identity.binding:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-                refusal = operation_scope_refusal(
-                    request=resolution.request, policy=resolution.policy, scope=provenance.approved_scope
-                )
-                if refusal is not None:
-                    raise ProfileAccessRefusedError(refusal.code)
+
+    def _require_current_scope(
+        self,
+        action: AccessAction,
+        resolution: ResolvedOperationAccess,
+        provenance: OperationAdmissionProvenance | None,
+    ) -> None:
+        if action is AccessAction.SUBMIT:
+            return
+        if provenance is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        if action not in {AccessAction.START, AccessAction.RESUME, AccessAction.COMMIT, AccessAction.RESPOND}:
+            return
+        # Historical reads use fresh current disclosure authority. Old
+        # credential generations must not execute again implicitly,
+        # but they do not revoke the profile's own persisted history.
+        if provenance.profile_binding != self.custody.identity.binding:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        refusal = operation_scope_refusal(
+            request=resolution.request, policy=resolution.policy, scope=provenance.approved_scope
+        )
+        if refusal is not None:
+            raise ProfileAccessRefusedError(refusal.code)
+
+    @staticmethod
+    def _authorization_request(
+        identity: OperationIdentity,
+        action: AccessAction,
+        lease: AccessSession,
+        resolution: ResolvedOperationAccess,
+    ) -> WorkerAuthorityRequest:
         request_type = WorkerResponseScopeRequest if action is AccessAction.RESPOND else WorkerAuthorizationRequest
         return request_type(
             request_id=uuid4(),
@@ -373,21 +429,40 @@ class ProfileWorkerOperationAuthority:
         """
         task = asyncio.current_task()
         binding = self._bindings.get(identity.operation_id)
+        if not self._owns_password_rotation_commit(task, identity):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        payload = self._password_retirement_payload(identity, binding)
+        if payload is None or not self._preserves_password_profile(payload, outcome):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        self.custody.retire_password_successor(password_generation=outcome.password_generation)
+
+    def _owns_password_rotation_commit(self, task: asyncio.Task[object] | None, identity: OperationIdentity) -> bool:
+        return (
+            task is not None and self._held.get(task) == (identity, AccessAction.COMMIT) and task in self._held_leases
+        )
+
+    @staticmethod
+    def _password_retirement_payload(
+        identity: OperationIdentity, binding: WorkerOperationBinding | None
+    ) -> ProfilePassphraseRotationOperationRequest | None:
         if (
-            task is None
-            or self._held.get(task) != (identity, AccessAction.COMMIT)
-            or task not in self._held_leases
+            binding is None
             or identity.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
-            or binding is None
             or binding.request.definition_id != identity.definition_id
             or binding.request.subject_ref != identity.subject_ref
             or not isinstance(binding.request.payload, ProfilePassphraseRotationOperationRequest)
-            or binding.request.payload.profile_id != self.custody.identity.binding.profile_id
-            or outcome.profile_id != str(binding.request.payload.profile_id)
-            or not outcome.dek_epoch_preserved
         ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        self.custody.retire_password_successor(password_generation=outcome.password_generation)
+            return None
+        return binding.request.payload
+
+    def _preserves_password_profile(
+        self, payload: ProfilePassphraseRotationOperationRequest, outcome: ProfilePassphraseRotationOutcome
+    ) -> bool:
+        return (
+            payload.profile_id == self.custody.identity.binding.profile_id
+            and outcome.profile_id == str(payload.profile_id)
+            and outcome.dek_epoch_preserved
+        )
 
     def require_owner(
         self,

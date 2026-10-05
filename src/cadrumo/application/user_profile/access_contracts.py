@@ -21,7 +21,8 @@ from ...core.period import Period
 from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.utc import UtcInstant
 from ..operations.models import OperationDefinitionId
-from ..operations.registry import OperationFrontendProjection, OperationPublicSchemaId
+from ..operations.registry import OperationFrontendProjection
+from ..operations.schema_identity import OperationPublicSchemaId
 
 ACCESS_LEASE_MAXIMUM = timedelta(minutes=5)
 GRANT_DEFAULT_VALIDITY = timedelta(days=365)
@@ -163,6 +164,54 @@ class SessionState(StrEnum):
     REVOKED = "revoked"
 
 
+def _validate_session_origin(session: AccessSession) -> None:
+    if (session.kind is SessionKind.API_KEY) != (session.originating_login_id is None):
+        raise ValueError("only human and attended sessions bind an originating OS login")
+    if session.originating_login_id is not None and not session.originating_login_id:
+        raise ValueError("originating OS login identity must be nonempty")
+
+
+def _validate_session_lifetime(session: AccessSession) -> None:
+    lifetime = session.expires_at - session.issued_at
+    if lifetime <= timedelta():
+        raise ValueError("session validity must be a positive interval")
+    if session.kind is not SessionKind.HUMAN and lifetime > ACCESS_LEASE_MAXIMUM:
+        raise ValueError("delegated access exceeds the maximum lease")
+
+
+def _validate_session_credential_pairs(session: AccessSession) -> None:
+    if (session.grant_id is None) != (session.grant_generation is None):
+        raise ValueError("grant identity and generation must be paired")
+    if (session.key_id is None) != (session.key_generation is None):
+        raise ValueError("key identity and generation must be paired")
+
+
+def _validate_session_kind_lineage(session: AccessSession) -> None:
+    if session.kind is SessionKind.HUMAN:
+        if session.parent_session_id is not None or session.grant_id is not None or session.key_id is not None:
+            raise ValueError("human authority cannot descend from automation")
+    elif session.grant_id is None:
+        raise ValueError("delegated sessions require an explicit grant")
+
+
+def _validate_session_kind_credentials(session: AccessSession) -> None:
+    if session.kind is SessionKind.API_KEY and session.key_id is None:
+        raise ValueError("API sessions require an authenticated key identity")
+    if session.kind is SessionKind.ATTENDED and (session.parent_session_id is None or session.key_id is not None):
+        raise ValueError("attended sessions require a parent and no root API key")
+
+
+def _validate_session_parent_identity(session: AccessSession) -> None:
+    if session.parent_session_id == session.session_id:
+        raise ValueError("a session cannot parent itself")
+
+
+def _validate_session_lineage(session: AccessSession) -> None:
+    _validate_session_kind_lineage(session)
+    _validate_session_kind_credentials(session)
+    _validate_session_parent_identity(session)
+
+
 class AccessSession(BaseModel):
     """Owner-issued lease bound to a boot and connection, never a portable bearer.
 
@@ -194,30 +243,10 @@ class AccessSession(BaseModel):
 
     @model_validator(mode="after")
     def _validate_origin_and_lease(self) -> AccessSession:
-        lifetime = self.expires_at - self.issued_at
-        if (self.kind is SessionKind.API_KEY) != (self.originating_login_id is None):
-            raise ValueError("only human and attended sessions bind an originating OS login")
-        if self.originating_login_id is not None and not self.originating_login_id:
-            raise ValueError("originating OS login identity must be nonempty")
-        if lifetime <= timedelta():
-            raise ValueError("session validity must be a positive interval")
-        if self.kind is not SessionKind.HUMAN and lifetime > ACCESS_LEASE_MAXIMUM:
-            raise ValueError("delegated access exceeds the maximum lease")
-        if (self.grant_id is None) != (self.grant_generation is None):
-            raise ValueError("grant identity and generation must be paired")
-        if (self.key_id is None) != (self.key_generation is None):
-            raise ValueError("key identity and generation must be paired")
-        if self.kind is SessionKind.HUMAN:
-            if self.parent_session_id is not None or self.grant_id is not None or self.key_id is not None:
-                raise ValueError("human authority cannot descend from automation")
-        elif self.grant_id is None:
-            raise ValueError("delegated sessions require an explicit grant")
-        if self.kind is SessionKind.API_KEY and self.key_id is None:
-            raise ValueError("API sessions require an authenticated key identity")
-        if self.kind is SessionKind.ATTENDED and (self.parent_session_id is None or self.key_id is not None):
-            raise ValueError("attended sessions require a parent and no root API key")
-        if self.parent_session_id == self.session_id:
-            raise ValueError("a session cannot parent itself")
+        _validate_session_origin(self)
+        _validate_session_lifetime(self)
+        _validate_session_credential_pairs(self)
+        _validate_session_lineage(self)
         return self
 
 
@@ -253,6 +282,19 @@ class LoginEligibility(StrEnum):
     UNKNOWN = "unknown"
 
 
+class OsLockState(StrEnum):
+    """Native screen-lock observation of one login.
+
+    ``LOCKED`` is positive evidence that the login was locked. ``UNKNOWN``
+    covers observer errors, incomplete transitions and platforms without a
+    lock observer; it is neither lock evidence nor proof of attendance.
+    """
+
+    LOCKED = "locked"
+    UNLOCKED = "unlocked"
+    UNKNOWN = "unknown"
+
+
 class OsLoginContext(BaseModel):
     """Fresh native observations supplied only by the trusted lifecycle owner.
 
@@ -266,9 +308,14 @@ class OsLoginContext(BaseModel):
     login_id: Annotated[str, Field(min_length=1, max_length=256)]
     os_owner_id: Annotated[str, Field(min_length=1, max_length=256)]
     active: bool
-    locked: bool
+    lock_state: OsLockState
     unattended: LoginEligibility
     credential_facilities: Availability
+
+    @property
+    def unlocked(self) -> bool:
+        """Only a positive unlocked observation admits attended work; unknown refuses like locked."""
+        return self.lock_state is OsLockState.UNLOCKED
 
 
 class AccessEvaluationContext(BaseModel):

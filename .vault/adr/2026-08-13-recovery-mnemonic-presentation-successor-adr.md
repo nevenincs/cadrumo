@@ -7,9 +7,9 @@ related:
   - "[[2026-08-13-profile-password-custody-research]]"
 supersedes:
   - '2026-08-08-recovery-mnemonic-surface-adr'
-modified: '2026-08-13'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd58049ebe1256c41a665d6857dcc82d89e3e45d93d4d4c18c8efdf96e633f48'
+body_hash: 'sha256:7b821ee309f8ea9631f133a67e74033e7c0d853577478fa53fe9110989059dba'
 ---
 # `recovery-mnemonic-presentation` adr: `recovery mnemonic presentation and handling` | (**status:** `accepted`)
 
@@ -33,7 +33,7 @@ The wordlist and encoding version are canonical and locale-independent. Presenta
 
 ## Implementation
 
-Recovery enrollment presents mnemonic words once through a secret-capable interactive surface or bounded secret descriptor. The operator confirms possession through an explicit verification step before the recovery record becomes enrolled. Durable application results carry only version, enrollment state, and a non-secret fingerprint. Logs, telemetry, action envelopes, clipboard automation, shell history, and normal JSON output never contain words. Import accepts mnemonic only through the secret channel and zeroizes transient buffers.
+Recovery enrollment presents mnemonic words once through a secret-capable interactive surface or bounded secret descriptor. The operator confirms possession through an explicit verification step before the recovery record becomes enrolled. Durable application results carry only version, enrollment state, and a non-secret fingerprint. Logs, action envelopes, clipboard automation, shell history, and normal JSON output never contain words. Import accepts mnemonic only through the secret channel and zeroizes transient buffers.
 
 ## Rationale
 

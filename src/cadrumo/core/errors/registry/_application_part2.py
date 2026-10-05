@@ -409,6 +409,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.calculation_note_gate.ModeloCalculationBlockedError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATION_BLOCKED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelos",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.filing_actions.ModeloFilingEvidenceMissingError",
         ErrorCode(
             code="REFUSED_MODELO_FILING_EVIDENCE_MISSING",
@@ -1170,7 +1180,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
             category=ErrorCategory.REFUSED,
-            message_key="adapters.outbound.storage._factory.errors.google_client_missing",
+            message_key="errors.refused.refused_google_client_metadata_unavailable",
             retryable=False,
             runbook_id=None,
         ),

@@ -8,6 +8,36 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.adapters.persistence.operations.financial_journal_purge.FinancialEditJournalPurgeRefusedError",
+        ErrorCode(
+            code="REFUSED_FINANCIAL_EDIT_JOURNAL_PURGE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.financial_edit_journal_purge",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.storage.custody.automation_secret_store._WindowsCredentialError",
+        ErrorCode(
+            code="ERROR_WINDOWS_CREDENTIAL_API",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.windows_credential_api",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.storage.custody.automation_secret_store._InvalidWindowsCredentialError",
+        ErrorCode(
+            code="INTEGRITY_WINDOWS_CREDENTIAL_RECORD",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.windows_credential_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.local_runtime.automation_requester.AutomationRequesterUncertainError",
         ErrorCode(
             code="ERROR_AUTOMATION_REQUESTER_UNCERTAIN",
@@ -38,7 +68,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.local_runtime.frontend_client.RuntimeFrontendRefusedError",
+        "cadrumo.adapters.local_runtime.frontend_client_contracts.RuntimeFrontendRefusedError",
         ErrorCode(
             code="REFUSED_RUNTIME_FRONTEND",
             category=ErrorCategory.REFUSED,

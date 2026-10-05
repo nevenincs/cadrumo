@@ -23,6 +23,7 @@ from ....domain.transactions.enums import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.lineage_models import SplitLineage
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -40,6 +41,7 @@ from .. import merge_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..models import MergeTransactionsResult
 from ..persistence_ports import LedgerPersistenceConflictError
+from ..protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -331,14 +333,12 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
             self.value = operand
             return "f" * 64
 
-    monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def canonical_merge(**kwargs: object) -> MergeTransactionsResult:
         assert in_commit
         merge_ports = cast(LedgerActionPorts, kwargs["ports"])
-        pinned = cast(
-            operation.RevisionGuardedTransactionCatalogueCoCommitWriterProtocol, merge_ports.transaction_repository
-        )
+        pinned = cast(RevisionGuardedTransactionCatalogueCoCommitWriterProtocol, merge_ports.transaction_repository)
         assert pinned is not repository
         pinned_catalogue, pinned_revision = pinned.load_revisioned()
         assert pinned_catalogue is catalogue
@@ -391,6 +391,21 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
     assert operands.value.result.source_child_ids == result.source_child_ids
     assert operands.value.result.parent_transaction_id == result.parent_transaction_id
     assert operands.value.result.merged_transaction_id == result.merged_transaction_id
+
+
+def test_committed_result_over_its_byte_bound_fails_as_validation_not_profile_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result, _children, _catalogue = _canonical_result()
+    projection = operation._operation_result(
+        profile_id=_PROFILE, expected_child_ids=result.source_child_ids, result=result
+    )
+    assert projection.source_child_ids == result.source_child_ids
+
+    monkeypatch.setattr(operation, "_MAX_MERGE_RESULT_JSON_BYTES", len(projection.model_dump_json()) - 1)
+
+    with pytest.raises(TransactionValidationError, match="registered projection bound"):
+        operation._operation_result(profile_id=_PROFILE, expected_child_ids=result.source_child_ids, result=result)
 
 
 def test_result_projector_requires_matching_success_receipt() -> None:

@@ -40,8 +40,9 @@ from ..quickfile import (
     QuickfileStageOutcome,
     QuickfileStageStatus,
 )
-from ..quickfile_operation_contracts import QuickfileProjection, QuickfileRequest, QuickfileStageFacts
+from ..quickfile_operation_contracts import QuickfileRequest, QuickfileStageFacts
 from ..quickfile_operation_ports import QuickfileOperationPorts
+from ..quickfile_operation_projections import QuickfileProjection
 from .m036_operation_support import INSTANT, PROFILE_ID, Subject, policy_decision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -252,7 +253,9 @@ async def test_profile_and_explicit_bucket_refuse_before_factory(
     foreign_profile: bool,
 ) -> None:
     subject = Subject(authority_operation)
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(
+        "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(PROFILE_ID)
+    )
     payload = _request(
         tmp_path, profile_id=uuid4() if foreign_profile else PROFILE_ID, bucket_id=None if foreign_profile else uuid4()
     )

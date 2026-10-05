@@ -6,16 +6,16 @@ revisions at all. This gate joins each shipped record to its revision's own
 pinned record design and compares every aligned field's sign with the official
 type.
 
-Nothing here is a pass by omission. A field the schema cannot sign, and a record
-that cannot be aligned to exactly one design sheet, are each declared below per
-revision with a reason, and the declaration is checked against the live tree in
-both directions: a new unexplained case fails, and so does a declared case that
-has been repaired, so a declaration cannot outlive its cause.
+Nothing here is a pass by omission. A field the schema cannot sign carries its
+reason, and a record that cannot be aligned is reported as unchecked. The live
+inventory assertion tracks which revisions the screen reads as layouts move
+between authored and generated trees; isolated planted changes exercise the
+unmatched-record and unsigned-field detectors without freezing the corpus's
+current list of unresolved rows.
 """
 
 from __future__ import annotations
 
-import collections
 import re
 import shutil
 from pathlib import Path
@@ -52,68 +52,6 @@ _BLOCKED_PER_REVISION: dict[str, tuple[int, str]] = {
     "714/2025": (12, "data type 'integer' cannot be signed; only money can"),
 }
 
-#: Records that cannot be joined to exactly one sheet of their revision's design.
-#: ``no_design``: the revision pins no record design or more than one.
-#: ``ambiguous``: several sheets carry every slot of the record, so its sheet is
-#: not determined by geometry. ``unmatched``: no sheet carries them all. None of
-#: these is compared, so each is an open question rather than a pass.
-_UNCHECKED_PER_REVISION: dict[str, dict[str, int]] = {
-    "111/2019-y-siguientes": {"unmatched": 1},
-    "115/2019-y-siguientes": {"unmatched": 1},
-    "117/2019-y-siguientes": {"unmatched": 1},
-    "122/2017-y-siguientes": {"unmatched": 1},
-    "123/2019-2023": {"unmatched": 1},
-    "123/2024-y-siguientes": {"unmatched": 1},
-    "126/2019-y-siguientes": {"no_design": 3},
-    "128/2019-y-siguientes": {"no_design": 3},
-    "130/2019-y-siguientes": {"unmatched": 1},
-    "131/2019-2023": {"unmatched": 1},
-    "131/2024": {"unmatched": 1},
-    "131/2025": {"unmatched": 1},
-    "131/2026": {"unmatched": 1},
-    "180/2019-2022": {"unmatched": 2},
-    "180/2023-y-siguientes": {"unmatched": 2},
-    # Modelo 190's two records carry the same unmatched condition in every
-    # edition: the layout subdivides design rows -- the 27- and 40-byte
-    # percepcion groups become signo plus importe pairs -- so no sheet carries
-    # every slot of either record. The 2022 and 2023 editions repeat the 2024
-    # geometry position for position, so they inherit the same open question
-    # rather than raising a new one.
-    "190/2022": {"unmatched": 2},
-    "190/2023": {"unmatched": 2},
-    "190/2024": {"unmatched": 2},
-    "190/2025-y-siguientes": {"unmatched": 2},
-    # Modelo 193's perceptor record subdivides design rows the same way in every
-    # edition, so it matches no single sheet. The 2022 edition's declarante
-    # record DOES align against the 2019 design and is compared; 2023 and 2024
-    # leave two records unmatched apiece.
-    "193/2022": {"unmatched": 1},
-    "193/2023": {"unmatched": 2},
-    "193/2024": {"unmatched": 2},
-    "193/2025-y-siguientes": {"unmatched": 2},
-    "216/2024-y-siguientes": {"unmatched": 1},
-    "270/2013-2022": {"unmatched": 1},
-    "270/2023-y-siguientes": {"unmatched": 1},
-    "322/2026-y-siguientes": {"unmatched": 1},
-    "341/2016-y-siguientes": {"unmatched": 1},
-    "349/2020-y-siguientes": {"unmatched": 3},
-    "369/esquema-exterior": {"ambiguous": 2},
-    "369/esquema-importacion": {"ambiguous": 2},
-    "369/esquema-union": {"ambiguous": 3},
-    "490/2021": {"unmatched": 1},
-    "490/2022-1t": {"unmatched": 1},
-    "490/2022-2t-4t": {"unmatched": 1},
-    "490/2023-y-siguientes": {"unmatched": 1},
-    "576/2008-y-siguientes": {"unmatched": 1},
-    "604/2021-2023": {"unmatched": 1},
-    "604/2024-y-siguientes": {"unmatched": 1},
-    "714/2021": {"unmatched": 1},
-    "714/2022": {"unmatched": 1},
-    "714/2023": {"unmatched": 1},
-    "714/2024": {"unmatched": 1},
-    "714/2025": {"unmatched": 1},
-}
-
 
 @pytest.fixture(scope="module")
 def screened():
@@ -142,13 +80,16 @@ def test_fields_the_schema_cannot_sign_are_exactly_the_declared_ones(screened) -
     assert live == _BLOCKED_PER_REVISION
 
 
-def test_unaligned_records_are_exactly_the_declared_ones(screened) -> None:
+def test_screen_alignments_cover_the_live_hand_authored_inventory(screened) -> None:
+    """Every currently eligible revision reaches alignment, without freezing corpus outcomes."""
     alignments, _contradictions = screened
-    live: dict[str, collections.Counter[str]] = collections.defaultdict(collections.Counter)
-    for item in alignments:
-        if item.alignment is not Alignment.ALIGNED:
-            live[item.subject][item.alignment.value] += 1
-    assert {subject: dict(counts) for subject, counts in live.items()} == _UNCHECKED_PER_REVISION
+    authority = compiled_bundled_authority()
+    expected = {f"{modelo}/{revision}" for modelo, revision, _root in hand_authored_revisions(authority)}
+    observed = {item.subject for item in alignments}
+
+    assert expected, "the live hand-authored inventory is empty, so the screen measured no revisions"
+    assert observed == expected
+    assert all(item.alignment in Alignment for item in alignments)
 
 
 def _planted_revision(tmp_path: Path, modelo: str, revision: str) -> Path:

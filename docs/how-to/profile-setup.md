@@ -6,7 +6,7 @@ or export a filing.
 
 A profile is local. Creating, editing, showing, exporting, or importing a
 profile never submits anything to the Agencia Estatal de Administración
-Tributaria (AEAT). Cadrumo builds and verifies your filing on your machine; you
+Tributaria (AEAT). Cadrumo builds and checks your filing on your machine; you
 upload it yourself.
 
 If you haven't installed Cadrumo and run the `aeat` command yet, start with the
@@ -16,7 +16,7 @@ If you haven't installed Cadrumo and run the `aeat` command yet, start with the
 ## What the active profile means
 
 The active profile is the taxpayer context for `aeat app` commands. While a
-profile is active, commands such as ledger import, transaction classification,
+profile is active, commands such as records import, transaction classification,
 modelo calculation, export, and local filing history read and update that
 profile's data.
 
@@ -34,8 +34,8 @@ current active-profile composition without fabricating another taxpayer:
 :verify: Confirm the profile list identifies the active taxpayer exactly.
 ```
 
-Logging in changes which local ledger, modelo drafts, and filing markers `aeat
-app` commands use. The login verb is `aeat config login`, not `aeat config
+Logging in changes which local records, modelo drafts, and recorded filings
+`aeat app` commands use. The login verb is `aeat config login`, not `aeat config
 profile login`.
 
 Name the profile exactly. `aeat config login` accepts a profile UUID or the
@@ -64,8 +64,8 @@ rest of setup follows:
 - **What the taxpayer does.** The economic activity and which kinds of income
   apply: business or professional activity, salaried work, rental income,
   investment income, capital gains, or a pension.
-- **Which VAT regime applies.** Value Added Tax (IVA) determines whether the
-  taxpayer charges and declares it, and how. The general regime files IVA
+- **Which VAT regime applies.** Value Added Tax (VAT) determines whether the
+  taxpayer charges and declares it, and how. The general regime files VAT
   through Modelo 303.
 - **Where the taxpayer is resident.** The autonomous community for a Spanish
   resident, or the country of residence for a non-resident.
@@ -93,9 +93,9 @@ The wizard is a full-page, question-by-question walk. Answer one page, move to
 the next; go back to change an earlier answer at any time. The first page asks
 for your output language. Answer it and the rest of the wizard renders in the
 language you chose. The pages then walk your identity, fiscal residence,
-economic activity, IVA, enrollment, family situation (including your
+economic activity, VAT, enrollment, family situation (including your
 descendientes), recurring obligations, and service preferences, ending on a
-review page that shows every answer before anything is committed. Questions are
+review page that shows every answer before anything is saved. Questions are
 conditional: the wizard only asks what applies to the answers you already gave.
 
 Each page explains its choices and shows the expected format for dates,
@@ -197,21 +197,20 @@ guide summarizes rather than repeats.
 
 Choose the entity type:
 
-- `natural_person` - an individual.
-- `legal_entity` - a company. Record its legal form too, such as `sl`, `sa`, or
-  `cooperativa`.
-- `attribution_entity` - a co-ownership or community of goods whose income is
+- `natural_person`: an individual.
+- `legal_entity`: a company. Record its legal form too, such as `sl`, `sa`, or `cooperativa`.
+- `attribution_entity`: a co-ownership or community of goods whose income is
   attributed to its members.
 
 For a natural person, list each kind of income that applies, repeating the flag
 once per category:
 
-- `actividad_economica` - business or professional activity.
-- `trabajo` - salaried employment.
-- `capital_inmobiliario` - rental income from property.
-- `capital_mobiliario` - investment income such as dividends or interest.
-- `ganancias_patrimoniales` - capital gains.
-- `pension` - a retirement or disability pension.
+- `actividad_economica`: business or professional activity.
+- `trabajo`: salaried employment.
+- `capital_inmobiliario`: rental income from property.
+- `capital_mobiliario`: investment income such as dividends or interest.
+- `ganancias_patrimoniales`: capital gains.
+- `pension`: a retirement or disability pension.
 
 Choose `actividad_economica` only when the taxpayer runs an activity. A pure
 landlord, a salaried-only taxpayer, or a pensioner with no activity should not
@@ -254,36 +253,32 @@ For a non-resident, set `--fiscal-residency non_resident_irnr` (not
 when required, a fiscal representative with `--representante-fiscal-nif` and
 `--representante-fiscal-nombre`.
 
-### Which IVA regime applies
+(which-iva-regime-applies)=
+### Which VAT regime applies
 
-Set `--iva-regime` to the taxpayer's IVA regime:
+Set `--iva-regime` to the taxpayer's VAT regime:
 
-- `GENERAL` - the standard regime; files quarterly IVA through Modelo 303.
-- `SIMPLIFICADO` - the simplified, module-based regime.
-- `RECARGO_EQUIVALENCIA` - the equivalence surcharge for qualifying retailers.
-- `REAGP` - the special regime for agriculture, livestock, and fishing.
-- `EXENTO` - exempt activities, such as some education or healthcare.
+- `GENERAL`: the standard regime; files quarterly VAT through Modelo 303.
+- `SIMPLIFICADO`: the simplified, module-based regime.
+- `RECARGO_EQUIVALENCIA`: the equivalence surcharge for qualifying retailers.
+- `REAGP`: the special regime for agriculture, livestock, and fishing.
+- `EXENTO`: exempt activities, such as some education or healthcare.
 
-Record any IVA enrollments that apply, such as ROI (intra-community operators) or
-OSS (one-stop-shop for cross-border B2C sales).
+Record any VAT enrollments that apply, such as ROI (intra-community traders) or OSS (one-stop-shop for cross-border B2C sales).
 
 ### Which recurring obligations apply
 
 These facts decide which forms the taxpayer must file. Record the ones that are
 true:
 
-- `--has-employees` or `--pays-professionals-with-retencion` - pays salaries or
-  professional fees with withholding.
-- `--pays-rent-with-retencion` - pays business-premises rent with withholding.
-- `--does-intracomunitario` - trades with businesses in other EU countries.
-- `--third-party-transactions-above-347-threshold` - transactions with third
+- `--has-employees` or `--pays-professionals-with-retencion`: pays salaries or professional fees with withholding.
+- `--pays-rent-with-retencion`: pays business-premises rent with withholding.
+- `--does-intracomunitario`: trades with businesses in other EU countries.
+- `--third-party-transactions-above-347-threshold`: transactions with third
   parties exceed the Modelo 347 threshold.
-- `--bienes-extranjero-above-threshold` - foreign assets exceed the legal
+- `--bienes-extranjero-above-threshold`: foreign assets exceed the legal
   threshold.
-- `--art109-activity-income-withholding-ge-70pct` - the Art. 109 RIRPF
-  70 percent income-coverage exception applies for covered professional,
-  agricultural, livestock, or forestry activity income. For activity starts,
-  record the coverage fact for the current payment period.
+- `--art109-activity-income-withholding-ge-70pct`: the Art. 109 RIRPF 70 percent income-coverage exception applies for covered professional, agricultural, livestock, or forestry activity income. For activity starts, record the coverage fact for the current payment period.
 
 Leaving an obligation flag unset is not the same as marking it false. When a
 fact is undeclared, the readiness check reports the related form as *incomplete*
@@ -327,8 +322,8 @@ Use this mapping to sanity-check your profile, then confirm a specific form with
 | Holds foreign assets over the legal threshold | Modelo 720 |
 
 This is a guide, not the authority. The tool decides applicability from the full
-profile and the registry rules. To see what applies to your profile, use
-[Find out which modelos apply to you](choose-modelo.md).
+profile and the tax rules. To see what applies to your profile, use [Choose
+which modelo to file](choose-modelo.md).
 
 (modify-your-profile)=
 ## Modify your profile
@@ -340,7 +335,7 @@ Re-run the wizard over an existing profile to change its facts:
 
 Edit mode walks the same pages with your current answers in place. Change what
 you need, then confirm the review page. Nothing is written until you confirm:
-edits stay staged during the walk, and an interrupted edit discards them all.
+changes are held until you confirm, and an interrupted edit discards them all.
 There is no save-and-exit in edit mode. Finish the walk in one sitting. The
 tool tells you both things at the end of every interactive edit, so an edit
 never silently half-applies.
@@ -365,9 +360,9 @@ Open the paged descendant editor:
 ```
 
 The editor shows your declared descendientes, lets you change any answer, add
-one, or reduce the count, and commits the complete set when you confirm.
-Reducing the count removes the descendientes beyond it. The stored set always
-matches exactly what you confirmed.
+one, or reduce the count, and saves the complete set when you confirm. Reducing
+the count removes the descendientes beyond it. The stored set always matches
+exactly what you confirmed.
 
 Script the same changes with the flag verbs:
 
@@ -416,8 +411,8 @@ What each step does:
 
 A sealed archive contains taxpayer data, including the tax identifier, activity,
 and local filing history. Store it as sensitive tax data, and don't attach it to
-a support request. See
-[import, export, and evidence](../reference/import-export-and-evidence.md).
+a support request. See [import, export, and supporting
+documents](../reference/import-export-and-evidence.md).
 
 ## Choose your service capabilities
 
@@ -432,10 +427,10 @@ capability off, then show the posture again:
 
 The three capabilities are:
 
-- `cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM
-  provider. Off by default. Barred for gestor profiles.
-- `llm_vision` - read invoices with the on-host vision model. On by default.
-- `google_export` - export calculations to Google Sheets. On by default.
+- `cloud_evidence_upload`: allow sending sensitive supporting documents to a
+  cloud LLM provider. Off by default. Barred for gestor profiles.
+- `llm_vision`: read invoices with the on-host vision model. On by default.
+- `google_export`: export calculations to Google Sheets. On by default.
 
 Turn any capability on or off with `aeat config profile capabilities set`.
 The example turns `llm_vision` off. Pass `cloud_evidence_upload on` to enable
@@ -443,9 +438,9 @@ cloud upload. A capability whose package extra is missing needs that extra
 installed; see [Install Cadrumo](../workstation-setup.md) for the extras.
 
 Sign out without deleting the profile using `aeat config logout` after the
-login-gated maintenance and capability checks. Logout closes the active
-storage session, discards its in-memory keys, disposes the bucket engines, and
-clears the local active-profile pointer:
+login-gated maintenance and capability checks above. Logout closes the active
+storage session, discards its in-memory keys, closes the storage connections,
+and clears the local active-profile pointer:
 
 ```{cli-sequence} profile-setup-logout
 :verify: Confirm logout closes the active session without deleting the profile.

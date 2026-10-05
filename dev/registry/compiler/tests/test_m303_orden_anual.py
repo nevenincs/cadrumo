@@ -9,18 +9,21 @@ indistinguishable from one whose output is current.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.governed_fact_scope import (
-    CandidateFactAuthority,
-    validating_governed_facts,
-)
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
 from ...analysis.m303_orden_anual import main
 from .._m303_orden_source import extract_m303_annual_orden_source
+from ..annual_orden_auxiliary_indicator import resolve_annual_orden_auxiliary_activity_indicators
 from ..loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -75,7 +78,9 @@ def test_extraction_outside_a_facts_scope_names_the_missing_authority() -> None:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     source = catalogues.sources["boe-orden-hfp-1335-2021-iva-authority"]
 
-    with pytest.raises(RegistryValidationError) as refusal:
+    with pytest.raises(
+        InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"
+    ) as refusal:
         extract_m303_annual_orden_source(
             ejercicio=2022,
             source=source,
@@ -83,7 +88,6 @@ def test_extraction_outside_a_facts_scope_names_the_missing_authority() -> None:
         )
 
     message = str(refusal.value)
-    assert "requires an explicit authority operation or scope" in message
     assert "without a matching facts projection" not in message
 
 
@@ -122,3 +126,21 @@ def test_an_unauthored_reduction_year_still_reports_the_coverage_gap() -> None:
             source=source,
             source_root=bundled_path(),
         )
+
+
+def test_the_auxiliary_indicator_lookup_refuses_when_neither_authority_nor_scope_is_supplied() -> None:
+    with (
+        outside_governed_fact_validation(),
+        pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
+    ):
+        resolve_annual_orden_auxiliary_activity_indicators(effective_date=date(2025, 1, 1))
+
+
+def test_the_same_lookup_resolves_from_an_explicit_authority_without_a_scope() -> None:
+    """CONTROL: the refusal above is the missing scope, not the lookup."""
+    with bundled_indexed_authority().lease_operation() as operation, outside_governed_fact_validation():
+        indicators = resolve_annual_orden_auxiliary_activity_indicators(
+            effective_date=date(2025, 1, 1), authority=operation
+        )
+
+    assert indicators.by_iae_and_activity

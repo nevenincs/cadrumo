@@ -3,22 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from decimal import Decimal
 from typing import NoReturn
 from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
-from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
-from ....application.actividad_asset.operation_dtos import (
-    ActivityAssetHistorySnapshot,
-    ActivityAssetRevisionSnapshot,
-    ScheduledAmortizationChargeSnapshot,
-)
-from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
-from ....application.actividad_asset.registered_operations import (
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
@@ -26,44 +18,38 @@ from ....application.actividad_asset.registered_operations import (
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
-    ActivityAssetClaimProjection,
     ActivityAssetClaimRequest,
-    ActivityAssetCorrectProjection,
     ActivityAssetCorrectRequest,
-    ActivityAssetCreateProjection,
     ActivityAssetCreateRequest,
-    ActivityAssetFilingHandoffProjection,
     ActivityAssetFilingHandoffRequest,
-    ActivityAssetForecastProjection,
     ActivityAssetForecastRequest,
-    ActivityAssetInspectProjection,
     ActivityAssetInspectRequest,
 )
-from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.operations.frontend_requests import (
-    OperationObservationRefusalV1,
-    OperationObservationSuccessV1,
+from ....application.actividad_asset.activity_asset_projections import (
+    ActivityAssetClaimProjection,
+    ActivityAssetCorrectProjection,
+    ActivityAssetCreateProjection,
+    ActivityAssetFilingHandoffProjection,
+    ActivityAssetForecastProjection,
+    ActivityAssetInspectProjection,
 )
+from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
+from ....application.actividad_asset.operation_dtos import (
+    ActivityAssetHistorySnapshot,
+    ActivityAssetRevisionSnapshot,
+    ScheduledAmortizationChargeSnapshot,
+)
+from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.public_scalar import PublicDecimal
-from ....application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
-from ....domain.renta.actividad_asset.errors import (
-    ActividadAssetClaimConflictError,
-    ActividadAssetIncompleteError,
-    ActividadAssetUnsupportedError,
-    ActividadAssetValidationError,
-)
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
-from ..account import AccountSessionExpiredError
-from ..operations.runtime_controller import RuntimeOperationController
-from ..runtime_account_session import read_runtime_account_session
+from ..operations.runtime_profile_session import RuntimeProfileSession
 from .actividad_asset import ActivityAssetTuiActionsV1
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
@@ -84,32 +70,41 @@ type _ActivityAssetProjection = (
 )
 
 
+def _activity_asset_success_effect(
+    projection: _ActivityAssetProjection,
+    success_effect: OperationEffect,
+) -> OperationEffect:
+    if projection.outcome == "refused":
+        return OperationEffect.NONE
+    if (
+        isinstance(projection, ActivityAssetClaimProjection)
+        and projection.claim_result is not None
+        and projection.claim_result.reused_existing_claim
+    ):
+        return OperationEffect.NONE
+    return success_effect
+
+
+def _activity_asset_refusal_matches(
+    projection: _ActivityAssetProjection,
+    *,
+    refused: bool,
+    refusal_code: str | None,
+) -> bool:
+    result_refusal = projection.refusal
+    if refused != (result_refusal is not None):
+        return False
+    result_code = result_refusal.code if result_refusal is not None else None
+    return refusal_code == result_code
+
+
 class RuntimeActivityAssetTuiActionsV1:
     """Submit exact-profile activity-asset requests to the installed runtime."""
 
     def __init__(self, client: RuntimeFrontendClient, *, profile_label: str) -> None:
         """Retain the originating TUI client, profile and session for every call."""
-        if client.frontend is not OperationFrontendProjection.TUI or not profile_label:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        self._client = client
-        self._profile_id = client.profile_id
-        self._session_id = client.session_id
-        self._profile_label = profile_label
-        self._require_binding()
-
-    def _require_binding(self) -> None:
-        if (
-            self._client.frontend is not OperationFrontendProjection.TUI
-            or self._client.profile_id != self._profile_id
-            or self._client.session_id != self._session_id
-        ):
-            raise AccountSessionExpiredError()
-        read_runtime_account_session(
-            self._client,
-            profile_id=self._profile_id,
-            session_id=self._session_id,
-            profile_label=self._profile_label,
-        )
+        self._session = RuntimeProfileSession(client, profile_label=profile_label)
+        self._profile_id = self._session.profile_id
 
     def _call[ProjectionT: _ActivityAssetProjection](
         self,
@@ -120,134 +115,37 @@ class RuntimeActivityAssetTuiActionsV1:
         success_effect: OperationEffect,
     ) -> ProjectionT:
         """Run one registered operation from the screen's background worker."""
-        return asyncio.run(
-            self._execute(
-                request,
-                definition_id=definition_id,
-                result_type=result_type,
-                success_effect=success_effect,
-            )
-        )
 
-    async def _execute[ProjectionT: _ActivityAssetProjection](
-        self,
-        request: BaseModel,
-        *,
-        definition_id: str,
-        result_type: type[ProjectionT],
-        success_effect: OperationEffect,
-    ) -> ProjectionT:
-        """Submit, observe and release one typed terminal result in this session."""
-        self._require_binding()
-        request_profile_id = getattr(request, "profile_id", None)
-        if request_profile_id != self._profile_id:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        subject_ref = profile_operation_subject(str(self._profile_id))
-        request_schema = OperationSchemaIdentityV1.from_model(
-            schema_id=f"{definition_id}.request",
-            schema_version=1,
-            model_type=type(request),
-        )
-        deadline = time.monotonic() + 120
-        controller: RuntimeOperationController | None = None
-        terminal_projection: OperationPublicProjectionV1 | None = None
-        try:
-            controller = await RuntimeOperationController.submit(
-                self._client,
-                definition_id=definition_id,
-                subject_ref=subject_ref,
-                payload=request,
-                expected_session_id=self._session_id,
-                deadline=deadline,
-            )
-            await controller.start()
-            while True:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-                observed = await controller.observe(0, page_limit=1)
-                if isinstance(observed, OperationObservationRefusalV1):
-                    raise RuntimeFrontendRefusedError(observed.code.value)
-                if not isinstance(observed, OperationObservationSuccessV1):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                state = observed.projection
-                if (
-                    state.operation_id != controller.operation_id
-                    or state.definition_id != definition_id
-                    or state.subject_ref != subject_ref
-                    or state.definition_contract.request_schema != request_schema
-                ):
-                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                if state.lifecycle is OperationLifecycle.TERMINAL:
-                    terminal_projection = state
-                    break
-                await asyncio.sleep(min(0.05, remaining))
-
-            condition = terminal_projection.terminal_condition
-            if condition is None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            if condition is not OperationTerminalCondition.SUCCEEDED and not (
-                condition is OperationTerminalCondition.REFUSED
-                and terminal_projection.refusal_ref in terminal_projection.definition_contract.refusal_detail_codes
-            ):
-                raise RuntimeFrontendRefusedError(
-                    terminal_projection.refusal_ref
-                    or terminal_projection.failure_error_code
-                    or "operation_not_successful"
-                )
-            projection = await controller.read_settled_result(
-                terminal_projection,
-                result_type,
-                result_version=1,
-                allow_refusal_detail=True,
-            )
+        def settle(
+            projection: ProjectionT,
+            condition: OperationTerminalCondition,
+            terminal: OperationPublicProjectionV1,
+            operation_id: str,
+        ) -> None:
             self._validate_terminal_result(
                 projection,
                 profile_id=self._profile_id,
                 terminal_condition=condition,
-                effect=terminal_projection.effect,
-                refusal_code=terminal_projection.refusal_ref,
+                effect=terminal.effect,
+                refusal_code=terminal.refusal_ref,
                 success_effect=success_effect,
             )
-            self._require_binding()
             if projection.outcome == "refused":
                 self._raise_refusal(
                     projection,
-                    operation_id=str(controller.operation_id),
+                    operation_id=operation_id,
                     terminal_condition=condition,
-                    effect=terminal_projection.effect,
+                    effect=terminal.effect,
                 )
-            return projection
-        except AccountSessionExpiredError as error:
-            raise self._session_expired_with_receipt(controller, terminal_projection) from error
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
-            # Operation denial and lost authentication are distinct. Check the
-            # retained session through the same non-touching status door used
-            # by the installed workbench before returning an ordinary refusal.
-            try:
-                self._require_binding()
-            except AccountSessionExpiredError as error:
-                raise self._session_expired_with_receipt(controller, terminal_projection) from error
-            raise
 
-    @staticmethod
-    def _session_expired_with_receipt(
-        controller: RuntimeOperationController | None,
-        projection: OperationPublicProjectionV1 | None,
-    ) -> AccountSessionExpiredError:
-        """Retain a terminal receipt if access was lost after operation start."""
-        if controller is None:
-            return AccountSessionExpiredError()
-        condition = projection.terminal_condition if projection is not None else None
-        effect = projection.effect if projection is not None else OperationEffect.UNKNOWN
-        refusal_code = projection.refusal_ref if projection is not None else None
-        return AccountSessionExpiredError(
-            context={
-                "operation_id": str(controller.operation_id),
-                "terminal_condition": condition.value if condition is not None else "unknown",
-                "effect": effect.value,
-                "refusal_code": refusal_code,
-            }
+        return asyncio.run(
+            self._session.run_operation(
+                request,
+                definition_id=definition_id,
+                result_type=result_type,
+                settle=settle,
+                allow_refusal_detail=True,
+            )
         )
 
     @staticmethod
@@ -266,22 +164,12 @@ class RuntimeActivityAssetTuiActionsV1:
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         refused = projection.outcome == "refused"
-        result_refusal_code = projection.refusal.code if projection.refusal is not None else None
         expected_condition = OperationTerminalCondition.REFUSED if refused else OperationTerminalCondition.SUCCEEDED
-        expected_effect = (
-            OperationEffect.NONE
-            if refused
-            else OperationEffect.NONE
-            if isinstance(projection, ActivityAssetClaimProjection)
-            and projection.claim_result is not None
-            and projection.claim_result.reused_existing_claim
-            else success_effect
-        )
+        expected_effect = _activity_asset_success_effect(projection, success_effect)
         if (
             terminal_condition is not expected_condition
             or effect is not expected_effect
-            or refusal_code != result_refusal_code
-            or refused != (projection.refusal is not None)
+            or not _activity_asset_refusal_matches(projection, refused=refused, refusal_code=refusal_code)
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
@@ -303,20 +191,7 @@ class RuntimeActivityAssetTuiActionsV1:
             "effect": effect.value,
             "refusal_code": refusal.code,
         }
-        if refusal.code == "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE":
-            raise ActividadAssetIncompleteError(
-                context=context,
-                precondition_verdict=(
-                    refusal.precondition_verdict.to_verdict() if refusal.precondition_verdict is not None else None
-                ),
-            )
-        if refusal.code == "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED":
-            raise ActividadAssetUnsupportedError(context=context)
-        if refusal.code == "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT":
-            raise ActividadAssetClaimConflictError(context=context)
-        if refusal.code == "REFUSED_ACTIVIDAD_ASSET_VALIDATION":
-            raise ActividadAssetValidationError(context=context)
-        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        raise refusal.to_domain_error(context=context)
 
     def create(self, request: ActivityAssetCreationRequestV1) -> ActivityAssetInspectionV1:
         """Create an asset and return its complete persisted revision chain."""

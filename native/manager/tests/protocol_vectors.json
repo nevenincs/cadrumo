@@ -1,0 +1,159 @@
+{
+  "max_line_bytes": 512,
+  "boot_record_location": ".runtime/boot.json",
+  "commands": [
+    {
+      "line": "{\"type\":\"ping\",\"seq\":0}",
+      "type": "ping",
+      "seq": 0
+    },
+    {
+      "line": "{\"type\":\"ping\",\"seq\":9007199254740991}",
+      "type": "ping",
+      "seq": 9007199254740991
+    },
+    {
+      "line": "{\"type\":\"stop\"}",
+      "type": "stop"
+    },
+    {
+      "line": "{\"type\":\"stop-if-idle\"}",
+      "type": "stop-if-idle"
+    },
+    {
+      "line": "{\"type\":\"session-end\"}",
+      "type": "session-end"
+    }
+  ],
+  "announcements": {
+    "canonical": [
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":4242,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":9007199254740991,\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"development\"}",
+      "{\"type\":\"heartbeat\",\"seq\":0,\"tick_age_ms\":null,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":7,\"tick_age_ms\":12,\"frontends\":2,\"hosted_profiles\":1}",
+      "{\"type\":\"heartbeat\",\"seq\":9007199254740991,\"tick_age_ms\":9007199254740991,\"frontends\":9007199254740991,\"hosted_profiles\":9007199254740991}",
+      "{\"type\":\"stopping\",\"reason\":64}",
+      "{\"type\":\"stopping\",\"reason\":65}",
+      "{\"type\":\"stopping\",\"reason\":66}",
+      "{\"type\":\"stopping\",\"reason\":67}",
+      "{\"type\":\"stopping\",\"reason\":68}",
+      "{\"type\":\"stopping\",\"reason\":69}",
+      "{\"type\":\"stopping\",\"reason\":70}",
+      "{\"type\":\"stopping\",\"reason\":71}",
+      "{\"type\":\"stopping\",\"reason\":72}",
+      "{\"type\":\"stopping\",\"reason\":73}",
+      "{\"type\":\"busy\"}",
+      "{\"type\":\"refused\",\"code\":\"malformed\"}",
+      "{\"type\":\"refused\",\"code\":\"oversized\"}"
+    ],
+    "accepted": [
+      " {\"type\":\"busy\"} \r",
+      "{\"admission\":\"native\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"version\":\"0.5.1\",\"pid\":1,\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"type\":\"ready\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"\\u00e9\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\": \"heartbeat\", \"seq\": 1, \"tick_age_ms\": null, \"frontends\": 0, \"hosted_profiles\": 0}"
+    ],
+    "refused": [
+      "",
+      "[]",
+      "null",
+      "\"busy\"",
+      "{}",
+      "{\"seq\":1}",
+      "{\"type\":\"pong\"}",
+      "{\"type\":\"busy\",\"type\":\"busy\"}",
+      "{\"type\":\"busy\",\"extra\":1}",
+      "{\"type\":\"busy\",\"x\":{}}",
+      "{\"type\":\"busy\",\"x\":[]}",
+      "{\"type\":\"busy\"} {}",
+      "{\"type\":\"busy\"}é",
+      "{\"type\":\"BUSY\"}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"frontends\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1.0,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":true,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":-1,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":9007199254740992,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":\"1\",\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":-5,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1,\"tick_age_ms\":3,\"frontends\":9007199254740992,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":NaN,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"heartbeat\",\"seq\":1e0,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":0,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":-1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":9007199254740992,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":1,\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"other\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"not-a-uuid\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":1,\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\",\"extra\":1}",
+      "{\"type\":\"stopping\",\"reason\":63}",
+      "{\"type\":\"stopping\",\"reason\":0}",
+      "{\"type\":\"stopping\",\"reason\":74}",
+      "{\"type\":\"stopping\",\"reason\":\"64\"}",
+      "{\"type\":\"stopping\",\"reason\":64.0}",
+      "{\"type\":\"stopping\"}",
+      "{\"type\":\"refused\",\"code\":\"other\"}",
+      "{\"type\":\"refused\"}",
+      "{\"type\":\"busy\",\"code\":\"malformed\"}",
+      "{\"type\":\"busy\"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              }"
+    ],
+    "refused_by_manager_only": [
+      "{\"type\":\"ready\",\"boot_id\":\"0F8FAD5B-D9CB-469F-A165-70867728950E\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5bd9cb469fa16570867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"{0f8fad5b-d9cb-469f-a165-70867728950e}\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"admission\":\"native\"}",
+      "{\"type\":\"ready\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":1,\"version\":\"0.5.1\",\"storage_identity\":\" 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \",\"admission\":\"native\"}",
+      "{\"type\":\"heartbeat\",\"seq\":-0,\"tick_age_ms\":3,\"frontends\":0,\"hosted_profiles\":0}"
+    ]
+  },
+  "boot_records": {
+    "canonical": [
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}"
+    ],
+    "accepted": [
+      "{\"admission\":\"development\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4294967295,\"process_created\":18446744073709551615,\"schema_version\":1,\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\"}",
+      " {\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}\n"
+    ],
+    "refused": [
+      "",
+      "[]",
+      "{}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\",\"pid\":4242}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":2,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":0,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4294967296,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":0,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":18446744073709551616,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":1.5,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":\"relative\",\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":\"\",\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"other\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"extra\":1,\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"extra\":{},\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"not-a-uuid\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        "
+    ],
+    "refused_by_manager_only": [
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0f8fad5b-d9cb-469f-a165-70867728950e\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":true,\"version\":\"0.5.1\"}",
+      "{\"admission\":\"native\",\"boot_id\":\"0F8FAD5B-D9CB-469F-A165-70867728950E\",\"package_directory\":null,\"pid\":4242,\"process_created\":133000000000000000,\"schema_version\":1,\"version\":\"0.5.1\"}"
+    ]
+  }
+}

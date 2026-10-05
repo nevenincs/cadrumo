@@ -202,6 +202,7 @@ def _sealed_modelo_303_blocker_for_period(
     bucket_id: str,
     period: Period,
     ports: ModeloIvaWalletSeedPorts,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, str, int, str] | None:
     """Return the first sealed Modelo 303 revision at or after the seeded period.
 
@@ -216,7 +217,7 @@ def _sealed_modelo_303_blocker_for_period(
     """
     seeded_key = (period.filing_year, iva_compensation_period_sort_key(period))
     work_units = ports.work_unit_repository.load()
-    revisions = ports.calculation_repository.load()
+    revisions = ports.calculation_repository.load(operation=operation)
     candidates: list[tuple[tuple[int, tuple[int, str]], str, str, int, str]] = []
     for revision in revisions.values():
         if revision.state not in SEALED_REVISION_STATES:
@@ -304,6 +305,7 @@ def correct_iva_compensation_period_for_bucket(
         bucket_id=bucket_id,
         period=period,
         ports=ports,
+        operation=operation,
     )
     if blocker is not None:
         work_unit_id, revision_id, blocker_year, blocker_period = blocker
@@ -457,7 +459,9 @@ def record_iva_compensation_override_for_bucket(
     if taxpayer_nif is None:
         raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.override")
 
-    blocker = _sealed_modelo_303_blocker_for_period(bucket_id=bucket_id, period=period, ports=ports)
+    blocker = _sealed_modelo_303_blocker_for_period(
+        bucket_id=bucket_id, period=period, ports=ports, operation=operation
+    )
     if blocker is not None:
         work_unit_id, revision_id, blocker_year, blocker_period = blocker
         raise ModeloIvaWalletOverrideSealedError(
@@ -476,7 +480,16 @@ def record_iva_compensation_override_for_bucket(
 
     observation_ports = ports.calculation_observation_ports
     existing = observation_ports.iva_wallet_decision_repository.load_decision(taxpayer_nif, period)
-    if existing is not None and not existing.blocked and str(existing.selected_authority) == "aeat_wallet":
+    from ...core.time.clock import now
+    from ...domain.iva_compensation.reconciliation import DEFAULT_MAX_WALLET_AGE_DAYS, is_wallet_stale
+
+    if (
+        existing is not None
+        and not existing.blocked
+        and existing.selected_authority == "aeat_wallet"
+        and existing.wallet_captured_at is not None
+        and not is_wallet_stale(existing.wallet_captured_at, now(), DEFAULT_MAX_WALLET_AGE_DAYS)
+    ):
         raise ModeloIvaWalletOverrideFreshWalletError(
             translated_message="application.modelo.iva_wallet.override_fresh_wallet_blocked",
             context={
@@ -485,7 +498,6 @@ def record_iva_compensation_override_for_bucket(
             },
         )
 
-    from ...core.time.clock import now
     from ...domain.iva_compensation.reconciliation import IvaCompensationOverride
 
     snapshot = operation.snapshot(

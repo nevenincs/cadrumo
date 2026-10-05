@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-import re
-from typing import Final
 from urllib.parse import SplitResult, urlsplit
 
 from pydantic import BaseModel
 
+from ...core.google_drive_reference import parse_google_drive_file_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.attachments.enums import AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 
 __all__ = ["AttachmentReviewItem", "get_attachment_review_item", "list_attachment_review_queue"]
-
-_DRIVE_FILE_ID_RE: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_-]{25,}")
 
 
 class AttachmentReviewItem(BaseModel):
@@ -66,8 +63,7 @@ def _drive_file_id(reference: str) -> str | None:
         parts = _drive_file_path_parts(parsed)
         if parts is None:
             return None
-        file_id = parts[3]
-        return file_id if _DRIVE_FILE_ID_RE.fullmatch(file_id) is not None else None
+        return parse_google_drive_file_id(reference)
     except ValueError:
         return None
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
+from functools import partial
 from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
@@ -20,9 +21,11 @@ from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.ids import BindingId, RelationId
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
+from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
 from .errors import ModeloValidationError
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 
@@ -109,6 +112,10 @@ def _validated_row_binding_index(value: object, *, surface: str) -> str:
     return str(index)
 
 
+def _duplicate_row_binding_index(row_index: str, *, surface: str, binding_id: BindingId) -> ModeloValidationError:
+    return ModeloValidationError(f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}")
+
+
 def canonical_row_binding_values(
     row_binding_values: Mapping[object, object],
     *,
@@ -121,14 +128,16 @@ def canonical_row_binding_values(
         if not isinstance(raw_rows, Mapping):
             raise ModeloValidationError(f"{surface} for binding {binding_id!r} must be a row-index mapping")
         typed_rows = TypeAdapter(dict[object, object]).validate_python(raw_rows)
-        rows: dict[str, str] = {}
-        for raw_row_index, raw_value in typed_rows.items():
-            row_index = _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]")
-            if row_index in rows:
-                raise ModeloValidationError(
-                    f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}",
+        rows = index_unique_row_coordinates(
+            (
+                (
+                    _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]"),
+                    str(raw_value).strip(),
                 )
-            rows[row_index] = str(raw_value).strip()
+                for raw_row_index, raw_value in typed_rows.items()
+            ),
+            duplicate=partial(_duplicate_row_binding_index, surface=surface, binding_id=binding_id),
+        )
         if rows:
             canonical[binding_id] = dict(sorted(rows.items(), key=lambda item: int(item[0])))
     return dict(sorted(canonical.items()))
@@ -224,6 +233,22 @@ def _cleared_casillas_revision_id_payload(
     return {}
 
 
+def _operator_layer_revision_id_payload(
+    operator_layer: CalculationOperatorLayer | None,
+) -> dict[str, object]:
+    """Build the optional operator-layer payload key.
+
+    Present only when the calculation recorded its caller tier. A revision
+    stored before the layer existed carries none and hashes exactly as it did,
+    so its content-addressed id is unchanged. A recorded layer joins identity
+    even when it is empty: "the operator authored nothing" is a known fact that
+    a revision whose layer is unknown does not assert.
+    """
+    if operator_layer is None:
+        return {}
+    return {OPERATOR_LAYER_IDENTITY_KEY: operator_layer.identity_payload()}
+
+
 def _m210_revision_id_payload(
     m210_official_tipo_renta_code: str | None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
@@ -266,14 +291,17 @@ def _source_issues_revision_id_payload(
     source_issues: Sequence[CalculationSourceIssue],
 ) -> dict[str, object]:
     """Build the optional unresolved-source-issue payload key."""
+    # A box is appended only when an issue names one, so every issue stored
+    # before issues could name a box keeps the identity it was stored under.
     canonical_source_issues = tuple(
         sorted(
             (
                 issue.reason,
-                issue.binding_source.value,
+                "" if issue.binding_source is None else issue.binding_source.value,
                 issue.source_ref or "",
                 issue.resolver_id or "",
                 issue.message,
+                *(() if issue.casilla_id is None else (str(issue.casilla_id),)),
             )
             for issue in source_issues
         )
@@ -445,6 +473,7 @@ def derive_calculation_revision_id_from_identity_inputs(
     ]
     amendment_identity = identity_inputs["amendment_identity"]
     cleared_casilla_ids = identity_inputs["cleared_casilla_ids"]
+    operator_layer = identity_inputs["operator_layer"]
     payload: dict[str, object] = _base_revision_id_payload(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -478,6 +507,7 @@ def derive_calculation_revision_id_from_identity_inputs(
     )
     payload.update(_amendment_revision_id_payload(amendment_identity))
     payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
+    payload.update(_operator_layer_revision_id_payload(operator_layer))
     return content_hash_hex(payload)
 
 

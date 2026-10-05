@@ -29,7 +29,6 @@ from .....application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
     resolve_catalogue_invoice,
-    resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
 from .....application.invoices.catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
@@ -172,10 +171,7 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> Non
 
         # Resolve through the repository before removal to prove the read path.
         lifecycle_ports = build_catalogue_lifecycle_ports(bucket_id=_BUCKET_ID)
-        resolved = resolve_catalogue_invoice_from_repository(
-            invoice_id=invoice_id[:8],
-            ports=lifecycle_ports.read_ports,
-        )
+        resolved = resolve_catalogue_invoice(lifecycle_ports.read_ports.invoice_reader.load(), invoice_id[:8])
         assert resolved.invoice_id == invoice_id
 
         result = remove_catalogue_invoice(

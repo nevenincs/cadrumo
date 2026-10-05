@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from ...core.json_contract import Notice, ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileFact
-    from .results import ConfigProfileCreateResult, ConfigProfileEditResult
+    from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
 import contextlib
 
@@ -182,10 +182,6 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         click_type=_choice(["1", "2"]),
         metavar=_choice_metavar(["1", "2"]),
         help=tr("wizard.setup.flags.taxation-type.help"),
-    ),
-    "charge-iban": typer.Option(
-        "--charge-iban",
-        help=tr("wizard.setup.flags.charge-iban.help"),
     ),
     "output-language": typer.Option(
         "--output-language",
@@ -752,6 +748,55 @@ def _canonical_integer_value(value: object) -> str:
     return str(int(str(value)))
 
 
+def _configure_select_option(
+    question: WizardQuestion,
+    operation: PinnedAuthorityOperation,
+    option: typer.models.OptionInfo,
+) -> None:
+    """Apply registry choices and reviewed help overrides for selects."""
+    if question.widget is not WizardWidget.SELECT:
+        return
+    values = [choice.value for choice in question.choices]
+    if question.id == "tax-residence-ccaa":
+        # Foral tokens stay selectable so the refusal can redirect the
+        # operator to the foral Hacienda instead of a generic choice error.
+        from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+
+        values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
+    option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
+    option.metavar = _choice_metavar(values)
+    if question.id == "situacion-familiar":
+        # Keep the closed input protocol visible at the boundary while using
+        # the direct catalogue translation for operator-facing help.
+        option.help = tr("wizard.setup.flags.situacion-familiar.help")
+    if question.id == "tax-residence-ccaa":
+        option.metavar = "CCAA"
+        option.show_choices = False
+        option.help = tr("wizard.setup.flags.tax-residence-ccaa.help")
+
+
+def _parameter_annotation_default(
+    question: WizardQuestion,
+    option: typer.models.OptionInfo,
+) -> tuple[object, object]:
+    """Derive the exact Typer annotation and default for one wizard widget."""
+    match question.widget:
+        case WizardWidget.CONFIRM:
+            return Annotated[bool | None, option], None
+        case WizardWidget.SELECT:
+            return Annotated[str | None, option], None
+        case WizardWidget.CHECKBOX:
+            return Annotated[list[str], option], []
+        case WizardWidget.INTEGER:
+            return Annotated[int | None, option], None
+        case WizardWidget.PATH:
+            return Annotated[Path | None, option], None
+        case WizardWidget.SECRET:
+            return Annotated[str | None, option], None
+        case WizardWidget.TEXT:
+            return Annotated[str | None, option], None
+
+
 def _python_parameter(
     flow: WizardFlow,
     question: WizardQuestion,
@@ -772,55 +817,12 @@ def _python_parameter(
     if option is None:
         option = typer.Option(_flag_name(question), help=tr(_help_key(flow, question)))
         SETUP_OPTION_INFOS[question.id] = option
-    if question.widget is WizardWidget.SELECT:
-        values = [choice.value for choice in question.choices]
-        if question.id == "tax-residence-ccaa":
-            # Foral tokens stay selectable so the refusal can redirect the
-            # operator to the foral Hacienda instead of a generic choice error.
-            from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
-
-            values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
-        option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
-        option.metavar = _choice_metavar(values)
-        if question.id == "situacion-familiar":
-            # Typer's generated help currently reduces dynamic Choice metavars
-            # to ``<str>``. Keep this closed input protocol visible at the
-            # boundary through the explicit metavar above. The help copy stays
-            # a direct catalogue translation so it cannot bypass the locale
-            # source contract while appending transport tokens.
-            option.help = tr("wizard.setup.flags.situacion-familiar.help")
-        if question.id == "tax-residence-ccaa":
-            option.metavar = "CCAA"
-            option.show_choices = False
-            option.help = tr("wizard.setup.flags.tax-residence-ccaa.help")
+    _configure_select_option(question, operation, option)
     if section_title is not None:
         # `OptionInfo` carries `rich_help_panel`; setting it groups the
         # flag under the section's panel in Typer's `--help` output.
         option.rich_help_panel = section_title
-    annotation: object
-    default: object
-    match question.widget:
-        case WizardWidget.CONFIRM:
-            annotation = Annotated[bool | None, option]
-            default = None
-        case WizardWidget.SELECT:
-            annotation = Annotated[str | None, option]
-            default = None
-        case WizardWidget.CHECKBOX:
-            annotation = Annotated[list[str], option]
-            default = []
-        case WizardWidget.INTEGER:
-            annotation = Annotated[int | None, option]
-            default = None
-        case WizardWidget.PATH:
-            annotation = Annotated[Path | None, option]
-            default = None
-        case WizardWidget.SECRET:
-            annotation = Annotated[str | None, option]
-            default = None
-        case WizardWidget.TEXT:
-            annotation = Annotated[str | None, option]
-            default = None
+    annotation, default = _parameter_annotation_default(question, option)
     return inspect.Parameter(
         name=question.id.replace("-", "_"),
         kind=inspect.Parameter.KEYWORD_ONLY,
@@ -1700,36 +1702,37 @@ def _emit_wizard_success(
     from ..operator_output.emit import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
-    # Two distinct values, deliberately: ``status_token`` is the closed
-    # machine-readable vocabulary the JSON envelope carries, and ``verb`` is
-    # the localized word the operator reads on the text line. Collapsing them
-    # is what let the wizard publish ``creado`` as a contract token while the
-    # profile manager published ``created`` for the same command.
-    if mode == "create":
-        status_token = ProfileWizardStatus.CREATED
-        verb_key = "wizard.commands.status.created"
-    elif record_changed:
-        status_token = ProfileWizardStatus.UPDATED
-        verb_key = "wizard.commands.status.updated"
-    else:
-        status_token = ProfileWizardStatus.UNCHANGED
-        verb_key = "wizard.commands.status.unchanged"
+    def _success_status() -> tuple[ProfileWizardStatus, str]:
+        """Keep machine status and localized verb keys paired."""
+        if mode == "create":
+            return ProfileWizardStatus.CREATED, "wizard.commands.status.created"
+        if record_changed:
+            return ProfileWizardStatus.UPDATED, "wizard.commands.status.updated"
+        return ProfileWizardStatus.UNCHANGED, "wizard.commands.status.unchanged"
+
+    def _success_messages() -> tuple[str, str, str]:
+        """Resolve all user-visible disclosures in the active language."""
+        no_resume = (
+            modify_no_resume_message
+            if modify_no_resume_message is not None
+            else tr("application.wizard.notices.modify_no_resume")
+        )
+        descendants = (
+            modify_descendants_message
+            if modify_descendants_message is not None
+            else tr("application.wizard.notices.modify_descendants_via_door")
+        )
+        ccaa = (
+            tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa_value)
+            if ccaa_defaulted and default_ccaa_value is not None
+            else ""
+        )
+        return no_resume, descendants, ccaa
+
+    # Keep the closed machine token separate from the localized text verb.
+    status_token, verb_key = _success_status()
     verb = tr(verb_key)
-    resolved_modify_no_resume_message = (
-        modify_no_resume_message
-        if modify_no_resume_message is not None
-        else tr("application.wizard.notices.modify_no_resume")
-    )
-    resolved_modify_descendants_message = (
-        modify_descendants_message
-        if modify_descendants_message is not None
-        else tr("application.wizard.notices.modify_descendants_via_door")
-    )
-    ccaa_message = (
-        tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa_value)
-        if ccaa_defaulted and default_ccaa_value is not None
-        else ""
-    )
+    resolved_modify_no_resume_message, resolved_modify_descendants_message, ccaa_message = _success_messages()
     notices = _wizard_success_notices(
         mode,
         next_command=next_command,

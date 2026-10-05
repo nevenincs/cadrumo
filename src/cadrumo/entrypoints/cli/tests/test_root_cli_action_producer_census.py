@@ -10,7 +10,6 @@ from types import ModuleType
 import pytest
 
 from .. import _app_diagnostics as diagnostics_module
-from .. import _app_diagnostics_telemetry as telemetry_module
 from .. import _app_live as live_module
 from .. import _log_levels as log_levels_module
 from ..config import archive_reconcile as maintenance_module
@@ -21,7 +20,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _MODULES: tuple[ModuleType, ...] = (
     log_levels_module,
     diagnostics_module,
-    telemetry_module,
     maintenance_module,
     live_module,
 )
@@ -35,11 +33,6 @@ _NOTICE_PRODUCERS: dict[str, set[tuple[str, str, str | None]]] = {
         ("diagnostics_run_health", "'diagnostics.run_health.session_stale'", None),
         ("diagnostics_run_health", "'diagnostics.run_health.no_session'", None),
         ("diagnostics_errors", "'diagnostics.errors.no_failures'", None),
-    },
-    "cadrumo.entrypoints.cli._app_diagnostics_telemetry": {
-        ("diagnostics_telemetry_flush", "'diagnostics.telemetry.flush.dry_run'", None),
-        ("diagnostics_telemetry_flush", "'diagnostics.telemetry.flush.consent_refused'", None),
-        ("diagnostics_telemetry_flush", "'diagnostics.telemetry.flush.no_endpoint'", None),
     },
     "cadrumo.entrypoints.cli.config.archive_reconcile": {
         ("_reconcile_notices", "'config.profile.archive.reconcile.nothing_to_reconcile'", None),

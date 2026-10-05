@@ -34,7 +34,8 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.host import ScreenHostApp
-from ..profile.overview import FieldEditScreen, ProfileFieldPersist, ProfileManagerScreen
+from ..profile.edit_screens import FieldEditScreen
+from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [

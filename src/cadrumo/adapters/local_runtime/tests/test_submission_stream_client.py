@@ -24,12 +24,16 @@ from ....application.runtime.operation_access import (
     RuntimeOperationSubmitPayload,
     RuntimeOperationSubmitted,
 )
-from ....application.runtime.profile_access import RuntimeAccessRefusal, RuntimeRequest
-from ....application.runtime.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SUBMISSION_PAYLOAD_MAX_BYTES
-from ....application.runtime.transport import RuntimeStatusRequest, RuntimeTransportStatus
+from ....application.runtime.profile_access import RuntimeAccessRefusal, RuntimeRequest, RuntimeSessionRequest
+from ....application.runtime.submission_payload import (
+    SUBMISSION_PAYLOAD_CHUNK_BYTES,
+    SUBMISSION_PAYLOAD_MAX_BYTES,
+    SubmissionPayloadDescriptor,
+)
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....core.hashing import sha256_hex
-from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake, read_document, read_secret, write_document
+from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
+from ..runtime_frame_io import read_document, read_secret, write_document
 from .test_projection_page_client import MemoryChannel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -77,7 +81,12 @@ def _exchange(
         )
         try:
             if pin_connection:
-                connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 10)
+                connection.session(
+                    RuntimeSessionRequest(
+                        action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                    ),
+                    deadline=time.monotonic() + 10,
+                )
             try:
                 outcome = connection.operation(request, deadline=time.monotonic() + 10)
             except RuntimeRefusalError as error:
@@ -122,6 +131,7 @@ def test_large_submission_streams_exact_bytes_after_readiness(value: str, final_
     def serve(channel: MemoryChannel, hello: RuntimeServerHello) -> None:
         begin = read_document(channel, RuntimeRequest, deadline=time.monotonic() + 10).root
         assert isinstance(begin, RuntimeOperationSubmitPayload)
+        assert isinstance(begin.descriptor, SubmissionPayloadDescriptor)
         assert begin.request_id == request.request_id
         assert begin.profile_id == request.profile_id and begin.session_id == request.session_id
         assert begin.definition_id == request.definition_id and begin.subject_ref == request.subject_ref
@@ -172,14 +182,14 @@ def test_wrong_readiness_or_early_refusal_sends_no_body(fault: str) -> None:
 
     def serve(channel: MemoryChannel, hello: RuntimeServerHello) -> None:
         if fault == "connection":
-            status = read_document(channel, RuntimeStatusRequest, deadline=time.monotonic() + 10)
+            status = read_document(channel, RuntimeSessionRequest, deadline=time.monotonic() + 10)
             write_document(
                 channel,
-                RuntimeTransportStatus(
+                RuntimeAccessRefusal(
                     request_id=status.request_id,
                     runtime_boot_id=hello.boot_id,
                     connection_id=_CONNECTION_ID,
-                    accepting_connections=True,
+                    code=RuntimeRefusalCode.UNAVAILABLE,
                 ),
                 deadline=time.monotonic() + 10,
             )

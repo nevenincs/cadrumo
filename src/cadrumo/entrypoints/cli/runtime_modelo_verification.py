@@ -6,14 +6,11 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-    ModeloWorkFilePublicResultV2,
-    ModeloWorkFileRequest,
-    ModeloWorkVerifyPublicResultV2,
-    ModeloWorkVerifyRequest,
 )
 from ...application.modelo.revision_selection_operation import (
     MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
@@ -22,24 +19,23 @@ from ...application.modelo.revision_selection_operation import (
 )
 from ...application.modelo.selectors import ModeloCalculationRevisionDefault, ModeloCalculationRevisionSelector
 from ...application.modelo.work_addressing import ModeloWorkAddressNotFoundError
+from ...application.modelo.work_filing_contracts import ModeloWorkFilePublicResultV2, ModeloWorkFileRequest
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.public_period import PublicPeriod
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.operations import (
     OperationEffect,
-    OperationTerminalCondition,
     profile_operation_subject,
 )
 from ._modelo_behavior_support import work_address_for_cli
 from ._modelo_cli_support import selector_bad_parameter, validate_calculation_revision_id
 from .common import no_active_profile_refusal
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_modelo_work_revision(
@@ -65,12 +61,7 @@ def read_modelo_work_revision(
         or projection.unit.bucket_id != str(client.profile_id)
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -98,36 +89,8 @@ def select_modelo_work_revision_for_cli(
     validated_id = (
         validate_calculation_revision_id(calculation_revision_id) if calculation_revision_id is not None else None
     )
-    has_work_address = any(value is not None for value in (work_unit_id, modelo, year, period, revision))
-    if has_work_address or validated_id is None:
-        try:
-            address = work_address_for_cli(
-                work_unit_id=work_unit_id,
-                modelo=modelo,
-                year=year,
-                period=period,
-                revision=revision,
-                bucket_id=bucket_id,
-            )
-        except ModeloWorkAddressNotFoundError as error:
-            raise selector_bad_parameter(error) from error
-        selected_work_unit_id = address.work_unit_id or address.operator_work_unit_id
-        selected_modelo = address.modelo
-        selected_year = address.filing_year
-        selected_period = address.period
-        selected_revision = address.registry_revision_id
-    else:
-        selected_work_unit_id = selected_modelo = selected_year = selected_period = selected_revision = None
-    request = ModeloWorkRevisionRequest(
-        profile_id=client.profile_id,
-        calculation_revision_id=validated_id,
-        work_unit_id=selected_work_unit_id,
-        modelo=selected_modelo,
-        year=selected_year,
-        period=PublicPeriod.from_period(selected_period) if selected_period is not None else None,
-        revision=selected_revision,
-        selector=selector,
-        default_for=default_for,
+    request = _work_revision_request(
+        client.profile_id, validated_id, work_unit_id, modelo, year, period, revision, bucket_id, selector, default_for
     )
     completed = read_modelo_work_revision(client, request, timeout=timeout)
     projection = completed.projection
@@ -158,12 +121,7 @@ def run_modelo_work_verification(
         or projection.advisories.calculation_revision_id != request.calculation_revision_id
         or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -192,12 +150,7 @@ def run_modelo_work_filing(
         or not projection.handoff_required
         or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -207,3 +160,50 @@ __all__ = [
     "run_modelo_work_verification",
     "select_modelo_work_revision_for_cli",
 ]
+
+
+def _work_revision_request(
+    profile_id: UUID,
+    validated_id: str | None,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    revision: str | None,
+    bucket_id: str | None,
+    selector: ModeloCalculationRevisionSelector,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> ModeloWorkRevisionRequest:
+    """Resolve the same complete work address before constructing its registered selection."""
+    has_work_address = any(value is not None for value in (work_unit_id, modelo, year, period, revision))
+    if has_work_address or validated_id is None:
+        try:
+            address = work_address_for_cli(
+                work_unit_id=work_unit_id,
+                modelo=modelo,
+                year=year,
+                period=period,
+                revision=revision,
+                bucket_id=bucket_id,
+            )
+        except ModeloWorkAddressNotFoundError as error:
+            raise selector_bad_parameter(error) from error
+        selected_work_unit_id = address.work_unit_id or address.operator_work_unit_id
+        selected_modelo = address.modelo
+        selected_year = address.filing_year
+        selected_period = address.period
+        selected_revision = address.registry_revision_id
+    else:
+        selected_work_unit_id = selected_modelo = selected_year = selected_period = selected_revision = None
+    request = ModeloWorkRevisionRequest(
+        profile_id=profile_id,
+        calculation_revision_id=validated_id,
+        work_unit_id=selected_work_unit_id,
+        modelo=selected_modelo,
+        year=selected_year,
+        period=PublicPeriod.from_period(selected_period) if selected_period is not None else None,
+        revision=selected_revision,
+        selector=selector,
+        default_for=default_for,
+    )
+    return request

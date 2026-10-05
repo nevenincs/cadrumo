@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from dataclasses import replace
 from pathlib import Path
 from uuid import UUID
 
@@ -11,39 +10,15 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validat
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
-from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.period import Period
-from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import LiveIvaAcquisitionFailureMode
 from .filed_history_operation import (
@@ -52,6 +27,12 @@ from .filed_history_operation import (
     FiledHistoryProviderPreflight,
 )
 from .iva_remote_state import capture_iva_remote_state
+from .live_operation_execution import (
+    prepare_provider_capture,
+    publish_live_capture_report,
+    require_exact_profile_worker,
+)
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .remote_state_models import (
     IvaRemoteStateAcquisitionReport,
     LiveIvaAuthOutcome,
@@ -59,7 +40,6 @@ from .remote_state_models import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )
-from .session import LiveSessionWriteReceipt
 
 IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID = "live.iva-wallet.evidence-capture"
 _PHASES = ("iva-evidence.preflight", "iva-evidence.acquire", "iva-evidence.result")
@@ -210,18 +190,21 @@ class IvaRemoteStateCaptureExecutor:
     ) -> str:
         """Acquire both surfaces and publish one encrypted manifest receipt."""
         payload = request.payload
-        profile_id = canonical_profile_bucket_id(payload.profile_id)
-        if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         period = Period.from_year_and_code(payload.target_year, payload.target_period)
-        await context.events.phase(_PHASES[0])
-        self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory(payload.output_root)
-        resources = self._browser_resources_factory()
-        context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
-        await context.events.effect(OperationEffect.UNKNOWN)
-        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        composition, resources, session_receipt = await prepare_provider_capture(
+            context,
+            payload.profile_id,
+            payload.output_root,
+            self._composition_factory,
+            self._browser_resources_factory,
+            self._provider_preflight,
+            preflight_phase=_PHASES[0],
+            acquire_phase=_PHASES[1],
+            may_write=True,
+        )
         with resources.activate():
             report = await capture_iva_remote_state(
                 ports=composition.iva_remote_state_port,
@@ -244,10 +227,9 @@ class IvaRemoteStateCaptureExecutor:
             or not report.acquisition_manifest_id
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        await context.events.phase(_PHASES[2])
-        await context.events.effect(OperationEffect.UPDATED)
-        async with context.cancellation.irreversible_section():
-            return await context.operands.put(report, written_at=now())
+        return await publish_live_capture_report(
+            context, report, result_phase=_PHASES[2], effect=OperationEffect.UPDATED
+        )
 
 
 def build_iva_remote_state_capture_definition(
@@ -260,34 +242,14 @@ def build_iva_remote_state_capture_definition(
     def build() -> IvaRemoteStateCaptureExecutor:
         return IvaRemoteStateCaptureExecutor(composition_factory, browser_resources_factory, provider_preflight)
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID,
         request_type=IvaRemoteStateCaptureRequest,
         result_type=IvaRemoteStateAcquisitionReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=IvaRemoteStateCaptureRequest,
-            executor_type=IvaRemoteStateCaptureExecutor,
-            build=build,
-        ),
+        executor_type=IvaRemoteStateCaptureExecutor,
+        build=build,
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -295,33 +257,21 @@ def resolve_iva_remote_state_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile IVA read authority and fresh local COMMIT fences."""
-    if request.definition_id != IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID or not isinstance(
-        request.payload, IvaRemoteStateCaptureRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    return resolve_whole_profile_capture_access(
+        request,
+        context,
+        definition_id=IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID,
+        payload_type=IvaRemoteStateCaptureRequest,
     )
-    return replace(resolved, policy=policy)
 
 
 def build_iva_remote_state_capture_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind closed combined-IVA schemas to whole-profile disclosure access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=IvaRemoteStateCaptureRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=IvaRemoteStateCapturePublicResultV1,
-        ),
+        public_result_type=IvaRemoteStateCapturePublicResultV1,
         result_projector=_project_result,
         access_resolver=resolve_iva_remote_state_capture_access,
     )

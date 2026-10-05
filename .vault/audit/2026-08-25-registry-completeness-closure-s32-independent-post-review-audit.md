@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b7815b337e7c03cd14e17d4aaca0c868ccd058b733c9fa0c04178715a8d86e2b'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:0afe1fa752a37e32e2f14e9a4a74b8e95f8d57469413d446f8364ef71809f093'
+related: []
 ---
 
 # `registry-completeness-closure` audit: `W03.P05.S32 independent review`
@@ -57,9 +56,6 @@ or verification evidence.
 
 ## Verification
 
-- `uv run pytest src/cadrumo/domain/calculations/registry/tests/test_filing_grade_binding_resolution.py -q` — 5 passed.
-- `uv run pytest src/cadrumo/domain/calculations/registry/tests/test_modelo_353_registry.py -q` — 23 passed.
-- `uv run pytest -m integration src/cadrumo/application/registry/tests/test_source_connectivity_authority.py -q` — 22 passed.
 - A direct validated-authority recomputation returned 66 filing-grade revisions and 9,150 binding declarations. Its census projection returned exactly four declared-binding deferred families, with five exact destinations because Modelo 193 has distinct 2024 and 2025+ revisions. Every destination remains `deferred`, not `enrolled`.
 - Re-read current shared `HEAD` before this record's correction. The review changes only this audit and the S32 execution record; it does not modify a registry, resolver, provenance model, or census declaration.
 

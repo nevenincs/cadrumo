@@ -10,18 +10,12 @@ import typer
 from dev._paths import REPO_ROOT
 
 from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, AdjudicationSet, load_adjudications
-from .manager import (
-    AeipApplyPlan,
-    AeipInventory,
-    ChainPlan,
-    apply_prepared_plan,
-    build_inventory,
-    detect_stale_adjudications,
-    extract_occurrences,
-    plan_chains,
-    prepare_apply,
-    render_evolution_record,
-)
+from .apply_execution import apply_prepared_plan
+from .apply_preparation import prepare_apply
+from .inventory import build_inventory, extract_occurrences
+from .planning import plan_chains, render_evolution_record
+from .stale_adjudications import detect_stale_adjudications
+from .types import AeipApplyPlan, AeipInventory, ChainPlan
 
 app = typer.Typer(
     name="aeip",
@@ -118,17 +112,33 @@ def inventory_command(
     """Report the event matrix: programmes, spans, and id-reuse collisions."""
     inventory, _, _ = _load(modelo, adjudications)
     multi = [event for event in inventory.events if event.spans_multiple_revisions]
+    _report_inventory_header(modelo, inventory, len(multi))
+    _report_revision_counts(inventory)
+    _report_claim_collisions(inventory)
 
+
+def _report_inventory_header(modelo: str, inventory: AeipInventory, multi_count: int) -> None:
     typer.echo(f"Modelo {modelo} anexo-A AEIP family across revisions {', '.join(inventory.revisions)}")
     typer.echo(f"  event-row occurrences : {len(inventory.occurrences)}")
     typer.echo(f"  distinct programmes   : {len(inventory.events)}")
-    typer.echo(f"    spanning >1 revision: {len(multi)}")
-    typer.echo(f"    single-revision     : {len(inventory.events) - len(multi)}")
+    typer.echo(f"    spanning >1 revision: {multi_count}")
+    typer.echo(f"    single-revision     : {len(inventory.events) - multi_count}")
+
+
+def _report_revision_counts(inventory: AeipInventory) -> None:
     for revision in inventory.revisions:
-        events = sum(1 for event in inventory.events for occ in event.occurrences if occ.revision_id == revision)
+        events = _revision_event_count(inventory, revision)
         categories = inventory.category_row_counts.get(revision, 0)
         typer.echo(f"  {revision}: {events:>3} event rows, {categories:>3} category rows")
 
+
+def _revision_event_count(inventory: AeipInventory, revision: str) -> int:
+    return sum(
+        1 for event in inventory.events for occurrence in event.occurrences if occurrence.revision_id == revision
+    )
+
+
+def _report_claim_collisions(inventory: AeipInventory) -> None:
     within_revision, pooled = casilla_claims(inventory)
     collisions = sorted(key for key, slugs in within_revision.items() if len(slugs) > 1)
     reassigned = sorted(casilla for casilla, slugs in pooled.items() if len(slugs) > 1)

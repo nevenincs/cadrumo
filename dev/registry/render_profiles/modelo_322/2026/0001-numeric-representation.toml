@@ -1,0 +1,41 @@
+schema_version = 1
+fragment_id = 'numeric-representation'
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'DR32201'
+source_row = 12
+record_identity = 'DR32201'
+source_cell = 'A12'
+ordinal = '7'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm322-2026-identificacion-ejercicio-year-yyyy'
+decision_statement = 'The four-position Identificación ejercicio is the unsigned four-digit filing year.'
+justification = 'The source field is named Ejercicio and has four numeric positions; the filing-year contract preserves all four digits.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'DR32201'
+source_row = 12
+record_identity = 'DR32201'
+source_cell = 'A12'
+ordinal = '7'
+
+[design_identity]
+modelo = '322'
+design_epoch = '2026'
+source_ref = 'aeat-dr-322-2026'
+source_sha256 = 'f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76'

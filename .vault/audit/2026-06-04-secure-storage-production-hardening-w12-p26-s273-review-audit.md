@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:617ea8df89e28fdec416015d67f5a8993db368f514f252953c1dc340b5594d4c'
+modified: '2026-10-03'
+body_hash: 'sha256:378065ec8a3bd13047119c938ef93eb5947245da1a2bcce7e8c8e1449772ab16'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S273-001 | PASS | Wizard command factory delegates storage custody
 
-`src/aeat/application/wizard/_commands.py` does not construct repositories, manage
+The retired module does not construct repositories, manage
 master-key material, write bucket manifests directly, or persist wizard state through a
 side store. Create and full-edit flows enter `profile_create_storage_span` or
 `profile_storage_session`; patch-edit flows enter `profile_storage_session` before
@@ -40,7 +40,7 @@ routing rather than duplicating it.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/wizard/_commands.py src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_commands_helpers.py src/aeat/application/wizard/test_create_pointer_atomicity.py`
-- `uv run --no-sync pytest -q src/aeat/application/wizard/test_commands.py src/aeat/application/wizard/test_create_pointer_atomicity.py src/aeat/application/wizard/test_commands_helpers.py`
+- the historical check
+- the historical check
 
 Disposition: close `AFR-171`.

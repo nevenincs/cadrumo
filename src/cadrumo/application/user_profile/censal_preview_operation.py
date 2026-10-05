@@ -1,4 +1,7 @@
-"""Recorded, exact-profile preview of one authenticated censal read."""
+"""Recorded, exact-profile preview of one authenticated censal read.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 
@@ -28,7 +31,11 @@ from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from ..live.censo_ports import CensalFetchPort
 from ..live.session import LiveSessionWriteReceipt, SessionWriteReporter, active_verified_session
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -38,29 +45,20 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError
+from .censal_access import bind_whole_profile_censal_access
 from .censal_observation import CensalObservation
 from .censal_operation import CensalProfileBaseline
 from .censo_sync import (
@@ -91,7 +89,7 @@ _CENSAL_PREVIEW_PHASES = (
     CENSAL_PREVIEW_PHASE_SETTLEMENT,
 )
 _CENSAL_PREVIEW_MAX_VALUE_LENGTH = 4_096
-_CENSAL_PREVIEW_RESULT_MAX_BYTES = min(48 * 1024, PROJECTION_DOCUMENT_MAX_BYTES - 4_096)
+_CENSAL_PREVIEW_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _CensalPath = Annotated[str, Field(min_length=3, max_length=160)]
 _CensalValue = Annotated[str, Field(max_length=_CENSAL_PREVIEW_MAX_VALUE_LENGTH)]
@@ -150,6 +148,7 @@ class CensalPreviewOperationResult(BaseModel):
     adopted: tuple[CensalPreviewFactProjection, ...] = ()
     unchanged: tuple[CensalPreviewFactProjection, ...] = ()
     divergences: tuple[CensalPreviewDivergenceProjection, ...] = ()
+    observation: CensalObservation | None = None
 
     @model_validator(mode="after")
     def _validate_partition(self) -> CensalPreviewOperationResult:
@@ -158,14 +157,22 @@ class CensalPreviewOperationResult(BaseModel):
             tuple(item.path for item in self.unchanged),
             tuple(item.path for item in self.divergences),
         )
-        for paths in groups:
-            if paths != tuple(path for path in CENSAL_ADOPTABLE_PATHS if path in paths):
-                raise ValueError("censal preview outcomes must retain canonical field order")
-            if len(paths) != len(set(paths)):
-                raise ValueError("censal preview outcome paths must be unique")
-        if len({path for group in groups for path in group}) != sum(map(len, groups)):
-            raise ValueError("censal preview outcome paths must be disjoint")
+        _validate_censal_preview_partition(groups)
         return self
+
+
+def _validate_censal_preview_partition(groups: tuple[tuple[str, ...], ...]) -> None:
+    for paths in groups:
+        _validate_canonical_preview_paths(paths)
+    if len({path for group in groups for path in group}) != sum(map(len, groups)):
+        raise ValueError("censal preview outcome paths must be disjoint")
+
+
+def _validate_canonical_preview_paths(paths: tuple[str, ...]) -> None:
+    if paths != tuple(path for path in CENSAL_ADOPTABLE_PATHS if path in paths):
+        raise ValueError("censal preview outcomes must retain canonical field order")
+    if len(paths) != len(set(paths)):
+        raise ValueError("censal preview outcome paths must be unique")
 
 
 type CensalPreviewAcquire = Callable[
@@ -188,12 +195,6 @@ class CensalPreviewBrowserResources(Protocol):
 
 
 type CensalPreviewBrowserResourcesFactory = Callable[[], CensalPreviewBrowserResources]
-
-
-def _unconfigured_provider_preflight(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
-    """Refuse provider acquisition when composition supplied no readiness check."""
-    del profile_id, operation
-    raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
 
 
 def _load_exact_baseline(
@@ -250,6 +251,7 @@ def _build_preview_result(
         adopted=adopted,
         unchanged=unchanged,
         divergences=divergences,
+        observation=observation,
     )
 
 
@@ -324,15 +326,9 @@ class CensalPreviewOperationExecutor:
         """Acquire one observation and persist its bounded exact-profile preview."""
         baseline = request.payload.baseline
         profile_id = str(baseline.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != CENSAL_PREVIEW_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != CENSAL_PREVIEW_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, UUID(profile_id))
 
         await context.events.phase(CENSAL_PREVIEW_PHASE_PREFLIGHT)
         decode_context = context.authority_operation.profile_decode_context()
@@ -377,7 +373,7 @@ def build_censal_preview_operation_definition(
     operator_scope_ports: OperatorScopePorts,
     censal_fetch_port: CensalFetchPort,
     browser_resources_factory: CensalPreviewBrowserResourcesFactory,
-    provider_preflight: CensalPreviewProviderPreflight = _unconfigured_provider_preflight,
+    provider_preflight: CensalPreviewProviderPreflight,
     acquire: CensalPreviewAcquire | None = None,
 ) -> OperationDefinition:
     """Build the recorded census preview with worker-scoped browser custody."""
@@ -431,16 +427,23 @@ def build_censal_preview_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
 def resolve_censal_preview_operation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Resolve exact-profile preview access with provider readiness at worker start."""
+    """Resolve exact-profile preview access; the bound worker checks provider readiness."""
+    _validated_censal_preview_request(request, context)
+    return bind_whole_profile_censal_access(
+        request, context, actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS, provider=Availability.NOT_REQUIRED
+    )
+
+
+def _validated_censal_preview_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> CensalPreviewOperationRequest:
     payload = request.payload
     if request.definition_id != CENSAL_PREVIEW_OPERATION_DEFINITION_ID or not isinstance(
         payload, CensalPreviewOperationRequest
@@ -451,96 +454,16 @@ def resolve_censal_preview_operation_access(
         profile_id
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-
-    admitted = context.admitted_request
-    if (
-        admitted is not None
-        and context.action
-        in {
-            AccessAction.OBSERVE,
-            AccessAction.RESULT,
-            AccessAction.CANCEL,
-            AccessAction.DETACH,
-        }
-        and (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != request.definition_id
-            or admitted.action is not AccessAction.SUBMIT
-            or not admitted.period_independent
-            or admitted.periods
-        )
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    disclosure = None
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                }
-            ),
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=(Availability.NEEDS_USER if context.action is AccessAction.START else Availability.NOT_REQUIRED),
-            transaction_authority_required=False,
-        ),
-    )
+    return payload
 
 
 def build_censal_preview_operation_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Register the credential-free request and bounded public preview result."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=CensalPreviewOperationRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=CensalPreviewOperationResult,
-        ),
+        public_result_type=CensalPreviewOperationResult,
         access_resolver=resolve_censal_preview_operation_access,
     )
 

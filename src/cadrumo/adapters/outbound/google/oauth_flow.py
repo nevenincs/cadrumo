@@ -1,6 +1,6 @@
 """Google OAuth Desktop login flow for per-profile Google sessions.
 
-Runs an operator-supplied :class:`adapters.outbound.google.records.OAuthClient`
+Runs this installation's :class:`adapters.outbound.google.records.OAuthClient`
 through Google's loopback IP + PKCE Desktop flow using
 ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``.
 The operating system picks an ephemeral loopback port and opens the
@@ -28,6 +28,7 @@ from collections.abc import Callable, Mapping
 from contextlib import nullcontext
 from datetime import datetime
 from typing import TYPE_CHECKING, NoReturn, Protocol, cast
+from urllib.parse import parse_qs, urlsplit
 
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.google_configuration_operation_ports import (
@@ -46,11 +47,15 @@ from .errors import (
     GoogleAuthPreconditionCondition,
     GoogleAuthProfileUnboundError,
     GoogleAuthScopeInsufficientError,
+    GoogleAuthSignInRequiredError,
+    GoogleAuthValidationError,
     google_auth_no_action_verdict,
 )
 from .records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 
 if TYPE_CHECKING:
+    from google_auth_oauthlib.flow import OAuthCredentials
+
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # Upper bound (seconds) on how long the loopback consent receiver blocks
@@ -58,6 +63,16 @@ if TYPE_CHECKING:
 # behind ``require_interactive_terminal``: even when a TTY is present the
 # flow must not block indefinitely if the operator abandons consent.
 _CONSENT_WAIT_TIMEOUT_SECONDS = 300
+
+# The consent redirect is received on the IPv4 loopback address itself. A
+# host name would depend on local name resolution, which another program or
+# a hosts-file entry can point elsewhere.
+_LOOPBACK_HOST = "127.0.0.1"
+
+# The authorization response's error code for a request the resource owner or
+# the authorization server denied (RFC 6749 section 4.1.2.1). No authorization
+# code accompanies it, so no grant was issued and there is nothing to exchange.
+_CONSENT_DECLINED = "access_denied"
 
 
 class _CanonicalTokenExchange(Protocol):
@@ -164,6 +179,7 @@ def require_resolvable_profile_record(profile_id: str, *, operation: PinnedAutho
 def credentials_to_records(
     *,
     refresh_token: str,
+    client_id: str,
     token_uri: str,
     account_email: str,
     granted_scopes: tuple[str, ...],
@@ -176,11 +192,12 @@ def credentials_to_records(
     :class:`adapters.outbound.google.records.OAuthToken` carries the refresh
     credential and the returned
     :class:`adapters.outbound.google.records.OAuthMetadata` carries the linked
-    Google account, granted scope tuple, and issuance timestamps used by the
+    Google account, granted scope tuple, and issuance timestamp used by the
     session store.
 
     Args:
         refresh_token: The refresh token returned by the consent screen.
+        client_id: The client the consent was granted to, bound into the token.
         token_uri: The token endpoint URL mirrored from
             :class:`adapters.outbound.google.records.OAuthClient`.
         account_email: The Google account that completed the consent.
@@ -218,12 +235,11 @@ def credentials_to_records(
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         )
-    token = OAuthToken(refresh_token=refresh_token, token_uri=token_uri)
+    token = OAuthToken(refresh_token=refresh_token, client_id=client_id, token_uri=token_uri)
     metadata = OAuthMetadata(
         account_email=account_email,
         granted_scopes=tuple(granted_scopes),
         issued_at=issued_at,
-        last_refresh_at=issued_at,
     )
     return token, metadata
 
@@ -249,7 +265,7 @@ def run_login_flow(
     :func:`adapters.outbound.google.oauth_flow.credentials_to_records`.
 
     Args:
-        client: Operator-imported
+        client: This installation's
             :class:`adapters.outbound.google.records.OAuthClient` metadata.
         profile: Active profile UUID resolved by
             :func:`adapters.outbound.google.active_profile.resolve_active_profile`.
@@ -285,6 +301,7 @@ def run_login_flow(
         )
     return credentials_to_records(
         refresh_token=refresh_token,
+        client_id=client.client_id,
         token_uri=token_uri,
         account_email=account_email,
         granted_scopes=granted_scopes,
@@ -319,33 +336,29 @@ def _run_local_server(
             ),
         ) from exc
 
-    client_config: dict[str, dict[str, object]] = {
-        "installed": {
-            "client_id": client.client_id,
-            "client_secret": client.client_secret,
-            "project_id": client.project_id,
-            "auth_uri": client.auth_uri,
-            "token_uri": client.token_uri,
-            "auth_provider_x509_cert_url": client.auth_provider_x509_cert_url,
-            "redirect_uris": list(client.redirect_uris) or ["http://localhost"],
-        },
-    }
+    client_config = _oauth_loopback_client_config(client)
 
     class AdmittedInstalledAppFlow(InstalledAppFlow):
         def fetch_token(self, **kwargs: object) -> Mapping[str, object]:
             """Renew after the human wait, just before the canonical token exchange."""
+            # Read from the redirect itself, before the exchange is admitted, so
+            # no later answer of the token endpoint can be taken for a decline.
+            if _consent_declined(kwargs.get("authorization_response")):
+                raise _consent_declined_refusal()
+            # A completed exchange means Google holds a grant for this client,
+            # whatever is refused afterwards, so it is accounted as a change.
             if before_handoff is not None:
-                before_handoff("oauth.token-exchange")
+                before_handoff("oauth.token-exchange", writes=True)
             # CAST-RATIONALE-GOOGLE-OAUTH-FETCH: locked Flow.fetch_token accepts
             # arbitrary OAuth session kwargs and returns its token mapping;
             # the local InstalledAppFlow stub omits this inherited method.
             delegate = cast(_CanonicalTokenExchange, super())
             token = delegate.fetch_token(**kwargs)
             if acknowledged is not None:
-                acknowledged("oauth.token-exchange")
+                acknowledged("oauth.token-exchange", writes=True)
             return token
 
-    flow_type = InstalledAppFlow if before_handoff is None and acknowledged is None else AdmittedInstalledAppFlow
+    flow_type = InstalledAppFlow if _oauth_handoffs_absent(before_handoff, acknowledged) else AdmittedInstalledAppFlow
     try:
         flow = flow_type.from_client_config(client_config, scopes=list(REQUIRED_SCOPES))
     except ValueError as exc:
@@ -363,15 +376,20 @@ def _run_local_server(
     if before_handoff is not None:
         before_handoff("oauth.browser-consent")
     try:
-        if before_handoff is None and acknowledged is None:
-            credentials = flow.run_local_server(port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS)
+        if _oauth_handoffs_absent(before_handoff, acknowledged):
+            credentials = flow.run_local_server(
+                host=_LOOPBACK_HOST, port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS
+            )
         else:
             # Browser consent stays human; its state-bearing URL must not be
             # printed into an unattended worker's diagnostic stream.
             credentials = flow.run_local_server(
-                port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS, authorization_prompt_message=None
+                host=_LOOPBACK_HOST,
+                port=0,
+                timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS,
+                authorization_prompt_message=None,
             )
-    except ProfileAccessRefusedError:
+    except (ProfileAccessRefusedError, GoogleAuthSignInRequiredError):
         raise
     except OSError as exc:
         raise GoogleAuthLoopbackBindError(
@@ -394,16 +412,27 @@ def _run_local_server(
     # but the `google-auth` stubs ship a narrower `Credentials` class on which
     # the attribute isn't visible to pyrefly. The dynamic lookup below is the
     # documented public API.
-    token_uri = getattr(credentials, "token_uri", None)
-    return (
-        str(credentials.refresh_token),
-        str(token_uri),
-        _decode_email_from_id_token(
-            credentials, audience=client.client_id, before_handoff=before_handoff, acknowledged=acknowledged
-        )
-        if before_handoff is not None or acknowledged is not None
-        else _decode_email_from_id_token(credentials, audience=client.client_id),
-        tuple(str(scope) for scope in (credentials.scopes or ())),
+    return _oauth_loopback_records(credentials, client, before_handoff=before_handoff, acknowledged=acknowledged)
+
+
+def _consent_declined(authorization_response: object) -> bool:
+    """Return whether the redirect Google sent says the consent request was declined."""
+    if not isinstance(authorization_response, str):
+        return False
+    return parse_qs(urlsplit(authorization_response).query).get("error") == [_CONSENT_DECLINED]
+
+
+def _consent_declined_refusal() -> GoogleAuthSignInRequiredError:
+    """Build the refusal for a consent that was declined before anything was exchanged."""
+    return GoogleAuthSignInRequiredError(
+        "the Google consent was declined",
+        translated_message="adapters.google.oauth_flow.errors.consent_declined",
+        precondition_verdict=google_auth_no_action_verdict(
+            condition=GoogleAuthPreconditionCondition.CONSENT_GRANTED,
+            facts={"consent_granted": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -569,3 +598,60 @@ __all__ = [
     "require_resolvable_profile_record",
     "run_login_flow",
 ]
+
+
+def _oauth_handoffs_absent(
+    before_handoff: GoogleConfigurationHandoff | None, acknowledged: GoogleConfigurationAcknowledgement | None
+) -> bool:
+    """Identify the unchanged direct credential path before constructing admitted transport requests."""
+    return before_handoff is None and acknowledged is None
+
+
+def _oauth_loopback_client_config(client: OAuthClient) -> dict[str, dict[str, object]]:
+    """Build the unchanged desktop client configuration before consent begins."""
+    return {
+        "installed": {
+            "client_id": client.client_id,
+            "client_secret": client.client_secret,
+            "project_id": client.project_id,
+            "auth_uri": client.auth_uri,
+            "token_uri": client.token_uri,
+            "auth_provider_x509_cert_url": client.auth_provider_x509_cert_url,
+            "redirect_uris": list(client.redirect_uris) or [f"http://{_LOOPBACK_HOST}"],
+        }
+    }
+
+
+def _oauth_loopback_records(
+    credentials: OAuthCredentials,
+    client: OAuthClient,
+    *,
+    before_handoff: GoogleConfigurationHandoff | None,
+    acknowledged: GoogleConfigurationAcknowledgement | None,
+) -> tuple[str, str, str, tuple[str, ...]]:
+    """Verify the admitted identity and retain the refresh and scope facts in evaluation order."""
+    refresh_token = credentials.refresh_token
+    if not isinstance(refresh_token, str) or not refresh_token.strip():
+        # Without a refresh token the sign-in would work until the access token
+        # lapses and then fail on every later command, so nothing is stored.
+        raise GoogleAuthValidationError(
+            "Google completed the consent without issuing a refresh token",
+            translated_message="adapters.google.oauth_flow.errors.refresh_token_missing",
+            precondition_verdict=google_auth_no_action_verdict(
+                condition=GoogleAuthPreconditionCondition.REFRESH_CREDENTIAL_ISSUED,
+                facts={"refresh_token_issued": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                outcome=NoRecoveryOutcome.SAFETY,
+            ),
+        )
+    token_uri = getattr(credentials, "token_uri", None)
+    return (
+        refresh_token,
+        str(token_uri),
+        _decode_email_from_id_token(
+            credentials, audience=client.client_id, before_handoff=before_handoff, acknowledged=acknowledged
+        )
+        if before_handoff is not None or acknowledged is not None
+        else _decode_email_from_id_token(credentials, audience=client.client_id),
+        tuple(str(scope) for scope in (credentials.scopes or ())),
+    )

@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal, InvalidOperation
-
 import typer
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ._actividad_asset_payloads import (
     ActivityAssetFilingHandoffPayload,
     ActivityAssetForecastPayload,
     ActivityAssetHistoryPayload,
 )
+from ._date_parsing import _parse_iso_date
 from .actividad_asset_receipts import claim_receipt, inspection_receipt
 from .common import emit_envelope
 from .runtime_ledger_actividad_asset import (
@@ -26,15 +23,6 @@ from .runtime_ledger_actividad_asset import (
     forecast_activity_asset,
     inspect_activity_asset,
 )
-
-
-def _parse_free_amount(value: str | None) -> Decimal | None:
-    if value is None:
-        return None
-    try:
-        return Decimal(value)
-    except InvalidOperation as exc:
-        raise ActividadAssetValidationError("free-depreciation amount must be a decimal euro amount") from exc
 
 
 def actividad_asset_create(ctx: typer.Context, revision_json: str) -> None:
@@ -93,9 +81,9 @@ def actividad_asset_forecast(
     result = forecast_activity_asset(
         ctx,
         asset_id=asset_id,
-        covered_from=date.fromisoformat(covered_from),
-        covered_until=date.fromisoformat(covered_until),
-        requested_free_amount=_parse_free_amount(free_depreciation_amount),
+        covered_from=_parse_iso_date(covered_from, label="covered-from"),
+        covered_until=_parse_iso_date(covered_until, label="covered-until"),
+        requested_free_amount=parse_requested_free_amount(free_depreciation_amount),
         supersedes_claim_id=supersedes_claim_id,
     )
     if result.forecast is None:

@@ -101,9 +101,11 @@ class _Factory:
     def __init__(self, *, bucket_id: str | None = None) -> None:
         self.bucket_id = bucket_id
         self.requested: list[str] = []
+        self.operations: list[object] = []
 
-    def __call__(self, *, bucket_id: str) -> ModeloIvaWalletSeedPorts:
+    def __call__(self, *, bucket_id: str, operation: object) -> ModeloIvaWalletSeedPorts:
         self.requested.append(bucket_id)
+        self.operations.append(operation)
         selected = self.bucket_id if self.bucket_id is not None else bucket_id
         return cast(
             ModeloIvaWalletSeedPorts,
@@ -310,6 +312,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_seed_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def seed(**kwargs: object) -> object:
         seen.append(kwargs)
@@ -331,6 +334,7 @@ def test_seed_executor_uses_pinned_authority_and_refuses_ungrounded_state(monkey
     assert result_ref == "result-reference"
     assert authority.coordinates == [("303", 2024, "4T")]
     assert factory.requested == [str(_PROFILE)]
+    assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
     assert seen[0]["operation"] is authority
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
@@ -390,6 +394,7 @@ def test_seed_authority_refusal_precedes_commit_and_duplicate_is_effect_none(
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_seed_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_seed_operation.seed_iva_compensation_period_for_bucket",
         lambda **_kwargs: pytest.fail("seed service must not run without pinned source authority"),
@@ -446,6 +451,7 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
     monkeypatch.setattr(
         "cadrumo.application.modelo.iva_wallet_override_operation.require_active_bucket_id", lambda: str(_PROFILE)
     )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def record(**kwargs: object) -> object:
         seen.append(kwargs)
@@ -468,6 +474,7 @@ def test_override_executor_uses_pinned_authority_and_refuses_ungrounded_decision
     assert result_ref == "result-reference"
     assert authority.coordinates == [("303", 2024, "4T")]
     assert factory.requested == [str(_PROFILE)]
+    assert factory.operations == [authority]
     assert seen[0]["bucket_id"] == str(_PROFILE)
     assert seen[0]["operation"] is authority
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]

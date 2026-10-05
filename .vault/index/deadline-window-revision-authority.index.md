@@ -4,20 +4,18 @@ tags:
   - '#index'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ae121f69c2af3c7d58ab0086a4ef6d1371e3c50cee8d0156bef1a5f5041348ca'
+body_hash: 'sha256:0db28798b3d73c2e301e907a7931775e10d0e9e0d7099da79fccb92584734098'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-engine-projection-audit]]'
-  - '[[2026-08-24-deadline-window-revision-authority-ledger]]'
   - '[[2026-08-24-deadline-window-revision-authority-m202-s42-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-m216-s43-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-m303-historical-calendar-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-m349-s44-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-m353-s14-review-audit]]'
-  - '[[2026-08-24-deadline-window-revision-authority-plan]]'
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
   - '[[2026-08-24-deadline-window-revision-authority-research]]'
   - '[[2026-08-24-deadline-window-revision-authority-s09-warm-cache-review-audit]]'
@@ -99,14 +97,6 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-25-deadline-window-revision-authority-s46-m210-design-axis-audit` - `deadline-window-revision-authority` audit: `s46 m210 design axis`
 - `2026-08-25-deadline-window-revision-authority-s50-cli-calendar-parity-audit` - `deadline-window-revision-authority` audit: `s50 cli calendar parity`
 - `2026-08-25-deadline-window-revision-authority-supported-year-deadline-census-audit` - `deadline-window-revision-authority` audit: `supported year deadline census`
-
-### exec
-
-- `2026-08-24-deadline-window-revision-authority-ledger` - `deadline-window-revision-authority` ledger
-
-### plan
-
-- `2026-08-24-deadline-window-revision-authority-plan` - `deadline-window-revision-authority` plan
 
 ### reference
 

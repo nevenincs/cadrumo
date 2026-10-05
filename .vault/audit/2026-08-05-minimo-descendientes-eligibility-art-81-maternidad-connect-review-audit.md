@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:3dcab5bd91a1116cd834e4e873efb52551431721a2b3a3f9841ddb271c8dd352'
-related:
-  - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
+related: []
 ---
 
 # `minimo-descendientes-eligibility` audit: `Art. 81.1 maternidad connect review: two confirmed over-grants`

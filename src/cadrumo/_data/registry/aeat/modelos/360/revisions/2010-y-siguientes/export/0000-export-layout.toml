@@ -1,0 +1,6 @@
+[[revisions.2010-y-siguientes.export_layouts]]
+id = 'generated-modelo-360-2010-y-siguientes-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-360-2010']
+legal_refs = ['orden-eha-789-2010:art-1']
+dictionary_path_overrides = []

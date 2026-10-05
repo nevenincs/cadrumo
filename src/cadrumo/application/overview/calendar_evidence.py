@@ -415,6 +415,9 @@ def _stronger_filing_evidence(
             "aeat_snapshot_id": aeat.aeat_snapshot_id,
             "aeat_evidence_kind": aeat.aeat_evidence_kind,
             "aeat_evidence_conflict_reference_ids": conflict_reference_ids,
+            "aeat_evidence_concerns": tuple(
+                sorted(set(existing.aeat_evidence_concerns + candidate.aeat_evidence_concerns))
+            ),
             "verified_justificante_csv": aeat.verified_justificante_csv,
             "justificante_required": existing.justificante_required or candidate.justificante_required,
             "justificante_verified": aeat.justificante_verified,

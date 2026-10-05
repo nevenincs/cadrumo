@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#data-file-quality'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d3fcfdbd2a4949bd61898fd2e5f3e096f1ac5e193db62e4e1c16564216540dd'
+body_hash: 'sha256:eb918c6c35facdea644506567c031229ee30222c3d40e412bdcb04009ed00668'
 related: []
 ---
 
@@ -42,12 +42,7 @@ and manual, while `justfile:355-360` excludes `check-hooks` from aggregates.
 Remove the duplicate generic hooks or make them delegate to the canonical
 driver so path policy and diagnostics have one declaration site.
 
-Both `.github/workflows/ci.yml` and `.github/workflows/ci-full.yml` currently
-call `check-style` and `check-format` explicitly in their Lint step. Add the
-public `check-data-format` recipe there while also enrolling it in
-`check-code`; replacing the workflow step with `check-code` would broaden CI
-to unrelated gates and is outside this feature. CI must call the recipe rather
-than reimplement its tool commands, per `dev/ci_contract.py`.
+Both `.github/workflows/ci.yml` and `.github/workflows/ci-full.yml` currently call `check-style` and `check-format` explicitly in their Lint step. Add the public `check-data-format` recipe there while also enrolling it in `check-code`; replacing the workflow step with `check-code` would broaden CI to unrelated gates and is outside this feature.
 
 Generic development dependencies belong in `[dependency-groups].dev` in
 `pyproject.toml`. The existing `rtoml` declaration is intentionally in the

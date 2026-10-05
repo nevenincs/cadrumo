@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#modelo-131-calc-verify'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:7983c05d190ea26b438b996a5c29e63ef21718dc832d063bc1488e9549f4d140'
-related:
-  - '[[2026-04-27-modelo-131-calc-verify-exec]]'
+body_hash: 'sha256:867be653c8b4fc4f5dcd5611e32c181d4884969d953b792b0008c272c3b4b50b'
+related: []
 ---
 
 # `modelo-131-calc-verify` feature index
@@ -16,7 +15,3 @@ related:
 Auto-generated index of all documents tagged with `#modelo-131-calc-verify`.
 
 ## Documents
-
-### exec
-
-- `2026-04-27-modelo-131-calc-verify-exec` - modelo-131-calc-verify execution summary

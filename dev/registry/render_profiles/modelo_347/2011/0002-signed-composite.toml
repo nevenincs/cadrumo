@@ -1,0 +1,263 @@
+schema_version = 1
+fragment_id = "signed-composite"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "347"
+design_epoch = "2011"
+source_ref = "aeat-dr-347-2011"
+source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 156
+ordinal = "12"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe total anual de las operaciones field states one leading blank-or-N sign at position 145 and a 13+2 digit unsigned magnitude at 146-160."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 156
+ordinal = "12"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 464
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe anual de las operaciones field states one leading blank-or-N sign at position 83 and a 13+2 digit unsigned magnitude at 84-98."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 464
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 518
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe anual percibido por transmisiones de inmuebles sujetas a iva field states one leading blank-or-N sign at position 116 and a 13+2 digit unsigned magnitude at 117-131."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 518
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 543
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe de las operaciones primer trimestre field states one leading blank-or-N sign at position 136 and a 13+2 digit unsigned magnitude at 137-151."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 543
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 568
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe percibido por transmisiones de inmuebles sujetas a iva primer trimestre field states one leading blank-or-N sign at position 152 and a 13+2 digit unsigned magnitude at 153-167."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 568
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 589
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe de las operaciones segundo trimestre field states one leading blank-or-N sign at position 168 and a 13+2 digit unsigned magnitude at 169-183."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 589
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 615
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe percibido por transmisiones de inmuebles sujetas a iva segundo trimestre field states one leading blank-or-N sign at position 184 and a 13+2 digit unsigned magnitude at 185-199."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 615
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 637
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe de las operaciones tercer trimestre field states one leading blank-or-N sign at position 200 and a 13+2 digit unsigned magnitude at 201-215."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 637
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 661
+ordinal = "23"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe percibido por transmisiones de inmuebles sujetas a iva tercer trimestre field states one leading blank-or-N sign at position 216 and a 13+2 digit unsigned magnitude at 217-231."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 661
+ordinal = "23"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 682
+ordinal = "24"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe de las operaciones cuarto trimestre field states one leading blank-or-N sign at position 232 and a 13+2 digit unsigned magnitude at 233-247."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 682
+ordinal = "24"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 707
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official importe percibido por transmisiones de inmuebles sujetas a iva cuarto trimestre field states one leading blank-or-N sign at position 248 and a 13+2 digit unsigned magnitude at 249-263."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign, magnitude and partition clause of the composite grammar."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 707
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Declarado"

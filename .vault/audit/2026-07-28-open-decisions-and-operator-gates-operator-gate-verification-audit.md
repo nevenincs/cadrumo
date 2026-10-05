@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#open-decisions-and-operator-gates'
 date: '2026-07-28'
-modified: '2026-07-28'
-body_hash: 'sha256:8447956d266e4c1ce475cbefb3df550f9d0cc6cd4422bcbb544feceb0d59f13b'
-related:
-  - "[[2026-07-25-open-decisions-and-operator-gates-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:454e29e284a958366e8dfca9def97c24a1a70d1383722c059a1b5665724c6e48'
+related: []
 ---
 
 # `open-decisions-and-operator-gates` audit: `operator gate verification: the repository is private, S09 is discharged, and the R6 marketplace supersession never shipped`
@@ -77,14 +76,14 @@ row is superseded: ruling R6 of the accepted canonical-release-pipeline record
 retires the stale identity by *declared supersession*, where the cohort manifest
 carries a list of plugin names the product retires and the merge tool removes
 them under the unchanged ownership rule. The consumer half of that ruling
-shipped. `dev/packaging/marketplace_publish.py` reads a `supersedes` key,
+shipped. the retired module read a `supersedes` key,
 validates it as a list of non-empty names, refuses a manifest that both claims
 and supersedes the same name, refuses superseding a plugin published by a
 sibling product, and carries a preflight that refuses when a retired identity is
 still live in the published index.
 
 The producer half did not ship. `_marketplace_manifest_document()` in
-`src/cadrumo/agent/_workspace.py` emits exactly `name`, `description`, `owner`,
+The retired module emitted exactly `name`, `description`, `owner`,
 and `plugins`. It emits no `supersedes` key and no `published_by` key. No other
 site in the tree writes either. The cohort therefore never declares that it
 retires the prior identity, the merge tool's sibling-protection preserves that

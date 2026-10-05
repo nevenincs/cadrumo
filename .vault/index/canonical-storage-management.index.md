@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#canonical-storage-management'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:44050e1dff0c5a1f82d259c52187805d9db271cf7c1ddb01f801932b5e768adb'
+body_hash: 'sha256:70862a3b50411a69922bb7e02ad094df11668bf38b76d43ee80244e0a3f4a488'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-closure-criterion-census-audit]]'
@@ -15,8 +15,6 @@ related:
   - '[[2026-08-03-canonical-storage-management-dormancy-burndown-audit]]'
   - '[[2026-08-03-canonical-storage-management-enforcement-gates-reference]]'
   - '[[2026-08-03-canonical-storage-management-honesty-review-audit]]'
-  - '[[2026-08-03-canonical-storage-management-ledger]]'
-  - '[[2026-08-03-canonical-storage-management-plan]]'
   - '[[2026-08-03-canonical-storage-management-research]]'
   - '[[2026-08-03-canonical-storage-management-self-duplication-review-audit]]'
   - '[[2026-08-03-canonical-storage-management-semantic-duplication-burndown-reference]]'
@@ -54,14 +52,6 @@ Auto-generated index of all documents tagged with `#canonical-storage-management
 - `2026-08-04-canonical-storage-management-s78-closure-criterion-audit` - `canonical-storage-management` audit: `what closing S78 would claim, and what the evidence supports`
 - `2026-08-04-canonical-storage-management-void-assertion-class-audit` - `canonical-storage-management` audit: `void assertion class`
 - `2026-08-10-canonical-storage-management-dev-product-boundary-audit` - `canonical-storage-management` audit: `Dev product boundary and storage CLI review`
-
-### exec
-
-- `2026-08-03-canonical-storage-management-ledger` - `canonical-storage-management` ledger
-
-### plan
-
-- `2026-08-03-canonical-storage-management-plan` - `canonical-storage-management` plan
 
 ### reference
 

@@ -25,8 +25,8 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = "CADRUMO_LIVE_TESTS_GOOGLE"
 def strict_live_test_opt_in(value: str) -> bool:
     """Return whether ``value`` is the sole accepted live-test opt-in token.
 
-    :class:`~core.config.Settings` uses this for both
-    ``live_tests_enabled`` and ``live_tests_google_enabled`` so neither field
+    :class:`~core.config.Settings` and the live-test fixture share this
+    predicate for the general and Google opt-ins so neither field
     accepts truthy alternatives such as ``"true"``, ``"yes"``, or ``"on"``.
     """
     return value == LIVE_READ_TEST_OPT_IN_VALUE

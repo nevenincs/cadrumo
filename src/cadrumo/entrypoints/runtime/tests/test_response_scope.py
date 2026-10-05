@@ -32,13 +32,13 @@ from cadrumo.application.user_profile.access_contracts import (
     OperationAccessPolicy,
     OperationAccessRequest,
     OperationResponseScopeAllowed,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
     SessionKind,
     SessionState,
 )
-from cadrumo.application.user_profile.access_policy import evaluate_operation_access, evaluate_response_scope
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CensalFieldIntent,
@@ -49,11 +49,12 @@ from cadrumo.application.user_profile.censal_operation import (
     build_censal_operation_registration,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
+from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access, evaluate_response_scope
 from cadrumo.application.user_profile.operations import (
-    PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
 )
+from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -98,6 +99,7 @@ def response_case() -> ResponseCase:
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=build_operator_scope_ports(),
         censal_fetch_port=fetch_censal_datos,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
     definitions = tuple(sorted((*USER_PROFILE_OPERATION_DEFINITIONS, censal), key=lambda item: item.definition_id))
     registrations = (
@@ -210,7 +212,7 @@ def response_case() -> ResponseCase:
                 login_id="response-login",
                 os_owner_id=binding.os_owner_id,
                 active=True,
-                locked=False,
+                lock_state=OsLockState.UNLOCKED,
                 unattended=LoginEligibility.ELIGIBLE,
                 credential_facilities=Availability.AVAILABLE,
             ),

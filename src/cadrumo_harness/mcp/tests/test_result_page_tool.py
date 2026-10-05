@@ -10,13 +10,15 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import JsonValue
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationSchemaIdentityV1
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.runtime.projection_pages import (
     PROJECTION_PAGE_BYTES,
     ProjectionPage,
@@ -24,7 +26,8 @@ from cadrumo.application.runtime.projection_pages import (
     project_document_page,
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

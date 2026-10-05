@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#release-asset-transport'
 date: '2026-07-20'
-modified: '2026-07-20'
-body_hash: 'sha256:5362efe29bb09a8832c0c1af7dfd714a7f785253e54ecc8c8d99a791c7d28545'
+modified: '2026-10-03'
+body_hash: 'sha256:44cf0ed5f2fd3cb485a92b4e5f69fa722d981f45403faeaedf74f245d9241b3d'
 related:
   - "[[2026-07-20-release-asset-transport-adr]]"
 ---
@@ -45,7 +45,7 @@ Grounding pass (2026-07-20) behind the accepted release-asset-transport ADR: how
 
 ## Workflow conversion fragments
 
-Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence_release.py` with subcommands `emit-manifest` (hash assets, stamp `workflow_path`/`run_id`/`run_attempt`/`head_sha`/`head_branch`/`event`, upload `evidence-manifest.json`), `verify` (download manifest plus assets by derived tag, cross-check the Actions API run record, assert exactly one draft per tag and `target_commitish == head_sha`, re-hash every asset, bounded retry on download; exit 1 naming any mismatch), `leak-sweep` (run the field-agnostic runner-metadata leak detector over a directory of assets about to be published — hostnames, usernames including username-bearing absolute paths in transcripts, machine identifiers, UNC and cohort-embedded forms — exit 1 naming the leaking asset and pattern; no rewriting: rows are scrubbed at mint time inside the evidence builders per the reconciled D9, commit `be4eca4708`), and `gc` (keep-window plus reserved-namespace refusal, tested in Python, not inline shell).
+Baseline: origin/main `22b642533d`.
 
 ### `packaging-smoke.yml`
 
@@ -80,9 +80,4 @@ Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence
 
 ## Migration order
 
-1. Land `dev/packaging/evidence_release.py` (emit-manifest, verify, leak-sweep, gc) with tests. (Row scrubbing itself already lives in the evidence builders — scrub-at-birth with a fail-closed mint refusal, landed at `be4eca4708`.)
-2. Convert `packaging-smoke.yml` (biggest storage win); verify one green end-to-end run: draft exists and is unique, assets plus manifest present, oracle legs consumed the release cohort.
-3. Convert scoop/homebrew/claude producers and consumers.
-4. Rework publish-release Gates 2 and 3; acceptance gate is a full `dry_run: true` dispatch (validates everything, publishes nothing).
-5. Add `evidence-gc.yml`; delete dead artifact uploads; update operator-preflight wording and the release checklist.
-6. Purge existing stored artifacts to clear the quota debt (in-flight operator task).
+1. Convert `packaging-smoke.yml` (biggest storage win); verify one green end-to-end run: draft exists and is unique, assets plus manifest present, oracle legs consumed the release cohort. 3. Convert scoop/homebrew/claude producers and consumers. 4. Rework publish-release Gates 2 and 3; acceptance gate is a full `dry_run: true` dispatch (validates everything, publishes nothing). 5. Add `evidence-gc.yml`; delete dead artifact uploads; update operator-preflight wording and the release checklist. 6. Purge existing stored artifacts to clear the quota debt (in-flight operator task).

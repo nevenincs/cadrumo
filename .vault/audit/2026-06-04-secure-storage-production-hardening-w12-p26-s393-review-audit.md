@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:05b8d20cc2000015a9d121a6a21d73a6501bef3bf6abb9cb1fa5e8ccf37126eb'
+modified: '2026-10-03'
+body_hash: 'sha256:de65b2c4e1998642d12dc1724aee1e5def7120a023ae768c79c41568a1ecc035'
 related: []
 ---
 
@@ -24,8 +24,8 @@ After the scanner fix, `python -m aeat.locales set` and `python -m aeat.locales 
 
 ## S393-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/locales/_ast_scanner.py src/aeat/locales/test_parity.py src/aeat/locales`
-- `uv run --no-sync pytest -q src/aeat/locales/test_parity.py::test_ast_scanner_collects_translation_key_kwargs`
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 
 Disposition: close `AFR-291`.

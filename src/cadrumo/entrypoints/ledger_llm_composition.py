@@ -15,7 +15,7 @@ from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ..adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
 from ..adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
-from ..adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ..adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -110,7 +110,7 @@ class LedgerLlmComposition:
 
 
 def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmComposition:
-    """Bind storage, local readers, and telemetry for one CLI ledger invocation."""
+    """Bind storage, local readers, and run records for one CLI ledger invocation."""
     evidence_ports = build_ledger_evidence_ports(bucket_id=bucket_id)
     evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
     text_layer_ports = evidence_text_layer_ports()
@@ -165,7 +165,7 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
     def record_classifier_run(run: Callable[[], object], provider: str) -> object:
         started_at = now()
         clock_start = time.monotonic()
-        recorder = LLMRunTelemetryRecorder()
+        recorder = LLMRunRecorder()
 
         def record(succeeded: bool, error_kind: str) -> None:
             try:

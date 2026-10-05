@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:0b846e793a6ff138afae81a47e7b00088f4aee8b6eb21807580c84367f49e382'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 
 # `profile-password-custody` audit: `unrecorded ruling closure`

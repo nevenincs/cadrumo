@@ -37,8 +37,10 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import (
@@ -74,11 +76,6 @@ from ...aggregation.m303_arrivals import (
     resolve_m303_prorrata_transition_arrival,
 )
 from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
-from .._record_field_renderer import (
-    complementaria_page_marker,
-    m303_complementaria_marker,
-    m303_no_activity_marker,
-)
 from ..export_producer import filing_producer_values, m303_filing_lexicals, m303_profile_lexicals
 from ..producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
@@ -98,6 +95,11 @@ from ..producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
+)
+from ..producer_snapshot_m200 import Modelo200ProfileFacts
+from ..record_field_renderer import (
+    m303_complementaria_marker,
+    m303_no_activity_marker,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -1017,8 +1019,6 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-        refund_account=refund_account,
-        charge_account=charge_account,
     )
     refund_snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
@@ -1034,8 +1034,6 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     )
     assert isinstance(refund_snapshot.selected_account, RefundAccountSelection)
     assert isinstance(refund_snapshot.model_profile, ModeloIVAProfile)
-    assert refund_snapshot.model_profile.refund_account is None
-    assert refund_snapshot.model_profile.charge_account is None
     assert _REFUND_IBAN in refund_snapshot.model_dump_json()
     assert _CHARGE_IBAN not in refund_snapshot.model_dump_json()
     refund_values = filing_producer_values(refund_snapshot)
@@ -1060,6 +1058,54 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     charge_values = filing_producer_values(charge_snapshot)
     assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] == _CHARGE_IBAN
     assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC] is None
+
+
+@pytest.mark.parametrize(
+    ("disposition", "expected"),
+    [
+        pytest.param(
+            ResultDisposition.DEVOLUCION,
+            {
+                FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: "2",
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: _REFUND_IBAN,
+                FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: "",
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: None,
+            },
+            id="refund-fills-the-devolucion-block",
+        ),
+        pytest.param(
+            ResultDisposition.DOMICILIACION,
+            {
+                FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: None,
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: None,
+                FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: None,
+                FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN_2: _CHARGE_IBAN,
+            },
+            id="charge-fills-the-ingreso-iban",
+        ),
+    ],
+)
+def test_modelo_200_account_fields_follow_the_selected_account_role(
+    disposition: ResultDisposition,
+    expected: dict[FilingProducerKey, object],
+) -> None:
+    """DR200 page DID: devolución block at 242-424 from the refund role, ingreso IBAN at 443 from the charge role."""
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo("200"),
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=Modelo200ProfileFacts(),
+        elections=_elections(disposition),
+        amendment_evidence=None,
+        refund_account=RefundAccount(iban=_REFUND_IBAN),
+        charge_account=ChargeAccount(iban=_CHARGE_IBAN),
+        m303_filing_facts=None,
+    )
+
+    values = filing_producer_values(snapshot)
+
+    assert {key: values[key] for key in expected} == expected
 
 
 def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained() -> None:
@@ -1147,7 +1193,7 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
 
 
 def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence() -> None:
-    """The 2023 X/C wire spellings do not introduce a second producer state."""
+    """The 303 complementaria and no-activity markers read one immutable amendment and disposition state."""
     amendment = AmendmentEvidence(
         kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
         m303_rectificativa_motive=None,
@@ -1180,10 +1226,8 @@ def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence(
 
     draft = _marker_draft()
     assert m303_complementaria_marker(draft, complemented) == "X"
-    assert complementaria_page_marker(draft, complemented) == "C"
     assert m303_no_activity_marker(draft, complemented) == "X"
     assert m303_complementaria_marker(draft, ordinary) is None
-    assert complementaria_page_marker(draft, ordinary) is None
     assert m303_no_activity_marker(draft, ordinary) is None
 
 

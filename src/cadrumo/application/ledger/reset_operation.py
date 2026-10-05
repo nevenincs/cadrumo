@@ -3,54 +3,33 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..operations.profile_guard import require_operation_profile
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPortsFactory
+from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_lifecycle import reset_ledger_catalogue
 from .models import LedgerCatalogueResetReport, LedgerRemovalBlocker
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 
 LEDGER_RESET_OPERATION_DEFINITION_ID = "ledger.reset"
 LEDGER_RESET_PHASE = "ledger.reset"
@@ -160,29 +139,15 @@ class LedgerResetExecutor:
         """Preview or reset one profile and publish its bounded encrypted receipt."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        subject = profile_operation_subject(bucket_id)
-        if (
-            request.definition_id != LEDGER_RESET_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != bucket_id
-        ):
+        if request.definition_id != LEDGER_RESET_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_RESET_PHASE)
 
         def reset(*, dry_run: bool) -> LedgerCatalogueResetReport:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
-            if ports.operation is not operation or ports.transaction_repository.bucket_id != bucket_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            for repository in (
-                ports.invoice_repository,
-                ports.work_unit_repository,
-                ports.calculation_repository,
-            ):
-                if getattr(repository, "bucket_id", None) != bucket_id:
-                    raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
             return reset_ledger_catalogue(
                 bucket_id=bucket_id,
                 actor=payload.actor or bucket_id or "operator",
@@ -237,31 +202,13 @@ class LedgerResetExecutor:
 
 def build_ledger_reset_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare durable exact-profile reset with a bounded secure receipt."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_RESET_OPERATION_DEFINITION_ID,
         request_type=LedgerResetRequest,
         result_type=LedgerResetOperationResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerResetRequest,
-            executor_type=LedgerResetExecutor,
-            build=lambda: LedgerResetExecutor(ports_factory),
-        ),
-        phase_codes=(LEDGER_RESET_PHASE,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=LedgerResetExecutor,
+        build=lambda: LedgerResetExecutor(ports_factory),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -281,34 +228,15 @@ def resolve_ledger_reset_access(
         request.payload, LedgerResetRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
-    )
-    if request.payload.dry_run:
-        return resolved
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
-    )
-    return replace(resolved, policy=policy)
+    resolve = resolve_ledger_read_access if request.payload.dry_run else resolve_ledger_commit_access
+    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_reset_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Enroll the exact request and bounded result at the operation registry."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerResetRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerResetOperationResult,
-        ),
+        public_result_type=LedgerResetOperationResult,
         access_resolver=resolve_ledger_reset_access,
     )
 

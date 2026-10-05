@@ -37,7 +37,9 @@ from ..acceleration_receipt_crypto import (
     wrap_profile_session_dek,
 )
 from ..errors import WipeTypeError
+from ..sign_in_generation import SignInGeneration
 from ..zeroise import zeroise
+from .receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -75,6 +77,8 @@ def test_session_receipt_unwrap_returns_a_buffer_that_wipes() -> None:
         session_id=_SESSION_ID,
         custody_generation=1,
         dek_epoch="epoch-1",
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=SignInGeneration(lineage=_SESSION_ID, generation=1),
         issued_at=_ISSUED_AT,
         idle_deadline=_IDLE_DEADLINE,
         absolute_deadline=_ABSOLUTE_DEADLINE,
@@ -150,6 +154,9 @@ def test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material(tmp_path: P
             now=_ISSUED_AT,
             idle_minutes=30,
             absolute_minutes=480,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in=sign_in_custody(tmp_path, profile_id),
+            generation=sign_in_custody(tmp_path, profile_id).establish().current,
         )
 
         outcome, resumed = resume_profile_session(

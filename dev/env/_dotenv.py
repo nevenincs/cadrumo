@@ -121,22 +121,7 @@ def port_values(*, target: Path, template: Path, source: Path, source_template: 
     appended: list[str] = []
     result = Porting()
     for key, line in _assignments(_read_lines(source)).items():
-        value = line.value
-        if _is_empty(value) or source_defaults.get(key) == value.strip():
-            continue
-        mine = current.get(key)
-        if _is_multiline(value) or (mine is not None and _is_multiline(mine.value)):
-            result.skipped.append(key)
-        elif mine is None:
-            appended.append(f"{key}={value}{newline}")
-            result.ported.append(key)
-        elif mine.value.strip() == value.strip():
-            continue
-        elif _is_empty(mine.value) or defaults.get(key) == mine.value.strip():
-            lines[mine.index] = mine.prefix + value + (_ending(lines[mine.index]) or newline)
-            result.ported.append(key)
-        else:
-            result.kept.append(key)
+        _port_assignment(key, line, source_defaults, current, defaults, lines, newline, appended, result)
     if result.ported:
         if lines and not _ending(lines[-1]):
             lines[-1] += newline
@@ -230,3 +215,43 @@ def provision(root: Path, main: Path | None) -> int:
 def env_setup() -> int:
     """Provision this checkout's `env/.env`, porting values from the main worktree."""
     return provision(REPO_ROOT, main_worktree(REPO_ROOT))
+
+
+def _port_assignment(
+    key: str,
+    line: _Assignment,
+    source_defaults: dict[str, str],
+    current: dict[str, _Assignment],
+    defaults: dict[str, str],
+    lines: list[str],
+    newline: str,
+    appended: list[str],
+    result: Porting,
+) -> None:
+    """Port assignment."""
+    value = line.value
+    if _is_empty(value) or source_defaults.get(key) == value.strip():
+        return
+    mine = current.get(key)
+    if _unportable_line_value(value, mine):
+        result.skipped.append(key)
+    elif mine is None:
+        appended.append(f"{key}={value}{newline}")
+        result.ported.append(key)
+    elif mine.value.strip() == value.strip():
+        return
+    elif _target_holds_default(mine, defaults, key):
+        lines[mine.index] = mine.prefix + value + (_ending(lines[mine.index]) or newline)
+        result.ported.append(key)
+    else:
+        result.kept.append(key)
+
+
+def _unportable_line_value(value: str, mine: _Assignment | None) -> bool:
+    """Require both source and existing target values to be single-line before porting."""
+    return _is_multiline(value) or (mine is not None and _is_multiline(mine.value))
+
+
+def _target_holds_default(mine: _Assignment, defaults: dict[str, str], key: str) -> bool:
+    """Permit replacement only of an empty target or its own template default."""
+    return _is_empty(mine.value) or defaults.get(key) == mine.value.strip()

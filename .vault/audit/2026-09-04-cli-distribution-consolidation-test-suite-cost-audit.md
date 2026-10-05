@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-distribution-consolidation'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:c850a501f1ae825e96ed2b660d6c1034ca9cbb7793f2f68f601db32ee664d242'
-related:
-  - "[[2026-09-02-cli-distribution-consolidation-plan]]"
+related: []
 ---
 
 # `cli-distribution-consolidation` audit: `test suite cost`

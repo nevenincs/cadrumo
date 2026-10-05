@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-edition-authoring'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:79aeecb8b221e8801273782c460553d4e3c88cab0cb75d488a56d79dd72e0b53'
+body_hash: 'sha256:5db2d8d6d366c757e2a40c6c7028b77ab34495dae3ffa308162c2c93e57d0426'
 related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
 ---
@@ -21,11 +21,11 @@ Independent focused run of the four reviewed test modules collected 63 cases: 62
 
 ### inherited-formula-identity | high | Unchanged inherited formulas can silently bind to a structural successor identity
 
-Open. `dev/registry/compiler/_loader_internals.py:260` calls the casilla identity guard only when an inherited keyed member has a stated superseder. The unchanged-member branch appends the predecessor formula without comparing the target's predecessor and successor identities. An isolated real directory-loader fixture declares a 2024 formula targeting `0001` on lineage `combined`; a 2025 delta declares a split from `combined` into `surname` and `given`, reusing `0001` for `surname`, and does not restate the formula. Loading succeeds and the inherited formula still targets `0001`, now a different identity. All structural endpoint/lifecycle checks accept this otherwise valid split. The amendment expressly denies formula inheritance across different structural identities; checking only explicitly restated formulas leaves the omitted/inherited case unprotected. The current four formula identity tests all restate the formula and therefore miss this path.
+The unchanged-member branch appends the predecessor formula without comparing the target's predecessor and successor identities. An isolated real directory-loader fixture declares a 2024 formula targeting `0001` on lineage `combined`; a 2025 delta declares a split from `combined` into `surname` and `given`, reusing `0001` for `surname`, and does not restate the formula. Loading succeeds and the inherited formula still targets `0001`, now a different identity. All structural endpoint/lifecycle checks accept this otherwise valid split. The amendment expressly denies formula inheritance across different structural identities; checking only explicitly restated formulas leaves the omitted/inherited case unprotected. The current four formula identity tests all restate the formula and therefore miss this path.
 
 ### endpoint-evidence-scope | high | Structural relationship citations are not checked against the endpoint they claim to ground
 
-Open. `dev/registry/compiler/_validate_revision_closure.py:113` checks that relation references exist and that each endpoint list includes an allowed evidence tier, but does not test endpoint applicability. Swapping `from_source_refs` and `to_source_refs` on all three committed Modelo 309 relationships returns no structural failures and no revision-reference-surface failures. The catalogue states `aeat-dr-309-2004` applies from 2004-01-01 through 2015-12-31 and `aeat-dr-309-2016` applies from 2016-01-01 through 2017-12-31. Thus the source endpoint can claim the design applicable only to the target interval and vice versa without refusal. This is an applicability/endpoint closure issue, not a requirement that sources have identical publication dates, disjoint references or edition-specific names. The live authored citations are correctly oriented; the validator does not protect that property.
+Swapping `from_source_refs` and `to_source_refs` on all three committed Modelo 309 relationships returns no structural failures and no revision-reference-surface failures. The catalogue states `aeat-dr-309-2004` applies from 2004-01-01 through 2015-12-31 and `aeat-dr-309-2016` applies from 2016-01-01 through 2017-12-31. Thus the source endpoint can claim the design applicable only to the target interval and vice versa without refusal. This is an applicability/endpoint closure issue, not a requirement that sources have identical publication dates, disjoint references or edition-specific names. The live authored citations are correctly oriented; the validator does not protect that property.
 
 ### original-findings-recheck | low | Original target identity and endpoint evidence counterexamples are closed
 

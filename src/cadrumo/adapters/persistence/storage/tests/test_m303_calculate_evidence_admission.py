@@ -26,15 +26,21 @@ from cadrumo.application.modelo import operation_definitions as definitions_modu
 from cadrumo.application.modelo.action_errors import (
     M303Exonerado390AttestationUnadmissibleError,
     M303FilingEvidenceError,
-    ModeloProfileReadinessError,
 )
+from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
 )
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
+    ModeloWorkCalculateRequest,
+)
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.operations import OperationEffect
@@ -140,12 +146,12 @@ def _calculation_ports_factory(work_unit: WorkUnit) -> CalculationActionPortsFac
 
 def _calculate_request(
     work_unit: WorkUnit,
-    evidence: definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None,
-) -> OperationRequest[definitions_module.ModeloWorkCalculateRequest]:
+    evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None,
+) -> OperationRequest[ModeloWorkCalculateRequest]:
     return OperationRequest(
         definition_id=definitions_module.MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=work_unit.work_unit_id,
-        payload=definitions_module.ModeloWorkCalculateRequest(
+        payload=ModeloWorkCalculateRequest(
             work_unit_id=work_unit.work_unit_id,
             actor="operator",
             ordinary_m303_filing_evidence=evidence,
@@ -157,7 +163,7 @@ def _m303_attestation_input(
     *,
     operation: PinnedAuthorityOperation,
     store: AttachmentStore,
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     admission = admit_m303_exonerado_390_applicability_attestation(
         bucket_id=_M303_BUCKET_ID,
         request=M303Exonerado390ApplicabilityAttestationRequest(
@@ -171,7 +177,7 @@ def _m303_attestation_input(
         store=store,
         clock=lambda: _M303_CLOCK,
     )
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+    return ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
         m303_exonerado_390_attachment_id=admission.attachment_id,
         m303_exonerado_390_sha256=admission.sha256,
@@ -184,7 +190,7 @@ def _crafted_attestation(
     *,
     value: M303Exonerado390ApplicabilityAssertion = M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
     kind: AttachmentKind = AttachmentKind.M303_EXONERADO_390_APPLICABILITY_ATTESTATION,
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     """Ingest canonical attestation bytes under a deliberately chosen kind or assertion."""
     payload = M303Exonerado390ApplicabilityAttestation(
         schema_version=1,
@@ -209,7 +215,7 @@ def _crafted_attestation(
             source_command="test:crafted-attestation",
         ),
     )
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+    return ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
         m303_exonerado_390_attachment_id=attachment.attachment_id,
         m303_exonerado_390_sha256=attachment.sha256,
@@ -218,8 +224,8 @@ def _crafted_attestation(
 
 def _unknown_digest(
     _store: AttachmentStore, _profiles: ProfileRecordRepository, _operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+    return ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
         m303_exonerado_390_attachment_id="e" * 64,
         m303_exonerado_390_sha256="e" * 64,
@@ -228,13 +234,13 @@ def _unknown_digest(
 
 def _wrong_role(
     store: AttachmentStore, profiles: ProfileRecordRepository, _operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     return _crafted_attestation(store, profiles, kind=AttachmentKind.METADATA_BLOB)
 
 
 def _wrong_period(
     store: AttachmentStore, _profiles: ProfileRecordRepository, operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     admission = admit_m303_exonerado_390_applicability_attestation(
         bucket_id=_M303_BUCKET_ID,
         request=M303Exonerado390ApplicabilityAttestationRequest(
@@ -248,7 +254,7 @@ def _wrong_period(
         store=store,
         clock=lambda: _M303_CLOCK,
     )
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+    return ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
         m303_exonerado_390_attachment_id=admission.attachment_id,
         m303_exonerado_390_sha256=admission.sha256,
@@ -257,7 +263,7 @@ def _wrong_period(
 
 def _stale_profile_witness(
     store: AttachmentStore, profiles: ProfileRecordRepository, operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     evidence = _m303_attestation_input(operation=operation, store=store)
     current = profiles.load(_M303_BUCKET_ID)
     profiles.apply_fact_changes(
@@ -277,15 +283,39 @@ def _stale_profile_witness(
 
 def _conflicting_assertion(
     store: AttachmentStore, profiles: ProfileRecordRepository, operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     evidence = _m303_attestation_input(operation=operation, store=store)
     _crafted_attestation(store, profiles, value=M303Exonerado390ApplicabilityAssertion.APPLICABLE)
     return evidence
 
 
+def _require_empty_caller_context(inputs: WorkCalculateInputBundle) -> None:
+    """A never-calculated unit replays an empty, known caller context into the writer.
+
+    The workspace Calculate action replays the current head's operator values,
+    clears, detail rows and Modelo 210 selections; these units have no head, so
+    every replayed channel is empty and the known (empty) operator layer is
+    recorded.
+    """
+    assert inputs.record_operator_layer is True
+    replayed = (
+        inputs.casilla_inputs,
+        inputs.text_casilla_inputs,
+        inputs.binding_values,
+        inputs.enum_binding_values,
+        inputs.relation_values,
+        inputs.detail_rows,
+        inputs.cleared_casilla_ids,
+        inputs.borrador_snapshot_id,
+        inputs.m210_official_tipo_renta_code,
+        inputs.m210_gross_income_source_mode,
+    )
+    assert all(value in (None, (), {}) for value in replayed), replayed
+
+
 _EvidenceBuilder = Callable[
     [AttachmentStore, ProfileRecordRepository, PinnedAuthorityOperation],
-    definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
+    ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
 ]
 
 _UNADMISSIBLE_EVIDENCE: dict[str, tuple[_EvidenceBuilder, type[CadrumoError]]] = {
@@ -325,7 +355,7 @@ def test_calculate_executor_refuses_mismatched_m303_attachment_pair_before_calcu
 ) -> None:
     """The split public attachment coordinates must still name one admitted object."""
     work_unit = _m303_work_unit(operation)
-    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+    evidence_input = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
         m303_exonerado_390_attachment_id="b" * 64,
         m303_exonerado_390_sha256="c" * 64,
@@ -375,7 +405,7 @@ def test_calculate_executor_refuses_evidence_admitted_under_another_profile_buck
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Custody is opened for the work unit's own bucket; another bucket's admitted attestation never answers it."""
+    """A work unit outside the active profile bucket is refused before any attachment custody opens."""
     foreign_bucket_id = "9b2e0c1d-5f6a-4b70-9c81-a2b3c4d5e6f8"
     work_unit = _m303_work_unit(operation, bucket_id=foreign_bucket_id)
     opened: list[str] = []
@@ -393,12 +423,13 @@ def test_calculate_executor_refuses_evidence_admitted_under_another_profile_buck
                 calculation_action_ports_factory=_calculation_ports_factory(work_unit),
                 attachment_store_factory=open_store,
             )
-            with pytest.raises(ModeloProfileReadinessError):
+            with pytest.raises(ProfileAccessRefusedError) as refused:
                 asyncio.run(
                     executor.execute(_calculate_request(work_unit, evidence_input), _calculate_context(operation))
                 )
 
-    assert opened == [foreign_bucket_id]
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert opened == []
 
 
 def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context(
@@ -411,7 +442,7 @@ def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context
         filing_year=2025,
         period=Period.from_year_and_code(2025, "01"),
     )
-    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+    evidence_input = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
         m303_exonerado_390_attachment_id="b" * 64,
         m303_exonerado_390_sha256="b" * 64,
@@ -436,7 +467,7 @@ def test_calculate_executor_refuses_m303_evidence_for_another_modelo_before_calc
 ) -> None:
     """An ordinary M303 envelope has no meaning for another modelo's revision."""
     work_unit = _m303_work_unit(operation, modelo="131")
-    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+    evidence_input = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
         m303_exonerado_390_attachment_id="b" * 64,
         m303_exonerado_390_sha256="b" * 64,
@@ -457,6 +488,37 @@ def test_calculate_executor_refuses_m303_evidence_for_another_modelo_before_calc
     )
 
 
+def test_calculation_preparation_authors_a_period_before_the_last_from_the_joint_return_answer_alone(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """1T asks only the joint-return election, and an uncalculated unit replays an empty, known context."""
+    first_quarter = Period.from_year_and_code(2025, "1T")
+    work_unit = _m303_work_unit(operation, period=first_quarter)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
+        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        with bound_test_profile_record(_M303_BUCKET_ID):
+            prepared = asyncio.run(
+                definitions_module.prepare_modelo_work_calculation(
+                    _calculate_request(
+                        work_unit,
+                        ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=True),
+                    ).payload,
+                    operation=operation,
+                    calculation_action_ports_factory=_calculation_ports_factory(work_unit),
+                    attachment_store_factory=lambda _bucket_id: AttachmentStore(),
+                )
+            )
+
+    _require_empty_caller_context(prepared.inputs)
+    authored = prepared.inputs.filing_instance_evidence
+    assert authored is not None
+    assert authored.m303.period == first_quarter
+    assert authored.m303.joint_return_elected is True
+    assert authored.m303.exonerado_390 is None
+    assert authored.m303.annual_volume_nonzero is None
+
+
 def test_calculate_executor_refuses_the_last_period_without_an_attestation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
@@ -474,7 +536,7 @@ def test_calculate_executor_refuses_the_last_period_without_an_attestation(
                 executor.execute(
                     _calculate_request(
                         work_unit,
-                        definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=False),
+                        ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=False),
                     ),
                     _calculate_context(operation),
                 )

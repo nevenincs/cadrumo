@@ -26,12 +26,9 @@ from ....domain.calculations.registry.withholding296_bindings import Withholding
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..row_set_assembly import (
     assemble_atribucion_observations,
-    assemble_donativo_observations,
     assemble_foreign_asset_observations,
     assemble_observations_for_grouping,
     assemble_observations_for_snapshot,
-    assemble_refund_observations,
-    assemble_related_party_observations,
     assemble_withholding296_observations,
     assemble_withholding_observations,
 )
@@ -171,49 +168,85 @@ def test_assemble_withholding_unknown_binding_silently_dropped() -> None:
     assert observations[0].perceptor_tax_id == "12345678A"
 
 
-def test_assemble_foreign_asset_parses_iso_acquisition_date() -> None:
-    revision = _modelo("720", "2013-y-siguientes")
-    cells = (
-        _TestRowCell(binding="modelo-720-asset-row-class", row_index=1, value="C"),
-        _TestRowCell(binding="modelo-720-asset-row-country", row_index=1, value="CH"),
-        _TestRowCell(binding="modelo-720-asset-row-currency", row_index=1, value="CHF"),
-        _TestRowCell(binding="modelo-720-asset-row-identifier", row_index=1, value="CH-iban-001"),
-        _TestRowCell(binding="modelo-720-asset-row-acquisition-date", row_index=1, value="2020-01-15"),
-        _TestRowCell(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
+_M720_ASSET_REF = "m720a_" + "c" * 32
+_M720_ROW = {
+    "modelo-720-asset-row-asset-ref": _M720_ASSET_REF,
+    "modelo-720-asset-row-class": "C",
+    "modelo-720-asset-row-country": "CH",
+    "modelo-720-asset-row-currency": "CHF",
+    "modelo-720-asset-row-identifier": "CH-iban-001",
+    "modelo-720-asset-row-acquisition-date": "2020-01-15",
+    "modelo-720-asset-row-valuation": Decimal("120000"),
+    "modelo-720-asset-row-valuation-event": "year_end",
+}
+
+
+def _m720_cells(*, omit: str | None = None) -> tuple[_TestRowCell, ...]:
+    return tuple(
+        _TestRowCell(binding=binding, row_index=1, value=value)
+        for binding, value in _M720_ROW.items()
+        if binding != omit
     )
 
-    observations = assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+
+def test_assemble_foreign_asset_parses_a_complete_row() -> None:
+    revision = _modelo("720", "2013-y-siguientes")
+
+    observations = assemble_foreign_asset_observations(_m720_cells(), revision, filing_year=2025)
 
     assert len(observations) == 1
     obs = observations[0]
+    assert obs.asset_ref == _M720_ASSET_REF
     assert obs.country_code == "CH"
     assert obs.currency_code == "CHF"
     assert obs.acquisition_date == date(2020, 1, 15)
     assert obs.valuation_amount == Decimal("120000")
+    assert obs.valuation_event == "year_end"
+    assert obs.valuation_event_date is None
 
 
-def test_assemble_foreign_asset_refuses_a_row_with_no_country() -> None:
-    """Modelo 720 declares assets situated ABROAD, so Spain is not a usable fallback.
-
-    The observation model already requires the country; the assembler's ES
-    fallback was the only reason that requirement never reached a row. The
-    positive control is ``test_assemble_foreign_asset_parses_iso_acquisition_date``,
-    which is the identical row with the country cell present.
-    """
+def test_assemble_foreign_asset_reads_an_extinction_date() -> None:
     revision = _modelo("720", "2013-y-siguientes")
     cells = (
-        _TestRowCell(binding="modelo-720-asset-row-class", row_index=1, value="C"),
-        _TestRowCell(binding="modelo-720-asset-row-currency", row_index=1, value="CHF"),
-        _TestRowCell(binding="modelo-720-asset-row-identifier", row_index=1, value="CH-iban-001"),
-        _TestRowCell(binding="modelo-720-asset-row-acquisition-date", row_index=1, value="2020-01-15"),
-        _TestRowCell(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
+        *_m720_cells(omit="modelo-720-asset-row-valuation-event"),
+        _TestRowCell(binding="modelo-720-asset-row-valuation-event", row_index=1, value="extinction"),
+        _TestRowCell(binding="modelo-720-asset-row-valuation-event-date", row_index=1, value="2025-06-13"),
     )
 
+    (obs,) = assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+
+    assert obs.valuation_event == "extinction"
+    assert obs.valuation_event_date == date(2025, 6, 13)
+
+
+@pytest.mark.parametrize(
+    ("omitted", "field"),
+    [
+        ("modelo-720-asset-row-country", "country_code"),
+        ("modelo-720-asset-row-class", "asset_class_code"),
+        ("modelo-720-asset-row-currency", "currency_code"),
+        ("modelo-720-asset-row-valuation", "valuation_amount"),
+        ("modelo-720-asset-row-acquisition-date", "acquisition_date"),
+        ("modelo-720-asset-row-asset-ref", "asset_ref"),
+        ("modelo-720-asset-row-valuation-event", "valuation_event"),
+    ],
+)
+def test_assemble_foreign_asset_refuses_a_row_missing_a_required_field(omitted: str, field: str) -> None:
+    """A blank field is the operator's to supply, never a default.
+
+    Spain is no fallback country (modelo 720 declares assets ABROAD), EUR no
+    fallback currency, zero no fallback valuation, 31 December no fallback
+    acquisition date, and C no fallback class. The positive control is
+    ``test_assemble_foreign_asset_parses_a_complete_row``, the identical row
+    with every cell present.
+    """
+    revision = _modelo("720", "2013-y-siguientes")
+
     with pytest.raises(RegistryValidationError) as excinfo:
-        assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+        assemble_foreign_asset_observations(_m720_cells(omit=omitted), revision, filing_year=2025)
 
     assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
-    assert "country_code" in str((excinfo.value.context or {})["validation_error_detail"])
+    assert field in str((excinfo.value.context or {})["validation_error_detail"])
 
 
 def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
@@ -231,146 +264,6 @@ def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
 
     assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
     assert "share_percentage must be within [0, 100]" in str((excinfo.value.context or {})["validation_error_detail"])
-
-
-def test_assemble_related_party_reads_operation_kind_and_method() -> None:
-    revision = _modelo("232", "2018-y-siguientes")
-    cells = (
-        _TestRowCell(binding="modelo-232-related-party-row-nif", row_index=1, value="A12345678"),
-        _TestRowCell(binding="modelo-232-related-party-row-name", row_index=1, value="Counter SL"),
-        _TestRowCell(binding="modelo-232-related-party-row-country", row_index=1, value="ES"),
-        _TestRowCell(binding="modelo-232-related-party-row-operation-kind", row_index=1, value="01"),
-        _TestRowCell(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="1A"),
-        _TestRowCell(binding="modelo-232-related-party-row-amount", row_index=1, value=Decimal("50000")),
-    )
-
-    observations = assemble_related_party_observations(cells, revision, filing_year=2025)
-
-    assert len(observations) == 1
-    obs = observations[0]
-    assert obs.counterparty_tax_id == "A12345678"
-    assert obs.operation_kind_code == "01"
-    assert obs.transfer_pricing_method_code == "1A"
-    assert obs.amount == Decimal("50000")
-    assert obs.country_code == "ES"
-
-
-def _related_party_cells(*, country: str | None) -> tuple[_TestRowCell, ...]:
-    """Build one complete related-party row, optionally omitting the country cell.
-
-    Every other cell is a value the assembler accepts, so a refusal can only
-    have come from the missing country.
-    """
-    cells = [
-        _TestRowCell(binding="modelo-232-related-party-row-nif", row_index=1, value="A12345678"),
-        _TestRowCell(binding="modelo-232-related-party-row-name", row_index=1, value="Counter SL"),
-        _TestRowCell(binding="modelo-232-related-party-row-operation-kind", row_index=1, value="01"),
-        _TestRowCell(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="1A"),
-        _TestRowCell(binding="modelo-232-related-party-row-amount", row_index=1, value=Decimal("50000")),
-    ]
-    if country is not None:
-        cells.insert(
-            2,
-            _TestRowCell(binding="modelo-232-related-party-row-country", row_index=1, value=country),
-        )
-    return tuple(cells)
-
-
-def test_assemble_related_party_refuses_a_row_with_no_country() -> None:
-    """A blank country cell must refuse rather than resolve the row to Spain.
-
-    The assembler is the boundary where an operator's cleared workbook cell
-    reaches the typed observation, and modelo 232 declares paraíso-fiscal
-    operations, so substituting Spain here declares a domestic counterparty
-    the row never stated.
-    """
-    revision = _modelo("232", "2018-y-siguientes")
-
-    with pytest.raises(RegistryValidationError) as excinfo:
-        assemble_related_party_observations(_related_party_cells(country=None), revision, filing_year=2025)
-
-    assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
-    assert "country_code" in str((excinfo.value.context or {})["validation_error_detail"])
-
-
-def test_assemble_related_party_carries_a_tax_haven_country_through() -> None:
-    """Positive control for the refusal above, and the case the ES default masked."""
-    revision = _modelo("232", "2018-y-siguientes")
-
-    observations = assemble_related_party_observations(_related_party_cells(country="KY"), revision, filing_year=2025)
-
-    assert len(observations) == 1
-    assert observations[0].country_code == "KY"
-
-
-def test_assemble_refund_parses_iso_operation_date() -> None:
-    revision = _modelo("360", "2010-y-siguientes")
-    cells = (
-        _TestRowCell(binding="modelo-360-refund-row-member-state", row_index=1, value="FR"),
-        _TestRowCell(binding="modelo-360-refund-row-operation-kind", row_index=1, value="01"),
-        _TestRowCell(binding="modelo-360-refund-row-operation-date", row_index=1, value="2025-06-15"),
-        _TestRowCell(binding="modelo-360-refund-row-supplier-nif", row_index=1, value="FR-supplier-1"),
-        _TestRowCell(binding="modelo-360-refund-row-amount", row_index=1, value=Decimal("500")),
-    )
-
-    observations = assemble_refund_observations(cells, revision, filing_year=2025)
-
-    assert len(observations) == 1
-    obs = observations[0]
-    assert obs.member_state_code == "FR"
-    assert obs.operation_date == date(2025, 6, 15)
-    assert obs.refund_amount == Decimal("500")
-
-
-def test_assemble_donativo_groups_two_donors_into_two_observations() -> None:
-    revision = _modelo("182", "2025")
-    cells = (
-        _TestRowCell(binding="modelo-182-donor-row-nif", row_index=1, value="11111111A"),
-        _TestRowCell(binding="modelo-182-donor-row-name", row_index=1, value="Donor One"),
-        _TestRowCell(binding="modelo-182-donor-row-amount", row_index=1, value=Decimal("100")),
-        _TestRowCell(binding="modelo-182-donor-row-deduction-percentage", row_index=1, value=Decimal("80")),
-        _TestRowCell(binding="modelo-182-donor-row-recurrencia", row_index=1, value="1"),
-        _TestRowCell(binding="modelo-182-donor-row-nif", row_index=2, value="22222222B"),
-        _TestRowCell(binding="modelo-182-donor-row-name", row_index=2, value="Donor Two"),
-        _TestRowCell(binding="modelo-182-donor-row-amount", row_index=2, value=Decimal("250")),
-        _TestRowCell(binding="modelo-182-donor-row-deduction-percentage", row_index=2, value=Decimal("35")),
-        _TestRowCell(binding="modelo-182-donor-row-recurrencia", row_index=2, value="0"),
-    )
-
-    observations = assemble_donativo_observations(cells, revision, filing_year=2025)
-
-    assert len(observations) == 2
-    by_nif = {obs.donor_tax_id: obs for obs in observations}
-    assert by_nif["11111111A"].donor_legal_name == "Donor One"
-    assert by_nif["11111111A"].amount_donated == Decimal("100")
-    assert by_nif["11111111A"].deduction_percentage == Decimal("80")
-    assert by_nif["11111111A"].is_recurrent is True
-    assert by_nif["11111111A"].transaction_date == date(2025, 12, 31)
-    assert by_nif["22222222B"].amount_donated == Decimal("250")
-    assert by_nif["22222222B"].is_recurrent is False
-
-
-def test_assemble_observations_for_grouping_dispatches_per_donativo_donor() -> None:
-    from ....domain.calculations.registry.donativo_bindings import DonativoDonorObservation
-
-    revision = _modelo("182", "2025")
-    cells = (
-        _TestRowCell(binding="modelo-182-donor-row-nif", row_index=1, value="11111111A"),
-        _TestRowCell(binding="modelo-182-donor-row-amount", row_index=1, value=Decimal("100")),
-    )
-
-    source_kind, observations = assemble_observations_for_grouping(
-        "per_donativo_donor",
-        cells,
-        revision,
-        filing_year=2025,
-    )
-
-    assert source_kind == "donativo"
-    assert len(observations) == 1
-    obs = observations[0]
-    assert isinstance(obs, DonativoDonorObservation)
-    assert obs.donor_tax_id == "11111111A"
 
 
 def test_snapshot_command_uses_the_validated_revision_and_filing_year() -> None:
@@ -530,14 +423,9 @@ def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> 
 
 def test_assemble_observations_for_grouping_dispatches_foreign_asset() -> None:
     revision = _modelo("720", "2013-y-siguientes")
-    cells = (
-        _TestRowCell(binding="modelo-720-asset-row-class", row_index=1, value="C"),
-        _TestRowCell(binding="modelo-720-asset-row-country", row_index=1, value="CH"),
-    )
-
     source_kind, observations = assemble_observations_for_grouping(
         "per_foreign_asset",
-        cells,
+        _m720_cells(),
         revision,
         filing_year=2025,
     )

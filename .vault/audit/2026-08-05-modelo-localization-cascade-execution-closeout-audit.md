@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-localization-cascade'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2927447d2c98fb73a141f00cea4e4760afa2e353da785faba26d07473a36fa6'
+body_hash: 'sha256:37102b4f564fb642468336d7c43a700afa8bf2070bf9c3f8325dba7941e44ac3'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
@@ -38,8 +38,8 @@ to satisfy unchecked plan rows.
 
 The production loader derives Modelo, revision, exact Casilla, continuidad,
 and alias localization identities without copying natural-language values;
-see `src/cadrumo/domain/calculations/registry/_modelo_localization.py:19-119`
-and `src/cadrumo/domain/calculations/registry/_loader.py:250-329`. The resolver
+see the retired module
+and the retired module. The resolver
 tries the requested locale and then the Spanish source across the ordered
 identity chain. This satisfies the runtime part of the historical S11 boundary
 without retaining an isolated second resolver.
@@ -51,8 +51,7 @@ current inventory is 30 Catalan generic allowlisted values, 51 Spanish generic
 allowlisted values, 64 Spanish Modelo source values, and 63 Hungarian
 allowlisted values, including 33 M100 `Index` entries recorded through the
 locale CLI. The explicit adjudication pass returned `UNRESOLVED []`; the
-source-aware contracts are in `src/cadrumo/locales/_status.py:93-215` and
-`src/cadrumo/tests/test_locale_translation_honesty.py:255-313`.
+source-aware contracts are in the retired module and
 
 ### execution closeout | low | focused verification is retained
 

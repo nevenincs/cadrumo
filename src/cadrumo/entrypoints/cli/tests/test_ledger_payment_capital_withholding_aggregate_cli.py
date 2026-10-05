@@ -23,7 +23,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from cadrumo.application.modelo.aggregate_operation import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -43,7 +43,13 @@ from ....adapters.persistence.profile.tests.ledger_capital_support import (
     capital_request,
 )
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ....application.aggregation.retenciones import RetencionObservation
+from ....application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
+)
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -218,7 +224,7 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
 
     assert calculated_code != 0, calculated_output
     error = json.loads(calculated_output)["error"]
-    assert error["code"] == "REFUSED_CLI_BOUNDARY", calculated_output
+    assert error["code"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
     context = error["context"]
     assert context["reason"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
     assert context["terminal_condition"] == "refused", calculated_output
@@ -229,7 +235,7 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
 def test_ledger_capital_capture_refuses_the_wrong_modelo_and_other_123_transports(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    """A coupon cannot settle through Modelo 111, and 123 takes no invoice or hand-typed retención."""
+    """A coupon cannot settle through Modelo 111, and 123 takes no invoice evidence, alone or beside the payment."""
     with native_api_cli_session(
         tmp_path,
         scope_for_destination=_capture_scope,
@@ -237,25 +243,41 @@ def test_ledger_capital_capture_refuses_the_wrong_modelo_and_other_123_transport
     ) as session:
         transaction = session.prepared
         payload = capital_request(transaction).model_dump_json()
-        manual_row = json.dumps(
-            {
-                "source_kind": "ledger_transaction",
-                "source_object_id": transaction.transaction_id,
-                "perceptor_nif": CAPITAL_HOLDER_NIF,
-                "scheme": "intereses",
-                "taxable_base": str(CAPITAL_GROSS),
-                "retencion_amount": str(CAPITAL_IRPF),
-                "accrued_on": CAPITAL_EXIGIBLE_ON.isoformat(),
-            }
-        )
+        invoice_payload = InvoiceWithholdingEvidenceRequest(
+            invoice_id="a" * 64,
+            income_kind=WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL,
+            scheme="intereses",
+            recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+            recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+            exigibility_event_id="coupon-exigible",
+            exigibility_occurred_on=CAPITAL_EXIGIBLE_ON,
+            allocation_id="invoice-allocation",
+            allocated_base=CAPITAL_GROSS,
+            allocated_withholding=CAPITAL_IRPF,
+            allocated_settlement=CAPITAL_GROSS - CAPITAL_IRPF,
+            idempotency_key="invoice-capture",
+        ).model_dump_json()
 
         refusals = (
             _aggregate(session, "111", _Q2, "--ledger-payment-withholding", payload),
-            _aggregate(session, "123", _Q2, "--retencion-observation", manual_row),
+            _aggregate(session, "123", _Q2, "--received-invoice-retencion", invoice_payload),
+            _aggregate(
+                session,
+                "123",
+                _Q2,
+                "--ledger-payment-withholding",
+                payload,
+                "--received-invoice-retencion",
+                invoice_payload,
+            ),
         )
 
-        assert [code for code, _output in refusals] == [2, 2], refusals
+        assert [code for code, _output in refusals] == [2, 2, 2], refusals
         assert {json.loads(output)["error"]["code"] for _code, output in refusals} == {"REFUSED_CLI_BOUNDARY"}
+        invoice_only_message = json.loads(refusals[1][1])["error"]["message"]
+        assert "--ledger-payment-withholding" in invoice_only_message, invoice_only_message
+        exclusive_message = json.loads(refusals[2][1])["error"]["message"]
+        assert "--received-invoice-retencion" in exclusive_message, exclusive_message
         with password_profile_session(session.profile_id, authority_operation):
             assert _stored(session.profile_id, "111", _Q2) == ()
             assert _stored(session.profile_id, "123", _Q2) == ()

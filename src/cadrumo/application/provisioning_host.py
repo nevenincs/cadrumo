@@ -33,6 +33,8 @@ from pydantic import Field, model_validator
 
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_path
 from ..core.type_guards import is_object_dict
 from .provisioning_contracts import (
     OLLAMA_INSTALL_TIMEOUT_S,
@@ -328,6 +330,29 @@ def start_runtime(
     parts = urlsplit(endpoint)
     environment = dict(os.environ)
     environment["OLLAMA_HOST"] = f"{parts.hostname}:{parts.port or 11434}"
+    models_root = storage_path(StorageCategory.OLLAMA_MODELS, settings=resolved)
+    home_root = storage_path(StorageCategory.OLLAMA_HOME, settings=resolved)
+    temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=resolved)
+    appdata_root = home_root / "AppData" / "Roaming"
+    local_appdata_root = home_root / "AppData" / "Local"
+    try:
+        models_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        home_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        local_appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    except OSError as exc:
+        return _start_refusal(
+            ProvisioningPreconditionCondition.RUNTIME_START_SUCCEEDED,
+            {"runtime_url": endpoint, "spawned": False, "start_error_type": exc.__class__.__name__},
+        )
+    environment["OLLAMA_MODELS"] = str(models_root)
+    environment["HOME"] = str(home_root)
+    environment["USERPROFILE"] = str(home_root)
+    environment["APPDATA"] = str(appdata_root)
+    environment["LOCALAPPDATA"] = str(local_appdata_root)
+    for variable in ("TEMP", "TMP", "TMPDIR"):
+        environment[variable] = str(temporary_root)
     try:
         pid = spawn(executable, environment)
     except OSError as exc:

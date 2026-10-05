@@ -15,6 +15,8 @@ from .....application.user_profile.automation_custody_port import (
     AutomationSecretStore,
     NativeSecretBackend,
 )
+from .....core.errors.hierarchy import CadrumoError
+from .automation_secret_target import require_automation_secret_target
 from .zeroise import zeroise
 
 _MAX_CREDENTIAL_BLOB_SIZE = 2560
@@ -38,7 +40,7 @@ class _WindowsCredentialApi(Protocol):
     def delete(self, target: str) -> None: ...
 
 
-class _WindowsCredentialError(Exception):
+class _WindowsCredentialError(CadrumoError):
     """Retain only a native error code for internal status mapping."""
 
     def __init__(self, winerror: int) -> None:
@@ -46,7 +48,7 @@ class _WindowsCredentialError(Exception):
         super().__init__()
 
 
-class _InvalidWindowsCredentialError(Exception):
+class _InvalidWindowsCredentialError(CadrumoError):
     """A native record does not satisfy the local credential-blob contract."""
 
 
@@ -156,10 +158,7 @@ class _WindowsCredentialManager:
         finally:
             # CredRead returns a caller-owned copy, so clear its blob before freeing it.
             try:
-                if credential_pointer and credential_pointer.contents.CredentialBlob:
-                    blob_size = int(credential_pointer.contents.CredentialBlobSize)
-                    if 0 < blob_size <= _MAX_CREDENTIAL_BLOB_SIZE:
-                        ctypes.memset(credential_pointer.contents.CredentialBlob, 0, blob_size)
+                _clear_native_credential_copy(credential_pointer)
             finally:
                 self._cred_free(ctypes.cast(credential_pointer, ctypes.c_void_p))
 
@@ -201,8 +200,7 @@ class WindowsAutomationSecretStore:
     backend = NativeSecretBackend.WINDOWS_CREDENTIAL_MANAGER
 
     def _target(self, namespace: str, account: str) -> str:
-        if not namespace.startswith("cadrumo.automation.") or not account or len(namespace + account) > 1024:
-            raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+        require_automation_secret_target(namespace, account)
         if sys.platform != "win32":
             raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
         return namespace + ":" + account
@@ -272,3 +270,11 @@ def native_automation_secret_store(backend: NativeSecretBackend) -> AutomationSe
 
         return MacOSKeychainAutomationSecretStore()
     raise AutomationCustodyError(AutomationCustodyCode.UNSUPPORTED)
+
+
+def _clear_native_credential_copy(credential_pointer: Any) -> None:
+    """Wipe a bounded caller-owned native credential blob before its original free."""
+    if credential_pointer and credential_pointer.contents.CredentialBlob:
+        blob_size = int(credential_pointer.contents.CredentialBlobSize)
+        if 0 < blob_size <= _MAX_CREDENTIAL_BLOB_SIZE:
+            ctypes.memset(credential_pointer.contents.CredentialBlob, 0, blob_size)

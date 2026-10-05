@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#eu-locale'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:58ed81cd513fdf26d173b39da144da1a5b84c93dbf3ca4a7f23e008e8e066ade'
+body_hash: 'sha256:8c9f067f11543b954cfc68ab1c58deddc5523d6c2a5e24553e812e5447c34f4a'
 related:
-  - '[[2026-06-04-eu-locale-adr]]'
   - '[[2026-06-04-eu-locale-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#eu-locale`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-eu-locale-adr` - `eu-locale` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

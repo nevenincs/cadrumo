@@ -172,13 +172,9 @@ def _snapshot_payload(snapshot: DefinitionSnapshot) -> JsonObject:
 def _json_projection(value: object) -> object:
     """Project raw TOML values without conflating temporal scalars with strings."""
     if isinstance(value, Mapping):
-        mapping = cast(Mapping[object, object], value)
-        if any(not isinstance(key, str) for key in mapping):
-            raise TypeError("raw definition mappings must have string keys")
-        return {cast(str, key): _json_projection(child) for key, child in mapping.items()}
+        return _json_mapping_projection(cast(Mapping[object, object], value))
     if isinstance(value, (list, tuple)):
-        sequence = cast(list[object] | tuple[object, ...], value)
-        return [_json_projection(child) for child in sequence]
+        return _json_sequence_projection(cast(list[object] | tuple[object, ...], value))
     if isinstance(value, datetime):
         return {"$toml_type": "datetime", "value": value.isoformat()}
     if isinstance(value, date):
@@ -190,30 +186,52 @@ def _json_projection(value: object) -> object:
     raise TypeError(f"raw definition contains unsupported value type {type(value).__name__}")
 
 
+def _json_mapping_projection(mapping: Mapping[object, object]) -> JsonObject:
+    if any(not isinstance(key, str) for key in mapping):
+        raise TypeError("raw definition mappings must have string keys")
+    return {cast(str, key): _json_projection(child) for key, child in mapping.items()}
+
+
+def _json_sequence_projection(sequence: list[object] | tuple[object, ...]) -> list[object]:
+    return [_json_projection(child) for child in sequence]
+
+
 def _first_mismatch(before: object, after: object, path: str = "$") -> str | None:
     if type(before) is not type(after):
         return path
     if isinstance(before, dict):
-        before_mapping = cast(dict[str, object], before)
-        after_mapping = cast(dict[str, object], after)
-        for key in sorted(before_mapping.keys() | after_mapping.keys()):
-            child = f"{path}.{key}"
-            if key not in before_mapping or key not in after_mapping:
-                return child
-            mismatch = _first_mismatch(before_mapping[key], after_mapping[key], child)
-            if mismatch is not None:
-                return mismatch
-        return None
+        return _mapping_first_mismatch(cast(dict[str, object], before), cast(dict[str, object], after), path)
     if isinstance(before, (list, tuple)):
-        before_sequence = cast(list[object] | tuple[object, ...], before)
-        after_sequence = cast(list[object] | tuple[object, ...], after)
-        common = min(len(before_sequence), len(after_sequence))
-        for index in range(common):
-            mismatch = _first_mismatch(before_sequence[index], after_sequence[index], f"{path}[{index}]")
-            if mismatch is not None:
-                return mismatch
-        return None if len(before_sequence) == len(after_sequence) else f"{path}[{common}]"
+        return _sequence_first_mismatch(
+            cast(list[object] | tuple[object, ...], before),
+            cast(list[object] | tuple[object, ...], after),
+            path,
+        )
     return None if before == after else path
+
+
+def _mapping_first_mismatch(before: dict[str, object], after: dict[str, object], path: str) -> str | None:
+    for key in sorted(before.keys() | after.keys()):
+        child = f"{path}.{key}"
+        if key not in before or key not in after:
+            return child
+        mismatch = _first_mismatch(before[key], after[key], child)
+        if mismatch is not None:
+            return mismatch
+    return None
+
+
+def _sequence_first_mismatch(
+    before: list[object] | tuple[object, ...],
+    after: list[object] | tuple[object, ...],
+    path: str,
+) -> str | None:
+    common = min(len(before), len(after))
+    for index in range(common):
+        mismatch = _first_mismatch(before[index], after[index], f"{path}[{index}]")
+        if mismatch is not None:
+            return mismatch
+    return None if len(before) == len(after) else f"{path}[{common}]"
 
 
 __all__ = [

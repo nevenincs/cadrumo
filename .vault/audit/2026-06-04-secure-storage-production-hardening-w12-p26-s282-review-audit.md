@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:6e2e852b84448b1287efb6ce0444bd351b468a26a288bb5a854db26a9553c4f5'
+modified: '2026-10-03'
+body_hash: 'sha256:5bd394af84f8fd70dbec32c216ebabd9a4ac86df464d8ed2e56b8803f296b0d5'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S282-001 | PASS | Runtime-default workflow model boundary
 
-`src/aeat/application/workflow/_models.py` owns strict workflow records and the
+The retired module owned strict workflow records and the
 runtime helper that resolves the active transaction catalogue repository. It does
 not implement a parallel storage backend. Active secure-object access remains routed
 through `require_active_bucket_id`, `resolve_active_bucket_id`, and the runtime
@@ -41,8 +41,8 @@ helpers instead of duplicating bucket or secure-object routing.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/workflow/_models.py src/aeat/application/workflow/test_models.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/application/workflow/test_transaction_catalogue_resolution.py src/aeat/application/workflow/test_state_persistence_roundtrip.py`
-- `uv run --no-sync pytest -q src/aeat/application/workflow/test_models.py src/aeat/application/workflow/test_active_profile_resolution.py src/aeat/application/workflow/test_transaction_catalogue_resolution.py src/aeat/application/workflow/test_state_persistence_roundtrip.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "workflow models WorkflowState ProfileBucketPointer secure object active profile manifest bucket runtime default" --type code --port 8766 --max-results 10`
 

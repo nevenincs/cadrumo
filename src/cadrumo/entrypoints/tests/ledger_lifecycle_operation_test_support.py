@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from ...application.ledger.actions_common import build_manual_ledger_result
 from ...application.ledger.actions_lifecycle import archive_manual_transaction
 from ...application.ledger.actions_manual import create_manual_transaction, ledger_transaction_result_payload
-from ...application.ledger.lifecycle_mutation_operation import (
+from ...application.ledger.lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
     LEDGER_RESTORE_OPERATION_DEFINITION_ID,

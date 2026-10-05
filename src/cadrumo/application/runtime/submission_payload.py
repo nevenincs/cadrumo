@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import base64
-import binascii
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+from ...core.base64_codec import b64_decode_canonical
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -28,6 +27,14 @@ class SubmissionPayloadDescriptor(BaseModel):
     payload_digest: ContentDigest
 
 
+class FinancialOperandInputDescriptor(BaseModel):
+    """Bounded volatile operator input, deliberately without an input digest."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["financial_operand_input"] = "financial_operand_input"
+    byte_count: Annotated[int, Field(ge=2, le=SUBMISSION_PAYLOAD_MAX_BYTES)]
+
+
 class SubmissionPayloadChunk(BaseModel):
     """One bounded, ordered byte range without exposing its contents in repr."""
 
@@ -39,13 +46,10 @@ class SubmissionPayloadChunk(BaseModel):
     def decode(self) -> bytes:
         """Reject noncanonical base64, empty data and oversized chunks."""
         try:
-            data = base64.b64decode(self.encoded, validate=True)
-        except (ValueError, binascii.Error):
+            data = b64_decode_canonical(self.encoded)
+        except ValueError:
             raise ValueError("invalid submission payload chunk") from None
-        if (
-            not 0 < len(data) <= SUBMISSION_PAYLOAD_CHUNK_BYTES
-            or base64.b64encode(data).decode("ascii") != self.encoded
-        ):
+        if not 0 < len(data) <= SUBMISSION_PAYLOAD_CHUNK_BYTES:
             raise ValueError("invalid submission payload chunk")
         return data
 
@@ -53,7 +57,7 @@ class SubmissionPayloadChunk(BaseModel):
 class SubmissionPayloadBuffer:
     """Assemble a single finite submission, then wipe its mutable byte storage."""
 
-    def __init__(self, descriptor: SubmissionPayloadDescriptor) -> None:
+    def __init__(self, descriptor: SubmissionPayloadDescriptor | FinancialOperandInputDescriptor) -> None:
         """Retain only bounded metadata and an initially empty mutable buffer."""
         self._descriptor = descriptor
         self._content = bytearray()
@@ -81,7 +85,10 @@ class SubmissionPayloadBuffer:
         try:
             if len(self._content) != self._descriptor.byte_count:
                 raise ValueError("submission payload is incomplete")
-            if sha256_hex(bytes(self._content)) != self._descriptor.payload_digest:
+            if (
+                isinstance(self._descriptor, SubmissionPayloadDescriptor)
+                and sha256_hex(bytes(self._content)) != self._descriptor.payload_digest
+            ):
                 raise ValueError("submission payload digest does not match")
             try:
                 return self._content.decode("utf-8", errors="strict")

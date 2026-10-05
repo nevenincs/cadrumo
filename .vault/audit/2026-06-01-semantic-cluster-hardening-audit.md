@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_hash: 'sha256:57d7db6d15c2b03eca99bd97c4ac2f72228152ffa51c899b88316dd53463d032'
-related:
-  - "[[2026-06-01-semantic-cluster-hardening-plan]]"
+related: []
 ---
 
 # `semantic-cluster-hardening` audit: `Axis-7 semantic functionality-cluster swarm audit (delta)`

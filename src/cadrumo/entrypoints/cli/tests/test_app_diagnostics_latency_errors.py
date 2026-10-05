@@ -4,8 +4,8 @@ Exercises both verbs end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.build_latency_report` and
 :func:`~cadrumo.application.diagnostics_run_health.build_error_breakdown`
 aggregators, and real encrypted SQLite persistence in an isolated storage
-root. No test doubles: LLM run telemetry is seeded through its production
-writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`) and both
+root. No test doubles: LLM run record is seeded through its production
+writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunRecorder`) and both
 verbs report it back typed.
 """
 
@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture
@@ -37,7 +37,7 @@ def _invoke(args: list[str]) -> Result:
 
 def _seed_latency_runs() -> None:
     """Write ten real claude runs with known ascending durations 100..1000ms."""
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     for index, duration_ms in enumerate((100, 200, 300, 400, 500, 600, 700, 800, 900, 1000), start=1):
         recorder.record(
             LLMRunRecord(
@@ -54,7 +54,7 @@ def _seed_latency_runs() -> None:
 
 def _seed_error_runs() -> None:
     """Write four real failed runs across two providers and two error kinds."""
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     seeds = (
         ("llm:claude:test-model", "KindA"),
         ("llm:claude:test-model", "KindA"),
@@ -99,7 +99,7 @@ def test_latency_reports_nearest_rank_percentiles(diagnostics_native_profile: Na
 
 
 def test_latency_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
+    """With no LLM run record the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "latency"])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)

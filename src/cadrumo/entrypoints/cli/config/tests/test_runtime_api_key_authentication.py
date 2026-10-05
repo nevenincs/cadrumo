@@ -14,15 +14,14 @@ import pytest
 
 from cadrumo.adapters.local_runtime import runtime_credentials
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
@@ -33,6 +32,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -40,6 +40,8 @@ from cadrumo.application.user_profile.view_operation import PROFILE_VIEW_OPERATI
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -58,7 +60,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -188,7 +190,8 @@ def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_becom
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         monkeypatch.setattr(runtime_credentials, "installed_automation_secret_store", lambda: subject.client_native)

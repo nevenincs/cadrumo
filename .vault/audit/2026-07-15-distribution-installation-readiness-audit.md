@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-19'
+modified: '2026-10-03'
 body_hash: 'sha256:c8ed68fdefc40feb88d389c18711c17bd23508502dd401948790150aa325e22a'
 related:
-  - "[[2026-07-15-distribution-installation-readiness-plan]]"
   - "[[2026-07-16-distribution-harness-identity-adr]]"
 ---
 

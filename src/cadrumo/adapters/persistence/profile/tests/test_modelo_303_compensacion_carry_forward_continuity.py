@@ -71,8 +71,8 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from ...storage.sql.engine import get_engine
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.tests.secure_sql import (
@@ -219,6 +219,7 @@ def _calculate_303(
         dict(relation_values),
         period=period,
     )
+    declared = {str(binding.id) for binding in snapshot.revision.bindings}
     binding_values = {
         # Casilla 110 is a bound casilla: the engine requires its binding fact
         # to always be present. Default it to zero (no prior-period carry) so
@@ -228,7 +229,7 @@ def _calculate_303(
         _CARRY_BINDING: Decimal("0"),
         _AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
         _STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
-        **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS},
+        **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS if binding in declared},
         **cuota_binding_overrides,
         **relation_binding_values,
     }

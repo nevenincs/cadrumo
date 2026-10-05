@@ -4,14 +4,11 @@ tags:
   - '#index'
   - '#mcp-protocol-hardening'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:85cb03b54f58d4eb5b4929e7ff2b23d4f2c653f06ae24e53928d40309d00f6de'
+body_hash: 'sha256:1aca944237ce5dc878f6e5f0e2232b9352fb8b04cadc2e31b4e4dcf47d61ff60'
 related:
-  - '[[2026-07-08-mcp-hardening-conformance-plan]]'
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
-  - '[[2026-07-08-mcp-protocol-hardening-ledger]]'
-  - '[[2026-07-08-mcp-protocol-hardening-plan]]'
   - '[[2026-07-08-mcp-protocol-hardening-research]]'
 ---
 
@@ -24,15 +21,6 @@ Auto-generated index of all documents tagged with `#mcp-protocol-hardening`.
 ### adr
 
 - `2026-07-08-mcp-protocol-hardening-adr` - `mcp-protocol-hardening` adr: `long-running call contract, schema fidelity, and declared protocol boundaries` | (**status:** `accepted`)
-
-### exec
-
-- `2026-07-08-mcp-protocol-hardening-ledger` - `mcp-protocol-hardening` ledger
-
-### plan
-
-- `2026-07-08-mcp-hardening-conformance-plan` - `mcp-hardening-conformance` plan
-- `2026-07-08-mcp-protocol-hardening-plan` - `mcp-protocol-hardening` plan
 
 ### research
 

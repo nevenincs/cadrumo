@@ -29,10 +29,8 @@ from cadrumo.application.modelo.export_projection import (
     ModeloExportEvidenceStatus,
     ModeloExportPublicResultV3,
 )
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    ModeloExportRequest,
-)
+from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,

@@ -19,14 +19,14 @@ from ....core.filing_projection_ref import (
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.iva_schema_vocabulary import (
-    m303_regime_composition_simplified_scope,
-)
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import (
     m303_iae_epigraph_wire_value,
     project_m303_regimen_simplificado_rows,
     validate_m303_regimen_simplificado_endpoint_epoch,
+)
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
 )
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference

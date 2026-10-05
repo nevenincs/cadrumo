@@ -8,7 +8,7 @@ from uuid import UUID
 import pytest
 
 from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
-from ....application.ledger.invoice_evidence_operation import LedgerEvidenceConfirmProjection
+from ....application.ledger.invoice_evidence_confirm_operation import LedgerEvidenceConfirmProjection
 from ....application.ledger.invoice_evidence_operation_dtos import (
     ClassificationAssemblyProjectionV1,
     ConfirmationBlockerProjectionV1,

@@ -39,8 +39,10 @@ from .....domain.calculations.registry.authority import bundled_indexed_authorit
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
-from .....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from .....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from .....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva.regimen_simplificado_rows import (

@@ -25,6 +25,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .errors import TerminologyValidationError
 from .loader import HandbookValidator, TerminologyHandbook
+from .schema import ConceptRecord
 
 __all__ = [
     "approved_completeness_validator",
@@ -34,6 +35,23 @@ __all__ = [
     "lifecycle_replaced_by_validator",
     "relation_integrity_validator",
 ]
+
+
+def _approved_spanish_failures(concept: ConceptRecord, failures: list[str]) -> None:
+    """Approved spanish failures."""
+    from cadrumo.core.external_constants import OutputLanguage
+
+    es = next(
+        (section for section in concept.languages if section.language is OutputLanguage.ES),
+        None,
+    )
+    if es is None:
+        failures.append(f"concept {concept.concept_id!r}: approved concept has no es language section")
+    else:
+        if not (es.definition and es.definition.strip()):
+            failures.append(f"concept {concept.concept_id!r}: approved es section has no definition")
+        if es.source is None or not es.source.citation.strip():
+            failures.append(f"concept {concept.concept_id!r}: approved es section has no source citation")
 
 
 def id_uniqueness_validator() -> HandbookValidator:
@@ -164,27 +182,10 @@ def approved_completeness_validator() -> HandbookValidator:
     """
 
     def _validate(handbook: TerminologyHandbook) -> None:
-        from cadrumo.core.external_constants import OutputLanguage
 
         failures: list[str] = []
         for concept in handbook.concepts:
-            if concept.lifecycle is not ConceptLifecycle.APPROVED:
-                continue
-            es = next(
-                (section for section in concept.languages if section.language is OutputLanguage.ES),
-                None,
-            )
-            if es is None:
-                failures.append(f"concept {concept.concept_id!r}: approved concept has no es language section")
-            else:
-                if not (es.definition and es.definition.strip()):
-                    failures.append(f"concept {concept.concept_id!r}: approved es section has no definition")
-                if es.source is None or not es.source.citation.strip():
-                    failures.append(f"concept {concept.concept_id!r}: approved es section has no source citation")
-            for section in concept.languages:
-                if not section.short_description.strip():
-                    lang = section.language.value
-                    failures.append(f"concept {concept.concept_id!r}: {lang!r} section has empty short_description")
+            _approved_concept_failures(concept, failures)
         if failures:
             raise TerminologyValidationError(
                 "approved-concept completeness:\n" + "\n".join(f" - {f}" for f in failures),
@@ -248,3 +249,14 @@ def _first_replaced_by_cycle(handbook: TerminologyHandbook) -> list[str] | None:
             current = by_id[current].replaced_by
         visited.update(seen_on_path)
     return None
+
+
+def _approved_concept_failures(concept: ConceptRecord, failures: list[str]) -> None:
+    """Approved concept failures."""
+    if concept.lifecycle is not ConceptLifecycle.APPROVED:
+        return
+    _approved_spanish_failures(concept, failures)
+    for section in concept.languages:
+        if not section.short_description.strip():
+            lang = section.language.value
+            failures.append(f"concept {concept.concept_id!r}: {lang!r} section has empty short_description")

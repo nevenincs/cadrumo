@@ -10,7 +10,7 @@ from __future__ import annotations
 import base64
 import re
 from collections.abc import Callable
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from functools import wraps
 
@@ -373,23 +373,3 @@ class CacheStats(BaseModel):
 
     entries: int = Field(ge=0, description="Number of cached files.")
     total_bytes: int = Field(ge=0, description="Total size of cache files in bytes.")
-
-
-class UsageSummary(BaseModel):
-    """Aggregated :class:`~adapters.persistence.llm.usage.UsageRecorder` statistics."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    entries: int = Field(ge=0, description="Number of usage records included.")
-    total_input_tokens: int = Field(ge=0, description="Sum of input tokens.")
-    total_output_tokens: int = Field(ge=0, description="Sum of output tokens.")
-    total_cost_estimate_usd: Decimal | None = Field(
-        description=(
-            "Sum of estimated cost in USD, or None when ANY included record is unpriced. "
-            "A total that silently skipped unpriced rows would understate the bill while "
-            "looking complete, which is the same defect one layer along."
-        ),
-    )
-    unpriced_entries: int = Field(ge=0, default=0, description="Records carrying no cost estimate.")
-    since: date | None = Field(default=None, description="Inclusive lower date bound.")
-    until: date | None = Field(default=None, description="Inclusive upper date bound.")

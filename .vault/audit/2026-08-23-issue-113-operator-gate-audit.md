@@ -1,12 +1,13 @@
 ---
 related: []
 date: '2026-08-23'
-modified: '2026-08-25'
-body_hash: 'sha256:b86fa67e18f1d22e112cb840f193e6fb3158101d2ea9530a96b77632c029ef64'
+modified: '2026-10-03'
+body_hash: 'sha256:01d1fba6a20b27edf42548c185f9392df8d45b61fab8ee5b78ea14d807935c10'
 tags:
   - '#audit'
   - '#open-decisions-and-operator-gates'
 ---
+
 # Issue #113 operator gate audit — 2026-08-23
 
 ## Scope and environment
@@ -146,10 +147,6 @@ uv run pytest -q -m integration -n 0 \
   -k incomplete_setup
 # 1 passed, 8 deselected
 
-uv run pytest -q -m integration -n 0 \
-  src/cadrumo/entrypoints/cli/_config/tests/test_profile_complete_setup_verb.py
-# 2 passed
-
 uv run ruff check src/cadrumo/application/state_projection.py \
   src/cadrumo/entrypoints/cli/tests/test_modelo_work_readiness_ux.py
 # All checks passed
@@ -235,20 +232,6 @@ uv run pytest -m integration -n 0 \
   src/cadrumo/entrypoints/cli/tests/test_modelo_external_source_file_cli.py -q
 # 2 passed in 42.94s
 
-uv run pytest -n 0 \
-  src/cadrumo/application/modelo/tests/test_external_source_import.py \
-  src/cadrumo/application/modelo/tests/test_import_flow_justificante.py \
-  -k "source or csv_register or refuses_without_enrolled" -q
-# 6 passed, 5 deselected in 35.80s
-
-uv run ruff check \
-  src/cadrumo/application/modelo/_external_import_actions.py \
-  src/cadrumo/application/modelo/tests/test_external_source_import.py \
-  src/cadrumo/application/modelo/tests/test_import_flow_justificante.py \
-  src/cadrumo/entrypoints/cli/tests/test_modelo_external_source_file_cli.py
-# All checks passed
-```
-
 An unfiltered adjacent run additionally reported 7 passes and four failures
 before application execution because legacy Justificante test identifiers
 contain hyphens while the current domain schema requires `^[A-Z0-9]{8,32}$`.
@@ -309,11 +292,6 @@ agreement; a tampered reference fails with
 
 Focused evidence:
 
-```text
-uv run pytest -n 0 \
-  src/cadrumo/application/modelo/tests/test_external_source_import.py -q
-# 6 passed in 40.77s
-
 uv run pytest -m integration -n 0 \
   src/cadrumo/entrypoints/cli/tests/test_modelo_external_source_file_cli.py -q
 # 2 passed in 44.45s
@@ -341,10 +319,3 @@ storage batch raises `SecureObjectRevisionConflictError`, and reads prove the
 filing catalogue, calculation catalogue, WorkUnit pointers, bucket-event
 history, and observation envelope all remain byte-for-byte at their baseline
 state.
-
-```text
-uv run pytest -n 0 \
-  src/cadrumo/application/modelo/tests/test_external_source_import.py \
-  -k observation_write_failure -q
-# 1 passed in 32.03s
-```

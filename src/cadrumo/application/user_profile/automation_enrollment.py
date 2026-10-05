@@ -11,7 +11,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Protocol
+from typing import Annotated, Protocol, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretBytes, model_validator
@@ -108,22 +108,43 @@ class EnrollmentRecord(BaseModel):
 
     @model_validator(mode="after")
     def _stage(self) -> EnrollmentRecord:
-        if not self.created_at < self.expires_at <= self.created_at + ACCESS_LEASE_MAXIMUM:
-            raise ValueError("invalid request interval")
-        if (self.candidate_key_id is None) != (self.credential_reference is None):
-            raise ValueError("incomplete delivery binding")
-        if self.stage is EnrollmentStage.REQUESTED and self.candidate_key_id is not None:
-            raise ValueError("unstaged candidate")
-        if self.stage is EnrollmentStage.CANDIDATE and (
-            self.proposal.kind not in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE} or self.candidate_key_id is None
-        ):
-            raise ValueError("missing candidate delivery binding")
-        if self.stage is EnrollmentStage.COMPLETE and (
-            (self.proposal.kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE})
-            != (self.candidate_key_id is not None)
-        ):
-            raise ValueError("completed request has inconsistent delivery binding")
+        _require_enrollment_request_interval(self.created_at, self.expires_at)
+        _require_complete_candidate_delivery_binding(self.candidate_key_id, self.credential_reference)
+        _require_candidate_stage_consistency(self.stage, self.proposal.kind, self.candidate_key_id)
+        _require_completed_stage_consistency(self.stage, self.proposal.kind, self.candidate_key_id)
         return self
+
+
+def _require_enrollment_request_interval(created_at: UtcInstant, expires_at: UtcInstant) -> None:
+    if not created_at < expires_at <= created_at + ACCESS_LEASE_MAXIMUM:
+        raise ValueError("invalid request interval")
+
+
+def _require_complete_candidate_delivery_binding(
+    candidate_key_id: UUID | None, credential_reference: UUID | None
+) -> None:
+    if (candidate_key_id is None) != (credential_reference is None):
+        raise ValueError("incomplete delivery binding")
+
+
+def _require_candidate_stage_consistency(
+    stage: EnrollmentStage, kind: EnrollmentKind, candidate_key_id: UUID | None
+) -> None:
+    if stage is EnrollmentStage.REQUESTED and candidate_key_id is not None:
+        raise ValueError("unstaged candidate")
+    if stage is EnrollmentStage.CANDIDATE and (
+        kind not in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE} or candidate_key_id is None
+    ):
+        raise ValueError("missing candidate delivery binding")
+
+
+def _require_completed_stage_consistency(
+    stage: EnrollmentStage, kind: EnrollmentKind, candidate_key_id: UUID | None
+) -> None:
+    if stage is EnrollmentStage.COMPLETE and (
+        (kind in {EnrollmentKind.ENROLL, EnrollmentKind.ROTATE}) != (candidate_key_id is not None)
+    ):
+        raise ValueError("completed request has inconsistent delivery binding")
 
 
 class EnrollmentGrant(BaseModel):
@@ -207,6 +228,27 @@ class AutomationScopeProjection(BaseModel):
     periods: tuple[AutomationPeriodProjection, ...] | None
     allow_period_independent: bool
     allow_delegation: bool
+
+    @classmethod
+    def from_scope(cls, scope: AccessScope) -> Self:
+        """Flatten a domain scope into its stable public ordering."""
+        return cls(
+            operations=tuple(sorted(scope.operations)),
+            actions=tuple(sorted(scope.actions)),
+            disclosures=tuple(
+                sorted(
+                    scope.disclosures, key=lambda item: (str(item.destination_id), item.projection_id, item.category)
+                )
+            ),
+            periods=None
+            if scope.periods is None
+            else tuple(
+                AutomationPeriodProjection(filing_year=item.filing_year, code=str(item.code))
+                for item in sorted(scope.periods, key=lambda item: (item.filing_year, str(item.code)))
+            ),
+            allow_period_independent=scope.allow_period_independent,
+            allow_delegation=scope.allow_delegation,
+        )
 
 
 class AutomationGrantProjection(BaseModel):

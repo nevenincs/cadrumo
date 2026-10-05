@@ -6,17 +6,18 @@ at lookup time. The ECB rates are the official exchange rate of Spanish law (Ley
 46/1998 art. 36) accepted for IRPF, IVA, and PGC conversion.
 
 The ECB publishes EUR-base quotes (``1 EUR = rate CCY``). The
-:class:`domain.currency.service.CurrencyNormalizationService` expects ``get_eur_rate`` to
-return CCY->EUR (so ``eur = amount * rate``), so this provider returns
-``1 / ecb_rate``.
+:class:`domain.currency.service.CurrencyNormalizationService` expects a CCY->EUR
+rate (so ``eur = amount * rate``), so this provider answers with ``1 / ecb_rate``.
 
 The ECB publishes only on TARGET working days and the Data Portal answers a
 non-publication date with an empty result set, so a lookup widens its query
 window backwards by :data:`LOOKBACK_DAYS` and takes the most recent published
-observation on or before the requested date.
+observation on or before the requested date, recording that observation's own
+date. A currency the ECB publishes no series for answers HTTP 404, which the
+transport reports as ``None`` and the provider as an unsupported currency.
 
 A transport or protocol failure raises
-:exc:`domain.currency.errors.ExchangeRateProviderError` rather than returning ``None``:
+:exc:`domain.currency.errors.ExchangeRateProviderError` rather than answering:
 an unreachable ECB must not be indistinguishable from a currency the ECB does
 not publish, which would silently degrade ledger rows to a zero EUR value.
 
@@ -45,17 +46,20 @@ from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_iso8601_date
 from ....domain.currency.errors import ExchangeRateProviderError
+from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 
 ECB_DATA_API_HOST = "data-api.ecb.europa.eu"
 ECB_EXR_ENDPOINT = f"https://{ECB_DATA_API_HOST}/service/data/EXR"
 
 # The longest ECB non-publication run is the TARGET year-end closure plus its
 # adjacent weekends, comfortably under a week; 14 days leaves margin without
-# ever reaching back into a materially different rate.
+# ever reaching back into a materially different rate. A year-end request on a
+# closure day therefore resolves to the last publication before it.
 LOOKBACK_DAYS = 14
 
-#: Transport contract: given a URL, return the response body as text.
-RateFetch = Callable[[str], str]
+#: Transport contract: given a URL, return the response body as text, or ``None``
+#: when the Data Portal publishes no series for the requested currency.
+RateFetch = Callable[[str], str | None]
 
 #: Identifier stamped on every record this provider converts. Names the ECB euro
 #: reference-rate series specifically, not merely "an exchange-rate provider",
@@ -87,18 +91,19 @@ class EcbReferenceRateProvider:
         self._lookback = timedelta(days=lookback_days)
         # Resolved results are memoized per (currency, date) so a ledger import
         # spanning many rows on few distinct dates issues few requests.
-        self._resolved: dict[tuple[str, date], Decimal | None] = {}
+        self._resolved: dict[tuple[str, date], EurRateLookup] = {}
 
     @property
     def rate_source_id(self) -> str:
         """Return :data:`ECB_RATE_SOURCE_ID`, the stamped rate authority."""
         return ECB_RATE_SOURCE_ID
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        """Return the CCY->EUR rate for ``rate_date`` (or most-recent prior).
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        """Return the CCY->EUR rate for ``rate_date`` or the most recent publication before it.
 
-        Returns ``None`` when the ECB publishes no series for ``currency``, or
-        no observation within the lookback window ending at ``rate_date``.
+        The answer is unsupported when the ECB publishes no series for
+        ``currency`` and missing when the series has no usable observation in
+        the look-back window ending at ``rate_date``.
 
         Raises:
             ExchangeRateProviderError: When the ECB Data Portal cannot be
@@ -106,17 +111,34 @@ class EcbReferenceRateProvider:
         """
         code = _normalise_ecb_currency(currency)
         if code == DEFAULT_CURRENCY:
-            return Decimal("1")
+            return EurRateLookup(
+                status=EurRateLookupStatus.FOUND,
+                rate_date=rate_date,
+                source=ECB_RATE_SOURCE_ID,
+                rate=Decimal("1"),
+                observation_date=rate_date,
+            )
         key = (code, rate_date)
         if key not in self._resolved:
             self._resolved[key] = self._resolve(code, rate_date)
         return self._resolved[key]
 
-    def _resolve(self, code: str, rate_date: date) -> Decimal | None:
+    def _resolve(self, code: str, rate_date: date) -> EurRateLookup:
         url = _observation_url(code, rate_date - self._lookback, rate_date)
-        observations = _parse_observations(self._fetch(url))
+        payload = self._fetch(url)
+        if payload is None:
+            return EurRateLookup(
+                status=EurRateLookupStatus.UNSUPPORTED_CURRENCY,
+                rate_date=rate_date,
+                source=ECB_RATE_SOURCE_ID,
+            )
+        observations = _parse_observations(payload)
         if not observations:
-            return None
+            return EurRateLookup(
+                status=EurRateLookupStatus.MISSING_RATE,
+                rate_date=rate_date,
+                source=ECB_RATE_SOURCE_ID,
+            )
         # The window ends at rate_date, so the latest observation in it is the
         # operation-date rate or the most recent prior publication. Every
         # observation the parser yields is finite and strictly positive, so
@@ -126,9 +148,15 @@ class EcbReferenceRateProvider:
         # LATEST observation, so a single unusable quote at the end of the
         # window discarded the valid earlier ones behind it and reported no
         # rate at all.
-        _, ecb_rate = max(observations, key=lambda row: row[0])
+        observed_on, ecb_rate = max(observations, key=lambda row: row[0])
         # ECB quotes EUR-base (1 EUR = ecb_rate CCY); CCY->EUR is the inverse.
-        return Decimal("1") / ecb_rate
+        return EurRateLookup(
+            status=EurRateLookupStatus.FOUND,
+            rate_date=rate_date,
+            source=ECB_RATE_SOURCE_ID,
+            rate=Decimal("1") / ecb_rate,
+            observation_date=observed_on,
+        )
 
 
 def _observation_url(currency: str, start: date, end: date) -> str:
@@ -204,8 +232,11 @@ def _parse_observation_row(
     return day, quote
 
 
-def _https_fetch(url: str) -> str:
+def _https_fetch(url: str) -> str | None:
     """Read ``url`` over HTTPS, constrained to the ECB Data Portal host.
+
+    A 404 is the Data Portal saying it publishes no such series, which is an
+    answer about the currency, so it returns ``None`` rather than raising.
 
     Carries no test-awareness. Keeping a deterministic suite off the live host is
     enforced by the ``aeat_live`` marker contract, not by a production branch
@@ -224,6 +255,8 @@ def _https_fetch(url: str) -> str:
     try:
         with httpx.Client(timeout=timeout) as client:
             response = client.get(url)
+            if response.status_code == httpx.codes.NOT_FOUND:
+                return None
             response.raise_for_status()
             return response.content.decode(UTF_8_ENCODING)
     except (httpx.HTTPError, TimeoutError, OSError) as exc:

@@ -26,7 +26,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period, StandardPeriodCode
 from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import DateAxis
@@ -72,10 +72,6 @@ class PerceptorClaveScope:
     casillas: Mapping[CasillaId, tuple[ClaveScopeToken, ...]]
     effective_date: date
 
-    def is_scoped(self, casilla_id: CasillaId) -> bool:
-        """Whether the registry declares a clave scope for ``casilla_id``."""
-        return casilla_id in self.casillas
-
     def admits(self, casilla_id: CasillaId, clave: str, subclave: str | None) -> bool:
         """Whether a record with ``clave``/``subclave`` carries ``casilla_id``.
 
@@ -96,9 +92,7 @@ def resolve_perceptor_clave_scope(
     selector, so the coordinate is the period's own end date and the governed
     fact resolver picks the edition, including any temporal projection.
     """
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("perceptor clave scope requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="perceptor clave scope")
     effective_date = period.end_date
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
@@ -109,6 +103,18 @@ def resolve_perceptor_clave_scope(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("perceptor clave scope must resolve as a mapping fact")
+    entries = _scope_entries(resolved)
+    casillas = _casilla_scopes(entries)
+    return PerceptorClaveScope(
+        modelo_id=_required_scope_entry(entries, "modelo"),
+        row_clave_binding=_required_scope_entry(entries, "row_clave_binding"),
+        row_subclave_binding=_required_scope_entry(entries, "row_subclave_binding"),
+        casillas=MappingProxyType(casillas),
+        effective_date=effective_date,
+    )
+
+
+def _scope_entries(resolved: ResolvedMappingFact) -> dict[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if not isinstance(entry.key, str) or not isinstance(entry.value, str):
@@ -116,13 +122,17 @@ def resolve_perceptor_clave_scope(
         if entry.key in entries:
             raise RegistryValidationError(f"duplicate perceptor clave scope key {entry.key!r}")
         entries[entry.key] = entry.value.strip()
+    return entries
 
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if not value:
-            raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
-        return value
 
+def _required_scope_entry(entries: Mapping[str, str], key: str) -> str:
+    value = entries.get(key)
+    if not value:
+        raise RegistryValidationError(f"perceptor clave scope is missing {key!r}")
+    return value
+
+
+def _casilla_scopes(entries: Mapping[str, str]) -> dict[CasillaId, tuple[ClaveScopeToken, ...]]:
     casillas: dict[CasillaId, tuple[ClaveScopeToken, ...]] = {}
     for key, value in entries.items():
         if key in _RESERVED_KEYS:
@@ -136,13 +146,7 @@ def resolve_perceptor_clave_scope(
         casillas[casilla_id] = tokens
     if not casillas:
         raise RegistryValidationError("perceptor clave scope declares no casilla")
-    return PerceptorClaveScope(
-        modelo_id=required("modelo"),
-        row_clave_binding=required("row_clave_binding"),
-        row_subclave_binding=required("row_subclave_binding"),
-        casillas=MappingProxyType(casillas),
-        effective_date=effective_date,
-    )
+    return casillas
 
 
 def row_field_value_bindings(revision: ModeloRevision) -> dict[CasillaId, BindingId]:

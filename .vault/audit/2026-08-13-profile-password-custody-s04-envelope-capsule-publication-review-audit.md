@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:d25ccdbc4718862eac73323ad5e726fda4fc4fd6bd8a2937f66b5b536989cb59'
 related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
 ---
 

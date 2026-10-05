@@ -1,0 +1,45 @@
+[package]
+name = "cadrumo-desktop"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[features]
+live-package-tests = []
+# Only for the packaged end-to-end test build: admits a single
+# --remote-debugging-port argument in WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS.
+# Never enabled for a distributed build.
+webview2-remote-debugging = []
+
+[[bin]]
+name = "cadrumo"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+cadrumo-application = { path = "../../application" }
+portable-pty = "0.9"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ctrlc = "3"
+getrandom = "0.3"
+tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros"] }
+# Rust APIs only: the shell reaches them through token-checked app commands
+# and grants the webview no plugin command.
+tauri-plugin-clipboard-manager = "2.4.1"
+opener = "0.9"
+
+[dev-dependencies]
+tauri = { version = "2", features = ["test"] }
+
+[target.'cfg(windows)'.dependencies]
+cadrumo-platform = { path = "../../platform", features = ["webview2"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "deny"

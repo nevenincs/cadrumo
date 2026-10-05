@@ -289,7 +289,7 @@ def test_asserting_a_scoped_family_carries_it_and_declining_it_takes_none(tmp_pa
 def test_a_hand_merged_manifest_shape_is_refused_by_the_duplicate_casilla_id_check(tmp_path: Path) -> None:
     """Detector teeth: the refusal a manifest-merging materialiser would produce, without touching it.
 
-    ``_inherit_casillas`` in the loader internals owns the casilla merge and
+    ``inherit_casillas`` in the loader internals owns the casilla merge and
     is not touched here; it belongs to a different step. This test instead
     authors, as a plain revision, the exact shape a materialiser would
     produce if it merged the completeness manifest the way it merges

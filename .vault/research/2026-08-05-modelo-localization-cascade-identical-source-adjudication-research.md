@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-localization-cascade'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ab2aa1a2662fd9634856bb1ae07378c57b7cb39c630390f5bb1a349a2e0bc613'
+body_hash: 'sha256:74abc9c5ede1104baf0a2db34ec796a22ea0123a41361b1a801d974ab0a83ba7'
 related:
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
@@ -24,9 +24,7 @@ schema leaves are compared with the mandatory Spanish catalogue. The Spanish
 value is therefore the authority-preserving source wording for Modelo and
 Casilla labels, titles, and official names; another locale matching that
 wording is not evidence that the Spanish source is untranslated. This is
-implemented by the source selection and reference-locale classification in
-`src/cadrumo/locales/_status.py:37-38, 93-107, 193-200` and asserted by
-`src/cadrumo/tests/test_locale_translation_honesty.py:255-265, 270-313`.
+implemented by the source selection and reference-locale classification  and asserted by
 
 ### Current equality inventory | every equality has an explicit disposition
 
@@ -44,20 +42,18 @@ break down as M100: 10, M131: 3, M200: 1, and M232: 50. The 33 Hungarian
 M100 `Index` entries are individually recorded through the locale CLI's
 `allow-identical` operation: the established Hungarian loanword is used in
 context, while the Spanish authority remains `Índice`. The generic Catalan,
-Spanish, and Hungarian equalities retain per-key reasons in
-`src/cadrumo/locales/_intentional_identical.json`; no equality is left without
+Spanish, and Hungarian equalities retain per-key reasons ; no equality is left without
 either an allowlist disposition or the official Spanish-source classification.
 
 ### Fallback and identity | the runtime already exposes the required chain
 
 The canonical identity functions derive Modelo, revision, exact Casilla,
 continuidad, and alias keys from structured IDs in
-`src/cadrumo/domain/calculations/registry/_modelo_localization.py:19-92`.
+
 Resolution tries the requested locale across the ordered exact-to-continuidad
 keys, then retries the same chain in Spanish, as documented by
-`src/cadrumo/domain/calculations/registry/_modelo_localization.py:95-119`.
-The loader attaches those identities without copying presentation values in
-`src/cadrumo/domain/calculations/registry/_loader.py:250-329`. This means a
+
+The loader attaches those identities without copying presentation values . This means a
 mechanical migration can compare identities and values independently; it must
 not infer semantic sameness from English equality alone.
 
@@ -77,8 +73,8 @@ unscoped full-suite run after every concurrent worktree change.
 
 The registry and locale-key scanners expose structured IDs and dotted leaves,
 and the new-Modelo scaffold refuses to create revision-local locale storage;
-see `src/cadrumo/locales/_registry_scanner.py:62-78`,
-`src/cadrumo/locales/manager.py:266-399`, and
+see the former source file,
+the former source file, and
 `dev/registry/newmodelo/tests/test_manager.py:52-53`. A disposable extractor
 can therefore emit a deliberately reviewable register, detect duplicate
 identity/value conflicts, derive revision overlays, and compare the proposed
@@ -101,13 +97,13 @@ and the migration gates, not the legal identity of an ungrounded Casilla.
 
 ## Sources
 
-* `src/cadrumo/locales/_status.py:37-38, 93-107, 153-215`
-* `src/cadrumo/tests/test_locale_translation_honesty.py:255-313`
-* `src/cadrumo/domain/calculations/registry/_modelo_localization.py:19-119`
-* `src/cadrumo/domain/calculations/registry/_loader.py:250-329`
-* `src/cadrumo/locales/_registry_scanner.py:62-78`
-* `src/cadrumo/locales/manager.py:266-399`
+* the former source file
+* the former source file
+* the former source file
+* the former source file
+* the former source file
+* the former source file
 * `dev/registry/newmodelo/tests/test_manager.py:52-53`
-* `src/cadrumo/locales/_intentional_identical.json`
+* the former source file
 * `ced27b5a59` — root-only Modelo localization cutover and disposal of the
   temporary migration application.

@@ -18,10 +18,10 @@ from .._app_ledger_foundation_command_specs import LEDGER_FOUNDATION_COMMAND_SPE
 from .._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
 from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from .._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
-from ..command_spec import (
+from ..command_parameter_contracts import OptionSpec
+from ..command_shared_contracts import (
     DeferredTarget,
     LiteralValue,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     TranslationKey,
@@ -130,6 +130,7 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
             "actor",
             "idempotency_key",
             "source_jurisdiction",
+            "account",
         ),
         "app_ledger_allocate": (
             "transaction_id",

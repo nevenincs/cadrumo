@@ -9,11 +9,12 @@ from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1
 from ....core.errors.hierarchy import InternalInvariantError
+from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
 from ..components.widgets import ContentDataTable
-from .controller import LedgerWorkspaceController, ledger_copy
+from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, ledger_workspace_page
 
@@ -28,7 +29,7 @@ from .workspace_presentation import LedgerConfirmationFlowScreen, ledger_workspa
 #: reconciliation table is being built — the operator's screen fails to open
 #: rather than showing the row it could not label. Keying off the enum keeps
 #: that a red test instead of a render-time refusal.
-DIRECTION_STATE_COPY_KEYS: dict[str, str] = {
+DIRECTION_STATE_LOCALE_KEYS: dict[str, str] = {
     LinkInconsistencyDirection.INVOICE_ONLY.value: "tui.ledger.reconciliation.direction_state.invoice_only",
     LinkInconsistencyDirection.TRANSACTION_ONLY.value: "tui.ledger.reconciliation.direction_state.transaction_only",
 }
@@ -46,35 +47,35 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(ledger_copy("tui.ledger.reconciliation.title"), classes="cadrumo-banner")
+        yield Static(tr("tui.ledger.reconciliation.title"), classes="cadrumo-banner")
         with ledger_workspace_page() as navigation:
             yield navigation
-            yield Static(ledger_copy("tui.ledger.reconciliation.local_only"), markup=False)
+            yield Static(tr("tui.ledger.reconciliation.local_only"), markup=False)
             yield Static(
-                ledger_copy("tui.ledger.reconciliation.suggestions"),
+                tr("tui.ledger.reconciliation.suggestions"),
                 classes="cadrumo-heading cadrumo-heading-lead",
                 markup=False,
             )
             yield ContentDataTable[str](id="ledger-suggestions", cursor_type="row", zebra_stripes=True)
             yield Static(
-                ledger_copy("tui.ledger.reconciliation.inconsistencies"),
+                tr("tui.ledger.reconciliation.inconsistencies"),
                 classes="cadrumo-heading",
                 markup=False,
             )
             yield ContentDataTable[str](id="ledger-inconsistencies", cursor_type="row", zebra_stripes=True)
             yield Static(
-                ledger_copy("tui.ledger.reconciliation.affected"),
+                tr("tui.ledger.reconciliation.affected"),
                 classes="cadrumo-heading",
                 markup=False,
             )
             yield ContentDataTable[str](id="ledger-affected", cursor_type="row", zebra_stripes=True)
             yield Static("", id="ledger-flow-status", markup=False)
             yield Button(
-                ledger_copy("tui.ledger.reconciliation.confirm"),
+                tr("tui.ledger.reconciliation.confirm"),
                 id="ledger-reconciliation-confirm",
                 disabled=True,
             )
-            yield Button(ledger_copy("tui.ledger.reconciliation.cancel"), id="ledger-reconciliation-cancel")
+            yield Button(tr("tui.ledger.reconciliation.cancel"), id="ledger-reconciliation-cancel")
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -96,14 +97,14 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         # Fixed so the three columns fit the 80-column floor together; the
         # compared values sit on their own lines in the evidence cell instead
         # of widening it.
-        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=22)
-        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=20)
-        table.add_column(ledger_copy("tui.ledger.reconciliation.match_evidence"), key="evidence", width=28)
+        table.add_column(tr("tui.ledger.reconciliation.entry"), key="entry", width=22)
+        table.add_column(tr("tui.ledger.reconciliation.invoice"), key="invoice", width=20)
+        table.add_column(tr("tui.ledger.reconciliation.match_evidence"), key="evidence", width=28)
         for row in self.controller.projection.invoice_reconciliations:
             table.add_row(
                 self.controller.entry_label(row.transaction_id),
                 # The projection carries no invoice number; the issuer and total name it.
-                ledger_copy(
+                tr(
                     "tui.ledger.reconciliation.invoice_label",
                     counterparty=row.invoice_counterparty,
                     total=row.invoice_total,
@@ -116,19 +117,18 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
     @staticmethod
     def _match_evidence(row: LedgerInvoiceReconciliationRefV1) -> str:
         """Show both values behind each canonical match verdict."""
-        yes = ledger_copy("tui.ledger.reconciliation.yes")
-        no = ledger_copy("tui.ledger.reconciliation.no")
+        yes = tr("tui.ledger.reconciliation.yes")
+        no = tr("tui.ledger.reconciliation.no")
         return "\n".join(
             (
-                f"{ledger_copy('tui.ledger.reconciliation.score')}: {row.score}",
+                f"{tr('tui.ledger.reconciliation.score')}: {row.score}",
                 # The verdict AND the two values it was reached on. A bare
                 # yes/no asks the operator to confirm a link while hiding
                 # what was compared, and a bare "no" reports a
                 # disagreement without saying between what and what.
-                f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: {yes if row.amount_match else no}",
+                f"{tr('tui.ledger.reconciliation.amount_match')}: {yes if row.amount_match else no}",
                 f"  {row.transaction_amount} / {row.invoice_total}",
-                f"{ledger_copy('tui.ledger.reconciliation.counterparty_match')}: "
-                f"{yes if row.counterparty_match else no}",
+                f"{tr('tui.ledger.reconciliation.counterparty_match')}: {yes if row.counterparty_match else no}",
                 f"  {row.transaction_counterparty}",
                 f"  {row.invoice_counterparty}",
             )
@@ -136,26 +136,26 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
 
     def _populate_inconsistency_table(self, table: DataTable[str]) -> None:
         """Render each one-sided link with its canonical direction label."""
-        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), width=12)
-        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), width=12)
-        table.add_column(ledger_copy("tui.ledger.reconciliation.direction"), width=30)
+        table.add_column(tr("tui.ledger.reconciliation.entry"), width=12)
+        table.add_column(tr("tui.ledger.reconciliation.invoice"), width=12)
+        table.add_column(tr("tui.ledger.reconciliation.direction"), width=30)
         for row in self.controller.projection.link_inconsistencies:
-            direction_key = DIRECTION_STATE_COPY_KEYS.get(row.direction)
+            direction_key = DIRECTION_STATE_LOCALE_KEYS.get(row.direction)
             if direction_key is None:
                 raise ValueError("unsupported canonical link inconsistency direction")
             table.add_row(
                 self.controller.entry_label(row.transaction_id),
                 str(row.invoice_id)[:12],
-                ledger_copy(direction_key),
+                tr(direction_key),
                 key=f"{row.transaction_id}:{row.invoice_id}",
             )
 
     def _populate_affected_declaration_table(self, table: DataTable[str]) -> None:
         """Render affected declaration coordinates and their change counts."""
         table.add_columns(
-            ledger_copy("tui.ledger.reconciliation.modelo"),
-            ledger_copy("tui.ledger.reconciliation.period"),
-            ledger_copy("tui.ledger.reconciliation.changes"),
+            tr("tui.ledger.reconciliation.modelo"),
+            tr("tui.ledger.reconciliation.period"),
+            tr("tui.ledger.reconciliation.changes"),
         )
         for row in self.controller.projection.affected_declarations:
             table.add_row(
@@ -171,7 +171,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         if not (
             projection.invoice_reconciliations or projection.link_inconsistencies or projection.affected_declarations
         ):
-            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.empty"))
+            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.reconciliation.empty"))
 
     def _hide_submission_controls_if_unavailable(self) -> None:
         """Keep mutation controls absent when there is no door or nothing to link."""
@@ -208,9 +208,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         if self.flow_state is not LedgerFlowState.EDITING or table.id != "ledger-suggestions":
             return
         if not self.controller.can_submit_links():
-            self.query_one("#ledger-flow-status", Static).update(
-                ledger_copy("tui.ledger.refusal.submission_unavailable")
-            )
+            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
             return
         semantic_key = str(event.row_key.value)
         source = next(
@@ -225,7 +223,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             raise ValueError("selected reconciliation row is absent from the visible projection")
         self.selected_pair = (source.transaction_id, source.invoice_id)
         self._transition(LedgerFlowState.CONFIRMING)
-        self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.confirming"))
+        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.reconciliation.confirming"))
         button = self.query_one("#ledger-reconciliation-confirm", Button)
         button.disabled = False
         button.focus()
@@ -247,7 +245,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         self._transition(LedgerFlowState.SUBMITTING)
         event.button.disabled = True
         self.query_one("#ledger-reconciliation-cancel", Button).disabled = True
-        self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.progress"))
+        self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.reconciliation.progress"))
         self.run_worker(self._submit(), exclusive=True)
 
     async def _submit(self) -> None:
@@ -259,10 +257,10 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             await self.controller.submit_link(*pair)
         except Exception:
             self._transition(LedgerFlowState.FAILED)
-            status.update(ledger_copy("tui.ledger.reconciliation.failure"))
+            status.update(tr("tui.ledger.reconciliation.failure"))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
-            status.update(ledger_copy("tui.ledger.reconciliation.success"))
+            status.update(tr("tui.ledger.reconciliation.success"))
 
     @override
     def _cancel_flow(self) -> None:

@@ -17,25 +17,34 @@ def format_sequence_json(document: object) -> str:
     are preserved; ordinary documents retain the standard two-space layout.
     """
 
-    def render(value: object, depth: int) -> str:
-        prefix = "  " * depth
-        child_prefix = prefix + "  "
-        if isinstance(value, dict) and value:
-            entries = [
-                f"{child_prefix}{json.dumps(key, ensure_ascii=False)}: {render(value[key], depth + 1)}"
-                for key in sorted(value)
-            ]
-            return "{\n" + ",\n".join(entries) + "\n" + prefix + "}"
-        if isinstance(value, list) and value:
-            rows: list[str] = []
-            for item in value:
-                inline = None
-                if len(value) >= _RECORD_ARRAY_MIN_ITEMS and isinstance(item, dict):
-                    candidate = json.dumps(item, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-                    if len(child_prefix) + len(candidate) <= _INLINE_RECORD_MAX_CHARS:
-                        inline = candidate
-                rows.append(child_prefix + (inline if inline is not None else render(item, depth + 1)))
-            return "[\n" + ",\n".join(rows) + "\n" + prefix + "]"
-        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    return _render_json_value(document, 0)
 
-    return render(document, 0)
+
+def _render_json_value(value: object, depth: int) -> str:
+    prefix = "  " * depth
+    child_prefix = prefix + "  "
+    if isinstance(value, dict) and value:
+        entries = [
+            f"{child_prefix}{json.dumps(key, ensure_ascii=False)}: {_render_json_value(value[key], depth + 1)}"
+            for key in sorted(value)
+        ]
+        return "{\n" + ",\n".join(entries) + "\n" + prefix + "}"
+    if isinstance(value, list) and value:
+        return _render_json_list(value, depth, prefix, child_prefix)
+    return json.dumps(value, ensure_ascii=False, sort_keys=True)
+
+
+def _render_json_list(value: list[object], depth: int, prefix: str, child_prefix: str) -> str:
+    rows: list[str] = []
+    for item in value:
+        inline = _inline_json_record(item, len(value), child_prefix)
+        rows.append(child_prefix + (inline if inline is not None else _render_json_value(item, depth + 1)))
+    return "[\n" + ",\n".join(rows) + "\n" + prefix + "]"
+
+
+def _inline_json_record(item: object, length: int, child_prefix: str) -> str | None:
+    if length >= _RECORD_ARRAY_MIN_ITEMS and isinstance(item, dict):
+        candidate = json.dumps(item, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        if len(child_prefix) + len(candidate) <= _INLINE_RECORD_MAX_CHARS:
+            return candidate
+    return None

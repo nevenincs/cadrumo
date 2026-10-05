@@ -3,20 +3,21 @@ tags:
   - '#audit'
   - '#semantic-dedup-epic'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:11dde14cbb9a564463b653f42e933981bde02de710aaa0c00d54b61198828468'
-related:
-  - "[[2026-06-13-semantic-dedup-epic-plan]]"
+body_hash: 'sha256:e4f48230b0ecac0e019e31b0aecf9587ad9dccb986f1f31ea9002abd405d07d0'
+related: []
 ---
 # `semantic-dedup-epic` audit: `204 of 239 execution records carry no authored content at all`
+
+## Scope
 
 Written by the reviewer of a different campaign, which reached this feature through a plan row
 scoped to it. The finding is about the record, not about the work.
 
-## What was measured
+### What was measured
 
-    .vault/exec/2026-06-13-semantic-dedup-epic/          239 records
+.vault/exec/2026-06-13-semantic-dedup-epic/          239 records
       genuinely authored                                  35
       no authored content whatsoever                     204
     .vault/plan/2026-06-13-semantic-dedup-epic-plan.md
@@ -30,7 +31,9 @@ from the originating Step row.
 So these are not records missing a section. They are scaffolds containing nothing a human
 supplied — the entire content is the Step's own text, mechanically restated.
 
-## When they were created
+## Findings
+
+### When they were created
 
 The 35 authored records are dated 2026-06-13 (8), 2026-06-14 (23) and 2026-07-04 (4), spread
 across the campaign's working period, and carry substantial outcomes — one documents a
@@ -42,7 +45,7 @@ full-space equivalence probe over 0..99,999,999 with 0 mismatches.
 That is the shape of a retro-scaffold: steps already checked, records generated afterwards in
 one pass so that each checked step had a file to point at.
 
-## Why the outcomes cannot be reconstructed
+### Why the outcomes cannot be reconstructed
 
 `plan-closure-requires-exec-records` permits reconstructing a record from a verifiable commit
 — that is legitimate and was done elsewhere in the reviewing campaign. It is not available
@@ -62,7 +65,7 @@ records rather than of the effort:
 
 **0 of 204 can be reconstructed from a verifiable commit.**
 
-## Why unchecking them would also be wrong
+### Why unchecking them would also be wrong
 
 The natural remedy — uncheck every step whose record cannot be evidenced — asserts that the
 work was not done. Spot-checks contradict that:
@@ -73,7 +76,9 @@ normalisation its step describes.
 So the code changes appear present. **Unchecking would replace an unevidenced record with a
 false one**, at scale, in a plan this reviewer does not own.
 
-## Disposition
+## Recommendations
+
+### Disposition
 
 Neither branch of fill-or-uncheck is correct here, and the honest position is the one neither
 branch expresses: **the steps' completion is unevidenced, not disproven.**
@@ -88,7 +93,7 @@ any of the 204 should understand that its emptiness is not an oversight to be fi
 but the visible trace of records generated after the fact — and that the work they describe
 does appear to have landed, on the evidence of the tree rather than of the record.
 
-## What would actually settle it
+### What would actually settle it
 
 Per-step evidence exists only in the campaign's own commit history, and recovering it means
 someone who was present reconstructing the mapping, or a commit-by-commit walk of the

@@ -1,0 +1,133 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-131-fichero-boe'
+
+[[revisions.2025.export_layouts.records]]
+id = 'modelo-131-2025-did'
+record_type = 'DID'
+order = 2
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = false
+requires_positive_casilla_id = '15'
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-131-2025-did-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-131-2025-did-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '131'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-131-2025-did-page'
+offset = 6
+length = 5
+kind = 'literal'
+literal = 'DID00'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-131-2025-did-end'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-131-2025-did.modelo-131.did.iban'
+offset = 12
+length = 34
+kind = 'binding'
+binding = 'modelo-131.did.iban'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1347-2024:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-131-2025-did-reservado-46'
+offset = 46
+length = 200
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-131-2025-did-close'
+offset = 246
+length = 12
+kind = 'literal'
+literal = '</T131DID00>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2025']
+
+[revisions.2025.export_layouts.records.row_field_casilla_ids]

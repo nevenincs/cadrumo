@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#storage-backend-security-review'
 date: '2026-08-16'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a5aa0cb71163c725b3c277f967a2c1990ae32c31cf6a1b08ab34da8b1df0c91'
+body_hash: 'sha256:2f3de2c23519eec6cbd5c09220c5c511232d2e49d695ae4118d05f02ea232db5'
 related:
   - '[[2026-06-14-storage-backend-security-review-adr]]'
-  - '[[2026-06-14-storage-backend-security-review-ledger]]'
-  - '[[2026-06-14-storage-backend-security-review-plan]]'
   - '[[2026-06-14-storage-backend-security-review-research]]'
   - '[[2026-06-15-storage-backend-security-review-audit]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 ### audit
 
 - `2026-06-15-storage-backend-security-review-audit` - `storage-backend-security-review` audit: `campaign close honesty review`
-
-### exec
-
-- `2026-06-14-storage-backend-security-review-ledger` - `storage-backend-security-review` ledger
-
-### plan
-
-- `2026-06-14-storage-backend-security-review-plan` - `storage-backend-security-review` plan
 
 ### research
 

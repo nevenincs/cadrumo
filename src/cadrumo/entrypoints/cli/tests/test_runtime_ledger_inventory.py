@@ -10,20 +10,22 @@ import pytest
 import typer
 from pydantic import BaseModel
 
-from ....application.inventory.registered_operation import (
-    INVENTORY_CREATE_OPERATION_DEFINITION_ID,
-    INVENTORY_VALIDATION_REFUSAL_CODE,
+from ....application.inventory.registered_projections import (
     InventoryCreateProjection,
-    InventoryCreateRequest,
     InventoryLedgerProjection,
     InventoryRefusalProjection,
+)
+from ....application.inventory.registered_requests import (
+    INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_VALIDATION_REFUSAL_CODE,
+    InventoryCreateRequest,
 )
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.contribuyente.inventory.records import ValuationMethod
 from .. import runtime_ledger_inventory as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

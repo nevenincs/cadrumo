@@ -20,14 +20,8 @@ from typing import TYPE_CHECKING, cast, get_args
 import typer
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ...application.modelo.action_errors import WorkUnitNotFoundError
-from ...application.modelo.calculate_input import (
-    WorkCalculateInputBundle,
-    build_work_calculate_input_bundle,
-)
-from ...application.modelo.calculation_action_ports import CalculationActionPorts
-from ...application.modelo.calculation_actions import get_calculation_revision
-from ...application.modelo.operation_definitions import ModeloDetailRowWireV1
+from ...application.modelo.calculation_request_fields import ModeloCalculationOverride
+from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
@@ -39,7 +33,6 @@ from ...application.modelo.work_addressing import (
     ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
-from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.modelo.work_selection import ModeloWorkUnitCandidate
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -49,33 +42,21 @@ from ...core.hashing import canonical_json_bytes
 from ...core.hex import HEX_PATTERN_64
 from ...core.i18n.render import tr
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
-from ...core.rescate_type import RescateType
 from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
-    Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
-    ModeloDetailRow,
-    validate_m349_country_prefix_context,
-    validate_m349_nif_format,
 )
 from ._modelo_rendering import short_id
 from .common import active_bucket_id_or_refuse, active_profile_label
 from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ...application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-    from ...application.modelo.work_profile import ModeloWorkProfile
-    from ...domain.modelos.calculation_revision import CalculationRevision
-    from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-    from ...domain.modelos.work_unit import WorkUnit
+    pass
 
 _log = get_logger(__name__)
 
@@ -88,7 +69,6 @@ _SUPPORTED_ROW_MODELS: tuple[type[BaseModel], ...] = (
     Modelo232VinculadaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
-    Modelo347ContraparteRow,
 )
 
 
@@ -138,25 +118,6 @@ def validate_calculation_revision_id(value: str) -> CalculationRevisionId:
             ),
         )
     return stripped
-
-
-def load_modelo_calculation_revision(
-    calculation_revision_id: CalculationRevisionId,
-    *,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    """Load a known revision through the application calculation authority.
-
-    Callers use this after target resolution. Keeping the known-ID read here
-    makes that distinction explicit so command modules do not look like they
-    own revision selection policy.
-    """
-    return get_calculation_revision(calculation_revision_id, ports=ports)
-
-
-def load_modelo_work_unit(work_unit_id: str, *, ports: WorkLifecyclePorts) -> WorkUnit:
-    """Load a known work unit through the application lifecycle authority."""
-    return get_work_unit(work_unit_id, ports=ports)
 
 
 def parse_kv_spec[T](
@@ -376,60 +337,6 @@ def _annotation_contains_decimal(annotation: object) -> bool:
     return annotation is Decimal or any(_annotation_contains_decimal(argument) for argument in get_args(annotation))
 
 
-def _row_decimal_field_names() -> frozenset[str]:
-    field_names: set[str] = set()
-    for row_model in _SUPPORTED_ROW_MODELS:
-        for field_name, field in row_model.model_fields.items():
-            if not isinstance(field_name, str):
-                raise TypeError("row model field names must be strings")
-            if _annotation_contains_decimal(field.annotation):
-                field_names.add(field_name)
-    return frozenset(field_names)
-
-
-def _coerce_row_field_values(
-    values: Mapping[str, str],
-) -> dict[str, str | Decimal]:
-    decimal_fields = _row_decimal_field_names()
-    return {key: Decimal(value) if key in decimal_fields else value for key, value in values.items()}
-
-
-def _validate_m349_row_nif(row_type: str, values: Mapping[str, str | Decimal]) -> None:
-    if row_type not in {"operador", "rectificacion"}:
-        return
-    nif = str(values.get("nif_comunitario", ""))
-    country_code = str(values.get("codigo_pais", ""))
-    if not nif or not country_code or validate_m349_nif_format(nif, country_code):
-        return
-    raise typer.BadParameter(
-        tr(
-            "application.modelo.errors.calculate_m349_invalid_nif",
-            nif=nif,
-            pais=country_code,
-        ),
-    )
-
-
-def parse_row_spec(spec: str) -> ModeloDetailRow:
-    """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model."""
-    row_type, row_model, kv_raw = _parse_row_spec_tokens(spec)
-    try:
-        kv_pairs = _coerce_row_field_values(kv_raw)
-        row = row_model.model_validate({"row_type": row_type, **kv_pairs})
-        _validate_m349_row_nif(row_type, kv_pairs)
-        return cast(ModeloDetailRow, row)
-    except typer.BadParameter:
-        raise
-    except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.row_validation_error",
-                row_type=row_type,
-                error=str(exc),
-            ),
-        ) from exc
-
-
 def parse_calculation_wire_row_spec(spec: str) -> ModeloDetailRowWireV1:
     """Parse CLI row syntax into the registered mirror without local registry custody."""
     row_type, _row_model, fields = _parse_row_spec_tokens(spec)
@@ -457,6 +364,11 @@ def parse_work_calculate_wire_specs(
         dict(parse_relation_override(spec) for spec in (relation or ())),
         tuple(parse_calculation_wire_row_spec(spec) for spec in (row or ())),
     )
+
+
+def calculation_overrides(pairs: Mapping[str, str]) -> tuple[ModeloCalculationOverride, ...]:
+    """Carry parsed override tokens into the calculation request in their declared order."""
+    return tuple(ModeloCalculationOverride(key=key, value=value) for key, value in pairs.items())
 
 
 def optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:
@@ -489,217 +401,6 @@ def optional_decimal_option(raw: str | None, *, translation_key: str, default: s
             ),
         )
     return parsed
-
-
-def _parse_work_calculate_cli_specs(
-    *,
-    casilla: list[str] | None,
-    binding: list[str] | None,
-    relation: list[str] | None,
-    row: list[str] | None,
-) -> tuple[
-    dict[str, str],
-    dict[BindingId, str],
-    dict[RelationId, str],
-    tuple[ModeloDetailRow, ...],
-]:
-    return (
-        dict(parse_casilla_override(spec) for spec in (casilla or ())),
-        dict(parse_binding_override(spec) for spec in (binding or ())),
-        dict(parse_relation_override(spec) for spec in relation or ()),
-        tuple(parse_row_spec(spec) for spec in (row or ())),
-    )
-
-
-def work_calculate_input_bundle_from_cli(
-    *,
-    work_unit_id: str,
-    ports: CalculationActionPorts,
-    casilla: list[str] | None,
-    binding: list[str] | None,
-    relation: list[str] | None,
-    row: list[str] | None,
-    borrador_snapshot_id: str | None,
-    m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
-    prestacion_inss_exenta: str | None,
-    rescate_plan_pensiones_capital: str | None,
-    rescate_plan_pensiones_aportaciones_pre_2007: str | None,
-    rescate_plan_pensiones_aportaciones_totales: str | None,
-    rescate_type: RescateType | None = None,
-    contingencia_year: int | None = None,
-    rescate_year: int | None = None,
-    sal_beneficio_neto: str | None,
-    sal_reserva_dotada: str | None,
-    sal_capital_social: str | None,
-    autoconsumo_promotor_base: str | None,
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
-    profile: ModeloWorkProfile | None = None,
-) -> WorkCalculateInputBundle:
-    """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
-    casilla_pairs, binding_pairs, relation_pairs, detail_rows = _parse_work_calculate_cli_specs(
-        casilla=casilla,
-        binding=binding,
-        relation=relation,
-        row=row,
-    )
-    try:
-        _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows, ports=ports)
-        return build_work_calculate_input_bundle(
-            work_unit_id=work_unit_id,
-            ports=ports,
-            profile=profile,
-            casilla_overrides=casilla_pairs,
-            binding_overrides=binding_pairs,
-            relation_overrides=relation_pairs,
-            detail_rows=detail_rows,
-            borrador_snapshot_id=borrador_snapshot_id,
-            m210_gross_income_source_mode=m210_gross_income_source_mode,
-            prestacion_inss_exenta=optional_decimal_option(
-                prestacion_inss_exenta,
-                translation_key="cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
-                default=(
-                    "--prestacion-inss-exenta must be a decimal amount; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            rescate_plan_pensiones_capital=optional_decimal_option(
-                rescate_plan_pensiones_capital,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default=(
-                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            rescate_plan_pensiones_aportaciones_pre_2007=optional_decimal_option(
-                rescate_plan_pensiones_aportaciones_pre_2007,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default=(
-                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            rescate_plan_pensiones_aportaciones_totales=optional_decimal_option(
-                rescate_plan_pensiones_aportaciones_totales,
-                translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default=(
-                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            rescate_plan_pensiones_tipo=rescate_type,
-            rescate_plan_pensiones_contingencia_year=contingencia_year,
-            rescate_plan_pensiones_rescate_year=rescate_year,
-            sal_beneficio_neto=optional_decimal_option(
-                sal_beneficio_neto,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default=(
-                    "--sal-* values must be decimal amounts; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            sal_reserva_dotada=optional_decimal_option(
-                sal_reserva_dotada,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default=(
-                    "--sal-* values must be decimal amounts; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            sal_capital_social=optional_decimal_option(
-                sal_capital_social,
-                translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default=(
-                    "--sal-* values must be decimal amounts; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            autoconsumo_promotor_base=optional_decimal_option(
-                autoconsumo_promotor_base,
-                translation_key="cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
-                default=(
-                    "--autoconsumo-promotor-base must be a decimal amount; received: {value}. "
-                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
-                ),
-            ),
-            filing_instance_evidence=filing_instance_evidence,
-            operation=ports.operation,
-        )
-    except CadrumoError:
-        raise
-    except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-
-def _m349_detail_rows(
-    rows: tuple[ModeloDetailRow, ...],
-) -> tuple[tuple[Modelo349OperadorRow, ...], tuple[Modelo349RectificacionRow, ...]]:
-    return (
-        tuple(row for row in rows if isinstance(row, Modelo349OperadorRow)),
-        tuple(row for row in rows if isinstance(row, Modelo349RectificacionRow)),
-    )
-
-
-def _validate_m349_operador_rows(
-    rows: tuple[Modelo349OperadorRow, ...],
-    *,
-    filing_year: int,
-    period: str,
-) -> None:
-    for row in rows:
-        try:
-            validate_m349_country_prefix_context(
-                country_code=row.codigo_pais,
-                clave_operacion=row.clave_operacion,
-                filing_year=filing_year,
-                period=period,
-            )
-        except Modelo349CountryPrefixContextError as exc:
-            raise bad_parameter_from_error(exc) from exc
-
-
-def _validate_m349_rectification_rows(
-    rows: tuple[Modelo349RectificacionRow, ...],
-    *,
-    filing_year: int,
-    period: str,
-) -> None:
-    for row in rows:
-        try:
-            validate_m349_country_prefix_context(
-                country_code=row.codigo_pais,
-                clave_operacion=row.clave_operacion,
-                filing_year=filing_year,
-                period=period,
-                is_rectification=True,
-                rectified_year=int(row.ejercicio),
-                rectified_period=row.periodo,
-            )
-        except Modelo349CountryPrefixContextError as exc:
-            raise bad_parameter_from_error(exc) from exc
-
-
-def _validate_m349_detail_rows_for_work_unit(
-    work_unit_id: str,
-    rows: tuple[ModeloDetailRow, ...],
-    *,
-    ports: CalculationActionPorts,
-) -> None:
-    operador_rows, rectification_rows = _m349_detail_rows(rows)
-    if not operador_rows and not rectification_rows:
-        return
-    unit = get_work_unit(work_unit_id, ports=ports.work_lifecycle_ports)
-    if str(unit.modelo) != Modelo("349").value:
-        return
-    _validate_m349_operador_rows(
-        operador_rows,
-        filing_year=unit.filing_year,
-        period=unit.period.registry_token,
-    )
-    _validate_m349_rectification_rows(
-        rectification_rows,
-        filing_year=unit.filing_year,
-        period=unit.period.registry_token,
-    )
 
 
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
@@ -885,15 +586,12 @@ def resolve_default_actor() -> str:
 __all__ = [
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",
-    "load_modelo_calculation_revision",
-    "load_modelo_work_unit",
     "optional_decimal_option",
     "parse_binding_override",
     "parse_casilla_override",
     "parse_kv_spec",
     "parse_relation_override",
     "parse_revision_selector",
-    "parse_row_spec",
     "resolve_actor_option",
     "resolve_default_actor",
     "resolve_explicit_or_active_bucket_id",
@@ -904,6 +602,5 @@ __all__ = [
     "validate_relation_key",
     "validate_trusted_public_key",
     "validate_work_unit_id",
-    "work_calculate_input_bundle_from_cli",
     "work_candidate_lines",
 ]

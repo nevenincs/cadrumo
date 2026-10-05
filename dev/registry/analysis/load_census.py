@@ -64,7 +64,9 @@ from typing import Final, TypeGuard
 import grimp
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT
+from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE, is_test_module_name, is_test_source
 from dev.packaging.command_execution import run_command
 from dev.quality.unread_inputs import report_unread
 
@@ -87,7 +89,7 @@ LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
 #: registry conformance and maintenance tooling is a real consumer -- the live
 #: parity oracle catalogue is assembled there and nowhere else -- so omitting it
 #: would report live oracle modules as unreferenced.
-REFERENCE_SCAN_ROOTS: Final[tuple[Path, ...]] = (SOURCE_ROOT / "cadrumo", REPO_ROOT / "dev")
+REFERENCE_SCAN_ROOTS: Final[tuple[Path, ...]] = (REPO_ROOT / PRODUCT_PACKAGE, REPO_ROOT / DEVELOPMENT_TOOLING)
 
 #: Cache directories whose redirection forces a cold load. Pointing them at
 #: empty directories denies the loader its compiled tree and denies the
@@ -103,16 +105,6 @@ TRACE_REGIMES: Final[tuple[str, ...]] = ("warm", "cold", "inspection_snapshot")
 
 class LoadCensusError(RuntimeError):
     """Raised when the census cannot be computed from the tree as it stands."""
-
-
-def is_test_module(module: str) -> bool:
-    """Return whether ``module`` belongs to the test surface rather than production.
-
-    Returns:
-        ``True`` for test packages, ``test_*`` modules and ``conftest`` modules.
-    """
-    parts = module.split(".")
-    return "tests" in parts or parts[-1].startswith("test_") or parts[-1] == "conftest"
 
 
 def build_runtime_graph() -> grimp.ImportGraph:
@@ -182,7 +174,7 @@ def module_level_importers(module: str) -> frozenset[str]:
     importers: set[str] = set()
     unread: list[str] = []
     for path in scan_directory(REGISTRY_DIR, pattern="*.py", recursive=True, require_root=True):
-        if "__pycache__" in path.parts or "tests" in path.parts:
+        if "__pycache__" in path.parts or is_test_source(path, root=REGISTRY_DIR):
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -247,7 +239,7 @@ def registry_package_modules() -> frozenset[str]:
     modules: set[str] = set()
     for path in scan_directory(REGISTRY_DIR, pattern="*.py"):
         stem = path.stem
-        if stem == "conftest":
+        if is_test_source(path, root=REGISTRY_DIR):
             continue
         modules.add(REGISTRY_PACKAGE if stem == "__init__" else f"{REGISTRY_PACKAGE}.{stem}")
     return frozenset(modules)
@@ -298,7 +290,7 @@ def census_universe(graph: grimp.ImportGraph) -> frozenset[str]:
     """
     closure = static_load_closure(graph)
     members = closure | dynamic_reach(graph, closure) | registry_package_modules()
-    return frozenset(m for m in _with_ancestor_packages(members) if not is_test_module(m))
+    return frozenset(m for m in _with_ancestor_packages(members) if not is_test_module_name(m))
 
 
 def _with_ancestor_packages(modules: Iterable[str]) -> frozenset[str]:
@@ -397,22 +389,40 @@ def _string_tuple_constants(tree: ast.Module) -> dict[str, tuple[str, ...]]:
     """Collect module-level names bound to a tuple or list of string literals."""
     constants: dict[str, tuple[str, ...]] = {}
     for node in tree.body:
-        targets: Sequence[ast.expr]
-        if isinstance(node, ast.Assign):
-            targets, value = list(node.targets), node.value
-        elif isinstance(node, ast.AnnAssign) and node.value is not None:
-            targets, value = [node.target], node.value
-        else:
+        assignment = _module_level_assignment(node)
+        if assignment is None:
             continue
-        if not isinstance(value, (ast.Tuple, ast.List)):
-            continue
-        items = [e.value for e in value.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
-        if len(items) != len(value.elts) or not items:
+        targets, value = assignment
+        items = _literal_string_sequence(value)
+        if items is None:
             continue
         for target in targets:
             if isinstance(target, ast.Name):
-                constants[target.id] = tuple(items)
+                constants[target.id] = items
     return constants
+
+
+def _module_level_assignment(node: ast.stmt) -> tuple[Sequence[ast.expr], ast.expr] | None:
+    """Return assignment targets and value for module-level assignment statements."""
+    if isinstance(node, ast.Assign):
+        return node.targets, node.value
+    if isinstance(node, ast.AnnAssign) and node.value is not None:
+        return (node.target,), node.value
+    return None
+
+
+def _literal_string_sequence(value: ast.expr) -> tuple[str, ...] | None:
+    """Return a non-empty tuple/list's strings only when every member is a string literal."""
+    if not isinstance(value, (ast.Tuple, ast.List)):
+        return None
+    if not value.elts:
+        return None
+    members: list[str] = []
+    for entry in value.elts:
+        if not isinstance(entry, ast.Constant) or not isinstance(entry.value, str):
+            return None
+        members.append(entry.value)
+    return tuple(members)
 
 
 def _is_import_module_call(node: ast.AST) -> TypeGuard[ast.Call]:
@@ -492,31 +502,45 @@ def _loop_resolved_targets(
     for node in ast.walk(tree):
         if not isinstance(node, ast.For) or not isinstance(node.iter, ast.Name):
             continue
-        variable = node.target.id if isinstance(node.target, ast.Name) else None
+        variable = _loop_target_name(node)
         if variable is None:
             continue
         # Find the import sites FIRST. Evaluating a constant costs an
         # interpreter, and a loop that imports nothing has no target to
         # recover; resolving before looking would pay that price for every
         # ordinary loop in the tree.
-        sites = [
-            inner.lineno
-            for inner in ast.walk(node)
-            if _is_import_module_call(inner)
-            and inner.args
-            and isinstance(inner.args[0], ast.Name)
-            and inner.args[0].id == variable
-        ]
+        sites = _loop_import_sites(node, variable)
         if not sites:
             continue
-        members = constants.get(node.iter.id)
-        if members is None:
-            members = evaluated_string_sequence(module, node.iter.id)
+        members = _loop_members(node.iter.id, constants, module=module)
         if members is None:
             continue
         for lineno in sites:
             resolved[lineno] = members
     return resolved
+
+
+def _loop_target_name(node: ast.For) -> str | None:
+    """Return the target variable when a loop binds a simple name."""
+    return node.target.id if isinstance(node.target, ast.Name) else None
+
+
+def _loop_import_sites(node: ast.For, variable: str) -> tuple[int, ...]:
+    """Return loop call lines that dynamically import the loop variable."""
+    return tuple(
+        inner.lineno
+        for inner in ast.walk(node)
+        if _is_import_module_call(inner)
+        and inner.args
+        and isinstance(inner.args[0], ast.Name)
+        and inner.args[0].id == variable
+    )
+
+
+def _loop_members(name: str, constants: Mapping[str, tuple[str, ...]], *, module: str) -> tuple[str, ...] | None:
+    """Resolve one loop's iterable from syntax first, then the module value."""
+    members = constants.get(name)
+    return evaluated_string_sequence(module, name) if members is None else members
 
 
 def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImportSite, ...]:
@@ -545,25 +569,30 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
             if module is not None:
                 unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
-        if module is None:
+        if module is None or (production_only and is_test_module_name(module)):
             continue
-        if production_only and is_test_module(module):
-            continue
-        package = module.rsplit(".", 1)[0] if path.name != "__init__.py" else module
-        loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree), module=module)
-        for node in ast.walk(tree):
-            if not _is_import_module_call(node):
-                continue
-            members = loop_targets.get(node.lineno)
-            if members is not None:
-                sites.extend(DynamicImportSite(module, node.lineno, _absolute(member, package)) for member in members)
-                continue
-            sites.append(DynamicImportSite(module, node.lineno, _literal_dynamic_target(node, package)))
+        sites.extend(_dynamic_imports_in_file(path, module, tree))
     report_unread(
         "registry load census dynamic import harvest",
         "an import_module call site in one of them would be missing from the census",
         unread,
     )
+    return tuple(sites)
+
+
+def _dynamic_imports_in_file(path: Path, module: str, tree: ast.Module) -> tuple[DynamicImportSite, ...]:
+    """Resolve the dynamic-import call sites in one parsed source module."""
+    package = module.rsplit(".", 1)[0] if path.name != "__init__.py" else module
+    loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree), module=module)
+    sites: list[DynamicImportSite] = []
+    for node in ast.walk(tree):
+        if not _is_import_module_call(node):
+            continue
+        members = loop_targets.get(node.lineno)
+        if members is None:
+            sites.append(DynamicImportSite(module, node.lineno, _literal_dynamic_target(node, package)))
+        else:
+            sites.extend(DynamicImportSite(module, node.lineno, _absolute(member, package)) for member in members)
     return tuple(sites)
 
 
@@ -591,16 +620,29 @@ def _registry_import_targets(
     Returns:
         Canonical registry module names, possibly empty.
     """
+    targets = _registry_statement_targets(node, module)
+    return _canonical_registry_targets(node, targets, defining_modules)
+
+
+def _registry_statement_targets(node: ast.Import | ast.ImportFrom, module: str) -> tuple[str, ...]:
+    """Resolve the module path named by one import statement."""
     if isinstance(node, ast.Import):
-        targets = tuple(alias.name for alias in node.names)
-    elif node.level == 0:
-        targets = (node.module or "",)
-    else:
-        base = module.split(".")
-        # ``a.b.c`` sits in package ``a.b``; one further level per extra dot.
-        del base[len(base) - node.level :]
-        target = ".".join((*base, node.module)) if node.module else ".".join(base)
-        targets = (target,)
+        return tuple(alias.name for alias in node.names)
+    if node.level == 0:
+        return (node.module or "",)
+    base = module.split(".")
+    # ``a.b.c`` sits in package ``a.b``; one further level per extra dot.
+    del base[len(base) - node.level :]
+    target = ".".join((*base, node.module)) if node.module else ".".join(base)
+    return (target,)
+
+
+def _canonical_registry_targets(
+    node: ast.Import | ast.ImportFrom,
+    targets: tuple[str, ...],
+    defining_modules: frozenset[str],
+) -> tuple[str, ...]:
+    """Keep direct registry modules and real submodules named by package imports."""
     resolved: list[str] = []
     for target in targets:
         if target.startswith(REGISTRY_PACKAGE + "."):
@@ -664,25 +706,16 @@ def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
     defining_modules = registry_package_modules()
     for path in _iter_source_files():
         module = _module_name_for(path)
-        try:
-            tree = _parse(path)
-        except (OSError, SyntaxError, UnicodeDecodeError) as error:
-            if module is not None:
-                unread.append(f"{path}: {type(error).__name__}: {error}")
-            continue
-        if module is None:
+        tree = _reference_tree(path, module, unread)
+        if module is None or tree is None:
             continue
         # The package's own production modules are already represented by graph
         # edges. Its tests are also consumers, so retain their direct canonical
         # imports in this map rather than allowing them to look unreferenced.
-        if module.startswith(REGISTRY_PACKAGE + ".") and not is_test_module(module):
+        if module.startswith(REGISTRY_PACKAGE + ".") and not is_test_module_name(module):
             continue
-        bucket = tests if is_test_module(module) else production
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Import | ast.ImportFrom):
-                continue
-            for owner in _registry_import_targets(node, module, defining_modules):
-                bucket.setdefault(owner, set()).add(module)
+        bucket = tests if is_test_module_name(module) else production
+        _record_registry_imports(tree, module, defining_modules, bucket)
     report_unread(
         "registry load census reference map",
         "a registry consumer named only in one of them would be missing from the reference map, "
@@ -693,6 +726,30 @@ def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
         production={k: frozenset(v) for k, v in production.items()},
         tests={k: frozenset(v) for k, v in tests.items()},
     )
+
+
+def _reference_tree(path: Path, module: str | None, unread: list[str]) -> ast.Module | None:
+    """Parse a source file while retaining unreadable in-scope evidence."""
+    try:
+        return _parse(path)
+    except (OSError, SyntaxError, UnicodeDecodeError) as error:
+        if module is not None:
+            unread.append(f"{path}: {type(error).__name__}: {error}")
+        return None
+
+
+def _record_registry_imports(
+    tree: ast.Module,
+    module: str,
+    defining_modules: frozenset[str],
+    bucket: dict[str, set[str]],
+) -> None:
+    """Add each direct canonical registry import from one consumer module."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Import | ast.ImportFrom):
+            continue
+        for owner in _registry_import_targets(node, module, defining_modules):
+            bucket.setdefault(owner, set()).add(module)
 
 
 def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) -> frozenset[str]:
@@ -716,12 +773,17 @@ def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) 
     for module in sorted(registry_package_modules()):
         if module == REGISTRY_PACKAGE:
             continue
-        importers = graph.find_modules_that_directly_import(module)
-        in_package = {i for i in importers if i.startswith(REGISTRY_PACKAGE + ".") and not is_test_module(i)}
-        direct_tests = {i for i in importers if is_test_module(i)}
-        if not in_package and not direct_tests and not reference_map.consumers(module):
+        if _is_unreferenced_module(module, graph, reference_map):
             candidates.add(module)
     return frozenset(candidates)
+
+
+def _is_unreferenced_module(module: str, graph: grimp.ImportGraph, reference_map: ReferenceMap) -> bool:
+    """Apply the three independent consumer checks to one registry module."""
+    importers = graph.find_modules_that_directly_import(module)
+    in_package = {i for i in importers if i.startswith(REGISTRY_PACKAGE + ".") and not is_test_module_name(i)}
+    direct_tests = {i for i in importers if is_test_module_name(i)}
+    return not in_package and not direct_tests and not reference_map.consumers(module)
 
 
 def _trace_script(regime: str) -> str:
@@ -819,7 +881,7 @@ def trace_regime(regime: str) -> frozenset[str]:
     """
     if regime not in TRACE_REGIMES:
         raise LoadCensusError(f"unknown trace regime {regime!r}; expected one of {TRACE_REGIMES}")
-    with tempfile.TemporaryDirectory() as workspace:
+    with tempfile.TemporaryDirectory(dir=prepare_temporary_directory()) as workspace:
         area = Path(workspace)
         output = area / "executed.json"
         script = area / "trace.py"

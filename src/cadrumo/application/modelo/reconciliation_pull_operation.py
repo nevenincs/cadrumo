@@ -4,57 +4,50 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import replace
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
-from ...core.identity.hex_ids import SnapshotId, WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_commit_access
+from ..live.filed_observation_ports import FiledObservationProtocol
 from ..live.justificante import (
     JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
     JustificanteCaptureSnapshotService,
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+    require_terminal_receipt_match,
 )
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
+from ..user_profile.access_contracts import (
+    AccessDenialCode,
+)
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .action_errors import CalculationRevisionNotFoundError
 from .reconciliation import (
     ModeloReconciliationBytesCommand,
     PreparedModeloReconciliation,
+    prepare_filed_observation_reconciliation,
     prepare_modelo_reconcile_bytes,
 )
 from .reconciliation_import_operation import ModeloReconciliationImportProjection
@@ -74,8 +67,40 @@ class ModeloReconciliationPullRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     work_unit_id: WorkUnitId
-    snapshot_id: SnapshotId
+    calculation_revision_id: CalculationRevisionId | None = None
+    snapshot_id: SnapshotId | None = None
+    observation_id: SnapshotId | None = None
+    source_kind: ModeloReconciliationEvidenceKind = ModeloReconciliationEvidenceKind.JUSTIFICANTE
     actor: Annotated[str, Field(min_length=1, max_length=64, pattern=r"\S")] = "operator"
+
+    @model_validator(mode="after")
+    def _exact_evidence_selection(self) -> ModeloReconciliationPullRequest:
+        if self.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE:
+            valid = self.snapshot_id is not None and self.observation_id is None
+        else:
+            valid = self.observation_id is not None and self.snapshot_id is None
+        if not valid:
+            raise ValueError("reconciliation pull requires exactly the selected evidence handle")
+        return self
+
+
+def reconciliation_pull_source_ref(
+    source_kind: ModeloReconciliationEvidenceKind,
+    snapshot_id: str | None,
+    observation_id: str | None,
+) -> str:
+    """Name the selected encrypted evidence without exposing a filesystem path."""
+    if (
+        source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE
+        and (snapshot_id is None or observation_id is not None)
+    ) or (
+        source_kind is ModeloReconciliationEvidenceKind.DECLARATION
+        and (observation_id is None or snapshot_id is not None)
+    ):
+        raise ValueError("reconciliation evidence reference is inconsistent with its source kind")
+    if source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE:
+        return f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot_id}"
+    return f"secure-object://cadrumo.outbound.aeat.sede.filed_declaration.observations/{observation_id}"
 
 
 class ModeloReconciliationPullOperationReport(BaseModel):
@@ -84,37 +109,41 @@ class ModeloReconciliationPullOperationReport(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     projection: ModeloReconciliationImportProjection
-    snapshot_id: SnapshotId
+    snapshot_id: SnapshotId | None = None
+    observation_id: SnapshotId | None = None
+    source_kind: ModeloReconciliationEvidenceKind = ModeloReconciliationEvidenceKind.JUSTIFICANTE
     local_write_performed: Literal[True]
 
 
 def _project_reconciliation_pull(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     report = ModeloReconciliationPullOperationReport.model_validate(result, strict=True)
     projection = report.projection
-    expected_source_ref = f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{report.snapshot_id}"
-    if (
-        receipt.identity.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.bucket_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or projection.source_kind is not ModeloReconciliationEvidenceKind.JUSTIFICANTE
-        or projection.source_path != expected_source_ref
-    ):
-        raise ValueError("modelo reconciliation pull result contradicts its terminal receipt")
+    expected_source_ref = reconciliation_pull_source_ref(report.source_kind, report.snapshot_id, report.observation_id)
+    contradiction = "modelo reconciliation pull result contradicts its terminal receipt"
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.bucket_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.UPDATED,
+        message=contradiction,
+    )
+    if projection.source_kind is not report.source_kind or projection.source_path != expected_source_ref:
+        raise ValueError(contradiction)
     return projection
 
 
 class ModeloReconciliationPullExecutor:
     """Prepare against a captured PDF, then guard the atomic record/event write."""
 
-    def __init__(self, service_factory: Callable[[str], JustificanteCaptureSnapshotService]) -> None:
+    def __init__(
+        self,
+        service_factory: Callable[[str], JustificanteCaptureSnapshotService],
+        observation_loader: Callable[[str, str], FiledObservationProtocol] | None = None,
+    ) -> None:
         """Bind the exact-profile secure snapshot service factory."""
         self._service_factory = service_factory
+        self._observation_loader = observation_loader
 
     async def execute(
         self,
@@ -124,15 +153,9 @@ class ModeloReconciliationPullExecutor:
         """Compare one captured receipt and persist its record and event."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject_ref = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject_ref
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject_ref
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
 
@@ -145,6 +168,29 @@ class ModeloReconciliationPullExecutor:
                     translated_message="errors.error.modelo_work_address_not_found",
                     context={"work_unit_present": False},
                 )
+            if unit.bucket_id != profile_id:
+                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            if payload.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
+                if self._observation_loader is None or payload.observation_id is None:
+                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+                observation = self._observation_loader(profile_id, payload.observation_id)
+                if (
+                    observation.modelo != str(unit.modelo)
+                    or observation.ejercicio != unit.filing_year
+                    or observation.period != unit.period
+                ):
+                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+                with validating_governed_facts(context.authority_operation):
+                    return prepare_filed_observation_reconciliation(
+                        work_unit=unit,
+                        observation=observation,
+                        source_ref=reconciliation_pull_source_ref(payload.source_kind, None, payload.observation_id),
+                        actor=payload.actor,
+                        calculation_revision_id=payload.calculation_revision_id,
+                        operation=context.authority_operation,
+                    )
+            if payload.snapshot_id is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             snapshot = self._service_factory(profile_id).show(payload.snapshot_id)
             if unit.bucket_id != profile_id or snapshot.bucket_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -161,20 +207,30 @@ class ModeloReconciliationPullExecutor:
                 source_bytes=snapshot.decoded_pdf_bytes(),
                 source_ref=source_ref,
                 actor=payload.actor,
+                calculation_revision_id=payload.calculation_revision_id,
             )
             with validating_governed_facts(context.authority_operation):
                 prepared = prepare_modelo_reconcile_bytes(command, operation=context.authority_operation)
             return prepared
 
-        prepared = await await_cancellation_complete(
-            asyncio.to_thread(prepare), task_name="modelo-reconciliation-pull-prepare"
-        )
+        try:
+            prepared = await await_cancellation_complete(
+                asyncio.to_thread(prepare), task_name="modelo-reconciliation-pull-prepare"
+            )
+        except CalculationRevisionNotFoundError as exc:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
         projection = ModeloReconciliationImportProjection.from_report(prepared.report)
-        expected_source_ref = f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{payload.snapshot_id}"
+        expected_source_ref = reconciliation_pull_source_ref(
+            payload.source_kind, payload.snapshot_id, payload.observation_id
+        )
         if (
             projection.bucket_id != profile_id
             or projection.work_unit_id != payload.work_unit_id
-            or projection.source_kind is not ModeloReconciliationEvidenceKind.JUSTIFICANTE
+            or (
+                payload.calculation_revision_id is not None
+                and projection.calculation_revision_id != payload.calculation_revision_id
+            )
+            or projection.source_kind is not payload.source_kind
             or projection.source_path != expected_source_ref
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -191,7 +247,11 @@ class ModeloReconciliationPullExecutor:
 
         await context.events.phase(_PHASES[2])
         result = ModeloReconciliationPullOperationReport(
-            projection=projection, snapshot_id=payload.snapshot_id, local_write_performed=True
+            projection=projection,
+            snapshot_id=payload.snapshot_id,
+            observation_id=payload.observation_id,
+            source_kind=payload.source_kind,
+            local_write_performed=True,
         )
         async with context.cancellation.irreversible_section():
             return await context.operands.put(result, written_at=now())
@@ -199,6 +259,7 @@ class ModeloReconciliationPullExecutor:
 
 def build_modelo_reconciliation_pull_definition(
     service_factory: Callable[[str], JustificanteCaptureSnapshotService],
+    observation_loader: Callable[[str, str], FiledObservationProtocol] | None = None,
 ) -> OperationDefinition:
     """Declare a non-replayable write over an existing encrypted capture."""
     return OperationDefinition(
@@ -208,27 +269,13 @@ def build_modelo_reconciliation_pull_definition(
         executor_factory=OperationExecutorFactory(
             request_type=ModeloReconciliationPullRequest,
             executor_type=ModeloReconciliationPullExecutor,
-            build=lambda: ModeloReconciliationPullExecutor(service_factory),
+            build=lambda: ModeloReconciliationPullExecutor(service_factory, observation_loader),
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -236,33 +283,22 @@ def resolve_modelo_reconciliation_pull_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax disclosure and authorization for the commit."""
-    if request.definition_id != MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, ModeloReconciliationPullRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
+        payload_type=ModeloReconciliationPullRequest,
+        access_profile_id=context.profile_id,
     )
-    return replace(resolved, policy=policy)
+    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_reconciliation_pull_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Release the full comparison only with a truthful terminal receipt."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloReconciliationPullRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloReconciliationImportProjection,
-        ),
+        public_result_type=ModeloReconciliationImportProjection,
         result_projector=_project_reconciliation_pull,
         access_resolver=resolve_modelo_reconciliation_pull_access,
     )

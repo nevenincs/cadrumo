@@ -23,9 +23,10 @@ from cadrumo.application.user_profile.automation_custody_port import (
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
 from .. import runtime_credentials
-from ..framing import VerifiedRuntimeConnection, write_document
+from ..framing import VerifiedRuntimeConnection
 from ..frontend_client import RuntimeFrontendClient
 from ..runtime_credentials import open_installed_credential_client
+from ..runtime_frame_io import write_document
 from .test_enrollment_framing import MemoryChannel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

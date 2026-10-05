@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-145-reopen'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:17d9206eac6186d12c51e0799b999b12eb8c1361638058b0692c6c9eb077e180'
+modified: '2026-10-03'
+body_hash: 'sha256:88000c94f6dab43a007e5ef39fc464e9f2a4ba64e47e38c02c340a53321bf28a'
 related: []
 ---
 
@@ -111,7 +111,7 @@ reduction the field unlocks.
 
 ### Reusable enums and schemas
 
-- RentaDisabilityGrade (src/aeat/domain/contribuyente/_renta_codes.py:37):
+- RentaDisabilityGrade :
   exact 5-value match for every M145 discapacidad field. Reuse.
 - Registry InputKind (registry/_schema.py:96): every M145 casilla is
   MANUAL. Reuse.

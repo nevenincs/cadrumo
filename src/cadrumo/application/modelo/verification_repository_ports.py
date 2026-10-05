@@ -34,6 +34,7 @@ from ..filing.draft_review_ports import DraftReviewPorts
 from ..workflow.run_models import WorkflowResult
 
 if TYPE_CHECKING:
+    from ..aggregation.ledger_membership import LedgerMembershipPorts
     from .workflow_gate_ports import WorkflowGatePorts
 
 
@@ -71,6 +72,7 @@ class VerificationRepositoryBundle:
     draft_review_ports: DraftReviewPorts
     workflow_gate_ports: WorkflowGatePorts
     retencion_observation_ports: RetencionObservationPorts
+    ledger_membership_ports: LedgerMembershipPorts
 
 
 class VerificationRepositoryBundleFactory(Protocol):

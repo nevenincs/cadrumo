@@ -35,6 +35,7 @@ from .record_design_intermediate import (
     intermediate_anchor_key,
     intermediate_record_key,
 )
+from .record_design_revision_projection import project_record_design_for_revision
 from .semantic_map import (
     SemanticMap,
     SemanticMapEntry,
@@ -125,55 +126,77 @@ class JoinedRecordDesign(_StrictModel):
 
     @model_validator(mode="after")
     def _require_complete_joined_state(self) -> JoinedRecordDesign:
-        if (self.authored_semantic_map is None) != (self.compiled_semantic_map is None):
-            raise ValueError("joined record design requires authored and compiled semantic maps together")
-        if self.authored_semantic_map is not None and self.compiled_semantic_map is not None:
-            if self.authored_semantic_map.model_copy(update={"entries": self.compiled_semantic_map.entries}) != (
-                self.compiled_semantic_map
-            ):
-                raise ValueError("compiled semantic map may change only casilla tokens")
-            if any(
-                not _entry_is_exact_or_compiled_token(
-                    authored,
-                    compiled,
-                )
-                for authored, compiled in zip(
-                    self.authored_semantic_map.entries,
-                    self.compiled_semantic_map.entries,
-                    strict=True,
-                )
-            ):
-                raise ValueError("compiled semantic-map casilla ids must be exact or solely left-zero-padded")
-        record_fields = tuple(field for record in self.records for field in record.fields)
-        if self.fields != record_fields:
-            raise ValueError("joined record-design fields must exactly flatten its records")
-        fixed_keys = {(record.parser_sheet.sheet, record.parser_sheet.record_identity) for record in self.records}
-        envelope_keys = {(envelope.sheet, envelope.record_identity) for envelope in self.variable_envelopes}
-        header_keys = {(header.sheet, header.record_identity) for header in self.auxiliary_envelope_headers}
-        has_overlapping_composition_identity = (
-            fixed_keys.intersection(envelope_keys)
-            or fixed_keys.intersection(header_keys)
-            or envelope_keys.intersection(header_keys)
+        _require_authored_and_compiled_maps(self.authored_semantic_map, self.compiled_semantic_map)
+        _require_joined_fields_match_records(self.records, self.fields)
+        _require_disjoint_composition_identities(self.records, self.variable_envelopes, self.auxiliary_envelope_headers)
+        _require_variable_envelope_contract(
+            self.variable_envelope_contract,
+            self.variable_envelopes,
+            revision_id=self.revision_id,
         )
-        if has_overlapping_composition_identity:
-            raise ValueError("joined record design composition identities must remain disjoint")
-        # The composed identity comes from the reviewed map, never a literal:
-        # every modelo declaring this wrapper names its own record.
-        composed_identity = (
-            self.variable_envelope_contract.semantic.record_identity
-            if self.variable_envelope_contract is not None
-            else None
-        )
-        if self.variable_envelope_contract is None:
-            if self.variable_envelopes:
-                raise ValueError("joined parser envelope requires reviewed semantic composition")
-        elif tuple(
-            envelope for envelope in self.variable_envelopes if envelope.record_identity == composed_identity
-        ) != (self.variable_envelope_contract.parser_envelope,):
-            raise ValueError(f"joined variable envelope must be the sole parser {composed_identity!r} wrapper")
-        elif self.revision_id is None:
-            raise ValueError("joined variable envelope requires the exact selected revision")
         return self
+
+
+def _require_authored_and_compiled_maps(
+    authored_semantic_map: SemanticMap | None,
+    compiled_semantic_map: SemanticMap | None,
+) -> None:
+    if (authored_semantic_map is None) != (compiled_semantic_map is None):
+        raise ValueError("joined record design requires authored and compiled semantic maps together")
+    if authored_semantic_map is not None and compiled_semantic_map is not None:
+        if authored_semantic_map.model_copy(update={"entries": compiled_semantic_map.entries}) != compiled_semantic_map:
+            raise ValueError("compiled semantic map may change only casilla tokens")
+        if any(
+            not _entry_is_exact_or_compiled_token(authored, compiled)
+            for authored, compiled in zip(authored_semantic_map.entries, compiled_semantic_map.entries, strict=True)
+        ):
+            raise ValueError("compiled semantic-map casilla ids must be exact or solely left-zero-padded")
+
+
+def _require_joined_fields_match_records(
+    records: tuple[JoinedRecordDesignRecord, ...],
+    fields: tuple[JoinedRecordDesignField, ...],
+) -> None:
+    record_fields = tuple(field for record in records for field in record.fields)
+    if fields != record_fields:
+        raise ValueError("joined record-design fields must exactly flatten its records")
+
+
+def _require_disjoint_composition_identities(
+    records: tuple[JoinedRecordDesignRecord, ...],
+    variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...],
+    auxiliary_envelope_headers: tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeader, ...],
+) -> None:
+    fixed_keys = {(record.parser_sheet.sheet, record.parser_sheet.record_identity) for record in records}
+    envelope_keys = {(envelope.sheet, envelope.record_identity) for envelope in variable_envelopes}
+    header_keys = {(header.sheet, header.record_identity) for header in auxiliary_envelope_headers}
+    has_overlapping_composition_identity = (
+        fixed_keys.intersection(envelope_keys)
+        or fixed_keys.intersection(header_keys)
+        or envelope_keys.intersection(header_keys)
+    )
+    if has_overlapping_composition_identity:
+        raise ValueError("joined record design composition identities must remain disjoint")
+
+
+def _require_variable_envelope_contract(
+    contract: JoinedVariableEnvelope | None,
+    variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...],
+    *,
+    revision_id: RevisionId | None,
+) -> None:
+    # The composed identity comes from the reviewed map, never a literal:
+    # every modelo declaring this wrapper names its own record.
+    composed_identity = contract.semantic.record_identity if contract is not None else None
+    if contract is None:
+        if variable_envelopes:
+            raise ValueError("joined parser envelope requires reviewed semantic composition")
+    elif tuple(envelope for envelope in variable_envelopes if envelope.record_identity == composed_identity) != (
+        contract.parser_envelope,
+    ):
+        raise ValueError(f"joined variable envelope must be the sole parser {composed_identity!r} wrapper")
+    elif revision_id is None:
+        raise ValueError("joined variable envelope requires the exact selected revision")
 
 
 def design_view(joined_field: JoinedRecordDesignField) -> RecordDesignIntermediateField:
@@ -194,6 +217,7 @@ def design_view(joined_field: JoinedRecordDesignField) -> RecordDesignIntermedia
             "length": part.length,
             "aeat_type": part.aeat_type,
             "content": part.statement,
+            "semantic_part_offset": part.offset,
         },
     )
 
@@ -228,6 +252,7 @@ def join_record_design_semantics(
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> JoinedRecordDesign:
     """Join static parser/map evidence through a non-filing revision inspection."""
+    intermediate = project_record_design_for_revision(intermediate, inspection.revision_id)
     validated = _validate_semantic_map_with_admissions(
         semantic_map,
         intermediate,
@@ -278,19 +303,23 @@ def _join_record_design_semantics(
         projection_endpoints=projection_endpoints,
         variable_envelopes=intermediate.variable_envelopes,
         auxiliary_envelope_headers=intermediate.auxiliary_envelope_headers,
-        variable_envelope_contract=(
-            JoinedVariableEnvelope(
-                parser_envelope=next(
-                    envelope
-                    for envelope in intermediate.variable_envelopes
-                    if envelope.record_identity == semantic_map.variable_envelopes[0].record_identity
-                ),
-                semantic=semantic_map.variable_envelopes[0],
-            )
-            if semantic_map.variable_envelopes
-            else None
-        ),
+        variable_envelope_contract=_joined_variable_envelope_contract(intermediate, semantic_map),
     )
+
+
+def _joined_variable_envelope_contract(
+    intermediate: RecordDesignIntermediate,
+    semantic_map: SemanticMap,
+) -> JoinedVariableEnvelope | None:
+    if not semantic_map.variable_envelopes:
+        return None
+    parser_envelope = next(
+        envelope
+        for envelope in intermediate.variable_envelopes
+        if envelope.record_identity == semantic_map.variable_envelopes[0].record_identity
+    )
+    semantic_envelope = semantic_map.variable_envelopes[0]
+    return JoinedVariableEnvelope(parser_envelope=parser_envelope, semantic=semantic_envelope)
 
 
 def _require_semantic_entries(

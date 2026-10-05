@@ -73,7 +73,6 @@ from cadrumo.application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -97,6 +96,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

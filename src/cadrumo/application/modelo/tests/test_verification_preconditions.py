@@ -164,3 +164,38 @@ def test_application_result_requires_exact_ordered_finding_projection() -> None:
             published=True,
             finding_preconditions=tuple(reversed(projections)),
         )
+
+
+@pytest.mark.parametrize(
+    ("evidence_family", "scenario_code", "no_recovery_outcome"),
+    [
+        ("iva_selected_scope_evidence", "unresolved", NoRecoveryOutcome.OPERATOR_DECISION),
+        ("iva_selected_scope_evidence", "intra_eu_self_assessment_unrecordable", NoRecoveryOutcome.TERMINAL),
+        ("iva_selected_scope_evidence", "import_document_unrecordable", NoRecoveryOutcome.TERMINAL),
+        ("iva_selected_scope_evidence", "reagp_document_unrecordable", NoRecoveryOutcome.TERMINAL),
+        ("iva_selected_scope_evidence", "rectification_document_unrecordable", NoRecoveryOutcome.TERMINAL),
+        ("iva_compensation_annual_source_evidence", "unresolved", NoRecoveryOutcome.OPERATOR_DECISION),
+    ],
+)
+def test_held_back_source_evidence_failures_are_declared(
+    evidence_family: str,
+    scenario_code: str,
+    no_recovery_outcome: NoRecoveryOutcome,
+) -> None:
+    """A verify refusal for unresolved source evidence builds, rather than failing the command.
+
+    Undeclared, these identities raised inside verify and the CLI reported an
+    internal error in place of the blocking finding.
+    """
+    failure = build_verification_precondition_failure(
+        calculation_revision_id=_CALCULATION_REVISION_ID,
+        work_unit_id=_WORK_UNIT_ID,
+        condition_id=f"modelo.work.verify.{evidence_family}.complete",
+        scenario_id=f"modelo.work.verify.{evidence_family}.{scenario_code}",
+        evidence_id=f"modelo.work.verify.{evidence_family}",
+        evidence_values={"modelo": "303"},
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+
+    assert failure.verdict.action is None
+    assert failure.verdict.no_recovery_outcome is no_recovery_outcome

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:90df1ea9c16b7d3c6c690e2311aba80ef08e444c49108a03dbb0712f42e88b8d'
+modified: '2026-10-03'
+body_hash: 'sha256:e63f444926acc454eb9bc32af950ebfe759a45fb56c4ab541b26925461be7862'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The added test calls `inspect_bucket_storage_runtime()` with a blank bucket id a
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime.py` passed with 31 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/runtime.py src/aeat/adapters/persistence/storage/test_runtime.py` passed.
+- the historical check passed with 31 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Hygiene scans found no naked environment access, monkeypatch/fake/stub shortcuts, skips/xfails, silent pass/suppress, or ignore pragmas in the scoped S182 files.
 

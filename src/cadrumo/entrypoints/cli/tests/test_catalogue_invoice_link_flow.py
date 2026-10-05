@@ -37,7 +37,9 @@ from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....application.invoices.catalogue_add_operation import INVOICE_ADD_OPERATION_DEFINITION_ID
+from ....application.invoices.catalogue_add_contracts import (
+    INVOICE_ADD_OPERATION_DEFINITION_ID,
+)
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID
 from ....core.aggregation import IntracomOperationType

@@ -12,9 +12,11 @@ from threading import Lock
 from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from .containment_commands import ContainmentCommand, run_containment_command_sync
 from .linux_pidfd import open_linux_pidfd
-from .manager_commands import NativeManagerCommand, run_manager_command_sync
-from .posix import PosixRuntimeChannel, posix_owner_uid
+from .posix import posix_owner_uid
+from .posix_channel import PosixRuntimeChannel
+from .worker_arguments import validated_worker_arguments
 
 _PROPERTIES = {
     "ActiveState",
@@ -29,35 +31,6 @@ _PROPERTIES = {
     "TimeoutStopUSec",
     "Type",
 }
-
-_INSTALLED_WORKER_ARGUMENTS = ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
-
-
-def validated_linux_worker_arguments(
-    arguments: Sequence[str] | None = None, *, worker_script: Path | None = None
-) -> tuple[str, ...]:
-    """Build or verify argv for the host's explicitly selected isolated worker.
-
-    Script selection belongs to the trusted Python constructor. It is never
-    inferred from worker arguments, client documents or the environment.
-    """
-    prefix: tuple[str, ...] = _INSTALLED_WORKER_ARGUMENTS
-    if worker_script is not None:
-        if not worker_script.is_absolute():
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        try:
-            selected = worker_script.resolve(strict=True)
-            if not selected.is_file():
-                raise ValueError
-        except (OSError, ValueError):
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        prefix = ("-I", str(selected))
-    if arguments is None:
-        return prefix
-    command = tuple(arguments)
-    if command[: len(prefix)] != prefix or any("\0" in argument for argument in command):
-        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-    return command
 
 
 def linux_process_start_identity(pid: int) -> str:
@@ -77,8 +50,8 @@ def linux_process_start_identity(pid: int) -> str:
 
 
 def _unit_properties(unit: str) -> dict[str, str]:
-    result = run_manager_command_sync(
-        NativeManagerCommand.SYSTEMCTL,
+    result = run_containment_command_sync(
+        ContainmentCommand.SYSTEMCTL,
         ("--user", "--no-pager", "--no-ask-password", "show", unit, "--property=" + ",".join(sorted(_PROPERTIES))),
     )
     if result.returncode != 0:
@@ -95,8 +68,8 @@ def _unit_properties(unit: str) -> dict[str, str]:
 
 
 def _unit_absent(unit: str) -> bool:
-    result = run_manager_command_sync(
-        NativeManagerCommand.SYSTEMCTL,
+    result = run_containment_command_sync(
+        ContainmentCommand.SYSTEMCTL,
         (
             "--user",
             "--no-pager",
@@ -195,7 +168,7 @@ class LinuxProcessScope:
         """Reserve an unguessable unit identity without launching any child."""
         if sys.platform != "linux":
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        selected = validated_linux_worker_arguments(worker_script=worker_script)
+        selected = validated_worker_arguments(worker_script=worker_script)
         self._worker_script = Path(selected[1]) if worker_script is not None else None
         self._unit = f"cadrumo-worker-{worker_id.hex}.service"
         self._lock = Lock()
@@ -209,112 +182,23 @@ class LinuxProcessScope:
         self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
     ) -> LinuxOwnedProcess:
         """Register systemd containment before its first child executes code."""
-        if self._guardian is not None or not executable.is_absolute() or not directory.is_absolute():
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        arguments = validated_linux_worker_arguments(arguments, worker_script=self._worker_script)
-        if environment != {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        # Keep the venv interpreter path: resolving its symlink changes Python's
-        # pyvenv.cfg discovery and can launch without the installed package.
-        if not executable.is_file() or not os.access(executable, os.X_OK):
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        directory = directory.resolve(strict=True)
-        parent_pid = os.getpid()
-        start_identity = linux_process_start_identity(parent_pid)
-        # `env -i` gives the guardian and worker an explicit noncredential
-        # environment, independently of the user manager's inherited state.
-        clean = ("PATH=/usr/bin:/bin", "LANG=C", "LC_ALL=C", "PYDANTIC_DISABLE_PLUGINS=__all__")
-        script_selection = ("--worker-script", str(self._worker_script)) if self._worker_script is not None else ()
+        arguments, directory = _validated_launch_inputs(self, executable, arguments, directory, environment)
+        command = _guardian_launch_command(self, executable, arguments, directory, environment)
         # A lost manager acknowledgement may still have started this exact
         # unit. Retain the stop obligation before asking the manager.
         self._started = True
-        result = run_manager_command_sync(
-            NativeManagerCommand.SYSTEMD_RUN,
-            (
-                "--user",
-                "--no-pager",
-                "--no-ask-password",
-                "--no-block",
-                "--collect",
-                "--expand-environment=no",
-                "--service-type=exec",
-                f"--unit={self._unit}",
-                f"--working-directory={directory}",
-                "--property=KillMode=control-group",
-                "--property=ExitType=main",
-                "--property=SendSIGKILL=yes",
-                "--property=TimeoutStopSec=1s",
-                "--property=Restart=no",
-                "--property=StandardOutput=null",
-                "--property=StandardError=null",
-                "/usr/bin/env",
-                "-i",
-                *clean,
-                str(executable),
-                "-I",
-                "-m",
-                "cadrumo.entrypoints.runtime.linux_worker_guardian",
-                "--parent-pid",
-                str(parent_pid),
-                "--parent-start",
-                start_identity,
-                *script_selection,
-                "--",
-                *arguments,
-            ),
-        )
+        result = run_containment_command_sync(ContainmentCommand.SYSTEMD_RUN, command)
         if result.returncode != 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        deadline = time.monotonic() + 5
-        while True:
-            facts = _unit_properties(self._unit)
-            if (
-                facts["ActiveState"] == "active"
-                and facts["Type"] == "exec"
-                and facts["ExitType"] == "main"
-                and facts["KillMode"] == "control-group"
-                and facts["SendSIGKILL"] == "yes"
-                and facts["TimeoutStopUSec"] == "1s"
-                and facts["Restart"] == "no"
-                and facts["StandardOutput"] == "null"
-                and facts["StandardError"] == "null"
-                and facts["MainPID"].isdecimal()
-                and int(facts["MainPID"]) > 0
-                and facts["ControlGroup"].startswith("/")
-                and facts["ControlGroup"].endswith("/" + self._unit)
-            ):
-                pid = int(facts["MainPID"])
-                pidfd = open_linux_pidfd(pid)
-                try:
-                    if _pidfd_alive(pidfd) and _cgroup_for(pid) == facts["ControlGroup"]:
-                        self._cgroup = facts["ControlGroup"]
-                        self._guardian = LinuxOwnedProcess(pid=pid, pidfd=pidfd)
-                        return self._guardian
-                finally:
-                    if self._guardian is None:
-                        os.close(pidfd)
-            if time.monotonic() >= deadline:
-                raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-            time.sleep(0.05)
+        return _wait_for_guardian(self)
 
     def verify_worker(self, channel: PosixRuntimeChannel, *, owner_id: str) -> int:
         """Pin the socket peer and cgroup before worker identity or key release."""
-        pid = channel.peer.process_id
-        if self._guardian is None or not self._cgroup or not self._guardian.alive:
-            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        if pid is None or channel.peer.os_owner_id != owner_id or owner_id != str(posix_owner_uid()):
-            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        pid = _validated_worker_peer(self, channel, owner_id)
         with channel.capture_peer_pidfd() as pidfd:
-            if not _pidfd_alive(pidfd) or _cgroup_for(pid) != self._cgroup or pid == self._guardian.pid:
+            if not _worker_pidfd_matches_cgroup(self, pidfd, pid):
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-            held = os.dup(pidfd)
-            with self._lock:
-                if self._worker_pid and self._worker_pid != pid:
-                    os.close(held)
-                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-                if self._worker_pidfd >= 0:
-                    os.close(self._worker_pidfd)
-                self._worker_pid, self._worker_pidfd = pid, held
+            _retain_worker_pidfd(self, pidfd, pid)
         return pid
 
     def owns_process(self, pid: int) -> bool:
@@ -342,29 +226,191 @@ class LinuxProcessScope:
         """Stop the verified unit and observe worker/guardian death, retaining failure."""
         if not self._started:
             return
-        response = run_manager_command_sync(
-            NativeManagerCommand.SYSTEMCTL,
+        response = run_containment_command_sync(
+            ContainmentCommand.SYSTEMCTL,
             ("--user", "--no-pager", "--no-ask-password", "stop", self._unit),
         )
-        if response.returncode != 0 and not (
-            _unit_absent(self._unit)
-            and (self._guardian is None or not self._guardian.alive)
-            and (self._worker_pidfd < 0 or not _pidfd_alive(self._worker_pidfd))
-        ):
+        if response.returncode != 0 and not _failed_stop_is_settled(self):
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            guardian_dead = self._guardian is None or not self._guardian.alive
-            worker_dead = self._worker_pidfd < 0 or not _pidfd_alive(self._worker_pidfd)
-            if worker_dead and guardian_dead and (not self._cgroup or _cgroup_empty(self._cgroup)):
-                if self._worker_pidfd >= 0:
-                    os.close(self._worker_pidfd)
-                    self._worker_pidfd = -1
-                self._worker_pid = 0
-                if self._guardian is not None:
-                    self._guardian.close()
-                    self._guardian = None
-                self._started = False
-                return
-            time.sleep(0.01)
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        _wait_for_unit_settlement(self, timeout)
+
+
+def _validated_launch_inputs(
+    scope: LinuxProcessScope,
+    executable: Path,
+    arguments: Sequence[str],
+    directory: Path,
+    environment: Mapping[str, str],
+) -> tuple[tuple[str, ...], Path]:
+    if scope._guardian is not None or not executable.is_absolute() or not directory.is_absolute():
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    selected_arguments = validated_worker_arguments(arguments, worker_script=scope._worker_script)
+    from ...core.config import Settings
+
+    baseline = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
+    allowed_storage = Settings.storage_env_var_names() | {"TEMP", "TMP", "TMPDIR"}
+    extras = set(environment) - set(baseline)
+    if any(environment.get(name) != value for name, value in baseline.items()) or not extras <= allowed_storage:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    # Keep the venv interpreter path: resolving its symlink changes Python's
+    # pyvenv.cfg discovery and can launch without the installed package.
+    if not executable.is_file() or not os.access(executable, os.X_OK):
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    return selected_arguments, directory.resolve(strict=True)
+
+
+def _guardian_launch_command(
+    scope: LinuxProcessScope,
+    executable: Path,
+    arguments: tuple[str, ...],
+    directory: Path,
+    environment: Mapping[str, str],
+) -> tuple[str, ...]:
+    parent_pid = os.getpid()
+    start_identity = linux_process_start_identity(parent_pid)
+    # `env -i` gives the guardian and worker an explicit noncredential
+    # environment, independently of the user manager's inherited state.
+    clean = tuple(f"{name}={value}" for name, value in sorted(environment.items()))
+    script_selection = ("--worker-script", str(scope._worker_script)) if scope._worker_script is not None else ()
+    return (
+        "--user",
+        "--no-pager",
+        "--no-ask-password",
+        "--no-block",
+        "--collect",
+        "--expand-environment=no",
+        "--service-type=exec",
+        f"--unit={scope._unit}",
+        f"--working-directory={directory}",
+        "--property=KillMode=control-group",
+        "--property=ExitType=main",
+        "--property=SendSIGKILL=yes",
+        "--property=TimeoutStopSec=1s",
+        "--property=Restart=no",
+        "--property=StandardOutput=null",
+        "--property=StandardError=null",
+        "/usr/bin/env",
+        "-i",
+        *clean,
+        str(executable),
+        "-I",
+        "-m",
+        "cadrumo.entrypoints.runtime.linux_worker_guardian",
+        "--parent-pid",
+        str(parent_pid),
+        "--parent-start",
+        start_identity,
+        *script_selection,
+        "--",
+        *arguments,
+    )
+
+
+def _wait_for_guardian(scope: LinuxProcessScope) -> LinuxOwnedProcess:
+    deadline = time.monotonic() + 5
+    while True:
+        facts = _unit_properties(scope._unit)
+        if _valid_guardian_service(facts) and _valid_guardian_identity(facts, scope._unit):
+            guardian = _retain_guardian(scope, facts)
+            if guardian is not None:
+                return guardian
+        if time.monotonic() >= deadline:
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+        time.sleep(0.05)
+
+
+def _valid_guardian_service(facts: Mapping[str, str]) -> bool:
+    return (
+        facts["ActiveState"] == "active"
+        and facts["Type"] == "exec"
+        and facts["ExitType"] == "main"
+        and facts["KillMode"] == "control-group"
+        and facts["SendSIGKILL"] == "yes"
+        and facts["TimeoutStopUSec"] == "1s"
+        and facts["Restart"] == "no"
+        and facts["StandardOutput"] == "null"
+        and facts["StandardError"] == "null"
+    )
+
+
+def _valid_guardian_identity(facts: Mapping[str, str], unit: str) -> bool:
+    return (
+        facts["MainPID"].isdecimal()
+        and int(facts["MainPID"]) > 0
+        and facts["ControlGroup"].startswith("/")
+        and facts["ControlGroup"].endswith("/" + unit)
+    )
+
+
+def _retain_guardian(scope: LinuxProcessScope, facts: Mapping[str, str]) -> LinuxOwnedProcess | None:
+    pid = int(facts["MainPID"])
+    pidfd = open_linux_pidfd(pid)
+    try:
+        if _pidfd_alive(pidfd) and _cgroup_for(pid) == facts["ControlGroup"]:
+            scope._cgroup = facts["ControlGroup"]
+            scope._guardian = LinuxOwnedProcess(pid=pid, pidfd=pidfd)
+            return scope._guardian
+    finally:
+        if scope._guardian is None:
+            os.close(pidfd)
+    return None
+
+
+def _validated_worker_peer(scope: LinuxProcessScope, channel: PosixRuntimeChannel, owner_id: str) -> int:
+    pid = channel.peer.process_id
+    if scope._guardian is None or not scope._cgroup or not scope._guardian.alive:
+        raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+    if pid is None or channel.peer.os_owner_id != owner_id or owner_id != str(posix_owner_uid()):
+        raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+    return pid
+
+
+def _worker_pidfd_matches_cgroup(scope: LinuxProcessScope, pidfd: int, pid: int) -> bool:
+    guardian = scope._guardian
+    return guardian is not None and _pidfd_alive(pidfd) and _cgroup_for(pid) == scope._cgroup and pid != guardian.pid
+
+
+def _retain_worker_pidfd(scope: LinuxProcessScope, pidfd: int, pid: int) -> None:
+    held = os.dup(pidfd)
+    with scope._lock:
+        if scope._worker_pid and scope._worker_pid != pid:
+            os.close(held)
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+        if scope._worker_pidfd >= 0:
+            os.close(scope._worker_pidfd)
+        scope._worker_pid, scope._worker_pidfd = pid, held
+
+
+def _failed_stop_is_settled(scope: LinuxProcessScope) -> bool:
+    return (
+        _unit_absent(scope._unit)
+        and (scope._guardian is None or not scope._guardian.alive)
+        and (scope._worker_pidfd < 0 or not _pidfd_alive(scope._worker_pidfd))
+    )
+
+
+def _wait_for_unit_settlement(scope: LinuxProcessScope, timeout: float) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if _unit_is_settled(scope):
+            _release_worker_authority(scope)
+            return
+        time.sleep(0.01)
+    raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+
+
+def _unit_is_settled(scope: LinuxProcessScope) -> bool:
+    guardian_dead = scope._guardian is None or not scope._guardian.alive
+    worker_dead = scope._worker_pidfd < 0 or not _pidfd_alive(scope._worker_pidfd)
+    return worker_dead and guardian_dead and (not scope._cgroup or _cgroup_empty(scope._cgroup))
+
+
+def _release_worker_authority(scope: LinuxProcessScope) -> None:
+    if scope._worker_pidfd >= 0:
+        os.close(scope._worker_pidfd)
+        scope._worker_pidfd = -1
+    scope._worker_pid = 0
+    if scope._guardian is not None:
+        scope._guardian.close()
+        scope._guardian = None
+    scope._started = False

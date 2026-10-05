@@ -16,13 +16,10 @@ from cadrumo.domain.calculations.registry.bindings_previous_filing import (
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
 )
-from cadrumo.domain.calculations.registry.relations import (
-    RegistryFoldRequirement,
-    relation_source_requirements,
-    resolve_relation_values_from_observations,
-)
+from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement, relation_source_requirements
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from cadrumo.domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 
 from ._formula_runtime_support import (
     _M100_PAGOS_FRACCIONADOS_CASILLA,

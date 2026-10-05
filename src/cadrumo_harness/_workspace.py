@@ -437,88 +437,145 @@ def _extract_runtime_wheelhouse(
         )
     with zipfile.ZipFile(cohort.runtime_wheelhouse) as archive:
         names = archive.namelist()
-        if names.count(_RUNTIME_WHEELHOUSE_MANIFEST) != 1 or len(names) != len(set(names)):
-            raise ValueError("runtime wheelhouse has a missing or duplicate member")
-        document = _string_keyed_object(
-            json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST), object_pairs_hook=_json_object)
-        )
-        if document is None:
-            raise ValueError("runtime wheelhouse manifest must be an object with string keys")
-        if not isinstance(document, dict) or set(document) != {"lock_sha256", "platform_floors", "runtimes", "schema"}:
-            raise ValueError("runtime wheelhouse manifest schema drifted")
-        if document != dict(cohort.runtime_wheelhouse_manifest):
-            raise ValueError("runtime wheelhouse manifest drifted from the validated cohort")
-        if document.get("schema") != _RUNTIME_WHEELHOUSE_SCHEMA:
-            raise ValueError("runtime wheelhouse identity drifted")
-        if document.get("platform_floors") != _RUNTIME_WHEELHOUSE_FLOORS:
-            raise ValueError("runtime wheelhouse platform support floor drifted")
-        runtimes = _string_keyed_object(document.get("runtimes"))
-        if not runtimes:
-            raise ValueError("runtime wheelhouse declares no runtimes")
+        _validate_runtime_wheelhouse_members(names)
+        document = _read_runtime_wheelhouse_manifest(archive, cohort)
+        runtimes = _runtime_wheelhouse_runtimes(document)
         expected_members = {_RUNTIME_WHEELHOUSE_MANIFEST}
         destination.mkdir(parents=True)
         ready_runtime = False
         for python_version, runtime_value in sorted(runtimes.items()):
-            runtime = _string_keyed_object(runtime_value)
-            if (
-                not isinstance(python_version, str)
-                or re.fullmatch(r"3\.[0-9]+", python_version) is None
-                or runtime is None
-                or runtime.get("python") != python_version
-            ):
-                raise ValueError(f"runtime wheelhouse runtime declaration is invalid: {python_version!r}")
-            status = runtime.get("status")
-            if status == "missing-wheel":
-                if set(runtime) != {"missing", "python", "status"}:
-                    raise ValueError(f"runtime wheelhouse missing-wheel record drifted: {python_version!r}")
-                continue
-            if status != "ready" or set(runtime) != {"platforms", "python", "status", "wheels"}:
-                raise ValueError(f"runtime wheelhouse runtime status is invalid: {python_version!r}")
-            ready_runtime = True
-            platforms = _string_keyed_object(runtime.get("platforms"))
-            wheels = _string_keyed_object(runtime.get("wheels"))
-            if platforms is None or frozenset(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
-                raise ValueError(f"runtime wheelhouse platform closure is incomplete: {python_version!r}")
-            if not wheels:
-                raise ValueError(f"runtime wheelhouse declares no wheels: {python_version!r}")
-            for filename, record in sorted(wheels.items()):
-                record_object = _string_keyed_object(record)
-                if (
-                    not isinstance(filename, str)
-                    or PurePosixPath(filename).name != filename
-                    or not filename.endswith(".whl")
-                    or record_object is None
-                    or set(record_object) != {"distribution", "sha256", "size", "version"}
-                ):
-                    raise ValueError(f"runtime wheelhouse record is invalid: {filename!r}")
-                member = f"{_RUNTIME_WHEELHOUSE_PREFIX}{python_version}/{filename}"
-                expected_members.add(member)
-                payload = archive.read(member)
-                if len(payload) != record_object.get("size") or sha256_hex(payload) != record_object.get("sha256"):
-                    raise ValueError(f"runtime wheelhouse wheel bytes drifted: {python_version}/{filename!r}")
-                destination_path = destination / filename
-                if destination_path.exists() and destination_path.read_bytes() != payload:
-                    raise ValueError(f"runtime wheelhouse runtime variants disagree: {filename!r}")
-                destination_path.write_bytes(payload)
-            for target, rows_value in platforms.items():
-                rows = _string_keyed_object(rows_value)
-                if not rows:
-                    raise ValueError(f"runtime wheelhouse target closure is empty: {python_version}/{target!r}")
-                for distribution, filename in rows.items():
-                    record = _string_keyed_object(wheels.get(filename)) if isinstance(filename, str) else None
-                    if not isinstance(distribution, str) or record is None:
-                        raise ValueError(
-                            f"runtime wheelhouse target references an unknown wheel: {python_version}/{target!r}"
-                        )
-                    if record.get("distribution") != distribution:
-                        raise ValueError(
-                            f"runtime wheelhouse target swaps distribution bytes: {python_version}/{target!r}"
-                        )
+            ready_runtime = (
+                _extract_runtime_wheelhouse_runtime(
+                    archive, destination, expected_members, python_version, runtime_value
+                )
+                or ready_runtime
+            )
         if not ready_runtime:
             raise ValueError("runtime wheelhouse has no ready runtime closure")
         if set(names) != expected_members:
             raise ValueError("runtime wheelhouse member inventory drifted")
     return {str(key): value for key, value in document.items()}
+
+
+def _validate_runtime_wheelhouse_members(names: list[str]) -> None:
+    if names.count(_RUNTIME_WHEELHOUSE_MANIFEST) != 1 or len(names) != len(set(names)):
+        raise ValueError("runtime wheelhouse has a missing or duplicate member")
+
+
+def _read_runtime_wheelhouse_manifest(archive: zipfile.ZipFile, cohort: _PluginPythonCohort) -> dict[str, object]:
+    document = _string_keyed_object(
+        json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST), object_pairs_hook=_json_object)
+    )
+    if document is None:
+        raise ValueError("runtime wheelhouse manifest must be an object with string keys")
+    if set(document) != {"lock_sha256", "platform_floors", "runtimes", "schema"}:
+        raise ValueError("runtime wheelhouse manifest schema drifted")
+    if document != dict(cohort.runtime_wheelhouse_manifest):
+        raise ValueError("runtime wheelhouse manifest drifted from the validated cohort")
+    if document.get("schema") != _RUNTIME_WHEELHOUSE_SCHEMA:
+        raise ValueError("runtime wheelhouse identity drifted")
+    if document.get("platform_floors") != _RUNTIME_WHEELHOUSE_FLOORS:
+        raise ValueError("runtime wheelhouse platform support floor drifted")
+    return document
+
+
+def _runtime_wheelhouse_runtimes(document: Mapping[str, object]) -> dict[str, object]:
+    runtimes = _string_keyed_object(document.get("runtimes"))
+    if not runtimes:
+        raise ValueError("runtime wheelhouse declares no runtimes")
+    return runtimes
+
+
+def _extract_runtime_wheelhouse_runtime(
+    archive: zipfile.ZipFile,
+    destination: Path,
+    expected_members: set[str],
+    python_version: object,
+    runtime_value: object,
+) -> bool:
+    runtime = _validated_runtime_declaration(python_version, runtime_value)
+    status = runtime["status"]
+    if status == "missing-wheel":
+        if set(runtime) != {"missing", "python", "status"}:
+            raise ValueError(f"runtime wheelhouse missing-wheel record drifted: {python_version!r}")
+        return False
+    if status != "ready" or set(runtime) != {"platforms", "python", "status", "wheels"}:
+        raise ValueError(f"runtime wheelhouse runtime status is invalid: {python_version!r}")
+    platforms = _string_keyed_object(runtime.get("platforms"))
+    wheels = _string_keyed_object(runtime.get("wheels"))
+    if platforms is None or frozenset(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
+        raise ValueError(f"runtime wheelhouse platform closure is incomplete: {python_version!r}")
+    if not wheels:
+        raise ValueError(f"runtime wheelhouse declares no wheels: {python_version!r}")
+    _extract_runtime_wheelhouse_wheels(archive, destination, expected_members, python_version, wheels)
+    _validate_runtime_platform_closures(platforms, wheels, python_version)
+    return True
+
+
+def _validated_runtime_declaration(python_version: object, runtime_value: object) -> dict[str, object]:
+    runtime = _string_keyed_object(runtime_value)
+    if (
+        not isinstance(python_version, str)
+        or re.fullmatch(r"3\.[0-9]+", python_version) is None
+        or runtime is None
+        or runtime.get("python") != python_version
+    ):
+        raise ValueError(f"runtime wheelhouse runtime declaration is invalid: {python_version!r}")
+    return runtime
+
+
+def _extract_runtime_wheelhouse_wheels(
+    archive: zipfile.ZipFile,
+    destination: Path,
+    expected_members: set[str],
+    python_version: object,
+    wheels: Mapping[str, object],
+) -> None:
+    for filename, record in sorted(wheels.items()):
+        record_object = _validated_runtime_wheel_record(filename, record)
+        member = f"{_RUNTIME_WHEELHOUSE_PREFIX}{python_version}/{filename}"
+        expected_members.add(member)
+        payload = archive.read(member)
+        if len(payload) != record_object.get("size") or sha256_hex(payload) != record_object.get("sha256"):
+            raise ValueError(f"runtime wheelhouse wheel bytes drifted: {python_version}/{filename!r}")
+        destination_path = destination / filename
+        if destination_path.exists() and destination_path.read_bytes() != payload:
+            raise ValueError(f"runtime wheelhouse runtime variants disagree: {filename!r}")
+        destination_path.write_bytes(payload)
+
+
+def _validated_runtime_wheel_record(filename: object, record: object) -> dict[str, object]:
+    record_object = _string_keyed_object(record)
+    if (
+        not isinstance(filename, str)
+        or PurePosixPath(filename).name != filename
+        or not filename.endswith(".whl")
+        or record_object is None
+        or set(record_object) != {"distribution", "sha256", "size", "version"}
+    ):
+        raise ValueError(f"runtime wheelhouse record is invalid: {filename!r}")
+    return record_object
+
+
+def _validate_runtime_platform_closures(
+    platforms: Mapping[str, object], wheels: Mapping[str, object], python_version: object
+) -> None:
+    for target, rows_value in platforms.items():
+        rows = _string_keyed_object(rows_value)
+        if not rows:
+            raise ValueError(f"runtime wheelhouse target closure is empty: {python_version}/{target!r}")
+        _validate_runtime_target_rows(rows, wheels, python_version, target)
+
+
+def _validate_runtime_target_rows(
+    rows: Mapping[str, object], wheels: Mapping[str, object], python_version: object, target: str
+) -> None:
+    for distribution, filename in rows.items():
+        record = _string_keyed_object(wheels.get(filename)) if isinstance(filename, str) else None
+        if not isinstance(distribution, str) or record is None:
+            raise ValueError(f"runtime wheelhouse target references an unknown wheel: {python_version}/{target!r}")
+        if record.get("distribution") != distribution:
+            raise ValueError(f"runtime wheelhouse target swaps distribution bytes: {python_version}/{target!r}")
 
 
 def _verify_and_copy_cohort_wheels(cohort: _PluginPythonCohort, artifact_dir: Path) -> dict[str, str]:

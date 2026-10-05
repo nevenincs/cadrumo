@@ -1,0 +1,630 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "720"
+design_epoch = "2013"
+source_ref = "aeat-dr-720"
+source_sha256 = "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-720-type-1"
+record_type = "type_1"
+binding_record = "type_1"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+export_record_id = "modelo-720-type-2"
+record_type = "type_2"
+binding_record = "type_2"
+repeat = "binding_rows"
+
+[[entries]]
+kind = "literal"
+literal = "1"
+export_field_id = "modelo-720-type_1-tipo-de-registro"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 77
+ordinal = "1"
+
+[[entries]]
+kind = "literal"
+literal = "720"
+export_field_id = "modelo-720-type_1-modelo-declaracion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 79
+ordinal = "2"
+
+[[entries]]
+kind = "draft"
+draft_attribute = "filing_year"
+export_field_id = "modelo-720-type_1-ejercicio"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 81
+ordinal = "3"
+
+[[entries]]
+kind = "header"
+producer_key = "taxpayer.tax_id"
+export_field_id = "modelo-720-type_1-n-i-f-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 84
+ordinal = "4"
+
+[[entries]]
+kind = "header"
+producer_key = "taxpayer.full_name"
+export_field_id = "modelo-720-type_1-apellidos-y-nombre-o-razon-social-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 95
+ordinal = "5"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.tipo-de-soporte"
+export_field_id = "modelo-720-type_1-tipo-de-soporte"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 105
+ordinal = "6"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.telefono-contacto"
+export_field_id = "modelo-720-type_1-telefono-contacto"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 113
+ordinal_absent = true
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.nombre-contacto"
+export_field_id = "modelo-720-type_1-nombre-contacto"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 114
+ordinal_absent = true
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.numero-identificativo-de-la-declaracion"
+export_field_id = "modelo-720-type_1-numero-identificativo-de-la-declaracion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 118
+ordinal = "8"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.declaracion-complementaria-o-sustitutiva"
+export_field_id = "modelo-720-type_1-declaracion-complementaria-o-sustitutiva"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 125
+ordinal = "9"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.numero-identificativo-de-la-declaracion-anterior"
+export_field_id = "modelo-720-type_1-numero-identificativo-de-la-declaracion-anterior"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 148
+ordinal = "10"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.numero-total-de-registros-declarados"
+export_field_id = "modelo-720-type_1-numero-total-de-registros-declarados"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 158
+ordinal = "11"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s"
+export_field_id = "modelo-720-type_1-suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 161
+ordinal = "12"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_1.suma-total-de-valoracion-2-importe-o-valor-de-la-transmision"
+export_field_id = "modelo-720-type_1-suma-total-de-valoracion-2-importe-o-valor-de-la-transmision"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 196
+ordinal = "13"
+
+[[entries]]
+kind = "filler"
+export_field_id = "modelo-720-type-1-reserved-tail"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 228
+ordinal = "14"
+
+[[entries]]
+kind = "literal"
+literal = "2"
+export_field_id = "modelo-720-type_2-tipo-de-registro"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 313
+ordinal = "1"
+
+[[entries]]
+kind = "literal"
+literal = "720"
+export_field_id = "modelo-720-type_2-modelo-declaracion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 315
+ordinal = "2"
+
+[[entries]]
+kind = "draft"
+draft_attribute = "filing_year"
+export_field_id = "modelo-720-type_2-ejercicio"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 317
+ordinal = "3"
+
+[[entries]]
+kind = "header"
+producer_key = "taxpayer.tax_id"
+export_field_id = "modelo-720-type_2-n-i-f-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 320
+ordinal = "4"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.n-i-f-del-declarado"
+export_field_id = "modelo-720-type_2-n-i-f-del-declarado"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 323
+ordinal = "5"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.n-i-f-del-representante-legal"
+export_field_id = "modelo-720-type_2-n-i-f-del-representante-legal"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 326
+ordinal = "6"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.apellidos-y-nombre-razon-social-o-denominacion-del-declarado"
+export_field_id = "modelo-720-type_2-apellidos-y-nombre-razon-social-o-denominacion-del-declarado"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 340
+ordinal = "7"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.clave-de-condicion-del-declarante"
+export_field_id = "modelo-720-type_2-clave-de-condicion-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 355
+ordinal = "8"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.tipo-de-titularidad-sobre-el-bien-o-derecho"
+export_field_id = "modelo-720-type_2-tipo-de-titularidad-sobre-el-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 369
+ordinal = "9"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.clave-tipo-de-bien-o-derecho"
+export_field_id = "modelo-720-type_2-clave-tipo-de-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 373
+ordinal = "10"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.subclave-de-bien-o-derecho"
+export_field_id = "modelo-720-type_2-subclave-de-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 403
+ordinal = "11"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.tipo-de-derecho-real-sobre-inmueble"
+export_field_id = "modelo-720-type_2-tipo-de-derecho-real-sobre-inmueble"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 454
+ordinal = "12"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.codigo-de-pais"
+export_field_id = "modelo-720-type_2-codigo-de-pais"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 461
+ordinal = "13"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.clave-de-identificacion"
+export_field_id = "modelo-720-type_2-clave-de-identificacion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 488
+ordinal = "14"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.identificacion-de-valores"
+export_field_id = "modelo-720-type_2-identificacion-de-valores"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 498
+ordinal = "15"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.clave-identificacion-de-cuenta"
+export_field_id = "modelo-720-type_2-clave-identificacion-de-cuenta"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 526
+ordinal = "16"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.codigo-bic"
+export_field_id = "modelo-720-type_2-codigo-bic"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 534
+ordinal = "17"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.codigo-de-cuenta"
+export_field_id = "modelo-720-type_2-codigo-de-cuenta"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 537
+ordinal = "18"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.identificacion-de-la-entidad"
+export_field_id = "modelo-720-type_2-identificacion-de-la-entidad"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 544
+ordinal = "19"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.numero-de-identificacion-fiscal-en-el-pais-de-residencia-fis"
+export_field_id = "modelo-720-type_2-numero-de-identificacion-fiscal-en-el-pais-de-residencia-fis"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 565
+ordinal = "20"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.domicilio-de-la-entidad-o-ubicacion-del-inmueble"
+export_field_id = "modelo-720-type_2-domicilio-de-la-entidad-o-ubicacion-del-inmueble"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 572
+ordinal = "21"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.fecha-de-incorporacion"
+export_field_id = "modelo-720-type_2-fecha-de-incorporacion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 620
+ordinal = "22"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.origen-del-bien-o-derecho"
+export_field_id = "modelo-720-type_2-origen-del-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 658
+ordinal = "23"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.fecha-de-extincion"
+export_field_id = "modelo-720-type_2-fecha-de-extincion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 694
+ordinal = "24"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e"
+export_field_id = "modelo-720-type_2-valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 720
+ordinal = "25"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u"
+export_field_id = "modelo-720-type_2-valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 785
+ordinal = "26"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.clave-de-representacion-de-valores"
+export_field_id = "modelo-720-type_2-clave-de-representacion-de-valores"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 817
+ordinal = "27"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.numero-de-valores"
+export_field_id = "modelo-720-type_2-numero-de-valores-integer-part"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 837
+ordinal_absent = true
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.numero-de-valores"
+export_field_id = "modelo-720-type_2-numero-de-valores-fractional-digits"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 838
+ordinal_absent = true
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.clave-tipo-de-bien-inmueble"
+export_field_id = "modelo-720-type_2-clave-tipo-de-bien-inmueble"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 840
+ordinal = "29"
+
+[[entries]]
+kind = "binding"
+binding = "modelo-720.type_2.porcentaje-de-participacion"
+export_field_id = "modelo-720-type_2-porcentaje-de-participacion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 848
+ordinal = "30"
+
+[[entries]]
+kind = "filler"
+export_field_id = "modelo-720-type-2-reserved-tail"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+record_identity = "Tipo 2 - Registro De Detalle"
+source_row = 866
+ordinal = "31"

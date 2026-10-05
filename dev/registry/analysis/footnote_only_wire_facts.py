@@ -368,6 +368,62 @@ def classify_pointer(
     return "pointer_resolves_vocabulary_miss", f"{resolved} note(s) resolved, still to be read"
 
 
+def _pointer_finding_for_field(
+    field: RecordDesignIntermediateField,
+    *,
+    modelo: str,
+    revision: str,
+    source: RecordDesignIntermediateSource,
+    by_sheet: dict[str, dict[str, str]],
+    adjudications: tuple[NoteGovernedAmountDeclaration, ...],
+    readings: tuple[NoteStatedApplicabilityDeclaration, ...],
+) -> PointerWireFactFinding | None:
+    content = field.content
+    if field.source_cell is None or content is None or not content.strip():
+        return None
+    # Resolved against the field's OWN sheet. A design numbers each page's
+    # notes from one, so a design-wide lookup hands back another page's note.
+    resolved = resolve_pointer_notes(content, by_sheet.get(field.sheet, {}))
+    if not resolved:
+        return None
+    applicability = cell_applicability_reading(readings, sheet=field.sheet, content=content)
+    # Two ways a pointer-only cell belongs in this census, and both are asked
+    # through the routed predicate. Either the correction would newly admit
+    # the field - an unread pointer, outstanding work - or the field is
+    # ALREADY admitted because its note was read and declared to state no
+    # wire fact. The second is why the reported set is not simply the first:
+    # once such a declaration lands the field stops being newly admissible,
+    # and reporting only newly-admissible fields would drop the row silently
+    # at the moment it became covered. This screen keeps covered rows and
+    # reclassifies them, so its census can be reconciled against its rows.
+    covered = applicability is not None and field_is_render_profile_eligible(field, source)
+    if not (covered or would_become_eligible(field, source)):
+        return None
+    # Asked through the module that owns the reading aid rather than by
+    # keeping a second copy of its vocabulary here.
+    evidence = PointerEvidence(cell=content, pointer=content.strip(), notes=resolved)
+    kind, detail = classify_pointer(
+        evidence,
+        resolved=len(resolved),
+        adjudication=cell_adjudication(adjudications, sheet=field.sheet, content=content),
+        applicability=applicability,
+    )
+    return PointerWireFactFinding(
+        modelo=modelo,
+        revision=revision,
+        record=field.record_identity,
+        cell=f"{field.sheet}!{field.source_cell}",
+        offset=field.offset,
+        length=field.length,
+        aeat_type=field.aeat_type.strip(),
+        description=field.normalized_description,
+        kind=kind,
+        pointer=content.strip(),
+        notes=tuple(item.note for item in resolved),
+        detail=detail,
+    )
+
+
 def revision_findings(
     authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
 ) -> tuple[PointerWireFactFinding, ...]:
@@ -383,53 +439,17 @@ def revision_findings(
 
     findings: list[PointerWireFactFinding] = []
     for joined_field in inputs.joined.fields:
-        field = joined_field.parser_field
-        content = field.content
-        if field.source_cell is None or content is None or not content.strip():
-            continue
-        # Resolved against the field's OWN sheet. A design numbers each page's
-        # notes from one, so a design-wide lookup hands back another page's note.
-        resolved = resolve_pointer_notes(content, by_sheet.get(field.sheet, {}))
-        if not resolved:
-            continue
-        applicability = cell_applicability_reading(readings, sheet=field.sheet, content=content)
-        # Two ways a pointer-only cell belongs in this census, and both are asked
-        # through the routed predicate. Either the correction would newly admit
-        # the field - an unread pointer, outstanding work - or the field is
-        # ALREADY admitted because its note was read and declared to state no
-        # wire fact. The second is why the reported set is not simply the first:
-        # once such a declaration lands the field stops being newly admissible,
-        # and reporting only newly-admissible fields would drop the row silently
-        # at the moment it became covered. This screen keeps covered rows and
-        # reclassifies them, so its census can be reconciled against its rows.
-        covered = applicability is not None and field_is_render_profile_eligible(field, source)
-        if not (covered or would_become_eligible(field, source)):
-            continue
-        # Asked through the module that owns the reading aid rather than by
-        # keeping a second copy of its vocabulary here.
-        evidence = PointerEvidence(cell=content, pointer=content.strip(), notes=resolved)
-        kind, detail = classify_pointer(
-            evidence,
-            resolved=len(resolved),
-            adjudication=cell_adjudication(adjudications, sheet=field.sheet, content=content),
-            applicability=applicability,
+        finding = _pointer_finding_for_field(
+            joined_field.parser_field,
+            modelo=modelo,
+            revision=revision,
+            source=source,
+            by_sheet=by_sheet,
+            adjudications=adjudications,
+            readings=readings,
         )
-        findings.append(
-            PointerWireFactFinding(
-                modelo=modelo,
-                revision=revision,
-                record=field.record_identity,
-                cell=f"{field.sheet}!{field.source_cell}",
-                offset=field.offset,
-                length=field.length,
-                aeat_type=field.aeat_type.strip(),
-                description=field.normalized_description,
-                kind=kind,
-                pointer=content.strip(),
-                notes=tuple(item.note for item in resolved),
-                detail=detail,
-            )
-        )
+        if finding is not None:
+            findings.append(finding)
     return tuple(findings)
 
 

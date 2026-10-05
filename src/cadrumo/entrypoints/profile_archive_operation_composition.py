@@ -57,7 +57,7 @@ def build_profile_archive_operation_ports(
         record = ProfileRecordStore(session=session).load().record
         if not resolve_capability(ServiceCapability.GOOGLE_EXPORT, profile_record=record, settings=settings).enabled:
             raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
-        root_folder_id = resolve_required_drive_root_folder_id(profile=str(profile_id), settings=settings)
+        root_folder_id = resolve_required_drive_root_folder_id(profile=str(profile_id))
 
         def provider_factory() -> StorageProvider:
             require_profile()

@@ -23,10 +23,7 @@ from ...application.ledger.actions_manual import (
     prepare_manual_transaction_update,
 )
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from ...application.ledger.rule_operation import (
-    LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
+from ...application.ledger.rule_contracts import (
     LedgerRuleAddProjection,
     LedgerRuleAddRequest,
     LedgerRuleApplyAppliedProjection,
@@ -36,6 +33,11 @@ from ...application.ledger.rule_operation import (
     LedgerRuleListProjection,
     LedgerRuleListRequest,
     LedgerRuleRowProjection,
+)
+from ...application.ledger.rule_operation import (
+    LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
+    LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
+    LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
 )
 from ...core.decimal.formatting import format_decimal
 from ...core.operations import OperationEffect

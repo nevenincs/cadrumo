@@ -11,14 +11,16 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
-from cadrumo.application.actividad_asset.registered_operations import (
+from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
-    ActivityAssetInspectionRevision,
-    ActivityAssetInspectProjection,
     ActivityAssetInspectRequest,
     ActivityAssetOperationPortsFactory,
+)
+from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetInspectProjection
+from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
+from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
+from cadrumo.application.actividad_asset.registered_operations import (
     build_activity_asset_inspect_definition,
     build_activity_asset_inspect_registration,
 )
@@ -219,7 +221,7 @@ def _install_runtime(
     expire_after_result: bool = False,
     effect: OperationEffect = OperationEffect.NONE,
 ) -> tuple[list[dict[str, object]], _Controller]:
-    from cadrumo.entrypoints.tui.ledger import runtime_actividad_asset as bridge
+    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
 
     status_checks: list[tuple[UUID, UUID]] = []
 

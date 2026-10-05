@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, JsonValue, RootModel
+from pydantic import BaseModel, Field, JsonValue, RootModel, model_validator
 
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -24,7 +24,7 @@ from ..user_profile.automation_custody_port import AutomationCustodyCode
 from ..user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
 from .operation_access import OperationManagementRequest
 from .projection_pages import ProjectionPage, ProjectionPageRequest
-from .submission_payload import SubmissionPayloadChunk, SubmissionPayloadDescriptor
+from .submission_payload import FinancialOperandInputDescriptor, SubmissionPayloadChunk, SubmissionPayloadDescriptor
 from .worker_authorization import WorkerAuthorityRequest
 
 
@@ -76,11 +76,23 @@ class ProfileWorkerSettlementRequest(BaseModel):
 
 
 class ProfileWorkerControlRequest(BaseModel):
-    """Internal lifecycle control or a request for a following protected proof frame."""
+    """Internal lifecycle control or a request for a following protected proof frame.
+
+    A ``receipt`` request carries the originating OS login the runtime
+    captured for the connection presenting the proof; the worker refuses the
+    receipt unless it names that login. Other actions carry none.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     action: Literal["status", "stop", "password", "receipt", "cancel_human", "prepare_api"]
     request_id: UUID
+    originating_login_id: Annotated[str, Field(min_length=1, max_length=256)] | None = None
+
+    @model_validator(mode="after")
+    def _login_only_for_receipt(self) -> ProfileWorkerControlRequest:
+        if (self.action == "receipt") != (self.originating_login_id is not None):
+            raise ValueError("only a receipt proof request carries its originating login")
+        return self
 
 
 class ProfileWorkerHumanBindingRequest(BaseModel):
@@ -92,6 +104,21 @@ class ProfileWorkerHumanBindingRequest(BaseModel):
     candidate_id: UUID
     lease: AccessSession
     persist_receipt: bool = False
+
+
+class ProfileWorkerHumanReceiptRequest(BaseModel):
+    """Mint the receipt a bound human session left pending, after its publication.
+
+    The runtime sends this only for a session it still publishes, under its
+    admission guard, with the sign-in generation it captured at publication.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["mint_human_receipt"] = "mint_human_receipt"
+    request_id: UUID
+    session_id: UUID
+    sign_in_lineage: UUID
+    sign_in_generation: Annotated[int, Field(ge=1)]
 
 
 class ProfileWorkerContractRequest(BaseModel):
@@ -132,7 +159,7 @@ class ProfileWorkerSubmissionBeginRequest(BaseModel):
     definition_id: OperationDefinitionId
     subject_ref: OperationReference
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256, repr=False)
-    descriptor: SubmissionPayloadDescriptor
+    descriptor: SubmissionPayloadDescriptor | FinancialOperandInputDescriptor
 
 
 class ProfileWorkerSubmissionChunkRequest(BaseModel):
@@ -259,6 +286,7 @@ class ProfileWorkerRequest(
             | ProfileWorkerSettlementRequest
             | ProfileWorkerControlRequest
             | ProfileWorkerHumanBindingRequest
+            | ProfileWorkerHumanReceiptRequest
             | ProfileWorkerContractRequest
             | ProfileWorkerSubmitRequest
             | ProfileWorkerSubmissionBeginRequest
@@ -323,7 +351,11 @@ class ProfileWorkerHumanOutcome(BaseModel):
 
 
 class ProfileWorkerHumanBound(BaseModel):
-    """Acknowledge the exact admitted human session and acceleration outcome."""
+    """Acknowledge the exact admitted human session and acceleration outcome.
+
+    ``receipt_pending`` means the worker holds the proof for a receipt that it
+    mints only on a later request; ``receipt`` then reports nothing persisted.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["human_bound"] = "human_bound"
@@ -331,6 +363,7 @@ class ProfileWorkerHumanBound(BaseModel):
     request_id: UUID
     session_id: UUID
     receipt: ProfileHumanLoginReceipt
+    receipt_pending: bool = False
 
 
 class ProfileWorkerRefusal(BaseModel):

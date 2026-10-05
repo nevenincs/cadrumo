@@ -3,16 +3,15 @@ tags:
   - '#adr'
   - '#tui-operation-observation'
 date: '2026-09-24'
-modified: '2026-09-24'
+modified: '2026-10-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:8238967be0bffca2c9afdc9f07d8e438a638c260e2d036d85bb37372b45755e3'
+body_hash: 'sha256:22d88df42f0d8e28922e1bedce3fcc6bece39a7cc55732d1207991c0059defc1'
 related:
   - "[[2026-08-24-tui-operation-observation-adr]]"
   - "[[2026-08-27-tui-architecture-credential-free-type-aware-gate-adr]]"
   - '[[2026-09-24-tui-operation-observation-manual-edit-operand-custody-reference]]'
 ---
-
-# `tui-operation-observation` adr: `complete operand custody for manual edit values` | (**status:** `proposed`)
+# `tui-operation-observation` adr: `complete operand custody for manual edit values` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -58,8 +57,10 @@ completed, or the change is ratified by amending both decisions.
   approved encrypted persistence only. Transient custody meets it by never
   persisting the value; secure-reference storage meets it by encrypting what it
   persists.
-- The operand protocol, its custody checkpoints, its crash classification and
-  its composition guard are implemented and tested. Retiring them removes an
+- The custody checkpoints, crash classification and composition guard are
+  implemented and tested, but the current Decimal-only broker is narrower than
+  the accepted typed-operand handoff and cannot represent a batched edit submission.
+  The complete typed submission must cross once, with its values held only in memory. Retiring them removes an
   accepted capability whose only consumer was taken away without a decision.
 - Restoring the consumer reverses a shipped change and its conformance pin, so
   it needs the same care as any contract change: the request schema and the
@@ -103,7 +104,8 @@ completed, or the change is ratified by amending both decisions.
 
 ## Implementation
 
-If the recommended option is accepted: the edit-apply definition re-declares
+We will complete the accepted transient design while preserving batched edits,
+as the operator selected on 2026-10-04. The edit-apply definition re-declares
 the manual-override operand, and its executor consumes the value through the
 executor context's operand access instead of the request. The request drops its manual values and returns to
 credential-free journal storage under a new schema version. The edit
@@ -111,11 +113,16 @@ application service submits the values through operand custody, as the
 observation decision specifies. The secure-reference conformance pin is
 replaced by one asserting the operand declaration and the credential-free
 request. The composition proofs return to the production declaring definition.
-If the alternative is accepted instead, the retirement follows the no-legacy
-rule: the protocol modules, custody store, submission path, composition guard
-and their tests are removed together, and both decisions are amended.
-Under either option, the journal migration named in the constraints lands
-first. It purges plain-JSON manual amounts from stored edit-apply requests and
+The transferred operand is the exact validated typed edit submission, including
+all supported intent families in one batch; it is not a sequence of persisted
+amounts or a restriction to one edited field. The request is an amount-free
+versioned description of the exact admitted edit and its custody requirement.
+The one-shot grant, concrete model admission, exact baseline binding, guarded
+consumption and authoritative effect receipt follow the accepted observation
+decision. The Decimal-only prototype is replaced through its actual owner
+rather than retained as a test-only capability.
+
+The journal migration named in the constraints lands first. It purges plain-JSON manual amounts from stored edit-apply requests and
 events, and it is tested from every stored request version: plain JSON,
 secure reference and the chosen successor. It also has a test proving that an
 unrewritable journal is refused.
@@ -138,8 +145,8 @@ values without a stated reason.
   stored-request shape needs explicit handling.
 - The operand protocol regains a production consumer, and its composition
   proofs stop needing a test-only definition.
-- If the alternative is chosen instead, the protocol's modules and tests are
-  deleted, and both accepted decisions are amended to match.
+- The typed batch handoff replaces the incomplete Decimal-only prototype.
+  No financial values or reversible derivatives enter operation metadata.
 - Under either option, operation journals written before `01b78c1021` lose
   their plaintext manual amounts through a forward migration, or are refused.
   No stored journal keeps a private amount in plain JSON.

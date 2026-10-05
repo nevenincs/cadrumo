@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:da15bba72c737af3e35209e16c0ae1583d10eedd3366a3d8391e7ac3c4314db7'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+body_hash: 'sha256:ef918c0d67283cb7cf7ad2b8933a5eb2dbd17b07c061dfe230d7edd7a20478f4'
+related: []
 ---
+
 # `ci-lane-deconflation` audit: `S121 code review`
 
 ## Scope
@@ -31,4 +31,4 @@ Keep the S121 execution note at 1,058 lines when resolving the current staged re
 
 ## Verification
 
-At `9764465dad`, the S121 execution record reports 1,058 lines, exactly matching `declarations.py` in both predecessor `5c43de30cf` and the current source tree. The source remains below the 1,250-line budget and neither the source nor evidence commits alter `dev/audit/size_budget.py` or its baseline.
+At `9764465dad`, the S121 execution record reports 1,058 lines, exactly matching `declarations.py` in both predecessor `5c43de30cf` and the current source tree.

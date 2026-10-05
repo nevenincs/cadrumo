@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#agent-harness'
 date: '2026-07-06'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_hash: 'sha256:f27f1f865c12b19b740d5cfa23168ff44cfb4b320d86c2f38db0dfc9f5a86d22'
-related:
-  - "[[2026-07-02-agent-harness-plan]]"
+related: []
 ---
 
 # `agent-harness` audit: `Response formula provenance hardening review`

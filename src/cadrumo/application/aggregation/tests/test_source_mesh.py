@@ -253,6 +253,65 @@ def test_row_casilla_serialized_hydration_refuses_duplicate_coordinates(field: s
         )
 
 
+def _row_binding_list_row(row_index: int, value: str) -> dict[str, object]:
+    return {"binding_id": "inventory-operation-a", "row_index": row_index, "value": value, "value_kind": "decimal"}
+
+
+def _row_source_identity_list_row(row_index: int, identity: str) -> dict[str, object]:
+    row_identity = _row_identity(identity)
+    return {
+        "binding_id": "inventory-operation-a",
+        "row_index": row_index,
+        "source_kind": row_identity.source_kind,
+        "source_row_identity": row_identity.source_row_identity,
+        "fingerprint": row_identity.fingerprint,
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "first", "second"),
+    [
+        ("row_binding_values", _row_binding_list_row(1, "1.00"), _row_binding_list_row(1, "2.00")),
+        (
+            "row_source_identities",
+            _row_source_identity_list_row(1, "opaque-activity-alpha"),
+            _row_source_identity_list_row(1, "opaque-activity-beta"),
+        ),
+    ],
+)
+def test_row_binding_serialized_hydration_refuses_duplicate_coordinates(
+    field: str,
+    first: dict[str, object],
+    second: dict[str, object],
+) -> None:
+    # Two rows that disagree at one coordinate: keeping either would silently drop the other.
+    with pytest.raises(ValidationError, match="duplicate_row_binding_coordinate"):
+        CalculationSourceResolution.model_validate({"resolver_id": "inventory", field: [first, second]})
+
+
+def test_row_binding_serialized_hydration_keeps_distinct_coordinates_in_coordinate_order() -> None:
+    resolution = CalculationSourceResolution.model_validate(
+        {
+            "resolver_id": "inventory",
+            "row_binding_values": [_row_binding_list_row(2, "2.00"), _row_binding_list_row(1, "1.00")],
+            "row_source_identities": [
+                _row_source_identity_list_row(2, "opaque-activity-beta"),
+                _row_source_identity_list_row(1, "opaque-activity-alpha"),
+            ],
+        },
+    )
+
+    assert dict(resolution.row_binding_values) == {
+        ("inventory-operation-a", 1): Decimal("1.00"),
+        ("inventory-operation-a", 2): Decimal("2.00"),
+    }
+    assert tuple(resolution.row_binding_values) == (("inventory-operation-a", 1), ("inventory-operation-a", 2))
+    assert [identity.source_row_identity for identity in resolution.row_source_identities.values()] == [
+        "opaque-activity-alpha",
+        "opaque-activity-beta",
+    ]
+
+
 def test_row_source_identity_is_sorted_and_excluded_from_generic_serialization() -> None:
     second = ("inventory-operation-z", 2)
     first = ("inventory-operation-a", 1)
@@ -1061,6 +1120,29 @@ def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> N
     assert all(diagnostic.reason == "unhandled_binding_source" for diagnostic in ledger_diagnostics)
     assert all(diagnostic.binding_id for diagnostic in ledger_diagnostics)
     assert all("ledger_iva_aggregation" in diagnostic.message for diagnostic in ledger_diagnostics)
+
+
+def test_a_kind_enrolled_with_nothing_to_run_is_never_unhandled() -> None:
+    """Modelo 720's operator-typed fields need no resolver; its foreign-asset rows still do.
+
+    An operator's typed value is a ``manual_input`` binding, enrolled on the
+    route with nothing to run, as a constant the record design fixes is.
+    Neither is a missing route. The foreign-asset rows are a filing-grade
+    source, so leaving them outside the handled set is still reported: that is
+    the gap the screen exists for.
+    """
+    revision = published_revision("720", "2013-y-siguientes")
+    declared = {binding.source for binding in revision.bindings}
+    assert {BindingSourceKind.MANUAL_INPUT, BindingSourceKind.FOREIGN_ASSET} <= declared
+
+    diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())
+    reported = {(diagnostic.reason, diagnostic.source_kind) for diagnostic in diagnostics}
+
+    assert ("unhandled_binding_source", BindingSourceKind.FOREIGN_ASSET.value) in reported
+    assert not {source for _reason, source in reported} & {
+        BindingSourceKind.DESIGN_CONSTANT.value,
+        BindingSourceKind.MANUAL_INPUT.value,
+    }
 
 
 def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(

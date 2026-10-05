@@ -158,24 +158,32 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
         if (self.exigibility_event_id is None) != (self.exigibility_occurred_on is None):
             raise ValueError("exigibility evidence requires both event id and date")
         if self.income_kind is WithholdingIncomeKind.WORK:
-            if self.modelo_190_detail is None:
-                raise ValueError("work income requires Modelo 190 annual detail")
-            if self.perceptor_nif is not None or self.perceptor_name is not None:
-                raise ValueError("work income takes its perceptor from the Modelo 190 annual detail")
-            if self.exigibility_event_id is not None:
-                raise ValueError("work income is recognised when paid and takes no exigibility evidence")
-            if self.modelo_193_pending_payment is not None:
-                raise ValueError("only ordinary movable capital can carry Modelo 193 pending-payment evidence")
+            _validate_work_income_evidence(self)
             return self
-        if self.modelo_190_detail is not None:
-            raise ValueError("ordinary movable capital income takes no Modelo 190 annual detail")
-        if self.perceptor_nif is None:
-            raise ValueError("ordinary movable capital income requires the perceptor NIF")
-        if self.perceptor_name is None or not self.perceptor_name.strip():
-            raise ValueError("ordinary movable capital income requires the perceptor name")
-        if self.exigibility_event_id is None:
-            raise ValueError("ordinary movable capital income requires exigibility evidence")
+        _validate_capital_income_evidence(self)
         return self
+
+
+def _validate_work_income_evidence(request: LedgerPaymentWithholdingEvidenceRequest) -> None:
+    if request.modelo_190_detail is None:
+        raise ValueError("work income requires Modelo 190 annual detail")
+    if request.perceptor_nif is not None or request.perceptor_name is not None:
+        raise ValueError("work income takes its perceptor from the Modelo 190 annual detail")
+    if request.exigibility_event_id is not None:
+        raise ValueError("work income is recognised when paid and takes no exigibility evidence")
+    if request.modelo_193_pending_payment is not None:
+        raise ValueError("only ordinary movable capital can carry Modelo 193 pending-payment evidence")
+
+
+def _validate_capital_income_evidence(request: LedgerPaymentWithholdingEvidenceRequest) -> None:
+    if request.modelo_190_detail is not None:
+        raise ValueError("ordinary movable capital income takes no Modelo 190 annual detail")
+    if request.perceptor_nif is None:
+        raise ValueError("ordinary movable capital income requires the perceptor NIF")
+    if request.perceptor_name is None or not request.perceptor_name.strip():
+        raise ValueError("ordinary movable capital income requires the perceptor name")
+    if request.exigibility_event_id is None:
+        raise ValueError("ordinary movable capital income requires exigibility evidence")
 
 
 class LedgerPaymentWithholdingCapture(BaseModel):
@@ -217,6 +225,55 @@ def build_ledger_payment_withholding_capture(
     ``cadence`` is the filer's canonical schedule for ``applicable_year``; a
     recognition quarter it does not assign is refused.
     """
+    _validate_ledger_payment_capture(transaction, request, applicable_year=applicable_year, cadence=cadence)
+    modelo = _PERIODIC_MODELO[request.income_kind]
+    payment_on = transaction.raw.booked_date
+    evidence = _recognition_evidence(request, applicable_year=applicable_year, payment_on=payment_on)
+    recognized_on = _recognized_payment_date(
+        evidence,
+        request,
+        modelo=modelo,
+        applicable_year=applicable_year,
+        payment_on=payment_on,
+    )
+    period = quarterly_withholding_capture_period(cadence, modelo=modelo, recognized_on=recognized_on)
+    perceptor_nif, perceptor_name = _perceptor(request)
+    source_revision_id = _payment_source_revision(transaction, request, payment_on, evidence, perceptor_nif)
+    command = _withholding_capture_command(
+        transaction,
+        request,
+        evidence,
+        modelo=modelo,
+        source_revision_id=source_revision_id,
+        perceptor_nif=perceptor_nif,
+        perceptor_name=perceptor_name,
+    )
+    return LedgerPaymentWithholdingCapture(
+        command=command,
+        scope=WithholdingWindowScope(modelo=modelo, period=period),
+        catalogue_read_revision_id=catalogue_revision_id,
+    )
+
+
+def _validate_ledger_payment_capture(
+    transaction: Transaction,
+    request: LedgerPaymentWithholdingEvidenceRequest,
+    *,
+    applicable_year: int,
+    cadence: WithholdingFilerCadence,
+) -> None:
+    _validate_payment_identity_and_state(transaction, request, applicable_year=applicable_year, cadence=cadence)
+    _validate_payment_currency_and_amounts(transaction, request)
+    _validate_recipient_residence(request)
+
+
+def _validate_payment_identity_and_state(
+    transaction: Transaction,
+    request: LedgerPaymentWithholdingEvidenceRequest,
+    *,
+    applicable_year: int,
+    cadence: WithholdingFilerCadence,
+) -> None:
     if request.transaction_id != transaction.transaction_id:
         raise LedgerPaymentWithholdingEvidenceError("transaction_identity_mismatch")
     if cadence.filing_year != applicable_year:
@@ -225,6 +282,11 @@ def build_ledger_payment_withholding_capture(
         raise LedgerPaymentWithholdingEvidenceError("transaction_not_active")
     if transaction.direction is not TransactionDirection.OUTGOING:
         raise LedgerPaymentWithholdingEvidenceError("transaction_not_outgoing_payment")
+
+
+def _validate_payment_currency_and_amounts(
+    transaction: Transaction, request: LedgerPaymentWithholdingEvidenceRequest
+) -> None:
     if transaction.raw.currency != DEFAULT_CURRENCY:
         if transaction.value_in_eur is None:
             raise LedgerPaymentWithholdingEvidenceError("payment_eur_amount_unavailable")
@@ -236,14 +298,19 @@ def build_ledger_payment_withholding_capture(
     # The stored amount is a non-negative magnitude; direction carries the flow.
     if transaction.raw.amount != request.net_settlement:
         raise LedgerPaymentWithholdingEvidenceError("paid_amount_settlement_mismatch")
+
+
+def _validate_recipient_residence(request: LedgerPaymentWithholdingEvidenceRequest) -> None:
     if request.recipient_tax_status is WithholdingRecipientTaxStatus.NONRESIDENT:
         raise LedgerPaymentWithholdingEvidenceError("recipient_nonresident")
     if request.recipient_tax_status is WithholdingRecipientTaxStatus.UNKNOWN:
         raise LedgerPaymentWithholdingEvidenceError("recipient_residence_unknown")
 
-    modelo = _PERIODIC_MODELO[request.income_kind]
-    payment_on = transaction.raw.booked_date
-    evidence = WithholdingRecognitionEvidence(
+
+def _recognition_evidence(
+    request: LedgerPaymentWithholdingEvidenceRequest, *, applicable_year: int, payment_on: date
+) -> WithholdingRecognitionEvidence:
+    return WithholdingRecognitionEvidence(
         applicable_year=applicable_year,
         recipient_tax_status=request.recipient_tax_status,
         recipient_tax_regime=request.recipient_tax_regime,
@@ -252,6 +319,16 @@ def build_ledger_payment_withholding_capture(
         payment_or_satisfaction=WithholdingDatedEvent(event_id=request.payment_event_id, occurred_on=payment_on),
         exigibility=_exigibility_event(request),
     )
+
+
+def _recognized_payment_date(
+    evidence: WithholdingRecognitionEvidence,
+    request: LedgerPaymentWithholdingEvidenceRequest,
+    *,
+    modelo: str,
+    applicable_year: int,
+    payment_on: date,
+) -> date:
     try:
         recognition = derive_withholding_recognition(evidence, modelo=modelo)
     except WithholdingRecognitionError as exc:
@@ -265,9 +342,16 @@ def build_ledger_payment_withholding_capture(
         )
     if payment_on.year > recognized_on.year and request.modelo_193_pending_payment is None:
         raise LedgerPaymentWithholdingEvidenceError("capital_paid_after_accrual_year_without_pending_evidence")
-    period = quarterly_withholding_capture_period(cadence, modelo=modelo, recognized_on=recognized_on)
+    return recognized_on
 
-    perceptor_nif, perceptor_name = _perceptor(request)
+
+def _payment_source_revision(
+    transaction: Transaction,
+    request: LedgerPaymentWithholdingEvidenceRequest,
+    payment_on: date,
+    evidence: WithholdingRecognitionEvidence,
+    perceptor_nif: str,
+) -> str:
     # The bucket-wide catalogue revision changes whenever any other row is
     # written, so it proves only a consistent read. The source revision binds
     # the facts this liability rests on, keeping replay and later corrections
@@ -288,8 +372,20 @@ def build_ledger_payment_withholding_capture(
             "exigibility_event_id": evidence.exigibility.event_id,
             "exigible_on": evidence.exigibility.occurred_on.isoformat(),
         }
-    source_revision_id = content_hash_hex(source_facts)
-    command = WithholdingEvidenceCaptureCommand(
+    return content_hash_hex(source_facts)
+
+
+def _withholding_capture_command(
+    transaction: Transaction,
+    request: LedgerPaymentWithholdingEvidenceRequest,
+    evidence: WithholdingRecognitionEvidence,
+    *,
+    modelo: str,
+    source_revision_id: str,
+    perceptor_nif: str,
+    perceptor_name: str,
+) -> WithholdingEvidenceCaptureCommand:
+    return WithholdingEvidenceCaptureCommand(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=transaction.transaction_id,
         source_revision_id=source_revision_id,
@@ -316,11 +412,6 @@ def build_ledger_payment_withholding_capture(
         supersedes_generation_id=request.supersedes_generation_id,
         modelo_190_detail=request.modelo_190_detail,
         modelo_193_pending_payment=request.modelo_193_pending_payment,
-    )
-    return LedgerPaymentWithholdingCapture(
-        command=command,
-        scope=WithholdingWindowScope(modelo=modelo, period=period),
-        catalogue_read_revision_id=catalogue_revision_id,
     )
 
 

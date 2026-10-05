@@ -3,25 +3,48 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ac1a35a1a71ed7e165b29ae894cbf9036ec19dc9753dc84aa186595684fd95d'
+body_hash: 'sha256:d3f659189c4c3e903c63092ead6a84021fc992e67f890f5dc3df601b5ddda097'
 related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: the generator's input schema is narrower than the registry it generates into
 
-## The finding
+## Scope
 
+Assess whether the export-fragment semantic map can express the binding rows required by the generator and identify the repair order.
+
+## Findings
 The semantic map cannot express a `binding_rows` repeat. The registry can:
 
 | | `repeat` vocabulary |
 |---|---|
 | registry, `registry/schema_exports.py:645` | `Literal["binding_rows", "projection_rows"] \| None` |
-| generator map, `dev/registry/pipeline/_semantic_map.py:300` | `Literal["projection_rows"] \| None` |
 
 A generator whose input vocabulary is a strict subset of its output schema can
 emit a structurally WRONG tree while every individual step reports success.
+
+## Recommendations
+**A. Refuse (small, and the honest guard).** A target whose published export
+declares `repeat = "binding_rows"` must not be renderable from a map that cannot
+express it. The right home is `check_generated_export_tree`
+(`dev/registry/pipeline/_tree_check.py:83`), the only place holding BOTH the
+fresh candidate and the published tree; the renderer cannot host it, since its
+inputs are the design, map, profiles and defects, with no binding visibility.
+The refusal must name the schema gap, not report drift. Prove it bites.
+
+**B. Then the capability.** Widen the map `repeat` to admit `binding_rows`, let
+entries name a binding id instead of a `casilla_id`, teach the renderer to
+materialise binding rows, and re-author the modelo 347 `2011` and `2025` maps
+from the AEAT design plus the revision's bindings -- never from the committed
+tree, which is the circularity the renderer admission gate exists to prevent.
+Entries to convert sit at `mappings/modelo_347/2011/0003-declarado.toml` lines
+68, 96, 124, 151 and 165.
+
+**Widening the `Literal` alone is the worst move available:** it would let a map
+claim a repeat the renderer still cannot materialise, turning a loud schema
+refusal into a silent one.
 
 ## What it costs, concretely
 
@@ -68,28 +91,6 @@ The gate's red says "committed export fragment(s) differ from a fresh render",
 which reads like ordinary staleness. The obvious response -- regenerate and
 commit -- is the one action that converts a caught defect into a shipped one. Any
 fix must make that repair impossible to take by accident.
-
-## Fix, in order
-
-**A. Refuse (small, and the honest guard).** A target whose published export
-declares `repeat = "binding_rows"` must not be renderable from a map that cannot
-express it. The right home is `check_generated_export_tree`
-(`dev/registry/pipeline/_tree_check.py:83`), the only place holding BOTH the
-fresh candidate and the published tree; the renderer cannot host it, since its
-inputs are the design, map, profiles and defects, with no binding visibility.
-The refusal must name the schema gap, not report drift. Prove it bites.
-
-**B. Then the capability.** Widen the map `repeat` to admit `binding_rows`, let
-entries name a binding id instead of a `casilla_id`, teach the renderer to
-materialise binding rows, and re-author the modelo 347 `2011` and `2025` maps
-from the AEAT design plus the revision's bindings -- never from the committed
-tree, which is the circularity the renderer admission gate exists to prevent.
-Entries to convert sit at `mappings/modelo_347/2011/0003-declarado.toml` lines
-68, 96, 124, 151 and 165.
-
-**Widening the `Literal` alone is the worst move available:** it would let a map
-claim a repeat the renderer still cannot materialise, turning a loud schema
-refusal into a silent one.
 
 ## The generalisable lesson
 

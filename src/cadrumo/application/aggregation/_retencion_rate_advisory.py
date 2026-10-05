@@ -308,7 +308,7 @@ def _profile_regime_hint(profile: TaxpayerProfile) -> bool | None:
         irpf_estimation_regime_directa_simplificada_token,
         irpf_estimation_regime_objetiva_token,
     )
-    from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_reagp_token
+    from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_reagp_token
 
     if profile.iva_regime == iva_regime_reagp_token():
         return True

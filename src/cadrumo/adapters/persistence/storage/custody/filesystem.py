@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Any, Final, Literal, cast, overload
 from uuid import uuid4
 
+from .....core.descriptor_write import write_all
+from .....core.windows_contention import is_windows_contention
 from ._capsule_filesystem import (
     windows_mark_handle_for_deletion as _windows_mark_handle_for_deletion,
 )
@@ -330,20 +332,35 @@ def _write_windows_local_record_once(path: Path, payload: bytes) -> None:
 
 def _replace_windows_local_record(path: Path, payload: bytes) -> None:
     """Atomically replace a Windows local record, waiting out active readers."""
-    from .....core.atomic_write import atomic_write_hardened_bytes
+    from .....core.atomic_write import hardened_staged_bytes_publication
 
     deadline = time.monotonic() + _LOCAL_RECORD_REPLACE_BUDGET_SECONDS
-    while True:
-        try:
-            atomic_write_hardened_bytes(path, payload, mode=0o600)
-        except PermissionError as exc:
-            if time.monotonic() >= deadline:
-                raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-            time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
-        except OSError as exc:
-            raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-        else:
-            return
+    publication_error: OSError
+    try:
+        with hardened_staged_bytes_publication(path, payload, mode=0o600) as staged:
+            while True:
+                try:
+                    staged.publish()
+                except PermissionError as exc:
+                    # The existing bounded Windows policy retries publication
+                    # denials with an accepted native code. WinError 5 may be
+                    # permanent access denial too; the budget bounds waiting
+                    # but does not classify its underlying cause. Staging,
+                    # descriptor writing and file syncing happen before this
+                    # loop and are refused immediately.
+                    if not is_windows_contention(exc) or time.monotonic() >= deadline:
+                        publication_error = exc
+                        break
+                    time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
+                except OSError as exc:
+                    publication_error = exc
+                    break
+                else:
+                    return
+    except OSError as exc:
+        raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
+
+    raise ProfileCustodyRecordError("local custody record cannot be atomically written") from publication_error
 
 
 def compare_and_replace_profile_custody_local_record(
@@ -578,12 +595,7 @@ def _posix_open_exclusive_file(parent_fd: int, name: str) -> int:
 
 
 def _write_descriptor_fsynced(descriptor: int, payload: bytes) -> None:
-    offset = 0
-    while offset < len(payload):
-        written = os.write(descriptor, payload[offset:])
-        if written <= 0:
-            raise OSError("local custody record short write")
-        offset += written
+    write_all(descriptor, payload)
     os.fsync(descriptor)
 
 
@@ -725,24 +737,6 @@ def _record_read_operation(
         trace.append(ProfileCustodyPasswordReadOperation(operation=operation, path=path))
 
 
-def _renameat2_exchange(*, parent_fd: int, first_name: str, second_name: str) -> None:
-    """Swap two named children atomically below the same pinned POSIX parent."""
-    import ctypes
-
-    renameat2 = getattr(ctypes.CDLL(None, use_errno=True), "renameat2", None)
-    if renameat2 is None:
-        raise ProfileCustodyRecordError("atomic local custody record exchange is unavailable")
-    renameat2.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
-    renameat2.restype = ctypes.c_int
-    if renameat2(parent_fd, os.fsencode(first_name), parent_fd, os.fsencode(second_name), 2) == 0:
-        return
-    error = ctypes.get_errno()
-    raise ProfileCustodyRecordError("atomic local custody record exchange failed") from OSError(
-        error,
-        os.strerror(error),
-    )
-
-
 lexists = _lexists
 posix_child_exists = _posix_child_exists
 read_regular_file = _read_regular_file
@@ -754,7 +748,6 @@ write_descriptor_fsynced = _write_descriptor_fsynced
 write_windows_local_stage = _write_windows_local_stage
 windows_replace_file = _windows_replace_file
 windows_read_handle_bounded = _windows_read_handle_bounded
-renameat2_exchange = _renameat2_exchange
 
 
 __all__ = [

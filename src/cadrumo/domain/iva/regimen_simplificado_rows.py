@@ -281,7 +281,9 @@ class M303RegimenSimplificadoScopeDecision(BaseModel):
         """Translate the persisted scope through the dated composition catalogue."""
         if isinstance(value, M303RegimenSimplificadoScope):
             return value
-        from ..calculations.registry.iva_schema_vocabulary import require_m303_regimen_simplificado_scope
+        from ..calculations.registry.m303_schema_vocabulary import (
+            require_m303_regimen_simplificado_scope,
+        )
 
         return require_m303_regimen_simplificado_scope(value)
 
@@ -450,11 +452,37 @@ def validate_regimen_simplificado_rows(
         return
     if not rows.activities:
         raise IvaValidationError("applicable regimen simplificado requires activity rows")
-    by_id = {item.orden_id: item for item in orden}
     source_year = rows.ejercicio if orden_ejercicio is None else orden_ejercicio
+    by_id = _annual_orden_by_identity(orden, source_year=source_year)
+    _validate_regimen_rows_against_orden(
+        rows.activities,
+        by_id=by_id,
+        orden=orden,
+        agricultural_authority=agricultural_authority,
+        censo_iae_epigraphs=censo_iae_epigraphs,
+    )
+
+
+def _annual_orden_by_identity(
+    orden: tuple[ActividadOrdenAnual, ...],
+    *,
+    source_year: int,
+) -> dict[ActividadOrdenAnualId, ActividadOrdenAnual]:
+    by_id = {item.orden_id: item for item in orden}
     if len(by_id) != len(orden) or any(item.ejercicio != source_year for item in orden):
         raise IvaValidationError("annual Orden taxonomy is duplicate, conflicting, or for the wrong year")
-    for row in rows.activities:
+    return by_id
+
+
+def _validate_regimen_rows_against_orden(
+    rows: tuple[RegimenSimplificadoActivity, ...],
+    *,
+    by_id: dict[ActividadOrdenAnualId, ActividadOrdenAnual],
+    orden: tuple[ActividadOrdenAnual, ...],
+    agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta,
+    censo_iae_epigraphs: frozenset[str],
+) -> None:
+    for row in rows:
         if isinstance(row, ActividadAgricolaSimplificado):
             raise IvaValidationError(
                 "agricultural annual Orden authority cannot resolve DP30302 activity code: "

@@ -8,11 +8,8 @@ from contextlib import ExitStack
 import pytest
 
 from ..authority import IndexedRegistryAuthority, PinnedAuthorityOperation, bundled_authority_descriptor_path
-from ..governed_fact_scope import (
-    governed_facts_in_scope,
-    outside_governed_fact_validation,
-    validating_governed_facts,
-)
+from ..governed_fact_scope import governed_facts_in_scope, validating_governed_facts
+from .fact_scope import outside_governed_fact_validation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

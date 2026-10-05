@@ -22,6 +22,7 @@ from http import HTTPStatus
 from queue import Queue
 from typing import ClassVar, override
 
+import httpx
 import pytest
 
 from ...core.config import override_settings
@@ -694,6 +695,26 @@ def test_a_pull_stream_that_ends_without_success_is_not_reported_as_pulled(
     assert outcome.pulled is False
     assert outcome.facts["pull_completed"] is False
     assert outcome.bytes_fetched == 10
+
+
+def test_http_error_from_progress_callback_keeps_the_last_streamed_byte_count(
+    runtime: tuple[str, Queue[dict[str, object]]],
+) -> None:
+    """A callback transport error retains observed bytes without confirming the pull."""
+    chat_url, _events = runtime
+    _RuntimeLoopbackHandler.pull_lines = [{"status": "success", "completed": GIB, "total": GIB}]
+
+    def fail_after_progress(_progress: object) -> None:
+        raise httpx.ReadError("progress transport failed")
+
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = pull_runtime_model(
+            "small-model:1b", 1 * GIB, profile=_roomy_profile(), on_progress=fail_after_progress
+        )
+
+    assert outcome.pulled is False
+    assert outcome.bytes_fetched == GIB
+    assert outcome.facts["runtime_error_type"] == "ReadError"
 
 
 def test_every_pull_attempt_is_recorded_as_the_last_pull(runtime: tuple[str, Queue[dict[str, object]]]) -> None:

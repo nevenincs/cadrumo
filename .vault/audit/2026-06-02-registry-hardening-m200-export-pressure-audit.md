@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:83b6995993de553596f47503bbdc0d76d65f367a9aa6ee428f3bf74175e4c6ea'
+modified: '2026-10-03'
+body_hash: 'sha256:f5ae5edf5d39efa3c9435b4f850163b310683df1d5403030c7d8f31beaa1c7a3'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'
 ---
 
@@ -25,10 +24,10 @@ split the largest M200 export fragment without new loader semantics.
 
 M200 now owns the largest committed TOML fragment in the modelo corpus:
 
-- `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-002.toml`
+- the retired data file
   at 1618 lines.
 - The second largest file is
-  `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0065-modelo-200-page-043.toml`
+  the retired data file
   at 1612 lines.
 - M200 export contains 137 TOML files.
 - Eleven M200 export fragments are at or above 1200 lines.
@@ -59,17 +58,17 @@ merge behavior.
 
 | Lines | Fields | Records | Record id | Path |
 | ---: | ---: | ---: | --- | --- |
-| 1618 | 117 | 1 | `modelo-200-page-019` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-002.toml` |
-| 1612 | 115 | 1 | `modelo-200-page-043` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0065-modelo-200-page-043.toml` |
-| 1555 | 113 | 1 | `modelo-200-page-001` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0002-modelo-200-page-001.toml` |
-| 1555 | 111 | 1 | `modelo-200-page-020d` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0033-modelo-200-page-020d.toml` |
-| 1472 | 105 | 1 | `modelo-200-page-013` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0016-modelo-200-page-013.toml` |
-| 1472 | 105 | 1 | `modelo-200-page-032` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0054-modelo-200-page-032.toml` |
-| 1430 | 102 | 1 | `modelo-200-page-012` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0015-modelo-200-page-012.toml` |
-| 1359 | 97 | 1 | `modelo-200-page-020b` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0031-modelo-200-page-020b.toml` |
-| 1304 | 93 | 1 | `modelo-200-page-033` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0055-modelo-200-page-033.toml` |
-| 1287 | 92 | 1 | `modelo-200-page-014b` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0018-modelo-200-page-014b.toml` |
-| 1234 | 88 | 1 | `modelo-200-page-026g` | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0047-modelo-200-page-026g.toml` |
+| 1618 | 117 | 1 | `modelo-200-page-019` | the retired data file |
+| 1612 | 115 | 1 | `modelo-200-page-043` | the retired data file |
+| 1555 | 113 | 1 | `modelo-200-page-001` | the retired data file |
+| 1555 | 111 | 1 | `modelo-200-page-020d` | the retired data file |
+| 1472 | 105 | 1 | `modelo-200-page-013` | the retired data file |
+| 1472 | 105 | 1 | `modelo-200-page-032` | the retired data file |
+| 1430 | 102 | 1 | `modelo-200-page-012` | the retired data file |
+| 1359 | 97 | 1 | `modelo-200-page-020b` | the retired data file |
+| 1304 | 93 | 1 | `modelo-200-page-033` | the retired data file |
+| 1287 | 92 | 1 | `modelo-200-page-014b` | the retired data file |
+| 1234 | 88 | 1 | `modelo-200-page-026g` | the retired data file |
 
 ## Existing Page-019 Split Pattern
 
@@ -77,10 +76,10 @@ merge behavior.
 
 | Lines | Path |
 | ---: | --- |
-| 887 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-001.toml` |
-| 899 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-001b.toml` |
-| 20 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-001c.toml` |
-| 1618 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-002.toml` |
+| 887 | the retired data file |
+| 899 | the retired data file |
+| 20 | the retired data file |
+| 1618 | the retired data file |
 
 The sibling fragments repeat:
 
@@ -97,7 +96,7 @@ shape and split `part-002` at a field boundary into two ordered fragments.
 Split only the current largest fragment first:
 
 - source:
-  `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-002.toml`
+  the retired data file
 - expected replacement shape:
   - one first fragment retaining the layout id, record id, and an initial field
     run;
@@ -112,7 +111,7 @@ loader tests.
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 5.88s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_directory_mode_merges_export_record_field_fragments_by_record_id -q`
+- the historical check
   - Result: 1 passed in 0.29s.

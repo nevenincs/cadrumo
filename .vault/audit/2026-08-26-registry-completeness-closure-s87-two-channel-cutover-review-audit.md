@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:8c8273879cfaad931ae6a73fdc7f4104046e1448c0f5d93a4aaee43d7afc30bb'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr]]"
 ---
 # `registry-completeness-closure` audit: `s87 two channel cutover review`

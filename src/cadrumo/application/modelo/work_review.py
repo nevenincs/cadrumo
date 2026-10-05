@@ -14,6 +14,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
+from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
@@ -43,6 +44,7 @@ from ...domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
 from .row_source_fingerprint import ModeloRowSourceFingerprint
 
 if TYPE_CHECKING:
@@ -286,6 +288,120 @@ def build_modelo_work_review(
     )
 
 
+_WORK_REVIEW_CAPTURE_SCOPE = ProducerCaptureScope(
+    owner="application.modelo.work_review",
+    namespace="modelo.work_review",
+)
+
+
+def _work_review_owner_observation(
+    *,
+    operation: PinnedAuthorityOperation,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+) -> tuple[str, ...]:
+    """Read every limb one work review is a function of.
+
+    The review resolves the work unit, its current calculation revision and
+    that revision's latest verification report, all under the registry
+    generation the operation pins. The verification catalogue exposes no
+    revision counter, so its limb is the digest of what it holds.
+    """
+    _work_units, work_unit_revision = work_unit_repository.load_revisioned()
+    _calculations, calculation_revision = calculation_repository.load_revisioned(operation=operation)
+    verification_digest = content_hash_hex(verification_repository.load(operation=operation).model_dump(mode="json"))
+    return (
+        work_unit_revision,
+        calculation_revision,
+        verification_digest,
+        str(operation.read_current_coordinate().generation),
+    )
+
+
+def _work_review_capture_coordinate(
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+) -> dict[str, object]:
+    return {
+        "target": content_hash_hex(
+            {
+                "bucket_id": str(bucket_id),
+                "modelo": str(modelo),
+                "filing_year": filing_year,
+                "period": period.registry_token,
+            }
+        )
+    }
+
+
+def capture_modelo_work_review(
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+) -> ProducerCapture[ModeloWorkReview]:
+    """Build one work review over a window in which none of its owner limbs moved.
+
+    The review is exactly what :func:`build_modelo_work_review` returned; this
+    adds the currentness coordinate a pinned multi-producer read needs and
+    nothing else.
+    """
+    return _WORK_REVIEW_CAPTURE_SCOPE.capture(
+        coordinate=_work_review_capture_coordinate(bucket_id, modelo, filing_year, period),
+        observe=lambda: _work_review_owner_observation(
+            operation=operation,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            verification_repository=verification_repository,
+        ),
+        build=lambda: build_modelo_work_review(
+            bucket_id,
+            modelo,
+            filing_year,
+            period,
+            operation=operation,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            verification_repository=verification_repository,
+        ),
+    )
+
+
+def read_modelo_work_review_current_coordinate(
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+) -> ProducerCaptureCoordinate:
+    """Read the coordinate a later pass compares a work-review capture against.
+
+    A capture whose limbs moved since it was taken refuses through
+    ``errors.refused.producer_capture_not_current`` when compared with this.
+    """
+    return _WORK_REVIEW_CAPTURE_SCOPE.read_current_coordinate(
+        coordinate=_work_review_capture_coordinate(bucket_id, modelo, filing_year, period),
+        observe=lambda: _work_review_owner_observation(
+            operation=operation,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            verification_repository=verification_repository,
+        ),
+    )
+
+
 __all__ = [
     "BlockerRef",
     "ModeloWorkBindingOrigin",
@@ -298,4 +414,6 @@ __all__ = [
     "ModeloWorkReviewCasilla",
     "build_modelo_work_review",
     "build_modelo_work_review_casillas",
+    "capture_modelo_work_review",
+    "read_modelo_work_review_current_coordinate",
 ]

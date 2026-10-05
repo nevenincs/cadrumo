@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d832a0b269beae2dd9380825996cd67028af4dc4b3f3a6aa94f43632b3eb30da'
+modified: '2026-10-03'
+body_hash: 'sha256:0aa9575cc83978ca768db15c5c31f51f06247371698411b6bb7f55069584a324'
 related: []
 ---
 
@@ -34,9 +34,9 @@ ids or matched full snapshot ids; tests assert the bounded context directly.
 
 ## S229-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/live/_notifications.py src/aeat/application/live/test_notifications.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/live/test_notifications.py` passed with 17 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "notifications or s85_runtime"` passed with 1 selected runtime-migration test.
+- the historical check passed.
+- the historical check passed with 17 tests.
+- the historical check passed with 1 selected runtime-migration test.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: notification locale leaves were set through

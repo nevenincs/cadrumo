@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4dbbc395b6f4fd0d4864b1609421b861d005635db3a6c296a7bb7b057af0df6f'
-related:
-  - "[[2026-09-07-tuimodelo-plan]]"
+body_hash: 'sha256:ef15e3b7f22995cf66834e3bb8f2683288944bee754f527eb678aa18ff1fa568'
+related: []
 ---
 
 # `tuimodelo` audit: `retired mechanisms a plan row may no longer assert`
@@ -34,14 +33,7 @@ surviving in a plan row.
 
 ### exit-receipt-family | critical | The C1 to C5 modelo workspace exit receipts are retired in decision and in code, and are still cited as a live gating condition by a shipped application module.
 
-The accepted modelo workspace-interface decision retired the five exit-receipt schemas, their
-five validators and the shared discriminated proof type outright: not renamed, not relocated.
-The code followed on 2026-08-30, when commit `51023bdad2` deleted
-`dev/quality/modelo_workspace_receipts.py` and its test module, 926 deletions against 63
-insertions. That commit's own message records why the deletion was necessary rather than
-cosmetic: the module's test suite passed even when the rest of the tree could not import,
-because the module depended on nothing in the product, so a green suite over a mechanism no
-decision still recognises manufactured confidence rather than provided it.
+The accepted modelo workspace-interface decision retired the five exit-receipt schemas, their five validators and the shared discriminated proof type outright: not renamed, not relocated. That commit's own message records why the deletion was necessary rather than cosmetic: the module's test suite passed even when the rest of the tree could not import, because the module depended on nothing in the product, so a green suite over a mechanism no decision still recognises manufactured confidence rather than provided it.
 
 The same commit records the boundary that a later reader most often gets wrong. The action
 denominator survived untouched, because it asserts implementation shape, which the same decision
@@ -52,19 +44,7 @@ A plan row may no longer assert a cohort gate, a green receipt, admission by rec
 disposition whose reconsideration condition is the existence of one. Rebuilding any of the five
 is a named hazard for this campaign.
 
-Live citations follow. In the modelo interface plan, `W01.P01.S96` names the retired receipt
-vocabulary as the subject of a rename. A third exclusion belongs beside the two recorded under
-the visibility finding below: the same amendment that retired these receipts expressly retained
-the cohort conformance matrices they used to attest, so `W06.P13.S93`, which proves C5's
-aggregate matrix, cites the retained half and is not a citation of the retired mechanism at all.
-In the workbench architecture plan, `W07.P17.S338` carries a C4 label as historical
-provenance for six modelo actions rather than as a gate. In production,
-`src/cadrumo/application/modelo/_edit_facade.py` carries the strongest surviving citation: its
-module prose at line 11 states that no C3 financial-operand dependency receipt is green yet and
-that the facade therefore never advertises a usable C3 path, and line 71 encodes that as a
-machine-readable reconsideration condition reading that the capability becomes available once
-the green C3 financial-operand dependency receipt exists. That condition can never be satisfied,
-because nothing can make a deleted receipt green.
+Live citations follow. In the modelo interface plan, `W01.P01.S96` names the retired receipt vocabulary as the subject of a rename. A third exclusion belongs beside the two recorded under the visibility finding below: the same amendment that retired these receipts expressly retained the cohort conformance matrices they used to attest, so `W06.P13.S93`, which proves C5's aggregate matrix, cites the retained half and is not a citation of the retired mechanism at all. In the workbench architecture plan, `W07.P17.S338` carries a C4 label as historical provenance for six modelo actions rather than as a gate. That condition can never be satisfied, because nothing can make a deleted receipt green.
 
 ### authenticated-visibility | high | The untrusted-remote-consumer redaction assumption is retired for operator-facing surfaces but survives for logs and off-host payloads, and the two are routinely conflated.
 
@@ -163,10 +143,7 @@ own terms, and neither covers keyboard, non-colour, large-schema, refusal or emp
 names the shared operation modal, which belongs to the operations lane rather than the modelo
 lane. That gap stays with the interface plan; this campaign must not appear to have absorbed it.
 
-Reopen the edit-facade capability projection under the surviving mechanism, replacing the C3
-receipt condition it still cites. This is the campaign's `W01.P03.S141`, and this audit
-establishes that the condition at line 71 of `src/cadrumo/application/modelo/_edit_facade.py` is
-unsatisfiable rather than merely stale, which is why the row cannot be closed by waiting.
+Reopen the edit-facade capability projection under the surviving mechanism, replacing the C3 receipt condition it still cites.
 
 Treat the two exclusions as binding when any later step sweeps for the retired redaction
 assumption. A sweep that removed a log-shaped or off-host redaction gate would weaken a control

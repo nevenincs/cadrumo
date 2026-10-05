@@ -11,22 +11,18 @@ from pydantic import TypeAdapter, ValidationError
 from ...errors import RegistryValidationError
 from ...schema import SupportedFilingYearsCatalogue
 from ...schema_base import DateAxis, SourceCitation
+from ..payloads import GovernedFactFamily, ScalarFactPayload
 from ..resolution import (
     GovernedFactQuery,
     ResolvedGovernedFact,
     ScalarFactQuery,
+    optional_unique_mapping_tokens,
     required_mapping_entry,
     resolve_governed_fact,
     unique_mapping_tokens,
 )
-from ..schema import (
-    FactOwnership,
-    FactSelector,
-    GovernedFact,
-    GovernedFactCatalogue,
-    GovernedFactFamily,
-    ScalarFactPayload,
-)
+from ..schema import GovernedFact, GovernedFactCatalogue
+from ..variants import FactOwnership, FactSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -384,3 +380,58 @@ def test_repeated_empty_or_absent_tokens_are_refused_in_the_consumers_words(
         unique_mapping_tokens(entries, "order", subject="demo catalogue", requirement="must declare unique tokens")
 
     assert str(raised.value) == message
+
+
+def test_a_present_entry_of_only_separators_is_empty_when_emptiness_is_admitted() -> None:
+    assert unique_mapping_tokens({"refs": " ,, "}, "refs", subject="demo catalogue", refuse_empty=False) == ()
+
+
+@pytest.mark.parametrize(
+    ("entries", "message"),
+    [
+        ({}, "demo catalogue is missing 'refs'"),
+        ({"refs": "  "}, "demo catalogue is missing 'refs'"),
+        ({"refs": "x, y ,x"}, "demo catalogue 'refs' must contain unique tokens"),
+    ],
+)
+def test_admitting_emptiness_still_refuses_a_missing_entry_or_a_repeat(entries: dict[str, str], message: str) -> None:
+    with pytest.raises(RegistryValidationError) as raised:
+        unique_mapping_tokens(entries, "refs", subject="demo catalogue", refuse_empty=False)
+
+    assert str(raised.value) == message
+
+
+def test_a_declared_separator_splits_the_entry_in_order() -> None:
+    assert unique_mapping_tokens({"keys": " b | a|c "}, "keys", subject="demo catalogue", separator="|") == (
+        "b",
+        "a",
+        "c",
+    )
+
+
+def test_a_declared_separator_leaves_commas_inside_tokens() -> None:
+    assert unique_mapping_tokens({"keys": "a,b|c"}, "keys", subject="demo catalogue", separator="|") == ("a,b", "c")
+
+
+@pytest.mark.parametrize("entries", [{}, {"refs": ""}, {"refs": " \t "}, {"refs": ","}, {"refs": " , ,, "}])
+def test_an_optional_entry_absent_blank_or_only_separators_declares_no_token(entries: dict[str, str]) -> None:
+    assert optional_unique_mapping_tokens(entries, "refs", subject="demo catalogue") == ()
+
+
+def test_an_optional_entry_with_one_token_yields_it_stripped() -> None:
+    assert optional_unique_mapping_tokens({"refs": "  art. 20  "}, "refs", subject="demo catalogue") == ("art. 20",)
+
+
+def test_an_optional_entry_keeps_declaration_order_and_strips_each_token() -> None:
+    assert optional_unique_mapping_tokens({"refs": " z ,a,, m "}, "refs", subject="demo catalogue") == ("z", "a", "m")
+
+
+def test_an_optional_entry_refuses_a_repeated_token_in_the_consumers_words() -> None:
+    with pytest.raises(RegistryValidationError) as raised:
+        optional_unique_mapping_tokens(
+            {"refs": "a, b ,a"}, "refs", subject="demo catalogue", requirement="must contain unique references"
+        )
+
+    assert str(raised.value) == "demo catalogue 'refs' must contain unique references"
+    assert raised.value.__cause__ is None
+    assert raised.value.__context__ is None

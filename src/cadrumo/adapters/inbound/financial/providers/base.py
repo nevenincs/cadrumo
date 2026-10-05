@@ -209,11 +209,45 @@ def _resolved_absolute_source_path(absolute_path: str) -> Path:
     return Path(absolute_path).resolve()
 
 
+def require_admissible_source(path: Path) -> Path:
+    """Return the resolved source path after the shared input safety guards.
+
+    Refuses a symlink, a missing or non-regular file, and a source over the
+    ingest size ceiling. Detection applies it before sniffing or probing any
+    provider, and every provider applies it before reading bytes.
+
+    Raises:
+        InvalidFinancialSourceError: When the source is not admissible.
+    """
+    if path.is_symlink():
+        raise InvalidFinancialSourceError(
+            translated_message="errors.financial.source_file_is_symlink",
+            context={"path": str(path)},
+        )
+    resolved = path.resolve()
+    if not resolved.exists() or not resolved.is_file():
+        raise InvalidFinancialSourceError(
+            translated_message="errors.financial.source_file_not_found",
+            context={"path": str(resolved)},
+        )
+    size = resolved.stat().st_size
+    if size > _MAX_SOURCE_BYTES:
+        raise InvalidFinancialSourceError(
+            translated_message="errors.financial.source_file_too_large",
+            context={
+                "path": str(resolved),
+                "size_bytes": size,
+                "max_bytes": _MAX_SOURCE_BYTES,
+            },
+        )
+    return resolved
+
+
 class FinancialProvider(ABC):
     """Abstract base class for file-backed raw transaction providers.
 
     Concrete subclasses must declare :attr:`name`,
-    :attr:`supported_extensions`, :attr:`source_format`,
+    :attr:`source_format`,
     :attr:`verification_source`, and :attr:`provisional_pending_specimen`
     and implement :meth:`ingest` plus :meth:`validate_source`. The shared
     :meth:`build_provenance` helper centralises
@@ -228,8 +262,6 @@ class FinancialProvider(ABC):
     Attributes:
         name: Stable provider identifier embedded in synthetic
             transaction ids and provenance records.
-        supported_extensions: Lowercase file extensions
-            (including the leading dot) the provider accepts.
         source_format: Source-format enum used for provenance.
         verification_source: Corpus provenance declaration; one of
             ``"real_bank_corpus_pdf"``,
@@ -242,7 +274,6 @@ class FinancialProvider(ABC):
     """
 
     name: ClassVar[str]
-    supported_extensions: ClassVar[frozenset[str]]
     source_format: ClassVar[SourceFormat]
     verification_source: ClassVar[CorpusVerificationSource]
     provisional_pending_specimen: ClassVar[bool]
@@ -301,19 +332,6 @@ class FinancialProvider(ABC):
                 f"{cls.__qualname__}: verification_source='no_corpus' requires provisional_pending_specimen=True",
             )
 
-    def can_handle(self, path: Path) -> bool:
-        """Return whether the provider is a plausible match for ``path``.
-
-        Args:
-            path: Candidate source document.
-
-        Returns:
-            True if ``path`` exists and its extension is in
-            :attr:`supported_extensions`. Content sniffing is left to
-            :meth:`validate_source` and :func:`detect_provider`.
-        """
-        return path.is_file() and path.suffix.lower() in self.supported_extensions
-
     @abstractmethod
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
         """Yield parsed ledger rows from ``path``.
@@ -350,33 +368,13 @@ class FinancialProvider(ABC):
     def _read_source_bytes(self, path: Path) -> bytes:
         """Read raw source bytes after enforcing adapter input safety guards.
 
-        The shared guard refuses symlinks, missing files, non-files, and sources
-        over the configured size ceiling before format-specific parsers receive
-        bytes. Concrete providers reuse the same bytes for validation,
-        extraction, and SHA-256 provenance.
+        :func:`require_admissible_source` refuses symlinks, missing files,
+        non-files, and sources over the configured size ceiling before
+        format-specific parsers receive bytes. Concrete providers parse the same
+        bytes they hash, so the SHA-256 provenance names exactly the content
+        that produced the rows.
         """
-        if path.is_symlink():
-            raise InvalidFinancialSourceError(
-                translated_message="errors.financial.source_file_is_symlink",
-                context={"path": str(path)},
-            )
-        resolved = path.resolve()
-        if not resolved.exists() or not resolved.is_file():
-            raise InvalidFinancialSourceError(
-                translated_message="errors.financial.source_file_not_found",
-                context={"path": str(resolved)},
-            )
-        size = resolved.stat().st_size
-        if size > _MAX_SOURCE_BYTES:
-            raise InvalidFinancialSourceError(
-                translated_message="errors.financial.source_file_too_large",
-                context={
-                    "path": str(resolved),
-                    "size_bytes": size,
-                    "max_bytes": _MAX_SOURCE_BYTES,
-                },
-            )
-        return resolved.read_bytes()
+        return require_admissible_source(path).read_bytes()
 
     @staticmethod
     def _compute_sha256(source_bytes: bytes) -> str:
@@ -721,12 +719,15 @@ class ParsedLedgerRow(BaseModel):
             non-negative magnitude amount.
         direction: The authoritative flow direction derived from the source
             sign at the parse boundary.
+        own_account_id: Always ``None`` from a provider: a statement row is
+            bound to the taxpayer's own account by the import, not the parser.
     """
 
     model_config = _STRICT_FROZEN
 
     raw: RawTransaction
     direction: TransactionDirection
+    own_account_id: None = None
 
 
 def direction_from_signed_amount(signed_amount: Decimal) -> TransactionDirection:

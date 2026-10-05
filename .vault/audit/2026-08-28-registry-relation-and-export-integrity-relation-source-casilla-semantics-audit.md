@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#registry-relation-and-export-integrity'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:de70aa003f8fd75d411cb2edd4ac769b57db7d35945fbebbbd47062f2c70b206'
+body_hash: 'sha256:acbbd00dcc404f5931139bc7b53e2ede9231e9dcd7622c0d23122904ea2b8ed1'
 related: []
 ---
 
 # `registry-relation-and-export-integrity` audit: `Cross-modelo relations join by bare casilla id and validate existence, not meaning`
 
-## Finding
+## Scope
 
+Review the registry relation-source casilla semantics and determine whether the latent mismatch is reachable on a live declaration.
+
+## Findings
 Cross-modelo `annual_summary` relations fold a quarterly return into an annual
 one by pinning a **bare source casilla id**. Registry validation asserts that the
 id *exists* in the source revision and that the periods line up. It never asserts
@@ -21,6 +24,29 @@ changed across a renumbering, so the join key is one that has demonstrably moved
 
 There is **no live defect today**. The finding is that today's correctness is
 circumstantial rather than enforced.
+
+## Recommendations
+Assert `semantic_role` agreement between the source casilla and the target
+binding at registry build, alongside the existing existence and period checks.
+This is the campaign's own standing method — *never join on casilla id across
+filing years; require `semantic_role` to agree* — expressed as a gate instead of
+a discipline.
+
+Two things to settle before implementing, neither adjudicated here:
+
+- The source and target vocabularies are not identical (`retenciones_ingresos_a_cuenta`
+  on M123 against a `modelo-193-123-retenciones-anual` binding), so the assertion
+  needs a declared correspondence rather than string equality. A relation could
+  carry an expected `source_semantic_role` and the validator compare that against
+  the loaded source revision — which keeps the authority in registry data.
+- Whether existing relations all satisfy such an assertion must be checked before
+  the gate is turned on; a gate landed red is a gate someone will weaken.
+
+Per the standing rule, a gate is unproven until it bites: any implementation needs
+a deliberate break — repoint one relation at a wrong-semantics id in the source
+revision and confirm the build reds — rather than a synthetic fixture.
+
+No production code, registry data or test was changed by this audit.
 
 ## Evidence
 
@@ -74,30 +100,6 @@ This is the same hazard class as the stale `casilla 158` reference recorded in
 `[[2026-08-28-calculation-correctness-campaign-m390-recargo-total-fourth-tier-audit]]`, but
 structural rather than prose: there the comment mis-described a correct
 computation; here the join key itself is the id.
-
-## Remediation — owner's decision, not taken here
-
-Assert `semantic_role` agreement between the source casilla and the target
-binding at registry build, alongside the existing existence and period checks.
-This is the campaign's own standing method — *never join on casilla id across
-filing years; require `semantic_role` to agree* — expressed as a gate instead of
-a discipline.
-
-Two things to settle before implementing, neither adjudicated here:
-
-- The source and target vocabularies are not identical (`retenciones_ingresos_a_cuenta`
-  on M123 against a `modelo-193-123-retenciones-anual` binding), so the assertion
-  needs a declared correspondence rather than string equality. A relation could
-  carry an expected `source_semantic_role` and the validator compare that against
-  the loaded source revision — which keeps the authority in registry data.
-- Whether existing relations all satisfy such an assertion must be checked before
-  the gate is turned on; a gate landed red is a gate someone will weaken.
-
-Per the standing rule, a gate is unproven until it bites: any implementation needs
-a deliberate break — repoint one relation at a wrong-semantics id in the source
-revision and confirm the build reds — rather than a synthetic fixture.
-
-No production code, registry data or test was changed by this audit.
 
 ## Tree-wide sweep: the hazard is latent everywhere, live nowhere
 

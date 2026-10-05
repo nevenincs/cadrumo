@@ -1,4 +1,4 @@
-"""Exact worker human-login acknowledgements and optional receipt publication."""
+"""Exact worker human-login acknowledgements and receipt publication after session publication."""
 
 from __future__ import annotations
 
@@ -12,6 +12,8 @@ import pytest
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, worker_profiles
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
+from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
@@ -106,39 +108,69 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                 candidate_id, outcome = human.authenticate(proof)
                 assert not outcome.session_persisted and not path.exists()
                 lease = _human_lease(identity, outcome)
+                sign_in = SignInGenerationCustody(root=root, binding=identity.binding)
+                bound, pending = human.bind(candidate_id, lease, persist_receipt=mode != "default")
+                # Binding precedes publication, so it never mints.
+                assert pending == (mode != "default")
+                assert not bound.session_persisted and not path.exists() and store.writes == 0
+                assert custody.require(lease.session_id) == lease
+                if mode == "default":
+                    return
+                if mode == "retired_before_mint":
+                    # The runtime refused or retired the session before minting.
+                    human.discard(lease.session_id)
+                    custody.retire(lease.session_id)
+                    with pytest.raises(AutomationCustodyError):
+                        human.mint_receipt(lease.session_id, sign_in.establish().current)
+                    assert not path.exists() and store.writes == 0
+                    return
+                if mode == "lease_gone":
+                    custody.retire(lease.session_id)
+                    gone = human.mint_receipt(lease.session_id, sign_in.establish().current)
+                    assert not gone.session_persisted and not path.exists() and store.writes == 0
+                    return
+                captured = sign_in.establish().current
+                if mode == "advanced_before_mint":
+                    sign_in.advance()
+                    stale = human.mint_receipt(lease.session_id, captured)
+                    assert not stale.session_persisted and not path.exists() and store.writes == 0
+                    with pytest.raises(AutomationCustodyError):
+                        human.mint_receipt(lease.session_id, captured)
+                    return
                 if mode == "publication_failure":
                     # A malformed exact receipt leaf causes a storage publication
-                    # error after custody installation, independently of keyring availability.
+                    # error at the mint, independently of keyring availability.
                     path.mkdir(parents=True)
                     try:
                         with pytest.raises(ProfileCustodyRecordError):
-                            human.bind(candidate_id, lease, persist_receipt=True)
-                        assert custody.live_sessions() == ()
-                        try:
-                            human.bind(candidate_id, lease)
-                        except AutomationCustodyError:
-                            pass
-                        else:
-                            raise AssertionError("failed candidate remained bindable")
+                            human.mint_receipt(lease.session_id, captured)
+                        with pytest.raises(AutomationCustodyError):
+                            human.mint_receipt(lease.session_id, captured)
                     finally:
                         path.rmdir()
                     return
-                acknowledged = human.bind(candidate_id, lease, persist_receipt=mode != "default")
+                acknowledged = human.mint_receipt(lease.session_id, captured)
                 assert acknowledged.authenticated_at == outcome.authenticated_at
                 assert acknowledged.idle_deadline == outcome.idle_deadline
                 assert acknowledged.absolute_deadline == outcome.absolute_deadline
                 assert not acknowledged.resumed
                 assert acknowledged.session_persisted == (mode == "success")
                 assert custody.require(lease.session_id) == lease
-                if mode in {"unavailable", "default"}:
+                if mode == "unavailable":
                     assert not path.exists() and store.writes == 0
                     return
+                check = binding_probe.verify_profile_session_binding(
+                    sign_in=sign_in, login_id=lease.originating_login_id or ""
+                )
+                assert check.verdict is binding_probe.ReceiptBindingVerdict.BOUND
+                assert check.record is not None and check.record.sign_in == captured
                 assert path.is_file() and store.writes == 1
                 original = path.read_bytes()
                 with borrow_profile_receipt_key(bucket_id=identity.binding.profile_id) as receipt_key:
-                    resumed_id, resumed_outcome = human.resume(receipt_key)
+                    resumed_id, resumed_outcome = human.resume(receipt_key, login_id=lease.originating_login_id)
                 successor = _human_lease(identity, resumed_outcome)
-                resumed_ack = human.bind(resumed_id, successor, persist_receipt=False)
+                resumed_ack, resumed_pending = human.bind(resumed_id, successor, persist_receipt=True)
+                assert not resumed_pending
                 assert resumed_ack.resumed and resumed_ack.session_persisted
                 assert resumed_ack.authenticated_at == acknowledged.authenticated_at
                 assert resumed_ack.idle_deadline == acknowledged.idle_deadline
@@ -151,7 +183,18 @@ def _exercise(tmp_path: Path, mode: str) -> None:
                 custody.close()
 
 
-@pytest.mark.parametrize("mode", ["success", "default", "unavailable", "publication_failure"])
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "success",
+        "default",
+        "unavailable",
+        "publication_failure",
+        "retired_before_mint",
+        "lease_gone",
+        "advanced_before_mint",
+    ],
+)
 def test_worker_human_login_receipt_lifecycle(tmp_path: Path, mode: str) -> None:
     result = run_audited_process(
         [sys.executable, "-m", "cadrumo.entrypoints.runtime.tests.test_human_login_receipt", str(tmp_path), mode],

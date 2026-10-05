@@ -14,26 +14,29 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject, changed
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.modelo.operation_definitions import (
-    ModeloWorkCalculatePublicResultV2,
-    ModeloWorkCalculateRequest,
-    ModeloWorkFileApproval,
-    ModeloWorkFilePublicResultV2,
-    ModeloWorkFileRequest,
-    ModeloWorkVerifyPublicResultV2,
-    ModeloWorkVerifyRequest,
-)
 from cadrumo.application.modelo.revision_selection_operation import (
     ModeloWorkRevisionProjection,
     ModeloWorkRevisionRequest,
+)
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateRequest,
+)
+from cadrumo.application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
+from cadrumo.application.modelo.work_verification_contracts import (
+    ModeloWorkVerifyPublicResultV2,
+    ModeloWorkVerifyRequest,
 )
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
@@ -66,6 +69,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_work_unit,
 )
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .test_modelo_metadata import _admit, _connect, _LoginObservation, _submit
 from .test_modelo_metadata_history import _observe
@@ -243,7 +247,10 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
             capture_login=lambda _channel: _LoginObservation(),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
@@ -257,6 +264,7 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
                                 {
                                     "work_unit_id": unit.work_unit_id,
                                     "actor": "native-operator",
+                                    "caller_context": "explicit",
                                     "inputs": {
                                         "binding_overrides": [
                                             {"key": key, "value": "0"}

@@ -47,10 +47,10 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
@@ -77,14 +77,14 @@ from ...tests.authored_edition_support import authored_revisions_where
 from .._export_tree import render_complete_export_tree
 from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
-from ..candidate_staging import stage_continuity_metadata
 from ..cli import stage_published_modelo
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
     collect_export_fragment_output_digests,
     load_export_fragment_provenance_manifest,
-    normalised_loader_semantics,
 )
+from ..export_fragment_provenance_projection import normalised_loader_semantics
 from ..generated_tree_inventory import generated_export_trees
 from ..render_check import parsed_tree_file
 from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
@@ -269,8 +269,8 @@ def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operatio
         model_profile=taxpayer.iva,
         elections=m303_did._elections(ResultDisposition.DEVOLUCION),
         amendment_evidence=None,
-        refund_account=taxpayer.iva.refund_account,
-        charge_account=taxpayer.iva.charge_account,
+        refund_account=m303_did._REFUND_ACCOUNT,
+        charge_account=m303_did._CHARGE_ACCOUNT,
         m303_filing_facts=facts,
     )
     return snapshot, producer
@@ -766,7 +766,7 @@ def _extra_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]
         (
             "drop",
             _dropped_occurrence,
-            "filing-envelope payload must be the exact prefix, occurrences, and closer bytes",
+            "filing-envelope payload must be the exact prefix, occurrences, closer, and terminator bytes",
         ),
         (
             "duplicate",

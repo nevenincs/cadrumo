@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-row-width-pressure'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:4a2a79c7c027db5602efe30aaa875e385e14da43307ce3e4ba8fb9bad38556dd'
-related:
-  - '[[2026-06-04-registry-row-width-pressure-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:5f6edcdca5aa9371529599639cb19d596a23923f1b9ad510323238cf4dac3b80'
+related: []
 ---
 
 # `registry-row-width-pressure` audit: `verification blocker`
@@ -20,22 +19,22 @@ module exceeds its existing reviewability ceiling.
 
 ## Passing gates
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py -q`: 27 passed.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_committed_registry.py -q`: 41 passed.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_record_design.py -q`: 41 passed.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_cross_revision_drift.py -q`: 37 passed.
+- the historical check: 27 passed.
+- the historical check: 41 passed.
+- the historical check: 41 passed.
+- the historical check: 37 passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-06-04-registry-row-width-pressure-plan.md`: passed.
 
 ## Blocking gate
 
-`uv run --no-sync pytest src/aeat/domain/calculations/registry/test_registry_reviewability.py -q`
+the historical check
 currently returns 1 failed, 2 passed. The failing assertion is
 `test_registry_validator_modules_stay_below_p05_reviewability_baseline`:
 
 - `_validate_relation_periods.py`: 217 lines exceeds the existing 203-line
   baseline.
 
-The scoped diff shows that `src/aeat/domain/calculations/registry/_validate_relation_periods.py`
+The scoped diff shows that the retired module
 has unrelated concurrent docstring edits. This row-width slice did not edit
 that file and should not adjust its validator-module baseline.
 

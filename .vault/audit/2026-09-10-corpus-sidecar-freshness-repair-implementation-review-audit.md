@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#corpus-sidecar-freshness-repair'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:beb6cd08ee4b5abc45d787f1b474bef673ca6ecc62dd3e12ecbd0f6592c96298'
-related:
-  - "[[2026-09-10-corpus-sidecar-freshness-repair-plan]]"
+related: []
 ---
 
 # `corpus-sidecar-freshness-repair` audit: `implementation review`

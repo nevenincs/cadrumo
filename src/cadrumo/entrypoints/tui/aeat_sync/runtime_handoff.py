@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FiledHistoryOperationRequest,
@@ -27,10 +27,11 @@ from ....application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
-    OperationSchemaIdentityV1,
 )
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.operator_actions.models import ActionReference
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
@@ -174,59 +175,111 @@ async def _prepare_censal_request(
         deadline=deadline,
     )
     await controller.start()
+    return await _wait_for_censal_preparation(
+        client,
+        controller,
+        profile_id=profile_id,
+        session_id=session_id,
+        subject_ref=subject_ref,
+        contract=contract,
+        deadline=deadline,
+    )
 
+
+async def _wait_for_censal_preparation(
+    client: RuntimeFrontendClient,
+    controller: RuntimeOperationController,
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+    subject_ref: str,
+    contract: OperationPublicDefinitionContractV1,
+    deadline: float,
+) -> CensalOperationRequest:
     while True:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+        remaining = remaining_budget(deadline)
         observed = await controller.observe(0, page_limit=1)
         if isinstance(observed, OperationObservationRefusalV1):
             raise RuntimeFrontendRefusedError(observed.code.value)
         if not isinstance(observed, OperationObservationSuccessV1):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         projection = observed.projection
-        expected_request_schema = OperationSchemaIdentityV1.from_model(
-            schema_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID + ".request",
-            schema_version=1,
-            model_type=CensalPrepareOperationRequest,
-        )
-        if (
-            projection.operation_id != controller.operation_id
-            or projection.definition_id != CENSAL_PREPARE_OPERATION_DEFINITION_ID
-            or projection.subject_ref != subject_ref
-            or projection.definition_contract != contract
-            or contract.request_schema != expected_request_schema
-            or projection.definition_contract.result_schema
-            != OperationSchemaIdentityV1.from_model(
-                schema_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID + ".result",
-                schema_version=1,
-                model_type=CensalPrepareOperationProjection,
-            )
-            or not _client_still_bound(client, profile_id=profile_id, session_id=session_id)
+        if not _valid_censal_prepare_projection(
+            client,
+            projection,
+            controller,
+            profile_id=profile_id,
+            session_id=session_id,
+            subject_ref=subject_ref,
+            contract=contract,
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         if projection.lifecycle is OperationLifecycle.TERMINAL:
-            if (
-                projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-                or projection.effect is not OperationEffect.NONE
-                or projection.result_ref is None
-            ):
-                raise RuntimeFrontendRefusedError(
-                    projection.refusal_ref or projection.failure_error_code or "censo_preparation_not_successful"
-                )
-            prepared = await controller.read_settled_result(
-                projection,
-                CensalPrepareOperationProjection,
-                result_version=1,
+            return await _read_censal_preparation_result(
+                client, controller, projection, profile_id=profile_id, session_id=session_id
             )
-            if (
-                prepared.profile_id != profile_id
-                or prepared.operation_request.baseline.profile_id != str(profile_id)
-                or not _client_still_bound(client, profile_id=profile_id, session_id=session_id)
-            ):
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            return prepared.operation_request
         await asyncio.sleep(min(0.05, remaining))
+
+
+def _valid_censal_prepare_projection(
+    client: RuntimeFrontendClient,
+    projection: OperationPublicProjectionV1,
+    controller: RuntimeOperationController,
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+    subject_ref: str,
+    contract: OperationPublicDefinitionContractV1,
+) -> bool:
+    expected_request = OperationSchemaIdentityV1.from_model(
+        schema_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID + ".request",
+        schema_version=1,
+        model_type=CensalPrepareOperationRequest,
+    )
+    expected_result = OperationSchemaIdentityV1.from_model(
+        schema_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID + ".result",
+        schema_version=1,
+        model_type=CensalPrepareOperationProjection,
+    )
+    return (
+        projection.operation_id == controller.operation_id
+        and projection.definition_id == CENSAL_PREPARE_OPERATION_DEFINITION_ID
+        and projection.subject_ref == subject_ref
+        and projection.definition_contract == contract
+        and contract.request_schema == expected_request
+        and projection.definition_contract.result_schema == expected_result
+        and _client_still_bound(client, profile_id=profile_id, session_id=session_id)
+    )
+
+
+async def _read_censal_preparation_result(
+    client: RuntimeFrontendClient,
+    controller: RuntimeOperationController,
+    projection: OperationPublicProjectionV1,
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+) -> CensalOperationRequest:
+    if (
+        projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or projection.effect is not OperationEffect.NONE
+        or projection.result_ref is None
+    ):
+        raise RuntimeFrontendRefusedError(
+            projection.refusal_ref or projection.failure_error_code or "censo_preparation_not_successful"
+        )
+    prepared = await controller.read_settled_result(
+        projection,
+        CensalPrepareOperationProjection,
+        result_version=1,
+    )
+    if (
+        prepared.profile_id != profile_id
+        or prepared.operation_request.baseline.profile_id != str(profile_id)
+        or not _client_still_bound(client, profile_id=profile_id, session_id=session_id)
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    return prepared.operation_request
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -259,21 +312,12 @@ class _RuntimeNotificationsListController(RuntimeOperationController):
         return result
 
 
-def compose_runtime_aeat_sync_handoff(
+def _admit_handoff_contracts(
     client: RuntimeFrontendClient,
     *,
-    output_root: Path,
-) -> tuple[AeatSyncOperationHandoffV1 | None, OperationPublicContractSetV1 | None]:
-    """Bind only the enrolled AEAT Sync operations to the originating TUI session.
-
-    Each action remains independently unavailable unless its exact public
-    contract, action join, TUI permission, request schema, and result schema
-    compose in this session. The handoff accepts only those admitted pairs and
-    starts the selected operation before returning its modal controller.
-    """
-    if client.frontend is not OperationFrontendProjection.TUI:
-        return None, None
-    profile_id, session_id = client.profile_id, client.session_id
+    profile_id: UUID,
+    session_id: UUID,
+) -> tuple[dict[str, OperationPublicDefinitionContractV1], OperationPublicDefinitionContractV1 | None] | None:
     candidates = (
         (
             FILED_HISTORY_OPERATION_DEFINITION_ID,
@@ -298,7 +342,7 @@ def compose_runtime_aeat_sync_handoff(
         except (RuntimeFrontendRefusedError, RuntimeRefusalError):
             continue
         if not _client_still_bound(client, profile_id=profile_id, session_id=session_id):
-            return None, None
+            return None
         if _contract_matches(
             contract,
             definition_id=definition_id,
@@ -308,116 +352,188 @@ def compose_runtime_aeat_sync_handoff(
         ):
             admitted[definition_id] = contract
 
-    # CENSO review is exposed only when its worker-side baseline preparation is
-    # also admitted. The preparation operation has no user action join and is
-    # kept out of the screen's action contract set.
-    prepare_contract: OperationPublicDefinitionContractV1 | None = None
     try:
-        candidate_prepare_contract = client.contract(
+        prepare_contract = client.contract(
             CENSAL_PREPARE_OPERATION_DEFINITION_ID,
             deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
         )
     except (RuntimeFrontendRefusedError, RuntimeRefusalError):
-        candidate_prepare_contract = None
+        prepare_contract = None
     if not _client_still_bound(client, profile_id=profile_id, session_id=session_id):
-        return None, None
-    if candidate_prepare_contract is not None and _contract_matches(
-        candidate_prepare_contract,
+        return None
+    if prepare_contract is None or not _contract_matches(
+        prepare_contract,
         definition_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID,
         action=None,
         request_type=CensalPrepareOperationRequest,
         result_type=CensalPrepareOperationProjection,
     ):
-        prepare_contract = candidate_prepare_contract
+        return admitted, None
+    if not _admit_censal_review(client, admitted, profile_id=profile_id, session_id=session_id):
+        return None
+    return admitted, prepare_contract
 
-    if prepare_contract is not None:
-        try:
-            candidate_censal_contract = client.contract(
-                CENSAL_OPERATION_DEFINITION_ID,
-                deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
-            )
-        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
-            candidate_censal_contract = None
-        if not _client_still_bound(client, profile_id=profile_id, session_id=session_id):
-            return None, None
-        if candidate_censal_contract is not None and _censal_review_contract_matches(candidate_censal_contract):
-            admitted[CENSAL_OPERATION_DEFINITION_ID] = candidate_censal_contract
 
-    if not admitted:
-        return None, None
-    operation_contracts = OperationPublicContractSetV1.build(tuple(admitted.values()))
+def _admit_censal_review(
+    client: RuntimeFrontendClient,
+    admitted: dict[str, OperationPublicDefinitionContractV1],
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+) -> bool:
+    try:
+        contract = client.contract(
+            CENSAL_OPERATION_DEFINITION_ID,
+            deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
+        )
+    except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+        contract = None
+    if not _client_still_bound(client, profile_id=profile_id, session_id=session_id):
+        return False
+    if contract is not None and _censal_review_contract_matches(contract):
+        admitted[CENSAL_OPERATION_DEFINITION_ID] = contract
+    return True
 
-    async def handoff(request: AeatSyncOperationRequestV1, /) -> RuntimeOperationController:
-        subject_ref = profile_operation_subject(str(profile_id))
-        if request.action == _FILED_HISTORY_ACTION and request.operation == FILED_HISTORY_OPERATION_DEFINITION_ID:
-            definition_id = FILED_HISTORY_OPERATION_DEFINITION_ID
-            contract = admitted.get(definition_id)
-            payload = FiledHistoryOperationRequest(
+
+@dataclass(frozen=True, slots=True)
+class _HandoffSelection:
+    definition_id: str
+    contract: OperationPublicDefinitionContractV1 | None
+    payload: BaseModel
+    subject_ref: str
+
+
+async def _select_handoff_action(
+    client: RuntimeFrontendClient,
+    request: AeatSyncOperationRequestV1,
+    admitted: dict[str, OperationPublicDefinitionContractV1],
+    prepare_contract: OperationPublicDefinitionContractV1 | None,
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+    output_root: Path,
+) -> _HandoffSelection:
+    subject_ref = profile_operation_subject(str(profile_id))
+    if request.action == _FILED_HISTORY_ACTION and request.operation == FILED_HISTORY_OPERATION_DEFINITION_ID:
+        return _HandoffSelection(
+            FILED_HISTORY_OPERATION_DEFINITION_ID,
+            admitted.get(FILED_HISTORY_OPERATION_DEFINITION_ID),
+            FiledHistoryOperationRequest(
                 profile_id=profile_id,
                 output_root=output_root,
                 today=today_madrid(),
                 limit=None,
                 dry_run=False,
-            )
-        elif request.action == _NOTIFICATIONS_LIST_ACTION and request.operation == NOTIFICATIONS_LIST_DEFINITION_ID:
-            definition_id = NOTIFICATIONS_LIST_DEFINITION_ID
-            contract = admitted.get(definition_id)
-            payload = NotificationsListRequest(profile_id=profile_id)
-        elif request.action == _CENSAL_REVIEW_ACTION and request.operation == CENSAL_OPERATION_DEFINITION_ID:
-            definition_id = CENSAL_OPERATION_DEFINITION_ID
-            contract = admitted.get(definition_id)
-            if contract is None or prepare_contract is None:
-                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-            payload = await _prepare_censal_request(
-                client,
-                profile_id=profile_id,
-                session_id=session_id,
-                contract=prepare_contract,
-            )
-            subject_ref = str(profile_id)
-        else:
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if contract is None:
+            ),
+            subject_ref,
+        )
+    if request.action == _NOTIFICATIONS_LIST_ACTION and request.operation == NOTIFICATIONS_LIST_DEFINITION_ID:
+        return _HandoffSelection(
+            NOTIFICATIONS_LIST_DEFINITION_ID,
+            admitted.get(NOTIFICATIONS_LIST_DEFINITION_ID),
+            NotificationsListRequest(profile_id=profile_id),
+            subject_ref,
+        )
+    if request.action == _CENSAL_REVIEW_ACTION and request.operation == CENSAL_OPERATION_DEFINITION_ID:
+        contract = admitted.get(CENSAL_OPERATION_DEFINITION_ID)
+        if contract is None or prepare_contract is None:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        await _current_contract(
+        payload = await _prepare_censal_request(
             client,
-            definition_id=definition_id,
-            expected=contract,
             profile_id=profile_id,
             session_id=session_id,
-            deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
+            contract=prepare_contract,
         )
+        return _HandoffSelection(CENSAL_OPERATION_DEFINITION_ID, contract, payload, str(profile_id))
+    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
-        controller = await RuntimeOperationController.submit(
-            client,
-            definition_id=definition_id,
-            subject_ref=subject_ref,
-            payload=payload,
-            expected_session_id=session_id,
+
+async def _submit_handoff_action(
+    client: RuntimeFrontendClient,
+    selection: _HandoffSelection,
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+) -> RuntimeOperationController:
+    contract = selection.contract
+    if contract is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+    await _current_contract(
+        client,
+        definition_id=selection.definition_id,
+        expected=contract,
+        profile_id=profile_id,
+        session_id=session_id,
+        deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
+    )
+    controller = await RuntimeOperationController.submit(
+        client,
+        definition_id=selection.definition_id,
+        subject_ref=selection.subject_ref,
+        payload=selection.payload,
+        expected_session_id=session_id,
+    )
+    # Submission is inert until start; recheck the contract before executing.
+    await _current_contract(
+        client,
+        definition_id=selection.definition_id,
+        expected=contract,
+        profile_id=profile_id,
+        session_id=session_id,
+        deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
+    )
+    if selection.definition_id == NOTIFICATIONS_LIST_DEFINITION_ID:
+        controller = _RuntimeNotificationsListController(
+            client=client,
+            operation_id=controller.operation_id,
+            session_id=session_id,
+            deadline=controller.deadline,
+            profile_id=profile_id,
+            expected_contract=contract,
         )
-        # Submission is inert until start. Recheck the immutable contract after
-        # the controller's own contract-bound submission before authorizing it
-        # to execute, so a session whose installed contract changed stays idle.
-        await _current_contract(
+    await controller.start()
+    return controller
+
+
+def compose_runtime_aeat_sync_handoff(
+    client: RuntimeFrontendClient,
+    *,
+    output_root: Path,
+) -> tuple[AeatSyncOperationHandoffV1 | None, OperationPublicContractSetV1 | None]:
+    """Bind only the enrolled AEAT Sync operations to the originating TUI session.
+
+    Each action remains independently unavailable unless its exact public
+    contract, action join, TUI permission, request schema, and result schema
+    compose in this session. The handoff accepts only those admitted pairs and
+    starts the selected operation before returning its modal controller.
+    """
+    if client.frontend is not OperationFrontendProjection.TUI:
+        return None, None
+    profile_id, session_id = client.profile_id, client.session_id
+    admission = _admit_handoff_contracts(client, profile_id=profile_id, session_id=session_id)
+    if admission is None:
+        return None, None
+    admitted, prepare_contract = admission
+    if not admitted:
+        return None, None
+    operation_contracts = OperationPublicContractSetV1.build(tuple(admitted.values()))
+
+    async def handoff(request: AeatSyncOperationRequestV1, /) -> RuntimeOperationController:
+        selection = await _select_handoff_action(
             client,
-            definition_id=definition_id,
-            expected=contract,
+            request,
+            admitted,
+            prepare_contract,
             profile_id=profile_id,
             session_id=session_id,
-            deadline=time.monotonic() + _CONTRACT_TIMEOUT_SECONDS,
+            output_root=output_root,
         )
-
-        if definition_id == NOTIFICATIONS_LIST_DEFINITION_ID:
-            controller = _RuntimeNotificationsListController(
-                client=client,
-                operation_id=controller.operation_id,
-                session_id=session_id,
-                deadline=controller.deadline,
-                profile_id=profile_id,
-                expected_contract=contract,
-            )
-        await controller.start()
-        return controller
+        return await _submit_handoff_action(
+            client,
+            selection,
+            profile_id=profile_id,
+            session_id=session_id,
+        )
 
     return handoff, operation_contracts
 

@@ -5,24 +5,26 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 import typer
 
-from ...application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
-from ...application.modelo.filing_record_import_operation import (
+from ...application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome, FilingReconciliationResult
+from ...application.modelo.filing_record_import_contracts import (
     MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
     ModeloFilingRecordImportProjection,
     ModeloFilingRecordImportRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ._filing_chain_payloads import filing_reconciliation_payload
 from ._modelo_payloads import FilingRecordImportResult, ModeloRecordPayload
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def import_modelo_filing_record(
@@ -72,33 +74,55 @@ def import_modelo_filing_record(
     )
     projection = completed.projection
     if not isinstance(projection, ModeloFilingRecordImportProjection):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
+        raise invalid_completion_error(completed)
+    return _project_filing_import_result(
+        completed, projection, client.profile_id, source_file, evidence_kind, evidence_reference_id
+    )
+
+
+__all__ = ["import_modelo_filing_record"]
+
+
+def _filing_import_terminal_invalid(
+    completed: RegisteredOperationCompletion[ModeloFilingRecordImportProjection],
+    reconciliation: FilingReconciliationResult,
+    source_file: Path | None,
+) -> bool:
+    """Correlate imported or already-recorded reconciliation with its effects."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or (
+            completed.effect is OperationEffect.NONE
+            and reconciliation.outcome is not FilingReconciliationOutcome.ALREADY_RECORDED
         )
+        or (
+            completed.effect is OperationEffect.UPDATED
+            and reconciliation.outcome is FilingReconciliationOutcome.ALREADY_RECORDED
+            and (source_file is None)
+        )
+    )
+
+
+def _project_filing_import_result(
+    completed: RegisteredOperationCompletion[ModeloFilingRecordImportProjection],
+    projection: ModeloFilingRecordImportProjection,
+    profile_id: UUID,
+    source_file: Path | None,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+) -> FilingRecordImportResult:
+    """Correlate filing import before adapting its bounded existing CLI payload."""
     try:
         reconciliation = projection.reconciliation.to_result()
         if (
-            completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.refusal_code is not None
-            or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
-            or (
-                completed.effect is OperationEffect.NONE
-                and reconciliation.outcome is not FilingReconciliationOutcome.ALREADY_RECORDED
-            )
-            or (
-                completed.effect is OperationEffect.UPDATED
-                and reconciliation.outcome is FilingReconciliationOutcome.ALREADY_RECORDED
-                and source_file is None
-            )
-            or projection.profile_id != client.profile_id
-            or projection.record.bucket_id != str(client.profile_id)
+            _filing_import_terminal_invalid(completed, reconciliation, source_file)
+            or projection.profile_id != profile_id
+            or projection.record.bucket_id != str(profile_id)
             or projection.record.external_evidence is None
-            or projection.record.external_evidence.kind is not evidence_kind
-            or projection.record.external_evidence.reference_id != evidence_reference_id
+            or (projection.record.external_evidence.kind is not evidence_kind)
+            or (projection.record.external_evidence.reference_id != evidence_reference_id)
         ):
             raise ValueError("filing import receipt or profile does not match its request")
         record = ModeloRecordPayload.model_validate(
@@ -116,22 +140,23 @@ def import_modelo_filing_record(
                 "reconciliation": filing_reconciliation_payload(reconciliation),
             }
         )
-        if (
-            result.bucket_id != str(client.profile_id)
-            or result.filing_record_id != reconciliation.filing_record_id
-            or result.work_unit_id != projection.record.work_unit_id
-            or result.external_evidence is None
-        ):
+        if _filing_import_cli_payload_mismatch(result, profile_id, reconciliation, projection):
             raise ValueError("filing import CLI projection exceeds its submitted result")
     except Exception:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return result
 
 
-__all__ = ["import_modelo_filing_record"]
+def _filing_import_cli_payload_mismatch(
+    result: FilingRecordImportResult,
+    profile_id: UUID,
+    reconciliation: FilingReconciliationResult,
+    projection: ModeloFilingRecordImportProjection,
+) -> bool:
+    """Correlate the CLI adaptation with its admitted record and reconciliation."""
+    return (
+        result.bucket_id != str(profile_id)
+        or result.filing_record_id != reconciliation.filing_record_id
+        or result.work_unit_id != projection.record.work_unit_id
+        or (result.external_evidence is None)
+    )

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#m200-erd-tipo-is'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:3edcb3cb5d2551c7c9c7e7ecb51d0a6861605623ef37addcf4748baa2aa43c72'
+body_hash: 'sha256:0de6492b634c909b811d8e3c001438009176deeee6727b1bed9c4c32449ac892'
 related:
-  - '[[2026-06-04-m200-erd-tipo-is-adr]]'
   - '[[2026-06-04-m200-erd-tipo-is-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#m200-erd-tipo-is`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-m200-erd-tipo-is-adr` - `m200-erd-tipo-is` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

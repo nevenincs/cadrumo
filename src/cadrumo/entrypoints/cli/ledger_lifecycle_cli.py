@@ -8,40 +8,42 @@ payloads inside :class:`SchemaEnvelope` through
 
 from __future__ import annotations
 
-import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal
+from uuid import UUID
 
 import typer
 from pydantic import ValidationError
 
 from ...application.ledger.id_resolution import compute_display_id_width
-from ...application.ledger.llm_review_operation import (
+from ...application.ledger.llm_review_contracts import (
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
-    LedgerLlmOperationResult,
     LedgerLlmReviewProjection,
     LedgerLlmReviewRequest,
     LedgerLlmReviewResponse,
     LedgerLlmSuggestionProjection,
 )
+from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
-from ...domain.attachments.enums import DocumentLinkSource
+from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import (
     ledger_validation_bad,
 )
 from .common import bad, emit_envelope
-from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
+from .registered_operation_contracts import (
+    RegisteredOperationCompletion,
     RegisteredOperationReviewCompletion,
     RegisteredOperationReviewHandler,
-    run_registered_operation,
-    submitted_operation_error,
 )
+from .registered_operation_errors import invalid_completion_error, submitted_operation_error
+from .runtime_profile_binding import bound_profile_client
+from .runtime_registered_operation import run_registered_operation
 
 if TYPE_CHECKING:
     from ...application.ledger.split_operation import LedgerSplitOperationResult
@@ -97,155 +99,6 @@ def ledger_attach(
         result,
         command="ledger.attach",
         result_schema=LedgerAttachResult,
-    )
-
-
-def ledger_evidence_pull(
-    ctx: typer.Context,
-    transaction_id: str,
-    source: DocumentLinkSource,
-    reference: str,
-    note: str = "",
-    actor: str | None = None,
-) -> None:
-    """Fetch a document link and attach its bytes through the profile worker."""
-    from ._ledger_payloads import LedgerAttachResult, TransactionPayload
-    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_pull
-
-    projection = run_ledger_evidence_pull(
-        ctx,
-        transaction_id=transaction_id,
-        source=source,
-        reference=reference,
-        note=note,
-        actor=actor,
-    )
-    transaction = TransactionPayload.model_validate_json(projection.transaction.model_dump_json())
-    result = LedgerAttachResult.model_validate(
-        {
-            "bucket_id": str(projection.profile_id),
-            "transaction_id": projection.transaction_id,
-            "bucket_event_ids": list(projection.bucket_event_ids),
-            "review_status": projection.review_status,
-            "transaction": transaction.model_dump(mode="json"),
-        },
-    )
-    emit_envelope(
-        ctx,
-        command="ledger.evidence.pull",
-        result=result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{projection.review_status.value}",
-        ],
-    )
-
-
-#: A Drive folder URL, which carries its id after a ``/folders/`` segment
-#: rather than the ``/d/`` one a file link uses. Matched here rather than in
-#: the shared file-id grammar so a single-document pull still refuses a folder
-#: link at the boundary instead of failing later against the media endpoint.
-_DRIVE_FOLDER_URL = re.compile(r"/folders/(?P<id>[A-Za-z0-9_-]{10,})")
-
-
-def _parse_drive_folder_reference(reference: str) -> str:
-    """Resolve a Drive folder id/URL/reference to a bare folder id.
-
-    A folder id has the same shape as a file id — only the ``in parents``
-    query disambiguates the two on the Drive side — so a bare id and a
-    ``?id=`` link resolve through
-    :func:`~adapters.outbound.google.document_link_resolver.parse_drive_file_id`.
-
-    A folder URL does not. Drive writes it as ``/drive/folders/<id>`` (with an
-    optional ``/u/<n>/`` account segment and a ``?usp=sharing`` suffix), and
-    the file grammar looks for ``/d/<id>``, so the URL an operator copies out
-    of the browser to sweep a folder was refused as unrecognisable — the one
-    reference form this verb exists to accept.
-
-    Refuses anything carrying no recognisable Drive id rather than sending an
-    unparsed string to the API.
-    """
-    from ...adapters.outbound.google.document_link_resolver import parse_drive_file_id
-
-    folder_url = _DRIVE_FOLDER_URL.search(reference.strip())
-    # ``Match.group`` is typed ``str | Any``; the explicit ``str`` keeps the
-    # union honest so the ``None`` check below is a real narrowing rather than
-    # something an assertion would have to paper over.
-    folder_id = str(folder_url.group("id")) if folder_url is not None else parse_drive_file_id(reference)
-    if folder_id is None:
-        raise bad(
-            tr("cli.app.ledger.evidence.pull_all_errors.folder_id_unrecognised", reference=reference),
-        )
-    return folder_id
-
-
-def ledger_evidence_pull_all(
-    ctx: typer.Context,
-    folder: str,
-    note: str = "",
-) -> None:
-    """Bulk-fetch Drive folder children through the exact profile worker."""
-    from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
-    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_pull_all
-
-    folder_id = _parse_drive_folder_reference(folder)
-    projection = run_ledger_evidence_pull_all(ctx, folder=folder_id, note=note)
-    rows = [
-        LedgerEvidencePullAllFilePayload(
-            file_id=row.file_id,
-            name=row.name,
-            mime_type=row.mime_type,
-            fetched=row.fetched,
-            attachment_id=row.attachment_id,
-            refusal_reason=None if row.refusal_reason is None else row.refusal_reason.value,
-        )
-        for row in projection.files
-    ]
-    result = LedgerEvidencePullAllResult.model_validate(
-        {
-            "bucket_id": str(projection.profile_id),
-            "folder_id": projection.folder_id,
-            "total_documents": projection.total_documents,
-            "fetched_count": projection.fetched_count,
-            "refused_count": projection.refused_count,
-            "skipped_non_document_count": projection.skipped_non_document_count,
-            "files": [row.model_dump(mode="json") for row in rows],
-        },
-    )
-    lines = [
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.folder_id')}\t{projection.folder_id}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.total')}\t{projection.total_documents}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.fetched')}\t{projection.fetched_count}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.refused')}\t{projection.refused_count}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.skipped')}\t{projection.skipped_non_document_count}",
-    ]
-    lines.extend(
-        f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
-        f"{row.attachment_id or row.refusal_reason or ''}"
-        for row in rows
-    )
-    notices: list[Notice] = []
-    if projection.refused_count:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="ledger.pull_folder.files_refused",
-                message=tr(
-                    "cli.app.ledger.evidence.pull_all_notices.files_refused",
-                    refused_count=projection.refused_count,
-                ),
-                context={"folder_id": projection.folder_id, "refused_count": str(projection.refused_count)},
-            ),
-        )
-    emit_envelope(
-        ctx,
-        command="ledger.evidence.pull_all",
-        result=result,
-        lines=lines,
-        notices=notices or None,
     )
 
 
@@ -706,9 +559,9 @@ def _ledger_split_llm(
     ``--child-description`` flags are the explicit operator override and cannot be
     combined with ``--llm``.
     """
-    from ...application.operations.registry import OperationSchemaIdentityV1
+    from ...application.operations.schema_identity import OperationSchemaIdentityV1
     from ...application.runtime.contracts import RuntimeRefusalCode
-    from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+    from ...core.operations import profile_operation_subject
 
     _validate_split_llm_options(
         child_amount=child_amount,
@@ -782,25 +635,11 @@ def _ledger_split_llm(
     if request.preview:
         preview = applied.preview
         if (
-            reviewed is not None
-            or applied.outcome != "preview"
-            or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.effect is not OperationEffect.NONE
-            or completed.refusal_code is not None
-            or applied.profile_id != client.profile_id
+            _split_preview_receipt_invalid(completed, applied, reviewed, client.profile_id)
             or preview is None
-            or not matches(preview)
-            or applied.transaction_id != preview.suggestion.transaction_id
-            or applied.reviewed_proposal_digest != preview.reviewed_proposal_digest
-            or applied.provenance != preview.suggestion.provenance
+            or _split_preview_proposal_invalid(applied, preview, matches)
         ):
-            raise submitted_operation_error(
-                completed.operation_id,
-                RuntimeRefusalCode.INVALID_FRAME.value,
-                terminal_condition=completed.terminal_condition,
-                effect=completed.effect,
-                refusal_code=completed.refusal_code,
-            )
+            raise invalid_completion_error(completed)
         suggestion = preview.suggestion
         _render_split_llm_preview(
             ctx,
@@ -812,19 +651,9 @@ def _ledger_split_llm(
     if (
         not apply
         or reviewed is None
-        or applied.outcome != "split"
-        or applied.profile_id != client.profile_id
-        or applied.transaction_id != reviewed.suggestion.transaction_id
-        or applied.reviewed_proposal_digest != reviewed.reviewed_proposal_digest
-        or applied.provenance != reviewed.suggestion.provenance
-        or completed.effect is not OperationEffect.UPDATED
+        or _split_applied_proposal_invalid(completed, applied, reviewed, client.profile_id)
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     _render_split_llm_applied(
         ctx,
         suggestion=reviewed.suggestion,
@@ -882,8 +711,6 @@ def ledger_merge(
 __all__ = [
     "ledger_archive",
     "ledger_attach",
-    "ledger_evidence_pull",
-    "ledger_evidence_pull_all",
     "ledger_exclude",
     "ledger_merge",
     "ledger_remove",
@@ -892,3 +719,51 @@ __all__ = [
     "ledger_split",
     "ledger_stash",
 ]
+
+
+def _split_preview_receipt_invalid(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    applied: LedgerLlmOperationResult,
+    reviewed: LedgerLlmReviewProjection | None,
+    profile_id: UUID,
+) -> bool:
+    """Require a successful read-only preview without an applied review."""
+    return (
+        reviewed is not None
+        or applied.outcome != "preview"
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or (completed.effect is not OperationEffect.NONE)
+        or (completed.refusal_code is not None)
+        or (applied.profile_id != profile_id)
+    )
+
+
+def _split_preview_proposal_invalid(
+    applied: LedgerLlmOperationResult,
+    preview: LedgerLlmReviewProjection,
+    matches: Callable[[LedgerLlmReviewProjection], bool],
+) -> bool:
+    """Correlate the preview transaction, reviewed digest, and provenance."""
+    return (
+        not matches(preview)
+        or applied.transaction_id != preview.suggestion.transaction_id
+        or applied.reviewed_proposal_digest != preview.reviewed_proposal_digest
+        or (applied.provenance != preview.suggestion.provenance)
+    )
+
+
+def _split_applied_proposal_invalid(
+    completed: RegisteredOperationCompletion[LedgerLlmOperationResult],
+    applied: LedgerLlmOperationResult,
+    reviewed: LedgerLlmReviewProjection,
+    profile_id: UUID,
+) -> bool:
+    """Correlate the committed split with the exact reviewed proposal and mutation effect."""
+    return (
+        applied.outcome != "split"
+        or applied.profile_id != profile_id
+        or applied.transaction_id != reviewed.suggestion.transaction_id
+        or (applied.reviewed_proposal_digest != reviewed.reviewed_proposal_digest)
+        or (applied.provenance != reviewed.suggestion.provenance)
+        or (completed.effect is not OperationEffect.UPDATED)
+    )

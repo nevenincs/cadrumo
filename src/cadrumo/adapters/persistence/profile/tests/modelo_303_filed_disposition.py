@@ -38,7 +38,7 @@ def modelo_303_filed_disposition(
     completed = dict(casilla_values)
     completed.setdefault(_RESULT_CASILLA, -completed.get(_AVAILABLE_CASILLA, Decimal("0")))
     header = ObservedHeaderFact(
-        header_key="declaration_type",
+        header_key="filing.result_disposition",
         value=_declaration_type(completed[_RESULT_CASILLA]),
         source_artefact_kind="submitted_file",
         source_locator=source_locator,

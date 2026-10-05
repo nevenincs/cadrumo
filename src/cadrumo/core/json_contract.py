@@ -43,7 +43,6 @@ from pydantic import (
     ConfigDict,
     Field,
     RootModel,
-    TypeAdapter,
     ValidationError,
     field_serializer,
     field_validator,
@@ -390,7 +389,7 @@ def strict_round_trip[ModelT: BaseModel](cls: type[ModelT], obj: BaseModel) -> M
     return cls.model_validate_json(obj.model_dump_json())
 
 
-class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
+class SchemaEnvelope[ResultT](BaseModel):
     """Stable outer envelope wrapping a successful command's payload.
 
     Every successful ``--json`` response is rendered through this
@@ -398,7 +397,7 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
     the inner payload shape. The outer spine (``schema_version``,
     ``command``, ``status``, ``notices``) is shared with the stderr error
     envelope so one shape describes success, warning, and error outcomes.
-    :func:`emit_json_success` constructs the runtime mapping and the
+    :func:`emit_json_success` constructs this spine around the JSON-shaped result. The
     JSON-contract conformance gate specialises this generic envelope over
     every schema authored by the command-spec graph.
 
@@ -420,7 +419,9 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
             profile manifests), so it stays ``None`` for any emitter that
             does not supply it.
         status: Outcome discriminator (``success`` or ``warning`` here).
-        result: The strict-validated command result.
+        result: The command result. Operator boundaries validate its registered
+            schema before emission; metadata emitters may supply any JSON-shaped
+            value. Specialising the generic validates a consumer's expected result.
         notices: Typed non-blocking diagnostics (warnings, advisories,
             next-step hints) surfaced to the caller. Replaces the former
             free-form ``warnings`` string list.
@@ -543,14 +544,13 @@ def emit_json_success(
 
     resolved_notices = [] if notices is None else list(notices)
     envelope_payload = redact_structured_for_cli_output(
-        {
-            "schema_version": ENVELOPE_SCHEMA_VERSION,
-            "command": command,
-            "active_profile": active_profile,
-            "status": derive_status(resolved_notices).value,
-            "result": jsonable_output_payload(result),
-            "notices": [jsonable_output_payload(notice) for notice in resolved_notices],
-        },
+        SchemaEnvelope[object](
+            command=command,
+            active_profile=active_profile,
+            status=derive_status(resolved_notices),
+            result=jsonable_output_payload(result),
+            notices=resolved_notices,
+        ).model_dump(mode="json"),
         reveal_identifiers=reveal_cli_identifiers_opt_in(),
     )
     _record_captured_envelope(envelope_payload)
@@ -571,7 +571,7 @@ def _record_captured_envelope(envelope_payload: object) -> None:
     The deterministic-output substrate captures the verbatim emitted
     envelope so a recorded run can be replayed and asserted byte-identical
     after masking. Capture is off by default: when no
-    :func:`core.observability.capture.capture_envelopes` scope is active the
+    context-local capture sink is active the
     recorder is a single ``ContextVar.get`` returning ``None``. The call
     is fully best-effort — a capture failure must never disturb the emit
     contract. The import is lazy so :mod:`core.json_contract` keeps
@@ -626,76 +626,6 @@ def validate_registered_result(command: str, result: object) -> OutputSchema | O
         ) from error
 
 
-def validate_registered_envelope_document(
-    document: object,
-    schema: RegisteredSchema | None,
-) -> dict[str, object]:
-    """Strictly validate one emitted CLI success or error JSON document."""
-    if not isinstance(document, dict):
-        raise OutputSchemaError("operator JSON envelope must be an object")
-    raw_document = cast("dict[object, object]", document)
-    if not all(isinstance(key, str) for key in raw_document):
-        raise OutputSchemaError("operator JSON envelope keys must be strings")
-    typed_document: dict[str, object] = {key: value for key, value in raw_document.items() if isinstance(key, str)}
-    if typed_document.get("status") == EnvelopeStatus.ERROR.value:
-        return _validated_error_envelope(typed_document)
-    if schema is None:
-        raise OutputSchemaError("operator JSON success envelope requires its authored result schema")
-    return _validated_success_envelope(typed_document, schema)
-
-
-def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, object]:
-    from .errors.error_codes import ErrorEnvelope
-
-    required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
-    if set(typed_document) != required_keys:
-        raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
-    if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
-        raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
-    command = typed_document.get("command")
-    active_profile = typed_document.get("active_profile")
-    if command is not None and (not isinstance(command, str) or not command):
-        raise OutputSchemaError("operator JSON error envelope has an invalid command")
-    if active_profile is not None and not isinstance(active_profile, str):
-        raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
-    # A parsed document is JSON, validated as JSON, as the success envelope is:
-    # strict Python-mode validation rejects the lists and plain strings that
-    # JSON carries for the envelope's tuples and enums, so every error that
-    # names a recovery action failed here while plain errors passed.
-    try:
-        ErrorEnvelope.model_validate_json(json.dumps(typed_document["error"]))
-        TypeAdapter(list[Notice]).validate_json(json.dumps(typed_document["notices"]))
-    except ValidationError as error:
-        raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
-    return typed_document
-
-
-def _validated_success_envelope(
-    typed_document: dict[str, object],
-    schema: RegisteredSchema,
-) -> dict[str, object]:
-    command = typed_document.get("command")
-    if not isinstance(command, str) or not command:
-        raise OutputSchemaError("operator JSON envelope has no usable command")
-    required_keys = {"schema_version", "command", "active_profile", "status", "result", "notices"}
-    if set(typed_document) != required_keys:
-        raise OutputSchemaError("operator JSON success envelope has an invalid outer shape")
-    if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
-        raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
-    # CAST-RATIONALE-ENVELOPE-GENERIC: __class_getitem__ returns a bare `type`
-    # at runtime; `schema` is an OutputSchema subclass, so the parameterized generic is
-    # exactly SchemaEnvelope[OutputSchema].
-    envelope_model = cast("type[SchemaEnvelope[OutputSchema]]", SchemaEnvelope.__class_getitem__(schema))
-    try:
-        validated = envelope_model.model_validate_json(json.dumps(typed_document))
-    except ValidationError as error:
-        raise OutputSchemaError("operator JSON success envelope failed strict validation") from error
-    # CAST-RATIONALE-ENVELOPE-DUMP: model_dump(mode="json") is typed
-    # dict[str, Any] by pydantic; the envelope's own strict schema already
-    # constrains every value to JSON-safe scalars/containers.
-    return cast(dict[str, object], validated.model_dump(mode="json"))
-
-
 __all__ = [
     "ENVELOPE_SCHEMA_VERSION",
     "ActionConditionEvidence",
@@ -713,7 +643,6 @@ __all__ = [
     "derive_status",
     "emit_json_success",
     "strict_round_trip",
-    "validate_registered_envelope_document",
     "validate_registered_result",
 ]
 

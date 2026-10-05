@@ -12,7 +12,7 @@ import typer
 
 from ....adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
-from ....application.invoices.catalogue_add_operation import (
+from ....application.invoices.catalogue_add_contracts import (
     InvoiceAddResult,
 )
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
@@ -24,7 +24,7 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....tests.ecb_stub import ecb_csv_fetch
 from .. import _ledger_business_invoice_cli as handler
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

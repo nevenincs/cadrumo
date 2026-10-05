@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:a6ec18a48c077e090ebf3cca3cbc87817ef8c0f7b30b6450fb6fcaee7854c3db'
+modified: '2026-10-03'
+body_hash: 'sha256:b5c2acba417ecef2bf740b0e4bfac4d5582820af9f813bd63dc1873286a54592'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S448-001 | PASS | Projection CLI has no storage authority
 
-Reviewed the S448 scope as `vaultspec-code-reviewer`. `src/aeat/entrypoints/cli/_modelo_projection_cli.py`
+Reviewed the S448 scope as `vaultspec-code-reviewer`. The retired module
 requires active-profile context through the registered CLI callback, parses operator
 options, delegates projection and comparison to application services, and emits typed
 payload envelopes. It does not construct repositories, inspect manifests, read raw

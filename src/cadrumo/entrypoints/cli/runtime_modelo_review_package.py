@@ -9,12 +9,10 @@ from ...application.modelo.review_package_operation import (
     ModeloReviewPackageBuildRequest,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...core.operations import OperationEffect, OperationTerminalCondition
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from ...core.operations import OperationEffect
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_modelo_review_package_build(
@@ -46,12 +44,7 @@ def run_modelo_review_package_build(
         or result.output_path != request.output_path
         or completed.effect is not OperationEffect.UPDATED
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 

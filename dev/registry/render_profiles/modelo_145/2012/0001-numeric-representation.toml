@@ -1,0 +1,649 @@
+schema_version = 1
+fragment_id = 'numeric-representation'
+
+[[width_17_rules]]
+rule_kind = 'width_17_membership'
+aeat_type = 'Num'
+integer_digits = 15
+decimal_digits = 2
+sign_policy = 'unsigned'
+
+[[width_17_rules.anchors]]
+sheet = 'PDF record design'
+source_row = 51
+record_identity = 'PDF record design'
+ordinal = '44'
+
+[[width_17_rules.anchors]]
+sheet = 'PDF record design'
+source_row = 52
+record_identity = 'PDF record design'
+ordinal = '45'
+
+[width_17_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-width17-num-euro-money-15-2'
+decision_statement = 'The two 17-position Num euro-amount fields use an unsigned 15-integer/2-decimal representation.'
+justification = 'The hash-verified PDF identifies the fields as the annual compensatory pension and child-support annuity amounts and assigns each 17 Num positions. It does not print the decimal split; the reviewed 15+2 euro scale preserves two cents digits without claiming the split is official wording.'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 10
+record_identity = 'PDF record design'
+ordinal = '7'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-140-year-yyyy'
+decision_statement = '4 unsigned digits for 1. Año de nacimiento obligatorio.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 1. Año de nacimiento obligatorio; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 10
+record_identity = 'PDF record design'
+ordinal = '7'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'day_dd'
+value_policy = 'two-digit-day'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 15
+record_identity = 'PDF record design'
+ordinal = '12'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-156-day-dd'
+decision_statement = '2 unsigned digits for 1. Movilidad geográfica. Fecha de traslado. Día.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 1. Movilidad geográfica. Fecha de traslado. Día; the reviewed day dd policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 15
+record_identity = 'PDF record design'
+ordinal = '12'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'month_mm'
+value_policy = 'two-digit-month'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 16
+record_identity = 'PDF record design'
+ordinal = '13'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-158-month-mm'
+decision_statement = '2 unsigned digits for 1. Movilidad geográfica. Fecha de traslado. Mes.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 1. Movilidad geográfica. Fecha de traslado. Mes; the reviewed month mm policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 16
+record_identity = 'PDF record design'
+ordinal = '13'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 17
+record_identity = 'PDF record design'
+ordinal = '14'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-160-year-yyyy'
+decision_statement = '4 unsigned digits for 1. Movilidad geográfica. Fecha de traslado. Año.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 1. Movilidad geográfica. Fecha de traslado. Año; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 17
+record_identity = 'PDF record design'
+ordinal = '14'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 19
+record_identity = 'PDF record design'
+ordinal = '16'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-165-year-yyyy'
+decision_statement = '4 unsigned digits for 2.1. Hijos y otros descendientes menores de 25 años,... Año de nacimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.1. Hijos y otros descendientes menores de 25 años,... Año de nacimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 19
+record_identity = 'PDF record design'
+ordinal = '16'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 20
+record_identity = 'PDF record design'
+ordinal = '17'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-169-year-yyyy'
+decision_statement = '4 unsigned digits for 2.1. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.1. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 20
+record_identity = 'PDF record design'
+ordinal = '17'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 24
+record_identity = 'PDF record design'
+ordinal = '21'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-176-year-yyyy'
+decision_statement = '4 unsigned digits for 2.2. Hijos y otros descendientes menores de 25 años,... Año de nacimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.2. Hijos y otros descendientes menores de 25 años,... Año de nacimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 24
+record_identity = 'PDF record design'
+ordinal = '21'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 25
+record_identity = 'PDF record design'
+ordinal = '22'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-180-year-yyyy'
+decision_statement = '4 unsigned digits for 2.2. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.2. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 25
+record_identity = 'PDF record design'
+ordinal = '22'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 29
+record_identity = 'PDF record design'
+ordinal = '26'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-187-year-yyyy'
+decision_statement = '4 unsigned digits for 2.3. Hijos y otros descendientes menores de 25 años,... Año de nacimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.3. Hijos y otros descendientes menores de 25 años,... Año de nacimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 29
+record_identity = 'PDF record design'
+ordinal = '26'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 30
+record_identity = 'PDF record design'
+ordinal = '27'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-191-year-yyyy'
+decision_statement = '4 unsigned digits for 2.3. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.3. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 30
+record_identity = 'PDF record design'
+ordinal = '27'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 34
+record_identity = 'PDF record design'
+ordinal = '31'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-198-year-yyyy'
+decision_statement = '4 unsigned digits for 2.4. Hijos y otros descendientes menores de 25 años,... Año de nacimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.4. Hijos y otros descendientes menores de 25 años,... Año de nacimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 34
+record_identity = 'PDF record design'
+ordinal = '31'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 35
+record_identity = 'PDF record design'
+ordinal = '32'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-202-year-yyyy'
+decision_statement = '4 unsigned digits for 2.4. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 2.4. Hijos y otros descendientes menores de 25 años,... Año de adopción o acogimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 35
+record_identity = 'PDF record design'
+ordinal = '32'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 39
+record_identity = 'PDF record design'
+ordinal = '36'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-209-year-yyyy'
+decision_statement = '4 unsigned digits for 3.1. Ascendientes mayores de 65 años, ... Año de nacimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 3.1. Ascendientes mayores de 65 años, ... Año de nacimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 39
+record_identity = 'PDF record design'
+ordinal = '36'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'integer'
+value_policy = 'unsigned-integer'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 46
+record_identity = 'PDF record design'
+ordinal = '39'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-215-integer'
+decision_statement = '2 unsigned digits for 3.1. Ascendientes mayores de 65 años, ... Convivencia con otros descendientes.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 3.1. Ascendientes mayores de 65 años, ... Convivencia con otros descendientes; the reviewed integer policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 46
+record_identity = 'PDF record design'
+ordinal = '39'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 47
+record_identity = 'PDF record design'
+ordinal = '40'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-217-year-yyyy'
+decision_statement = '4 unsigned digits for 3.2. Ascendientes mayores de 65 años, ... Año de nacimiento.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 3.2. Ascendientes mayores de 65 años, ... Año de nacimiento; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 47
+record_identity = 'PDF record design'
+ordinal = '40'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'integer'
+value_policy = 'unsigned-integer'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 50
+record_identity = 'PDF record design'
+ordinal = '43'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-223-integer'
+decision_statement = '2 unsigned digits for 3.2. Ascendientes mayores de 65 años, ... Convivencia con otros descendientes.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 3.2. Ascendientes mayores de 65 años, ... Convivencia con otros descendientes; the reviewed integer policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 50
+record_identity = 'PDF record design'
+ordinal = '43'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'day_dd'
+value_policy = 'two-digit-day'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 55
+record_identity = 'PDF record design'
+ordinal = '48'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-285-day-dd'
+decision_statement = '2 unsigned digits for 6. Fecha y firma de la comunicación. Dia.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 6. Fecha y firma de la comunicación. Dia; the reviewed day dd policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 55
+record_identity = 'PDF record design'
+ordinal = '48'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'month_mm'
+value_policy = 'two-digit-month'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 56
+record_identity = 'PDF record design'
+ordinal = '49'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-287-month-mm'
+decision_statement = '2 unsigned digits for 6. Fecha y firma de la comunicación. Mes.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 6. Fecha y firma de la comunicación. Mes; the reviewed month mm policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 56
+record_identity = 'PDF record design'
+ordinal = '49'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 57
+record_identity = 'PDF record design'
+ordinal = '50'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-289-year-yyyy'
+decision_statement = '4 unsigned digits for 6. Fecha y firma de la comunicación. Año.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 6. Fecha y firma de la comunicación. Año; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 57
+record_identity = 'PDF record design'
+ordinal = '50'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'day_dd'
+value_policy = 'two-digit-day'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 61
+record_identity = 'PDF record design'
+ordinal = '54'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-393-day-dd'
+decision_statement = '2 unsigned digits for 7. Acuse de recibo. Día.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 7. Acuse de recibo. Día; the reviewed day dd policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 61
+record_identity = 'PDF record design'
+ordinal = '54'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'month_mm'
+value_policy = 'two-digit-month'
+integer_digits = 2
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 62
+record_identity = 'PDF record design'
+ordinal = '55'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-395-month-mm'
+decision_statement = '2 unsigned digits for 7. Acuse de recibo. Mes.'
+justification = 'The official PDF assigns 2 Num positions and labels this field 7. Acuse de recibo. Mes; the reviewed month mm policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 62
+record_identity = 'PDF record design'
+ordinal = '55'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 63
+record_identity = 'PDF record design'
+ordinal = '56'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm145-2012-offset-397-year-yyyy'
+decision_statement = '4 unsigned digits for 7. Acuse de recibo. Año.'
+justification = 'The official PDF assigns 4 Num positions and labels this field 7. Acuse de recibo. Año; the reviewed year yyyy policy preserves that printed calendar or count meaning.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 63
+record_identity = 'PDF record design'
+ordinal = '56'
+
+[design_identity]
+modelo = '145'
+design_epoch = '2012'
+source_ref = 'aeat-dr-145-v20'
+source_sha256 = 'fe29e8df4db859b41c66aaaf96c1bd27bc2af9063d98a61e62f21832c091765c'

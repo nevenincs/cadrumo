@@ -4,8 +4,8 @@ Exercises the diagnose verb end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.build_run_health_report`
 aggregator, real encrypted SQLite persistence in an isolated storage root, and
 the real :func:`~cadrumo.application.auth.test_operator_auth` session probe. No
-test doubles: LLM run telemetry is seeded through its production writer
-(:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the verb
+test doubles: LLM run record is seeded through its production writer
+(:class:`~cadrumo.adapters.outbound.llm.LLMRunRecorder`) and the verb
 reports it back typed, alongside a real auth-session staleness verdict for a
 profile with no configured auth provider.
 """
@@ -19,7 +19,7 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from .._diagnostics_payloads import (
     ErrorKindCountPayload,
@@ -45,7 +45,7 @@ def _invoke(args: list[str]) -> Result:
 
 def _seed_runs() -> None:
     """Write three real run-timing records: two claude (one failed), one codex."""
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     recorder.record(
         LLMRunRecord(
             run_id="run-1",
@@ -83,7 +83,7 @@ def _seed_runs() -> None:
 
 
 def test_run_health_reports_seeded_llm_runs_and_no_session(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """The verb reports the seeded run telemetry typed and a no-session auth verdict."""
+    """The verb reports the seeded run record typed and a no-session auth verdict."""
     _seed_runs()
 
     result = _invoke(["--format", "json", "app", "diagnostics", "run-health"])
@@ -118,7 +118,7 @@ def test_run_health_reports_seeded_llm_runs_and_no_session(diagnostics_native_pr
 
 
 def test_run_health_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
+    """With no LLM run record the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "run-health"])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)

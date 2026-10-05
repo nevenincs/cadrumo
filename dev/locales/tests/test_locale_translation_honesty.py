@@ -17,7 +17,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 
 from .._paths import LOCALES_DIR, SRC_DIR
-from ..manager import LocaleManager, locale_catalogue_source
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

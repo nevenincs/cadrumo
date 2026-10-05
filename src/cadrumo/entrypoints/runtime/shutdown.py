@@ -8,15 +8,46 @@ from threading import Event, Thread
 from types import TracebackType
 from typing import NoReturn, Self, override
 
+from ...application.runtime.contracts import RuntimeExitReason
 
-def terminate_runtime() -> NoReturn:
-    """Exit without releasing singleton ownership ahead of remaining execution.
+
+def terminate_runtime(reason: RuntimeExitReason) -> NoReturn:
+    """Exit with ``reason`` without releasing singleton ownership ahead of remaining execution.
 
     This belongs only to the installed runtime process. Its native containment
     handles close with the process; cleanup callbacks cannot extend the bound.
     Journals remain available for honest lease/effect reconciliation afterwards.
     """
-    os._exit(2)
+    os._exit(int(reason))
+
+
+class RuntimeStop(Event):
+    """Stop latch that keeps the first reason this runtime was asked to end for."""
+
+    def __init__(self) -> None:
+        """Start unset, with no reason recorded."""
+        super().__init__()
+        self._first: dict[str, RuntimeExitReason] = {}
+
+    def request(self, reason: RuntimeExitReason) -> None:
+        """Record ``reason`` unless an earlier request named one, then set the latch."""
+        # dict.setdefault is one atomic step under the GIL, so a signal handler
+        # that interrupts another request cannot overwrite the first reason.
+        self._first.setdefault("reason", reason)
+        self.set()
+
+    @property
+    def reason(self) -> RuntimeExitReason | None:
+        """Return the first requested reason, or ``None`` when only ``set`` was called."""
+        return self._first.get("reason")
+
+
+def request_runtime_stop(stop: Event, reason: RuntimeExitReason) -> None:
+    """Set ``stop``, recording ``reason`` when it is the runtime's own exit latch."""
+    if isinstance(stop, RuntimeStop):
+        stop.request(reason)
+    else:
+        stop.set()
 
 
 class RuntimeShutdownEvent(Event):
@@ -34,7 +65,7 @@ class RuntimeShutdownEvent(Event):
             self._before_stop()
         except BaseException:
             # An unreadable stop disposition must never become a crash retry.
-            terminate_runtime()
+            terminate_runtime(RuntimeExitReason.SUPERVISOR_STOP)
         super().set()
 
 
@@ -59,7 +90,7 @@ class RuntimeShutdownWatchdog:
             if self._finished.is_set():
                 return
         if not self._finished.wait(self._timeout):
-            terminate_runtime()
+            terminate_runtime(RuntimeExitReason.DRAIN_WATCHDOG)
 
     def __enter__(self) -> Self:
         """Arm the bound before serving any clients or opening profile custody."""
@@ -67,7 +98,7 @@ class RuntimeShutdownWatchdog:
         return self
 
     def __exit__(
-        self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: TracebackType | None
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, _traceback: TracebackType | None
     ) -> None:
         """Disarm after serving has settled or terminated the installed process."""
         self._finished.set()

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:958701c430c7ea3d6198793574ca282ee95965cf8b51b1c378d3502bb67439bd'
+modified: '2026-10-03'
+body_hash: 'sha256:8cc0558a786604dc6153b10c100edee13da7101f5305977af7fb6a102c1e078c'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S291-001 | PASS | Corpus manifest is a plaintext integrity sidecar
 
-`src/aeat/core/corpus_manifest/__init__.py` writes and reads plaintext JSON manifests
+The retired module writes and reads plaintext JSON manifests
 for CORPUS-class reference data. This is a retained plaintext exception: the manifest
 records SHA-256 and byte length for reference files and self-attests its own body
 digest. It is not a storage backend for operator financial, tax, profile, or auth
@@ -52,9 +52,9 @@ logic.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/corpus_manifest/__init__.py src/aeat/core/corpus_manifest/_errors.py src/aeat/core/corpus_manifest/test_manifest.py src/aeat/core/errors/registry/_core.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py`
-- `uv run --no-sync pytest -q src/aeat/core/corpus_manifest/test_manifest.py`
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py`
-- `uv run --no-sync pytest -q -m docs src/aeat/tests/test_docs_api_stubs.py`
+- the historical check
+- the historical check
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "corpus manifest plaintext JSON sha256 tamper drift atomic save no secure bucket repository" --type code --port 8766 --max-results 8`

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-08-15'
-body_hash: 'sha256:da959daf9329fbf7148c31f52730ed3278f6708070c6c46033ab13acf662f054'
+modified: '2026-10-03'
+body_hash: 'sha256:5604366283c007d6c62091ceae2ee4136809ad2ddd24a4f8531728c4bf88026c'
 related: []
 ---
 
@@ -18,7 +18,7 @@ This research investigates the repository's testing taxonomy, hexagonal architec
 
 ### 1. Pytest Testing Taxonomy (Markers, Flags, and Constraints)
 
-The project's test suite uses a strict hexagonal marker system enforced statically by `src/aeat/tests/test_marker_integrity.py` and dynamically at collection time by `src/aeat/tests/_marker_hook.py`.
+The project's test suite uses a strict hexagonal marker system enforced statically by the former source file and dynamically at collection time by the former source file.
 
 * **Active Marker Schema:**
   * **Execution Markers (exactly one required per test):** `unit` (deterministic, no external I/O), `integration` (deterministic, layer-crossing), and `aeat_live` (opt-in external service access).
@@ -28,19 +28,19 @@ The project's test suite uses a strict hexagonal marker system enforced statical
   * Running a bare `pytest` command defaults to executing only `unit`-marked tests.
   * Unregistered markers are blocked by the `--strict-markers` flag.
 * **Bugs & Stale Declarations in Current `justfile`:**
-  * **Stale Markers:** The current `justfile` test commands reference `live_read` and `live_write` markers (e.g. `pytest -m "unit or live_read"`). These markers were retired and are listed in `_FORBIDDEN_MARKERS` inside `src/aeat/tests/test_marker_integrity.py`.
+  * **Stale Markers:** The current `justfile` test commands reference `live_read` and `live_write` markers (e.g. `pytest -m "unit or live_read"`). These markers were retired and are listed in `_FORBIDDEN_MARKERS` inside the former source file.
   * **Silent Execution Drops:**
     * Running `just test-live` attempts to execute `unit or live_read`. Because no tests carry the forbidden `live_read` marker, this command silently executes only the unit tests, skipping the actual live tests (which are marked `aeat_live`).
     * Running `just test-live-read` uses `-m "live_read"`, selecting 0 tests.
     * Running `just test-live-write` uses `-m live_write`, which selects 0 tests and prints a warning.
   * **Unregistered Marker and Lane Bypass:**
-    * The slow LibreOffice-based workbook parity tests in `src/aeat/domain/calculations/registry/tests/test_workbook_parity.py` are executed via `just test-workbook-parity` using `pytest -m workbook_parity`.
+    * The slow LibreOffice-based workbook parity tests  are executed via `just test-workbook-parity` using `pytest -m workbook_parity`.
     * Because `workbook_parity` is listed in `_FORBIDDEN_MARKERS` in the integrity check, it cannot be registered in `pyproject.toml` or attached to tests.
     * The test file `test_workbook_parity.py` is marked with `pytest.mark.unit` to pass the integrity checks.
     * As a consequence, `just test-workbook-parity` runs 0 tests, while the slow LibreOffice tests (adding 60–90 seconds to runs) are executed by default in the standard `just test` unit suite.
 * **Codebase Marker Mismatches and Integrity Contradictions (Discovered in Review):**
-  * **The `"docs"` Marker Contradiction**: The `"docs"` marker was registered in `pyproject.toml` and actively used by 5 test files under `docs/tools/tests/` and `src/aeat/tests/test_docstring_core_struct_links.py`. However, it was mistakenly cataloged in `_FORBIDDEN_MARKERS` inside `test_marker_integrity.py`, causing test failures when running the AST checks. This is resolved by removing `"docs"` from `_FORBIDDEN_MARKERS` and adding it to `_EXPECTED_CONFIGURED_MARKERS`.
-  * **`pytestmark` Placement Violation**: The file `src/aeat/tests/test_roundtrip_fixture_saturation.py` failed the AST-level placement check because a non-import variable assignment (`_TESTS_DIR = Path(__file__).parent`) appeared before the `pytestmark` list. This is resolved by moving `pytestmark` immediately after the imports.
+  * **The `"docs"` Marker Contradiction**: The `"docs"` marker was registered in `pyproject.toml` and actively used by 5 test files under `docs/tools/tests/` and the former source file. However, it was mistakenly cataloged in `_FORBIDDEN_MARKERS` inside `test_marker_integrity.py`, causing test failures when running the AST checks. This is resolved by removing `"docs"` from `_FORBIDDEN_MARKERS` and adding it to `_EXPECTED_CONFIGURED_MARKERS`.
+  * **`pytestmark` Placement Violation**: The file the former source file failed the AST-level placement check because a non-import variable assignment (`_TESTS_DIR = Path(__file__).parent`) appeared before the `pytestmark` list. This is resolved by moving `pytestmark` immediately after the imports.
 
 ---
 
@@ -62,7 +62,7 @@ The codebase enforces strict decoupling between layers (`entrypoints`, `adapters
   * Inter-domain integration uses Protocol-based inversion: registry validation exposes a `CrossDomainSnapshotCheck` Protocol and a `register_cross_domain_snapshot_check()` hook; `renta` registers its concrete check at runtime.
 * **Absolute Import Prohibition:**
   * Absolute imports of the package itself (`import aeat.*` or `from aeat.*`) are banned inside `src/aeat/`.
-  * Statically audited by `scripts/check_relative_imports.py` using AST walks to prevent false positives.
+  * Statically audited by the former source file using AST walks to prevent false positives.
   * Absolute imports are only allowed for `tests/` and tooling `scripts/` (outside the production package boundary).
 * **Hexagonal Directory Test Parity:**
   * `test_marker_integrity.py` ensures that all test modules live under a parent `tests` directory and use the `test_` prefix (no underscore prefixes or suffix styles allowed).
@@ -117,7 +117,7 @@ The project leverages `vaultspec-rag` (a dense/sparse hybrid embedding vector da
 * **Quality & Code Discovery Enforcement:**
   * Used to audit Axis 7 of the quality swarm: discovering semantic functionality-cluster overlap and enforcing canonical definition enrollment (as defined by `aeat-swarm-audit-cadence.md`).
   * Relies on loopback-bound daemon services to ensure fast semantic search responses without single-writer database lock conflicts.
-  * **Programmatic Semantic Auditing**: In addition to manual searches, we can programmatically assert semantic invariants. A python script `scripts/audit_semantic.py` will define a set of canonical concept queries (e.g. `"round to two decimal places for currency"`, `"calculate IRPF retention base"`), target canonical/allowed paths, and prohibited paths. The script queries the RAG daemon on port 8766; if high-similarity codebase chunks (e.g. score > 0.75) are found in prohibited paths (e.g. domain logic duplicated inside adapters or entrypoints) or outside the declared canonical modules without an allowed exception, the script exits non-zero, failing the gate.
+  * **Programmatic Semantic Auditing**: In addition to manual searches, we can programmatically assert semantic invariants. A python script the former source file will define a set of canonical concept queries (e.g. `"round to two decimal places for currency"`, `"calculate IRPF retention base"`), target canonical/allowed paths, and prohibited paths. The script queries the RAG daemon on port 8766; if high-similarity codebase chunks (e.g. score > 0.75) are found in prohibited paths (e.g. domain logic duplicated inside adapters or entrypoints) or outside the declared canonical modules without an allowed exception, the script exits non-zero, failing the gate.
 * **Vector Store & Indexing Lifecycle:**
   * Data lives under the gitignored path `.vault/data/search-data/`.
   * The HTTP RAG service (`vaultspec-rag server service start`) implements a filesystem watcher to incrementally re-index on modification, avoiding GPU/CPU-heavy manual full rebuilding during typical development loops.
@@ -127,7 +127,7 @@ The project leverages `vaultspec-rag` (a dense/sparse hybrid embedding vector da
 * **Proposed Design:**
   * Introduce a dedicated RAG lifecycle and validation section in the `justfile`.
   * Define `check-rag` to verify daemon status and heartbeat.
-  * Define `check-semantic` to run programmatic semantic invariant sweeps (`scripts/audit_semantic.py`) against the running daemon.
+  * Define `check-semantic` to run programmatic semantic invariant sweeps  against the running daemon.
   * Define `fix-rag` (or `fix-rag-index`) to trigger a safe incremental re-index.
   * Define `env-rag-start` and `env-rag-stop` to manage daemon processes.
   * Define `audit-rag` to run semantic concept searches on-demand from the console.
@@ -138,7 +138,7 @@ The project leverages `vaultspec-rag` (a dense/sparse hybrid embedding vector da
 
 The core calculations and models are validated by a large suite of registry tests:
 * **Registry Test Base:** `src/aeat/domain/calculations/registry/tests/` contains `155` test files validating schemas, referential integrity, domain parameters, and formula runtimes.
-* **Workbook Parity:** Parity scenario replays and conversions (`src/aeat/domain/calculations/registry/_workbook_parity.py`) run as slow integration/unit checks.
+* **Workbook Parity:** Parity scenario replays and conversions  run as slow integration/unit checks.
 * **Tautology checks:** Evaluated by `test_tautology_gate.py` to prevent circular verification against synthetic expectations.
 * **Proposed Design:** Group these under a dedicated section in the `justfile` (e.g. `── Registry and Correctness ──`).
   * Recipes should distinguish fast schema and integrity checks (`check-registry`) from slow workbook parity runs (`check-workbook-parity`).
@@ -161,4 +161,4 @@ The codebase integrates several static analysis tools in the dev loop and adviso
 * **Proposed Design:**
   * Group static checks under `── Code Quality ──`.
   * Establish a naming taxonomy: `check-` for read-only gates (e.g. `check-style`, `check-types`, `check-imports`, `check-security`) and `fix-` for formatting/repair tools (e.g. `fix-style`).
-  * Prepare to relocate embedded Python heredoc scripts into standalone scripts (e.g. `scripts/audit_complexity.py`).
+  * Prepare to relocate embedded Python heredoc scripts into standalone scripts (e.g. the former source file).

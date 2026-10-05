@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core.config import Settings
 from ...core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ..operator_actions.catalogue import lookup_action
 from ..provisioning import DependencyStatus
@@ -142,12 +143,39 @@ def test_unreadable_manifest_is_refused_without_a_recovery_action(tmp_path: Path
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
-def test_browsers_root_honours_the_vendor_override(tmp_path: Path) -> None:
+def test_browsers_root_ignores_uncontrolled_vendor_override(tmp_path: Path) -> None:
+    storage_root = tmp_path / "configured-storage"
     vendor_root = tmp_path / "vendor-playwright-cache"
 
-    assert playwright_browsers_root(env={"PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}) == vendor_root
-    assert playwright_browsers_root(env={}) != vendor_root
+    assert (
+        playwright_browsers_root(
+            env={"CADRUMO_STORAGE_ROOT": str(storage_root), "PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}
+        )
+        == (storage_root / "components/playwright").resolve()
+    )
     assert playwright_browsers_root(tmp_path, env={"PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}) == tmp_path
+
+
+def test_browsers_root_defaults_under_the_configured_storage_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", raising=False)
+    settings = Settings(cadrumo_local_storage_root=tmp_path)
+
+    assert playwright_browsers_root(settings=settings) == (tmp_path / "components" / "playwright").resolve()
+
+
+def test_cadrumo_browser_root_override_wins_over_vendor_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    storage_root = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage_root))
+    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", "browser-cache")
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path / "vendor-cache"))
+
+    assert playwright_browsers_root() == (storage_root / "browser-cache").resolve()
 
 
 class _Installer:

@@ -40,7 +40,6 @@ from ..festivos import (
     HolidayJurisdiction,
     is_business_day,
     load_holiday_calendar,
-    next_business_day,
     shift_deadline,
 )
 
@@ -207,15 +206,16 @@ def test_business_day_predicate_cases() -> None:
 
 
 # ---------------------------------------------------------------------------
-# next_business_day walk.
+# Deadline business-day walk.
 # ---------------------------------------------------------------------------
 
 
-def test_next_business_day_cases() -> None:
+def test_shift_deadline_walk_cases() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(2025, operation=operation)
         for case_id, probe, expected in _NEXT_BUSINESS_DAY_CASES:
-            assert next_business_day(probe, calendar=calendar, ccaa_code=None) == expected, case_id
+            shifted = shift_deadline(probe, modelo="303", ccaa_code=None, calendars=(calendar,), operation=operation)
+            assert shifted.adjusted_close_date == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -286,7 +286,7 @@ def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
             diada,
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendar=calendar,
+            calendars=(calendar,),
             operation=operation,
         )
         assert catalan_result.shifted is True
@@ -299,7 +299,7 @@ def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
             diada,
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-MD"),
-            calendar=calendar,
+            calendars=(calendar,),
             operation=operation,
         )
         assert madrid_result.shifted is False
@@ -314,7 +314,7 @@ def test_unverified_regional_holiday_never_extends_a_deadline() -> None:
             date(2025, 9, 11),
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendar=_diada_calendar(operation, verified=False),
+            calendars=(_diada_calendar(operation, verified=False),),
             operation=operation,
         )
     assert result.shifted is False
@@ -328,7 +328,7 @@ def test_unknown_territory_checks_national_holidays_only() -> None:
             date(2025, 9, 11),
             modelo="303",
             ccaa_code=None,
-            calendar=_diada_calendar(operation, verified=True),
+            calendars=(_diada_calendar(operation, verified=True),),
             operation=operation,
         )
     assert result.shifted is False
@@ -342,7 +342,7 @@ def test_modelo_369_is_never_shifted_and_says_so() -> None:
             date(2025, 10, 18),
             modelo="369",
             ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendar=_diada_calendar(operation, verified=True),
+            calendars=(_diada_calendar(operation, verified=True),),
             operation=operation,
         )
     assert result.adjusted_close_date == date(2025, 10, 18)
@@ -366,7 +366,7 @@ def test_shift_deadline_accepts_externally_supplied_calendar() -> None:
             tuesday,
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-MD"),
-            calendar=calendar,
+            calendars=(calendar,),
             operation=operation,
         )
         assert result.shifted is False
@@ -394,7 +394,7 @@ def test_shift_deadline_records_holiday_refs_for_audit_trail() -> None:
             diada,
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendar=_diada_calendar(operation, verified=True),
+            calendars=(_diada_calendar(operation, verified=True),),
             operation=operation,
         )
         assert "Diada" in result.holiday_refs
@@ -492,7 +492,6 @@ def test_no_parallel_festivos_implementation_exists() -> None:
     canonical_symbols = (
         "load_holiday_calendar",
         "is_business_day",
-        "next_business_day",
         "shift_deadline",
     )
 
@@ -556,3 +555,93 @@ def test_a_refused_year_is_never_cached_as_a_calendar() -> None:
         for _ in range(2):
             with pytest.raises(DeadlineValidationError):
                 load_holiday_calendar(1999, operation=operation)
+
+
+# ---------------------------------------------------------------------------
+# Walking past 31 December.
+# ---------------------------------------------------------------------------
+
+# 2022-12-31 is a Saturday and 2023-01-01 a Sunday, so the walk first reaches a
+# weekday on Monday 2023-01-02, a day only the 2023 calendar can classify.
+_SATURDAY_YEAR_END = date(2022, 12, 31)
+_FIRST_MONDAY = date(2023, 1, 2)
+
+
+def _year_end_calendar(*, verified: tuple[CalendarCCAA, ...] = ()) -> HolidayCalendar:
+    return HolidayCalendar(year=2022, boe_ref="synthetic-2022", verified_territories=verified)
+
+
+def _next_year_calendar(*, verified: tuple[CalendarCCAA, ...] = ()) -> HolidayCalendar:
+    return HolidayCalendar(
+        year=2023,
+        boe_ref="synthetic-2023",
+        national=(
+            Holiday(holiday_date=date(2023, 1, 1), jurisdiction=HolidayJurisdiction.NATIONAL, name="Año Nuevo"),
+            Holiday(holiday_date=_FIRST_MONDAY, jurisdiction=HolidayJurisdiction.NATIONAL, name="Lunes festivo"),
+        ),
+        verified_territories=verified,
+    )
+
+
+def test_a_year_end_shift_is_judged_against_the_next_years_calendar() -> None:
+    assert _SATURDAY_YEAR_END.weekday() == 5
+    with bundled_indexed_authority().operation() as operation:
+        result = shift_deadline(
+            _SATURDAY_YEAR_END,
+            modelo="303",
+            ccaa_code=None,
+            calendars=(_year_end_calendar(), _next_year_calendar()),
+            operation=operation,
+        )
+    assert result.adjusted_close_date == date(2023, 1, 3)
+    assert result.shift_days == 3
+    assert result.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
+
+
+def test_a_year_end_shift_into_an_unpublished_year_is_refused() -> None:
+    """Without the next year's calendar the moved date cannot be verified, so it is never guessed."""
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(DeadlineValidationError, match="2023"),
+    ):
+        shift_deadline(
+            _SATURDAY_YEAR_END,
+            modelo="303",
+            ccaa_code=None,
+            calendars=(_year_end_calendar(),),
+            operation=operation,
+        )
+
+
+def test_a_year_end_shift_reports_a_territory_the_next_year_does_not_verify() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        catalonia = _calendar_ccaa(operation, "ES-CT")
+        result = shift_deadline(
+            _SATURDAY_YEAR_END,
+            modelo="303",
+            ccaa_code=catalonia,
+            calendars=(_year_end_calendar(verified=(catalonia,)), _next_year_calendar()),
+            operation=operation,
+        )
+    assert result.adjusted_close_date == date(2023, 1, 3)
+    assert result.coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
+
+
+def test_a_single_year_calendar_refuses_to_classify_another_year() -> None:
+    calendar = _year_end_calendar()
+    with pytest.raises(DeadlineValidationError, match="2023-01-02"):
+        is_business_day(_FIRST_MONDAY, calendar=calendar, ccaa_code=None)
+
+
+def test_supplying_two_calendars_for_one_year_is_refused() -> None:
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(DeadlineValidationError, match="more than one"),
+    ):
+        shift_deadline(
+            _SATURDAY_YEAR_END,
+            modelo="303",
+            ccaa_code=None,
+            calendars=(_year_end_calendar(), _year_end_calendar()),
+            operation=operation,
+        )

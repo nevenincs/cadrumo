@@ -12,8 +12,9 @@ import pytest
 
 from .....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from .....core.config import override_settings
+from .....core.i18n.render import lookup_translation
 from .....domain.iva.classification import InvoiceKind
-from ..evidence import draft_lines
+from ..evidence_draft import draft_lines
 from ..models import LedgerEvidenceDraftV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -55,25 +56,26 @@ def test_a_draft_read_in_full_shows_no_label_reading_line() -> None:
 
 
 @pytest.mark.parametrize(
-    ("cause", "remedy"),
+    ("cause", "key"),
     [
-        (LabelReadingFallbackCause.READER_UNAVAILABLE, "Check the reader"),
-        (LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED, "Free memory"),
-        (LabelReadingFallbackCause.INFERENCE_SLOT_BUSY, "once it finishes"),
+        (LabelReadingFallbackCause.READER_UNAVAILABLE, "tui.ledger.evidence.draft.label_reading.reader_unavailable"),
+        (LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED, "tui.ledger.evidence.draft.label_reading.headroom_refused"),
+        (LabelReadingFallbackCause.INFERENCE_SLOT_BUSY, "tui.ledger.evidence.draft.label_reading.busy_refused"),
     ],
 )
 def test_a_degraded_draft_names_the_unread_fields_and_the_remedy_for_its_cause(
     cause: LabelReadingFallbackCause,
-    remedy: str,
+    key: str,
 ) -> None:
     with override_settings(cadrumo_output_language="en"):
         lines = draft_lines(_draft(_fallback(cause)))
 
+    template = lookup_translation(key, locale="en")
+    assert template is not None
     assert len(lines) == 5
     last = lines[-1]
     assert "currency, supplier_name" in last
-    assert "2 field(s)" in last
-    assert remedy in last
+    assert last == template.format(count=2, fields="currency, supplier_name")
 
 
 def test_every_cause_has_its_own_line() -> None:

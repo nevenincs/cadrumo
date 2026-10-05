@@ -2,8 +2,7 @@
 
 ``--dry-run`` promises the operator that a sweep left no trace. That promise is
 primary result data the command exists to produce, not an incidental diagnostic,
-so it rides ``result`` and never the notices channel -- the same shape the
-telemetry flush surface already uses for its own preview flag.
+so it rides ``result`` and never the notices channel.
 
 The single-modelo branch has no dry-run path at all. It is therefore refused
 rather than ignored: silently accepting the flag and performing a real write is

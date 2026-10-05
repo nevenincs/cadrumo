@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:816c82fd8524d0b381f003a9a1cf95ed095be28cf8bdabd4bbd51b61f7b94b09'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 
 # `tui-architecture` audit: `W01.P01.S03 TUI AST boundary review`

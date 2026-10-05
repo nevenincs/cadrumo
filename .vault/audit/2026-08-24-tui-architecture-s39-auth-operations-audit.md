@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:407c6e78e1333281c8c2656f1f6980b7bc1f195d284d47a16cc433a8e8099819'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 # `tui-architecture` audit: `s39 auth operations`
 

@@ -16,7 +16,7 @@ from ....application.ledger.invoice_draft_records import (
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
 )
-from ....application.ledger.invoice_evidence_operation import LedgerEvidenceExtractProjection
+from ....application.ledger.invoice_evidence_extract_operation import LedgerEvidenceExtractProjection
 from ....application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from ....application.ledger.structured_invoice_ports import (
     StructuredInvoiceClassification,

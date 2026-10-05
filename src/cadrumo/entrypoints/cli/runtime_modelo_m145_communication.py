@@ -9,7 +9,7 @@ import typer
 from pydantic import ValidationError
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.modelo.m145_communication_operation import (
+from ...application.modelo.m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID,
@@ -43,14 +43,10 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._modelo_cli_support import parse_casilla_override
 from ._modelo_m145_parsing import m145_actor_from_cli, m145_create_command_from_cli
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error, submitted_operation_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-_NOT_FOUND_CODE = M145_COMMUNICATION_RECORD_NOT_FOUND_REFUSAL_CODE
+from .runtime_registered_operation import run_registered_operation
 
 
 def create_m145_record(
@@ -87,7 +83,7 @@ def create_m145_record(
         expected_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED}),
     )
     if not isinstance(projection, M145CommunicationRecordProjection) or projection.state.value != "created":
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     _require_bucket(projection.bucket_id, client, completed)
     return projection.to_record()
 
@@ -111,7 +107,7 @@ def validate_m145_record(
         expected_effects=frozenset({OperationEffect.NONE}),
     )
     if not isinstance(projection, M145CommunicationValidationProjection):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     _require_bucket(projection.bucket_id, client, completed)
     _require_selector_match(projection.communication_record_id, communication_record_id, completed)
     return projection.to_result()
@@ -138,7 +134,7 @@ def export_m145_record(
         expected_effects=frozenset({OperationEffect.UPDATED}),
     )
     if not isinstance(projection, M145CommunicationExportProjection):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     _require_bucket(projection.bucket_id, client, completed)
     _require_selector_match(projection.communication_record_id, communication_record_id, completed)
     return projection.to_result()
@@ -168,7 +164,7 @@ def mark_m145_record_delivered(
         "delivered_to_payer",
         "locally_completed",
     }:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     _require_bucket(projection.bucket_id, client, completed)
     _require_selector_match(projection.communication_record_id, communication_record_id, completed)
     return projection.to_record()
@@ -195,7 +191,7 @@ def mark_m145_record_locally_completed(
         expected_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED}),
     )
     if not isinstance(projection, M145CommunicationRecordProjection) or projection.state.value != "locally_completed":
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     _require_bucket(projection.bucket_id, client, completed)
     _require_selector_match(projection.communication_record_id, communication_record_id, completed)
     return projection.to_record()
@@ -240,35 +236,13 @@ def _completed_result(
 ) -> M145CommunicationRecordProjection | M145CommunicationValidationProjection | M145CommunicationExportProjection:
     projection = completed.projection
     if projection.outcome == "prewrite_refusal":
-        refusal = projection.refusal
-        if (
-            refusal is None
-            or completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.effect is not OperationEffect.NONE
-            or completed.refusal_code != refusal.code
-            or projection.profile_id != profile_id
-            or projection.operation_id != definition_id
-            or projection.result is not None
-        ):
-            _invalid(completed)
-        _raise_canonical_refusal(
-            completed,
-            refusal.code,
-            refusal.message,
-            {fact.key: fact.value for fact in refusal.context},
-        )
+        _raise_m145_prewrite_refusal(completed, profile_id, definition_id)
     result = projection.result
     if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect not in expected_effects
-        or projection.outcome != "completed"
-        or projection.profile_id != profile_id
-        or projection.operation_id != definition_id
-        or projection.effect is not completed.effect
+        _m145_success_receipt_invalid(completed, projection, profile_id, definition_id, expected_effects)
         or result is None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     expected_kind = {
         M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID: "record",
         M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID: "validation",
@@ -277,7 +251,7 @@ def _completed_result(
         M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID: "record",
     }[definition_id]
     if result.kind != expected_kind:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -326,17 +300,7 @@ def _require_selector_match(
     completed: RegisteredOperationCompletion[M145CommunicationOperationResult],
 ) -> None:
     if not communication_record_id.startswith(selector.strip()):
-        _invalid(completed)
-
-
-def _invalid(completed: RegisteredOperationCompletion[M145CommunicationOperationResult]) -> NoReturn:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+        raise invalid_completion_error(completed)
 
 
 __all__ = [
@@ -346,3 +310,48 @@ __all__ = [
     "mark_m145_record_locally_completed",
     "validate_m145_record",
 ]
+
+
+def _raise_m145_prewrite_refusal(
+    completed: RegisteredOperationCompletion[M145CommunicationOperationResult],
+    profile_id: UUID,
+    definition_id: M145CommunicationOperationId,
+) -> NoReturn:
+    """Validate and translate the exact unchanged prewrite refusal."""
+    projection = completed.projection
+    refusal = projection.refusal
+    if (
+        refusal is None
+        or completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code != refusal.code
+        or projection.profile_id != profile_id
+        or projection.operation_id != definition_id
+        or projection.result is not None
+    ):
+        raise invalid_completion_error(completed)
+    _raise_canonical_refusal(
+        completed,
+        refusal.code,
+        refusal.message,
+        {fact.key: fact.value for fact in refusal.context},
+    )
+
+
+def _m145_success_receipt_invalid(
+    completed: RegisteredOperationCompletion[M145CommunicationOperationResult],
+    projection: M145CommunicationOperationResult,
+    profile_id: UUID,
+    definition_id: M145CommunicationOperationId,
+    expected_effects: frozenset[OperationEffect],
+) -> bool:
+    """Correlate successful operation identity, outcome, and effect."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect not in expected_effects
+        or (projection.outcome != "completed")
+        or (projection.profile_id != profile_id)
+        or (projection.operation_id != definition_id)
+        or (projection.effect is not completed.effect)
+    )

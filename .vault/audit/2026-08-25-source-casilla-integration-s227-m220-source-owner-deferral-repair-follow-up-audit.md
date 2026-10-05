@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9fe40bcaf81874202f229e4b378a44998e0787f0723ce195fca6a553c184bd4e'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:bc25c5091c7112678b804fd596bf7aa41716744412af64cf4ca96287e2fc9704'
+related: []
 ---
+
 # `source-casilla-integration` audit: `S227 M220 source-owner deferral repair follow-up`
 
 ## Scope
@@ -51,7 +51,6 @@ casilla linkage, layout, lifecycle, or export promotion.
 
 ### verification â€” PASS
 
-- `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py -k "not every_registry_revision_can_produce_a_filing_artifact"`: 5 passed, 1 deselected.
 - `uv run ruff check` over the reviewed Markdown paths: passed (no Python files).
 - `uvx vaultspec-core vault check all --feature source-casilla-integration --no-hints`: structure, frontmatter, links, schema, and ADR status clean. The 31 warnings are pre-existing M232/M360 documents and concurrent unfilled M390 research, outside this repair.
 

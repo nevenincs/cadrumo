@@ -4,26 +4,28 @@ from __future__ import annotations
 
 import traceback
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
+from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
-from typer.testing import CliRunner
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
+    isolated_profile_storage_root,
     mutate_encrypted_secure_object_json,
 )
 from ....application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
@@ -59,11 +61,10 @@ from .._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from .._modelo_rendering import verification_report_notices
 from .._modelo_work_review_cli import _review_lines
 from ..command_schema import command_schema_types
-from ..main import app
+from .portable_human_cli_runtime import PortableHumanCliRuntime, portable_human_cli_runtime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _COMMAND = "modelo.work.review"
 _NOW = datetime(2026, 8, 12, 10, 0, tzinfo=UTC)
 _RAW_ROW_IDENTITY = "opaque-inventory-activity-review-canary"
@@ -84,10 +85,16 @@ def _orphan_row_source_identity(document: dict[str, Any]) -> None:
 @contextmanager
 def _persist_blocked_review(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> Generator[tuple[ModeloWorkReview, VerificationReport, SecureObjectRepository]]:
+) -> Generator[tuple[ModeloWorkReview, VerificationReport, SecureObjectRepository, PortableHumanCliRuntime]]:
     """Build the application record from genuine encrypted repositories."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        objects = runtime.repository
+    with ExitStack() as stack:
+        storage_root = stack.enter_context(isolated_profile_storage_root(tmp_path=tmp_path))
+        label = "review-envelope"
+        bucket_id = register_cli_profile(label=label, log_in=False)
+        objects = secure_object_repository_for_active_bucket()
+        runtime = stack.enter_context(
+            portable_human_cli_runtime(storage_root=storage_root, profile_id=UUID(bucket_id), label=label)
+        )
         work_repository = WorkUnitCatalogueRepository(objects=objects)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
         verification_repository = VerificationReportCatalogueRepository(objects=objects)
@@ -98,7 +105,7 @@ def _persist_blocked_review(
         affected_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.legal_refs)
 
         work_unit_id = derive_work_unit_id(
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
             period=period,
@@ -122,7 +129,7 @@ def _persist_blocked_review(
         )
         work_unit = WorkUnit(
             work_unit_id=work_unit_id,
-            bucket_id=_BUCKET_ID,
+            bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
             period=period,
@@ -183,7 +190,7 @@ def _persist_blocked_review(
         verification_repository.save(upsert_verification_report(verification_repository.load(), report))
 
         review = build_modelo_work_review(
-            _BUCKET_ID,
+            bucket_id,
             modelo,
             filing_year,
             period,
@@ -192,13 +199,13 @@ def _persist_blocked_review(
             verification_repository=verification_repository,
             operation=operation,
         )
-        yield review, report, objects
+        yield review, report, objects, runtime
 
 
 def test_review_record_round_trips_through_registered_schema_envelope(
     tmp_path: Path, caplog: pytest.LogCaptureFixture, *, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    with _persist_blocked_review(tmp_path, operation=authority_operation) as (review, report, objects):
+    with _persist_blocked_review(tmp_path, operation=authority_operation) as (review, report, objects, runtime):
         result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
         notices = verification_report_notices(report)
         envelope_cls = cast(Any, SchemaEnvelope)[WorkReviewResult]
@@ -236,8 +243,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(
         )
         assert _RAW_ROW_IDENTITY not in repr(secure_context_dump)
 
-        command = CliRunner().invoke(
-            app,
+        command = runtime.invoke(
             ["--format", "json", "app", "modelo", "work", "review", review.work_unit_id],
         )
         assert command.exit_code == 0, command.output
@@ -255,8 +261,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(
             ),
             mutate=_orphan_row_source_identity,
         )
-        failed = CliRunner().invoke(
-            app,
+        failed = runtime.invoke(
             ["--format", "json", "app", "modelo", "work", "review", review.work_unit_id],
         )
         assert failed.exit_code != 0
@@ -269,7 +274,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(
 def test_review_payload_refuses_raw_identity_fields_without_echoing_value(
     tmp_path: Path, *, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    with _persist_blocked_review(tmp_path, operation=authority_operation) as (review, _, _):
+    with _persist_blocked_review(tmp_path, operation=authority_operation) as (review, _, _, _):
         payload = WorkReviewPayload.from_review(review).model_dump(mode="python")
         payload["row_source_identity"] = _RAW_ROW_IDENTITY
 

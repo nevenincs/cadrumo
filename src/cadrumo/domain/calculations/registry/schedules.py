@@ -11,8 +11,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final, Protocol
 
-from pydantic import ConfigDict, TypeAdapter, ValidationError
+from pydantic import ValidationError
 
+from ....core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from .errors import RegistryValidationError
 from .schema_deadlines import ModeloScheduleDefinition
 from .schema_verification import ProfilePredicateDefinition, ProfilePredicateOp
@@ -32,10 +33,6 @@ _PROFILE_ATTRIBUTE_FACTS: Final[dict[str, tuple[str, bool]]] = {
     _IRPF_ESTIMATION_REGIME_PATH: ("irpf_estimation_regime", True),
     _TAXPAYER_ENTITY_TYPE_PATH: ("entity_type", False),
 }
-_PROFILE_FACT_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
-    dict[str, object],
-    config=ConfigDict(strict=True),
-)
 
 
 class FilingScheduleCarrier(Protocol):
@@ -183,6 +180,6 @@ def _profile_fact_mapping(value: object) -> Mapping[str, object] | None:
     if not isinstance(value, Mapping):
         return None
     try:
-        return _PROFILE_FACT_MAPPING_ADAPTER.validate_python(value)
+        return STRICT_STR_KEYED_MAPPING_ADAPTER.validate_python(value)
     except ValidationError:
         return None

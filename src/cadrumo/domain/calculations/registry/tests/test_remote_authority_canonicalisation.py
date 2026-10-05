@@ -30,7 +30,9 @@ from .....core.remote_authority import (
     aeat_host_suffixes,
     canonical_remote_hostname,
     first_aeat_host,
+    host_is_under_suffixes,
     is_aeat_host,
+    is_current_aeat_host,
     is_sanctioned_gov_idp_host,
     sanctioned_gov_idp_host_suffixes,
 )
@@ -238,6 +240,27 @@ def test_aeat_suffixes_preserve_configured_and_legacy_authority() -> None:
     source = inspect.getsource(aeat_host_suffixes)
     assert "load_external_constants()" in source
     assert "Settings" not in source
+
+
+def test_suffix_admission_respects_the_label_boundary() -> None:
+    """A host shares a suffix only at a dot, whatever scope the caller chose."""
+    assert host_is_under_suffixes("example.org", ("example.org",))
+    assert host_is_under_suffixes("WWW.Example.ORG", ("example.org",))
+    assert host_is_under_suffixes("a.b.example.org", ("other.invalid", "example.org"))
+    assert not host_is_under_suffixes("evilexample.org", ("example.org",))
+    assert not host_is_under_suffixes("example.org.evil.invalid", ("example.org",))
+    assert not host_is_under_suffixes("example.org", ())
+
+
+def test_the_current_apex_scope_is_narrower_than_aeat_ownership() -> None:
+    """Landings and auth-gate redirects admit the current apex, never the legacy one."""
+    domains = load_external_constants().aeat.domains
+
+    assert is_current_aeat_host(f"www6.{domains.host_suffix}")
+    assert is_current_aeat_host(domains.host_suffix)
+    assert not is_current_aeat_host(f"sede.{domains.legacy_host_suffix}")
+    assert is_aeat_host(f"sede.{domains.legacy_host_suffix}")
+    assert not is_current_aeat_host(f"evil{domains.host_suffix}")
 
 
 def test_sanctioned_idp_is_separate_from_aeat_authority() -> None:

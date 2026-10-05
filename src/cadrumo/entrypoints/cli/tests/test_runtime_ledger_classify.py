@@ -10,12 +10,14 @@ from uuid import UUID
 import pytest
 import typer
 
-from ....application.ledger.classify_operation import (
+from ....application.ledger.classify_requests import (
     LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
-    LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
     LedgerClassifyM210Options,
-    LedgerClassifyOperationResult,
     LedgerClassifyRequest,
+)
+from ....application.ledger.classify_result_contracts import (
+    LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
+    LedgerClassifyOperationResult,
 )
 from ....application.ledger.models import ManualLedgerTransactionPatch
 from ....application.ledger.transaction_projection import LedgerM210IncomeProjection, LedgerTransactionProjection
@@ -24,7 +26,7 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....domain.transactions.enums import BusinessClassification
 from .. import runtime_ledger_classify as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

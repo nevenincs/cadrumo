@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..schema import ProfileSchemaDefinition
 
@@ -39,4 +40,4 @@ def legal_ids_fixture() -> frozenset[str]:
     # Every published legal reference, not only those a modelo snapshot cites:
     # the profile schema grounds itself on provisions no modelo names.
     with bundled_indexed_authority().operation() as operation:
-        return frozenset(operation.legal_reference_ids())
+        return frozenset(legal_reference_ids(operation))

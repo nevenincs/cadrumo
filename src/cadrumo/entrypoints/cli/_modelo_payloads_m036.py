@@ -28,12 +28,13 @@ from ...application.modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
 )
 from ...core.identity.bucket import BucketId
-from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.profile import ProfileId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
 from ...domain.buckets.event import BucketEventId
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.filing_text import ModeloActorLabel
 
 
@@ -119,11 +120,14 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
 
     event_id: BucketEventId
     bucket_id: BucketId
+    calculation_revision_id: CalculationRevisionId | None = None
+    registry_snapshot_ref: RegistrySnapshotRef | None = None
     work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
     verdict: ModeloReconciliationVerdict
     diff_count: NonNegativeInt
+    advisory_count: NonNegativeInt = 0
     actor: ModeloActorLabel
     reconciled_at: datetime
 

@@ -2,13 +2,11 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
     _POLICY_3,
     _POLICY_5,
     _POLICY_6,
-    _POLICY_8,
     _POLICY_9,
 )
 from ._app_ledger_command_spec_support import (
@@ -18,14 +16,12 @@ from ._app_ledger_command_spec_support import (
     _NO_RESULT_SCHEMA,
     _OPTIONAL_PERIOD_OPTION,
     _OPTIONAL_YEAR_OPTION,
+    _optional_text_option,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -33,6 +29,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -260,6 +257,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
+            _optional_text_option("account", ("--account",), "cli.ledger.list.account_help"),
         ),
         policy=_POLICY_5,
         handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_list", __package__)),
@@ -497,59 +495,6 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         policy=_POLICY_1,
         handler=None,
         result_schema=_NO_RESULT_SCHEMA,
-    ),
-    CommandSpec(
-        "app_ledger_evidence_pull_all",
-        "app_ledger_evidence",
-        "pull-all",
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.app.ledger.evidence.pull_all_help"),
-        short_help_key=None,
-        invocation=_LEAF_INVOCATION,
-        parameters=(
-            OptionSpec(
-                name="folder",
-                declarations=("--folder",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.evidence.pull_all_folder_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-                transport_locus=TransportLocus.REMOTE_HANDLE,
-                transport_shape=TransportShape.NOT_APPLICABLE,
-                transport_role=TransportRole.NOT_APPLICABLE,
-            ),
-            OptionSpec(
-                name="note",
-                declarations=("--note",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(""),
-                help_key=TranslationKey("cli.app.ledger.evidence.pull_all_note_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-        ),
-        policy=_POLICY_8,
-        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_evidence_pull_all", __package__)),
-        result_schema=ResultSchemaSpec(
-            SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerEvidencePullAllResult", __package__),
-            identity="ledger.evidence.pull_all",
-        ),
     ),
     CommandSpec(
         "app_ledger_ratios",

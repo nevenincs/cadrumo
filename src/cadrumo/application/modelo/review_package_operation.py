@@ -34,6 +34,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -44,11 +45,10 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -56,7 +56,7 @@ from ..operations.registry import (
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .export import ModeloExportCommand, export_modelo_revision
+from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPortsFactory
 from .review_package import (
     ReviewPackageActor,
@@ -84,6 +84,8 @@ class ModeloReviewPackageBuildRequest(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    charge_account_id: OwnAccountId | None = None
+    refund_account_id: OwnAccountId | None = None
     notes: ReviewPackageNote = ""
 
     @model_validator(mode="after")
@@ -199,6 +201,22 @@ class ModeloReviewPackageBuildPublicResultV1(BaseModel):
         )
 
 
+def _require_review_package_export_identity(
+    exported: ModeloExportResult,
+    *,
+    profile_id: str,
+    work_unit_id: WorkUnitId,
+    calculation_revision_id: CalculationRevisionId,
+) -> None:
+    """Admit the export receipt before rechecking the captured repository revisions."""
+    if (
+        exported.bucket_id != profile_id
+        or exported.work_unit_id != work_unit_id
+        or exported.calculation_revision_id != calculation_revision_id
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
 class ModeloReviewPackageBuildExecutor:
     """Keep export, revision capture, staging, and package write in one worker."""
 
@@ -254,20 +272,23 @@ class ModeloReviewPackageBuildExecutor:
                             refund_election=payload.refund_election,
                             payment_election=payload.payment_election,
                             prior_domiciliation_election=payload.prior_domiciliation_election,
+                            charge_account_id=payload.charge_account_id,
+                            refund_account_id=payload.refund_account_id,
                         ),
                         workflow_profile=workflow_profile,
                         operation=context.authority_operation,
                         export_ports=self._export_ports_factory(
                             bucket_id=profile_id,
                             m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+                            operation=context.authority_operation,
                         ),
                     )
-                    if (
-                        exported.bucket_id != profile_id
-                        or exported.work_unit_id != unit.work_unit_id
-                        or exported.calculation_revision_id != revision.calculation_revision_id
-                    ):
-                        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+                    _require_review_package_export_identity(
+                        exported,
+                        profile_id=profile_id,
+                        work_unit_id=unit.work_unit_id,
+                        calculation_revision_id=revision.calculation_revision_id,
+                    )
                     _fresh_revisions, fresh_revision_token = bundle.calculation.load_revisioned(
                         operation=context.authority_operation
                     )
@@ -309,7 +330,10 @@ def build_modelo_review_package_build_definition(
     export_ports_factory: ModeloExportPortsFactory,
     repositories: VerificationRepositoryBundleFactory,
 ) -> OperationDefinition:
-    """Register one irreversible, secure-reference package publication."""
+    """Register one irreversible, secure-reference package publication.
+
+    Parameter types: ``profile_resolver`` (:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`).
+    """
 
     def build() -> ModeloReviewPackageBuildExecutor:
         return ModeloReviewPackageBuildExecutor(

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-10-03'
 body_hash: 'sha256:9ecb46557219de6a8045393210c84e1ac07067dc97cbd4a046453c54e7e5d78c'
 related:
-  - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
   - "[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]"
   - "[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]"

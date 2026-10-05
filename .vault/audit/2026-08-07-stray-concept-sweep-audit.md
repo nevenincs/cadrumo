@@ -3,12 +3,14 @@ tags:
   - '#audit'
   - '#stray-concept-sweep'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:42b7987dcb24822d8d55bf9c58dd344f1ced6369bd4a6b41c6d6d54967cab7df'
+body_hash: 'sha256:d17cc8513746e57b625a71a8ab67350691c14a8be8118a56009c3f8f7b1543a0'
 related: []
 ---
 # `stray-concept-sweep` audit: disposition at HEAD
+
+## Scope
 
 Disposition pass over a five-concept stray-concept sweep (IVA treatment,
 prorrata, expense deductibility, invoice kind/direction, invoice-shaped
@@ -22,7 +24,7 @@ reads at HEAD, and — for the two findings whose mechanism was contested — a
 running probe rather than a reading. Two findings changed materially on
 contact, and in both cases only the executed measurement caught it.
 
-## Summary of dispositions
+### Summary of dispositions
 
 | # | Finding | Disposition |
 |---|---|---|
@@ -39,9 +41,11 @@ contact, and in both cases only the executed measurement caught it.
 | D3 | Two rate-tier → category tables | **Not actioned** — reason recorded |
 | D4 | `IvaLedgerCandidate` / `ADJUSTMENT` dormant | **Folded into the L1 ADR** |
 
-## Findings whose severity or mechanism changed on contact
+## Findings
 
-### L1 — the proposed fix cannot produce a correct figure
+### Findings whose severity or mechanism changed on contact
+
+#### L1 — the proposed fix cannot produce a correct figure
 
 The defect is real and reachable: three byte-identical copies of
 `_invoice_kind_for` map direction alone, `purchase_invoice_evidence_id` carries
@@ -73,7 +77,7 @@ The three duplicated copies should still be consolidated under any option, but
 consolidating them with refund detection would produce one canonical *wrong*
 answer in place of three duplicated ones.
 
-### L4 — the mechanism is a silent drop, not a split row, and the named fix is wrong
+#### L4 — the mechanism is a silent drop, not a split row, and the named fix is wrong
 
 The register described a non-canonical `operation_kind` as splitting one
 counterparty into two rollup rows. Measured, it does not. The aggregator routes
@@ -112,7 +116,7 @@ a positive control and simply had not covered this field — every test in it wa
 already passing canonical enum values for `operation_kind` while the model typed
 it as a bare string.
 
-### P1 and P3 — already closed by a peer, between the sweep and this pass
+#### P1 and P3 — already closed by a peer, between the sweep and this pass
 
 Both were verified false-at-HEAD, in the sense that the defect no longer exists.
 
@@ -138,71 +142,7 @@ Recorded because the register's own instruction was that a `path:line` citation
 is evidence of specificity and never of currency. Both citations were accurate
 when written and stale when read.
 
-## Findings routed rather than fixed
-
-**L3 — `CounterpartObservation` drops `invoice_number` and the explicit cuota.**
-Confirmed at HEAD: the model carries `taxable_base` and `invoice_total` but no
-`invoice_number` and no `iva_rate`/`iva_amount`, so cuota exists only implicitly
-as the difference, which absorbs any recargo de equivalencia component
-unguarded. Routed to `invoice-canonical-structure` rather than fixed here: that
-campaign is mid-decision on the *same* boundary — its plan works through
-`CounterpartAggregationObservation.source_kind` and the taxonomy mismatch
-between `CounterpartSourceKind` and the invoice binding family — and widening
-this model underneath an in-flight taxonomy decision would collide. Belongs as a
-Step in that plan, downstream of the source-kind decision it already carries.
-
-**L2 — `--irpf-category` has no validator at any layer.** Confirmed: no
-`_validate_irpf_category` exists anywhere in the tree, and
-`ledger_irpf_category()` resolves an unrecognised token to `None`, meaning no
-withholding treatment. Not fixed here because the honest fix is not a lone
-membership check: `ledger_irpf_category()` takes a `direction` and returns
-`None` for three distinct situations (no token, unknown token, token whose
-descriptor does not admit this direction), so a CLI-boundary check must
-distinguish "you mistyped" from "this category does not apply to this
-direction" or it will refuse legitimate rows. It also needs a refusal message in
-four locale catalogues through the `cadrumo.locales` CLI. That is a scoped piece
-of work on the ledger surface, not a drive-by. Belongs with L5.
-
-**L5 — category membership enforced only in Typer callbacks.** Confirmed, and
-the architectural point stands: the MCP and agent-harness surfaces construct
-application commands directly and walk around a Typer gate, and this product's
-primary operator is an autonomous agent. Moving membership onto the domain
-models touches the ledger surface broadly and warrants its own campaign.
-
-The cheapest half was fixed here. The register reported four functions named
-`_validate_category_id` doing two different things; at HEAD there are **three**,
-the invoices copy having been renamed to `_validate_spending_category_id` by
-`f9305acd3a`. The remaining misleading one is on `ClassificationHistoryEntry`
-(not `Transaction`, as the register placed it) and is renamed to
-`_normalize_category_id` in `20e428cec0`, so the validating name now belongs
-only to the two helpers that validate.
-
-## Findings deliberately not actioned
-
-**D2 — `_NUMERIC_IVA_RATE_SLOTS` re-lists `{0,4,10,21}`** at
-`application/invoices/_creation.py:62` while `application/review/_edit.py:152`
-derives the same set from `numeric_iva_rate_percentages()`. Confirmed, still
-agreeing value-for-value, and the divergence trigger is real and named in the
-enum's own docstring: `RATE_5`, the transient 2022–2024 rate, deliberately
-absent. Not actioned because it sits in `application/invoices/`, inside the
-`invoice-canonical-structure` campaign's working set, and because it is drift
-with no present error — the class this register is careful to keep separate
-from the defects. It should become a Step in that campaign, not a foreign edit
-mid-flight.
-
-**D3 — two hand-authored rate-tier → category tables** at
-`domain/iva/_invoice_classification.py` and `domain/iva/_classification.py`.
-Confirmed, agreeing today. Not actioned for the same reason plus one more: the
-narrower of the two is documented as domestic-only, rejects `NOT_SUBJECT` with
-an instructive error, and directs non-domestic callers elsewhere — a
-correctly-scoped helper rather than drift. `domain/iva/_classification.py` also
-received a peer commit during this pass (`7d211540b0`).
-
-The reference-good pattern for all three, when they are actioned, is
-`CUOTA_LESS_M303_IVA_CATEGORIES` in `domain/iva/_schema.py`: one canonical
-frozenset guarded by both a runtime assertion and a dedicated parity test.
-
-## What was confirmed still clean
+### What was confirmed still clean
 
 The register's clean list was spot-checked rather than re-derived, and nothing
 contradicted it. Specifically re-confirmed: `IvaLedgerCandidate` still has zero
@@ -211,7 +151,7 @@ production producers (all ten construction sites in
 `accrued_on` date bound the register had corrected is indeed validated through
 `IsoDateString`, and its boundary tests exist with a positive control.
 
-## Live disagreements between a stray implementation and its canonical source
+### Live disagreements between a stray implementation and its canonical source
 
 Reported separately because these are defects rather than refactors. Exactly
 one was found, and it is L4: `operation_kind` was admitted by a rule
@@ -220,14 +160,14 @@ one was found, and it is L4: `operation_kind` was admitted by a rule
 drop rather than an error. Every other duplicate mapping examined agreed with
 its canonical source value-for-value at HEAD.
 
-## Second pass: systematic fragmentation sweep
+### Second pass: systematic fragmentation sweep
 
 A follow-on sweep ran 18 semantic queries across the substrate axes where a
 duplicate authority would change a filed figure, each hit confirmed with `rg`
 and — where the answer was contested — by executing the code rather than
 reading it. Recorded in full, negatives included, so the sweep is falsifiable.
 
-### One new finding: the euro-conversion stamp is declared twice
+#### One new finding: the euro-conversion stamp is declared twice
 
 `application/invoices/_creation.py:349` `_stamp_fx_conversion` and
 `application/ledger/_business_operation_invoice.py:490` `_resolve_fx_stamp` are
@@ -259,7 +199,7 @@ currently a convention held identically in two places by nobody's enforcement.
 Both sites sit inside the invoice campaign's working set, so this belongs as a
 Step there, not as a foreign edit.
 
-### Axes swept and confirmed clean
+#### Axes swept and confirmed clean
 
 Each of these was a live hypothesis that a second authority existed; each was
 refuted against HEAD.
@@ -303,7 +243,7 @@ refuted against HEAD.
 - **Currency conversion itself.** One provider, one protocol, one normalization
   service — only the stamping policy above is duplicated.
 
-### What this pass suggests about where fragmentation actually lives
+#### What this pass suggests about where fragmentation actually lives
 
 The negatives are as informative as the finding. Every axis with a **named
 constant plus a gate** (the M347 threshold, the money primitive, the notice
@@ -313,3 +253,69 @@ stamps, the two rate-tier tables, `_NUMERIC_IVA_RATE_SLOTS`. The pattern is
 consistent: values get centralised in this codebase, decisions do not. A helper
 whose name starts with an underscore and whose body encodes a rule is where the
 next duplicate will be, and none of the existing gates look for that shape.
+
+## Recommendations
+
+### Findings routed rather than fixed
+
+**L3 — `CounterpartObservation` drops `invoice_number` and the explicit cuota.**
+Confirmed at HEAD: the model carries `taxable_base` and `invoice_total` but no
+`invoice_number` and no `iva_rate`/`iva_amount`, so cuota exists only implicitly
+as the difference, which absorbs any recargo de equivalencia component
+unguarded. Routed to `invoice-canonical-structure` rather than fixed here: that
+campaign is mid-decision on the *same* boundary — its plan works through
+`CounterpartAggregationObservation.source_kind` and the taxonomy mismatch
+between `CounterpartSourceKind` and the invoice binding family — and widening
+this model underneath an in-flight taxonomy decision would collide. Belongs as a
+Step in that plan, downstream of the source-kind decision it already carries.
+
+**L2 — `--irpf-category` has no validator at any layer.** Confirmed: no
+`_validate_irpf_category` exists anywhere in the tree, and
+`ledger_irpf_category()` resolves an unrecognised token to `None`, meaning no
+withholding treatment. Not fixed here because the honest fix is not a lone
+membership check: `ledger_irpf_category()` takes a `direction` and returns
+`None` for three distinct situations (no token, unknown token, token whose
+descriptor does not admit this direction), so a CLI-boundary check must
+distinguish "you mistyped" from "this category does not apply to this
+direction" or it will refuse legitimate rows. It also needs a refusal message in
+four locale catalogues through the `cadrumo.locales` CLI. That is a scoped piece
+of work on the ledger surface, not a drive-by. Belongs with L5.
+
+**L5 — category membership enforced only in Typer callbacks.** Confirmed, and
+the architectural point stands: the MCP and agent-harness surfaces construct
+application commands directly and walk around a Typer gate, and this product's
+primary operator is an autonomous agent. Moving membership onto the domain
+models touches the ledger surface broadly and warrants its own campaign.
+
+The cheapest half was fixed here. The register reported four functions named
+`_validate_category_id` doing two different things; at HEAD there are **three**,
+the invoices copy having been renamed to `_validate_spending_category_id` by
+`f9305acd3a`. The remaining misleading one is on `ClassificationHistoryEntry`
+(not `Transaction`, as the register placed it) and is renamed to
+`_normalize_category_id` in `20e428cec0`, so the validating name now belongs
+only to the two helpers that validate.
+
+### Findings deliberately not actioned
+
+**D2 — `_NUMERIC_IVA_RATE_SLOTS` re-lists `{0,4,10,21}`** at
+`application/invoices/_creation.py:62` while `application/review/_edit.py:152`
+derives the same set from `numeric_iva_rate_percentages()`. Confirmed, still
+agreeing value-for-value, and the divergence trigger is real and named in the
+enum's own docstring: `RATE_5`, the transient 2022–2024 rate, deliberately
+absent. Not actioned because it sits in `application/invoices/`, inside the
+`invoice-canonical-structure` campaign's working set, and because it is drift
+with no present error — the class this register is careful to keep separate
+from the defects. It should become a Step in that campaign, not a foreign edit
+mid-flight.
+
+**D3 — two hand-authored rate-tier → category tables** at
+`domain/iva/_invoice_classification.py` and `domain/iva/_classification.py`.
+Confirmed, agreeing today. Not actioned for the same reason plus one more: the
+narrower of the two is documented as domestic-only, rejects `NOT_SUBJECT` with
+an instructive error, and directs non-domestic callers elsewhere — a
+correctly-scoped helper rather than drift. `domain/iva/_classification.py` also
+received a peer commit during this pass (`7d211540b0`).
+
+The reference-good pattern for all three, when they are actioned, is
+`CUOTA_LESS_M303_IVA_CATEGORIES` in `domain/iva/_schema.py`: one canonical
+frozenset guarded by both a runtime assertion and a dedicated parity test.

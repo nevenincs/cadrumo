@@ -22,8 +22,8 @@ import keyring
 import keyring.backends.null
 import keyring.core
 
-from cadrumo.adapters.local_runtime.posix import PosixRuntimeEndpoint
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
+from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
+from cadrumo.adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
@@ -31,7 +31,12 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalCode,
     RuntimeRefusalError,
 )
-from cadrumo.application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    Availability,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
@@ -77,7 +82,7 @@ class _SequenceLoginObservation:
             login_id=self.login_id,
             os_owner_id=self.owner,
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -109,7 +114,7 @@ def _worker_composition() -> Generator[None]:
 
 
 @contextmanager
-def sequence_runtime(root: Path) -> Generator[RuntimeTransportServer]:
+def sequence_runtime(root: Path) -> Generator[RetainedRuntimeTransportServer]:
     """Serve the sandbox's exact endpoint before any installed frontend connects."""
     from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner
 
@@ -152,13 +157,12 @@ def sequence_runtime(root: Path) -> Generator[RuntimeTransportServer]:
             wall_clock=lambda: SANDBOX_INSTANT,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint,
             product_version=version("cadrumo"),
             stop=stop,
             profiles=profiles,
             boot_id=boot,
-            owner_stop_available=False,
         )
         context = copy_context()
 

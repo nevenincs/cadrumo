@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#m210-export-authority'
 date: '2026-08-16'
-modified: '2026-08-18'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:33711a8f8884c8ac95b9c67741e3a73636bb4ec5ea0d2269670e124fe56b7f59'
+body_hash: 'sha256:6e5fb9912a4988380d10beca747d91d535e3df17f0bbcd09b357466bc7fdcbf7'
 related:
   - "[[2026-08-16-m210-export-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -575,8 +575,8 @@ because the width check downstream refused. Both directions are gated.
 
 ## A manifest-schema addition silently stales every committed tree
 
-`dev/registry/_semantic_map.py` gained an `ordinal_absent` anchor field, and
-`_SEMANTIC_MAP_ANCHOR_KEYS` in `dev/registry/_provenance_manifest.py:112` was versioned
+The retired module gained an `ordinal_absent` anchor field, and
+`_SEMANTIC_MAP_ANCHOR_KEYS` in the retired module was versioned
 to admit it. Both halves are correct. What neither carries is the consequence: the field
 is emitted into `_generation.provenance.json`, so every committed generated tree's
 manifest became stale the moment the field landed - including Modelo 210 and both Modelo
@@ -590,7 +590,7 @@ the JSON. All nine manifests were regenerated through the generator; no TOML cha
 The finding is the coupling, not the field. A manifest-schema change is a tree-wide
 regeneration event, and there is no verb that performs it: the only thing that reports the
 staleness is the per-tree byte-equality assertion in
-`dev/registry/tests/test_generated_export_trees.py`, which reds for every enrolled tree at
+The retired test, which reds for every enrolled tree at
 once and names none of them as the cause. A tree NOT enrolled in that gate would carry a
 stale manifest indefinitely with nothing to say so. Enrolment is therefore the only
 staleness detector this repository has, which is an argument for enrolling every generated

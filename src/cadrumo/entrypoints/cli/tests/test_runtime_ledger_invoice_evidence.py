@@ -11,11 +11,13 @@ import typer
 from pydantic import BaseModel
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.ledger.invoice_evidence_operation import (
+from ....application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
-    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
+)
+from ....application.ledger.invoice_evidence_extract_operation import (
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
 )
@@ -26,7 +28,7 @@ from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.iva.classification import InvoiceKind
 from .. import runtime_ledger_invoice_evidence as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -36,6 +38,12 @@ _EVIDENCE_ID = "e" * 16
 _SOURCE_SHA256 = "a" * 64
 _DRAFT_SHA256 = "b" * 64
 _OPERATION_ID = cast(OperationId, "f" * 64)
+#: Extraction and confirmation results carry the label-reading fallback beside
+#: the draft, so both read the second result schema.
+_RESULT_VERSIONS = {
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID: 2,
+    LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID: 2,
+}
 
 
 def _bind(
@@ -65,7 +73,8 @@ def _bind(
         assert kwargs["definition_id"] == definition_id
         assert kwargs["subject_ref"] == profile_operation_subject(str(_PROFILE))
         assert kwargs["result_type"] is result_type
-        assert kwargs["request_version"] == kwargs["result_version"] == 1
+        assert kwargs["request_version"] == 1
+        assert kwargs["result_version"] == _RESULT_VERSIONS[definition_id]
         assert kwargs["timeout"] == 120
         assert kwargs["allow_refusal_detail"] is True
         return completion

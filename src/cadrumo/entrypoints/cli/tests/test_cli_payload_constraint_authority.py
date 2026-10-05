@@ -91,7 +91,6 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_ledger_rule_payloads.py",
         "config/_censo_payloads.py",
         "config/collab_payloads.py",
-        "config/_google_credential_source_payloads.py",
         "_root_payloads.py",
         "_ledger_ratios_payloads.py",
         "modelo_aux_payloads.py",

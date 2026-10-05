@@ -31,7 +31,8 @@ from ...core.config import load_settings
 from ...core.directory_scan import iter_directory, scan_directory
 from ...core.link_safety import is_link_like
 from ...core.logging import get_logger
-from ...core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
+from ...core.storage_environment import STORAGE_ROOT
+from ...core.storage_materialization import ensure_storage_tree
 from ...core.storage_taxonomy import (
     StorageArea,
     StorageCategory,
@@ -82,7 +83,7 @@ listing categories means a member reclassified in the taxonomy changes what
 reclaim will touch at the same moment, with no second list to forget.
 """
 
-_EXPECTED_ROOT_MODE: Final[int] = STORAGE_ROOT_MODE
+_EXPECTED_ROOT_MODE: Final[int] = STORAGE_ROOT.posix_directory_mode
 """Mode ``ensure_storage_tree`` requests on the root, read from it for the drift check.
 
 Bound to the materialiser's own constant rather than restating the value: a

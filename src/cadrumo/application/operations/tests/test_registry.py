@@ -58,9 +58,9 @@ from ..models import (
     OperationSnapshot,
     OperationTerminalReceipt,
 )
+from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
@@ -68,9 +68,9 @@ from ..registry import (
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
-    OperationSchemaIdentityV1,
 )
 from ..registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
+from ..schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -514,6 +514,13 @@ def snapshot(*, definition_id: str = "profile.sync", value: str = "submitted") -
         updated_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
         event_cursor=9,
     )
+
+
+def test_all_operation_frontends_names_every_declared_frontend() -> None:
+    assert isinstance(ALL_OPERATION_FRONTENDS, frozenset)
+    assert {frontend.value for frontend in ALL_OPERATION_FRONTENDS} == {"cli", "mcp", "tui"}
+    # A new frontend must be granted to all-frontend operations deliberately.
+    assert frozenset(OperationFrontendProjection) == ALL_OPERATION_FRONTENDS
 
 
 def test_registry_canonicalises_and_resolves_definition_and_action_identity() -> None:
@@ -1061,10 +1068,10 @@ def test_registry_public_contract_is_a_live_definition_fixed_point() -> None:
 
     assert registration.contract.refusal_detail_codes == frozenset()
     assert registration.contract.definition_contract_digest == (
-        "2f822406103069dc323c9a700537f6f7185037633360014bcfcb3b3ea4187e7b"
+        "63a310bee0a2fd9224252fa54abb9361d199fffcbc6347c407b96fef37852aac"
     )
     assert registry.public_contract_set.contract_set_digest == (
-        "88e1914b229c76ec39d57a06379d6a1c379a6fd1d8003e52050bfde68d2f8492"
+        "48c5c7b4cc31335e95beceb581b13c4ede197c59d43ccb184252bf7737e8e719"
     )
     assert registry.public_contract_set.definitions == (registration.contract,)
     assert registry.lookup_public_contract(item.definition_id) == registration.contract

@@ -60,7 +60,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f005"
 kind = "computed"
-computed_key = "complementaria_page_marker"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]

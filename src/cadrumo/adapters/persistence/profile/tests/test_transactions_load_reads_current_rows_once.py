@@ -85,7 +85,7 @@ def test_loading_current_rows_runs_no_migration_read(tmp_path: Path, monkeypatch
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         saved = TransactionCatalogue.from_transactions([_transaction("row-1"), _transaction("row-2")])
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(saved)
-        migrations = _count(monkeypatch, "migrate_many_atomically")
+        migrations = _count(monkeypatch, "migrate_targets_atomically")
         version_scans = _count(monkeypatch, "peek_many_schema_versions")
 
         loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()

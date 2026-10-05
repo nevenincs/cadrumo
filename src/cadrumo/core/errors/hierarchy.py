@@ -270,6 +270,10 @@ class CoreError(CadrumoError):
     """Base error for internal framework and core-primitive failures."""
 
 
+class CorpusAnchorResolutionError(CoreError):
+    """Corpus authoring cannot resolve one unique extracted authority unit."""
+
+
 class InternalInvariantError(CoreError):
     """Raised when composed production state violates an internal invariant."""
 

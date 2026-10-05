@@ -1,0 +1,72 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 4,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-x64",
+      "displayName": "Windows x64 pinned MSVC",
+      "generator": "Visual Studio 17 2022",
+      "toolchainFile": "${sourceDir}/native/cmake/WindowsToolchain.cmake",
+      "binaryDir": "$env{CADRUMO_BUILD_DIR}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "environment": {
+        "CADRUMO_BUILD_DIR": "${sourceDir}/build/windows-x64",
+        "TEMP": "$env{CADRUMO_BUILD_DIR}/tmp",
+        "TMP": "$env{CADRUMO_BUILD_DIR}/tmp",
+        "TMPDIR": "$env{CADRUMO_BUILD_DIR}/tmp"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "windows-x64",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "windows-x64",
+      "configuration": "Release"
+    },
+    {
+      "name": "package-debug",
+      "inherits": "debug",
+      "targets": [
+        "package"
+      ]
+    },
+    {
+      "name": "package-release",
+      "inherits": "release",
+      "targets": [
+        "package"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "windows-x64",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "windows-x64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

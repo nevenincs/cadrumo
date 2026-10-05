@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schema for the ``aeat app quickfile`` envelope.
 
-Projects the application :class:`~application.modelo.quickfile_operation_contracts.QuickfileProjection` onto a
+Projects the application :class:`~application.modelo.quickfile_operation_projections.QuickfileProjection` onto a
 strict :class:`~core.json_contract.OutputSchema` referenced as a deferred public target under the
 ``quickfile`` command path. The per-stage outcomes and the terminal export
 receipt (path reference only — never raw fichero bytes) are surfaced so a machine
@@ -11,11 +11,8 @@ from __future__ import annotations
 
 from ...application.modelo.export import ModeloExportResult
 from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
-from ...application.modelo.quickfile_operation_contracts import (
-    QuickfileProjection,
-    QuickfileReadinessSummary,
-    QuickfileStageSnapshot,
-)
+from ...application.modelo.quickfile_operation_contracts import QuickfileReadinessSummary, QuickfileStageSnapshot
+from ...application.modelo.quickfile_operation_projections import QuickfileProjection
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.i18n.render import UnmatchedPlaceholderError, extract_placeholders, tr
 from ...core.identity.bucket import BucketId
@@ -59,7 +56,7 @@ class QuickfileExportSummaryPayload(OutputSchema):
     byte_size: int
     file_sha256: str
     format: str
-    resolved_result_disposition: ResultDisposition
+    resolved_result_disposition: ResultDisposition | None
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElection

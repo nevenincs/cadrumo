@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:7ddb0cb723220529de42b88d984386aabb5b0a375167ef7497fbc9cfd8dc2364'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
-  - '[[2026-06-02-registry-hardening-next-work-P01-S05]]'
+modified: '2026-10-03'
+body_hash: 'sha256:a222eddaa8e9b9d28016a7deea30a6a33b78386ed81b795e3fef79f564dbad0a'
+related: []
 ---
 
 # P01.S05 Review
@@ -27,11 +25,11 @@ M100 2020 still has an oversized completeness manifest and remains tracked by
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_directory_mode_merges_completeness_manifest_casilla_fragments -q`
+- the historical check
   - Result: 1 passed in 0.29s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable src/aeat/domain/calculations/registry/test_registry_reviewability.py::test_registry_toml_fragments_stay_reviewable -q`
+- the historical check
   - Result: 2 passed in 5.61s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_tree_loads_directory_modelos -q`
+- the historical check
   - Result: 1 passed in 34.56s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_directory_source_inventory_lists_every_revision_fragment_toml -q`
+- the historical check
   - Result: 1 passed in 26.11s.

@@ -18,7 +18,7 @@ from ....core.period import Period
 from .. import _overview as handler
 from .. import runtime_overview_pipeline as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

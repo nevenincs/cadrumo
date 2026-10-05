@@ -19,7 +19,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.operation_definitions import resolve_active_workflow_profile
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -105,7 +105,7 @@ def seeded_modelo_verification_report(profile_id: UUID, *, operation: PinnedAuth
             binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
         )
         revision_id = str(revision.calculation_revision_id)
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_verification_repository_bundle(
@@ -115,7 +115,7 @@ def seeded_modelo_verification_report(profile_id: UUID, *, operation: PinnedAuth
             workflow_profile=resolve_active_workflow_profile(verification_operation),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=verification_operation,
-        )
+        ).report
     if report.completeness_status is not VerificationCompletenessStatus.COMPLETE:
         findings = (
             "; ".join(

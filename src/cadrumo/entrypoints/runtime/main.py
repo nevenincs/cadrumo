@@ -3,221 +3,302 @@
 from __future__ import annotations
 
 import argparse
+import os
 import signal
 import sys
-import time
-from collections.abc import Callable, Generator
-from contextlib import ExitStack, contextmanager
+from collections.abc import Callable, Mapping
 from functools import partial
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
-from typing import Literal
-from uuid import uuid4
+from typing import Any
+from uuid import UUID, uuid4
 
-from cadrumo.adapters.local_runtime.runtime_manager_composition import installed_runtime_binding
-
-from ...adapters.local_runtime.framing import RuntimeTransportCleanup
+from ...adapters.local_runtime.boot_record import RuntimeBootRecordPublication, current_runtime_boot_record
 from ...adapters.local_runtime.linux_login import linux_login_inventory
-from ...adapters.local_runtime.linux_managed_stop import LinuxManagedRuntimeStop
-from ...adapters.local_runtime.posix import PosixRuntimeEndpoint, posix_owner_uid
+from ...adapters.local_runtime.login_policy import compose_runtime_login_policy
+from ...adapters.local_runtime.posix import posix_owner_uid
+from ...adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
+from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from ...adapters.local_runtime.server import RuntimeTransportServer
 from ...adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ...adapters.local_runtime.windows_login import windows_login_inventory
-from ...adapters.local_runtime.windows_managed_stop import WindowsManagedRuntimeStop, open_runtime_launcher_latch
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError, RuntimeShutdownIncompleteError
+from ...adapters.local_runtime.windows_token_elevation import (
+    current_process_token_elevation_type,
+    supervised_elevation_refused,
+)
+from ...application.runtime.contracts import (
+    RuntimeExitReason,
+    RuntimeRefusalCode,
+    RuntimeRefusalError,
+    RuntimeShutdownIncompleteError,
+    runtime_refusal_exit_reason,
+)
 from ...application.runtime.login import RuntimeLoginInventory
 from ...core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, has_async_cleanup_failure
+from ...core.child_console import isolate_child_consoles
 from ...core.config import load_settings, override_settings
-from ...core.logging import LogExtra, configure_logging, get_logger
+from ...core.logging import configure_logging, get_logger
+from ...core.startup_phase_log import startup_phase
+from ...domain.calculations.registry.authority import published_authority_generation
 from .profile_connections import RuntimeProfileConnections
-from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, terminate_runtime
+from .shutdown import RuntimeShutdownEvent, RuntimeShutdownWatchdog, RuntimeStop, terminate_runtime
+from .supervised_channel import (
+    SupervisedRuntime,
+    SupervisorChannel,
+    route_diagnostics_to_redacted_logging,
+    take_supervisor_streams,
+)
+from .supervised_protocol import RuntimeReady
 
 _LOGGER = get_logger(__name__)
 
 
-def _log_startup_phase(
-    phase: Literal["managed_stop_setup", "registry_prepare"],
-    transition: Literal["enter", "leave"],
-    elapsed: float,
-    *,
-    primary_error: BaseException | None = None,
-) -> None:
-    """Keep diagnostic failures from replacing an existing product primary."""
-    try:
-        _LOGGER.info(
-            "runtime_startup phase=%s transition=%s elapsed_seconds=%.6f",
-            phase,
-            transition,
-            elapsed,
-            extra=LogExtra(
-                {"startup_phase": phase, "transition": transition, "elapsed_seconds": elapsed}
-            ).for_logging(),
-        )
-    except Exception:
-        return
-    except BaseException:
-        if primary_error is None:
-            raise
-
-
-@contextmanager
-def _startup_phase(phase: Literal["managed_stop_setup", "registry_prepare"]) -> Generator[None]:
-    """Emit only fixed phase names and elapsed native monotonic seconds."""
-    started = time.monotonic()
-    primary: list[BaseException] = []
-    _log_startup_phase(phase, "enter", 0.0)
-    try:
-        yield
-    except BaseException as error:
-        primary.append(error)
-        raise
-    finally:
-        elapsed = time.monotonic() - started
-        _log_startup_phase(phase, "leave", elapsed, primary_error=primary[0] if primary else None)
-
-
 def parse_runtime_arguments(arguments: list[str] | None = None) -> argparse.Namespace:
-    """Parse the same private native-manager launch binding at both boundaries."""
+    """Parse the explicit runtime owner binding."""
     parser = argparse.ArgumentParser(prog="cadrumo-runtime", allow_abbrev=False)
     parser.add_argument("--storage-root", required=True, type=Path)
     parser.add_argument("--storage-identity", required=True)
     parser.add_argument("--expected-version", required=True)
-    parser.add_argument("--managed-session", action="store_true")
-    parser.add_argument("--windows-runtime-host", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--windows-launcher-identity", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--supervised",
+        action="store_true",
+        help="Answer the launching supervisor over standard input and output.",
+    )
     options = parser.parse_args(arguments)
-    if (options.windows_runtime_host or options.windows_launcher_identity is not None) and (
-        sys.platform != "win32"
-        or not options.managed_session
-        or not options.windows_runtime_host
-        or options.windows_launcher_identity is None
-    ):
-        parser.error("invalid native runtime host disposition")
     return options
 
 
+def _accept_console_interrupts() -> None:
+    """Clear an inherited Windows "ignore Ctrl+C" flag so a console stop reaches the drain."""
+    if sys.platform != "win32":
+        return
+    import ctypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    # A NULL handler with FALSE restores normal Ctrl+C processing for this
+    # process. A launcher that started it in a new process group, or that
+    # itself ignored Ctrl+C, would otherwise leave every console stop unseen.
+    if not kernel32.SetConsoleCtrlHandler(None, False):
+        _LOGGER.warning("runtime could not restore console Ctrl+C processing")
+
+
+def _supervised_token_refused() -> bool:
+    if sys.platform != "win32":
+        return False
+    return supervised_elevation_refused(current_process_token_elevation_type())
+
+
+def _configure_runtime_logging(root: Path) -> None:
+    if sys.platform != "win32":
+        return
+    # Respect explicit operator routing. Only handler creation sees the fallback
+    # after native owner/root verification.
+    settings = load_settings()
+    if "cadrumo_log_dir" in settings.model_fields_set:
+        configure_logging()
+    else:
+        with override_settings(cadrumo_log_dir=root / "logs"):
+            configure_logging()
+
+
+def _runtime_login_inventory(
+    endpoint: WindowsRuntimeEndpoint | PosixRuntimeEndpoint,
+) -> Callable[[], RuntimeLoginInventory] | None:
+    if isinstance(endpoint, WindowsRuntimeEndpoint):
+        return partial(windows_login_inventory, expected_owner=endpoint.os_owner_id)
+    if sys.platform == "linux":
+        return partial(linux_login_inventory, expected_owner=str(posix_owner_uid()))
+    return None
+
+
+def _serve_transport(
+    endpoint: WindowsRuntimeEndpoint | PosixRuntimeEndpoint,
+    installed_version: str,
+    stop: Event | RuntimeShutdownEvent,
+    profiles: RuntimeProfileConnections,
+    boot_id: UUID,
+    attach: Callable[[RuntimeTransportServer], None] | None = None,
+) -> None:
+    try:
+        server = RuntimeTransportServer(
+            endpoint,
+            product_version=installed_version,
+            stop=stop,
+            profiles=profiles,
+            boot_id=boot_id,
+            authority_generation=published_authority_generation(),
+        )
+        if attach is not None:
+            attach(server)
+        server.serve()
+    except RuntimeShutdownIncompleteError:
+        # Never release the owner lock while callbacks, constructors or
+        # uncontained descendants still belong to this runtime.
+        terminate_runtime(RuntimeExitReason.DRAIN_WATCHDOG)
+
+
+def _serve_runtime_endpoint(
+    options: argparse.Namespace,
+    root: Path,
+    endpoint: WindowsRuntimeEndpoint | PosixRuntimeEndpoint,
+    installed_version: str,
+    stop: RuntimeStop,
+    previous: Mapping[signal.Signals, Any],
+    supervision: SupervisedRuntime | None,
+) -> None:
+    if endpoint.storage_identity != options.storage_identity:
+        raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
+    _configure_runtime_logging(root)
+    for number in previous:
+        signal.signal(number, lambda _number, _frame: stop.request(RuntimeExitReason.SIGNAL_STOP))
+    boot_id = uuid4()
+    login_policy = compose_runtime_login_policy(
+        os_owner_id=endpoint.os_owner_id if isinstance(endpoint, WindowsRuntimeEndpoint) else str(posix_owner_uid()),
+        runtime_boot_id=boot_id,
+        stop=stop,
+        native_inventory=_runtime_login_inventory(endpoint),
+    )
+    profiles = RuntimeProfileConnections(
+        storage_root=root,
+        storage_identity=endpoint.storage_identity,
+        runtime_boot_id=boot_id,
+        stop=stop,
+        capture_login=login_policy.capture,
+        login_inventory=login_policy.inventory,
+    )
+    attach = None
+    publication = None
+    if supervision is not None:
+        ready = RuntimeReady(
+            boot_id=boot_id,
+            pid=os.getpid(),
+            version=installed_version,
+            storage_identity=endpoint.storage_identity,
+            admission=login_policy.admission,
+        )
+        publication = RuntimeBootRecordPublication(
+            storage_root=root,
+            record=current_runtime_boot_record(
+                boot_id=boot_id, version=installed_version, admission=login_policy.admission
+            ),
+        )
+        attach = partial(supervision.attach, profiles=profiles, ready=ready, publish_boot_record=publication.publish)
+    with startup_phase(_LOGGER, "registry_prepare"):
+        profiles.prepare_registry()
+    with RuntimeShutdownWatchdog(stop, timeout=RuntimeTransportServer.DRAIN_SECONDS + 2):
+        try:
+            _serve_transport(endpoint, installed_version, stop, profiles, boot_id, attach)
+        finally:
+            if publication is not None:
+                _withdraw_boot_record(publication)
+
+
+def _withdraw_boot_record(publication: RuntimeBootRecordPublication) -> None:
+    try:
+        publication.withdraw()
+    except RuntimeRefusalError as error:
+        # A record left behind names a dead process, which adoption refuses.
+        _LOGGER.warning("runtime boot record was not removed", exc_info=error)
+
+
+def _release_runtime_endpoint(
+    endpoint: WindowsRuntimeEndpoint | PosixRuntimeEndpoint,
+    owner: RuntimeTransportCleanup,
+    primary_errors: list[BaseException],
+) -> None:
+    if sys.platform != "win32":
+        endpoint.close()
+        return
+    try:
+        owner.close_now()
+    except BaseException as failure:
+        retained = AsyncResourceCleanupError(
+            (owner,), (failure,), retry_task_name="runtime-endpoint-release", close_attempts=1
+        )
+        if not primary_errors:
+            raise retained from failure
+        primary_error = primary_errors[0]
+        for previous_failure in async_cleanup_failures(primary_error):
+            retained = previous_failure.merged_with(retained)
+        primary_error.__dict__["async_cleanup_error"] = retained
+        if isinstance(primary_error.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
+            primary_error.__dict__["cleanup_error"] = retained
+
+
+def _run_runtime_owner(
+    options: argparse.Namespace,
+    stop: RuntimeStop,
+    previous: Mapping[signal.Signals, Any],
+    supervision: SupervisedRuntime | None,
+) -> RuntimeExitReason:
+    installed_version = version("cadrumo")
+    if options.expected_version != installed_version:
+        raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+    root = Path(options.storage_root)
+    if not root.is_absolute():
+        raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
+    endpoint = (
+        WindowsRuntimeEndpoint(storage_root=root)
+        if sys.platform == "win32"
+        else PosixRuntimeEndpoint(storage_root=root)
+    )
+    owner = RuntimeTransportCleanup(endpoint)
+    primary_errors: list[BaseException] = []
+    try:
+        _serve_runtime_endpoint(options, root, endpoint, installed_version, stop, previous, supervision)
+    except BaseException as error:
+        primary_errors.append(error)
+        raise
+    finally:
+        _release_runtime_endpoint(endpoint, owner, primary_errors)
+    # Serving returns only after a stop; a stop that named no reason is a defect.
+    return stop.reason or RuntimeExitReason.UNEXPECTED_FAILURE
+
+
 def run(arguments: list[str] | None = None) -> int:
-    """Run one user/root owner; a manager argument never grants profile authority."""
+    """Run one user/root owner with independent profile admission; return its exit reason code."""
     options = parse_runtime_arguments(arguments)
-    stop = Event()
+    _accept_console_interrupts()
+    stop = RuntimeStop()
+    if not options.supervised:
+        return _run_runtime(options, stop, None)
+    # The manager's console stop must reach this process alone.
+    isolate_child_consoles()
+    exit_code = int(RuntimeExitReason.UNEXPECTED_FAILURE)
+    supervision: SupervisedRuntime | None = None
+    try:
+        # Take the launch streams before anything can start a child process.
+        supervision = SupervisedRuntime(stop, SupervisorChannel(take_supervisor_streams(), logger=_LOGGER))
+        route_diagnostics_to_redacted_logging(_LOGGER)
+        supervision.start()
+        if _supervised_token_refused():
+            # Refused before the endpoint is claimed; the supervisor stands down on this reason.
+            _LOGGER.error("supervised runtime refused a full UAC-elevated token")
+            exit_code = int(RuntimeExitReason.ELEVATED_TOKEN_REFUSED)
+        else:
+            exit_code = _run_runtime(options, stop, supervision)
+    except Exception as error:
+        # The supervisor receives only the reason code; the redacted log keeps the cause.
+        _LOGGER.error("supervised runtime ended by an unexpected failure", exc_info=error)
+    if supervision is not None:
+        supervision.finish(exit_code)
+    return exit_code
+
+
+def _run_runtime(options: argparse.Namespace, stop: RuntimeStop, supervision: SupervisedRuntime | None) -> int:
     previous = {number: signal.getsignal(number) for number in (signal.SIGINT, signal.SIGTERM)}
     try:
-        installed_version = version("cadrumo")
-        if options.expected_version != installed_version:
-            raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
-        root = Path(options.storage_root)
-        if not root.is_absolute():
-            raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
-        endpoint = (
-            WindowsRuntimeEndpoint(storage_root=root)
-            if sys.platform == "win32"
-            else PosixRuntimeEndpoint(storage_root=root)
-        )
-        endpoint_owner = RuntimeTransportCleanup(endpoint)
-        endpoint_primary: list[BaseException] = []
-        try:
-            with ExitStack() as launcher_resources:
-                if endpoint.storage_identity != options.storage_identity:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
-                if options.windows_runtime_host:
-                    native_binding = installed_runtime_binding(
-                        root=root, endpoint=endpoint, product_version=installed_version
-                    )
-                    if native_binding is None:
-                        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-                    latch = launcher_resources.enter_context(
-                        open_runtime_launcher_latch(native_binding, options.windows_launcher_identity)
-                    )
-                    stop = RuntimeShutdownEvent(before_stop=latch.set)
-                if sys.platform == "win32":
-                    # Respect explicit operator routing. Only handler creation sees
-                    # the fallback after native owner/root verification.
-                    settings = load_settings()
-                    if "cadrumo_log_dir" in settings.model_fields_set:
-                        configure_logging()
-                    else:
-                        with override_settings(cadrumo_log_dir=root / "logs"):
-                            configure_logging()
-                for number in previous:
-                    signal.signal(number, lambda _number, _frame: stop.set())
-                boot_id = uuid4()
-                prepare_stop: Callable[[], None] | None = None
-                finalize_stop: Callable[[], None] | None = None
-                login_inventory: Callable[[], RuntimeLoginInventory] | None = None
-                if isinstance(endpoint, WindowsRuntimeEndpoint):
-                    owner_id = endpoint.os_owner_id
-                    login_inventory = partial(windows_login_inventory, expected_owner=owner_id)
-                elif sys.platform == "linux":
-                    login_inventory = partial(linux_login_inventory, expected_owner=str(posix_owner_uid()))
-                with ExitStack() as resources:
-                    if options.managed_session and sys.platform in {"linux", "win32"}:
-                        with _startup_phase("managed_stop_setup"):
-                            binding = installed_runtime_binding(
-                                root=root, endpoint=endpoint, product_version=installed_version
-                            )
-                            if binding is not None and sys.platform == "linux":
-                                prepare_stop = LinuxManagedRuntimeStop(binding)
-                            elif binding is not None and sys.platform == "win32":
-                                managed_stop = resources.enter_context(WindowsManagedRuntimeStop(binding, stop))
-                                prepare_stop = managed_stop
-                                finalize_stop = managed_stop.finalize
-                    profiles = RuntimeProfileConnections(
-                        storage_root=root,
-                        storage_identity=endpoint.storage_identity,
-                        runtime_boot_id=boot_id,
-                        stop=stop,
-                        login_inventory=login_inventory,
-                    )
-                    with _startup_phase("registry_prepare"):
-                        profiles.prepare_registry()
-                    with RuntimeShutdownWatchdog(stop, timeout=RuntimeTransportServer.DRAIN_SECONDS + 2):
-                        try:
-                            RuntimeTransportServer(
-                                endpoint,
-                                product_version=installed_version,
-                                stop=stop,
-                                profiles=profiles,
-                                boot_id=boot_id,
-                                owner_stop_available=not options.managed_session or prepare_stop is not None,
-                                prepare_owner_stop=prepare_stop,
-                                finalize_owner_stop=finalize_stop,
-                            ).serve()
-                        except RuntimeShutdownIncompleteError:
-                            # Never release the owner lock while callbacks, constructors
-                            # or uncontained descendants still belong to this runtime.
-                            terminate_runtime()
-        except BaseException as error:
-            endpoint_primary.append(error)
-            raise
-        finally:
-            if sys.platform != "win32":
-                endpoint.close()
-            else:
-                try:
-                    endpoint_owner.close_now()
-                except BaseException as failure:
-                    retained = AsyncResourceCleanupError(
-                        (endpoint_owner,), (failure,), retry_task_name="runtime-endpoint-release", close_attempts=1
-                    )
-                    if not endpoint_primary:
-                        raise retained from failure
-                    primary_error = endpoint_primary[0]
-                    for previous_failure in async_cleanup_failures(primary_error):
-                        retained = previous_failure.merged_with(retained)
-                    primary_error.__dict__["async_cleanup_error"] = retained
-                    if isinstance(primary_error.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
-                        primary_error.__dict__["cleanup_error"] = retained
-        return 0
+        return int(_run_runtime_owner(options, stop, previous, supervision))
     except RuntimeRefusalError as error:
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise
         sys.stderr.write(error.reason.value + "\n")
-        return 2
+        return int(runtime_refusal_exit_reason(error.reason))
     except KeyboardInterrupt as error:
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise
-        return 0
+        return int(RuntimeExitReason.SIGNAL_STOP)
     finally:
         for number, handler in previous.items():
             signal.signal(number, handler)

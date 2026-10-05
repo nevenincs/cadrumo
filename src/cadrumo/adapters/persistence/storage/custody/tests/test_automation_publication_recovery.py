@@ -13,7 +13,7 @@ import pytest
 from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import api_key_verifier, generate_api_key
-from cadrumo.adapters.persistence.storage.custody.automation_store import CONTROL_NAMESPACE, WRAP_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.zeroise import zeroise
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,

@@ -191,6 +191,34 @@ def test_variable_envelope_recognition_has_no_record_name_selector() -> None:
     assert "T220000000" not in source
 
 
+def test_modelo_216_lowercase_variable_markers_preserve_the_official_composition() -> None:
+    """The source's marker spelling must not discard its body and closing suffix."""
+    from ..compiler.loader import load_shared_catalogues
+
+    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    resolved = resolve_record_design_binary(
+        bundled_path(),
+        catalogues.sources,
+        source_ref="aeat-dr-216-2024",
+        filing_year=2024,
+        design_epoch="2024",
+    )
+
+    sheets = extract_record_design(resolved.path).accept_partial()
+    envelope_sheet = next(sheet for sheet in sheets if sheet.name == "Pág. 0")
+    envelope = envelope_sheet.variable_envelope
+
+    assert envelope is not None
+    assert envelope_sheet.total_positions is None
+    assert len(envelope.prefix_fields) == 13
+    assert envelope.prefix_extent == 328
+    assert (envelope.body.row, envelope.body.ordinal, envelope.body.offset) == (19, 14, 329)
+    assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
+    assert (envelope.closing.row, envelope.closing.ordinal, envelope.closing.length) == (20, 15, 18)
+    assert envelope.closing.content == '"</T2160AAAAPP0000>"'
+    assert (envelope.variable_total.row, envelope.variable_total.length) == (21, "Variable")
+
+
 def test_workbook_declared_total_must_equal_terminal_parsed_extent(tmp_path: Path) -> None:
     """A cached official total that disagrees with parsed geometry refuses the sheet."""
     from openpyxl import Workbook
@@ -374,10 +402,12 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
         ),
     ),
 )
+@pytest.mark.parametrize("marker_spelling", ("Variable", "variable"))
 def test_variable_envelope_rejects_malformed_composition(
     tmp_path: Path,
     rows: tuple[_WorkbookRow, ...],
     message: str,
+    marker_spelling: str,
 ) -> None:
     """Malformed composition markers refuse through the production workbook parser."""
     from openpyxl import Workbook
@@ -388,7 +418,7 @@ def test_variable_envelope_rejects_malformed_composition(
     worksheet.title = "VARIABLE-ENVELOPE"
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
     for row in rows:
-        worksheet.append(row)
+        worksheet.append(tuple(marker_spelling if value == "Variable" else value for value in row))
     workbook.save(path)
     workbook.close()
 

@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a571a55fe6f49bcd433001e1257533532407d955a5d37040dac531776e2be98a'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:c4e590f379a30603ed90748458912169cea39781099369578942ab5cee6a622c'
+related: []
 ---
+
 # `registry-completeness-closure` audit: `S69 real closure outcome proof`
 
 ## Scope
@@ -24,18 +24,7 @@ Ruff. No production source was modified.
 
 ### grade-scoped-predicate | high | Below-filing-grade revisions make completeness structurally unreachable
 
-The accepted decision requires emitted-byte proof only when a revision declares
-filing grade and says a useful below-grade revision must not be represented as
-filing-capable. The implemented filing limb instead returns a refusal for every
-below-grade revision in
-`src/cadrumo/application/registry/_filing_export_coverage.py:107`, while the whole
-report requires zero refused rows in `dev/registry/conformance/closure.py:228`.
-S69 locks this mismatch in at
-`dev/registry/conformance/tests/test_real_closure_outcomes.py:97` by asserting the
-real Modelo 036 below-grade state blocks release. Because the temporal denominator
-intentionally includes useful non-filing revisions, the production predicate cannot
-reach complete even after all genuine filing-grade evidence is enrolled. This is an
-ADR-versus-code conflict, not proof that the complete outcome was tested.
+The accepted decision requires emitted-byte proof only when a revision declares filing grade and says a useful below-grade revision must not be represented as filing-capable. S69 locks this mismatch in at `dev/registry/conformance/tests/test_real_closure_outcomes.py:97` by asserting the real Modelo 036 below-grade state blocks release. Because the temporal denominator intentionally includes useful non-filing revisions, the production predicate cannot reach complete even after all genuine filing-grade evidence is enrolled. This is an ADR-versus-code conflict, not proof that the complete outcome was tested.
 
 ### complete-outcome | high | The checked S69 action proves a refusal rather than the named complete outcome
 

@@ -27,7 +27,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from ...calculations.registry.iva_schema_vocabulary import resolve_iva_art69_dos_service_catalogue
+from ...calculations.registry.iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue
 from ..classification import (
     CustomerTaxStatus,
     InvoiceKind,

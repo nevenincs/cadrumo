@@ -13,8 +13,10 @@ import ast
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeIs
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 
 from ..registry.compiler.validate_below_floor_export_refs import SUPPORTED_FILING_YEARS_DECLARATION
 
@@ -54,21 +56,8 @@ class Finding:
 
 def _canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
     payload = parse_toml((repo / AUTHORITY).read_text(encoding="utf-8"))
-    declaration = payload.get("supported_filing_years")
-    if not isinstance(declaration, dict):
-        raise ValueError("supported_filing_years authority must be a TOML table")
-    floor = declaration.get("floor")
-    horizon = declaration.get("horizon")
-    hard_ceiling = declaration.get("hard_ceiling")
-    if (
-        not isinstance(floor, int)
-        or isinstance(floor, bool)
-        or not isinstance(horizon, int)
-        or isinstance(horizon, bool)
-        or (hard_ceiling is not None and (not isinstance(hard_ceiling, int) or isinstance(hard_ceiling, bool)))
-    ):
-        raise ValueError("supported_filing_years authority has invalid bounds")
-    return floor, horizon, hard_ceiling
+    catalogue = SupportedFilingYearsCatalogue.model_validate(payload.get("supported_filing_years"))
+    return catalogue.floor, catalogue.horizon, catalogue.hard_ceiling
 
 
 def _source_line(lines: list[str], line: int) -> str:
@@ -107,26 +96,7 @@ def _python_findings(path: Path, repo: Path, canonical: set[int]) -> list[Findin
         return []
     findings: list[Finding] = []
     for node in ast.walk(tree):
-        kind: str | None = None
-        years: tuple[int, ...] = ()
-        if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
-            years = _literal_years(node)
-            if len(set(years)) >= 2:
-                kind = "enumerated-year-container"
-        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "range":
-            years = _literal_years(node)
-            if years:
-                kind = "literal-range-call"
-        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
-            years = _literal_years(node)
-            words = _names(node)
-            if years and words & POLICY_WORDS:
-                kind = "policy-named-assignment"
-        elif isinstance(node, ast.Compare):
-            years = _literal_years(node)
-            words = _names(node)
-            if years and words & POLICY_WORDS:
-                kind = "policy-year-comparison"
+        kind, years = _python_year_syntax(node)
         if kind is None:
             continue
         unique = tuple(sorted(set(years)))
@@ -212,6 +182,38 @@ def main() -> int:
         years = ",".join(map(str, row.years))
         print(f"{row.path}:{row.line}\t{row.kind}\t[{years}]\t{row.context}")
     return 0
+
+
+def _python_year_syntax(node: ast.AST) -> tuple[str | None, tuple[int, ...]]:
+    """Read the existing year-container, range and policy syntax cases."""
+    kind: str | None = None
+    years: tuple[int, ...] = ()
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+        years = _literal_years(node)
+        if len(set(years)) >= 2:
+            kind = "enumerated-year-container"
+    elif _is_literal_range_call(node):
+        years = _literal_years(node)
+        if years:
+            kind = "literal-range-call"
+    elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.Compare)):
+        kind, years = _policy_year_syntax(node)
+    return kind, years
+
+
+def _is_literal_range_call(node: ast.AST) -> TypeIs[ast.Call]:
+    """Require the bare range call; attribute calls remain outside this syntax case."""
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "range"
+
+
+def _policy_year_syntax(node: ast.Assign | ast.AnnAssign | ast.Compare) -> tuple[str | None, tuple[int, ...]]:
+    """Require both literal years and a policy name before assigning the original case label."""
+    years = _literal_years(node)
+    words = _names(node)
+    kind = None
+    if years and words & POLICY_WORDS:
+        kind = "policy-year-comparison" if isinstance(node, ast.Compare) else "policy-named-assignment"
+    return kind, years
 
 
 if __name__ == "__main__":

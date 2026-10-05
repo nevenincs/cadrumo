@@ -1,13 +1,11 @@
-"""Real native endpoints with a test manager; no installed-service claims."""
+"""Real native endpoints with explicitly owned test processes."""
 
 from __future__ import annotations
 
 import asyncio
-import socket
 import sys
 import tempfile
 import threading
-import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,24 +19,19 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalCode,
     RuntimeRefusalError,
 )
-from cadrumo.application.runtime.management import (
-    RuntimeManagerInspection,
-    RuntimeManagerKind,
-    RuntimeManagerProcessState,
-)
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 
-from ..framing import RuntimeTransportCleanup
-from ..posix import PosixRuntimeEndpoint
+from ..posix_endpoint import PosixRuntimeEndpoint
+from ..runtime_transport_cleanup import RuntimeTransportCleanup
 from ..startup import RuntimeLaunchDoor
 from ..windows import WindowsRuntimeEndpoint
-from .process_support import launch_fixture
+from .process_support import launch_fixture, runtime_namespace_base
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 
 
-class _FixtureManager:
-    """An explicit manager double launching real, finite, test-owned processes."""
+class _RuntimeProcess:
+    """Explicit lifetime ownership for a real finite runtime fixture."""
 
     def __init__(self, root: Path, namespace: Path) -> None:
         self.root, self.namespace = root, namespace
@@ -48,17 +41,6 @@ class _FixtureManager:
         self.start_count = 0
         self.launch_enabled = True
         self.lock = asyncio.Lock()
-        self.inspection = RuntimeManagerInspection(
-            kind=RuntimeManagerKind.WINDOWS_TASK,
-            available=True,
-            provisioned=True,
-            binding_matches=True,
-            login_autostart=False,
-            process_state=RuntimeManagerProcessState.STOPPED,
-        )
-
-    async def inspect(self) -> RuntimeManagerInspection:
-        return self.inspection
 
     async def start(self) -> None:
         self.start_count += 1
@@ -73,9 +55,6 @@ class _FixtureManager:
                 )
                 assert await self.line() == b"ready\n"
 
-    async def stop(self) -> None:
-        raise AssertionError("a client launch door must never stop the shared runtime")
-
     async def line(self) -> bytes:
         assert self.process is not None and self.process.stdout is not None
         return (await asyncio.wait_for(self.process.stdout.readline(), timeout=15)).replace(b"\r\n", b"\n")
@@ -89,21 +68,22 @@ class _FixtureManager:
 
 
 @asynccontextmanager
-async def _fixture(root: Path) -> AsyncIterator[tuple[_FixtureManager, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
-    temporary_parent = None if sys.platform == "win32" else Path("/") / "tmp"
-    with tempfile.TemporaryDirectory(prefix="cr-door-", dir=temporary_parent) as folder:
+async def _fixture(root: Path) -> AsyncIterator[tuple[_RuntimeProcess, PosixRuntimeEndpoint | WindowsRuntimeEndpoint]]:
+    with tempfile.TemporaryDirectory(prefix="s-", dir=runtime_namespace_base()) as folder:
         namespace = Path(folder) / "ipc"
-        manager = _FixtureManager(root, namespace)
+        runtime = _RuntimeProcess(root, namespace)
         endpoint = (
             WindowsRuntimeEndpoint(storage_root=root)
             if sys.platform == "win32"
             else PosixRuntimeEndpoint(storage_root=root, namespace=namespace)
         )
         try:
-            yield manager, endpoint
+            yield runtime, endpoint
         finally:
-            await manager.cleanup()
-            endpoint.close()
+            try:
+                await runtime.cleanup()
+            finally:
+                endpoint.close()
 
 
 def _expected(endpoint: PosixRuntimeEndpoint | WindowsRuntimeEndpoint) -> RuntimeClientHello:
@@ -111,9 +91,23 @@ def _expected(endpoint: PosixRuntimeEndpoint | WindowsRuntimeEndpoint) -> Runtim
 
 
 @pytest.mark.asyncio
-async def test_concurrent_clients_converge_with_autostart_disabled_and_disconnect_does_not_stop(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        door = RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager=manager)
+async def test_fixture_reaps_owned_runtime_after_assertion_failure(tmp_path: Path) -> None:
+    runtime: _RuntimeProcess | None = None
+    with pytest.raises(AssertionError, match="synthetic test failure"):
+        async with _fixture(tmp_path) as (runtime, endpoint):
+            await runtime.start()
+            connection = await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint)).open()
+            connection.close()
+            raise AssertionError("synthetic test failure")
+    assert runtime is not None and runtime.process is not None
+    assert runtime.process.returncode is not None
+
+
+@pytest.mark.asyncio
+async def test_concurrent_clients_share_existing_owner_and_disconnect_does_not_stop(tmp_path: Path) -> None:
+    async with _fixture(tmp_path) as (runtime, endpoint):
+        await runtime.start()
+        door = RuntimeLaunchDoor(endpoint, expected=_expected(endpoint))
         connections = await asyncio.gather(door.open(timeout=20), door.open(timeout=20))
         try:
             assert connections[0].hello.boot_id == connections[1].hello.boot_id
@@ -121,7 +115,6 @@ async def test_concurrent_clients_converge_with_autostart_disabled_and_disconnec
             subsequent = await door.open()
             try:
                 assert subsequent.hello.boot_id == connections[1].hello.boot_id
-                assert not manager.inspection.login_autostart
             finally:
                 subsequent.close()
         finally:
@@ -130,148 +123,64 @@ async def test_concurrent_clients_converge_with_autostart_disabled_and_disconnec
 
 
 @pytest.mark.asyncio
-async def test_existing_ready_owner_needs_no_manager(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        await manager.start()
+async def test_existing_ready_owner_is_reused(tmp_path: Path) -> None:
+    async with _fixture(tmp_path) as (runtime, endpoint):
+        await runtime.start()
 
-        def unexpected_manager() -> _FixtureManager:
-            raise AssertionError("a verified ready owner must not construct a manager")
-
-        connection = await RuntimeLaunchDoor(
-            endpoint, expected=_expected(endpoint), manager_factory=unexpected_manager
-        ).open()
+        connection = await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint)).open()
         connection.close()
-        assert manager.process is not None and manager.process.returncode is None
+        assert runtime.process is not None and runtime.process.returncode is None
 
 
 @pytest.mark.asyncio
-async def test_missing_manager_refuses_without_direct_launch(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (_manager, endpoint):
+async def test_missing_endpoint_refuses_without_direct_launch(tmp_path: Path) -> None:
+    async with _fixture(tmp_path) as (_runtime, endpoint):
         with pytest.raises(RuntimeRefusalError) as caught:
             await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint)).open()
         assert caught.value.reason is RuntimeRefusalCode.UNAVAILABLE
 
 
 @pytest.mark.asyncio
-async def test_missing_endpoint_constructs_manager_once_for_existing_provisioning(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        factory_calls = 0
-
-        def manager_factory() -> _FixtureManager:
-            nonlocal factory_calls
-            factory_calls += 1
-            return manager
-
-        connection = await RuntimeLaunchDoor(
-            endpoint, expected=_expected(endpoint), manager_factory=manager_factory
-        ).open(timeout=20)
-        try:
-            assert factory_calls == 1
-            assert manager.start_count == 1
-        finally:
-            connection.close()
-
-
-@pytest.mark.asyncio
-@pytest.mark.skipif(sys.platform == "win32", reason="requires native Unix endpoint substitution")
-@pytest.mark.parametrize("kind", ["regular_file", "symlink", "stale_socket"])
-async def test_only_missing_or_stale_endpoint_can_trigger_launch(tmp_path: Path, kind: str) -> None:
-    if sys.platform == "win32":
-        pytest.skip("requires native Unix endpoint substitution")
-    async with _fixture(tmp_path) as (manager, endpoint):
-        path = manager.namespace / (endpoint.storage_identity[:32] + ".sock")
-        target = tmp_path / "untouched"
-        target.write_bytes(b"synthetic unrelated content")
-        if kind == "symlink":
-            path.symlink_to(target)
-        elif kind == "regular_file":
-            path.write_bytes(b"untrusted endpoint")
-        else:
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as stale:
-                stale.bind(str(path))
-        door = RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager=manager)
-        if kind == "stale_socket":
-            connection = await door.open(timeout=20)
-            connection.close()
-            assert manager.start_count == 1
-        else:
-            original = path.lstat()
-            with pytest.raises(RuntimeRefusalError) as caught:
-                await door.open()
-            assert caught.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
-            assert manager.start_count == 0
-            assert path.lstat().st_ino == original.st_ino
-        assert target.read_bytes() == b"synthetic unrelated content"
-
-
-@pytest.mark.asyncio
 async def test_cross_root_composition_refuses_before_connecting_or_launching(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
+    async with _fixture(tmp_path) as (runtime, endpoint):
         expected = _expected(endpoint).model_copy(update={"storage_identity": "f" * 64})
         with pytest.raises(RuntimeRefusalError) as caught:
-            RuntimeLaunchDoor(endpoint, expected=expected, manager=manager)
+            RuntimeLaunchDoor(endpoint, expected=expected)
         assert caught.value.reason is RuntimeRefusalCode.ROOT_MISMATCH
-        assert manager.start_count == 0
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("field", ["available", "provisioned", "binding_matches"])
-async def test_unavailable_or_changed_provisioning_never_launches(tmp_path: Path, field: str) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        manager.inspection = manager.inspection.model_copy(update={field: False})
-        with pytest.raises(RuntimeRefusalError) as caught:
-            await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager=manager).open()
-        expected = RuntimeRefusalCode.VERSION_MISMATCH if field == "binding_matches" else RuntimeRefusalCode.UNAVAILABLE
-        assert caught.value.reason is expected
-        assert manager.start_count == 0
+        assert runtime.start_count == 0
 
 
 @pytest.mark.asyncio
 async def test_foreign_cohort_is_refused_without_restart_or_repair(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        manager.version = "different-cohort"
-        await manager.start()
-
-        def unexpected_manager() -> _FixtureManager:
-            raise AssertionError("an incompatible peer must not invoke manager provisioning")
+    async with _fixture(tmp_path) as (runtime, endpoint):
+        runtime.version = "different-cohort"
+        await runtime.start()
 
         with pytest.raises(RuntimeRefusalError) as caught:
-            await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager_factory=unexpected_manager).open()
+            await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint)).open()
         assert caught.value.reason is RuntimeRefusalCode.VERSION_MISMATCH
-        assert manager.start_count == 1
-        assert manager.process is not None and manager.process.returncode is None
-
-
-@pytest.mark.asyncio
-async def test_accepted_start_without_readiness_times_out_without_repeated_start(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        manager.launch_enabled = False
-        started = time.monotonic()
-        with pytest.raises(RuntimeRefusalError) as caught:
-            await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager=manager).open(timeout=0.2)
-        assert caught.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
-        assert manager.start_count == 1
-        assert time.monotonic() - started < 2
+        assert runtime.start_count == 1
+        assert runtime.process is not None and runtime.process.returncode is None
 
 
 @pytest.mark.asyncio
 async def test_cancelled_handshake_closes_late_connection_without_stopping_owner(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        manager.mode = "blocked"
-        await manager.start()
-        opening = asyncio.create_task(RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager=manager).open())
+    async with _fixture(tmp_path) as (runtime, endpoint):
+        runtime.mode = "blocked"
+        await runtime.start()
+        opening = asyncio.create_task(RuntimeLaunchDoor(endpoint, expected=_expected(endpoint)).open())
         try:
-            assert await manager.line() == b"handshake\n"
+            assert await runtime.line() == b"handshake\n"
             opening.cancel()
             await asyncio.sleep(0)
             assert not opening.done(), "cancellation must retain native handshake cleanup"
-            assert manager.process is not None and manager.process.stdin is not None
-            manager.process.stdin.write(b"release\n")
-            await manager.process.stdin.drain()
+            assert runtime.process is not None and runtime.process.stdin is not None
+            runtime.process.stdin.write(b"release\n")
+            await runtime.process.stdin.drain()
             with pytest.raises(asyncio.CancelledError):
                 await opening
-            assert await manager.line() == b"late_closed\n"
-            assert manager.process.returncode is None
+            assert await runtime.line() == b"late_closed\n"
+            assert runtime.process.returncode is None
         finally:
             if not opening.done():
                 opening.cancel()
@@ -328,17 +237,17 @@ class _FaultEndpoint:
 
 @pytest.mark.asyncio
 async def test_cancelled_native_handshake_failed_close_retains_owner_until_retry(tmp_path: Path) -> None:
-    async with _fixture(tmp_path) as (manager, endpoint):
-        manager.mode = "blocked"
-        await manager.start()
+    async with _fixture(tmp_path) as (runtime, endpoint):
+        runtime.mode = "blocked"
+        await runtime.start()
         fault = _FaultEndpoint(endpoint)
-        opening = asyncio.create_task(RuntimeLaunchDoor(fault, expected=_expected(endpoint), manager=manager).open())
+        opening = asyncio.create_task(RuntimeLaunchDoor(fault, expected=_expected(endpoint)).open())
         try:
-            assert await manager.line() == b"handshake\n"
+            assert await runtime.line() == b"handshake\n"
             opening.cancel("native handshake cancellation")
-            assert manager.process is not None and manager.process.stdin is not None
-            manager.process.stdin.write(b"release\n")
-            await manager.process.stdin.drain()
+            assert runtime.process is not None and runtime.process.stdin is not None
+            runtime.process.stdin.write(b"release\n")
+            await runtime.process.stdin.drain()
             with pytest.raises(asyncio.CancelledError) as caught:
                 await opening
             assert caught.value.args == ("native handshake cancellation",)
@@ -352,8 +261,8 @@ async def test_cancelled_native_handshake_failed_close_retains_owner_until_retry
             await cleanup.retry_cleanup()
             assert fault.channel.close_calls == 2
             assert fault.channel.released
-            assert await manager.line() == b"late_closed\n"
-            assert manager.process.returncode is None
+            assert await runtime.line() == b"late_closed\n"
+            assert runtime.process.returncode is None
         finally:
             if not opening.done():
                 opening.cancel()

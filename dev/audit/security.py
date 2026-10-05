@@ -34,6 +34,7 @@ See Also:
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -41,17 +42,18 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, TypeIs
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.first_party_source import PRODUCT_PACKAGE
 from dev.packaging.command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
 _FINDING_CAP: Final[int] = 40
 _SEMGREP_SPEC: Final[str] = "semgrep==1.168.0"
 _SEMGREP_TIMEOUT_SECONDS: Final[float] = 600.0
-_PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
+_PRODUCT_SOURCE_ROOT: Final[Path] = Path(PRODUCT_PACKAGE)
 
 #: `pyproject.toml` requires Python `>=3.13` with no upper bound, so semgrep's
 #: stock Python 3.6/3.7 forward-compatibility rules (flagging
@@ -66,6 +68,31 @@ _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS: Final[tuple[str, ...]] = (
 
 # semgrep's real severity axis (`extra.severity` in --json output), worst first.
 _SEVERITY_ORDER: Final[tuple[str, ...]] = ("ERROR", "WARNING", "INFO")
+
+
+def _semgrep_parse_errors(payload: dict[str, object]) -> tuple[str, ...] | SecurityResult:
+    """Semgrep parse errors."""
+    raw_errors = payload.get("errors", [])
+    if not isinstance(raw_errors, list) or not all(isinstance(error, dict) for error in raw_errors):
+        return SecurityResult.unavailable("semgrep JSON errors field was not an object list")
+    parse_errors = tuple(
+        f"{err.get('path', '?')}: {err.get('message', err.get('type', 'unknown error'))}" for err in raw_errors
+    )
+    return parse_errors
+
+
+def _semgrep_scanned_files(payload: dict[str, object]) -> int | SecurityResult:
+    """Semgrep scanned files."""
+    paths = payload.get("paths", {})
+    if not isinstance(paths, dict):
+        return SecurityResult.unavailable("semgrep JSON paths field was not an object")
+    scanned = paths.get("scanned", [])
+    if not isinstance(scanned, list) or not all(isinstance(path, str) for path in scanned):
+        return SecurityResult.unavailable("semgrep JSON paths.scanned field was not a string list")
+    files_scanned = len(scanned)
+    if files_scanned <= 0:
+        return SecurityResult.unavailable("semgrep analysed 0 files, so the scan proves nothing about security")
+    return files_scanned
 
 
 class SecurityOutcome(StrEnum):
@@ -217,22 +244,13 @@ def classify_semgrep_output(raw_stdout: str) -> SecurityResult:
     if not isinstance(payload, dict):
         return SecurityResult.unavailable("semgrep JSON root was not an object")
 
-    paths = payload.get("paths", {})
-    if not isinstance(paths, dict):
-        return SecurityResult.unavailable("semgrep JSON paths field was not an object")
-    scanned = paths.get("scanned", [])
-    if not isinstance(scanned, list) or not all(isinstance(path, str) for path in scanned):
-        return SecurityResult.unavailable("semgrep JSON paths.scanned field was not a string list")
-    files_scanned = len(scanned)
-    if files_scanned <= 0:
-        return SecurityResult.unavailable("semgrep analysed 0 files, so the scan proves nothing about security")
+    files_scanned = _semgrep_scanned_files(payload)
+    if isinstance(files_scanned, SecurityResult):
+        return files_scanned
 
-    raw_errors = payload.get("errors", [])
-    if not isinstance(raw_errors, list) or not all(isinstance(error, dict) for error in raw_errors):
-        return SecurityResult.unavailable("semgrep JSON errors field was not an object list")
-    parse_errors = tuple(
-        f"{err.get('path', '?')}: {err.get('message', err.get('type', 'unknown error'))}" for err in raw_errors
-    )
+    parse_errors = _semgrep_parse_errors(payload)
+    if isinstance(parse_errors, SecurityResult):
+        return parse_errors
 
     raw_results = payload.get("results", [])
     if not isinstance(raw_results, list):
@@ -240,32 +258,10 @@ def classify_semgrep_output(raw_stdout: str) -> SecurityResult:
 
     findings: list[SecurityFinding] = []
     for entry in raw_results:
-        if not isinstance(entry, dict):
-            return SecurityResult.unavailable("semgrep JSON result entry was not an object")
-        extra = entry.get("extra", {})
-        start = entry.get("start", {})
-        end = entry.get("end", {})
-        if not isinstance(extra, dict) or not isinstance(start, dict) or not isinstance(end, dict):
-            return SecurityResult.unavailable("semgrep JSON result fields had an invalid object shape")
-        line = start.get("line", 0)
-        end_line = end.get("line", 0)
-        if (
-            isinstance(line, bool)
-            or not isinstance(line, int)
-            or isinstance(end_line, bool)
-            or not isinstance(end_line, int)
-        ):
-            return SecurityResult.unavailable("semgrep JSON result line fields were not integers")
-        findings.append(
-            SecurityFinding(
-                check_id=str(entry.get("check_id", "")),
-                path=str(entry.get("path", "")).replace("\\", "/"),
-                line=line,
-                end_line=end_line,
-                severity=str(extra.get("severity", "UNKNOWN")),
-                message=str(extra.get("message", "")).strip(),
-            ),
-        )
+        finding = _semgrep_result_entry(entry)
+        if isinstance(finding, SecurityResult):
+            return finding
+        findings.append(finding)
 
     if not findings:
         return SecurityResult.observed_zero(files_scanned, parse_errors, raw_stdout)
@@ -304,6 +300,7 @@ def run_security_scan(
             errors="replace",
             cwd=repo_root,
             timeout_seconds=timeout,
+            environment=_semgrep_environment(),
         )
     except subprocess.TimeoutExpired:
         return SecurityResult.unavailable(f"semgrep exceeded its {timeout:g}s timeout")
@@ -316,6 +313,26 @@ def run_security_scan(
         return SecurityResult.unavailable(f"semgrep exited {completed.returncode}: {tail}")
 
     return classify_semgrep_output(completed.stdout)
+
+
+def _semgrep_environment() -> dict[str, str]:
+    """Bind scanner state explicitly; Semgrep ignores XDG roots that do not exist."""
+    from cadrumo.core.storage_environment import prepare_temporary_directory, tool_storage_environment
+
+    environment = dict(os.environ)
+    environment.update(tool_storage_environment())
+    locations = {
+        "SEMGREP_SETTINGS_FILE": ("XDG_CONFIG_HOME", "semgrep/settings.yml"),
+        "SEMGREP_LOG_FILE": ("XDG_STATE_HOME", "semgrep/semgrep.log"),
+        "SEMGREP_VERSION_CACHE_PATH": ("XDG_CACHE_HOME", "semgrep/version"),
+    }
+    for variable, (category, member) in locations.items():
+        path = Path(environment[category]) / member
+        path.parent.mkdir(parents=True, exist_ok=True)
+        environment[variable] = str(path)
+    temporary = str(prepare_temporary_directory())
+    environment.update({"TEMP": temporary, "TMP": temporary, "TMPDIR": temporary})
+    return environment
 
 
 def render_console_report(result: SecurityResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:
@@ -381,6 +398,34 @@ def main() -> int:
         print(render_console_report(result, full=args.full))
 
     return ADVISORY_BROKEN if result.outcome is SecurityOutcome.UNAVAILABLE else OK
+
+
+def _semgrep_result_entry(entry: object) -> SecurityFinding | SecurityResult:
+    """Validate one result completely before admitting its typed finding."""
+    if not isinstance(entry, dict):
+        return SecurityResult.unavailable("semgrep JSON result entry was not an object")
+    extra = entry.get("extra", {})
+    start = entry.get("start", {})
+    end = entry.get("end", {})
+    if not isinstance(extra, dict) or not isinstance(start, dict) or not isinstance(end, dict):
+        return SecurityResult.unavailable("semgrep JSON result fields had an invalid object shape")
+    line = start.get("line", 0)
+    end_line = end.get("line", 0)
+    if not _semgrep_line_is_integer(line) or not _semgrep_line_is_integer(end_line):
+        return SecurityResult.unavailable("semgrep JSON result line fields were not integers")
+    return SecurityFinding(
+        check_id=str(entry.get("check_id", "")),
+        path=str(entry.get("path", "")).replace("\\", "/"),
+        line=line,
+        end_line=end_line,
+        severity=str(extra.get("severity", "UNKNOWN")),
+        message=str(extra.get("message", "")).strip(),
+    )
+
+
+def _semgrep_line_is_integer(value: object) -> TypeIs[int]:
+    """Accept integer line values while refusing bool, preserving the JSON boundary."""
+    return not isinstance(value, bool) and isinstance(value, int)
 
 
 if __name__ == "__main__":

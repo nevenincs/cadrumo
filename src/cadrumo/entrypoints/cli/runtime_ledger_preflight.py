@@ -12,12 +12,12 @@ from ...application.ledger.preflight_operation import (
     LedgerPreflightRequest,
 )
 from ...application.operations.public_period import PublicPeriod
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_ledger_preflight_for_cli(ctx: typer.Context, *, period: Period) -> LedgerPreflightProjection:
@@ -41,10 +41,5 @@ def read_ledger_preflight_for_cli(ctx: typer.Context, *, period: Period) -> Ledg
         or result.period != selected_period
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return result

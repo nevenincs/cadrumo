@@ -26,13 +26,42 @@ from __future__ import annotations
 
 import re
 
-IBAN_SHAPE_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
+IBAN_SHAPE_RE = re.compile(r"\A[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}\Z")
 """ISO 13616 IBAN shape shared by registry and refund-account validators.
 
 The pattern checks uppercase canonical text only: country code, two check
 digits, and an alphanumeric BBAN for a total length of 15-34 characters. It is
 only the structural gate; callers must also run :func:`iban_mod_97`.
+
+The anchors are absolute and the digits ASCII, so ``.match`` and
+``.fullmatch`` agree: ``$`` would admit a trailing newline, and a Unicode digit
+class would admit other scripts' digits, which the mod-97 arithmetic then reads
+as numbers.
 """
+
+
+BIC_SHAPE_RE = re.compile(r"\A[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\Z")
+"""ISO 9362 SWIFT-BIC shape: bank, country and location codes plus an optional branch.
+
+Eight or eleven uppercase characters; callers fold spaces and case first, as for
+an IBAN.
+"""
+
+IBAN_MASK = "\u00b7\u00b7\u00b7\u00b7"
+"""Placeholder printed between the visible ends of a masked IBAN."""
+
+
+def mask_iban(value: str) -> str:
+    """Return the operator-facing mask of an IBAN: country code and last four characters.
+
+    Operator output never shows a full account number; the two ends are what an
+    operator needs to tell their own accounts apart. A value too short to hide
+    anything is masked entirely.
+    """
+    canonical = normalise_iban(value)
+    if len(canonical) <= 8:
+        return IBAN_MASK
+    return f"{canonical[:2]} {IBAN_MASK} {canonical[-4:]}"
 
 
 def normalise_iban(value: str) -> str:

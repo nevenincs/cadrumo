@@ -38,7 +38,7 @@
               "ledger_ready": "true",
               "missing_bindings": "4"
             },
-            "message": "ledger_ready only means the period ledger rows passed transaction preflight; missing_bindings/source_binding_ready still decide source completeness.",
+            "message": "Your records passed this period's checks, but the declaration still lacks values from some sources. Review the missing values before calculating.",
             "severity": "info"
           },
           {

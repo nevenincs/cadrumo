@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#external-client-boundary'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:8bc00fb90eb37da0a3b5695c81a79b61147d4414e6e5ea87187813bd4e634a1e'
+body_hash: 'sha256:4b6ffc4fe710ed5df7fe6631b14f00e69401af59d315e4085db7f398fee32805'
 related: []
 ---
 # `external-client-boundary` research: base product and external client dependency boundary
@@ -20,11 +20,11 @@ Commit `c923d86938f` deleted the production agent-workspace command, payloads, r
 
 ### The base application still contains external-adapter policy
 
-`src/cadrumo/application/operator_surface/_manifest.py:181` models required MCP exposure and `src/cadrumo/application/operator_surface/_manifest.py:603` enforces client-specific exposure policy. Consumers live under `src/cadrumo-harness/src/cadrumo_harness/mcp/`, including `_tools.py`, `_toolsets.py`, `_persona_scope.py`, and `_meta_tools.py`. Keeping the projection in the base package reverses the dependency even though the runtime import direction points from harness to base.
+the former source file models required MCP exposure and the former source file enforces client-specific exposure policy. Consumers live under `src/cadrumo-harness/src/cadrumo_harness/mcp/`, including `_tools.py`, `_toolsets.py`, `_persona_scope.py`, and `_meta_tools.py`. Keeping the projection in the base package reverses the dependency even though the runtime import direction points from harness to base.
 
 ### Consumer identity leaks beyond the projection
 
-Base corpus-search documentation names harness mapper and resource functions at `src/cadrumo/application/corpus_search/_models.py:12` and `_citation_lookup.py:22`. Base configuration and storage taxonomy describe MCP session telemetry at `src/cadrumo/core/config.py:498` and `src/cadrumo/core/_storage_taxonomy_locations.py:167`. These names make base semantics depend on one consumer rather than a generic capability.
+Base corpus-search documentation names harness mapper and resource functions  and `_citation_lookup.py:22`.  These names make base semantics depend on one consumer rather than a generic capability.
 
 ### The product release cohort also treats the client as a base artifact
 
@@ -42,12 +42,9 @@ Keeping only the command deletion is insufficient because base policy and releas
 
 - `c923d86938f`
 - `docs/_sequences/contracts/workstation-setup/install-agent-harness.seq:2`
-- `src/cadrumo/application/operator_surface/_manifest.py:181`
-- `src/cadrumo/application/operator_surface/_manifest.py:603`
-- `src/cadrumo/application/corpus_search/_models.py:12`
-- `src/cadrumo/application/corpus_search/_citation_lookup.py:22`
+
 - `src/cadrumo/core/config.py:498`
-- `src/cadrumo/core/_storage_taxonomy_locations.py:167`
+
 - `dev/packaging/python_cohort.py:100`
 - `dev/packaging/release_cohort.py:139`
 - `.github/workflows/publish-release.yml:605`

@@ -2,42 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
 from uuid import UUID
 
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.read_capture import capture_read_result
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
@@ -114,12 +92,9 @@ class LedgerPreflightExecutor:
         """Capture the canonical query and publish an encrypted no-effect result."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.subject_ref != request.subject_ref
-        ):
+        if request.definition_id != LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, payload.profile_id)
         await context.events.phase(LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID)
 
         def read() -> LedgerPreflightProjection:
@@ -138,45 +113,19 @@ class LedgerPreflightExecutor:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             return LedgerPreflightProjection.from_report(report, profile_id=payload.profile_id)
 
-        async def capture() -> str:
-            projection = await asyncio.to_thread(read)
-            reference = await context.operands.put(projection, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="ledger-preflight")
+        return await capture_read_result(context, read, task_name="ledger-preflight")
 
 
 def build_ledger_preflight_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
     """Register a period-specific canonical read with no mutation authority."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID,
         request_type=LedgerPreflightRequest,
         result_type=LedgerPreflightProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerPreflightRequest,
-            executor_type=LedgerPreflightExecutor,
-            build=lambda: LedgerPreflightExecutor(ports),
-        ),
-        phase_codes=(LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        executor_type=LedgerPreflightExecutor,
+        build=lambda: LedgerPreflightExecutor(ports),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -196,13 +145,8 @@ def resolve_ledger_preflight_access(
 
 def build_ledger_preflight_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind strict versioned schemas and exact-period disclosure."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerPreflightRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerPreflightProjection
-        ),
+        public_result_type=LedgerPreflightProjection,
         access_resolver=resolve_ledger_preflight_access,
     )

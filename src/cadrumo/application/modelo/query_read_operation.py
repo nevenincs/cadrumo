@@ -8,20 +8,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import date
-from typing import Annotated, Literal, Protocol, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import override_settings
-from ...core.external_constants import OutputLanguage
-from ...core.filing_year import FilingYear
-from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -34,9 +27,14 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.query_reports import ModeloBindingQueryRow, ModeloBindingsReport
+from ...domain.calculations.registry.query_reports import ModeloBindingsReport
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    ADMISSION_REPLAY_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    require_admitted_submission,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -46,25 +44,21 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.public_period import PublicPeriod
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..state_projection import (
-    CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS,
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
     build_modelo_readiness_reports,
 )
-from ..state_projection_ports import StateProjectionReadPorts
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -76,7 +70,19 @@ from ..user_profile.access_contracts import (
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .binding_readiness import profile_resolvable_binding_ids
-from .data_inventory import DataInventoryCasilla, DataInventoryChecklist, data_inventory_checklist
+from .data_inventory import data_inventory_checklist
+from .query_read_contracts import (
+    ModeloBindingRowV1,
+    ModeloBindingsListProjection,
+    ModeloBindingsListRequest,
+    ModeloBindingsResolveProjection,
+    ModeloBindingsResolveRequest,
+    ModeloQueryReadPortsFactory,
+    ModeloReadinessOperationRequest,
+    ModeloReadinessProjection,
+    ModeloRequiresProjection,
+    ModeloRequiresRequest,
+)
 from .registry_discovery import (
     registry_bindings,
     registry_bindings_for_scope,
@@ -90,433 +96,15 @@ MODELO_BINDINGS_RESOLVE_OPERATION_DEFINITION_ID = "modelo.bindings.resolve"
 MODELO_REQUIRES_OPERATION_DEFINITION_ID = "modelo.requires"
 MODELO_READINESS_OPERATION_DEFINITION_ID = "modelo.readiness"
 
-_Modelo = Annotated[str, Field(min_length=1, max_length=16)]
-_Token = Annotated[str, Field(min_length=1, max_length=128)]
-_Value = Annotated[str, Field(max_length=16_384)]
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloQueryReadPorts:
-    """Read capability for one admitted profile."""
-
-    bucket_id: str
-    read_ports: StateProjectionReadPorts
-
-
-class ModeloQueryReadPortsFactory(Protocol):
-    """Executable composition binds the readiness reader to a profile."""
-
-    def __call__(self, *, bucket_id: str) -> ModeloQueryReadPorts:
-        """Return the reader for the exact requested profile."""
-        ...
-
-
-class ModeloBindingsListRequest(CredentialFreeOperationRequest):
-    """Registry filters; an omitted modelo retains registry order."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    modelo: _Modelo | None = None
-    year: FilingYear | None = None
-    period_code: _Token | None = None
-    missing: bool = False
-    as_of: date | None = None
-    catalogue_only: bool = False
-
-    @model_validator(mode="after")
-    def _scope(self) -> Self:
-        if self.catalogue_only and (
-            self.modelo is not None
-            or self.year is not None
-            or self.period_code is not None
-            or self.missing
-            or self.as_of is not None
-        ):
-            raise ValueError("catalogue-only listing cannot carry binding filters")
-        if self.as_of is not None and self.year is None:
-            raise ValueError("as_of requires a filing year")
-        if self.year is not None and self.period_code is not None:
-            Period.from_year_and_code(self.year, self.period_code)
-        return self
-
-
-class ModeloBindingOverride(BaseModel):
-    """One temporary preview value, never a saved binding."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    binding_id: _Token
-    value: _Value
-
-
-class ModeloBindingsResolveRequest(CredentialFreeOperationRequest):
-    """One exact target and temporary overrides."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    modelo: _Modelo
-    period: PublicPeriod
-    as_of: date | None = None
-    overrides: tuple[ModeloBindingOverride, ...] = ()
-
-    @model_validator(mode="after")
-    def _unique_overrides(self) -> Self:
-        ids = tuple(row.binding_id for row in self.overrides)
-        if len(set(ids)) != len(ids):
-            raise ValueError("binding overrides must have unique ids")
-        return self
-
-
-class ModeloRequiresRequest(CredentialFreeOperationRequest):
-    """One exact data-inventory target."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    modelo: _Modelo
-    period: PublicPeriod
-    language: OutputLanguage = OutputLanguage.ES
-
-
-class ModeloReadinessOperationRequest(CredentialFreeOperationRequest):
-    """One readiness target; absent period means the annual 0A preflight."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    modelo: _Modelo
-    filing_year: FilingYear
-    period: PublicPeriod | None = None
-    revision_id: _Token | None = None
-    language: OutputLanguage = OutputLanguage.ES
-
-    @model_validator(mode="after")
-    def _matching_period(self) -> Self:
-        if self.period is not None and self.period.filing_year != self.filing_year:
-            raise ValueError("readiness period must match filing year")
-        return self
-
-
-class ModeloBindingEncodedOptionV1(BaseModel):
-    """One complete registry boolean encoding."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    encoded_value: str
-    boolean_meaning: bool
-    registry_value: str
-
-
-class ModeloBindingRowV1(BaseModel):
-    """Grounded binding row shared by list and preview."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    modelo: str
-    revision: str
-    filing_year: int | None
-    period: str | None
-    binding_id: str
-    source: str
-    readiness_locale_key: str
-    typed_enum: str | None
-    input_channel: str
-    borrador_capable: bool
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
-    relation_inputs: tuple[str, ...]
-    encoded_options: tuple[ModeloBindingEncodedOptionV1, ...]
-    override: str | None = None
-
-    @classmethod
-    def from_report_row(
-        cls, report: ModeloBindingsReport, row: ModeloBindingQueryRow, *, override: str | None = None
-    ) -> Self:
-        """Copy one registry row with its scope and complete legal grounding."""
-        return cls(
-            modelo=report.code,
-            revision=report.revision,
-            filing_year=report.filing_year,
-            period=report.period,
-            binding_id=row.binding_id,
-            source=row.provider.kind,
-            readiness_locale_key=CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.provider.kind],
-            typed_enum=row.typed_enum,
-            input_channel=row.input_channel,
-            borrador_capable=row.borrador_capable,
-            legal_refs=row.legal_refs,
-            source_refs=row.source_refs,
-            relation_inputs=row.relation_inputs,
-            encoded_options=tuple(
-                ModeloBindingEncodedOptionV1(
-                    encoded_value=item.encoded_value,
-                    boolean_meaning=item.boolean_meaning,
-                    registry_value=item.registry_value,
-                )
-                for item in row.encoded_options
-            ),
-            override=override,
-        )
-
-
-class ModeloBindingsListProjection(BaseModel):
-    """Full ordered registry listing with explicit filters and count."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    result_version: Literal[1] = 1
-    operation: Literal["modelo.bindings.list"] = "modelo.bindings.list"
-    authority_generation: ContentDigest
-    profile_id: UUID
-    modelo_filter: str | None
-    year_filter: int | None
-    period_filter: str | None
-    missing_filter: bool
-    catalogue_only: bool
-    known_modelos: tuple[str, ...]
-    binding_count: int
-    bindings: tuple[ModeloBindingRowV1, ...]
-
-
-class ModeloBindingsResolveProjection(BaseModel):
-    """Full ordered exact-scope preview with unsaved overrides."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    result_version: Literal[1] = 1
-    operation: Literal["modelo.bindings.resolve"] = "modelo.bindings.resolve"
-    authority_generation: ContentDigest
-    profile_id: UUID
-    modelo: str
-    revision: str
-    filing_year: int | None
-    period: str | None
-    override_count: int
-    binding_count: int
-    bindings: tuple[ModeloBindingRowV1, ...]
-
-
-class ModeloInventoryCasillaV1(BaseModel):
-    """One canonical checklist row and its provenance."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    casilla_id: str
-    number: str
-    label: str
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
-    binding_id: str | None
-    binding_source: str | None
-
-    @classmethod
-    def from_casilla(cls, row: DataInventoryCasilla) -> Self:
-        """Copy one canonical checklist row without shortening its references."""
-        return cls(
-            casilla_id=row.casilla_id,
-            number=row.number,
-            label=row.label,
-            legal_refs=row.legal_refs,
-            source_refs=row.source_refs,
-            binding_id=row.binding_id,
-            binding_source=row.binding_source,
-        )
-
-
-class ModeloRequiresProjection(BaseModel):
-    """Every canonical checklist bucket and profile gap, in source order."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    result_version: Literal[1] = 1
-    operation: Literal["modelo.requires"] = "modelo.requires"
-    authority_generation: ContentDigest
-    profile_id: UUID
-    language: OutputLanguage
-    modelo: str
-    revision: str
-    filing_year: int
-    period: str
-    required_manual: tuple[ModeloInventoryCasillaV1, ...]
-    optional_manual: tuple[ModeloInventoryCasillaV1, ...]
-    detail_row_fields: tuple[ModeloInventoryCasillaV1, ...]
-    ledger_derivable: tuple[ModeloInventoryCasillaV1, ...]
-    profile_derivable: tuple[ModeloInventoryCasillaV1, ...]
-    previous_filing: tuple[ModeloInventoryCasillaV1, ...]
-    relation_prefill: tuple[ModeloInventoryCasillaV1, ...]
-    live_observation: tuple[ModeloInventoryCasillaV1, ...]
-    unbucketed_sources: tuple[ModeloInventoryCasillaV1, ...]
-    unresolved_profile_bindings: tuple[str, ...]
-    unresolved_profile_keys: tuple[str, ...]
-    profile_checked: bool
-
-    @classmethod
-    def from_checklist(
-        cls,
-        profile_id: UUID,
-        checklist: DataInventoryChecklist,
-        *,
-        language: OutputLanguage,
-        authority_generation: ContentDigest,
-    ) -> Self:
-        """Preserve every canonical checklist section in declaration order."""
-
-        def rows(source: tuple[DataInventoryCasilla, ...]) -> tuple[ModeloInventoryCasillaV1, ...]:
-            return tuple(ModeloInventoryCasillaV1.from_casilla(row) for row in source)
-
-        return cls(
-            authority_generation=authority_generation,
-            profile_id=profile_id,
-            language=language,
-            modelo=checklist.modelo,
-            revision=checklist.revision_id,
-            filing_year=checklist.filing_year,
-            period=checklist.period,
-            required_manual=rows(checklist.required_manual),
-            optional_manual=rows(checklist.optional_manual),
-            detail_row_fields=rows(checklist.detail_row_fields),
-            ledger_derivable=rows(checklist.ledger_derivable),
-            profile_derivable=rows(checklist.profile_derivable),
-            previous_filing=rows(checklist.previous_filing),
-            relation_prefill=rows(checklist.relation_prefill),
-            live_observation=rows(checklist.live_observation),
-            unbucketed_sources=rows(checklist.unbucketed_sources),
-            unresolved_profile_bindings=checklist.unresolved_profile_bindings,
-            unresolved_profile_keys=checklist.unresolved_profile_keys,
-            profile_checked=checklist.profile_checked,
-        )
-
-
-class ModeloReadinessMissingRequirementV1(BaseModel):
-    """One missing profile requirement and its legal grounding."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    section_key: str
-    field_key: str
-    selector: str
-    label: str
-    legal_refs: tuple[str, ...]
-    modelos: tuple[str, ...]
-
-
-class ModeloReadinessMissingBindingV1(BaseModel):
-    """One unresolved calculation binding."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    binding_id: str
-    source: str
-    input_channel: str
-
-
-class ModeloReadinessLedgerIssueV1(BaseModel):
-    """One ledger preflight issue with its transaction address."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    transaction_id: str
-    reason: str
-    detail: str
-
-
-class ModeloReadinessProjection(BaseModel):
-    """All canonical readiness axes, including unassessed and recovery facts."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    result_version: Literal[1] = 1
-    operation: Literal["modelo.readiness"] = "modelo.readiness"
-    authority_generation: ContentDigest
-    profile_id: UUID
-    language: OutputLanguage
-    modelo: str
-    revision_id: str
-    filing_year: int
-    period: PublicPeriod
-    ready: bool
-    profile_ready: bool
-    per_operation_requirements_assessed: bool
-    profile_refusal: str
-    profile_precondition_verdict: PreconditionVerdictSnapshot | None
-    registry_ready: bool
-    registry_refusal: str
-    binding_ready: bool
-    missing: tuple[ModeloReadinessMissingRequirementV1, ...]
-    missing_bindings: tuple[ModeloReadinessMissingBindingV1, ...]
-    ledger_preflight_required: bool
-    ledger_ready: bool | None
-    ledger_period: PublicPeriod | None
-    ledger_checked_transaction_count: int
-    ledger_issues: tuple[ModeloReadinessLedgerIssueV1, ...]
-
-    @classmethod
-    def from_report(
-        cls,
-        profile_id: UUID,
-        report: ProjectionModeloReadiness,
-        *,
-        language: OutputLanguage,
-        authority_generation: ContentDigest,
-    ) -> Self:
-        """Copy all readiness axes from the canonical report."""
-        if str(report.profile_id) != str(profile_id):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        return cls(
-            authority_generation=authority_generation,
-            profile_id=profile_id,
-            language=language,
-            modelo=report.modelo,
-            revision_id=report.revision_id,
-            filing_year=report.filing_year,
-            period=PublicPeriod.from_period(report.period),
-            ready=report.ready,
-            profile_ready=report.profile_ready,
-            per_operation_requirements_assessed=report.per_operation_requirements_assessed,
-            profile_refusal=report.profile_refusal,
-            profile_precondition_verdict=(
-                PreconditionVerdictSnapshot.from_verdict(report.profile_precondition_verdict)
-                if report.profile_precondition_verdict is not None
-                else None
-            ),
-            registry_ready=report.registry_ready,
-            registry_refusal=report.registry_refusal,
-            binding_ready=report.binding_ready,
-            missing=tuple(
-                ModeloReadinessMissingRequirementV1(
-                    section_key=row.section_key,
-                    field_key=row.field_key,
-                    selector=row.selector,
-                    label=row.label,
-                    legal_refs=row.legal_refs,
-                    modelos=row.modelos,
-                )
-                for row in report.missing
-            ),
-            missing_bindings=tuple(
-                ModeloReadinessMissingBindingV1(
-                    binding_id=row.binding_id,
-                    source=row.source.value,
-                    input_channel=row.input_channel,
-                )
-                for row in report.missing_bindings
-            ),
-            ledger_preflight_required=report.ledger_preflight_required,
-            ledger_ready=report.ledger_ready,
-            ledger_period=(
-                PublicPeriod.from_period(report.ledger_period) if report.ledger_period is not None else None
-            ),
-            ledger_checked_transaction_count=report.ledger_checked_transaction_count,
-            ledger_issues=tuple(
-                ModeloReadinessLedgerIssueV1(
-                    transaction_id=row.transaction_id,
-                    reason=row.reason.value,
-                    detail=row.detail,
-                )
-                for row in report.ledger_issues
-            ),
-        )
-
 
 def require_modelo_query_worker_identity[PayloadT: BaseModel](
     definition_id: str, profile_id: UUID, request: OperationRequest[PayloadT], context: OperationExecutorContext
 ) -> str:
     """Require one exact-profile subject and active bucket for a query executor."""
     bucket_id = str(profile_id)
-    if (
-        request.definition_id != definition_id
-        or request.subject_ref != profile_operation_subject(bucket_id)
-        or context.identity.subject_ref != request.subject_ref
-        or require_active_bucket_id() != bucket_id
-    ):
+    if request.definition_id != definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    require_operation_profile(request, context, profile_id)
     return bucket_id
 
 
@@ -535,6 +123,62 @@ def _binding_report(
     if year is not None:
         return registry_bindings_for_year(modelo, filing_year=year, as_of=as_of, operation=operation)
     return registry_bindings(modelo, period=period_code, as_of=as_of, operation=operation)
+
+
+def _listing_report(
+    modelo: str,
+    payload: ModeloBindingsListRequest,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ModeloBindingsReport | None:
+    try:
+        return _binding_report(
+            modelo,
+            year=payload.year,
+            period_code=payload.period_code,
+            as_of=payload.as_of,
+            operation=operation,
+        )
+    except (RegistrySnapshotError, RegistryValidationError):
+        if payload.modelo is not None:
+            raise
+        return None
+
+
+def _resolved_listing_binding_ids(
+    payload: ModeloBindingsListRequest,
+    report: ModeloBindingsReport,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[str]:
+    if not payload.missing or report.filing_year is None:
+        return frozenset[str]()
+    try:
+        return profile_resolvable_binding_ids(
+            modelo=report.code,
+            bucket_id=str(payload.profile_id),
+            filing_year=report.filing_year,
+            period=report.filing_period,
+            as_of=payload.as_of,
+            revision_id=report.revision,
+            operation=operation,
+        )
+    except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
+        return frozenset[str]()
+
+
+def _listing_rows_for_report(
+    payload: ModeloBindingsListRequest,
+    report: ModeloBindingsReport,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloBindingRowV1, ...]:
+    resolved = _resolved_listing_binding_ids(payload, report, operation=operation)
+    return tuple(
+        ModeloBindingRowV1.from_report_row(report, row)
+        for row in report.rows
+        if not payload.missing or (row.operator_input_required and row.binding_id not in resolved)
+    )
 
 
 def _read_bindings_list(
@@ -562,32 +206,9 @@ def _read_bindings_list(
         )
     rows: list[ModeloBindingRowV1] = []
     for modelo in (payload.modelo,) if payload.modelo is not None else known_codes:
-        try:
-            report = _binding_report(
-                modelo, year=payload.year, period_code=payload.period_code, as_of=payload.as_of, operation=operation
-            )
-        except (RegistrySnapshotError, RegistryValidationError):
-            if payload.modelo is not None:
-                raise
-            continue
-        resolved = frozenset[str]()
-        if payload.missing and report.filing_year is not None:
-            try:
-                resolved = profile_resolvable_binding_ids(
-                    modelo=report.code,
-                    bucket_id=str(payload.profile_id),
-                    filing_year=report.filing_year,
-                    period=report.filing_period,
-                    as_of=payload.as_of,
-                    revision_id=report.revision,
-                    operation=operation,
-                )
-            except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
-                resolved = frozenset[str]()
-        for row in report.rows:
-            if payload.missing and (not row.operator_input_required or row.binding_id in resolved):
-                continue
-            rows.append(ModeloBindingRowV1.from_report_row(report, row))
+        report = _listing_report(modelo, payload, operation=operation)
+        if report is not None:
+            rows.extend(_listing_rows_for_report(payload, report, operation=operation))
     return ModeloBindingsListProjection(
         authority_generation=operation.generation.logical_generation,
         profile_id=payload.profile_id,
@@ -665,7 +286,7 @@ def read_modelo_readiness(
 ) -> ProjectionModeloReadiness:
     """Evaluate one canonical readiness report under the retained authority pin."""
     bucket_id = str(payload.profile_id)
-    ports = factory(bucket_id=bucket_id)
+    ports = factory(bucket_id=bucket_id, operation=operation)
     if ports.bucket_id != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     profile = ports.read_ports.profile.read_profile(profile_id=bucket_id)
@@ -829,24 +450,20 @@ def _read_definition(
     build_executor: Callable[[], object],
     *,
     sensitive: bool = False,
+    public_error_detail: bool = False,
     permitted_frontends: frozenset[OperationFrontendProjection] = frozenset(
         {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
     ),
 ) -> OperationDefinition:
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=build_executor,
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=build_executor,
         capabilities=modelo_query_read_capabilities(sensitive=sensitive),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=permitted_frontends,
+        public_error_detail=public_error_detail,
     )
 
 
@@ -858,13 +475,7 @@ def build_modelo_bindings_list_definition() -> OperationDefinition:
         ModeloBindingsListProjection,
         ModeloBindingsListExecutor,
         ModeloBindingsListExecutor,
-        permitted_frontends=frozenset(
-            {
-                OperationFrontendProjection.CLI,
-                OperationFrontendProjection.TUI,
-                OperationFrontendProjection.MCP,
-            }
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -888,13 +499,7 @@ def build_modelo_requires_definition() -> OperationDefinition:
         ModeloRequiresProjection,
         ModeloRequiresExecutor,
         ModeloRequiresExecutor,
-        permitted_frontends=frozenset(
-            {
-                OperationFrontendProjection.CLI,
-                OperationFrontendProjection.TUI,
-                OperationFrontendProjection.MCP,
-            }
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -906,6 +511,7 @@ def build_modelo_readiness_definition(factory: ModeloQueryReadPortsFactory) -> O
         ModeloReadinessProjection,
         ModeloReadinessExecutor,
         lambda: ModeloReadinessExecutor(factory),
+        public_error_detail=True,
     )
 
 
@@ -924,15 +530,13 @@ def _requested_scope(payload: BaseModel) -> tuple[frozenset[Period], bool, bool]
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def resolve_modelo_query_read_access(
+def _validated_access_payload(
     request: OperationRequest[BaseModel],
     context: OperationAccessContext,
     *,
     definition_id: str,
     payload_type: type[BaseModel],
-    result_category: DisclosureCategory,
-) -> ResolvedOperationAccess:
-    """Resolve an exact modelo query scope and public result category."""
+) -> BaseModel:
     payload = request.payload
     if (
         request.definition_id != definition_id
@@ -954,24 +558,28 @@ def resolve_modelo_query_read_access(
         str(payload.profile_id)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
+def _authorized_query_scope(
+    payload: BaseModel,
+    context: OperationAccessContext,
+    definition_id: str,
+) -> tuple[frozenset[Period], bool, bool]:
     periods, period_independent, requires_all_periods = _requested_scope(payload)
     admitted = context.admitted_request
-    if admitted is not None and context.action in {
-        AccessAction.OBSERVE,
-        AccessAction.RESULT,
-        AccessAction.CANCEL,
-        AccessAction.DETACH,
-    }:
-        if (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != definition_id
-            or admitted.action is not AccessAction.SUBMIT
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
+        require_admitted_submission(admitted, profile_id=context.profile_id, definition_id=definition_id)
         periods = admitted.periods
         period_independent = admitted.period_independent
     elif context.authority_operation is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    return periods, period_independent, requires_all_periods
+
+
+def _query_disclosure(
+    context: OperationAccessContext, result_category: DisclosureCategory
+) -> DisclosurePermission | None:
     disclosure = None
     if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
         disclosure = DisclosurePermission(
@@ -988,38 +596,80 @@ def resolve_modelo_query_read_access(
             projection_id=schema.schema_id,
             category=result_category,
         )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=periods,
-            period_independent=period_independent,
-            destination_id=context.destination_id,
+    return disclosure
+
+
+def _query_access_request(
+    context: OperationAccessContext,
+    definition_id: str,
+    periods: frozenset[Period],
+    period_independent: bool,
+) -> OperationAccessRequest:
+    return OperationAccessRequest(
+        profile_id=context.profile_id,
+        definition_id=definition_id,
+        action=context.action,
+        frontend=context.frontend,
+        periods=periods,
+        period_independent=period_independent,
+        destination_id=context.destination_id,
+    )
+
+
+def _query_access_policy(
+    context: OperationAccessContext,
+    definition_id: str,
+    periods: frozenset[Period],
+    period_independent: bool,
+    requires_all_periods: bool,
+    disclosure: DisclosurePermission | None,
+) -> OperationAccessPolicy:
+    return OperationAccessPolicy(
+        definition_id=definition_id,
+        definition_contract_digest=context.contract.definition_contract_digest,
+        actions=frozenset(
+            {
+                AccessAction.SUBMIT,
+                AccessAction.START,
+                AccessAction.RESUME,
+                AccessAction.OBSERVE,
+                AccessAction.RESULT,
+                AccessAction.CANCEL,
+                AccessAction.DETACH,
+            }
         ),
-        policy=OperationAccessPolicy(
-            definition_id=definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                }
-            ),
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=periods,
-            allow_period_independent=period_independent,
-            requires_all_periods=requires_all_periods,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
+        disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
+        periods=periods,
+        allow_period_independent=period_independent,
+        requires_all_periods=requires_all_periods,
+        backend=Availability.AVAILABLE,
+        published_authority=context.published_authority,
+        provider=Availability.NOT_REQUIRED,
+        transaction_authority_required=False,
+    )
+
+
+def resolve_modelo_query_read_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    *,
+    definition_id: str,
+    payload_type: type[BaseModel],
+    result_category: DisclosureCategory,
+) -> ResolvedOperationAccess:
+    """Resolve an exact modelo query scope and public result category."""
+    payload = _validated_access_payload(request, context, definition_id=definition_id, payload_type=payload_type)
+    periods, period_independent, requires_all_periods = _authorized_query_scope(payload, context, definition_id)
+    disclosure = _query_disclosure(context, result_category)
+    return ResolvedOperationAccess(
+        request=_query_access_request(context, definition_id, periods, period_independent),
+        policy=_query_access_policy(
+            context,
+            definition_id,
+            periods,
+            period_independent,
+            requires_all_periods,
+            disclosure,
         ),
     )
 

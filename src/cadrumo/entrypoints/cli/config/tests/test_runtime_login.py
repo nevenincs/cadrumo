@@ -19,15 +19,17 @@ import pytest
 import typer
 from typer.core import TyperCommand
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
+from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
@@ -43,6 +45,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessScope,
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessStatus,
 )
@@ -65,6 +68,8 @@ from cadrumo.entrypoints.cli.config.secure_input import MachineSecretChannel, Ma
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
+
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -311,6 +316,9 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
         now=datetime.now(UTC),
         idle_minutes=15,
         absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=committed_sign_in(_isolated_cli_backend, first_id),
+        generation=committed_sign_in(_isolated_cli_backend, first_id).establish().current,
     )
     receipt_path = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
     original_receipt = receipt_path.read_bytes()
@@ -358,7 +366,7 @@ class _NativeLoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -378,6 +386,10 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
     close_active_bucket_session()
     second_id = UUID(register_cli_profile(label="Receipt profile B", log_in=False))
     close_active_bucket_session()
+    endpoint = WindowsRuntimeEndpoint(storage_root=_isolated_cli_backend)
+    installation = runtime_installation(
+        storage_root=_isolated_cli_backend, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+    )
     with (
         bundled_indexed_authority().operation() as authority,
         bind_profile_custody_port(build_profile_custody_port()),
@@ -389,7 +401,21 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=authority.profile_decode_context(),
             ) as candidate:
-                assert candidate.persist_acceleration_receipt()
+                # Bind each receipt to the login and the custody binding the
+                # runtime below observes; a receipt bound elsewhere is refused
+                # and deleted at resume.
+                binding = current_automation_profile_binding(
+                    profile_id=profile_id,
+                    installation_id=installation.installation_id,
+                    os_owner_id=owner_id(),
+                    root=_isolated_cli_backend,
+                )
+                sign_in = SignInGenerationCustody(root=_isolated_cli_backend, binding=binding)
+                assert candidate.persist_acceleration_receipt(
+                    login_id=_NativeLoginObservation.login_id,
+                    binding=binding,
+                    sign_in=sign_in.establish().current,
+                )
     _select(first_id)
     first_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
     second_receipt = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=second_id)
@@ -398,10 +424,6 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
     before_first_keyring = dict(keyring.entries)
     second_metadata = json.loads(before_second)
 
-    endpoint = WindowsRuntimeEndpoint(storage_root=_isolated_cli_backend)
-    runtime_installation(
-        storage_root=_isolated_cli_backend, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
-    )
     stop, boot, native = Event(), uuid4(), MemoryNativePort()
     profiles = RuntimeProfileConnections(
         storage_root=_isolated_cli_backend,
@@ -411,7 +433,8 @@ def test_installed_cli_resumes_other_profile_without_retiring_original(
         capture_login=lambda _channel: _NativeLoginObservation(),
         secret_store=lambda: native,
     )
-    server = RuntimeTransportServer(
+    profiles.prepare_registry()
+    server = RetainedRuntimeTransportServer(
         endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
     )
     with ThreadPoolExecutor(max_workers=1) as pool:

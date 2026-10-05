@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:bc2477560874e2a07b80ba86e367f0092c52335ab4c17886b9eaaa2731f8efc4'
 related:
   - "[[2026-09-11-justfile-design-adr]]"
-  - "[[2026-09-11-justfile-design-plan]]"
   - "[[2026-09-11-justfile-design-research]]"
   - "[[2026-09-11-justfile-design-audit]]"
 ---

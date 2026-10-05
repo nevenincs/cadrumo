@@ -21,23 +21,25 @@ from cadrumo.application.user_profile.automation_custody_port import (
     NativeSecretBackend,
 )
 
+from .. import macos_core_foundation, macos_keychain_contracts, macos_keychain_policy, macos_login_keychain
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NAMESPACE = "cadrumo.automation.client"
 _ACCOUNT = "synthetic-exact-account"
 _KEYCHAIN = "/Users/synthetic/Library/Keychains/login.keychain-db"
-_IDENTITY = native._ItemIdentity(_NAMESPACE, _ACCOUNT, _KEYCHAIN)
+_IDENTITY = macos_keychain_contracts.KeychainItemIdentity(_NAMESPACE, _ACCOUNT, _KEYCHAIN)
 
 
 class _MemoryNativeApi:
     """Isolate the byte-oriented native port; never attest an OS facility."""
 
     def __init__(self) -> None:
-        self.item: native._Item | None = None
-        self.calls: list[tuple[str, native._ItemIdentity]] = []
+        self.item: macos_keychain_contracts.KeychainItem | None = None
+        self.calls: list[tuple[str, macos_keychain_contracts.KeychainItemIdentity]] = []
         self.updates: list[int] = []
-        self.add_status = native._SUCCESS
-        self.delete_status = native._SUCCESS
+        self.add_status = macos_keychain_contracts.SUCCESS
+        self.delete_status = macos_keychain_contracts.SUCCESS
         self.corrupt_write = False
         self.retain_delete = False
         self.session_error: AutomationCustodyCode | None = None
@@ -58,28 +60,38 @@ class _MemoryNativeApi:
             if self.restore_failure:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
 
-    def read(self, identity: native._ItemIdentity) -> native._Item | None:
+    def read(
+        self, identity: macos_keychain_contracts.KeychainItemIdentity
+    ) -> macos_keychain_contracts.KeychainItem | None:
         self.calls.append(("read", identity))
         if self.read_error is not None:
             raise AutomationCustodyError(self.read_error)
         return self.item
 
-    def update(self, identity: native._ItemIdentity, value: bytes) -> int:
+    def update(self, identity: macos_keychain_contracts.KeychainItemIdentity, value: bytes) -> int:
         self.calls.append(("update", identity))
-        status = self.updates.pop(0) if self.updates else (native._NOT_FOUND if self.item is None else native._SUCCESS)
-        if status == native._SUCCESS:
-            self.item = native._Item(identity, True, b"synthetic-mismatch" if self.corrupt_write else value)
+        status = (
+            self.updates.pop(0)
+            if self.updates
+            else (macos_keychain_contracts.NOT_FOUND if self.item is None else macos_keychain_contracts.SUCCESS)
+        )
+        if status == macos_keychain_contracts.SUCCESS:
+            self.item = macos_keychain_contracts.KeychainItem(
+                identity, True, b"synthetic-mismatch" if self.corrupt_write else value
+            )
         return status
 
-    def add(self, identity: native._ItemIdentity, value: bytes) -> int:
+    def add(self, identity: macos_keychain_contracts.KeychainItemIdentity, value: bytes) -> int:
         self.calls.append(("add", identity))
-        if self.add_status in (native._SUCCESS, native._DUPLICATE):
-            self.item = native._Item(identity, True, b"synthetic-mismatch" if self.corrupt_write else value)
+        if self.add_status in (macos_keychain_contracts.SUCCESS, macos_keychain_contracts.DUPLICATE):
+            self.item = macos_keychain_contracts.KeychainItem(
+                identity, True, b"synthetic-mismatch" if self.corrupt_write else value
+            )
         return self.add_status
 
-    def delete(self, identity: native._ItemIdentity) -> int:
+    def delete(self, identity: macos_keychain_contracts.KeychainItemIdentity) -> int:
         self.calls.append(("delete", identity))
-        if self.delete_status == native._SUCCESS and not self.retain_delete:
+        if self.delete_status == macos_keychain_contracts.SUCCESS and not self.retain_delete:
             self.item = None
         return self.delete_status
 
@@ -87,7 +99,7 @@ class _MemoryNativeApi:
 @pytest.fixture
 def api(monkeypatch: pytest.MonkeyPatch) -> _MemoryNativeApi:
     api = _MemoryNativeApi()
-    monkeypatch.setattr(native.sys, "platform", "darwin")
+    monkeypatch.setattr(macos_keychain_policy.sys, "platform", "darwin")
     monkeypatch.setattr(native, "_native_api", lambda: api)
     return api
 
@@ -106,14 +118,14 @@ def test_exact_binary_replace_read_delete_and_composition(api: _MemoryNativeApi)
     assert all(action != "delete" for action, _ in api.calls)
     store.delete(_NAMESPACE, _ACCOUNT)
     assert store.read(_NAMESPACE, _ACCOUNT) is None
-    api.delete_status = native._NOT_FOUND
+    api.delete_status = macos_keychain_contracts.NOT_FOUND
     store.delete(_NAMESPACE, _ACCOUNT)
     assert api.sessions == api.closed_sessions
 
 
 @pytest.mark.parametrize("defect", ["namespace", "account", "keychain", "acl", "empty", "oversize"])
 def test_bad_native_binding_refuses_release_and_mutation(api: _MemoryNativeApi, defect: str) -> None:
-    item = native._Item(_IDENTITY, True, b"synthetic-opaque-secret")
+    item = macos_keychain_contracts.KeychainItem(_IDENTITY, True, b"synthetic-opaque-secret")
     if defect == "namespace":
         item = replace(item, identity=replace(_IDENTITY, namespace="wrong"))
     elif defect == "account":
@@ -142,16 +154,16 @@ def test_bad_native_binding_refuses_release_and_mutation(api: _MemoryNativeApi, 
 @pytest.mark.parametrize(
     "native_status,reason",
     [
-        (native._INTERACTION_NOT_ALLOWED, AutomationCustodyCode.NEEDS_USER),
-        (native._AUTH_FAILED, AutomationCustodyCode.NEEDS_USER),
-        (native._INTERACTION_REQUIRED, AutomationCustodyCode.NEEDS_USER),
+        (macos_keychain_contracts.INTERACTION_NOT_ALLOWED, AutomationCustodyCode.NEEDS_USER),
+        (macos_keychain_contracts.AUTH_FAILED, AutomationCustodyCode.NEEDS_USER),
+        (macos_keychain_contracts.INTERACTION_REQUIRED, AutomationCustodyCode.NEEDS_USER),
         (-25291, AutomationCustodyCode.UNAVAILABLE),
     ],
 )
 def test_native_failures_have_only_safe_typed_codes(
     api: _MemoryNativeApi, native_status: int, reason: AutomationCustodyCode
 ) -> None:
-    api.item = native._Item(_IDENTITY, True, b"synthetic")
+    api.item = macos_keychain_contracts.KeychainItem(_IDENTITY, True, b"synthetic")
     api.updates = [native_status]
     with pytest.raises(AutomationCustodyError) as caught:
         native.MacOSKeychainAutomationSecretStore().replace(_NAMESPACE, _ACCOUNT, SecretBytes(b"replacement"))
@@ -178,7 +190,7 @@ def test_locked_or_unavailable_login_precedes_every_item_call(
 
 
 def test_restore_failure_prevents_successful_private_release(api: _MemoryNativeApi) -> None:
-    api.item = native._Item(_IDENTITY, True, b"synthetic")
+    api.item = macos_keychain_contracts.KeychainItem(_IDENTITY, True, b"synthetic")
     api.restore_failure = True
     with pytest.raises(AutomationCustodyError) as caught:
         native.MacOSKeychainAutomationSecretStore().read(_NAMESPACE, _ACCOUNT)
@@ -187,13 +199,13 @@ def test_restore_failure_prevents_successful_private_release(api: _MemoryNativeA
 
 
 def test_add_race_is_bounded_and_never_deletes(api: _MemoryNativeApi) -> None:
-    api.add_status = native._DUPLICATE
+    api.add_status = macos_keychain_contracts.DUPLICATE
     store = native.MacOSKeychainAutomationSecretStore()
     store.replace(_NAMESPACE, _ACCOUNT, SecretBytes(b"synthetic-replacement"))
     assert [action for action, _ in api.calls] == ["read", "update", "add", "read", "update", "read"]
     api.item = None
     api.calls.clear()
-    api.updates = [native._NOT_FOUND, native._NOT_FOUND]
+    api.updates = [macos_keychain_contracts.NOT_FOUND, macos_keychain_contracts.NOT_FOUND]
     with pytest.raises(AutomationCustodyError) as caught:
         store.replace(_NAMESPACE, _ACCOUNT, SecretBytes(b"value"))
     assert caught.value.reason is AutomationCustodyCode.CONFLICT
@@ -215,18 +227,18 @@ def test_readback_and_absence_are_authoritative(api: _MemoryNativeApi) -> None:
 
 
 def test_wrong_platform_and_invalid_target_never_open_native_facility(monkeypatch: pytest.MonkeyPatch) -> None:
-    def forbidden_api() -> native._KeychainApi:
+    def forbidden_api() -> macos_keychain_contracts.KeychainApi:
         pytest.fail("invalid platform/target must not enter the native API")
 
     monkeypatch.setattr(native, "_native_api", forbidden_api)
-    monkeypatch.setattr(native.sys, "platform", "linux")
+    monkeypatch.setattr(macos_keychain_policy.sys, "platform", "linux")
     with pytest.raises(AutomationCustodyError) as caught:
         native_automation_secret_store(NativeSecretBackend.MACOS_KEYCHAIN)
     assert caught.value.reason is AutomationCustodyCode.UNSUPPORTED
     with pytest.raises(AutomationCustodyError) as caught:
         native.MacOSKeychainAutomationSecretStore().read(_NAMESPACE, _ACCOUNT)
     assert caught.value.reason is AutomationCustodyCode.UNSUPPORTED
-    monkeypatch.setattr(native.sys, "platform", "darwin")
+    monkeypatch.setattr(macos_keychain_policy.sys, "platform", "darwin")
     for namespace, account in (
         ("foreign", _ACCOUNT),
         (_NAMESPACE, ""),
@@ -277,13 +289,13 @@ class _UiSet:
         if value == 0:
             if not self.state.ignore_disable:
                 self.state.allowed = value
-            return native._AUTH_FAILED if self.state.fail_disable else 0
+            return macos_keychain_contracts.AUTH_FAILED if self.state.fail_disable else 0
         if not self.state.ignore_restore:
             self.state.allowed = value
-        return native._AUTH_FAILED if self.state.fail_restore else 0
+        return macos_keychain_contracts.AUTH_FAILED if self.state.fail_restore else 0
 
 
-class _UiNative(native._LoginKeychain):
+class _UiNative(macos_login_keychain.LoginKeychain):
     def __init__(self, state: _UiState) -> None:
         self.ui_get = _UiGet(state)
         self.ui_set = _UiSet(state)
@@ -353,13 +365,13 @@ def test_cooperating_native_callers_cannot_restore_ui_during_another_call() -> N
         frozenset(),
         frozenset({"decrypt"}),
         frozenset({"any"}),
-        native._RESTRICTED_AUTHORIZATIONS | {"change_acl"},
+        macos_keychain_contracts.RESTRICTED_AUTHORIZATIONS | {"change_acl"},
         frozenset({"foreign"}),
     ],
 )
 def test_unexplained_native_authorization_role_refuses(authorizations: frozenset[str]) -> None:
     with pytest.raises(AutomationCustodyError) as caught:
-        native._acl_role(authorizations)
+        macos_keychain_policy.keychain_acl_role(authorizations)
     assert caught.value.reason is AutomationCustodyCode.INVALID
 
 
@@ -377,7 +389,7 @@ class _DictionarySet:
         return None
 
 
-class _QueryCF(native._CoreFoundation):
+class _QueryCF(macos_core_foundation.CoreFoundation):
     """Track native query decisions and ownership of the enclosing CF values."""
 
     def __init__(self) -> None:
@@ -428,7 +440,7 @@ class _QueryCF(native._CoreFoundation):
             self.closed.append(8000)
 
 
-class _QueryNative(native._LoginKeychain):
+class _QueryNative(macos_login_keychain.LoginKeychain):
     def __init__(self, cf: _QueryCF) -> None:
         self.cf = cf
         self.path = _KEYCHAIN
@@ -546,7 +558,7 @@ class _OpenKeychain:
         return 0
 
 
-class _BindingNative(native._LoginKeychain):
+class _BindingNative(macos_login_keychain.LoginKeychain):
     def __init__(self, cf: _QueryCF, state: _UiState, *, observed_path: str, unlocked: bool) -> None:
         self.cf = cf
         self.path = _KEYCHAIN
@@ -608,7 +620,7 @@ def test_actual_native_binding_is_fresh_and_cannot_be_used_after_session_close()
         api._bound_keychain(_IDENTITY)
 
 
-class _AccessCF(native._CoreFoundation):
+class _AccessCF(macos_core_foundation.CoreFoundation):
     def __init__(self, count: int) -> None:
         self.entries = tuple(range(100, 100 + count))
         self.array_count = _AccessArrayCount(self.entries)
@@ -616,7 +628,7 @@ class _AccessCF(native._CoreFoundation):
         self.array_type = _ResultFunction(1)
 
     @override
-    def require_type(self, pointer: int | None, expected: native._NativeFunction) -> int:
+    def require_type(self, pointer: int | None, expected: macos_keychain_contracts.NativeKeychainFunction) -> int:
         assert isinstance(pointer, int)
         assert pointer in {500, 600}
         return pointer
@@ -624,7 +636,7 @@ class _AccessCF(native._CoreFoundation):
     @override
     def text(self, pointer: int | None) -> str:
         assert pointer == 701
-        return native._DESCRIPTION
+        return macos_keychain_contracts.DESCRIPTION
 
 
 class _AccessArrayCount:
@@ -668,14 +680,14 @@ class _SetAcl:
         return 0
 
 
-class _AccessNative(native._LoginKeychain):
+class _AccessNative(macos_login_keychain.LoginKeychain):
     """Exercise actual ACL validation without pretending an OS response exists."""
 
     def __init__(self) -> None:
         self.tags: dict[int, frozenset[str]] = {
             100: frozenset({"change_acl"}),
             101: frozenset({"encrypt"}),
-            102: native._RESTRICTED_AUTHORIZATIONS,
+            102: macos_keychain_contracts.RESTRICTED_AUTHORIZATIONS,
         }
         self.apps: dict[int, int | None] = {100: 600, 101: None, 102: None}
         self.cf = _AccessCF(3)
@@ -686,7 +698,7 @@ class _AccessNative(native._LoginKeychain):
 
     @contextmanager
     @override
-    def _copied(self, function: native._NativeFunction, *args: object) -> Generator[int]:
+    def _copied(self, function: macos_keychain_contracts.NativeKeychainFunction, *args: object) -> Generator[int]:
         yield 500
 
     @override
@@ -720,7 +732,7 @@ def test_actual_acl_validation_refuses_unexplained_existing_access_without_widen
     elif defect == "trusted-safe":
         api.apps[101] = 600
     elif defect == "extra-owner":
-        api.tags[102] = native._RESTRICTED_AUTHORIZATIONS | {"change_acl"}
+        api.tags[102] = macos_keychain_contracts.RESTRICTED_AUTHORIZATIONS | {"change_acl"}
     elif defect == "unknown":
         api.tags[101] = frozenset({"foreign"})
     else:
@@ -742,7 +754,7 @@ class _ResultFunction:
         return self.result
 
 
-class _ReadCF(native._CoreFoundation):
+class _ReadCF(macos_core_foundation.CoreFoundation):
     def __init__(self, *, native_type: int, size: int, address: int | None) -> None:
         self.type_id = _ResultFunction(native_type)
         self.data_type = _ResultFunction(1)
@@ -765,7 +777,7 @@ class _CopyString:
         return 1
 
 
-class _TextCF(native._CoreFoundation):
+class _TextCF(macos_core_foundation.CoreFoundation):
     def __init__(self, value: str) -> None:
         self.type_id = _ResultFunction(1)
         self.string_type = _ResultFunction(1)
@@ -819,7 +831,7 @@ class _Release:
         return None
 
 
-class _DataCF(native._CoreFoundation):
+class _DataCF(macos_core_foundation.CoreFoundation):
     def __init__(self, creator: _CreateData, release: _Release) -> None:
         self.data_create = creator
         self.release = release

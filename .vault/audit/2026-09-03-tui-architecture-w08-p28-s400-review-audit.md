@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_hash: 'sha256:5079a3ccd674bc1244a4338c61d46372bf90477b11a7c883d23ad33e31ac5b66'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 ## Scope
 

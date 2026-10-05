@@ -46,6 +46,10 @@ def _foreign_asset(*, row_index: int) -> RowSetEdit:
             ),
             RowSetCellEdit(binding="modelo-720-asset-row-acquisition-date", row_index=row_index, value="2020-01-15"),
             RowSetCellEdit(binding="modelo-720-asset-row-valuation", row_index=row_index, value=Decimal("120000")),
+            RowSetCellEdit(
+                binding="modelo-720-asset-row-asset-ref", row_index=row_index, value=f"m720a_{row_index:032x}"
+            ),
+            RowSetCellEdit(binding="modelo-720-asset-row-valuation-event", row_index=row_index, value="year_end"),
         ),
     )
 
@@ -77,7 +81,7 @@ def test_complete_pull_assembly_preserves_every_populated_block_and_observation(
     rows = (_foreign_asset(row_index=1), _foreign_asset(row_index=2), RowSetEdit(grouping="per_foreign_asset"))
     pulled = _pull(snapshot, rows)
     facts = _pull_facts(pulled, snapshot, assemble_observations=True)
-    assert facts.row_set_edits_populated == 2 and facts.row_set_cells_populated == 12
+    assert facts.row_set_edits_populated == 2 and facts.row_set_cells_populated == 16
     assert facts.assembled_observation_count == 2
     assert tuple(row.observations[0].source_id for row in facts.assembled_groupings) == (
         "detalle:per_foreign_asset:row-1",
@@ -136,7 +140,7 @@ def test_port_construction_is_lazy_and_denied_admission_precedes_credentials(
         calls.append("credentials")
         pytest.fail("refused provider admission must prevent credential discovery")
 
-    def root(*, profile: str, settings: object) -> str:
+    def root(*, profile: str) -> str:
         assert profile == str(_PROFILE)
         calls.append("root")
         return "synthetic-drive-root"

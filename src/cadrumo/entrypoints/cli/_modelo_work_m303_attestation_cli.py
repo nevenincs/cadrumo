@@ -12,6 +12,7 @@ from ...application.modelo.m303_attestation_operation import (
 )
 from ...application.operations.public_period import PublicPeriod
 from ...core.external_constants import OutputLanguage
+from ...core.time.utc import parse_iso_datetime
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
 from ._modelo_payloads import M303Exonerado390AttestationResult
@@ -65,7 +66,7 @@ def work_attest_m303_exonerado_390(
 def _observed_at_from_cli(value: str) -> datetime:
     """Parse the explicit ISO-8601 instant before strict evidence validation."""
     try:
-        return datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+        return parse_iso_datetime(value.strip())
     except ValueError as exc:
         raise typer.BadParameter("--observed-at must be an ISO-8601 timestamp") from exc
 

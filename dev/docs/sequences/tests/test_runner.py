@@ -25,7 +25,7 @@ from uuid import UUID
 import pytest
 from pydantic import JsonValue, SecretStr
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
@@ -697,31 +697,31 @@ class TestNumericJsonPathResolution:
     """
 
     def test_digit_segment_resolves_a_string_object_key(self) -> None:
-        from ..runner import _resolve_json_path
+        from ..runner import resolve_json_path
 
         document = {"result": {"casilla_values": {"03": "500.00", "01": "1000.00"}}}
-        assert _resolve_json_path(document, "result.casilla_values.03") == (True, "500.00")
-        assert _resolve_json_path(document, "result.casilla_values.01") == (True, "1000.00")
-        assert _resolve_json_path(document, "result.casilla_values.99") == (False, None)
+        assert resolve_json_path(document, "result.casilla_values.03") == (True, "500.00")
+        assert resolve_json_path(document, "result.casilla_values.01") == (True, "1000.00")
+        assert resolve_json_path(document, "result.casilla_values.99") == (False, None)
 
     def test_digit_segment_resolves_a_list_index_when_the_node_is_a_list(self) -> None:
-        from ..runner import _resolve_json_path
+        from ..runner import resolve_json_path
 
         document = {"result": {"items": [{"id": "first"}, {"id": "second"}]}}
-        assert _resolve_json_path(document, "result.items.1.id") == (True, "second")
-        assert _resolve_json_path(document, "result.items.2.id") == (False, None)
+        assert resolve_json_path(document, "result.items.1.id") == (True, "second")
+        assert resolve_json_path(document, "result.items.2.id") == (False, None)
         # The bracketed form remains the explicit list address for the same node.
-        assert _resolve_json_path(document, "result.items[0].id") == (True, "first")
+        assert resolve_json_path(document, "result.items[0].id") == (True, "first")
 
     def test_bracket_form_never_indexes_an_object(self) -> None:
-        from ..runner import _resolve_json_path
+        from ..runner import resolve_json_path
 
         document = {"result": {"casilla_values": {"0": "zero-key"}}}
-        assert _resolve_json_path(document, "result.casilla_values[0]") == (False, None)
-        assert _resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
+        assert resolve_json_path(document, "result.casilla_values[0]") == (False, None)
+        assert resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
 
     def test_bracket_quoted_segment_resolves_a_dotted_hyphenated_object_key(self) -> None:
-        from ..runner import _resolve_json_path
+        from ..runner import resolve_json_path
 
         # M349's declarante casillas are flat string keys carrying a literal dot
         # and hyphens; the dotted grammar would split on the dot, so the
@@ -734,29 +734,29 @@ class TestNumericJsonPathResolution:
                 },
             },
         }
-        assert _resolve_json_path(document, 'result.casilla_values["decl.importe-operaciones"]') == (True, "12345.00")
-        assert _resolve_json_path(document, 'result.casilla_values["decl.numero-operadores"]') == (True, "3")
+        assert resolve_json_path(document, 'result.casilla_values["decl.importe-operaciones"]') == (True, "12345.00")
+        assert resolve_json_path(document, 'result.casilla_values["decl.numero-operadores"]') == (True, "3")
         # An absent quoted key misses cleanly.
-        assert _resolve_json_path(document, 'result.casilla_values["decl.nope"]') == (False, None)
+        assert resolve_json_path(document, 'result.casilla_values["decl.nope"]') == (False, None)
 
     def test_bracket_quoted_segment_is_a_dict_key_never_a_list_index(self) -> None:
-        from ..runner import _resolve_json_path
+        from ..runner import resolve_json_path
 
         # On a list node the quoted form addresses no element and misses cleanly
         # (it is a literal object key only, never a list index).
         document = {"result": {"items": [{"id": "first"}, {"id": "second"}]}}
-        assert _resolve_json_path(document, 'result.items["0"]') == (False, None)
+        assert resolve_json_path(document, 'result.items["0"]') == (False, None)
         # On a dict whose key is the digit string, the quoted form finds it.
         digit_key_doc = {"result": {"casilla_values": {"0": "zero-key"}}}
-        assert _resolve_json_path(digit_key_doc, 'result.casilla_values["0"]') == (True, "zero-key")
+        assert resolve_json_path(digit_key_doc, 'result.casilla_values["0"]') == (True, "zero-key")
 
     def test_bracket_quoted_segment_on_a_non_dict_node_misses_cleanly(self) -> None:
-        from ..runner import _resolve_json_path
+        from ..runner import resolve_json_path
 
         # A quoted key applied to a scalar (non-Mapping, non-list) node returns
         # (False, None) rather than raising.
         document = {"result": {"status": "verified_complete"}}
-        assert _resolve_json_path(document, 'result.status["x"]') == (False, None)
+        assert resolve_json_path(document, 'result.status["x"]') == (False, None)
 
 
 class TestAmbientEnvNeutralisation:
@@ -965,16 +965,3 @@ class TestAmbientEnvNeutralisation:
                 os.environ[env_var_name] = prior_value
             else:
                 os.environ.pop(env_var_name, None)
-
-
-@pytest.mark.parametrize("action", ["status", "start"])
-def test_sequence_public_runtime_management_does_not_supply_profile_proof(tmp_path: Path, action: str) -> None:
-    """Public runtime frames observe the real ready host without irrelevant secrets."""
-    sequence = _result_sequence(
-        f"@result aeat --format json app runtime {action}\n"
-        '@expect result.listener == "ready"\n'
-        "@expect exit_code == 0\n",
-        sequence_id=f"runtime-public-{action}",
-    )
-    transcript = execute_sequence(sequence, sandbox_root=tmp_path / action)
-    assert _envelope_result(transcript.frames[0].envelope)["listener"] == "ready"

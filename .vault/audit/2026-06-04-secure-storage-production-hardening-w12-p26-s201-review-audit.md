@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:db3a9d75cf7f7cbe011a22e100ff9e07b7926a16f249dde620741b9a42ec3b6b'
+modified: '2026-10-03'
+body_hash: 'sha256:e416c9b5ac6b09a26e8903cc54f6ef55b86a6093312a429f38c649ecf8be7249'
 related: []
 ---
 
@@ -60,10 +60,10 @@ mock, skip, xfail, or tautological test was introduced in the S201 code slice.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/calculations/_observations_repository.py src/aeat/application/calculations/test_observations_repository.py src/aeat/application/calculations/test_observations_repository_roundtrip.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `uv run --no-sync pytest src/aeat/application/calculations/test_observations_repository.py src/aeat/application/calculations/test_observations_repository_roundtrip.py -q` passed with 23 tests.
-- `uv run --no-sync pytest src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "iva_wallet_decision or calculation_observations or application_repository_defaults_isolate_active_profile_writes" -q` passed with 7 selected tests.
-- `uv run --no-sync pytest src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -q` passed with 83 tests.
+- the historical check passed.
+- the historical check passed with 23 tests.
+- the historical check passed with 7 selected tests.
+- the historical check passed with 83 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: `vaultspec-code-reviewer` review returned two LOW findings. The

@@ -147,19 +147,6 @@ required_text = ["modelo 303"]
 [revisions.2022.bindings.aggregation]
 op = "sum"
 
-[[revisions.2022.bindings]]
-id = "modelo-303-recargo-equivalencia-super-reducido-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2022.bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[revisions.2022.bindings.aggregation]
-op = "sum"
-
 # Casilla 59, base-only informativa for exempt entregas intracomunitarias
 # (LIVA art. 25). The official box is titled "Entregas intracomunitarias de
 # bienes y servicios", but the selector deliberately admits ONLY

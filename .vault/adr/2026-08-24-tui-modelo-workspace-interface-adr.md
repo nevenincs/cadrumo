@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7c99d06864191c7bbac72c3140a30aeb1dbf2b868e35c5502334049675de38d'
+body_hash: 'sha256:32e9ac926cf9ad4a9911eff0f66a92656f64df5d031439f50750ee77d062d23c'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
+  - '[[2026-09-30-modelo-editor-workbench-adr]]'
 ---
 
 # `tui-modelo-workspace-interface` adr: `Modelo workspace interface and staged editor amendment` | (**status:** `accepted`)
@@ -563,7 +564,7 @@ substitute mocks, prose, or a proposed record for an unmet predecessor:
 
 | Cohort | Required entrance receipts | Canonical exit artifact, schema, and validator | Required proof |
 |---|---|---|---|
-| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
+| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; the former source file | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
 | C1 — bounded review | this companion ADR accepted with exact stem, accepting commit, and body hash; accepted Casilla review; accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
 | C2 — complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
 | C3 — staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |
@@ -767,3 +768,7 @@ requirements are removed from Modelo admission proofs. A delivered Modelo screen
 TUI registration, admissibility, interaction/effect/refresh behavior, and supported-matrix
 coverage; work not registered is absent from TUI routing and remains plan work. No production or
 development table mirrors CLI command reachability as TUI state.
+
+## Amendment 2026-09-30: one workbench destination and user-confirmed re-basing
+
+`2026-09-30-modelo-editor-workbench-adr` (D4 and D5) amends D1 and D6 of this record. The read destinations of D1 are retired atomically into one workbench destination per declaration; results, verification, provenance and filing become regions of that workbench, with no alias to the retired destination ids. D6 gains user-confirmed re-basing: a stale session keeps its staged changes and re-opens its review against the new head, with every changed previous value marked for the operator to acknowledge before apply. Abandon and reload remains available. D2, D3, D5, D7 and D8 stand.

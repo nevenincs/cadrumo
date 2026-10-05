@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import TypeGuard
 from uuid import UUID
 
+from ....application.user_profile.access_contracts import ProfileAccessBinding
+from ....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ....application.user_profile.login_handover import ProfileLoginHandoverJournal
 from ....application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
@@ -14,6 +16,7 @@ from ....application.user_profile.login_session_port import (
     ProfileLoginThrottleEvaluationPort,
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
+    ProfileSignInGenerationPort,
 )
 from .custody.acceleration_receipt import (
     advance_persisted_profile_session_idle_deadline,
@@ -25,6 +28,7 @@ from .custody.acceleration_receipt import (
     resume_profile_session_with_key,
 )
 from .custody.acceleration_receipt_crypto import PersistedProfileSession
+from .custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from .custody.zeroise import zeroise
 from .master_key.active_session import (
     bind_active_bucket_session,
@@ -138,17 +142,32 @@ class _PersistenceProfileLoginSession:
         now: datetime,
         idle_minutes: int,
         absolute_minutes: int,
-    ) -> ProfilePersistedSessionPort:
-        return mint_profile_session(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            dek=dek,
-            now=now,
-            idle_minutes=idle_minutes,
-            absolute_minutes=absolute_minutes,
-        )
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
+        sign_in_generation: ProfileSignInGenerationPort,
+    ) -> ProfilePersistedSessionPort | None:
+        try:
+            return mint_profile_session(
+                storage_root=storage_root,
+                profile_id=profile_id,
+                custody_generation=custody_generation,
+                dek_epoch=dek_epoch,
+                dek=dek,
+                now=now,
+                idle_minutes=idle_minutes,
+                absolute_minutes=absolute_minutes,
+                login_id=login_id,
+                sign_in=SignInGenerationCustody(root=storage_root, binding=sign_in_binding),
+                generation=SignInGeneration(
+                    lineage=sign_in_generation.lineage, generation=sign_in_generation.generation
+                ),
+            )
+        except AutomationCustodyError as error:
+            # The mint checks the captured generation before any write, and
+            # nothing after that check raises CONFLICT.
+            if error.reason is not AutomationCustodyCode.CONFLICT:
+                raise
+            return None
 
     def resume_acceleration_receipt(
         self,
@@ -172,17 +191,8 @@ class _PersistenceProfileLoginSession:
         *,
         storage_root: Path,
         profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return borrow_profile_session_key(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            now=now,
-        )
+        return borrow_profile_session_key(storage_root=storage_root, profile_id=profile_id)
 
     def resume_acceleration_receipt_with_key(
         self,
@@ -193,6 +203,8 @@ class _PersistenceProfileLoginSession:
         dek_epoch: str,
         now: datetime,
         receipt_key: bytearray,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
         return resume_profile_session_with_key(
             storage_root=storage_root,
@@ -201,6 +213,8 @@ class _PersistenceProfileLoginSession:
             dek_epoch=dek_epoch,
             now=now,
             receipt_key=receipt_key,
+            login_id=login_id,
+            sign_in=SignInGenerationCustody(root=storage_root, binding=sign_in_binding),
         )
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:

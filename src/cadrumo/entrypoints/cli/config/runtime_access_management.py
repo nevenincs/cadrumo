@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID
 
 import typer
@@ -10,18 +10,18 @@ from pydantic import SecretStr
 
 from ....adapters.local_runtime.automation_decision import AutomationDecision, run_automation_decision
 from ....adapters.local_runtime.automation_inventory import read_automation_inventory
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.models import OperationId
-from ....application.user_profile.access_contracts import AccessScope
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_enrollment import (
-    AutomationPeriodProjection,
     AutomationReviewProjection,
     AutomationScopeProjection,
 )
 from ....application.user_profile.automation_lifecycle import AutomationDenialKind
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....core.time.clock import now
 from ..common import activate_subcommand_output_language, emit_envelope
 from ..errors import CliRefusedBoundaryError
 from ..runtime_profile_binding import require_profile_client
@@ -69,25 +69,6 @@ def _refused(error: RuntimeFrontendRefusedError) -> CliRefusedBoundaryError:
     return CliRefusedBoundaryError(context={"reason": error.reason})
 
 
-def _scope(scope: AccessScope) -> AutomationScopeProjection:
-    """Flatten domain periods only for this CLI's typed public presentation."""
-    return AutomationScopeProjection(
-        operations=tuple(sorted(scope.operations)),
-        actions=tuple(sorted(scope.actions)),
-        disclosures=tuple(
-            sorted(scope.disclosures, key=lambda item: (str(item.destination_id), item.projection_id, item.category))
-        ),
-        periods=None
-        if scope.periods is None
-        else tuple(
-            AutomationPeriodProjection(filing_year=item.filing_year, code=str(item.code))
-            for item in sorted(scope.periods, key=lambda item: (item.filing_year, str(item.code)))
-        ),
-        allow_period_independent=scope.allow_period_independent,
-        allow_delegation=scope.allow_delegation,
-    )
-
-
 def _session_payload(session: PublicAccessSession, *, instant: datetime) -> RuntimeSessionPayload:
     return RuntimeSessionPayload(
         session_id=session.session_id,
@@ -98,7 +79,7 @@ def _session_payload(session: PublicAccessSession, *, instant: datetime) -> Runt
         key_id=session.key_id,
         kind=session.kind,
         state=session.state,
-        scope=_scope(session.scope),
+        scope=AutomationScopeProjection.from_scope(session.scope),
         expires_at=session.expires_at,
         remaining_seconds=max(0, int((session.expires_at - instant).total_seconds())),
     )
@@ -111,7 +92,7 @@ def profile_sessions(ctx: typer.Context, output_language: OutputLanguage | None 
         sessions = client.sessions()
     except RuntimeFrontendRefusedError as error:
         raise _refused(error) from error
-    instant = datetime.now(UTC)
+    instant = now()
     projected = tuple(
         _session_payload(item, instant=instant) for item in sorted(sessions, key=lambda item: item.session_id)
     )

@@ -18,26 +18,30 @@ from ....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
-from ....application.modelo.aggregate_operation import (
+from ....application.modelo.aggregate_contracts import (
     MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
-    ModeloAggregateOperationRequest,
+)
+from ....application.modelo.aggregate_projection import (
+    ModeloAggregateClaveTotals,
     ModeloAggregateProjection,
     ModeloAggregateWindow,
     ModeloAggregateWindowBaseline,
 )
+from ....application.modelo.aggregate_request import ModeloAggregateOperationRequest
 from ....application.operations.public_period import PublicPeriod
+from ....application.operations.public_scalar import PublicDecimal
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.hashing import content_hash_hex
+from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from ....domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from .. import _modelo_aggregate_cli as aggregate_cli
 from .. import runtime_modelo_aggregate as bridge
 from .._modelo_payloads import ModeloAggregateResult
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -87,7 +91,17 @@ def _projection(
         source_kinds=(BindingSourceKind.PAYABLE_INVOICE,),
         result_row_count=1,
         clave_breakdown=(),
+        absent_source_families=(),
         withholding_window=_window() if modelo in {"111", "115", "123"} else None,
+    )
+
+
+def _clave_totals(clave: str, count: int, percibido: str, retencion: str) -> ModeloAggregateClaveTotals:
+    return ModeloAggregateClaveTotals(
+        clave=clave,
+        percepcion_count=count,
+        percibido_total=PublicDecimal(decimal=percibido),
+        retencion_total=PublicDecimal(decimal=retencion),
     )
 
 
@@ -158,7 +172,7 @@ def test_bridge_submits_exact_profile_command_and_correlates_read_receipt(
     assert options["definition_id"] == MODELO_AGGREGATE_OPERATION_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
     assert options["result_type"] is ModeloAggregateProjection
-    assert options["request_version"] == options["result_version"] == 1
+    assert options["request_version"] == options["result_version"] == 2
     assert options["allow_refusal_detail"] is True
 
 
@@ -221,10 +235,10 @@ def test_bridge_rejects_a_projection_or_receipt_that_disagrees_with_its_request(
     elif mismatch == "period":
         projection = _projection(period=PublicPeriod(filing_year=2024, code="1T"))
     elif mismatch == "breakdown":
-        breakdown = WithholdingClaveBreakdown.model_construct(
-            clave="A", percepcion_count=1, percibido_total=Decimal("100.00"), retencion_total=Decimal("15.00")
+        # A periodic window reads no annual composition, so it cannot carry its breakdown.
+        projection = projection.model_copy(
+            update={"clave_breakdown": (_clave_totals("A", 1, "100.00", "15.00"),), "calculation_revision_id": "r"}
         )
-        projection = projection.model_copy(update={"clave_breakdown": (breakdown,)})
     elif mismatch == "terminal":
         condition = OperationTerminalCondition.REFUSED
     elif mismatch == "refusal_code":
@@ -310,20 +324,46 @@ def test_cli_refuses_mixed_ledger_capture_inputs_before_submitting(
         )
 
 
-def test_cli_refuses_retired_withholding_observation_transport_before_submission(
+def test_cli_renders_an_annual_summary_breakdown_and_names_each_absent_source(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        aggregate_cli,
-        "run_modelo_aggregate",
-        lambda *_args, **_kwargs: pytest.fail("retired observation transport reached the profile operation"),
+    """The per-clave totals and the missing-data warning reach the envelope from the operation's projection."""
+    annual_period = Period.from_year_and_code(2025, "0A")
+    projection = ModeloAggregateProjection(
+        outcome="aggregated",
+        profile_id=_PROFILE,
+        modelo="190",
+        period=PublicPeriod.from_period(annual_period),
+        provider=PerModeloAggregationContributor.RETENCIONES,
+        observation_count=0,
+        source_kinds=(),
+        result_row_count=0,
+        clave_breakdown=(_clave_totals("A", 2, "2000.00", "300.00"),),
+        absent_source_families=(BindingSourceKind.RETENCIONES_AGGREGATION,),
+        calculation_revision_id="2025-y-siguientes",
     )
+    rendered: dict[str, object] = {}
+    monkeypatch.setattr(aggregate_cli, "run_modelo_aggregate", lambda *_args, **_kwargs: projection)
+    monkeypatch.setattr(aggregate_cli, "emit_envelope", lambda _ctx, **kwargs: rendered.update(kwargs))
 
-    with pytest.raises(typer.BadParameter, match="--withholding-observation is not accepted for Modelo 100"):
-        aggregate_cli.aggregate_modelo(
-            cast(typer.Context, cast(object, None)),
-            modelo="100",
-            year=2025,
-            period="0A",
-            withholding_observation=["not-json"],
-        )
+    aggregate_cli.aggregate_modelo(cast(typer.Context, cast(object, None)), modelo="190", year=2025, period="0A")
+
+    result = cast(ModeloAggregateResult, rendered["result"])
+    assert [
+        (row.clave.value, row.percepcion_count, row.percibido_total, row.retencion_total)
+        for row in result.clave_breakdown
+    ] == [("A", 2, "2000.00", "300.00")]
+    assert result.withholding_window is None
+    lines = cast(list[str], rendered["lines"])
+    assert "clave_breakdown\tA\t2\t2000.00\t300.00" in lines
+    notices = cast(list[Notice], rendered["notices"])
+    assert [notice.code for notice in notices] == ["modelo.aggregate.calculation_rows_absent"]
+    assert notices[0].severity is NoticeSeverity.WARNING
+    assert notices[0].context == {
+        "modelo": "190",
+        "filing_year": "2025",
+        "period": annual_period.registry_token,
+        "revision": "2025-y-siguientes",
+        "source_family": BindingSourceKind.RETENCIONES_AGGREGATION.value,
+        "reason": "stored_rows_absent",
+    }

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#bindings-interface-hardening'
 date: '2026-06-14'
-modified: '2026-08-15'
-body_hash: 'sha256:0de0d8d1a51e8176e8db60410daee9a5a1ae608b612bfd6787d74d8fa5ba24d8'
+modified: '2026-10-03'
+body_hash: 'sha256:6d5bf1da75f99f2cb508b2adb2cee1d649f4a45f3960d8bdbf44bcf0d7533cc8'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-06-02-registry-bindings-boundary-audit]]"
@@ -32,9 +32,8 @@ out of scope for new decisions.** The `ModeloSourceResolver` port,
 connectivity ADR and refined by the aggregation-taxonomy ADR. The live gates are
 present and rule-backed: `assert_no_novel_source_kinds` and
 `collect_unhandled_source_diagnostics` run on the calculate path
-(`src/aeat/application/modelo/_calculation_actions.py:691` and `:587`); the
-slot-source collision gate lives in
-`src/aeat/domain/calculations/registry/_validate_relation_sources.py`; the
+(the former source file and `:587`); the
+slot-source collision gate lives ; the
 pull==calculate parity is regression-backed
 (`test_pull_path_calculate_path_casilla_parity.py`). A new ADR MUST NOT re-decide
 this surface.
@@ -46,7 +45,7 @@ target of the campaign.
 ## Finding cluster A — validation is non-uniform within one layer
 
 The schema is clean: `DataBindingDefinition`
-(`src/aeat/domain/calculations/registry/_schema.py:977-1004`) is one strict,
+ is one strict,
 frozen envelope (`id`, `source`, `selector`, `aggregation`, `legal_refs`,
 `source_refs`, …). Enforcement, however, is scattered across **three incompatible
 validator conventions**:
@@ -97,7 +96,7 @@ Related defects in the same cluster:
 The closed set of binding `source` kinds (the 18-member
 `DataBindingDefinition.source` Literal) is sourced from three owners that disagree:
 
-- `RowSetGroupingKind` (`src/aeat/core/aggregation.py`) is enum-keyed end-to-end
+- `RowSetGroupingKind`  is enum-keyed end-to-end
   for `WITHHOLDING` and `FOREIGN_ASSET`, but its `RELATED_PARTY` / `ATRIBUCION` /
   `REFUND` members exist while the binding source uses divergent free strings
   (`related_party_operation` / `atribucion_member` / `refund_operation`) — the enum
@@ -142,12 +141,12 @@ sister `_relation_prefill` path), a real drift risk.
 
 Casilla values carry full `ModeloCasillaProvenance` (`formula_id`, `legal_refs`,
 `source_refs`) onto the draft and into the export. **Binding values do not.**
-`_filing_binding_values` (`src/aeat/application/filing/__init__.py:426-454`) builds
+`_filing_binding_values`  builds
 every `ModeloBindingValue` with a hardcoded free-text `source="registry binding
 input"` and discards the binding definition's `legal_refs` / `source_refs`. The
-carrier itself (`src/aeat/domain/filing/_schema.py:71-80`) and both CLI payloads
+carrier itself  and both CLI payloads
 (`BindingRowPayload`, `BindingPreviewRowPayload`,
-`src/aeat/entrypoints/cli/_modelo_payloads.py:825-860`) model no legal grounding —
+the former source file) model no legal grounding —
 even though the registry binding definitions hold it and the fichero/BOE export
 layer still emits it (`registry/_export.py:191-215`). The bindings half of the
 interface silently violates the `aeat-calculation-grounding` rule that the casilla
@@ -182,9 +181,9 @@ resolved from some provenance, carried onto a draft.
 The drift is at the edges, where the word was reused for unrelated ideas:
 
 - **Two `_profile_binding.py` files that are unrelated homonyms.**
-  `src/aeat/application/modelo/_profile_binding.py` projects `source="profile"`
+  the former source file projects `source="profile"`
   registry bindings from a taxpayer's profile facts;
-  `src/aeat/adapters/outbound/google/_profile_binding.py` resolves which AEAT
+  the former source file resolves which AEAT
   profile UUID an OAuth session is scoped to. Zero shared imports, types, or call
   paths — but the identical filename is the single most likely thing to mislead a
   grep-driven refactor.
@@ -202,7 +201,7 @@ The drift is at the edges, where the word was reused for unrelated ideas:
 
 ## Finding cluster F — structural debt, prior decisions, and the codification gap
 
-`src/aeat/domain/calculations/registry/_bindings.py` is a ~3,040-line, ~15-family
+the former source file is a ~3,040-line, ~15-family
 monolith with a private `_PreviousModeloSelector` coupling into `_formula_runtime.py`.
 Two prior boundary audits (`2026-06-02-registry-bindings-boundary-audit`,
 `2026-06-02-registry-formula-runtime-boundary-audit`) proposed codify candidates

@@ -11,10 +11,7 @@ authentication and follow the [CLI troubleshooting guide](troubleshooting.md).
 If that does not restore the command, report the failure with the Cadrumo
 version and redacted output.
 
-When available to your identity, the command-line interface (CLI) can read
-filed declarations, expedientes, notifications, and filed justificantes. To
-pull your census address into your profile, use the [census facts
-guide](censo-update.md).
+When available to your identity, the command-line interface (CLI) can read filed declarations, expedientes, notifications, and AEAT receipts. To pull your census address into your profile, use the [census facts guide](censo-update.md).
 
 ## Before you start
 
@@ -195,7 +192,8 @@ re-register it under its existing name:
 
 Re-run `aeat config auth certificate check` to confirm the new expiry date.
 
-## Acquire or verify a live session
+(acquire-or-verify-a-live-session)=
+## Start or check a live session
 
 When you are ready to use a live-read command:
 
@@ -220,8 +218,8 @@ configuration:
 :verify: Confirm logout ends the local session while preserving the provider configuration.
 ```
 
-To remove one provider's local configuration, sessions, acquisition lock,
-registered certificates, and stored certificate secrets:
+To remove one provider's local configuration, sessions, sign-in lock, registered
+certificates, and stored certificate secrets:
 
 ```{cli-sequence} authenticate-reset-provider
 :verify: Confirm reset removes the selected provider's local authentication state.
@@ -255,9 +253,9 @@ List the scope codes the tool accepts:
 
 Each scope is an AEAT apoderamiento area. Examples include:
 
-- `RENT` for modelos 100 and 714.
-- `IVA` for modelos 303 and 390.
-- `PAGOSF` for modelos 130 and 131.
+- `RENT` for Modelos 100 and 714.
+- `IVA` for Modelos 303 and 390.
+- `PAGOSF` for Modelos 130 and 131.
 - `RETEN` for withholding modelos.
 - `GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC`, and `EXPED` for their respective
   authority areas.
@@ -287,10 +285,7 @@ Show what is recorded for the active profile:
 :verify: Confirm the tool shows the apoderado configuration recorded locally.
 ```
 
-`aeat config auth apoderado check` is the live-verification verb, but the
-live check is not available. It refuses with `The live check of representatives
-is unavailable, or contact with the AEAT failed.` Use
-`aeat config auth apoderado status` for the offline configuration read.
+`aeat config auth apoderado check` is the command for the live check, but the live check is not available. It refuses with `The live check of representatives is unavailable, or contact with the AEAT failed.` Use `aeat config auth apoderado status` for the offline configuration read.
 
 Remove the configuration when the representation ends:
 

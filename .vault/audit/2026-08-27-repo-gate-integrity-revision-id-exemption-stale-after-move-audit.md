@@ -3,15 +3,16 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dbe25a256a22b55d913235d564475e4f99a29ed1c0b11c7fc96e107994576da0'
+body_hash: 'sha256:2ef818ee724a04248a50ffbb6059cada65fb2ebaae3eb364bc6bfd9b97d32da4'
 related: []
 ---
-
 # `repo-gate-integrity` audit: a stale exemption path, not a resolution defect
 
-## The red gate
+## Scope
+
+### The red gate
 
 `test_every_production_select_revision_call_is_law_determined` fails:
 
@@ -25,7 +26,9 @@ This guards the rule that matters most for cross-year correctness: a stored
 injected as the selector, because injection is "the defect class that lets one
 year's numbers be computed under another year's norms".
 
-## It is not that
+## Findings
+
+### It is not that
 
 The call moved; it did not change shape.
 
@@ -46,7 +49,7 @@ directly: "The non-overlap window gate guarantees resolution is unique, so a
 narrowing can only equal the law-determined pick or refuse." It cannot select a
 different revision.
 
-## Why the gate still deserves to be red
+### Why the gate still deserves to be red
 
 The exemption is keyed by module path, so a peer's module split silently
 invalidated it. That is the failure mode `aeat-quality-gates` warns about when it
@@ -54,15 +57,7 @@ says allowlists are "where the judgement moves" and that stale entries must fail
 The gate did exactly its job: it noticed that the attestation no longer covers the
 code it was written for.
 
-## Remedy, for the module's owner
-
-Enrolling `domain/calculations/registry/_snapshot_internals.py` in
-`_SANCTIONED_REVISION_ID_SITES`, and dropping `snapshot.py` if it no longer
-qualifies, restores the gate. That is deliberately left to whoever owns the split:
-enrollment is an attestation that the site only assert-equals, and the person who
-moved the code is the one who can make it.
-
-## The other four reds in the same sweep
+### The other four reds in the same sweep
 
 A full run of the registry test directory after reverting my own work
 (`8258892c64`) leaves these, none of them mine:
@@ -73,3 +68,13 @@ A full run of the registry test directory after reverting my own work
 - `test_record_design_source_selection.py` — a record-design import boundary.
 
 Recorded so the next sweep does not re-derive their attribution.
+
+## Recommendations
+
+### Remedy, for the module's owner
+
+Enrolling `domain/calculations/registry/_snapshot_internals.py` in
+`_SANCTIONED_REVISION_ID_SITES`, and dropping `snapshot.py` if it no longer
+qualifies, restores the gate. That is deliberately left to whoever owns the split:
+enrollment is an attestation that the site only assert-equals, and the person who
+moved the code is the one who can make it.

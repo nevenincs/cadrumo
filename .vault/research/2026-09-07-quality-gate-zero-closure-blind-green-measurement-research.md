@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:22bf97662288494792b0081dc2b6d92f6552affe9b42a4a498819588e31b5810'
+body_hash: 'sha256:5e9803e8a60c50f51aec45deedda9885b8a37860527a040c03b76ac268a9fa99'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
   - "[[2026-08-04-canonical-storage-management-void-assertion-class-audit]]"
@@ -36,11 +36,11 @@ This record exists because the counts it carries are load-bearing for `2026-09-0
 
 ## Sources
 
-- `dev/quality/tautological_assertion_scan.py` — the existing trivially-true scanner and the boundary claim this measurement tested.
-- `dev/tests/test_tautological_assertion_gate.py` — the scanner's only consumer, sweeping `src/cadrumo` and `dev` with a per-root anti-vacuity floor.
-- `dev/tests/test_no_tautology.py` — an independent inline detector over test-control modules; it does not use the scanner above.
+- the former source file — the existing trivially-true scanner and the boundary claim this measurement tested.
+- the former source file — the scanner's only consumer, sweeping `src/cadrumo` and `dev` with a per-root anti-vacuity floor.
+- the former source file — an independent inline detector over test-control modules; it does not use the scanner above.
 - `src/cadrumo/entrypoints/cli/language_argv.py:26` — the four locale-pinning forms.
 - `src/cadrumo/locales/{en,es,ca,hu}/cli.yml` — `calculate_source_advisory` prefixes.
-- `dev/quality/tests/test_taxonomy_absence_conformance.py` — the live in-repo pattern for a declaration checked against AST-discovered reality; it replaced and removed the former off-lane `src/cadrumo/tests/test_pinned_taxonomy_literal_conformance.py` implementation.
+- the former source file — the live in-repo pattern for a declaration checked against AST-discovered reality; it replaced and removed the former off-lane the former source file implementation.
 - `2026-08-04-canonical-storage-management-void-assertion-class-audit` — the 400/213/13/155 absence-assertion frame and the deferral this work answers.
 - `2026-08-30-repo-gate-integrity-wrong-subject-gates-audit` — the origin of the boundary claim, scoped to that audit's own instances.

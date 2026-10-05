@@ -5,15 +5,15 @@ that settles the return (``direct_annual_settlement``) or a fact to reconcile
 against (``factual_evidence``). That declaration reaches the application layer
 intact: it is a field on the fold requirement and a typed ``Literal`` at the
 handoff. What used to happen next is that the resolvers dropped it at the join,
-leaving the mesh a bare mapping of binding id to Decimal, so a ``factual_evidence``
-Modelo 193 retención the taxpayer SUFFERED arrived by the identical path a
-``direct_annual_settlement`` Modelo 130 pago fraccionado did, and no consumer could
-tell them apart.
+leaving the mesh a bare mapping of binding id to Decimal, so on Modelo 200 the
+``factual_evidence`` carry of the prior year's pending bases imponibles negativas
+arrived by the identical path the ``direct_annual_settlement`` Modelo 202 pagos
+fraccionados did, and no consumer could tell them apart.
 
-The value is CARRIED, not gated. A taxpayer is entitled to a suffered retención and
-dropping it silently is an over-declaration, which is the direction this apparatus
-does not otherwise watch, so nothing here withholds a figure. What changes is that
-a consumer can now distinguish the two classes.
+The value is CARRIED, not gated. Dropping a figure the taxpayer is entitled to is
+an over-declaration, which is the direction this apparatus does not otherwise
+watch, so nothing here withholds a figure. What changes is that a consumer can now
+distinguish the two classes.
 
 The undeclared case is pinned deliberately. Seventeen carries in the registry
 declare no treatment at all, and the governing decision record explicitly declined
@@ -63,6 +63,11 @@ def _supported_years() -> tuple[int, ...]:
 def _m100(filing_year: int | None = None) -> RegistrySnapshot:
     year = max(_supported_years()) if filing_year is None else filing_year
     return published_snapshot("100", filing_year=year, period="0A")
+
+
+def _m200_2025() -> RegistrySnapshot:
+    """Modelo 200 2025 relation-prefills both a settlement and an evidence carry."""
+    return published_snapshot("200", filing_year=2025, period="0A")
 
 
 def _requirements_by_binding(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
@@ -232,3 +237,9 @@ def test_carrying_the_treatment_does_not_withhold_the_value() -> None:
         )
         assert binding.value == amount, f"{treatment} withheld the value"
         assert binding.dependency_treatment == treatment
+
+
+def test_modelo_200_declared_settlement_and_evidence_treatments_remain_distinct() -> None:
+    """Real published relations carry both treatments through the resolver join."""
+    treatments = _grounded_treatments(_m200_2025())
+    assert {_SETTLEMENT, _EVIDENCE} <= set(treatments.values())

@@ -1,6 +1,173 @@
 modelo:
   schema:
     '353':
+      binding:
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 1: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 1: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 1: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 1: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 10: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 10: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 10: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 10: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 11: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 11: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 11: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 11: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 12: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 12: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 12: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 12: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 13: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 13: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 13: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 13: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 14: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 14: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 14: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 14: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 15: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 15: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 15: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 15: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 16: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 16: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 16: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 16: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 17: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 17: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 17: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 17: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 18: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 18: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 18: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 18: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 19: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 19: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 19: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 19: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 2: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 2: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 2: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 2: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Entitat dependent 20: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Entitat dependent 20: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Entitat dependent 20: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Entitat dependent 20: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 3: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 3: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 3: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 3: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 4: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 4: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 4: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 4: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 5: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 5: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 5: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 5: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 6: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 6: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 6: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 6: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 7: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 7: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 7: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 7: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 8: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 8: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 8: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 8: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Entitat dependent 9: % de participació al final del període'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Entitat dependent 9: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Entitat dependent 9: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Entitat dependent 9: resultat'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9ddommibb6:
+          label: 'Entitat dominant: NIF'
+        ? x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9ddpqmqpbidsmm8p9dd9qn6t39cpkm6obeehig
+        : label: 'Entitat dominant: número de justificant del Modelo 322'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9de9in6tbcehgm8ro:
+          label: 'Entitat dominant: resultat'
       casilla:
         continuidad:
           filing-period:

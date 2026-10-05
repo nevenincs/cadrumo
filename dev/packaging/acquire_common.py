@@ -16,7 +16,6 @@ The installed CLI oracle is reused rather than re-deriving tax truth.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import subprocess
@@ -26,6 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import UTF_8
 
 from .cohort_manifest import LoadedReleaseCohort
@@ -42,11 +42,6 @@ _UTF_8: Final[str] = UTF_8
 # The distributions the promoted Python cohort carries as installable wheels,
 # each keyed by the exact ``python-cohort.json`` digest name. A public
 # reacquisition proves this closed set, and only this set, byte-for-byte. The
-PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = (
-    "cadrumo",
-    "cadrumo-data-manuals",
-    "cadrumo-data-official",
-)
 
 
 _REFUSAL_PREFIX: Final[str] = "public reacquisition unavailable"
@@ -164,11 +159,6 @@ def require_command_succeeded(
         )
 
 
-def sha256_bytes(data: bytes) -> str:
-    """Return the hex SHA-256 digest of an in-memory byte string."""
-    return hashlib.sha256(data).hexdigest()
-
-
 def verify_artifact_digest(
     *,
     mechanism: str,
@@ -237,7 +227,7 @@ def match_downloaded_cohort_wheels(
             published) or resolves to more than one file.
     """
     resolved: dict[str, Path] = {}
-    for distribution in PYTHON_COHORT_WHEEL_NAMES:
+    for distribution in PRODUCT_IDENTITY.cohort_distributions:
         distribution_version = cohort.version
         prefix = _wheel_distribution_prefix(distribution, distribution_version)
         matches = [path for path in scan_directory(download_dir, pattern="*.whl") if path.name.startswith(prefix)]
@@ -517,7 +507,6 @@ def run_installed_cli_oracle(
 
 
 __all__ = [
-    "PYTHON_COHORT_WHEEL_NAMES",
     "AcquisitionError",
     "capture_owned_server_launch",
     "expected_oracle_target_value",
@@ -526,7 +515,6 @@ __all__ = [
     "refuse_unavailable",
     "require_command_succeeded",
     "run_installed_cli_oracle",
-    "sha256_bytes",
     "venv_bin_dir",
     "venv_executable",
     "verify_artifact_digest",

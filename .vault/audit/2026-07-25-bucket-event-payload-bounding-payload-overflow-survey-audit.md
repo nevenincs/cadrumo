@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#bucket-event-payload-bounding'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:907b31567d5928a1f6df9bf53df9e8be384a16d3117fed9df9265ec8cb67d337'
+modified: '2026-10-05'
+body_hash: 'sha256:6f720b81a24074880462611e08488d39bc516965559280aac931df13d15b000a'
 related:
   - '[[2026-07-25-reconcile-evidence-relocation-adr]]'
 ---
@@ -33,7 +33,7 @@ on `rg`, and on execution against the real model — never on a search miss.
 ### payload-overflow-tally | high | the shape has six occurrences, not four
 
 Two live occurrences were found that no prior pass had recorded, both in
-`src/cadrumo/application/ledger/_actions_split_merge.py`: the split event bound
+The retired module: the split event bound
 `child_transaction_ids` to a comma join of the child ids, and the merge event
 bound `source_child_ids` to a join of the same. Both are live in shipped verbs.
 
@@ -113,7 +113,7 @@ guard cannot enforce a bound that is not named.
 ### scoping-noise | medium | an unscoped detector is dominated by false positives
 
 A first cut keyed on the name `payload` alone flagged twenty-two values, of
-which twenty-one were not bucket events: Google Sheets rows, LLM telemetry and
+which twenty-one were not bucket events: Google Sheets rows, LLM
 cache records, CLI result bodies, and rendering payloads. `payload` is a common
 name across the codebase and carries no capped-slot contract outside this
 substrate.

@@ -12,21 +12,10 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.logout",
-        "notices": [
-          {
-            "action": null,
-            "code": "config.logout.remaining_access",
-            "context": null,
-            "message": "The CLI selection is cleared. Other sessions, bounded human resume and enrolled API keys retain their own authority. Use session or profile controls to revoke access.",
-            "severity": "info"
-          }
-        ],
+        "notices": [],
         "result": {
           "already_logged_out": false,
-          "automation_revoked": false,
-          "human_receipt_revoked": false,
-          "logged_out_profile": "<profile-id>",
-          "scope": "cli_context"
+          "logged_out_profile": "docs-sequence-sandbox"
         },
         "schema_version": "2",
         "status": "success"
@@ -69,7 +58,7 @@
           "display_name": "docs-sequence-sandbox",
           "earliest_safe_erase_date": null,
           "fingerprint": {
-            "digest": "78fa30bc90435e2321d7d5a0c25b68e2c1278d5fe63bf5c8e2a0134c08fbe9f7",
+            "digest": "78041f7dab4c5721ec8f5195e9176df025346d951a8ff3813288edd1f3d7ad17",
             "file_count": 4,
             "schema_version": 1,
             "total_bytes": 1850

@@ -1,0 +1,39 @@
+# RDL 23/2026 entered into force on 10 September. Its annual deduction reaches
+# 1 January, but its advance-payment clause applies only where the filing window
+# had not begun: Modelo 131 quarters 3T and 4T. The AEAT instructions captured
+# on 3 October independently state that exact quarterly boundary and rate.
+[legal."real-decreto-ley-23-2026:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-23-2026-art-1.html#a1"
+document_id = "BOE-A-2026-18828"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-18828"
+published_at = 2026-09-09
+effective_from = 2026-09-10
+governs_periods_from = 2026-01-01
+governs_periods_to = 2026-12-31
+review_status = "agent_reviewed"
+reviewed_by = "agent:codex"
+reviewed_at = 2026-10-03
+notes = "The deduction reaches the 2026 tax year; its fractional-payment rate applies only to filing windows not begun at entry into force, hence Modelo 131 periods 3T and 4T."
+required_text = ["Con efectos desde 1 de enero de 2026", "se modifica la disposición adicional quincuagésima séptima"]
+
+[sources."aeat-modelo-131-instructions-2026-late"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-instrucciones-2026-late.html"
+sha256 = "a1f8370ac01d628910fd95ace2704c3e9e991b7265c943c0e4b4619dbf101b27"
+bytes = 44126
+retrieved_at = 2026-10-03
+published_at = 2026-09-11
+applies_from = 2026-07-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html"
+review_status = "agent_reviewed"
+
+[sources."aeat-modelo-131-instructions-2026-late".period_selector]
+years = [2026]
+periods = ["3T", "4T"]

@@ -11,11 +11,11 @@ from ...application.ledger.participation_rebuild_operation import (
     LedgerParticipationRebuildProjection,
     LedgerParticipationRebuildRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationEffect, profile_operation_subject
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def rebuild_ledger_participation_for_cli(ctx: typer.Context) -> LedgerParticipationRebuildProjection:
@@ -32,10 +32,5 @@ def rebuild_ledger_participation_for_cli(ctx: typer.Context) -> LedgerParticipat
         timeout=60,
     )
     if completed.projection.profile_id != client.profile_id or completed.effect is not OperationEffect.UPDATED:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed.projection

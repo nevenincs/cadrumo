@@ -67,7 +67,6 @@ from ..review_package_signing import (
     ReviewPackageSigningKeypair,
     SignedReviewPackage,
     ensure_review_package_signing_keypair,
-    review_package_signing_public_key,
     sign_review_package,
 )
 from ._review_package_bytes_support import build_package_path
@@ -236,15 +235,12 @@ def test_operator_signs_accountant_counter_signs_both_layers_verify(
         assert len(bytes.fromhex(round_tripped.counter_signature_hex)) == 64
         assert round_tripped.counter_public_key_hex == accountant_keypair.public_key_hex
 
-        operator_public_key = review_package_signing_public_key(operator_keypair)
-        accountant_public_key = review_package_signing_public_key(accountant_keypair)
-
         assert (
             verify_counter_signed_receipt(
                 package_path,
                 round_tripped,
-                operator_public_key_hex=operator_public_key.public_key_hex,
-                counter_signer_public_key_hex=accountant_public_key.public_key_hex,
+                operator_public_key_hex=operator_keypair.public_key_hex,
+                counter_signer_public_key_hex=accountant_keypair.public_key_hex,
             )
             is True
         )

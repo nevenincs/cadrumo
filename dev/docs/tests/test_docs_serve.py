@@ -17,9 +17,11 @@ import fnmatch
 import http.server
 import ipaddress
 import os
+import shlex
 import shutil
 import socket
 import socketserver
+import sys
 import threading
 from collections.abc import Iterator
 from pathlib import Path
@@ -29,6 +31,8 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from ..build_paths import docs_build_root, docs_html_root
+from ..i18n import TARGET_LANGUAGES
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from ..serve import (
     _DEFAULT_HOST,
@@ -49,6 +53,7 @@ from ..serve import (
     start_ipv6_relay,
     write_state,
 )
+from ..serve_languages import language_build_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -66,7 +71,7 @@ def test_serve_command_scopes_the_autodoc_source_watch() -> None:
     user = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False)
     assert user[1:3] == ["-m", "sphinx_autobuild"]
     assert str(_REPO_ROOT / "docs") in user
-    assert str(_REPO_ROOT / "docs" / "_build" / "html") in user
+    assert str(docs_html_root(_REPO_ROOT)) in user
     assert "--watch" not in user  # user scope does not watch the (unrendered) app source
 
     full = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False, scope="full")
@@ -93,6 +98,8 @@ def test_the_live_preview_renders_goldens_without_executing_them(scope: str) -> 
     try:
         assert env[SEQUENCE_CHECK_SKIP_ENV] == "1"
         assert env["CADRUMO_DOCS_SCOPE"] == scope
+        assert env["CADRUMO_DOCS_LANGUAGE"] == "en"
+        assert env["CADRUMO_DOCS_BUILD_ROOT"] == str(docs_build_root(_REPO_ROOT))
     finally:
         shutil.rmtree(env["CADRUMO_LOCAL_STORAGE_ROOT"], ignore_errors=True)
 
@@ -116,6 +123,18 @@ def test_serve_command_open_browser_flag_is_optional() -> None:
     assert "--open-browser" in with_browser
     assert "--open-browser" not in without_browser
     assert "9001" in with_browser
+
+
+def test_live_preview_builds_dropdown_destinations() -> None:
+    """Every refresh builds translated roots at the paths advertised by the header."""
+    command = serve_command(_REPO_ROOT, host="127.0.0.1", port=8788, open_browser=False)
+    hook = command[command.index("--post-build") + 1]
+    assert shlex.split(hook) == [sys.executable, "-m", "dev.docs.serve_languages"]
+    for language in TARGET_LANGUAGES:
+        build = language_build_command(language, docs_html_root(_REPO_ROOT))
+        assert build[build.index("--language") + 1] == language
+        assert Path(build[build.index("--out-dir") + 1]) == docs_html_root(_REPO_ROOT) / language
+        assert "--isolated-source" in build
 
 
 # ── Binding defaults ──────────────────────────────────────────────────────────

@@ -23,6 +23,7 @@ persistence authorities is built on top of these types.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -220,125 +221,191 @@ def execute_reviewed_decision(
     ``expected_current`` carries the immutable reviewed ledger row to the
     existing guarded writer; it is never replaced by a freshly loaded baseline.
     """
-    source_command = origin.source_command
-
-    if not isinstance(suggestion, ReviewedInvoiceDraft) and ports is None:
-        raise TransactionValidationError(
-            "LLM review persistence requires caller-composed ledger action ports",
-            context={"origin": origin.value},
-        )
-
+    context = _ReviewExecutionContext(
+        origin=origin,
+        source_command=origin.source_command,
+        bucket_id=bucket_id,
+        business_pct=business_pct,
+        reason=reason,
+        actor=actor,
+        ports=ports,
+        occurred_at=occurred_at,
+        settings=settings,
+        expected_current=expected_current,
+    )
+    _require_review_ports(suggestion, context)
     if decision is LlmReviewDecision.REJECT:
-        # The split lives HERE, inside the reject branch, rather than as a second
-        # handler beside it. This branch runs before any type dispatch and
-        # currently catches every reject, so a draft decline added alongside it
-        # would never be reached -- and a parallel reject path is exactly the
-        # duplicate write surface this terminal exists to avoid.
-        if isinstance(suggestion, ReviewedInvoiceDraft):
-            return _decline_invoice_draft(
-                suggestion,
-                bucket_id=bucket_id,
-                reason=reason,
-                actor=actor,
-                bucket_event_repository=ports.bucket_event_repository if ports is not None else None,
-                occurred_at=occurred_at,
-            )
-        if ports is None:
-            raise AssertionError("ports are required for a non-draft rejection")
-        return reject_llm_suggestion(
-            suggestion,
-            bucket_id=bucket_id,
-            reason=reason,
-            actor=actor,
-            source_command=source_command,
-            transaction_repository=ports.transaction_repository,
-            bucket_event_repository=ports.bucket_event_repository,
-            occurred_at=occurred_at,
-        )
-
+        return _execute_rejection(suggestion, context)
     if decision is LlmReviewDecision.APPLY:
-        if isinstance(suggestion, ReviewedInvoiceDraft):
-            # Delegates to the draft store's single writer rather than opening a
-            # second path to the same record: that store is keyed by bucket and
-            # evidence reference so a correction updates the review in place,
-            # and a parallel writer would fork a second draft for one document.
-            return write_extraction_draft(
-                bucket_id=bucket_id,
-                evidence_reference=suggestion.evidence_reference,
-                draft=suggestion.draft,
-                extractor=suggestion.extractor,
-                read_transports=suggestion.read_transports,
-                settings=settings if settings is not None else load_settings(),
-            )
-        if isinstance(suggestion, LLMSaturatedSuggestion):
-            if ports is None:
-                raise AssertionError("ports are required for a saturated classification")
-            return apply_saturated_llm_classification(
-                suggestion,
-                bucket_id=bucket_id,
-                business_pct=business_pct,
-                actor=actor,
-                source_command=source_command,
-                ports=ports,
-                occurred_at=occurred_at,
-                expected_current=expected_current,
-            )
-        if isinstance(suggestion, LLMClassificationSuggestion):
-            if ports is None:
-                raise AssertionError("ports are required for a classification")
-            return apply_llm_classification(
-                suggestion,
-                bucket_id=bucket_id,
-                business_pct=business_pct,
-                actor=actor,
-                source_command=source_command,
-                transaction_repository=ports.transaction_repository,
-                bucket_event_repository=ports.bucket_event_repository,
-                occurred_at=occurred_at,
-                expected_current=expected_current,
-            )
-        if (
-            isinstance(suggestion, LLMSplitSuggestion)
-            and origin is LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT
-            and len(suggestion.children) == 1
-        ):
-            if ports is None:
-                raise AssertionError("ports are required for an evidence classification")
-            return apply_evidence_classification(
-                suggestion,
-                bucket_id=bucket_id,
-                actor=actor,
-                source_command=source_command,
-                ports=ports,
-                occurred_at=occurred_at,
-                expected_current=expected_current,
-            )
-        raise TransactionValidationError(
-            "APPLY decision requires a classification or saturated suggestion, not a split proposal",
-            context={"decision": decision.value, "origin": origin.value},
-        )
-
+        return _execute_application(suggestion, context, decision=decision)
     if decision is LlmReviewDecision.SPLIT:
-        if isinstance(suggestion, LLMSplitSuggestion):
-            if ports is None:
-                raise AssertionError("ports are required for an evidence split")
-            return apply_evidence_split(
-                suggestion,
-                bucket_id=bucket_id,
-                actor=actor,
-                source_command=source_command,
-                ports=ports,
-                occurred_at=occurred_at,
-                expected_current=expected_current,
-            )
-        raise TransactionValidationError(
-            "SPLIT decision requires an evidence split proposal",
-            context={"decision": decision.value, "origin": origin.value},
-        )
-
+        return _execute_split(suggestion, context, decision=decision)
     raise TransactionValidationError(
         f"{decision.value} is a non-persisting review terminal and cannot be executed as a durable decision",
         context={"decision": decision.value, "origin": origin.value},
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _ReviewExecutionContext:
+    origin: LlmReviewInvocationOrigin
+    source_command: str
+    bucket_id: str
+    business_pct: Decimal | None
+    reason: str
+    actor: str
+    ports: LedgerActionPorts | None
+    occurred_at: datetime | None
+    settings: Settings | None
+    expected_current: Transaction | None
+
+
+def _require_review_ports(suggestion: ReviewedSuggestion, context: _ReviewExecutionContext) -> None:
+    if not isinstance(suggestion, ReviewedInvoiceDraft) and context.ports is None:
+        raise TransactionValidationError(
+            "LLM review persistence requires caller-composed ledger action ports",
+            context={"origin": context.origin.value},
+        )
+
+
+def _require_action_ports(context: _ReviewExecutionContext, *, purpose: str) -> LedgerActionPorts:
+    if context.ports is None:
+        raise AssertionError(f"ports are required for {purpose}")
+    return context.ports
+
+
+def _execute_rejection(suggestion: ReviewedSuggestion, context: _ReviewExecutionContext) -> LlmReviewResult:
+    if isinstance(suggestion, ReviewedInvoiceDraft):
+        return _decline_invoice_draft(
+            suggestion,
+            bucket_id=context.bucket_id,
+            reason=context.reason,
+            actor=context.actor,
+            bucket_event_repository=context.ports.bucket_event_repository if context.ports is not None else None,
+            occurred_at=context.occurred_at,
+        )
+    ports = _require_action_ports(context, purpose="a non-draft rejection")
+    return reject_llm_suggestion(
+        suggestion,
+        bucket_id=context.bucket_id,
+        reason=context.reason,
+        actor=context.actor,
+        source_command=context.source_command,
+        transaction_repository=ports.transaction_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        occurred_at=context.occurred_at,
+    )
+
+
+def _execute_application(
+    suggestion: ReviewedSuggestion,
+    context: _ReviewExecutionContext,
+    *,
+    decision: LlmReviewDecision,
+) -> LlmReviewResult:
+    if isinstance(suggestion, ReviewedInvoiceDraft):
+        return _apply_invoice_draft(suggestion, context)
+    if isinstance(suggestion, LLMSaturatedSuggestion):
+        return _apply_saturated_suggestion(suggestion, context)
+    if isinstance(suggestion, LLMClassificationSuggestion):
+        return _apply_classification_suggestion(suggestion, context)
+    if (
+        isinstance(suggestion, LLMSplitSuggestion)
+        and context.origin is LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT
+        and len(suggestion.children) == 1
+    ):
+        return _apply_single_evidence_classification(suggestion, context)
+    raise TransactionValidationError(
+        "APPLY decision requires a classification or saturated suggestion, not a split proposal",
+        context={"decision": decision.value, "origin": context.origin.value},
+    )
+
+
+def _apply_invoice_draft(
+    suggestion: ReviewedInvoiceDraft,
+    context: _ReviewExecutionContext,
+) -> ExtractionDraftDocument:
+    # The draft store is the single writer for evidence-keyed revisions.
+    return write_extraction_draft(
+        bucket_id=context.bucket_id,
+        evidence_reference=suggestion.evidence_reference,
+        draft=suggestion.draft,
+        extractor=suggestion.extractor,
+        read_transports=suggestion.read_transports,
+        settings=context.settings if context.settings is not None else load_settings(),
+    )
+
+
+def _apply_saturated_suggestion(
+    suggestion: LLMSaturatedSuggestion,
+    context: _ReviewExecutionContext,
+) -> ManualLedgerTransactionResult:
+    ports = _require_action_ports(context, purpose="a saturated classification")
+    return apply_saturated_llm_classification(
+        suggestion,
+        bucket_id=context.bucket_id,
+        business_pct=context.business_pct,
+        actor=context.actor,
+        source_command=context.source_command,
+        ports=ports,
+        occurred_at=context.occurred_at,
+        expected_current=context.expected_current,
+    )
+
+
+def _apply_classification_suggestion(
+    suggestion: LLMClassificationSuggestion,
+    context: _ReviewExecutionContext,
+) -> ManualLedgerTransactionResult:
+    ports = _require_action_ports(context, purpose="a classification")
+    return apply_llm_classification(
+        suggestion,
+        bucket_id=context.bucket_id,
+        business_pct=context.business_pct,
+        actor=context.actor,
+        source_command=context.source_command,
+        transaction_repository=ports.transaction_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        occurred_at=context.occurred_at,
+        expected_current=context.expected_current,
+    )
+
+
+def _apply_single_evidence_classification(
+    suggestion: LLMSplitSuggestion,
+    context: _ReviewExecutionContext,
+) -> ManualLedgerTransactionResult:
+    ports = _require_action_ports(context, purpose="an evidence classification")
+    return apply_evidence_classification(
+        suggestion,
+        bucket_id=context.bucket_id,
+        actor=context.actor,
+        source_command=context.source_command,
+        ports=ports,
+        occurred_at=context.occurred_at,
+        expected_current=context.expected_current,
+    )
+
+
+def _execute_split(
+    suggestion: ReviewedSuggestion,
+    context: _ReviewExecutionContext,
+    *,
+    decision: LlmReviewDecision,
+) -> LlmReviewResult:
+    if not isinstance(suggestion, LLMSplitSuggestion):
+        raise TransactionValidationError(
+            "SPLIT decision requires an evidence split proposal",
+            context={"decision": decision.value, "origin": context.origin.value},
+        )
+    return apply_evidence_split(
+        suggestion,
+        bucket_id=context.bucket_id,
+        actor=context.actor,
+        source_command=context.source_command,
+        ports=_require_action_ports(context, purpose="an evidence split"),
+        occurred_at=context.occurred_at,
+        expected_current=context.expected_current,
     )
 
 

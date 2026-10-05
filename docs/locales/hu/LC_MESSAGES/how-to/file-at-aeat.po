@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:43+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -20,31 +20,31 @@ msgstr ""
 
 #: ../../how-to/file-at-aeat.md:1
 msgid "File your modelo at the AEAT portal"
-msgstr "Nyújtsd be a modelódat az AEAT-portálon"
+msgstr "Nyújtsd be a nyomtatványodat az AEAT-portálon"
 
 #: ../../how-to/file-at-aeat.md:3
 #, python-brace-format
 msgid ""
-"This page covers the handoff from a verified draft to a real filing at "
-"the Agencia Estatal de Administración Tributaria (AEAT), as an ordered "
-"checklist: present the figures yourself at the portal, save the "
-"justificante, and record the filing locally. You prepare and check a "
+"This page covers the handoff from a checked draft to a real filing at the"
+" Agencia Estatal de Administración Tributaria (AEAT), as an ordered "
+"checklist: present the figures yourself at the portal, save the AEAT "
+"receipt, and record the filing in Cadrumo. You prepare and check a "
 "{term}`modelo` with `aeat`, but the tool never submits anything to AEAT. "
 "You file at the portal yourself, signed with your own credentials. The "
-"`work file` command at the end records a local marker only; it does not "
-"and cannot file on your behalf."
+"`work file` command at the end only records the filing in Cadrumo; it "
+"does not and cannot file on your behalf."
 msgstr ""
 "Ez az oldal az ellenőrzött piszkozattól az Agencia Estatal de "
 "Administración Tributarianál (AEAT) történő valódi benyújtásig tartó "
-"átadást mutatja be rendezett ellenőrzőlistaként: add meg magad a számokat"
-" a portálon, mentsd el a justificantét, és rögzítsd helyben a benyújtást."
-" A {term}`modelo`-t az `aeat`-tel készíted elő és ellenőrzöd, de az "
-"eszköz soha nem nyújt be semmit az AEAT-nál. A benyújtást te magad végzed"
-" a portálon, a saját hitelesítő adataiddal aláírva. A végén lévő `work "
-"file` parancs csak helyi jelölőt rögzít; nem nyújt be, és nem is tud "
-"benyújtani a nevedben."
+"átadást mutatja be rendezett ellenőrzőlistaként: add meg te magad a "
+"számokat a portálon, mentsd el az AEAT-igazolást, és rögzítsd a "
+"benyújtást a Cadrumóban. A {term}`modelo`-t az `aeat`-tel készíted elő és"
+" ellenőrzöd, de az eszköz soha nem nyújt be semmit az AEAT-nál. A "
+"benyújtást te magad végzed a portálon, a saját hitelesítő adataiddal "
+"aláírva. A végén lévő `work file` parancs csak a Cadrumóban rögzíti a "
+"benyújtást; nem nyújt be, és nem is tud benyújtani a nevedben."
 
-#: ../../how-to/file-at-aeat.md:12
+#: ../../how-to/file-at-aeat.md:11
 msgid ""
 "How you present depends on the modelo. Cadrumo holds no AEAT software-"
 "developer registration, so the export of a modelo whose record design "
@@ -55,60 +55,63 @@ msgid ""
 "Cadrumo does not fill with a software identity, such as Modelo 130, the "
 "export leaves those fields blank and shows no such warning."
 msgstr ""
-"Hogy hogyan nyújtod be, az a modelótól függ. A Cadrumo nem rendelkezik "
-"AEAT-szoftverfejlesztői regisztrációval, ezért azoknak a modelóknak az "
-"exportja, amelyek rekordtervezete szoftverazonosítót foglal le, például a"
-" Modelo 303 vagy a Modelo 390, csupa nullából álló fejlesztői azonosítót "
+"A benyújtás módja a nyomtatványtól függ. A Cadrumo nem rendelkezik AEAT-"
+"szoftverfejlesztői regisztrációval, ezért azoknak a nyomtatványoknak az "
+"exportja, amelyek fájlszerkezete szoftverazonosítót foglal le, például a "
+"Modelo 303 vagy a Modelo 390, csupa nullából álló fejlesztői azonosítót "
 "hordoz a fejlécében. Az export figyelmeztet, hogy az AEAT nem fogadja el "
-"azt a fájlt benyújtásra, ezért inkább a kiszámított casillaértékeket írd "
-"be a portál űrlapjába. Az olyan modelóknál, amelyek elrendezését a "
-"Cadrumo nem tölti ki szoftverazonosítóval, például a Modelo 130-nál, az "
-"export üresen hagyja ezeket a mezőket, és nem ad ilyen figyelmeztetést."
+"azt a fájlt benyújtásra, ezért inkább a kiszámított rovatértékeket írd be"
+" a portálon lévő nyomtatványba. Az olyan nyomtatványoknál, amelyek "
+"elrendezését a Cadrumo nem tölti ki szoftverazonosítóval, például a "
+"Modelo 130-nál, az export üresen hagyja ezeket a mezőket, és nem ad ilyen"
+" figyelmeztetést."
 
-#: ../../how-to/file-at-aeat.md:20
+#: ../../how-to/file-at-aeat.md:19
 msgid "Before you start"
 msgstr "Mielőtt hozzákezdesz"
 
-#: ../../how-to/file-at-aeat.md:22
+#: ../../how-to/file-at-aeat.md:21
 msgid "You need:"
 msgstr "Ezekre lesz szükséged:"
 
-#: ../../how-to/file-at-aeat.md:24
+#: ../../how-to/file-at-aeat.md:23
 msgid ""
 "An active taxpayer profile carrying `--name` and `--surnames`, or filing "
-"refuses because it cannot stamp the operator name. Create one with `aeat "
-"config profile create`; see [Set up your taxpayer profile](profile-"
+"refuses because it cannot stamp the taxpayer's name. Create one with "
+"`aeat config profile create`; see [Set up your taxpayer profile](profile-"
 "setup.md)."
 msgstr ""
-"Egy aktív adózói profil, amely tartalmazza a `--name` és a `--surnames` "
-"értéket, különben a benyújtás elutasít, mert nem tudja ráírni a kezelő "
-"nevét. Hozz létre egyet az `aeat config profile create` paranccsal; lásd:"
-" [Állítsd be az adózói profilodat](profile-setup.md)."
+"Egy aktív adózói profil, amely hordozza a `--name` és a `--surnames` "
+"értékét, különben a benyújtás elutasításra kerül, mert nem tudja "
+"rábélyegezni az adózó nevét. Hozz létre egyet az `aeat config profile "
+"create` paranccsal; lásd [Állítsd be az adózói profilodat](profile-"
+"setup.md)."
 
-#: ../../how-to/file-at-aeat.md:28
+#: ../../how-to/file-at-aeat.md:26
 msgid ""
-"A verified saved calculation (work unit) for the modelo and period you "
-"want to file. If your draft isn't verified yet, see [verification reports"
-"](verification-reports.md)."
+"A saved calculation that passed the check, for the modelo and period you "
+"want to file. If your draft hasn't passed the check yet, see [checking a "
+"draft declaration](verification-reports.md)."
 msgstr ""
-"Egy ellenőrzött, mentett számítás (munkaegység) a benyújtani kívánt "
-"modelóhoz és időszakhoz. Ha a piszkozatod még nincs ellenőrizve, lásd: "
-"[ellenőrzési jelentések](verification-reports.md)."
+"Egy ellenőrzésen átment, mentett számítás a benyújtani kívánt "
+"nyomtatványhoz és időszakhoz. Ha a piszkozata még nem ment át az "
+"ellenőrzésen, lásd: [bevallás-piszkozat ellenőrzése](verification-"
+"reports.md)."
 
-#: ../../how-to/file-at-aeat.md:31
+#: ../../how-to/file-at-aeat.md:29
 msgid ""
 "Your own AEAT portal credentials, a digital certificate or Cl@ve. These "
 "are your credentials for AEAT's website, separate from anything "
 "configured inside `aeat`. The tool's [AEAT authentication](authenticate-"
 "with-aeat.md) is for read-only data pulls, not for filing."
 msgstr ""
-"A saját AEAT-portálos hitelesítő adataid, egy digitális tanúsítvány vagy "
-"Cl@ve. Ezek a te hitelesítő adataid az AEAT webhelyéhez, függetlenül "
+"A saját AEAT-portálos hitelesítő adataid: egy digitális tanúsítvány vagy "
+"Cl@ve. Ezek az AEAT webhelyéhez tartozó hitelesítő adataid, függetlenül "
 "attól, ami az `aeat`-ben be van állítva. Az eszköz [AEAT-hitelesítése"
 "](authenticate-with-aeat.md) csak olvasható adatlekérésekhez való, nem "
 "benyújtáshoz."
 
-#: ../../how-to/file-at-aeat.md:36
+#: ../../how-to/file-at-aeat.md:34
 msgid ""
 "Every `aeat` command on this page needs your passphrase; the tool prompts"
 " for it."
@@ -116,7 +119,7 @@ msgstr ""
 "Az ezen az oldalon szereplő minden `aeat` parancshoz kell a jelmondatod; "
 "az eszköz bekéri."
 
-#: ../../how-to/file-at-aeat.md:39
+#: ../../how-to/file-at-aeat.md:37
 msgid ""
 "`aeat` prints its messages in Spanish unless you choose another language."
 " Add `--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one "
@@ -130,66 +133,67 @@ msgstr ""
 "alapértelmezést a profilodhoz az `aeat config profile edit --output-"
 "language en` paranccsal. A dokumentáció példái angol nyelven készültek."
 
-#: ../../how-to/file-at-aeat.md:45
+#: ../../how-to/file-at-aeat.md:43
 msgid ""
 "If you're new to the workflow as a whole, start with the "
 "[quickstart](quickstart.md)."
 msgstr ""
-"Ha a munkafolyamat egésze még új számodra, kezdd a "
+"Ha most ismerkedsz a teljes munkafolyamattal, kezdd a "
 "[gyorsindítóval](quickstart.md)."
 
-#: ../../how-to/file-at-aeat.md:49
+#: ../../how-to/file-at-aeat.md:47
 msgid "The filing chain"
 msgstr "A benyújtási lánc"
 
-#: ../../how-to/file-at-aeat.md:51
+#: ../../how-to/file-at-aeat.md:49
 msgid ""
 "The sequence below runs the machine half of the filing. It starts from a "
-"classified, evidenced Modelo 303 for the first quarter of 2026 that is "
-"already calculated and verified. It confirms the verified revision, "
-"exports a Modelo 303 file that AEAT will not accept because it carries "
-"the development identity, and records the local filed marker. Between the"
-" export and the marker, you present the figures at the AEAT portal "
-"yourself (steps 2 and 3). The final frame is the reconcile command you "
-"run once you have AEAT's justificante on disk; it is shown but not run "
-"here, because it needs your real receipt:"
+"classified Modelo 303 for the first quarter of 2026, with supporting "
+"documents, that is already calculated and checked. It confirms the "
+"checked calculation, exports a Modelo 303 file that AEAT will not accept "
+"because it carries the development identity, and records the filing in "
+"Cadrumo. Between the export and recording the filing, you present the "
+"figures at the AEAT portal yourself (steps 2 and 3). The last step of the"
+" sequence is the reconcile command you run once you have the AEAT receipt"
+" on disk; it is shown but not run here, because it needs your real "
+"receipt:"
 msgstr ""
 "Az alábbi sorozat a benyújtás gépi felét futtatja végig. Egy besorolt, "
-"bizonyítékokkal alátámasztott, 2026 első negyedévére szóló Modelo 303-ból"
-" indul, amely már ki van számítva és ellenőrizve van. Megerősíti az "
-"ellenőrzött revíziót, exportál egy Modelo 303 fájlt, amelyet az AEAT nem "
-"fogad el, mert a fejlesztői azonosítót hordozza, és rögzíti a helyi "
-"benyújtási jelölőt. Az export és a jelölő között te magad adod meg a "
-"számokat az AEAT-portálon (a 2. és 3. lépés). Az utolsó keret az "
-"egyeztetési parancs, amelyet akkor futtatsz, amikor az AEAT "
-"justificantéja már a lemezeden van; itt megjelenik, de nem fut le, mert a"
-" valódi igazolásod kell hozzá:"
+"bizonylatokkal alátámasztott, 2026 első negyedévére szóló Modelo 303-ból "
+"indul, amely már ki van számítva és ellenőrizve van. Megerősíti az "
+"ellenőrzött számítást, exportál egy Modelo 303 fájlt, amelyet az AEAT nem"
+" fogad el, mert a fejlesztői azonosítót hordozza, és rögzíti a benyújtást"
+" a Cadrumóban. Az export és a benyújtás rögzítése között te magad adod "
+"meg a számokat az AEAT-portálon (a 2. és 3. lépés). A sorozat utolsó "
+"lépése az egyeztetési parancs, amelyet akkor futtatsz, amikor az AEAT-"
+"igazolás már a lemezeden van; itt megjelenik, de nem fut le, mert a "
+"valódi igazolásodra van szüksége:"
 
-#: ../../how-to/file-at-aeat.md:64
+#: ../../how-to/file-at-aeat.md:63
 msgid "The rest of this page walks each step of that chain in order."
 msgstr "Ez az oldal a lánc minden lépését sorrendben végigveszi."
 
 #: ../../how-to/file-at-aeat.md:66
-msgid "Step 1: confirm the draft is verified"
-msgstr "1. lépés: győződj meg róla, hogy a piszkozat ellenőrzött"
+msgid "Step 1: confirm the draft passed the check"
+msgstr "1. lépés: erősítsd meg, hogy a piszkozat átment az ellenőrzésen"
 
 #: ../../how-to/file-at-aeat.md:68
 msgid ""
-"If no verified calculation exists, `work revision --select latest-"
-"verified` refuses; run verification first. See [verification reports"
+"If no checked calculation exists, `work revision --select latest-"
+"verified` refuses; run the check first. See [checking a draft declaration"
 "](verification-reports.md)."
 msgstr ""
 "Ha nincs ellenőrzött számítás, a `work revision --select latest-verified`"
-" elutasít; előbb futtass ellenőrzést. Lásd: [ellenőrzési jelentések"
-"](verification-reports.md)."
+" elutasítja a műveletet; először futtasd az ellenőrzést. Lásd [bevallás-"
+"piszkozat ellenőrzése](verification-reports.md)."
 
 #: ../../how-to/file-at-aeat.md:72
 msgid ""
-"Read the verified figures back with `aeat app modelo work revision`. "
-"These are the values you present at the portal, box by box."
+"Read the checked figures back with `aeat app modelo work revision`. These"
+" are the values you present at the portal, box by box."
 msgstr ""
 "Olvasd vissza az ellenőrzött értékeket az `aeat app modelo work revision`"
-" paranccsal. Ezeket az értékeket adod meg a portálon, casillánként."
+" paranccsal. Ezeket az értékeket adod meg a portálon, rovatonként."
 
 #: ../../how-to/file-at-aeat.md:75
 msgid ""
@@ -204,22 +208,23 @@ msgid ""
 "overwrite an existing file unless you add `--replace`, and it refuses an "
 "`--output` path whose parent directory does not exist."
 msgstr ""
-"Az olyan modelónál, amelynek van elrendezése, az `export` a hivatalos "
-"elrendezésben írja a fájlt, soha nem PDF-et vagy táblázatot: a legtöbb "
-"modelónál `.boe` fájlt, vagyis a BOE (Boletín Oficial del Estado) "
-"rekordelrendezésű, rögzített szélességű szövegfájlt, a Modelo 100-nál "
-"pedig XML-fájlt. Teljes egészében a gépeden fut, soha nem veszi fel a "
-"kapcsolatot az AEAT-tal, és kiírja a fájl útvonalát, méretét és SHA-256 "
-"ellenőrzőösszegét. Jegyezd fel ezt az ellenőrzőösszeget: a fájl pontos "
-"tartalmát azonosítja, ezért ha valaha felmerül a kérdés, melyik verziót "
-"nyújtottad be, számold újra a lemezen lévő fájlból, és vesd össze. Az "
-"export nem írja felül a meglévő fájlt, hacsak nem adod meg a `--replace` "
-"kapcsolót, és elutasítja azt az `--output` útvonalat, amelynek "
-"szülőkönyvtára nem létezik."
+"Az olyan nyomtatványnál, amelynek van elrendezése, az `export` a "
+"hivatalos elrendezésben írja a fájlt, soha nem PDF-et vagy táblázatot: a "
+"legtöbb nyomtatványnál `.boe` fájlt, vagyis a BOE (Boletín Oficial del "
+"Estado) szerinti fájlelrendezésű, rögzített szélességű szövegfájlt, a "
+"Modelo 100-nál pedig XML-fájlt. Teljes egészében a gépeden fut, soha nem "
+"veszi fel a kapcsolatot az AEAT-tal, és kiírja a fájl elérési útját, "
+"méretét és SHA-256 ellenőrzőösszegét. Jegyezd fel ezt az "
+"ellenőrzőösszeget: a fájl pontos tartalmát azonosítja, ezért ha felmerül,"
+" hogy melyik verziót nyújtottad be, számold újra az ellenőrzőösszeget a "
+"lemezen lévő fájlból, és vesd össze a feljegyzettel. Az export nem írja "
+"felül a meglévő fájlt, hacsak nem adod meg a `--replace` kapcsolót, és "
+"elutasítja azt az `--output` elérési utat, amelynek szülőkönyvtára nem "
+"létezik."
 
 #: ../../how-to/file-at-aeat.md:85
 msgid "Step 2: present the figures at the AEAT portal yourself"
-msgstr "2. lépés: add meg a számokat magad az AEAT-portálon"
+msgstr "2. lépés: add meg a számokat te magad az AEAT-portálon"
 
 #: ../../how-to/file-at-aeat.md:87
 msgid ""
@@ -229,7 +234,7 @@ msgid ""
 msgstr ""
 "Ez a lépés teljes egészében az `aeat`-en kívül, a böngésződben történik. "
 "Jelentkezz be a saját tanúsítványoddal vagy Cl@ve-vel. Ne várd el, hogy "
-"az eszköz e lépés bármely részét elvégezze helyetted."
+"az eszköz elvégezze helyetted a lépés bármely részét."
 
 #: ../../how-to/file-at-aeat.md:91
 msgid "Log in at AEAT's Sede Electrónica."
@@ -237,7 +242,9 @@ msgstr "Jelentkezz be az AEAT Sede Electrónicáján."
 
 #: ../../how-to/file-at-aeat.md:92
 msgid "Choose the presentation page for your modelo and period."
-msgstr "Válaszd ki a modelódhoz és időszakodhoz tartozó benyújtási oldalt."
+msgstr ""
+"Válaszd ki a nyomtatványodhoz és az időszakodhoz tartozó benyújtási "
+"oldalt."
 
 #: ../../how-to/file-at-aeat.md:93
 msgid ""
@@ -246,13 +253,13 @@ msgid ""
 "your modelo, you can try importing the exported file instead. If the "
 "portal refuses it, enter the figures in the form."
 msgstr ""
-"Írd be a kiszámított casillaértékeket az űrlapba. Ha az export nem "
+"Írd be a kiszámított rovatértékeket a nyomtatványba. Ha az export nem "
 "figyelmeztetett a fejlesztői azonosítóra, és a portál kínál fájlimportot "
-"a modelódhoz, megpróbálhatod inkább az exportált fájlt importálni. Ha a "
-"portál elutasítja, add meg a számokat az űrlapban."
+"a nyomtatványodhoz, megpróbálhatod inkább az exportált fájlt importálni. "
+"Ha a portál elutasítja, add meg a számokat a nyomtatványban."
 
 #: ../../how-to/file-at-aeat.md:97
-msgid "Review the figures the portal shows against your verified calculation."
+msgid "Review the figures the portal shows against your checked calculation."
 msgstr "Vesd össze a portál által mutatott számokat az ellenőrzött számításoddal."
 
 #: ../../how-to/file-at-aeat.md:98
@@ -266,62 +273,63 @@ msgid ""
 " advisor is the right source. The portal is theirs, not the tool's."
 msgstr ""
 "A portál képernyői idővel változnak, ezért a pontos feliratok "
-"eltérhetnek. Ha nem találod a modelódhoz tartozó benyújtási oldalt, az "
-"AEAT saját súgója vagy a tanácsadód a megfelelő forrás. A portál az övék,"
-" nem az eszközé."
+"eltérhetnek. Ha nem találod a nyomtatványodhoz tartozó benyújtási oldalt,"
+" az AEAT saját súgója vagy a tanácsadód a megfelelő forrás. A portál az "
+"övék, nem az eszközé."
 
-#: ../../how-to/file-at-aeat.md:104
-msgid "Step 3: save the justificante"
-msgstr "3. lépés: mentsd el a justificantét"
+#: ../../how-to/file-at-aeat.md:105
+msgid "Step 3: save the AEAT receipt"
+msgstr "3. lépés: mentsd el az AEAT-igazolást"
 
-#: ../../how-to/file-at-aeat.md:106
+#: ../../how-to/file-at-aeat.md:107
 #, python-brace-format
 msgid ""
-"Immediately after submitting, download the {term}`justificante`. AEAT "
-"usually offers it as a PDF."
+"Immediately after submitting, download the AEAT receipt "
+"({term}`justificante`). AEAT usually offers it as a PDF."
 msgstr ""
-"Közvetlenül a benyújtás után töltsd le a {term}`justificante`-t. Az AEAT "
-"általában PDF-ként kínálja fel."
+"Közvetlenül a benyújtás után töltsd le az AEAT-igazolást "
+"({term}`justificante`). Az AEAT általában PDF-ként kínálja fel."
 
-#: ../../how-to/file-at-aeat.md:108
+#: ../../how-to/file-at-aeat.md:110
 msgid ""
 "Keep it with your tax records. You'll use it in step 5 to reconcile "
 "AEAT's record against your local one."
 msgstr ""
-"Tartsd meg az adónyilvántartásaid mellett. Az 5. lépésben ezzel "
-"egyeztetheted az AEAT nyilvántartását a helyivel."
+"Tartsd meg az adónyilvántartásaid között. Az 5. lépésben ezzel egyezteted"
+" az AEAT nyilvántartását a helyi nyilvántartásoddal."
 
-#: ../../how-to/file-at-aeat.md:111
-msgid "Step 4: record the filing locally"
-msgstr "4. lépés: rögzítsd helyben a benyújtást"
-
-#: ../../how-to/file-at-aeat.md:113
-msgid ""
-"Only after the portal submission succeeds, record the filing in `aeat` "
-"with the `work file` frame in [the filing chain](#the-filing-chain)."
-msgstr ""
-"Csak azután, hogy a portálon a benyújtás sikerült, rögzítsd a benyújtást "
-"az `aeat`-ben a [benyújtási lánc](#the-filing-chain) `work file` "
-"keretével."
+#: ../../how-to/file-at-aeat.md:114
+msgid "Step 4: record the filing"
+msgstr "4. lépés: rögzítsd a benyújtást"
 
 #: ../../how-to/file-at-aeat.md:116
 msgid ""
-"`work file` records a local \"filed\" marker and nothing more. It does "
-"not and cannot submit anything to AEAT. Add context with the optional "
-"flags `--notes TEXT` and `--by TEXT`, for example who filed and any "
-"portal reference you want to remember."
+"Only after the portal submission succeeds, record the filing in `aeat` "
+"with the `work file` step from [the filing chain](#the-filing-chain) "
+"above."
 msgstr ""
-"A `work file` helyi „benyújtva” jelölőt rögzít, és semmi mást. Nem nyújt "
-"be, és nem is tud benyújtani semmit az AEAT-nál. Az opcionális `--notes "
-"TEXT` és `--by TEXT` kapcsolókkal környezetet adhatsz hozzá, például hogy"
-" ki nyújtotta be, és minden portálhivatkozást, amelyre emlékezni "
-"szeretnél."
+"Csak azután, hogy a portálon a benyújtás sikeres, rögzítsd a benyújtást "
+"az `aeat`-ben a fenti [benyújtási lánc](#the-filing-chain) `work file` "
+"lépésével."
 
-#: ../../how-to/file-at-aeat.md:121
+#: ../../how-to/file-at-aeat.md:119
+msgid ""
+"`work file` only records in Cadrumo that you filed, and nothing more. It "
+"does not and cannot submit anything to AEAT. Add context with the "
+"optional flags `--notes TEXT` and `--by TEXT`, for example who filed and "
+"any portal reference you want to remember."
+msgstr ""
+"A `work file` csak azt rögzíti a Cadrumóban, hogy benyújtottad a "
+"bevallást, semmi mást. Nem nyújt be és nem is tud benyújtani semmit az "
+"AEAT-hoz. Adj hozzá környezetet az opcionális `--notes TEXT` és `--by "
+"TEXT` kapcsolókkal, például hogy ki nyújtotta be, és bármely "
+"portálhivatkozást, amelyre emlékezni szeretnél."
+
+#: ../../how-to/file-at-aeat.md:124
 msgid "If the command refuses, the usual causes are:"
 msgstr "Ha a parancs elutasít, a szokásos okok:"
 
-#: ../../how-to/file-at-aeat.md:123
+#: ../../how-to/file-at-aeat.md:126
 msgid ""
 "The filing window gate: the period's filing window isn't open. A window "
 "that has already closed cannot be reopened. Recording is optional, and "
@@ -329,167 +337,171 @@ msgid ""
 "line. See the [filing calendar](filing-calendar.md) for window dates."
 msgstr ""
 "A benyújtási időablak kapuja: az időszak benyújtási időablaka nincs "
-"nyitva. Az már bezárult időablakot nem lehet újranyitni. A rögzítés "
+"nyitva. Egy már bezárult időablakot nem lehet újranyitni. A rögzítés "
 "opcionális, és az elutasító üzenet az `aeat app modelo export` parancsot "
 "nevezi meg helyi célvonalként. Az időablakok dátumaihoz lásd a "
 "[benyújtási naptárat](filing-calendar.md)."
 
-#: ../../how-to/file-at-aeat.md:127
-msgid "The verification state: the saved calculation isn't verified."
-msgstr "Az ellenőrzési állapot: a mentett számítás nincs ellenőrizve."
+#: ../../how-to/file-at-aeat.md:130
+msgid "The check: the saved calculation hasn't passed the check."
+msgstr "Az ellenőrzés: a mentett számítás nem ment át az ellenőrzésen."
 
-#: ../../how-to/file-at-aeat.md:129
+#: ../../how-to/file-at-aeat.md:132
 msgid "Read the cause shown in the error message before retrying."
 msgstr "Az újrapróbálkozás előtt olvasd el a hibaüzenetben látható okot."
 
-#: ../../how-to/file-at-aeat.md:131
-msgid "Step 5: reconcile the justificante against your local record"
-msgstr "5. lépés: egyeztesd a justificantét a helyi nyilvántartásoddal"
+#: ../../how-to/file-at-aeat.md:135
+msgid "Step 5: reconcile the AEAT receipt against your local record"
+msgstr "5. lépés: egyeztesd az AEAT-igazolást a helyi nyilvántartásoddal"
 
-#: ../../how-to/file-at-aeat.md:133
+#: ../../how-to/file-at-aeat.md:137
 msgid ""
 "Compare AEAT's receipt against your local record with the `reconcile "
-"import` command shown as the final frame of [the filing chain](#the-"
-"filing-chain). Run reconciliation after step 4 so the comparison is "
-"against your filed record. It reports a verdict of matches or mismatches."
-" The command refuses a PDF it cannot read with `The PDF could not be "
-"read`. For reading verdicts and handling mismatches, see [reconcile a "
+"import` command shown as the last step of [the filing chain](#the-filing-"
+"chain). Run reconciliation after step 4 so the comparison is against the "
+"filing you recorded. It reports whether the figures match or not. The "
+"command refuses a PDF it cannot read with `The PDF could not be read`. "
+"For reading the results and handling mismatches, see [reconcile a "
 "filing](reconcile.md)."
 msgstr ""
-"Vesd össze az AEAT igazolását a helyi nyilvántartásoddal a [benyújtási "
-"lánc](#the-filing-chain) utolsó keretként bemutatott `reconcile import` "
-"parancsával. Az egyeztetést a 4. lépés után futtasd, hogy az összevetés a"
-" benyújtott nyilvántartásoddal történjen. Az eredmény egyezés vagy "
-"eltérés. A parancs a beolvashatatlan PDF-et elutasítja a `The PDF could "
-"not be read` üzenettel. Az eredmények értelmezéséhez és az eltérések "
-"kezeléséhez lásd: [egy benyújtás egyeztetése](reconcile.md)."
+"Vesd össze az AEAT-igazolást a helyi nyilvántartásoddal a [benyújtási "
+"lánc](#the-filing-chain) utolsó lépéseként bemutatott `reconcile import` "
+"paranccsal. Futtasd az egyeztetést a 4. lépés után, hogy az összevetés az"
+" általad rögzített benyújtással történjen. Jelzi, hogy a számok "
+"egyeznek-e. A parancs a beolvashatatlan PDF-et elutasítja a `The PDF "
+"could not be read` üzenettel. Az eredmények értelmezéséhez és az "
+"eltérések kezeléséhez lásd: [egy benyújtás egyeztetése](reconcile.md)."
 
-#: ../../how-to/file-at-aeat.md:140
+#: ../../how-to/file-at-aeat.md:144
 msgid ""
 "With AEAT authentication configured, skip the manual download and let the"
-" tool fetch the receipt itself. `reconcile pull` pulls the justificante "
-"from AEAT, stores it as encrypted evidence in your profile, and "
-"reconciles in one step:"
+" tool fetch the receipt itself. `reconcile pull` pulls the AEAT receipt "
+"from AEAT, stores it encrypted in your profile, and reconciles in one "
+"step:"
 msgstr ""
-"Beállított AEAT-hitelesítéssel kihagyhatod a kézi letöltést, és az eszköz"
-" maga is lekéri az igazolást. A `reconcile pull` lehúzza a justificantét "
-"az AEAT-ról, titkosított bizonyítékként tárolja a profilodban, és egy "
-"lépésben egyeztet:"
+"Beállított AEAT-hitelesítéssel hagyd ki a kézi letöltést, és hagyd, hogy "
+"az eszköz maga hozza le az igazolást. A `reconcile pull` lehúzza az AEAT-"
+"igazolást az AEAT-tól, titkosítva tárolja a profilodban, és egy lépésben "
+"egyeztet:"
 
-#: ../../how-to/file-at-aeat.md:148
+#: ../../how-to/file-at-aeat.md:151
+#, python-brace-format
 msgid ""
-"See [Pull and store the justificante](reconcile.md#pull-and-store-the-"
-"justificante)."
+"See {ref}`Pull and store the AEAT receipt <pull-and-store-the-"
+"justificante>`."
 msgstr ""
-"Lásd: [Kérd le és tárold a justificantét](reconcile.md#pull-and-store-"
-"the-justificante)."
+"Lásd {ref}`Az AEAT-igazolás lekérése és tárolása <pull-and-store-the-"
+"justificante>`."
 
-#: ../../how-to/file-at-aeat.md:150
+#: ../../how-to/file-at-aeat.md:153
 msgid "If something goes wrong at the portal"
 msgstr "Ha valami elromlik a portálon"
 
-#: ../../how-to/file-at-aeat.md:152
+#: ../../how-to/file-at-aeat.md:155
 msgid ""
 "If the submission was rejected or interrupted, or you presented the wrong"
-" figures, do not record the local filed marker. The marker describes only"
-" a submission that succeeded at the portal."
+" figures, do not record the filing in Cadrumo. The record describes only "
+"a submission that succeeded at the portal."
 msgstr ""
-"Ha a benyújtást elutasították vagy megszakadt, vagy rossz számokat adtál "
-"meg, ne rögzítsd a helyi benyújtási jelölőt. A jelölő csak olyan "
-"benyújtást ír le, amely a portálon sikerült."
+"Ha a benyújtást elutasították vagy megszakadt, vagy rossz számokat "
+"nyújtottál be, ne rögzítsd a benyújtást a Cadrumóban. A rögzítés csak egy"
+" olyan benyújtást ír le, amely a portálon sikeres volt."
 
-#: ../../how-to/file-at-aeat.md:156
+#: ../../how-to/file-at-aeat.md:159
 msgid "Instead:"
 msgstr "Ehelyett:"
 
-#: ../../how-to/file-at-aeat.md:158
+#: ../../how-to/file-at-aeat.md:161
 msgid "Fix the draft in `aeat`."
 msgstr "Javítsd ki a piszkozatot az `aeat`-ben."
 
-#: ../../how-to/file-at-aeat.md:159
-msgid "Re-verify the calculation."
+#: ../../how-to/file-at-aeat.md:162
+msgid "Check the calculation again."
 msgstr "Ellenőrizd újra a számítást."
 
-#: ../../how-to/file-at-aeat.md:160
+#: ../../how-to/file-at-aeat.md:163
 msgid "Read the corrected figures back with `aeat app modelo work revision`."
 msgstr ""
 "Olvasd vissza a javított értékeket az `aeat app modelo work revision` "
 "paranccsal."
 
-#: ../../how-to/file-at-aeat.md:161
+#: ../../how-to/file-at-aeat.md:164
 msgid "Retry the presentation at the portal."
 msgstr "Próbáld újra a benyújtást a portálon."
 
-#: ../../how-to/file-at-aeat.md:163
+#: ../../how-to/file-at-aeat.md:166
 msgid ""
 "If you filed by uploading a `.boe` file, re-export it to a new path and "
 "compare the checksum it prints with the one you recorded. If they match, "
 "you have the same file you presented before."
 msgstr ""
-"Ha `.boe` fájl feltöltésével nyújtottál be, exportáld újra új útvonalra, "
-"és vesd össze a kiírt ellenőrzőösszeget a feljegyzettel. Ha egyeznek, "
-"ugyanaz a fájl van meg, amelyet korábban benyújtottál."
+"Ha `.boe` fájl feltöltésével nyújtottad be, exportáld újra új elérési "
+"útra, és vesd össze a kiírt ellenőrzőösszeget azzal, amit feljegyeztél. "
+"Ha egyeznek, ugyanaz a fájl van nálad, amelyet korábban bemutattál."
 
-#: ../../how-to/file-at-aeat.md:167
+#: ../../how-to/file-at-aeat.md:170
 msgid ""
 "If the portal rejected the submission itself, consult AEAT or your "
 "advisor. The rejection happened on AEAT's side, and their message is the "
 "authoritative explanation."
 msgstr ""
-"Ha maga a portál utasította el a benyújtást, fordulj az AEAT-hoz vagy a "
+"Ha a portál magát a benyújtást utasította el, fordulj az AEAT-hoz vagy a "
 "tanácsadódhoz. Az elutasítás az AEAT oldalán történt, és az ő üzenetük a "
 "mérvadó magyarázat."
 
-#: ../../how-to/file-at-aeat.md:171
+#: ../../how-to/file-at-aeat.md:174
 msgid "Where to get help"
 msgstr "Hol kérhetsz segítséget"
 
-#: ../../how-to/file-at-aeat.md:173
+#: ../../how-to/file-at-aeat.md:176
 #, python-brace-format
 msgid ""
 "For diagnosing problems on your machine (refused commands, export errors,"
-" verification failures) see [troubleshooting](troubleshooting.md). "
-"Unfamiliar terms are defined in the {doc}`glossary "
-"</_generated/glossary>`. Before you share command output to ask for help,"
-" remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII."
+" failed checks) see [troubleshooting](troubleshooting.md). Unfamiliar "
+"terms are defined in the {doc}`glossary </_generated/glossary>`. Before "
+"you share command output to ask for help, remove personal tax identifiers"
+" such as your NIF, CIF, DNI, NIE, or NII."
 msgstr ""
 "A gépeden jelentkező problémák (elutasított parancsok, exporthibák, "
-"ellenőrzési hibák) diagnosztizálásához lásd: "
-"[hibaelhárítás](troubleshooting.md). Az ismeretlen kifejezéseket a "
-"{doc}`szójegyzék </_generated/glossary>` magyarázza. Mielőtt "
-"segítségkéréshez megosztanád egy parancs kimenetét, távolítsd el a "
-"személyes adóazonosítóidat, például a NIF-, CIF-, DNI-, NIE- vagy NII-"
-"számodat."
+"sikertelen ellenőrzések) diagnosztizálásához lásd a "
+"[hibaelhárítást](troubleshooting.md). Az ismeretlen kifejezéseket a "
+"{doc}`szójegyzék </_generated/glossary>` határozza meg. Mielőtt "
+"segítségkéréshez megosztod a parancs kimenetét, távolítsd el a személyes "
+"adóazonosítóidat, például a NIF-, CIF-, DNI-, NIE- vagy NII-azonosítót."
 
-#: ../../how-to/file-at-aeat.md:179
+#: ../../how-to/file-at-aeat.md:181
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/file-at-aeat.md:181
+#: ../../how-to/file-at-aeat.md:183
 msgid ""
-"[Import, export, and evidence](../reference/import-export-and-"
-"evidence.md) - distinguish the local upload file from official AEAT "
+"[Import, export, and supporting documents](../reference/import-export-"
+"and-evidence.md) - distinguish the local upload file from official AEAT "
 "filing proof."
 msgstr ""
-"[Importálás, exportálás és bizonyíték](../reference/import-export-and-"
-"evidence.md) - különböztesd meg a helyi feltöltési fájlt a hivatalos "
-"AEAT-benyújtási bizonyítéktól."
+"[Importálás, exportálás és bizonylatok](../reference/import-export-and-"
+"evidence.md) - különböztesse meg a helyi feltöltési fájlt a hivatalos "
+"AEAT-benyújtási igazolástól."
 
-#: ../../how-to/file-at-aeat.md:183
-msgid "[Reconcile a filing](reconcile.md) - read verdicts and resolve mismatches."
-msgstr ""
-"[Benyújtás egyeztetése](reconcile.md) - értelmezd az eredményeket, és "
-"oldd fel az eltéréseket."
-
-#: ../../how-to/file-at-aeat.md:184
+#: ../../how-to/file-at-aeat.md:185
 msgid ""
-"[Verification reports](verification-reports.md) - understand what "
-"\"verified\" means before you file."
+"[Reconcile a filed modelo against its AEAT receipt](reconcile.md) - read "
+"the results and resolve mismatches."
 msgstr ""
-"[Ellenőrzési jelentések](verification-reports.md) - értsd meg, mit jelent"
-" az „ellenőrzött”, mielőtt benyújtasz."
+"[Egy benyújtott nyomtatvány egyeztetése az AEAT-"
+"igazolással](reconcile.md) - értelmezd az eredményeket, és oldd fel az "
+"eltéréseket."
 
 #: ../../how-to/file-at-aeat.md:186
+msgid ""
+"[Check a draft declaration and act on the issues](verification-"
+"reports.md) - understand what a passed check means before you file."
+msgstr ""
+"[Bevallás-piszkozat ellenőrzése és teendők a problémák alapján"
+"](verification-reports.md) - értse meg, mit jelent az átment ellenőrzés, "
+"mielőtt benyújt."
+
+#: ../../how-to/file-at-aeat.md:188
 msgid ""
 "[Filing calendar](filing-calendar.md) - see when each period's filing "
 "window opens and closes."
@@ -497,15 +509,14 @@ msgstr ""
 "[Benyújtási naptár](filing-calendar.md) - nézd meg, mikor nyílik és zárul"
 " az egyes időszakok benyújtási időablaka."
 
-#: ../../how-to/file-at-aeat.md:188
+#: ../../how-to/file-at-aeat.md:190
 msgid ""
 "[Read AEAT notifications](check-aeat-notifications.md) - read AEAT's view"
 " after you file."
 msgstr ""
 "[AEAT-értesítések és egyéb élő adatok beolvasása](check-aeat-"
-"notifications.md) - olvasd el az AEAT nézetét, miután benyújtottál."
+"notifications.md) - olvasd el az AEAT nézetét, miután benyújtod."
 
-#: ../../how-to/file-at-aeat.md:190
+#: ../../how-to/file-at-aeat.md:192
 msgid "[CLI reference](../cli/index.rst) - full command and flag details."
 msgstr "[CLI-referencia](../cli/index.rst) - teljes parancs- és kapcsolórészletek."
-

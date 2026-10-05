@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from threading import get_ident
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -12,6 +14,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -33,6 +36,8 @@ from ...user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OperationAccessRequest,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -40,7 +45,7 @@ from ...user_profile.access_contracts import (
     SessionState,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ...user_profile.access_policy import evaluate_operation_access
+from ...user_profile.operation_access_policy import evaluate_operation_access
 from ..llm_diagnostics import LlmConfidenceProviderMetrics, LlmDiagnosticsReport, LlmUsageCostProviderMetrics
 from ..llm_diagnostics_operation import (
     LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,
@@ -218,6 +223,78 @@ def test_real_registry_compiles_and_request_threshold_keeps_legacy_bounds() -> N
             LedgerLlmDiagnosticsRequest(profile_id=_PROFILE, low_confidence_threshold=PublicDecimal(decimal=threshold))
 
 
+def _submitted(
+    *,
+    profile_id: UUID = _PROFILE,
+    definition_id: str = _OPERATION_ID,
+    action: AccessAction = AccessAction.SUBMIT,
+    periods: frozenset[Period] = frozenset(),
+) -> OperationAccessRequest:
+    return OperationAccessRequest(
+        profile_id=profile_id,
+        definition_id=definition_id,
+        action=action,
+        frontend=OperationFrontendProjection.MCP,
+        periods=periods,
+        period_independent=not periods,
+        destination_id=uuid4(),
+    )
+
+
+def _llm_context(
+    action: AccessAction, *, frontend: OperationFrontendProjection, admitted: OperationAccessRequest
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=action,
+        frontend=frontend,
+        contract=_registry().lookup_public_contract(_OPERATION_ID),
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted,
+    )
+
+
+@pytest.mark.parametrize("action", [AccessAction.OBSERVE, AccessAction.RESULT])
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.MCP, OperationFrontendProjection.CLI])
+def test_later_actions_replay_the_admission_from_a_fresh_session_and_any_frontend(
+    action: AccessAction, frontend: OperationFrontendProjection
+) -> None:
+    """A later session has a new destination and may use another frontend; observation stays available."""
+    fresh = _llm_context(action, frontend=frontend, admitted=_submitted())
+    assert fresh.admitted_request is not None and fresh.admitted_request.destination_id != fresh.destination_id
+
+    resolved = resolve_ledger_llm_diagnostics_access(_access_request(), fresh)
+
+    assert resolved.request.frontend is frontend
+    assert resolved.request.destination_id == fresh.destination_id
+    assert resolved.policy.disclosures
+    assert all(item.destination_id == fresh.destination_id for item in resolved.policy.disclosures)
+    for foreign in (
+        _submitted(profile_id=_OTHER),
+        _submitted(definition_id="ledger.other"),
+        _submitted(action=AccessAction.START),
+        _submitted(periods=frozenset({Period.from_year_and_code(2026, "1T")})),
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_ledger_llm_diagnostics_access(
+                _access_request(), replace(fresh, admitted_request=foreign, authority_operation=_PIN)
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START])
+def test_entry_actions_need_held_authority_even_with_a_matching_admission(action: AccessAction) -> None:
+    context = _llm_context(action, frontend=OperationFrontendProjection.MCP, admitted=_submitted())
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_ledger_llm_diagnostics_access(_access_request(), context)
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    held = replace(context, authority_operation=_PIN)
+    assert resolve_ledger_llm_diagnostics_access(_access_request(), held).request.action is action
+
+
 def test_result_release_rejects_foreign_subject_and_terminal_effect() -> None:
     """A typed report alone cannot bypass receipt, profile, or effect binding."""
     report = _report()
@@ -264,7 +341,8 @@ async def test_executor_reads_canonical_report_under_exact_profile_and_retained_
     """The owner stores only one complete NONE result and rejects a foreign pin."""
     from .. import llm_diagnostics_operation as module
 
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    caller_thread = get_ident()
+    bucket_reads: list[tuple[int, tuple[str, ...]]] = []
     values: list[BaseModel] = []
     effects: list[OperationEffect] = []
 
@@ -275,11 +353,22 @@ async def test_executor_reads_canonical_report_under_exact_profile_and_retained_
             return "f" * 64
 
     class Events:
-        async def phase(self, _code: str) -> None:
-            return None
+        def __init__(self) -> None:
+            self.phases: list[str] = []
+
+        async def phase(self, code: str) -> None:
+            self.phases.append(code)
 
         async def effect(self, effect: OperationEffect) -> None:
             effects.append(effect)
+
+    events = Events()
+
+    def active_bucket_id() -> str:
+        bucket_reads.append((get_ident(), tuple(events.phases)))
+        return str(_PROFILE)
+
+    monkeypatch.setattr(module, "require_active_bucket_id", active_bucket_id)
 
     context = cast(
         OperationExecutorContext,
@@ -290,11 +379,16 @@ async def test_executor_reads_canonical_report_under_exact_profile_and_retained_
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=_PIN,
-            events=Events(),
+            events=events,
             operands=Operands(),
         ),
     )
     assert await LedgerLlmDiagnosticsExecutor(_ports).execute(_request(), context) == "f" * 64
+    assert events.phases == [_OPERATION_ID]
+    assert len(bucket_reads) == 2
+    assert bucket_reads[0][1] == ()
+    assert bucket_reads[1][1] == (_OPERATION_ID,)
+    assert all(thread_id != caller_thread for thread_id, _phases in bucket_reads)
     assert effects == [OperationEffect.NONE]
     assert len(values) == 1 and isinstance(values[0], LedgerLlmDiagnosticsExecutionResult)
     assert values[0].projection.report.total_calls == 2
@@ -309,6 +403,72 @@ async def test_executor_reads_canonical_report_under_exact_profile_and_retained_
     with pytest.raises(ProfileAccessRefusedError) as refused:
         await LedgerLlmDiagnosticsExecutor(wrong_pin).execute(_request(), context)
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+@pytest.mark.asyncio
+async def test_executor_identity_mismatch_refuses_on_caller_thread_before_bucket_phase_or_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Identity refusal stays ahead of both threaded bucket checks and diagnostics composition."""
+    from .. import llm_diagnostics_operation as module
+
+    caller_thread = get_ident()
+    identity_threads: list[int] = []
+    bucket_reads: list[int] = []
+    provider_calls: list[tuple[UUID, PinnedAuthorityOperation]] = []
+    phases: list[str] = []
+    require_identity = module.require_profile_operation_identity
+
+    def record_identity_check(
+        request: OperationRequest[LedgerLlmDiagnosticsRequest],
+        context: OperationExecutorContext,
+        profile_id: UUID,
+        *,
+        expected_subject_ref: str | None = None,
+    ) -> None:
+        identity_threads.append(get_ident())
+        require_identity(request, context, profile_id, expected_subject_ref=expected_subject_ref)
+
+    def active_bucket_id() -> str:
+        bucket_reads.append(get_ident())
+        return str(_PROFILE)
+
+    def ports(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> LedgerLlmDiagnosticsOperationPorts:
+        provider_calls.append((profile_id, operation))
+        return _ports(profile_id=profile_id, operation=operation)
+
+    class Events:
+        async def phase(self, code: str) -> None:
+            phases.append(code)
+
+        async def effect(self, _effect: OperationEffect) -> None:
+            return None
+
+    monkeypatch.setattr(module, "require_profile_operation_identity", record_identity_check)
+    monkeypatch.setattr(module, "require_active_bucket_id", active_bucket_id)
+    request = _request()
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            identity=OperationIdentity(
+                operation_id="e" * 64,
+                definition_id=f"{_OPERATION_ID}.other",
+                subject_ref=request.subject_ref,
+            ),
+            authority_operation=_PIN,
+            events=Events(),
+            operands=object(),
+        ),
+    )
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        await LedgerLlmDiagnosticsExecutor(ports).execute(request, context)
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert identity_threads == [caller_thread]
+    assert bucket_reads == []
+    assert phases == []
+    assert provider_calls == []
 
 
 @pytest.mark.parametrize("missing", [DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES, None])
@@ -431,7 +591,7 @@ def test_mcp_result_requires_both_categories_destination_and_all_periods(
                     login_id="synthetic-login",
                     os_owner_id=binding.os_owner_id,
                     active=True,
-                    locked=False,
+                    lock_state=OsLockState.UNLOCKED,
                     unattended=LoginEligibility.ELIGIBLE,
                     credential_facilities=Availability.AVAILABLE,
                 ),

@@ -10,7 +10,6 @@ from pydantic import ValidationError
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.modelos.filing_record import (
     IvaSettlementPaymentEvidence,
-    IvaSettlementPaymentState,
     IvaSettlementRefundState,
 )
 
@@ -106,7 +105,6 @@ def test_settlement_snapshot_separates_declared_liability_from_evidenced_payment
 
     assert snapshot.declared_liability == Decimal("100.00")
     assert snapshot.evidenced_payment_amount == Decimal("25.00")
-    assert snapshot.payment_state is IvaSettlementPaymentState.PARTIALLY_EVIDENCED
 
 
 def test_identical_payment_evidence_collapses_without_erasing_its_artifact() -> None:

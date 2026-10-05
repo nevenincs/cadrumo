@@ -259,7 +259,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.verify\nverification_report_id\t0c839cf5d29ab606cd461d8ac77d51cbe8c991550881579101b5f4792b10ffbf\ncalculation_revision_id\t3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t3\nfinding\tadvisory\twarning\t\tModelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form\nfinding\tadvisory\twarning\t\tAn output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late\nfinding\tadvisory\twarning\t\tAn output transaction has no supporting evidence (binding bf64e35fb5ecb5fa5bb10d7053d2506eab6adc12441bdf97c3bc09a288b6d063, source output_iva_evidence, reason missing_transaction_evidence).\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late\nnotice\tmodelo.work.verify.finding.advisory\tModelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.\nnotice\tmodelo.work.verify.finding.advisory\tAn output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).\nnotice\tmodelo.work.verify.finding.advisory\tAn output transaction has no supporting evidence (binding bf64e35fb5ecb5fa5bb10d7053d2506eab6adc12441bdf97c3bc09a288b6d063, source output_iva_evidence, reason missing_transaction_evidence).\n"
+      "text": "operation\tmodelo.work.verify\nverification_report_id\t0c839cf5d29ab606cd461d8ac77d51cbe8c991550881579101b5f4792b10ffbf\ncalculation_revision_id\t3227116a07f3e895adacaa48e390b4d952df371de5c6d8d04b63ba06d236942e\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t3\nfinding\tadvisory\twarning\t\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late\nnotice\tmodelo.work.verify.finding.advisory\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\n"
     },
     {
       "argv": [
@@ -306,7 +306,7 @@
               "modelo": "303",
               "period": "1T"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
           },
           {
@@ -318,7 +318,7 @@
               "period": "1T",
               "software_identity_grade": "development_mock"
             },
-            "message": "The file header carries Cadrumo's all-zero development software identity; AEAT will not accept this file for presentation.",
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
             "severity": "warning"
           }
         ],

@@ -54,7 +54,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..lane_reachability import _recipes_invoked_by
+from ..lane_recipe_commands import _recipes_invoked_by
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

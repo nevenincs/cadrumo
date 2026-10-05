@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-identifiers'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e28345977673f50a0e89f6796964b61317d367aa1b9c557a7c9622292b353524'
-related:
-  - "[[2026-08-07-canonical-identifiers-plan]]"
+related: []
 ---
 
 # `canonical-identifiers` audit: `s11 contract`

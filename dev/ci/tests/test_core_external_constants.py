@@ -596,7 +596,6 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_log_file_level": "DEBUG",
         "cadrumo_log_root_level": "DEBUG",
         "cadrumo_google_drive_vault_folder_name": "cadrumo-vault",
-        "cadrumo_google_oauth_access_refresh_buffer_s": 300,
         "cadrumo_calc_sheets_recalc_delay_s": 2.0,
         "cadrumo_llm_default_max_tokens": 1024,
         "cadrumo_llm_default_temperature": 0.0,

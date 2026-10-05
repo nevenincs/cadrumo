@@ -7,7 +7,7 @@ and candidate screening required by that resolver.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -30,12 +30,7 @@ from ...domain.iva.flow import (
     is_inversion_sujeto_pasivo_flow,
 )
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
-from ...domain.iva.recargo_equivalencia import (
-    load_recargo_rate_table,
-    recargo_rate_for_applied_rate,
-    recargo_rate_record_from_fact,
-    resolve_recargo_rate_for_applied_rate,
-)
+from ...domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_rate
 from ...domain.iva.schema import IvaCategory, IvaLedgerObservationRole
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
@@ -243,6 +238,31 @@ def _invoice_line_iva_observation_without_iva(
         operation=operation,
     ):
         return None
+    return _declared_category_line_observation(
+        ledger_id=ledger_id,
+        invoice=invoice,
+        line=line,
+        category=category,
+        devengo_date=devengo_date,
+        recargo_amount=recargo_amount,
+        base_amount_eur=base_amount_eur,
+        iva_amount_eur=iva_amount_eur,
+        deduction_authority=deduction_authority,
+    )
+
+
+def _declared_category_line_observation(
+    *,
+    ledger_id: str,
+    invoice: Invoice,
+    line: InvoiceLine,
+    category: IvaCategory,
+    devengo_date: date,
+    recargo_amount: Decimal,
+    base_amount_eur: Decimal,
+    iva_amount_eur: Decimal,
+    deduction_authority: IvaLedgerObservation | None,
+) -> IvaLedgerObservation | None:
     # The rate slot still supplies the rate kind and the applied rate; only the
     # category, and the flow it implies, come from the invoice's declaration --
     # the order the bank-transaction feed resolves them in.
@@ -530,44 +550,18 @@ def _recargo_rate_divergence(
       screen's business;
     * no line identifiable as the one bearing it, so there is no base to
       compare against and a guess would be worse than silence;
-    * the table resolving no rate for that (applied rate, date) pairing. An
-      unmodelled window must NOT read as a mismatch -- that would turn a gap in
-      our own data into an accusation about the supplier's invoice.
+    * the authority containing no pairing for that (applied rate, date).
+      An unmodelled window must NOT read as a mismatch -- that would turn a
+      gap in our own data into an accusation about the supplier's invoice.
     """
-    recorded = invoice.recargo_amount
-    if recorded is None or recorded == 0:
+    recargo_inputs = _recargo_comparison_inputs(invoice, devengo_date=devengo_date)
+    if recargo_inputs is None:
         return None
-    line_index = _sole_recargo_bearing_line_index(invoice)
-    if line_index is None:
+    recorded, taxable_base, applied_rate = recargo_inputs
+    record = recargo_rate_record_for_applied_rate(applied_rate, devengo_date, operation=operation)
+    if record is None:
         return None
-    line = invoice.lines[line_index]
-    # The diagnostic has the same explicit devengo date as the recargo fact,
-    # so it resolves the persisted slot through the exact IVA authority fact.
-    applied_rate = iva_rate_percentage(line.iva_rate, devengo_date)
-    if applied_rate is None:
-        # Exempt and not-subject slots name no percentage, so there is no
-        # pairing to look up and nothing to disagree with.
-        return None
-    recargo_rate = recargo_rate_for_applied_rate(applied_rate, devengo_date, operation=operation)
-    if recargo_rate is None:
-        return None
-    records = tuple(
-        record
-        for record in load_recargo_rate_table(operation=operation)
-        if record.iva_rate == applied_rate and record.covers(devengo_date)
-    )
-    if not records:
-        return None
-    if len(records) == 1:
-        record = records[0]
-    else:
-        # Keep the exact resolver as the fail-closed overlap check. Published
-        # authorities should not produce this branch, but a malformed one must
-        # never be reduced to an arbitrary table row.
-        record = recargo_rate_record_from_fact(
-            resolve_recargo_rate_for_applied_rate(applied_rate, devengo_date, operation=operation),
-        )
-    expected = round_to_cents(line.subtotal * recargo_rate)
+    expected = round_to_cents(taxable_base * record.recargo_rate)
     if round_to_cents(recorded) == expected:
         return None
     # The provision the advisory names is the pairing fact's own grounding,
@@ -583,10 +577,25 @@ def _recargo_rate_divergence(
         recorded=round_to_cents(recorded),
         expected=expected,
         applied_rate=applied_rate,
-        recargo_rate=recargo_rate,
+        recargo_rate=record.recargo_rate,
         legal_refs=legal_refs,
         provisions=provisions,
     )
+
+
+def _recargo_comparison_inputs(invoice: Invoice, *, devengo_date: date) -> tuple[Decimal, Decimal, Decimal] | None:
+    recorded = invoice.recargo_amount
+    if recorded is None or recorded == 0:
+        return None
+    line_index = _sole_recargo_bearing_line_index(invoice)
+    if line_index is None:
+        return None
+    line = invoice.lines[line_index]
+    # Pairing uses the same explicit devengo date as the persisted rate slot.
+    applied_rate = iva_rate_percentage(line.iva_rate, devengo_date)
+    if applied_rate is None:
+        return None
+    return recorded, line.subtotal, applied_rate
 
 
 def recargo_unattributable_diagnostics(
@@ -792,6 +801,24 @@ def screened_invoice_iva_observations(
         # empty one, which switched the silence guard off without a signal.
         return ScreenedInvoiceIva(storage_degraded=True)
     _resolve_invoice_iva_registry_declarations(effective_date=period.end_date, operation=operation)
+    invoices = (
+        invoice
+        for invoice in catalogue.values()
+        if _screened_invoice_in_period(invoice, context=context, period=period)
+    )
+    return _collect_screened_invoice_results(
+        invoices,
+        ledger_observations=ledger_observations,
+        operation=operation,
+    )
+
+
+def _collect_screened_invoice_results(
+    invoices: Iterable[Invoice],
+    *,
+    ledger_observations: Sequence[IvaLedgerObservation],
+    operation: PinnedAuthorityOperation,
+) -> ScreenedInvoiceIva:
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
@@ -800,9 +827,7 @@ def screened_invoice_iva_observations(
     deduction_authority_missing: list[Invoice] = []
     recargo_rate_divergences: list[_RecargoRateDivergence] = []
     recargo_unattributable: list[Invoice] = []
-    for invoice in catalogue.values():
-        if not _screened_invoice_in_period(invoice, context=context, period=period):
-            continue
+    for invoice in invoices:
         screened = _screened_invoice_iva_result(
             invoice,
             ledger_observations=ledger_observations,

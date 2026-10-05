@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-derived-selectors'
 date: '2026-08-07'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:89959abef3206d5315c647c1971f57aa3c00afc3cb104417ad334c1f5d5140d1'
+body_hash: 'sha256:c9ac0e24f41d2fec25a6998725353f5e9a8cf0ad0a214349fab0178f29c02408'
 related:
   - "[[2026-08-04-profile-derived-selectors-adr]]"
-  - "[[2026-08-04-profile-derived-selectors-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
 ---
 
@@ -259,7 +258,7 @@ The finding states that `renta_family.cotizaciones_ss_madre_2024` has "no way fo
 
 - The field **IS declared** in the schema: `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` line 15 carries `key = "cotizaciones_ss_madre_2024"` in the `renta_family` section.
 
-- The field **IS rendered** by the profile manager: `build_profile_overview(record, schema=load_user_profile_schema())` (line 505 in `src/cadrumo/application/user_profile/_overview.py`) explicitly walks the schema and renders every declared field as an editable row whether or not a value exists. Its own docstring (line 517) states: "every declared field yields a row whether or not the profile has a value for it. A fact-driven walk would render only what is already filled in, which is precisely the information the operator does not need."
+- The field **IS rendered** by the profile manager: `build_profile_overview(record, schema=load_user_profile_schema())` (line 505 in the retired module) explicitly walks the schema and renders every declared field as an editable row whether or not a value exists. Its own docstring (line 517) states: "every declared field yields a row whether or not the profile has a value for it. A fact-driven walk would render only what is already filled in, which is precisely the information the operator does not need."
 
 - The field **IS writable**: Testing `profile_field_value_refusal("renta_family.cotizaciones_ss_madre_2024", "150.00")` returns `None`, confirming the write is accepted.
 
@@ -287,10 +286,10 @@ refusal rather than a silent zero.
 
 ## Sources
 
-- `src/cadrumo/application/user_profile/_lifecycle.py:190,197,282-283,363` - merged-set validation
-- `src/cadrumo/application/user_profile/_validation.py:107-109,161-162,173-183,479-483` - the refusal and its blocking behaviour
-- `src/cadrumo/application/user_profile/_projections.py:73,174,217,296-302` - the four builders and the mixed-ordering function
-- `src/cadrumo/application/modelo/_profile_binding.py:122,143-150,220` - the unwindowed index and compute-always
-- `src/cadrumo/domain/calculations/registry/_bindings.py:726-743` - the selector model after the as-of retirement
-- `src/cadrumo/entrypoints/cli/_config/_descendiente.py` - the stale flag help string
+- the retired module - merged-set validation
+- the retired module - the refusal and its blocking behaviour
+- the retired module - the four builders and the mixed-ordering function
+- the retired module - the unwindowed index and compute-always
+- the retired module - the selector model after the as-of retirement
+- the retired module - the stale flag help string
 - `.vault/plan/2026-08-04-profile-derived-selectors-plan.md` - the Verification criterion this record satisfies

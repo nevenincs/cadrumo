@@ -1,8 +1,8 @@
 """An amendment must state the detail rows that constitute the declaration.
 
-For M184, M232, M347 and M349 the per-counterpart rows ARE the return. The
+For M184, M232 and M349 the per-counterpart rows ARE the return. The
 amendment path never set them, and neither of the state transitions after it
-recomputes anything, so an amended M347 was filed declaring no counterparties
+recomputes anything, so an amended return was filed declaring no counterparts
 at all -- a substantive false statement about the period rather than a missing
 annex.
 
@@ -24,7 +24,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
-from ....domain.modelos.row_models import Modelo347ContraparteRow, ModeloDetailRow
+from ....domain.modelos.row_models import Modelo232VinculadaRow, ModeloDetailRow
 from .._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ..action_errors import AmendmentDetailRowsRequiredError
 from ..amendment_actions import _require_amendment_detail_rows
@@ -74,11 +74,12 @@ def _revision_id(*, detail_rows: Sequence[ModeloDetailRow] | None = None) -> str
     )
 
 
-def _counterparty() -> Modelo347ContraparteRow:
-    return Modelo347ContraparteRow(
+def _counterparty() -> Modelo232VinculadaRow:
+    return Modelo232VinculadaRow(
         nif="B12345678",
         nombre="Suministros Delta SL",
-        importe_Q1=Decimal("4000.00"),
+        pais="ES",
+        importe=Decimal("4000.00"),
     )
 
 
@@ -110,7 +111,7 @@ def test_a_modelo_whose_rows_are_not_the_declaration_needs_no_answer(modelo: str
 def test_supplied_rows_are_carried_through_unchanged() -> None:
     """The guard resolves, it does not filter."""
     row = _counterparty()
-    assert _require_amendment_detail_rows(modelo="347", filing_year=_FILING_YEAR, supplied=[row]) == (row,)
+    assert _require_amendment_detail_rows(modelo="232", filing_year=_FILING_YEAR, supplied=[row]) == (row,)
 
 
 def test_detail_rows_move_the_revision_content_address() -> None:

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:a1df0138b0862881f45f514dffe136ca7438885272527c5e28fe1e9ef9d7228c'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+related: []
 ---
 
 # `object-name-declustering` audit: `S25 graph cache review`

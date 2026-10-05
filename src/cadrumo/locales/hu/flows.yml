@@ -19,20 +19,6 @@ flows:
     select_unknown: 'Válassz az elfogadott értékek közül: %{choices}.'
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
-  login:
-    cancel_button: Mégse
-    intro: Válaszd ki a megnyitni kívánt profilt, és írd be a hozzá tartozó jelszót.
-      Semmi sem nyílik meg, amíg a jelszót el nem fogadja a program.
-    password_hint: Az a jelszó, amelyet a profil létrehozásakor választottál. Nem
-      állítható vissza.
-    password_label: Jelszó
-    profile_label: Profil
-    refusal:
-      password_required: Írd be az ehhez a profilhoz tartozó jelszót.
-      unlock_failed: A profilt nem sikerült megnyitni.
-    section: Profil és jelszó
-    title: Jelentkezz be a profilodba
-    unlock_button: Bejelentkezés
   manager:
     action:
       auth_clave_movil_route_app_request: Kérés az alkalmazásban
@@ -54,7 +40,7 @@ flows:
       running: A profil ellenőrzése és a beállítás befejezése…
     edit:
       cancel: Mégse
-      choose_one: Válasszon egy lehetőséget, vagy a mégse gombbal hagyja változatlanul
+      choose_one: Válassz egy lehetőséget, vagy a mégse gombbal hagyd változatlanul
         az értéket.
       clear: Törlés
       completed_refresh_unavailable: A művelet befejeződött, de a frissített nézet
@@ -81,35 +67,26 @@ flows:
     help:
       about: 'Erről a beállításról:'
       what: 'Mi ez:'
-      where: 'Hol találja:'
+      where: 'Hol találod:'
       why: 'Miért kell:'
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
     onboarding:
       continue: Tovább
-      done: A beállítás kész. Lépjen tovább a munkaterületre, vagy adjon meg további
-        opcionális adatokat alább.
       finish: Beállítás befejezése
       heading: Profil beállítása
-      intro: Itt csak a bevallások elkészítéséhez szükséges válaszokat kérjük. Nyomja
-        meg a Tovább gombot, és válaszoljon minden kérdésre; minden más opcionális,
-        és ráér később.
       progress: '{answered} / {total} kötelező válasz'
       question: '{number}. kérdés / {total} · {section}'
-      ready: Minden kötelező válasz megvan. Fejezze be a beállítást, és kezdje el
-        a bevallások elkészítését.
       required_only: Csak kötelezők
       search_empty: 'Egyetlen beállítás sem egyezik ezzel: „{query}”.'
       search_placeholder: Beállítások keresése
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} kötelező
-      sources_summary: Töltse ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaiból
+      section_pending: '! {title} - hiányzó kötelező adatok: {missing}'
+      sources_summary: Töltsd ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaidból
         gépelés helyett.
       sources_title: Adatok importálása (opcionális)
-      step: '{step}. lépés / {steps}: {section}'
-      step_finish: '{step}. lépés / {steps}: a beállítás befejezése'
-      to_workbench: Tovább a munkaterületre
+      to_workbench: Tovább a Kezdőlapra
     plantilla_media:
       average_workforce: Átlagos állományi létszám
       list_failed: A bejelentett éveket nem sikerült beolvasni. Próbáld újra.
@@ -130,6 +107,54 @@ flows:
       remove: Sor eltávolítása
       remove_confirm: Eltávolítja a(z) %{row} sort a(z) %{section} szakaszból?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Biztonságos profil létrehozva
+
+        ✓ Kötelező adatok mentve
+
+        ✓ Beállítás megerősítve'
+      answer_required: Adatok megadása
+      edit_intro: Nyiss ki egy szakaszt, majd válassz mezőt a szerkesztéshez. * Kötelező
+        · A többi opcionális. Minden módosítás azonnal mentésre kerül.
+      get_data_copy: Opcionális. Importáld az elérhető adatokat, vagy hagyd ki ezt
+        a lépést, és add meg a kötelező adatokat kézzel. A beállítás befejezéséhez
+        nincs szükség AEAT-hozzáférésre.
+      get_data_title: Adatok
+      nav_get_data: Import
+      nav_overview: Kezdés
+      nav_ready: Kész
+      nav_required: Kötelező
+      nav_review: Átnézés
+      overview_checklist: '✓ Biztonságos profil létrehozva
+
+        ○ Adatok importálása vagy a lépés kihagyása
+
+        ○ Kötelező adatok megadása
+
+        ○ Ellenőrzés és befejezés'
+      overview_copy: 'Biztonságos profilod létrejött. Csak a beállításhoz szükséges
+        adatokat kérjük, majd befejezés előtt ellenőrizheted őket. Kiléphetsz és visszatérhetsz:
+        minden válasz azonnal mentésre kerül.'
+      overview_title: Áttekintés
+      previous: Előző
+      ready_copy: Szép munka! Profilod beállítása kész, válaszaid el vannak mentve.
+        Folytasd a Kezdőlapon egy bevallás előkészítésével. Profilodat bármikor szerkesztheted.
+      ready_title: Kész
+      required_complete: Kötelező adatok kitöltve
+      required_copy: Még {missing} kötelező válasz hiányzik. A Folytatás végigvezet
+        rajtuk. A * jelű mezők kötelezők; az opcionális adatok később is megadhatók.
+      required_title: Kötelező
+      review_copy: Ellenőrizd a mentett adatokat. Nyiss ki egy szakaszt a szerkesztéshez.
+        Az opcionális mezők üresen maradhatnak. A befejezés a profil beállítását erősíti
+        meg; minden bevallás külön ellenőrzést igényel.
+      review_missing: Még {missing} kötelező válasz hiányzik. A Folytatás ezekhez
+        vezet.
+      review_saved: ✓ Minden kötelező válasz mentve. Az opcionális adatok nem akadályozzák
+        a befejezést.
+      review_title: Ellenőrzés
+      skip_import: Import kihagyása
+      start: Kezdés
+      step: '{step}/{steps}. lépés · Még {remaining} van hátra'
     title: 'Profil: {profile}'
   modelo_review:
     filter:
@@ -138,39 +163,36 @@ flows:
           atribucion_member: Jövedelem-hozzárendelési tag
           bienes_inversion_regularizacion: Beruházási javak kiigazítása
           borrador: AEAT-tervezet
-          collectible_invoice: Kimenő számla
+          collectible_invoice: Kimenő számlák
           design_constant: Tervezeti állandó
-          donativo_donor: Adományozó
           foreign_asset: Külföldi eszköz
-          gasto193_contributor: Adózónkénti költségek (193-as nyomtatvány)
+          gasto193_contributor: Adózónkénti költségek (Modelo 193)
           inventory: Készlet
           iva_compensation_annual_partition: Éves áfakompenzáció
           iva_wallet_decision: Áfaegyenleg-döntés
           ledger_impatriado_income_aggregation: Bevándorló jövedelmek összesítése
           ledger_irnr_income_aggregation: Nem rezidens jövedelmek összesítése
-          ledger_iva_aggregation: Áfanyilvántartás összesítése
-          ledger_oss_aggregation: OSS-nyilvántartás összesítése
-          ledger_renta_gastos_estimacion_directa_aggregation: Közvetlen becslésű költségek
-            összesítése
-          ledger_renta_gastos_pago_fraccionado_aggregation: Részletfizetési költségek
-            összesítése
-          ledger_renta_income_aggregation: Jövedelmek összesítése
+          ledger_iva_aggregation: Áfanyilvántartás
+          ledger_oss_aggregation: OSS-értékesítési nyilvántartás
+          ledger_renta_gastos_estimacion_directa_aggregation: Kiadási nyilvántartás
+            (közvetlen becslés)
+          ledger_renta_gastos_pago_fraccionado_aggregation: Kiadási nyilvántartás
+          ledger_renta_income_aggregation: Bevételi nyilvántartás
           ledger_transaction: Nyilvántartási tétel
-          m303_regimen_simplificado_annual_summary: 303-es nyomtatvány egyszerűsített
-            rendszer összesítő
+          m303_regimen_simplificado_annual_summary: Modelo 303 egyszerűsített rendszer
+            összesítő
           m347_third_party_operation: Harmadik féllel folytatott ügylet
+          m349_intracommunity_operation: Közösségen belüli ügylet
           manual_input: Kézi adatbevitel
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás
           profile: Profil
           prorrata_regularizacion: Arányosítás kiigazítása
           purchase_invoice_evidence: Beszerzési számla bizonylata
-          refund_operation: Visszatérítési művelet
-          related_party_operation: Kapcsolt ügylet
           relation_prefill: Kapcsolódó bevallás
           retenciones_aggregation: Levonások összesítése
           withholding: Levonási nyilvántartás
-          withholding296: Levonási kedvezményezett (296-os nyomtatvány)
+          withholding296: Levonási kedvezményezett (Modelo 296)
         estado_casilla_oficial:
           addressed: Közvetlenül megjelenített
           represented_via_binding: Kötésen keresztül megjelenített
@@ -181,6 +203,7 @@ flows:
           cross_period_dependency_unclean: Előző időszaki függőség rendezetlen
           missing_required_casilla: Kötelező mező hiányzik
           reconciliation_mismatch: Egyeztetési eltérés
+          stale_calculation: Elavult számítás
         finding_severity:
           blocking: Blokkoló
           warning: Figyelmeztetés
@@ -216,128 +239,23 @@ flows:
           alternate_binding: Alternatív kötés
           formula_binding: Képletkötés
           primary_binding: Elsődleges kötés
-  modelo_select:
-    column:
-      filing_year: Adóév
-      modelo: Modell
-      name: Név
-      period: Időszak
-      state: Állapot
-  modelo_workspace_filing:
-    column:
-      capability: Képesség
-      disposition: Diszpozíció
-    handoff: A benyújtás ezen az alkalmazáson kívül történik. Itt építsen, ellenőrizzen
-      és exportáljon, majd saját maga nyújtsa be az AEAT felé.
-    state_not_carried: Ez az oldal nem mutatja a benyújtás állapotát és előzményeit.
-    title: Benyújtás - {modelo} nyomtatvány
-    why:
-      draft_structural: A Cadrumo előre nem tudja megmondani, hogy a benyújtási tervezet
-        elkészíthető-e; ez a tervezet elkészítésekor derül ki.
-    why_line: '{capability}: {why}'
-  modelo_workspace_inputs:
-    column:
-      address: Cím
-      input_kind: Deklarált bemeneti típus
-      label: Címke
-      value: Érték
-    empty: Ez a revízió nem deklarál materializált értékeket.
-    input_kind_unmeasured: nincs mérve
-    page_bounded: '{shown} sor látható egy nagyobb halmazból; a többi sor ebből az
-      olvasásból nem érhető el.'
-    section:
-      unsectioned: Szakasz nélkül
-    title: Bemenetek - {modelo} nyomtatvány
-    values_unmeasured: Ez az oldal csak a nyomtatvány felépítését mutatja; számított
-      értékeket még nem.
   modelo_workspace_overview:
-    actions_none: Ebből a munkaterületből még nem érhető el következő lépés.
-    actions_suggested: 'Javasolt következő lépések: {actions}'
     column:
-      capability: Képesség
-      disposition: Diszpozíció
       field: Mező
       value: Érték
-    label:
-      filing_year: Adóév
-      law_selected: Jogszabály által kiválasztott revízió
-      modelo: Nyomtatvány
-      period: Időszak
-      requested_assertion: Kért revíziós állítás
-      review_status: Felülvizsgálati állapot
-      stored_assertion: Tárolt revíziós állítás
-      work_state: Munkaegység állapota
-      work_unit: Munkaegység
-    section:
-      address: Cím
-      capabilities: Képességek
-      revision: Revíziós koordináták
-    title: Áttekintés - {modelo} nyomtatvány
-    value:
-      no_work_unit: még nincs munkaegység
-  modelo_workspace_provenance:
-    column:
-      resolver: Feloldó
-      source_ref: Forráshivatkozás
-      subject: Alany
-    empty: Ez a számítás nem rögzített közreműködő forrást.
-    not_applicable: Ez az oldal még nem mutatja, honnan származnak az értékek.
-    page_bounded: '{shown} sor látható egy nagyobb halmazból. Egy forrás sok sort
-      adhat, ezért a sorszám nem jelzi a teljességet.'
-    title: Eredet - {modelo} nyomtatvány
-    value:
-      unattributed: nincs hozzárendelve
-  modelo_workspace_results:
-    column:
-      casilla: Rovat
-      formula: Képlet
-      value: Érték
-    empty: Ez a számítás nem hozott létre számított casillát.
-    not_applicable: 'Ez az oldal még nem tud számított eredményeket mutatni: nem tudja
-      megkülönböztetni a számított mezőket az Ön által kitöltöttektől.'
-    page_bounded: '{shown} sor látható egy nagyobb halmazból; a többi sor ebből az
-      olvasásból nem érhető el.'
-    title: Eredmények - {modelo} nyomtatvány
-  modelo_workspace_verification:
-    axis:
-      binding_ready: Kötések készek
-      ledger_ready: Főkönyv kész
-      profile_ready: Profil kész
-      ready: Kész (előállítói verdikt)
-      registry_ready: Nyilvántartás kész
-    capability_line: 'Ellenőrzés: {disposition}'
-    column:
-      axis: Tengely
-      casilla: Rovat
-      kind: Típus
-      message: Megállapítás
-      severity: Súlyosság
-      value: Érték
-    evidence_carried: 'Alátámasztó hivatkozások és következő lépés: {entries}'
-    evidence_none: Ez az ellenőrzési képesség nem hivatkozik nyilvántartási forrásra,
-      és nem nevez meg elérhető következő lépést.
-    findings_none: A munkafelülvizsgálat nem rögzített megállapítást.
-    findings_unmeasured: Ez az oldal még nem mutatja az ellenőrzés megállapításait.
-    readiness_unmeasured: Ez az oldal még nem mutatja, hogy a bevallás kész-e.
-    section:
-      findings: Megállapítások
-      readiness: Készenléti tengelyek
-    title: Ellenőrzés - {modelo} nyomtatvány
-    value:
-      unmeasured: nincs mérve
   passphrase:
     cancel_button: Mégse
     change_button: Jelszó módosítása
     confirm_label: Új jelszó megerősítése
     current_label: Jelenlegi jelszó
-    intro: Ez lecseréli a profilját védő jelszót. Az általa védett adatok nem kerülnek
+    intro: Ez lecseréli a profilodat védő jelszót. Az általa védett adatok nem kerülnek
       újratitkosításra, csak újracsomagolásra.
     new_hint: Legalább 12 karakter, betűk, számok vagy szimbólumok keverékével.
     new_label: Új jelszó
     refusal:
       change_failed: A jelszót nem sikerült módosítani.
       confirmation_mismatch: A megerősítés nem egyezik az új jelszóval.
-      current_required: Adja meg a jelenlegi jelszavát.
+      current_required: Add meg a jelenlegi jelszavadat.
     section: Jelszó
     title: Jelszó módosítása
   progress:
@@ -352,13 +270,14 @@ flows:
   registration:
     confirm_label: Ismételd meg a jelszót
     create_button: Profil létrehozása
-    intro: 'Válassz nevet ennek a profilnak és jelszót a védelméhez. Semmi másra nincs
-      szükség: a profil a folytatás pillanatában létrejön, a többit pedig akkor töltöd
-      ki, amikor szeretnéd.'
+    intro: Válassz nevet és jelszót a biztonságos profil létrehozásához. Az adatait
+      később is megadhatod.
+    password_help: Jelszavas védelem és helyreállítás
     password_hint: Legalább {minimum_length} karakter. Néhány hétköznapi szó egymás
       után könnyebben megjegyezhető és nehezebben kitalálható, mint egy rövid, bonyolult
       szó.
     password_label: Jelszó
+    progress: 1 · Biztonságos profil létrehozása    2 · Adatok beállítása
     recovery:
       cancel_button: Mégse
       confirm_button: Felírtam
@@ -376,6 +295,7 @@ flows:
       profile_already_exists: Már létezik '%{profile}' nevű profil. Válassz másik
         nevet, vagy lépj ki erről a képernyőről, és jelentkezz be abba a profilba.
       username_required: Adj meg egy nevet ennek a profilnak.
+    requirements: A név és mindkét jelszómező kötelező. A nyelvet később is megváltoztathatod.
     section: Név és jelszó
     strength:
       fair: Megfelelő.

@@ -6,7 +6,7 @@ casillas must be hand-entered, which are optional, which the bucket ledger
 populates automatically, and which come from the active taxpayer profile
 (warning when a profile-derivable coefficient is still unset). This module
 proves the classification against committed, non-trivial bindings in the REAL
-bundled registry for Modelos 100, 130, and 390, plus the profile-coefficient
+bundled registry for Modelos 100, 130, 202 and 390, plus the profile-coefficient
 warning against a REAL partial taxpayer profile. Expected rows are anchored to
 those registry declarations rather than produced by a second implementation
 of the classifier under test.
@@ -43,6 +43,10 @@ _M130_PERIOD = "2T"
 _M100_MODELO = "100"
 _M100_YEAR = 2025
 _M100_PERIOD = "0A"
+
+_M202_MODELO = "202"
+_M202_YEAR = 2025
+_M202_PERIOD = "1P"
 
 _M390_MODELO = "390"
 _M390_YEAR = 2025
@@ -138,10 +142,37 @@ def test_requires_classifies_real_m130_sources_with_bound_profile(
     assert result["profile_checked"] is True
 
 
-def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_sources(
+def test_requires_lists_relation_prefill_rows_with_their_bindings(
     invoke_requires: Callable[[list[str]], Result],
 ) -> None:
-    """Real M100 alternates remain visible instead of collapsing to the primary."""
+    """M202's instalments read the prior year's Modelo 200 through relation prefills."""
+    invocation = invoke_requires(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "requires",
+            _M202_MODELO,
+            "--year",
+            str(_M202_YEAR),
+            "--period",
+            _M202_PERIOD,
+        ],
+    )
+    assert invocation.exit_code == 0, invocation.output
+    result = unwrap_schema_envelope(invocation.output)
+    relation_rows = {(row["number"], row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
+    assert {
+        ("01", "modelo-202-cuota-base-ejercicio-anterior", "relation_prefill"),
+        ("30", "modelo-202-pagos-fraccionados-anteriores", "relation_prefill"),
+    } <= relation_rows
+
+
+def test_requires_advises_on_unbucketed_sources(
+    invoke_requires: Callable[[list[str]], Result],
+) -> None:
+    """A manual-input binding has no checklist bucket, so it is named in an advisory rather than dropped."""
     invocation = invoke_requires(
         [
             "--format",
@@ -158,11 +189,6 @@ def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_so
     )
     assert invocation.exit_code == 0, invocation.output
     result = unwrap_schema_envelope(invocation.output)
-    relation_pairs = {(row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
-    assert {
-        ("renta-modelo-130-pagos-fraccionados", "relation_prefill"),
-        ("renta-modelo-131-pagos-fraccionados", "relation_prefill"),
-    } <= relation_pairs
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
     assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
 

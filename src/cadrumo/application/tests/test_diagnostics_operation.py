@@ -1,17 +1,14 @@
-"""Exact-profile diagnostics, real schema/policy and bounded dispatch decisions.
+"""Exact-profile diagnostics reads and their real schema and access policy.
 
-Application port fixtures exercise the canonical report, consent and emit
-services. No test invokes a network telemetry sink or claims native acceptance.
+Application port fixtures exercise the canonical report services. No test
+claims native acceptance.
 """
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
-from threading import Event
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -19,34 +16,23 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ...core.config import Settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ...core.telemetry.emit import TelemetrySink
-from ...core.telemetry.schema import TelemetryEventPayload
-from ...core.telemetry.tier import TelemetryTier
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from .. import diagnostics_operation as module
 from ..diagnostics_operation import (
     DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
-    DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
-    DiagnosticsReadExecutionResult,
     DiagnosticsReadExecutor,
+    build_diagnostics_read_definition,
+    build_diagnostics_read_registration,
+    project_diagnostics_read_result,
+    resolve_diagnostics_read_access,
+)
+from ..diagnostics_operation_ports import DiagnosticsReadPorts
+from ..diagnostics_read_contracts import (
+    DiagnosticsReadExecutionResult,
     DiagnosticsReadKind,
     DiagnosticsReadProjection,
     DiagnosticsReadRequest,
-    DiagnosticsTelemetryFlushExecutionResult,
-    DiagnosticsTelemetryFlushExecutor,
-    DiagnosticsTelemetryFlushRequest,
-    build_diagnostics_read_definition,
-    build_diagnostics_read_registration,
-    build_diagnostics_telemetry_flush_definition,
-    build_diagnostics_telemetry_flush_registration,
-    project_diagnostics_read_result,
-    project_diagnostics_telemetry_flush_result,
-    resolve_diagnostics_read_access,
-    resolve_diagnostics_telemetry_flush_access,
 )
-from ..diagnostics_operation_ports import DiagnosticsReadPorts, DiagnosticsTelemetryFlushPorts
 from ..diagnostics_run_health import (
     build_error_breakdown,
     build_latency_report,
@@ -55,6 +41,7 @@ from ..diagnostics_run_health import (
     list_recent_runs,
 )
 from ..diagnostics_run_health_ports import DiagnosticAuthProbeResult, DiagnosticRunRecord
+from ..operations import profile_guard
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ..operations.owner import OperationExecutorContext
@@ -74,6 +61,7 @@ from ..user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -81,7 +69,7 @@ from ..user_profile.access_contracts import (
     SessionState,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.access_policy import evaluate_operation_access
+from ..user_profile.operation_access_policy import evaluate_operation_access
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -215,31 +203,20 @@ def _read_factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> D
     raise AssertionError("schema compilation must not compose persistence")
 
 
-def _flush_factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> DiagnosticsTelemetryFlushPorts:
-    raise AssertionError("schema compilation must not construct a telemetry sink")
-
-
 def _registry() -> OperationRegistry:
     read = build_diagnostics_read_definition(_read_factory)
-    flush = build_diagnostics_telemetry_flush_definition(_flush_factory)
     return OperationRegistry(
-        definitions=(read, flush),
-        public_registrations=(
-            build_diagnostics_read_registration(read),
-            build_diagnostics_telemetry_flush_registration(flush),
-        ),
+        definitions=(read,),
+        public_registrations=(build_diagnostics_read_registration(read),),
     )
 
 
-def test_both_real_registrations_compile_closed_nested_schemas() -> None:
+def test_real_registration_compiles_closed_nested_schemas() -> None:
     registry = _registry()
     read = registry.lookup_public_contract(DIAGNOSTICS_READ_OPERATION_DEFINITION_ID)
-    flush = registry.lookup_public_contract(DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID)
     assert read.permitted_frontends == frozenset(OperationFrontendProjection)
-    assert flush.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-    assert read.result_schema is not None and flush.result_schema is not None
+    assert read.result_schema is not None
     assert read.request_schema.schema_version == read.result_schema.schema_version == 1
-    assert flush.request_schema.schema_version == flush.result_schema.schema_version == 1
 
 
 @pytest.mark.parametrize("kind", ["run_health", "runs", "latency", "errors", "llm_usage"])
@@ -247,7 +224,7 @@ def test_both_real_registrations_compile_closed_nested_schemas() -> None:
 async def test_read_preserves_complete_canonical_report_and_filters(
     kind: DiagnosticsReadKind, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     runs, probe = _Runs(), _Probe()
 
     def factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> DiagnosticsReadPorts:
@@ -283,7 +260,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             since=request.payload.since,
             until=request.payload.until,
             provider=request.payload.provider,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
             auth_probe_port=canonical_probe,
         )
         assert projection.run_health.to_report().session_stale
@@ -294,7 +271,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             until=request.payload.until,
             provider=request.payload.provider,
             limit=1,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
         )
         assert tuple(row.model_dump() for row in projection.runs) == tuple(row.model_dump() for row in canonical)
         assert projection.runs[0].run_id == "b"
@@ -304,7 +281,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             since=request.payload.since,
             until=request.payload.until,
             provider=request.payload.provider,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
         )
     elif kind == "errors":
         assert projection.errors is not None
@@ -314,7 +291,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
                 since=request.payload.since,
                 until=request.payload.until,
                 provider=request.payload.provider,
-                run_telemetry_port=canonical_runs,
+                run_record_port=canonical_runs,
             ).model_dump()
         )
     else:
@@ -323,7 +300,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             since=request.payload.since,
             until=request.payload.until,
             provider=request.payload.provider,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
         )
     with pytest.raises(ValueError):
         project_diagnostics_read_result(result, invocation.receipt(OperationEffect.UNKNOWN))
@@ -331,7 +308,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
 
 @pytest.mark.asyncio
 async def test_wrong_worker_profile_refuses_before_composition(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_OTHER))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_OTHER))
     request = OperationRequest[DiagnosticsReadRequest](
         definition_id=DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
@@ -344,7 +321,7 @@ async def test_wrong_worker_profile_refuses_before_composition(monkeypatch: pyte
 
 @pytest.mark.asyncio
 async def test_factory_cannot_substitute_another_profile_before_private_read(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     runs, probe = _Runs(), _Probe()
 
     def wrong(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> DiagnosticsReadPorts:
@@ -465,7 +442,7 @@ def _policy_decision(
                     login_id="synthetic-login",
                     os_owner_id=binding.os_owner_id,
                     active=True,
-                    locked=False,
+                    lock_state=OsLockState.UNLOCKED,
                     unattended=LoginEligibility.ELIGIBLE,
                     credential_facilities=Availability.AVAILABLE,
                 ),
@@ -536,223 +513,3 @@ def test_mcp_report_result_uses_actual_disclosure_and_all_period_policy(consent:
         assert decision.code is (
             AccessDenialCode.PERIOD_DENIED if consent == "restricted_periods" else AccessDenialCode.DISCLOSURE_DENIED
         )
-
-
-def test_flush_commit_is_cli_only_and_absent_for_dry_run() -> None:
-    registry = _registry()
-    contract = registry.lookup_public_contract(DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID)
-    for dry_run in (True, False):
-        request = OperationRequest[BaseModel](
-            definition_id=contract.definition_id,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-            payload=DiagnosticsTelemetryFlushRequest(profile_id=_PROFILE, dry_run=dry_run),
-        )
-        context = OperationAccessContext(
-            profile_id=_PROFILE,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=_PIN,
-        )
-        resolved = resolve_diagnostics_telemetry_flush_access(request, context)
-        assert (AccessAction.COMMIT in resolved.policy.actions) is (not dry_run)
-        with pytest.raises(ProfileAccessRefusedError) as refused:
-            resolve_diagnostics_telemetry_flush_access(
-                request, replace(context, frontend=OperationFrontendProjection.MCP)
-            )
-        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
-
-
-def _enabled_settings() -> Settings:
-    return Settings(
-        cadrumo_telemetry_opt_in=True,
-        cadrumo_telemetry_tier=TelemetryTier.FULL,
-        cadrumo_telemetry_endpoint="https://telemetry.invalid/collect",
-    )
-
-
-class _FlushHarness:
-    def __init__(self, *, settings: Settings | None = None) -> None:
-        self.invocation = _Invocation(DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID)
-        self.runs, self.probe = _Runs(), _Probe()
-        self.settings = settings if settings is not None else _enabled_settings()
-        self.current_settings = self.settings
-        self.settings_reads = 0
-        self.sink_settings: list[Settings] = []
-        self.sent: list[TelemetryEventPayload] = []
-        self.sink_error = False
-        self.factory_error = False
-        self.send_entered = Event()
-        self.send_release: Event | None = None
-
-    def load_settings(self) -> Settings:
-        self.settings_reads += 1
-        return self.settings if self.settings_reads == 1 else self.current_settings
-
-    def sink_factory(self, settings: Settings) -> TelemetrySink:
-        assert not self.invocation.commit.active
-        self.sink_settings.append(settings)
-        if self.factory_error:
-            raise RuntimeError("synthetic pre-dispatch factory failure")
-        owner = self
-
-        class Sink:
-            def send(self, payload: TelemetryEventPayload) -> None:
-                assert not owner.invocation.commit.active
-                owner.sent.append(payload)
-                owner.send_entered.set()
-                if owner.send_release is not None:
-                    assert owner.send_release.wait(timeout=5)
-                if owner.sink_error:
-                    raise RuntimeError("synthetic sink failure after invocation")
-
-        return Sink()
-
-    def factory(self, *, profile_id: UUID, operation: PinnedAuthorityOperation) -> DiagnosticsTelemetryFlushPorts:
-        assert profile_id == _PROFILE and operation is _PIN
-        return DiagnosticsTelemetryFlushPorts(
-            profile_id,
-            operation,
-            self.runs,
-            self.probe,
-            self.load_settings,
-            self.sink_factory,
-        )
-
-    async def execute(self, **fields: object) -> str:
-        request = OperationRequest[DiagnosticsTelemetryFlushRequest](
-            definition_id=DIAGNOSTICS_TELEMETRY_FLUSH_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-            payload=DiagnosticsTelemetryFlushRequest.model_validate({"profile_id": _PROFILE, **fields}),
-        )
-        return await DiagnosticsTelemetryFlushExecutor(self.factory).execute(request, self.invocation.context)
-
-    def result(self) -> DiagnosticsTelemetryFlushExecutionResult:
-        result = self.invocation.operands.values[0]
-        assert isinstance(result, DiagnosticsTelemetryFlushExecutionResult)
-        return result
-
-
-@pytest.mark.parametrize("dry_run", [True, False])
-@pytest.mark.asyncio
-async def test_flush_dry_and_current_consent_noop_have_none_effect(
-    dry_run: bool, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
-    harness = _FlushHarness()
-    harness.current_settings = Settings(cadrumo_telemetry_endpoint="https://telemetry.invalid/collect")
-    assert await harness.execute(dry_run=dry_run, acknowledged=True) == "f" * 64
-    result = harness.result()
-    projection = result.projection
-    assert not projection.sent and not harness.sent and not harness.sink_settings
-    assert projection.preview.would_send is dry_run
-    assert len(harness.runs.windows) == harness.probe.calls == 1
-    assert harness.invocation.events.effects == [OperationEffect.NONE]
-    assert harness.invocation.commit.entries == (0 if dry_run else 1)
-    restored = projection.preview.to_preview()
-    assert restored.payload.counters == {"runs": 4, "succeeded": 2, "failed": 2}
-    assert restored.payload.timings_ms == {}
-    assert (
-        project_diagnostics_telemetry_flush_result(result, harness.invocation.receipt(OperationEffect.NONE))
-        == projection
-    )
-
-
-@pytest.mark.asyncio
-async def test_explicit_overrides_cross_worker_and_sink_attempt_is_unknown_outside_commit(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
-    harness = _FlushHarness(settings=Settings())
-    assert (
-        await harness.execute(
-            dry_run=False,
-            acknowledged=True,
-            opt_in=True,
-            tier=TelemetryTier.FULL,
-            endpoint="https://override.invalid/collect",
-        )
-        == "f" * 64
-    )
-    result = harness.result()
-    assert result.projection.sent and result.projection.preview.would_send
-    assert harness.settings_reads == 2 and harness.invocation.commit.entries == 1
-    assert len(harness.sent) == len(harness.sink_settings) == 1
-    assert harness.sink_settings[0].cadrumo_telemetry_endpoint == "https://override.invalid/collect"
-    assert harness.sent[0] == result.projection.preview.to_preview().payload
-    assert harness.invocation.events.effects == [OperationEffect.UNKNOWN, OperationEffect.UNKNOWN]
-    assert (
-        project_diagnostics_telemetry_flush_result(result, harness.invocation.receipt(OperationEffect.UNKNOWN))
-        == result.projection
-    )
-    with pytest.raises(ValueError):
-        project_diagnostics_telemetry_flush_result(result, harness.invocation.receipt(OperationEffect.NONE))
-
-
-@pytest.mark.asyncio
-async def test_authority_revocation_at_dispatch_refuses_without_sink_or_result(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
-    harness = _FlushHarness()
-    harness.invocation.commit.refuse = True
-    with pytest.raises(ProfileAccessRefusedError) as refused:
-        await harness.execute(dry_run=False, acknowledged=True)
-    assert refused.value.reason is AccessDenialCode.GRANT_INACTIVE
-    assert not harness.sent and not harness.sink_settings and not harness.invocation.operands.values
-    assert OperationEffect.UNKNOWN not in harness.invocation.events.effects
-
-
-@pytest.mark.parametrize("failure", ["factory", "sink"])
-@pytest.mark.asyncio
-async def test_pre_dispatch_failure_and_uncertain_sink_failure_keep_truthful_effects(
-    failure: str, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
-    harness = _FlushHarness()
-    harness.factory_error = failure == "factory"
-    harness.sink_error = failure == "sink"
-    with pytest.raises(RuntimeError):
-        await harness.execute(dry_run=False, acknowledged=True)
-    assert not harness.invocation.operands.values
-    assert bool(harness.sent) is (failure == "sink")
-    assert harness.invocation.events.effects[-1] is (
-        OperationEffect.NONE if failure == "factory" else OperationEffect.UNKNOWN
-    )
-    assert not harness.invocation.commit.active
-
-
-@pytest.mark.asyncio
-async def test_cancellation_joins_owned_dispatch_before_unknown_settlement(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(_PROFILE))
-    harness = _FlushHarness()
-    release = Event()
-    harness.send_release = release
-    task = asyncio.create_task(harness.execute(dry_run=False, acknowledged=True))
-    try:
-        assert await asyncio.to_thread(harness.send_entered.wait, 5)
-        task.cancel()
-        await asyncio.sleep(0)
-        assert not task.done()
-    finally:
-        release.set()
-    with pytest.raises(asyncio.CancelledError):
-        await task
-    assert len(harness.sent) == 1 and harness.result().projection.sent
-    assert harness.invocation.events.effects[-1] is OperationEffect.UNKNOWN
-    assert not harness.invocation.commit.active
-
-
-def test_flush_projection_refuses_undeclared_payload_metric() -> None:
-    from ..diagnostics_operation import DiagnosticsTelemetryPreviewSnapshot
-    from ..diagnostics_telemetry import build_telemetry_flush_preview
-
-    preview = build_telemetry_flush_preview(
-        settings=_enabled_settings(), acknowledged=True, run_telemetry_port=_Runs(), auth_probe_port=_Probe()
-    )
-    values = preview.model_dump()
-    values["payload"]["counters"]["unreviewed"] = 1
-    with pytest.raises(ValidationError):
-        DiagnosticsTelemetryPreviewSnapshot.model_validate(values)

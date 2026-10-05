@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from ...adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ...adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from ...application.modelo.m145_communication_operation import (
+from ...application.modelo.m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID,
     M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID,

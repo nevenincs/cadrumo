@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from pathlib import Path
 from uuid import UUID
 
@@ -10,40 +9,16 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
-from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
 from ...core.period import Period
-from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
+    RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext, retain_failed_operation_resources
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
-from ..user_profile.access_contracts import AccessAction, AccessDenialCode, OperationAccessPolicy
-from ..user_profile.access_errors import ProfileAccessRefusedError
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from .filed_data_capture import capture_source_filed_data
 from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
@@ -53,11 +28,17 @@ from .filed_history_operation import (
 from .filed_single_capture_operation import (
     FiledCaptureNoticeV1,
     FiledReconciliationV1,
-    public_filed_capture_notice,
-    public_filed_reconciliation,
+    filed_capture_tally_effect,
+    public_filed_capture_tally,
 )
+from .live_operation_execution import (
+    own_provider_browser,
+    publish_live_capture_report,
+    require_exact_profile_worker,
+    track_capture_session,
+)
+from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
 from .remote_state_models import SourceFiledDataCaptureReport
-from .session import LiveSessionWriteReceipt
 
 FILED_SOURCE_CAPTURE_DEFINITION_ID = "live.filed-capture.source"
 _PHASES = ("filed-source.preflight", "filed-source.acquire", "filed-source.result")
@@ -109,21 +90,7 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> Bas
         target_modelo=report.target_modelo,
         target_year=report.target_year,
         target_period=report.target_period.registry_token,
-        captured_count=report.captured_count,
-        reached_count=report.reached_count,
-        observation_paths=report.observation_paths,
-        artefact_refs=report.artefact_refs,
-        justificante_metadata_count=report.justificante_metadata_count,
-        justificante_csvs=report.justificante_csvs,
-        filing_evidence_stamped_count=report.filing_evidence_stamped_count,
-        filing_record_ids=report.filing_record_ids,
-        filing_evidence_conflict_count=report.filing_evidence_conflict_count,
-        filing_evidence_conflict_record_ids=report.filing_evidence_conflict_record_ids,
-        casilla_count=report.casilla_count,
-        calculation_observation_count=report.calculation_observation_count,
-        calculation_observation_keys=report.calculation_observation_keys,
-        evidence_notices=tuple(public_filed_capture_notice(notice) for notice in report.evidence_notices),
-        reconciliations=tuple(public_filed_reconciliation(row) for row in report.reconciliation_results),
+        **public_filed_capture_tally(report),
     )
 
 
@@ -146,18 +113,15 @@ class FiledSourceCaptureExecutor:
     ) -> str:
         """Capture registry dependencies and publish encrypted accounting."""
         payload = request.payload
-        profile_id = canonical_profile_bucket_id(payload.profile_id)
-        if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
         period = Period.from_year_and_code(payload.year, payload.period)
-        composition = self._composition_factory(payload.output_root)
-        resources = self._browser_resources_factory()
-        context.cleanup.own(resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
-        await context.events.effect(OperationEffect.UNKNOWN)
-        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        composition = self._composition_factory(payload.output_root, operation=context.authority_operation)
+        resources = await own_provider_browser(context, self._browser_resources_factory, acquire_phase=_PHASES[1])
+        session_receipt = await track_capture_session(context, may_write=True)
         with (
             retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS),
             resources.activate(),
@@ -173,15 +137,9 @@ class FiledSourceCaptureExecutor:
                 on_session_write=session_receipt,
                 operation=context.authority_operation,
             )
-        effect = (
-            OperationEffect.UPDATED
-            if report.captured_count or report.calculation_observation_count or report.filing_evidence_stamped_count
-            else OperationEffect.NONE
+        return await publish_live_capture_report(
+            context, report, result_phase=_PHASES[2], effect=session_receipt.combine(filed_capture_tally_effect(report))
         )
-        await context.events.phase(_PHASES[2])
-        await context.events.effect(session_receipt.combine(effect))
-        async with context.cancellation.irreversible_section():
-            return await context.operands.put(report, written_at=now())
 
 
 def build_filed_source_capture_definition(
@@ -194,34 +152,14 @@ def build_filed_source_capture_definition(
     def build() -> FiledSourceCaptureExecutor:
         return FiledSourceCaptureExecutor(composition_factory, browser_resources_factory, provider_preflight)
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=FILED_SOURCE_CAPTURE_DEFINITION_ID,
         request_type=FiledSourceCaptureRequest,
         result_type=SourceFiledDataCaptureReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=FiledSourceCaptureRequest,
-            executor_type=FiledSourceCaptureExecutor,
-            build=build,
-        ),
+        executor_type=FiledSourceCaptureExecutor,
+        build=build,
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -229,29 +167,16 @@ def resolve_filed_source_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile dependency access and a fresh COMMIT fence."""
-    if request.definition_id != FILED_SOURCE_CAPTURE_DEFINITION_ID or not isinstance(
-        request.payload, FiledSourceCaptureRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    policy = OperationAccessPolicy.model_validate(
-        {**dict(resolved.policy), "actions": resolved.policy.actions | {AccessAction.COMMIT}}
+    return resolve_whole_profile_capture_access(
+        request, context, definition_id=FILED_SOURCE_CAPTURE_DEFINITION_ID, payload_type=FiledSourceCaptureRequest
     )
-    return replace(resolved, policy=policy)
 
 
 def build_filed_source_capture_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind source capture public schemas to exact whole-profile access."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=FiledSourceCaptureRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=FiledSourceCapturePublicResultV1,
-        ),
+        public_result_type=FiledSourceCapturePublicResultV1,
         result_projector=_project_result,
         access_resolver=resolve_filed_source_capture_access,
     )

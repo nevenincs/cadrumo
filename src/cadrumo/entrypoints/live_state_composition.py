@@ -9,7 +9,7 @@ dependency on a frontend package.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import datetime
@@ -19,7 +19,11 @@ from uuid import UUID
 
 from ..adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.sede.declarations import (
+    DeclaracionesRegisterSession,
+    open_declarations_register,
+    shared_playwright,
+)
 from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import (
@@ -60,7 +64,6 @@ from ..adapters.persistence.profile.calculation_observations import (
 from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ..adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..adapters.persistence.profile.justificante import JustificanteRepository
-from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.profile.notification_documents import notification_document_repository
@@ -82,14 +85,19 @@ from ..application.auth.sessions import AuthenticatedAeatSessionResult
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
-from ..application.live.filed_data_capture import FiledHistoryEventSink, capture_report_path
+from ..application.live.filed_data_capture import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
+from ..application.live.filed_history_events import FiledHistoryEventSink
 from ..application.live.filed_history_operation import FiledHistoryOperationRequest
 from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
     persistiva_compensation_history_observations_strict,
 )
-from ..application.live.filed_observation_ports import FiledObservationPersistencePorts, FiledObservationProtocol
+from ..application.live.filed_observation_ports import (
+    FiledObservationPersistencePort,
+    FiledObservationPersistencePorts,
+    FiledObservationProtocol,
+)
 from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
 from ..application.live.notification_documents import NotificationDocumentRecord, NotificationDocumentService
 from ..application.live.notification_ports import (
@@ -279,6 +287,7 @@ def compose_filed_observation_persistence_ports(
     bucket_id: str,
     output_root: Path,
     objects: SecureObjectRepository,
+    operation: PinnedAuthorityOperation,
 ) -> FiledObservationPersistencePorts:
     """Compose every filed-observation port against one secure backend.
 
@@ -286,7 +295,14 @@ def compose_filed_observation_persistence_ports(
     :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
     """
     work_unit_repository = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
-    calculation_revision_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=bucket_id,
+        objects=objects,
+        operation=operation,
+    )
+    calculation_revision_repository = calculation_binding.calculation_repository()
     filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
     bucket_event_repository = BucketEventHistoryRepository(objects=objects)
     work_lifecycle_ports = WorkLifecyclePorts(
@@ -296,8 +312,7 @@ def compose_filed_observation_persistence_ports(
     justificante_repository = JustificanteRepository(objects=objects)
     calculation_repository = CalculationObservationRepository(bucket_id=bucket_id, objects=objects)
     iva_history_repository = IvaCompensationHistoryRepository(bucket_id=bucket_id, objects=objects)
-    with bundled_indexed_authority().operation() as operation:
-        transformation = FiledDeclarationTransformationAdapter(operation=operation)
+    transformation = FiledDeclarationTransformationAdapter(operation=operation)
     return FiledObservationPersistencePorts(
         parser=FiledObservationParserAdapter(),
         transformation=transformation,
@@ -342,6 +357,7 @@ def compose_live_state(
     *,
     bucket_id: str | None = None,
     objects: SecureObjectRepository | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> LiveStateComposition:
     """Compose the shared live-state port and filed-observation ports once.
 
@@ -358,6 +374,7 @@ def compose_live_state(
         bucket_id=resolved_bucket_id,
         output_root=resolved_root,
         objects=secure_objects,
+        operation=operation,
     )
     certificate_secret_backend_factory = build_certificate_secret_backend
     browser_session_factory = default_browser_session_factory
@@ -370,6 +387,7 @@ def compose_live_state(
     remote_port = AppIvaRemoteStatePort(
         objects=secure_objects,
         filed_observation_ports=filed_ports,
+        authority_operation=operation,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
@@ -396,6 +414,7 @@ class AppIvaRemoteStatePort:
         *,
         objects: SecureObjectRepository,
         filed_observation_ports: FiledObservationPersistencePorts,
+        authority_operation: PinnedAuthorityOperation,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
@@ -403,6 +422,7 @@ class AppIvaRemoteStatePort:
         """Bind the port to one secure backend and filed-observation bundle."""
         self._objects = objects
         self._filed_observation_ports = filed_observation_ports
+        self._authority_operation = authority_operation
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._browser_session_factory = browser_session_factory
         self._operator_scope_ports = operator_scope_ports
@@ -479,7 +499,11 @@ class AppIvaRemoteStatePort:
         """List persisted IVA history and authority decisions."""
         states = IvaCompensationHistoryRepository(objects=self._objects).list_periods()
         decisions = IvaWalletDecisionRepository(objects=self._objects).list_decisions()
-        carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year or now().year)
+        carry_forward = build_iva_compensation_carry_forward_report(
+            states,
+            as_of_year=as_of_year or now().year,
+            operation=self._authority_operation,
+        )
         return IvaCompensationHistoryReport(
             row_count=len(states),
             rows=tuple(_history_row(state) for state in states),
@@ -555,46 +579,14 @@ class AppIvaRemoteStatePort:
                                 },
                             )
                         declaration = candidate
-                        if progress_context is not None:
-                            progress_context.update(
-                                {
-                                    "stage": "capture_declaration_observation",
-                                    "modelo": declaration.modelo,
-                                    "ejercicio": declaration.ejercicio,
-                                    "period": declaration.period.registry_token,
-                                }
-                            )
+                        _stage_iva_history_declaration_progress(progress_context, declaration)
                         capture_timeout = settings.cadrumo_live_iva_declaration_capture_timeout_ms / 1000
-                        if effect_guard is None:
-                            try:
-                                observation = await asyncio.wait_for(
-                                    register.capture_observation(declaration, artefact_sink=persist_artefact),
-                                    timeout=capture_timeout,
-                                )
-                            except (TimeoutError, CadrumoError, OSError) as exc:
-                                failures.append(
-                                    f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
-                                    f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
-                                )
-                                continue
-                            manifest_path = store.persist_observation(observation)
-                        else:
-                            try:
-                                deferred = await asyncio.wait_for(
-                                    capture_deferred_sede_observation(register, declaration),
-                                    timeout=capture_timeout,
-                                )
-                            except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
-                                raise
-                            except (TimeoutError, CadrumoError, OSError) as exc:
-                                failures.append(
-                                    f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
-                                    f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
-                                )
-                                continue
-                            async with effect_guard():
-                                observation = deferred.persist_artefacts(persist_artefact)
-                                manifest_path = store.persist_observation(observation)
+                        captured = await _capture_one_iva_history_declaration(
+                            register, declaration, store, persist_artefact, capture_timeout, effect_guard, failures
+                        )
+                        if captured is None:
+                            continue
+                        observation, manifest_path = captured
                         paths.append(capture_report_path(manifest_path, output_root=output_root))
                         artefacts.extend(
                             artefact.storage_ref
@@ -718,13 +710,14 @@ def persist_and_reconcile_iva_compensation_wallet(
         )
     from ..application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 
-    resolved_decision_repository = decision_repository or IvaWalletDecisionRepository(
-        objects=resolved_repository.secure_object_repository,
-    )
     operation_scope = (
         nullcontext(authority_operation) if authority_operation is not None else bundled_indexed_authority().operation()
     )
     with operation_scope as operation:
+        resolved_decision_repository = decision_repository or IvaWalletDecisionRepository(
+            objects=resolved_repository.secure_object_repository,
+            operation=operation,
+        )
         snapshot = operation.snapshot(
             Modelo("303").value,
             filing_year=reloaded.target_year,
@@ -749,7 +742,7 @@ def persist_and_reconcile_iva_compensation_wallet(
             operation=operation,
         )
         decision = reconciliation.decision
-    loaded = resolved_decision_repository.load_decision(decision.taxpayer_nif, decision.target_period)
+        loaded = resolved_decision_repository.load_decision(decision.taxpayer_nif, decision.target_period)
     if loaded != decision:
         raise LiveApplicationError(
             translated_message="application.live.iva_wallet.errors.decision_reload_diverged",
@@ -774,33 +767,6 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
 
 
-def aggregate_iva_compensation_history_reports(
-    reports: list[IvaCompensationHistoryCaptureReport],
-    *,
-    output_root: Path,
-    year_from: int,
-    year_to: int,
-) -> IvaCompensationHistoryCaptureReport:
-    """Combine per-year history reports at the shared composition boundary."""
-    composition = compose_live_state(output_root=output_root)
-    reloaded = composition.iva_remote_state_port.list_history(as_of_year=None)
-    return IvaCompensationHistoryCaptureReport(
-        output_root=str(output_root),
-        year_from=year_from,
-        year_to=year_to,
-        captured_count=sum(report.captured_count for report in reports),
-        observation_paths=tuple(path for report in reports for path in report.observation_paths),
-        artefact_refs=tuple(ref for report in reports for ref in report.artefact_refs),
-        casilla_count=sum(report.casilla_count for report in reports),
-        calculation_observation_count=sum(report.calculation_observation_count for report in reports),
-        calculation_observation_keys=tuple(key for report in reports for key in report.calculation_observation_keys),
-        reloaded_history_count=reloaded.row_count,
-        reloaded_rows=reloaded.rows,
-        failed_declaration_count=sum(report.failed_declaration_count for report in reports),
-        failed_declarations=tuple(failure for report in reports for failure in report.failed_declarations),
-    )
-
-
 async def pull_filed_history_with_shared_composition(
     payload: FiledHistoryOperationRequest,
     profile: TaxpayerProfile | None,
@@ -821,7 +787,7 @@ async def pull_filed_history_with_shared_composition(
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
-    from ..application.live.filed_data_capture import pull_filed_history
+    from ..application.live.filed_history_pull import pull_filed_history
 
     return await pull_filed_history(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -923,7 +889,6 @@ def _decimal(value: object) -> str | None:
 __all__ = [
     "AppIvaRemoteStatePort",
     "LiveStateComposition",
-    "aggregate_iva_compensation_history_reports",
     "carry_forward_lot_row",
     "compose_filed_observation_persistence_ports",
     "compose_live_state",
@@ -933,3 +898,63 @@ __all__ = [
     "pull_filed_history_with_shared_composition",
     "taxpayer_ref",
 ]
+
+
+async def _capture_one_iva_history_declaration(
+    register: DeclaracionesRegisterSession,
+    declaration: Declaracion,
+    store: FiledObservationPersistencePort,
+    persist_artefact: Callable[
+        [tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes], FiledDeclaracionArtefact
+    ],
+    capture_timeout: float,
+    effect_guard: FiledEffectGuard | None,
+    failures: list[str],
+) -> tuple[FiledObservationProtocol, Path] | None:
+    """Capture one declaration under the original refusal, timeout, and artefact-write fence."""
+    if effect_guard is None:
+        try:
+            observation = await asyncio.wait_for(
+                register.capture_observation(declaration, artefact_sink=persist_artefact),
+                timeout=capture_timeout,
+            )
+        except (TimeoutError, CadrumoError, OSError) as exc:
+            failures.append(
+                f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
+                f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
+            )
+            return None
+        manifest_path = store.persist_observation(observation)
+    else:
+        try:
+            deferred = await asyncio.wait_for(
+                capture_deferred_sede_observation(register, declaration),
+                timeout=capture_timeout,
+            )
+        except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+            raise
+        except (TimeoutError, CadrumoError, OSError) as exc:
+            failures.append(
+                f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
+                f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
+            )
+            return None
+        async with effect_guard():
+            observation = deferred.persist_artefacts(persist_artefact)
+            manifest_path = store.persist_observation(observation)
+    return observation, manifest_path
+
+
+def _stage_iva_history_declaration_progress(
+    progress_context: dict[str, object] | None, declaration: Declaracion
+) -> None:
+    """Publish the current declaration immediately before its capture begins."""
+    if progress_context is not None:
+        progress_context.update(
+            {
+                "stage": "capture_declaration_observation",
+                "modelo": declaration.modelo,
+                "ejercicio": declaration.ejercicio,
+                "period": declaration.period.registry_token,
+            }
+        )

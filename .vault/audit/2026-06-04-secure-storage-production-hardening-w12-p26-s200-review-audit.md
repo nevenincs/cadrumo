@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:5dc4c718aa5e801c3fc5d24711bd185bb9899516e5745244c69506e312f79f02'
+modified: '2026-10-03'
+body_hash: 'sha256:e11e362334178141d742ce7c41de481bf63c7f73d5a31ba2205e5d00a8a7dbbc'
 related: []
 ---
 
@@ -62,13 +62,13 @@ runtime repository behavior rather than mirroring business logic.
 
 Validation:
 
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/calculations/test_iva_compensation_history.py` passed with 13 tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/entrypoints/cli/test_iva_wallet_inspector.py::test_seed_iva_compensation_refuses_duplicate` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "iva_compensation_history"` passed with 2 selected tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/test_w04_p21_survivors.py -k "iva_compensation"` passed with 4 selected tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/live/test_filed_capture_calculation_history.py -k "iva_compensation or history"` passed with 10 tests.
-- `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/live/test_iva_remote_state_acquisition.py::test_remote_state_capture_refuses_without_active_profile src/aeat/application/live/test_iva_remote_state_acquisition.py::test_standalone_iva_wallet_capture_refuses_without_active_profile src/aeat/application/live/test_iva_remote_state_acquisition.py::test_standalone_iva_history_capture_refuses_without_active_profile src/aeat/application/live/test_iva_remote_state_acquisition.py::test_acquisition_manifest_persists_redacted_auth_diagnostic_ref src/aeat/application/live/test_iva_remote_state_acquisition.py::test_acquisition_manifest_redacts_sensitive_surface_failure_context` passed with 5 tests.
-- `uv run --no-sync -q ruff check src/aeat/application/live/__init__.py src/aeat/application/calculations/_iva_compensation_history.py src/aeat/domain/iva_compensation/_carry_forward.py src/aeat/core/errors/registry/_application.py src/aeat/application/calculations/test_iva_compensation_history.py src/aeat/entrypoints/cli/test_iva_wallet_inspector.py` passed.
+- the historical check passed with 13 tests.
+- the historical check passed.
+- the historical check passed with 2 selected tests.
+- the historical check passed with 4 selected tests.
+- the historical check passed with 10 tests.
+- the historical check passed with 5 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: subagent review remains unavailable because the reviewer agent hit

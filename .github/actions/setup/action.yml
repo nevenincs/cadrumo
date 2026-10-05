@@ -44,9 +44,19 @@ runs:
       with:
         tool: just@1.38.0
 
+    - name: Bind tool storage to the checkout
+      shell: bash
+      run: |
+        set -euo pipefail
+        for name in UV_CACHE_DIR UV_PYTHON_INSTALL_DIR UV_TOOL_DIR UV_TOOL_BIN_DIR PIP_CACHE_DIR npm_config_cache CARGO_HOME CARGO_TARGET_DIR PYTHONPYCACHEPREFIX XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME RUFF_CACHE_DIR; do
+          value="$(just --evaluate "$name")"
+          printf '%s=%s\n' "$name" "$value" >> "$GITHUB_ENV"
+        done
+
     - name: Install uv
       uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       with:
+        prune-cache: false
         version: "0.11.29"
         enable-cache: false
         python-version: ${{ inputs.python-version }}

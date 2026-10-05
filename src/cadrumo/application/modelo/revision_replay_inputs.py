@@ -35,7 +35,7 @@ from ...domain.calculations.registry.applicability import (
     derive_modelo_applicability,
 )
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
@@ -114,6 +114,13 @@ def revision_filing_replay_inputs(
         revision=revision,
         snapshot=snapshot,
     )
+    detail_binding_inputs: dict[BindingId, dict[str, ModeloInputScalar]] = {}
+    for record in ("operador", "rectificacion"):
+        projected = revision_detail_record_binding_inputs(
+            revision=revision, modelo=str(work_unit.modelo), binding_record=record
+        )
+        if projected is not None:
+            detail_binding_inputs.update(projected)
     return {
         **_informational_casilla_replay_inputs(revision=revision, snapshot=snapshot),
         **_casilla_replay_inputs(
@@ -124,7 +131,7 @@ def revision_filing_replay_inputs(
         **bound_binding_replay_inputs,
         **dict(revision.binding_overrides),
         **dict(revision.row_binding_values),
-        **_m349_detail_row_replay_inputs(revision=revision, work_unit=work_unit),
+        **detail_binding_inputs,
         **_m232_detail_row_replay_inputs(revision=revision, work_unit=work_unit),
         **_not_applicable_relation_zero_inputs(
             snapshot=snapshot,
@@ -172,7 +179,7 @@ def _bound_binding_replay_inputs(
     """
     if snapshot is None:
         return {}
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    bindings_by_id = revision_bindings_by_id(snapshot.revision)
     recovered: dict[BindingId, str] = {}
     existing_binding_ids = frozenset(revision.binding_overrides)
     for casilla in snapshot.revision.casillas:
@@ -208,7 +215,7 @@ def _bound_casillas_with_replay_binding(
     snapshot: RegistrySnapshot,
     binding_ids: frozenset[BindingId],
 ) -> frozenset[str]:
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    bindings_by_id = revision_bindings_by_id(snapshot.revision)
     migrated: set[str] = set()
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind != InputKind.BOUND:
@@ -270,28 +277,32 @@ def _replay_binding_id_for_bound_casilla(
     return next((binding_id for binding_id in binding_ids if binding_id in bindings_by_id), None)
 
 
-def _m349_detail_row_replay_inputs(
+def revision_detail_record_binding_inputs(
     *,
     revision: CalculationRevision,
-    work_unit: WorkUnit,
-) -> dict[BindingId, dict[str, ModeloInputScalar]]:
-    """Project persisted Modelo 349 detail rows into indexed binding maps.
+    modelo: str,
+    binding_record: str,
+) -> dict[BindingId, dict[str, ModeloInputScalar]] | None:
+    """Project one supported record's saved :class:`CalculationRevision` detail rows.
 
     The filing runtime accepts repeating-row values as ``binding_id -> row-index
     -> scalar``. Stored row values are the durable row source; the EU IVA NIF
     subfield is normalized with the same export helper used by the row model so
     replay does not duplicate country-prefix logic.
+    ``None`` means this owner does not project the selected record. An empty
+    map means its supported typed row family contains no saved rows; callers
+    assessing completeness must also establish that ``detail_rows`` was
+    explicitly recorded, rather than supplied by a missing-field default.
     """
-    if str(work_unit.modelo) != Modelo("349").value:
-        return {}
-    operador_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
-    rectification_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349RectificacionRow))
-    if not operador_rows and not rectification_rows:
-        return {}
-    return {
-        **_m349_row_binding_replay_inputs(operador_rows, _M349_OPERADOR_ROW_BINDINGS),
-        **_m349_row_binding_replay_inputs(rectification_rows, _M349_RECTIFICACION_ROW_BINDINGS),
-    }
+    if modelo != Modelo("349").value:
+        return None
+    if binding_record == "operador":
+        rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
+        return _m349_row_binding_replay_inputs(rows, _M349_OPERADOR_ROW_BINDINGS)
+    if binding_record == "rectificacion":
+        rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349RectificacionRow))
+        return _m349_row_binding_replay_inputs(rows, _M349_RECTIFICACION_ROW_BINDINGS)
+    return None
 
 
 def _m349_row_binding_value(
@@ -460,4 +471,4 @@ def _not_applicable_relation_zero_ids(
     )
 
 
-__all__ = ["revision_filing_replay_inputs"]
+__all__ = ["revision_detail_record_binding_inputs", "revision_filing_replay_inputs"]

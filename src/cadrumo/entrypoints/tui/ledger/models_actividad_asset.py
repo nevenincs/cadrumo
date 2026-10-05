@@ -8,6 +8,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ....core.filing_year import FilingYear
+from ....core.hex import Hex64Str
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -36,7 +37,7 @@ class ActivityAssetForecastRequestV1(BaseModel):
     covered_from: date
     covered_until: date
     requested_free_amount: Decimal | None = None
-    supersedes_claim_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    supersedes_claim_id: Hex64Str | None = None
 
 
 class ActivityAssetClaimRequestV1(BaseModel):
@@ -45,7 +46,7 @@ class ActivityAssetClaimRequestV1(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     forecast: ScheduledAmortizationCharge
     creating_operation: str = Field(min_length=1, max_length=256)
-    supersedes_claim_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    supersedes_claim_id: Hex64Str | None = None
 
 
 class ActivityAssetFilingRequestV1(BaseModel):

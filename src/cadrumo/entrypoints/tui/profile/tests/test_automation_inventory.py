@@ -43,6 +43,7 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.profile import automation_inventory as subject
+from cadrumo.entrypoints.tui.profile import automation_inventory_details as detail_subject
 from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
 from cadrumo.entrypoints.tui.secret import automation_decision as decision_subject
 
@@ -229,15 +230,17 @@ def test_period_restrictions_and_review_validity_are_not_collapsed() -> None:
     scope = inventory.grants[0].scope
     unrestricted = scope.model_copy(update={"periods": None})
     none_allowed = scope.model_copy(update={"periods": ()})
-    assert tr("tui.automation_inventory.all_periods") in "\n".join(subject._scope(unrestricted))
-    assert tr("tui.automation_inventory.no_periods") in "\n".join(subject._scope(none_allowed))
-    assert "2026/3T" in "\n".join(subject._scope(scope))
+    assert tr("tui.automation_inventory.all_periods") in "\n".join(detail_subject._scope(unrestricted))
+    assert tr("tui.automation_inventory.no_periods") in "\n".join(detail_subject._scope(none_allowed))
+    assert "2026/3T" in "\n".join(detail_subject._scope(scope))
     unattended_notice = tr("tui.automation_inventory.unattended_notice")
-    assert unattended_notice in subject._grant_detail(inventory.grants[0])
-    assert unattended_notice not in subject._grant_detail(inventory.grants[0].model_copy(update={"unattended": False}))
+    assert unattended_notice in detail_subject._grant_detail(inventory.grants[0])
+    assert unattended_notice not in detail_subject._grant_detail(
+        inventory.grants[0].model_copy(update={"unattended": False})
+    )
 
     request = inventory.requests[0]
-    detail = subject._request_detail(request)
+    detail = detail_subject._request_detail(request)
     assert request.expires_at.isoformat() in detail
     assert request.proposal.expires_at.isoformat() in detail
     assert request.proposal.key_expires_at is not None
@@ -517,11 +520,11 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
             release.set()
         await asyncio.wait_for(closing, 5)
         assert finished.is_set()
-        assert modal.settled_outcome is not None
-        assert modal.settled_outcome.operation_id == "e" * 64
-        assert modal.settled_outcome.effect is OperationEffect.UPDATED
-        assert modal.settled_outcome.completed is not failed
-        assert modal.settled_outcome.terminal_condition is (
+        assert modal._outcome is not None
+        assert modal._outcome.operation_id == "e" * 64
+        assert modal._outcome.effect is OperationEffect.UPDATED
+        assert modal._outcome.completed is not failed
+        assert modal._outcome.terminal_condition is (
             OperationTerminalCondition.FAILED if failed else OperationTerminalCondition.SUCCEEDED
         )
         assert modal._review is None and modal._consent_text == ""

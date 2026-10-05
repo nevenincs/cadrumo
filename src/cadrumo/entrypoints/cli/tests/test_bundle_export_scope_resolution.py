@@ -45,6 +45,7 @@ def test_scoped_export_ignores_ambient_profile_and_refuses_conflicting_name(tmp_
             prepared = prepare_profile_export(
                 _request(tmp_path / "beta-bundle.json"),
                 journal=repository,
+                authority_operation=authority,
                 profile_decode_context=decode,
                 authorized_profile_id=beta,
             )
@@ -57,6 +58,7 @@ def test_scoped_export_ignores_ambient_profile_and_refuses_conflicting_name(tmp_
                 prepare_profile_export(
                     _request(tmp_path / "wrong-bundle.json", name="Scope alpha"),
                     journal=repository,
+                    authority_operation=authority,
                     profile_decode_context=decode,
                     authorized_profile_id=beta,
                 )

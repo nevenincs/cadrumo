@@ -18,10 +18,8 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import changed, lease, worker_profiles
-from cadrumo.adapters.local_runtime.worker_authorization_client import (
-    WorkerAuthorizationClient,
-    WorkerAuthorizationLease,
-)
+from cadrumo.adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
+from cadrumo.adapters.local_runtime.worker_authorization_lease import WorkerAuthorizationLease
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -32,14 +32,14 @@ msgid ""
 "current in your profile, see [maintain Modelo 036 census facts in your "
 "profile](censo-update.md)."
 msgstr ""
-"A Modelo 036 az AEAT nyilvántartási (censo) bevallása - az az űrlap, "
-"amellyel bejelented, módosítod vagy megszünteted az adójogi helyzetedet. "
-"Ezt te magad nyújtod be az AEAT Sede Electrónicáján (a sede), a hivatalos"
-" online portálon. Az ezen az oldalon szereplő parancsok utólag csak azt a"
-" tényt rögzítik a helyi auditnyomvonaladban - soha nem nyújtanak be "
-"semmit az AEAT-nál. Ha a nyilvántartott censo-adataidat naprakészen "
-"szeretnéd tartani a profilodban, lásd: [tartsd karban a profilod Modelo "
-"036 censo-adatait](censo-update.md)."
+"A Modelo 036 az AEAT censo-bevallása: ezzel a nyomtatvánnyal jelentheted "
+"be, módosíthatod vagy szüntetheted meg az adójogi helyzetedet. Te magad "
+"nyújtod be az AEAT Sede Electrónicáján (a sede), a hivatalos online "
+"portálon. Az ezen az oldalon szereplő parancsok csak utólag rögzítik ezt "
+"a tényt a helyi auditnyomvonaladban - az AEAT-hoz semmit sem nyújtanak "
+"be. Ha naprakészen szeretnéd tartani a profilodban nyilvántartott censo-"
+"adatokat, lásd: [Tartsd karban a profilod Modelo 036 censo-adatait"
+"](censo-update.md)."
 
 #: ../../how-to/modelo-036.md:10
 msgid "Before you start"
@@ -54,8 +54,8 @@ msgid ""
 "An active profile - see [set up your taxpayer profile](profile-setup.md)."
 " The commands below refuse without one."
 msgstr ""
-"Egy aktív profil - lásd: [állítsd be az adózói profilodat](profile-"
-"setup.md). Az alábbi parancsok nélküle elutasítanak."
+"Aktív profil - lásd: [Állítsd be az adózói profilodat](profile-setup.md)."
+" Az alábbi parancsok enélkül elutasítják a futást."
 
 #: ../../how-to/modelo-036.md:16
 msgid ""
@@ -63,21 +63,21 @@ msgid ""
 "for the passphrase."
 msgstr ""
 "A jelmondatod. Ezek a parancsok megnyitják a titkosított tárolót, ezért "
-"bekérik a jelmondatot."
+"bekérik a jelmondatodat."
 
 #: ../../how-to/modelo-036.md:18
 msgid "The date you filed the declaration at the sede."
-msgstr "A dátum, amikor a bevallást a sedénél benyújtottad."
+msgstr "A dátum, amikor a bevallást a sedénél benyújtotta."
 
 #: ../../how-to/modelo-036.md:19
 msgid ""
-"Optional: the justificante - the receipt number the sede shows after you "
-"file."
+"Optional: the AEAT receipt number (justificante) that the sede shows "
+"after you file."
 msgstr ""
-"Opcionális: a justificante - a bizonylatszám, amelyet a sede a benyújtás "
-"után mutat."
+"Opcionális: az AEAT-igazolás száma (justificante), amelyet a sede a "
+"benyújtás után mutat."
 
-#: ../../how-to/modelo-036.md:21
+#: ../../how-to/modelo-036.md:22
 msgid ""
 "`aeat` prints its messages in Spanish unless you choose another language."
 " Add `--language en` (or `es`, `ca`, `hu`) straight after `aeat` for one "
@@ -85,48 +85,49 @@ msgid ""
 "edit --output-language en`. The examples in this documentation are "
 "recorded in English."
 msgstr ""
-"Az `aeat` spanyolul írja ki az üzeneteit, hacsak nem választasz másik "
-"nyelvet. Egy parancshoz add meg az `--language en` kapcsolót (vagy `es`, "
-"`ca`, `hu` értékkel) közvetlenül az `aeat` után, vagy tárolj "
-"alapértelmezést a profilodhoz az `aeat config profile edit --output-"
-"language en` paranccsal. A dokumentáció példái angol nyelven készültek."
+"Az `aeat` spanyolul jeleníti meg az üzeneteit, hacsak nem választasz "
+"másik nyelvet. Egy parancshoz az `--language en` kapcsolót (vagy az `es`,"
+" `ca`, `hu` értékek egyikét) tedd közvetlenül az `aeat` után, vagy állíts"
+" be alapértelmezett nyelvet a profilodhoz az `aeat config profile edit "
+"--output-language en` paranccsal. A dokumentáció példái angol nyelven "
+"szerepelnek."
 
-#: ../../how-to/modelo-036.md:27
+#: ../../how-to/modelo-036.md:28
 msgid "Record the declaration"
 msgstr "A bevallás rögzítése"
 
-#: ../../how-to/modelo-036.md:29
+#: ../../how-to/modelo-036.md:30
 msgid "Pick the command that matches what you filed:"
 msgstr "Válaszd ki azt a parancsot, amely megfelel annak, amit benyújtottál:"
 
-#: ../../how-to/modelo-036.md:31
+#: ../../how-to/modelo-036.md:32
 msgid "If you registered an activity, record an alta."
 msgstr "Ha tevékenységet jelentettél be, rögzíts egy altát."
 
-#: ../../how-to/modelo-036.md:32
+#: ../../how-to/modelo-036.md:33
 msgid "If you changed registered facts, record a modificacion."
 msgstr "Ha a nyilvántartott adatokat módosítottad, rögzíts egy modificaciont."
 
-#: ../../how-to/modelo-036.md:33
+#: ../../how-to/modelo-036.md:34
 msgid "If you deregistered, record a baja."
 msgstr "Ha megszüntetted a nyilvántartást, rögzíts egy baját."
 
-#: ../../how-to/modelo-036.md:35
+#: ../../how-to/modelo-036.md:36
 msgid ""
 "Record the declarations in the order you filed them. A modificacion or "
 "baja is refused until the profile has an alta on record. After a baja, no"
 " further declaration is accepted, not even an alta."
 msgstr ""
-"A bevallásokat abban a sorrendben rögzítsd, ahogy benyújtottad őket. "
-"Modificaciont vagy baját addig utasít el a rendszer, amíg a profilhoz "
-"nincs rögzítve alta. Baja után további bevallást nem fogad el, még altát "
-"sem."
+"A bevallásokat abban a sorrendben rögzítsd, ahogy benyújtottad őket. A "
+"rendszer elutasítja a modificacion vagy a baja rögzítését, ha a profilban"
+" még nincs alta. Baja után a rendszer egyetlen további bevallást sem "
+"fogad el, még altát sem."
 
-#: ../../how-to/modelo-036.md:39
+#: ../../how-to/modelo-036.md:40
 msgid "Record an alta:"
 msgstr "Alta rögzítése:"
 
-#: ../../how-to/modelo-036.md:45
+#: ../../how-to/modelo-036.md:46
 msgid ""
 "Record a modificacion (the same flow as the alta, with a different event "
 "kind):"
@@ -134,176 +135,177 @@ msgstr ""
 "Modificacion rögzítése (ugyanaz a folyamat, mint az altánál, más "
 "eseményfajtával):"
 
-#: ../../how-to/modelo-036.md:50
+#: ../../how-to/modelo-036.md:51
 msgid "Record a baja:"
 msgstr "Baja rögzítése:"
 
-#: ../../how-to/modelo-036.md:55
+#: ../../how-to/modelo-036.md:56
 msgid ""
-"`--declared-on` is required - the ISO date (year-month-day) you filed at "
+"`--declared-on` is required: the ISO date (year-month-day) you filed at "
 "the sede. `--sede-justificante` is optional and accepts up to 128 "
 "characters. `--note` adds an optional note for your own records, up to "
 "512 characters."
 msgstr ""
-"A `--declared-on` kötelező - az ISO-dátum (év-hónap-nap), amikor a "
-"sedénél benyújtottad. A `--sede-justificante` opcionális, és legfeljebb "
-"128 karaktert fogad el. A `--note` opcionális megjegyzést ad hozzá a "
-"saját nyilvántartásodhoz, legfeljebb 512 karakter hosszan."
+"A `--declared-on` kötelező: az ISO-dátum (év-hónap-nap), amikor a sedénél"
+" benyújtotta. A `--sede-justificante` opcionális, és legfeljebb 128 "
+"karaktert fogad el. A `--note` opcionális megjegyzést ad hozzá a saját "
+"nyilvántartásához, legfeljebb 512 karakter hosszan."
 
-#: ../../how-to/modelo-036.md:59
+#: ../../how-to/modelo-036.md:60
 msgid "What success looks like"
 msgstr "Milyen a sikeres eredmény"
 
-#: ../../how-to/modelo-036.md:61
+#: ../../how-to/modelo-036.md:62
 msgid "The command prints the saved record:"
-msgstr "A parancs kiírja a mentett rekordot:"
-
-#: ../../how-to/modelo-036.md:63
-msgid "A `declaration_id` - a long reference number for the record."
-msgstr "Egy `declaration_id`: a rekord hosszú hivatkozási száma."
+msgstr "A parancs kiírja a mentett bejegyzést:"
 
 #: ../../how-to/modelo-036.md:64
+msgid "A `declaration_id` - a long reference number for the record."
+msgstr "Egy `declaration_id`: a bejegyzés hosszú hivatkozási száma."
+
+#: ../../how-to/modelo-036.md:65
 msgid "The event kind - alta, modificacion, or baja."
 msgstr "Az eseményfajta: alta, modificacion vagy baja."
 
-#: ../../how-to/modelo-036.md:65
+#: ../../how-to/modelo-036.md:66
 msgid "The declared-on date."
 msgstr "A bejelentés dátuma."
 
-#: ../../how-to/modelo-036.md:66
-msgid "When the record was saved."
-msgstr "Mikor mentette el a rendszer a rekordot."
-
 #: ../../how-to/modelo-036.md:67
-msgid "The justificante, if you gave one."
-msgstr "A justificante, ha megadtál egyet."
+msgid "When the record was saved."
+msgstr "Mikor mentette el a rendszer a bejegyzést."
 
-#: ../../how-to/modelo-036.md:69
+#: ../../how-to/modelo-036.md:68
+msgid "The AEAT receipt number, if you gave one."
+msgstr "Az AEAT-igazolás száma, ha megadott ilyet."
+
+#: ../../how-to/modelo-036.md:70
 msgid "That printed output is your confirmation. Save it with your records."
-msgstr "Ez a kiírt kimenet a visszaigazolásod. Mentsd el a nyilvántartásaid közé."
+msgstr "A kiírt kimenet a visszaigazolásod. Mentsd el a nyilvántartásaid közé."
 
-#: ../../how-to/modelo-036.md:71
+#: ../../how-to/modelo-036.md:72
 msgid "List and view recorded declarations"
 msgstr "Rögzített bevallások listázása és megtekintése"
 
-#: ../../how-to/modelo-036.md:73
+#: ../../how-to/modelo-036.md:74
 msgid ""
 "List the declarations you have recorded in the active profile, then open "
 "one by its id (the example starts with an alta already recorded, so the "
 "list has a row):"
 msgstr ""
 "Listázd az aktív profilban rögzített bevallásokat, majd nyiss meg egyet "
-"az azonosítója alapján (a példa egy már rögzített altával indul, hogy a "
-"listában legyen egy sor):"
+"az azonosítója alapján (a példa egy már rögzített altával indul, ezért a "
+"listában is van egy sor):"
 
-#: ../../how-to/modelo-036.md:80
+#: ../../how-to/modelo-036.md:81
 msgid ""
-"The list shows each declaration's id, event kind, declared-on date, "
-"recorded-at timestamp, and whether you gave a justificante. An empty list"
-" means you have recorded no declarations yet. The view shows the full "
-"record, including the justificante and your note if you gave them. An id "
-"that matches no recorded declaration is refused."
+"The list shows each declaration's id, event kind, declared-on date, the "
+"time it was recorded, and whether you gave an AEAT receipt number. An "
+"empty list means you have recorded no declarations yet. The view shows "
+"the full record, including the AEAT receipt number and your note if you "
+"gave them. An id that matches no recorded declaration is refused."
 msgstr ""
 "A lista minden bevalláshoz megmutatja az azonosítót, az eseményfajtát, a "
-"bejelentés dátumát, a rögzítés időbélyegét és azt, hogy adtál-e meg "
-"justificantét. Az üres lista azt jelenti, hogy még nem rögzítettél "
-"bevallást. A megtekintés a teljes rekordot mutatja, beleértve a "
-"justificantét és a megjegyzésedet, ha megadtad őket. Az olyan azonosítót,"
-" amely egyetlen rögzített bevallásnak sem felel meg, a rendszer "
-"elutasítja."
+"bejelentés dátumát, a rögzítés időpontját és azt, hogy megadta-e az AEAT-"
+"igazolás számát. Az üres lista azt jelenti, hogy még nem rögzített "
+"bevallást. A megtekintés a teljes bejegyzést mutatja, beleértve az AEAT-"
+"igazolás számát és a megjegyzését, ha megadta azokat. Egy olyan "
+"azonosítót, amely egyetlen rögzített bevallásnak sem felel meg, elutasít "
+"a rendszer."
 
-#: ../../how-to/modelo-036.md:85
+#: ../../how-to/modelo-036.md:87
 msgid "No command edits or deletes a recorded declaration."
 msgstr "Egyetlen parancs sem szerkeszt vagy töröl rögzített bevallást."
 
-#: ../../how-to/modelo-036.md:87
+#: ../../how-to/modelo-036.md:89
 msgid "If you typed something wrong"
 msgstr "Ha valamit rosszul gépeltél be"
 
-#: ../../how-to/modelo-036.md:89
+#: ../../how-to/modelo-036.md:91
 msgid ""
 "Re-running the command with identical values is safe - it records no "
 "additional declaration, and you get the same declaration ID back."
 msgstr ""
 "A parancs azonos értékekkel való újrafuttatása biztonságos - nem rögzít "
-"további bevallást, és ugyanazt a bevallásazonosítót kapod vissza."
+"további bevallást, és ugyanazt a bevallásazonosítót kapja vissza."
 
-#: ../../how-to/modelo-036.md:92
+#: ../../how-to/modelo-036.md:94
 msgid ""
-"Running the command with a corrected kind, date, or justificante records "
-"an additional declaration. Add a `--note` explaining the correction so "
-"your audit trail stays readable. Changing only `--note` does not create a"
-" new record. No command edits or deletes a recorded declaration."
+"Running the command with a corrected kind, date, or AEAT receipt number "
+"records an additional declaration. Add a `--note` explaining the "
+"correction so your audit trail stays readable. Changing only `--note` "
+"does not create a new record. No command edits or deletes a recorded "
+"declaration."
 msgstr ""
-"A parancs javított fajtával, dátummal vagy justificantéval való futtatása"
-" további bevallást rögzít. Adj hozzá egy `--note` megjegyzést, amely "
-"elmagyarázza a javítást, hogy az auditnyomvonalad olvasható maradjon. "
-"Csak a `--note` módosítása nem hoz létre új rekordot. Egyetlen parancs "
-"sem szerkeszt vagy töröl rögzített bevallást."
-
-#: ../../how-to/modelo-036.md:97
-msgid "What the record does and does not do"
-msgstr "Mit tesz és mit nem tesz a rekord"
+"Ha a parancsot javított típussal, dátummal vagy AEAT-igazolásszámmal "
+"futtatod, újabb bevallást rögzít. Egészítsd ki egy, a javítást magyarázó "
+"`--note` megjegyzéssel, hogy az auditnyomvonalad olvasható maradjon. A "
+"`--note` önmagában történő módosítása nem hoz létre új bejegyzést. Egyik "
+"parancs sem szerkeszt vagy töröl rögzített bevallást."
 
 #: ../../how-to/modelo-036.md:99
+msgid "What the record does and does not do"
+msgstr "Mit tesz és mit nem tesz a bejegyzés"
+
+#: ../../how-to/modelo-036.md:101
 msgid ""
 "The record is a local note for your own audit trail. It does not change "
 "your filing calendar, your obligations, or your profile facts."
 msgstr ""
-"A rekord egy helyi feljegyzés a saját auditnyomvonaladhoz. Nem "
-"változtatja meg a benyújtási naptáradat, a kötelezettségeidet vagy a "
-"profiladataidat."
+"A bejegyzés egy helyi feljegyzés a saját auditnyomvonalához. Nem "
+"változtatja meg a benyújtási naptárát, a kötelezettségeit vagy a "
+"profiladatait."
 
-#: ../../how-to/modelo-036.md:102
+#: ../../how-to/modelo-036.md:104
 msgid ""
 "After AEAT processes your declaration, update the census facts in your "
 "profile by hand to match what you filed - see [maintain Modelo 036 census"
 " facts in your profile](censo-update.md)."
 msgstr ""
 "Miután az AEAT feldolgozta a bevallásodat, frissítsd kézzel a profilodban"
-" lévő censo-adatokat, hogy megegyezzenek azzal, amit benyújtottál - lásd:"
-" [tartsd karban a profilod Modelo 036 censo-adatait](censo-update.md)."
+" szereplő censo-adatokat, hogy megfeleljenek annak, amit benyújtottál - "
+"lásd: [Tartsd karban a profilod Modelo 036 censo-adatait](censo-"
+"update.md)."
 
-#: ../../how-to/modelo-036.md:106
+#: ../../how-to/modelo-036.md:108
 msgid "Where to get help"
 msgstr "Hol kérhetsz segítséget"
 
-#: ../../how-to/modelo-036.md:108
+#: ../../how-to/modelo-036.md:110
 msgid "If a command fails, see [troubleshooting](troubleshooting.md)."
 msgstr "Ha egy parancs meghiúsul, lásd: [hibaelhárítás](troubleshooting.md)."
 
-#: ../../how-to/modelo-036.md:109
+#: ../../how-to/modelo-036.md:111
 #, python-brace-format
 msgid "For unfamiliar terms, see the {doc}`glossary </_generated/glossary>`."
 msgstr ""
 "Az ismeretlen kifejezésekhez lásd a {doc}`szójegyzéket "
 "</_generated/glossary>`."
 
-#: ../../how-to/modelo-036.md:110
+#: ../../how-to/modelo-036.md:112
 msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "NIF, CIF, DNI, NIE, or NII."
 msgstr ""
 "Mielőtt bárkivel megosztanád egy parancs kimenetét, távolítsd el belőle "
-"az adóazonosítókat, például a NIF-, NIE- vagy NII-számot."
+"az adóazonosítókat, például a NIF-, CIF-, DNI-, NIE- vagy NII-számot."
 
-#: ../../how-to/modelo-036.md:113
+#: ../../how-to/modelo-036.md:115
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/modelo-036.md:115
+#: ../../how-to/modelo-036.md:117
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Tartsd karban a profilod Modelo 036 censo-adatait](censo-update.md)"
 
-#: ../../how-to/modelo-036.md:116
+#: ../../how-to/modelo-036.md:118
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Állítsd be az adózói profilodat](profile-setup.md)"
 
-#: ../../how-to/modelo-036.md:117
+#: ../../how-to/modelo-036.md:119
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezd meg a benyújtási naptáradat](filing-calendar.md)"
 
-#: ../../how-to/modelo-036.md:118
+#: ../../how-to/modelo-036.md:120
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
-

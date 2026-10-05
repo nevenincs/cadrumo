@@ -292,7 +292,7 @@ def classify_with_evidence(
     """
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
-        # its own run-timing telemetry -- do not double-record here.
+        # its own run-timing record -- do not double-record here.
         vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
         response = _reader_classification(
@@ -329,7 +329,7 @@ def classify_with_evidence(
 def _reader_classification(result: object) -> LLMClassificationResponse:
     """Return one reader result as the classification the readers are declared to emit.
 
-    The run ports are declared over an opaque result so telemetry and reader
+    The run ports are declared over an opaque result so run records and reader
     recovery stay reader-agnostic; this boundary states what this caller asked
     for, and refuses a result that is not it rather than carrying it further.
     """
@@ -366,7 +366,7 @@ def _split_with_evidence(
     """
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
-        # its own run-timing telemetry -- do not double-record here.
+        # its own run-timing record -- do not double-record here.
         vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
         response = _reader_split(

@@ -30,9 +30,19 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
         environment_prefix="CADRUMO_",
         companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),
         companion_namespace="cadrumo_data",
+        application_id="md.neve.cadrumo",
     )
 
     assert expected == PRODUCT_IDENTITY
+
+
+def test_cohort_distributions_lists_the_product_before_its_companions() -> None:
+    """A release publishes the product and both data companions as one ordered set."""
+    assert PRODUCT_IDENTITY.cohort_distributions == (
+        PRODUCT_IDENTITY.distribution,
+        *PRODUCT_IDENTITY.companion_distributions,
+    )
+    assert len(set(PRODUCT_IDENTITY.cohort_distributions)) == 3
 
 
 @pytest.mark.parametrize(
@@ -100,6 +110,5 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
     }
-    identity_aeat_names = {"AEAT_AUTHORITY_SHORT_NAME"}
-    assert {name for name in identity_module.__all__ if name.casefold().startswith("aeat")} == identity_aeat_names
+    assert {name for name in identity_module.__all__ if name.casefold().startswith("aeat")} == set()
     assert allowed_aeat_names  # the wider cross-module set stays documented above

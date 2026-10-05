@@ -17,7 +17,8 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..legal_reference import LegalPage, LegalReferenceResult, render_legal_reference
+from ..legal_reference import render_legal_reference
+from ..legal_reference_models import LegalPage, LegalReferenceResult
 from ..terminology.legal_projection import project_legal_search_records
 from ..terminology.search_record import LegalSearchRecord, SearchRecordKind
 from ..terminology.unified_record import SearchRecord, to_search_record

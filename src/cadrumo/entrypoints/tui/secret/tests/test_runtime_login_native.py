@@ -16,10 +16,10 @@ import pytest
 from textual.app import App
 from textual.widgets import Input
 
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
@@ -27,7 +27,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from cadrumo.application.runtime.transport import RuntimeStatusRequest
+from cadrumo.application.runtime.profile_access import RuntimeSessionRequest
 from cadrumo.application.user_profile.access_contracts import AuthorityState
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
@@ -35,7 +35,9 @@ from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.runtime.tests.test_profile_connections import LoginObservation
 
-from ..runtime_login import RuntimeLoginHandoff, RuntimeLoginScreen
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
+from ..runtime_login import RuntimeLoginScreen
+from ..runtime_login_contracts import RuntimeLoginHandoff
 
 pytestmark = [
     pytest.mark.integration,
@@ -117,7 +119,12 @@ async def _cold_tui_recovery(
         # Observe the actual retained transport owner: recovery must close its
         # unadmitted client rather than leave a reusable connection behind.
         with pytest.raises(RuntimeRefusalError) as closed:
-            opened[0]._connection.status(RuntimeStatusRequest(request_id=uuid4()), deadline=time.monotonic() + 1)
+            opened[0]._connection.session(
+                RuntimeSessionRequest(
+                    action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()
+                ),
+                deadline=time.monotonic() + 1,
+            )
         assert closed.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
         assert not store.profile_lock_state().globally_locked
         active = {item.grant_id for item in store.snapshot().grants if item.state is AuthorityState.ACTIVE}
@@ -174,7 +181,8 @@ def test_cold_tui_global_lock_recovery_reactivates_only_explicit_grant(tmp_path:
             capture_login=lambda _channel: LoginObservation(owner_id()),
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         with ThreadPoolExecutor(max_workers=1) as pool:

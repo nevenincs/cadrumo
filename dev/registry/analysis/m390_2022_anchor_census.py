@@ -105,23 +105,16 @@ class M3902022NumberedAnchorCensus:
         return len(self.anchors)
 
 
-def census_m390_2022_numbered_anchors(
-    intermediate: RecordDesignIntermediate,
-) -> M3902022NumberedAnchorCensus:
-    """Require the exact 2022 numbered-page anchor set before owner mapping exists.
-
-    This is intentionally stricter than a count check.  A shifted parser row,
-    missing field, duplicate coordinate, new field, or a record renamed beneath
-    an unchanged page total all change the exact five-part anchor identity and
-    refuse here.  The later semantic-map authoring work consumes this same set;
-    it may not replace it with a box-number reverse lookup.
-    """
+def _require_2022_source_identity(intermediate: RecordDesignIntermediate) -> None:
+    """Refuse an intermediate built from another source or design epoch."""
     if str(intermediate.source.source_ref) != "aeat-dr-390-2022":
         raise ValueError("M390 2022 numbered-anchor census requires aeat-dr-390-2022")
     if intermediate.source.design_epoch != "2022":
         raise ValueError("M390 2022 numbered-anchor census requires design epoch '2022'")
 
-    fields = tuple(field for sheet in intermediate.sheets for field in sheet.fields)
+
+def _validated_anchor_set(fields: tuple[RecordDesignIntermediateField, ...]) -> frozenset[M390NumberedAnchor]:
+    """Require a unique parser set equal to the complete reviewed 2022 geometry."""
     anchors = tuple(_anchor(field) for field in fields)
     duplicates = tuple(sorted(anchor for anchor, count in Counter(anchors).items() if count != 1))
     if duplicates:
@@ -135,7 +128,13 @@ def census_m390_2022_numbered_anchors(
         )
     if len(actual) != M390_2022_NUMBERED_ANCHOR_COUNT:
         raise ValueError("M390 2022 numbered-anchor count drifted")
+    return actual
 
+
+def _anchors_by_record(
+    actual: frozenset[M390NumberedAnchor],
+) -> dict[str, frozenset[M390NumberedAnchor]]:
+    """Group exact anchors by record and require each reviewed cardinality."""
     by_record = {
         record_identity: frozenset(anchor for anchor in actual if anchor.record_identity == record_identity)
         for record_identity in M390_2022_NUMBERED_PAGE_COUNTS
@@ -143,7 +142,14 @@ def census_m390_2022_numbered_anchors(
     record_counts = {record_identity: len(record_anchors) for record_identity, record_anchors in by_record.items()}
     if record_counts != dict(M390_2022_NUMBERED_PAGE_COUNTS):
         raise ValueError(f"M390 2022 numbered-page record counts drifted: {record_counts!r}")
+    return by_record
 
+
+def _validated_scalar_casilla_anchors(
+    fields: tuple[RecordDesignIntermediateField, ...],
+    actual: frozenset[M390NumberedAnchor],
+) -> dict[str, M390NumberedAnchor]:
+    """Require the ten scalar boxes to be present on the numbered-page source."""
     scalar_casilla_anchors = _scalar_casilla_anchors(fields)
     if set(scalar_casilla_anchors) != set(M390_2022_SCALAR_CASILLA_BOXES):
         raise ValueError(
@@ -152,6 +158,25 @@ def census_m390_2022_numbered_anchors(
         )
     if any(anchor not in actual for anchor in scalar_casilla_anchors.values()):
         raise ValueError("M390 2022 scalar/Casilla anchors must belong to the numbered-page source set")
+    return scalar_casilla_anchors
+
+
+def census_m390_2022_numbered_anchors(
+    intermediate: RecordDesignIntermediate,
+) -> M3902022NumberedAnchorCensus:
+    """Require the exact 2022 numbered-page anchor set before owner mapping exists.
+
+    This is intentionally stricter than a count check.  A shifted parser row,
+    missing field, duplicate coordinate, new field, or a record renamed beneath
+    an unchanged page total all change the exact five-part anchor identity and
+    refuse here.  The later semantic-map authoring work consumes this same set;
+    it may not replace it with a box-number reverse lookup.
+    """
+    _require_2022_source_identity(intermediate)
+    fields = tuple(field for sheet in intermediate.sheets for field in sheet.fields)
+    actual = _validated_anchor_set(fields)
+    by_record = _anchors_by_record(actual)
+    scalar_casilla_anchors = _validated_scalar_casilla_anchors(fields, actual)
     return M3902022NumberedAnchorCensus(
         anchors=actual,
         anchors_by_record=by_record,

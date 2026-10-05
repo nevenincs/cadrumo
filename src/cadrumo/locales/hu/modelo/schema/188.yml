@@ -34,7 +34,7 @@ modelo:
           construct:
             modelo-188-calculation-construct:
               field:
-                title: '188-as nyomtatvány: tájékoztató bevallás tőkésítési műveletek
+                title: 'Modelo 188 nyomtatvány: tájékoztató bevallás tőkésítési műveletek
                   és élet- vagy rokkantsági biztosítások jövedelméről'
           field:
             label: 188-as modelo, 2022. adóév
@@ -42,6 +42,6 @@ modelo:
           construct:
             modelo-188-calculation-construct:
               field:
-                title: '188-as nyomtatvány: az önadózás számítása'
+                title: 'Modelo 188 nyomtatvány: az önadózás számítása'
           field:
             label: 1999. november 17-i rendelet, 2019. adóévtől

@@ -8,7 +8,7 @@ from uuid import UUID
 import typer
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.ratios_operation import (
+from ...application.ledger.ratios_contracts import (
     LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
     LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
     LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
@@ -31,12 +31,10 @@ from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
 from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import submitted_operation_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context) -> RuntimeFrontendClient:

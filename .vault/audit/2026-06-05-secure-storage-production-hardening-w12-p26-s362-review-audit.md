@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:f16fc4ac09b73121ee654168aaf78b395d8229ebdd6e6796eb5d5c12873dff6b'
+modified: '2026-10-03'
+body_hash: 'sha256:ea4770d01670af37aba0f112be6abe4eb2d5494e79c66e70a8ba8a59c81d1ef7'
 related: []
 ---
 
@@ -31,9 +31,9 @@ encrypted submission roundtrip tests pass.
 ## S362-004 | PASS | Validation
 
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
-- `uv run --no-sync ruff check src/aeat/domain/submission/_models.py src/aeat/domain/submission/tests/test_secure_storage_roundtrip.py src/aeat/domain/submission/tests/test_repository.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/submission/tests/test_secure_storage_roundtrip.py src/aeat/domain/submission/tests/test_repository.py` passed with 22 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/tests/test_runtime_migrated_repositories.py -k "submission"` passed with 2 selected tests.
+- the historical check passed.
+- the historical check passed with 22 tests.
+- the historical check passed with 2 selected tests.
 
 Reviewer note: no critical, high, medium, or low secure-storage findings remain for
 the S362 model slice.

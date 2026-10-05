@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b985bd8ff9f605ebd27bd7e5c30377f04153073d863553acde1c2d24f70ab514'
+body_hash: 'sha256:aeda91111c009f482e4b093a17f780b2703415f34c1d82bd387d9c1aac1892dd'
 related: []
 ---
 # `tui-architecture` audit: `W08.P27.S377 Declarations workspace screens review`
@@ -40,6 +40,6 @@ All implemented screens consume only the injected immutable projection and use p
 
 Initial gates: 31 focused application-plus-TUI tests passed; Ruff and ty passed. Final remediation gates: all 16 focused TUI tests passed; Ruff and ty passed for the package. The final same-day probe confirms two otherwise equal draft rows render as `03/09/2026 09:15 UTC` and `03/09/2026 09:45 UTC`, and the selected later row reaches the exact typed handoff.
 
-## Recommendation
+## Recommendations
 
 CLOSE. All recorded high, medium, and low findings are closed. W08.P27.S377 is safe to mark complete.

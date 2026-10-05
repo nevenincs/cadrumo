@@ -188,10 +188,8 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         binding_values={
             **resolution.binding_values,
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-            "renta-profile-descendientes-guarderia": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values=resolution.enum_binding_values,

@@ -71,7 +71,6 @@ __all__ = [
     "InvoiceDevengo",
     "devengo_proxy_attribution_diagnostics",
     "invoice_devengo_in_period",
-    "proxy_attributed_invoice_ids",
     "resolve_invoice_devengo",
 ]
 
@@ -146,32 +145,6 @@ def invoice_devengo_in_period(invoice: Invoice, *, period: Period) -> bool:
         span.
     """
     return period.contains(resolve_invoice_devengo(invoice).devengo_date)
-
-
-def proxy_attributed_invoice_ids(invoices: Iterable[Invoice]) -> tuple[str, ...]:
-    """Return the sorted ids of *invoices* attributed on the issue-date proxy.
-
-    The reporting half of the rank. An aggregation path hands it the invoices
-    it actually folded in, and a non-empty result names the records whose
-    period placement rests on a substitute rather than on a recorded devengo
-    date -- the set an operator has to see before filing, because those are the
-    records that would move quarter if the real date were recorded.
-
-    Args:
-        invoices: The invoices a period's figures were built from.
-
-    Returns:
-        The sorted invoice ids ranked
-        :attr:`~cadrumo.core.aggregation.InvoiceDevengoRank.ISSUE_DATE_PROXY`,
-        empty when every contributing invoice declared its own devengo date.
-    """
-    return tuple(
-        sorted(
-            invoice.invoice_id
-            for invoice in invoices
-            if resolve_invoice_devengo(invoice).rank is InvoiceDevengoRank.ISSUE_DATE_PROXY
-        ),
-    )
 
 
 def devengo_proxy_attribution_diagnostics(

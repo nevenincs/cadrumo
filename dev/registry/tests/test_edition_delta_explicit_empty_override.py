@@ -29,12 +29,10 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_migration import (
-    _prove_chain,
-    _prune_redundant_override_leaves,
-    assess_migration_state,
-)
-from ..edition_family_delta import collapse_keyed_families
+from ..edition_delta_assessment import assess_migration_state
+from ..edition_delta_equivalence import _prove_chain
+from ..edition_delta_override_pruning import prune_redundant_override_leaves
+from ..edition_family_delta_collapse import collapse_keyed_families
 from ..edition_round_trip import RoundTripReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -136,7 +134,7 @@ def test_an_explicit_empty_over_an_omitted_field_is_carried_as_an_override_and_p
     candidate = tmp_path / "candidate" / _MODELO_ID
 
     collapse_keyed_families(source, candidate)
-    _prune_redundant_override_leaves(candidate)
+    prune_redundant_override_leaves(candidate)
 
     (override,) = _construct_overrides(candidate)
     assert override["selector"] == {"revision": _BASELINE, "id": _CONSTRUCT}
@@ -178,7 +176,7 @@ def test_an_override_repeating_a_value_the_baseline_states_is_still_redundant_an
     ]
     staged = shutil.copytree(source, tmp_path / "staged" / _MODELO_ID)
 
-    assert _prune_redundant_override_leaves(staged) == 1
+    assert prune_redundant_override_leaves(staged) == 1
 
     assert _construct_overrides(staged) == []
     assert _construct_findings(staged) == []
@@ -197,7 +195,7 @@ def test_an_explicit_empty_override_already_authored_is_genuine_and_kept(tmp_pat
     staged = shutil.copytree(source, tmp_path / "staged" / _MODELO_ID)
 
     assert _construct_findings(source) == []
-    assert _prune_redundant_override_leaves(staged) == 0
+    assert prune_redundant_override_leaves(staged) == 0
 
     assert _construct_overrides(staged) == _construct_overrides(source)
     assert _prove(source, staged) == _CLEAN_REPORT

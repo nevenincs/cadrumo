@@ -29,22 +29,19 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
+from contextlib import ExitStack
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 from uuid import UUID
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
-from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
@@ -58,14 +55,12 @@ from ....application.modelo.calculation_actions import get_calculation_revision
 from ....application.modelo.calculation_projection import ModeloCalculationSnapshot
 from ....application.modelo.calculation_repository import calculation_revision_catalogue_repository
 from ....application.modelo.external_import_actions import import_external_filing_evidence
-from ....application.modelo.filing_actions import get_filing_record
 from ....application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from ....application.modelo.filing_repository import modelo_record_catalogue_repository
 from ....application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
 from ....application.modelo.registry_discovery import registry_casillas_for_registry_scope
 from ....application.modelo.work_lifecycle import get_work_unit
 from ....application.modelo.work_unit_repository import work_unit_catalogue_repository
-from ....application.user_profile.login_session import login_profile
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.casilla_id import validated_casilla_id
 from ....core.flows import FlowMode
@@ -87,6 +82,7 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from ...tests.filing_record_read_support import persisted_filing_record
 from .._modelo_amend_wizard_cli import (
     _ACTIVE_RUNS,
     _KIND_PAGE_ID,
@@ -99,21 +95,14 @@ from .._modelo_amend_wizard_cli import (
     _value_page_id,
     _values_kind_reason_definition,
 )
-from .._modelo_behavior_support import resolve_work_unit_for_cli as _resolve_work_unit_for_cli
-from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
-from .cli_runner import invoke_cached_cli
+from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit, load_work_unit_by_id
 from .modelo_cli import create_modelo_work_unit_via_cli
-from .runtime_profile_cli_fixture import (
-    NativeCliProfileFixture,
-    RuntimeFailureObservation,
-    native_cli_profile_scope,
-)
+from .modelo_profile_seed import ProfileSeeder, invoke_seeded_profile_cli, seed_profile
+from .portable_human_cli_runtime import PortableHumanCliRuntime
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["_isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
-
-_NATIVE_RUNTIME_FAILURES: list[RuntimeFailureObservation] = []
 
 
 def test_amend_wizard_missing_evidence_has_no_invented_recovery_action() -> None:
@@ -226,14 +215,8 @@ _AMEND_PARITY_SPINE = (
 )
 
 
-def _invoke(args: list[str], *, native_profile: NativeCliProfileFixture | None = None):
-    if native_profile is None:
-        return invoke_cached_cli(args)
-    close_active_bucket_session()
-    return invoke_cached_cli(
-        ["--profile", "operator", "--profile-secrets-stdin", *args],
-        input=json.dumps({"profile_passphrase": native_profile.passphrase}),
-    )
+def _invoke(args: list[str], *, runtime_profile: PortableHumanCliRuntime | None = None):
+    return invoke_seeded_profile_cli(args) if runtime_profile is None else runtime_profile.invoke(args)
 
 
 def _payload_string(output: str, key: str) -> str:
@@ -261,46 +244,34 @@ def _operator_profile_facts() -> dict[str, str]:
     }
 
 
-def _create_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(label="operator", facts=_operator_profile_facts(), log_in=False)
+def _create_profile(seed_profile: ProfileSeeder) -> PortableHumanCliRuntime:
+    """Register genuine password custody and retain the joined human runtime."""
+    return seed_profile(label="operator", facts=_operator_profile_facts())
 
 
 @pytest.fixture
-def _native_operator_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
-    """Register the test profile and serve its real Windows worker runtime."""
-    with native_cli_profile_scope(tmp_path) as profile:
-        _NATIVE_RUNTIME_FAILURES.clear()
-        profile.failure_observer = _capture_native_runtime_failure
-        profile.register(label="operator", facts=_operator_profile_facts())
-        yield profile
-
-
-def _capture_native_runtime_failure(observation: RuntimeFailureObservation) -> None:
-    """Retain sanitized exception, source location and worker exchange evidence."""
-    _NATIVE_RUNTIME_FAILURES.append(observation)
+def _operator_profile(seed_profile: ProfileSeeder) -> PortableHumanCliRuntime:
+    return _create_profile(seed_profile)
 
 
 def _profile_amend_catalogue_state(
     *,
-    native_profile: NativeCliProfileFixture,
+    runtime_profile: PortableHumanCliRuntime,
     bucket_id: str,
 ) -> tuple[object, object, object]:
-    """Snapshot catalogues after real password custody opens the registered profile."""
+    """Read the retained encrypted setup oracle independently of frontend admission."""
     with bundled_indexed_authority().operation() as operation:
-        login_profile(
-            name="operator",
-            passphrase_callback=lambda: native_profile.passphrase,
-            profile_decode_context=operation.profile_decode_context(),
+        assert str(runtime_profile.profile_id) == bucket_id
+        return (
+            work_unit_catalogue_repository(bucket_id=bucket_id).load(),
+            modelo_record_catalogue_repository(bucket_id=bucket_id).load(),
+            calculation_revision_catalogue_repository(bucket_id=bucket_id, operation=operation).load(),
         )
-    return (
-        work_unit_catalogue_repository(bucket_id=bucket_id).load(),
-        modelo_record_catalogue_repository(bucket_id=bucket_id).load(),
-        calculation_revision_catalogue_repository(bucket_id=bucket_id).load(),
-    )
 
 
-def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025) -> None:
+def _seed_justificante(
+    *, bucket_id: str, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025
+) -> None:
     """Persist the stored receipt metadata a justificante-bound evidence import requires."""
     body = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(body).hexdigest()
@@ -319,15 +290,15 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
         source_pdf_sha256=source_pdf_sha256,
         parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
     )
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
-    with open_test_profile_session(bucket_id):
-        JustificanteRepository(bucket_id=bucket_id).save(receipt)
+    JustificanteRepository(bucket_id=bucket_id).save(receipt)
 
 
 def _import_external_baseline(work_unit_id: str, *, csv: str = "JUST20251301TAMENDWIZARD", period: str = "1T") -> str:
     """Import an AEAT-attested M130 baseline filing and return its filing_record_id."""
-    _seed_justificante(csv=csv, period=period)
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with open_test_profile_session(bucket_id):
+        _seed_justificante(bucket_id=bucket_id, csv=csv, period=period)
     result = _invoke(
         [
             "--format", "json",
@@ -347,6 +318,7 @@ def _import_external_m303_baseline(
     *,
     csv: str = "JUST20253031TAMENDWIZARD",
     period: str = "1T",
+    runtime_profile: PortableHumanCliRuntime | None = None,
 ) -> str:
     """Import an AEAT-attested M303 baseline filing and return its filing_record_id.
 
@@ -357,14 +329,17 @@ def _import_external_m303_baseline(
     the period's observation and with it the result disposition an amendment
     of that period carries forward.
     """
-    _seed_justificante(csv=csv, period=period, modelo="303")
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     casilla_values, source_headers = modelo_303_filed_disposition(
         {validated_casilla_id("07", surface="amend wizard m303 baseline"): _M303_BASELINE_BASE_GENERAL},
         source_locator=csv,
     )
-    with open_test_profile_session(bucket_id), bundled_indexed_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation, ExitStack() as sessions:
+        if runtime_profile is not None:
+            assert str(runtime_profile.profile_id) == bucket_id
+        sessions.enter_context(open_test_profile_session(bucket_id))
+        _seed_justificante(bucket_id=bucket_id, csv=csv, period=period, modelo="303")
         ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
         work_unit = get_work_unit(work_unit_id, ports=ports.work_lifecycle_ports)
         record = import_external_filing_evidence(
@@ -408,13 +383,13 @@ def _scripted_amend(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(
-            unit.current_filing_record_id,
-            ports=build_filing_action_ports(bucket_id=bucket_id),
-        )
         with bundled_indexed_authority().operation() as operation:
+            baseline = persisted_filing_record(
+                unit.current_filing_record_id,
+                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
+            )
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -484,7 +459,7 @@ def _amend_via_shared_path(
     from_filing_record_id: str,
     overrides: dict[str, str],
     kind: str,
-    native_profile: NativeCliProfileFixture,
+    runtime_profile: PortableHumanCliRuntime,
     motive: str | None = None,
     reason: str,
 ):
@@ -503,7 +478,7 @@ def _amend_via_shared_path(
             "--reason", reason,
             *set_flags,
         ],
-        native_profile=native_profile,
+        runtime_profile=runtime_profile,
     )  # fmt: skip
 
 
@@ -522,13 +497,13 @@ def _permitted_kind_choice_values(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(
-            unit.current_filing_record_id,
-            ports=build_filing_action_ports(bucket_id=bucket_id),
-        )
         with bundled_indexed_authority().operation() as operation:
+            baseline = persisted_filing_record(
+                unit.current_filing_record_id,
+                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
+            )
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -563,7 +538,7 @@ def _permitted_kind_choice_values(
 
 
 def test_amend_wizard_scripted_sequence_files_m130_complementaria(
-    _native_operator_profile: NativeCliProfileFixture,
+    _operator_profile: PortableHumanCliRuntime,
 ) -> None:
     """The wizard's scripted definitions, fed to the shared amend path, file the correction.
 
@@ -594,7 +569,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
         kind=kind,
         motive=motive,
         reason=reason,
-        native_profile=_native_operator_profile,
+        runtime_profile=_operator_profile,
     )
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -611,14 +586,14 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
     revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
-            native_profile=_native_operator_profile,
+            runtime_profile=_operator_profile,
         ).output,
     )
     assert Decimal(revision["casilla_values"]["01"]) == _CORRECTED_INGRESOS
 
 
 def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
-    _native_operator_profile: NativeCliProfileFixture,
+    _operator_profile: PortableHumanCliRuntime,
 ) -> None:
     """An Autoliquidación Rectificativa on M303 files through the wizard's scripted drive.
 
@@ -650,7 +625,7 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
         kind=kind,
         motive=motive,
         reason=reason,
-        native_profile=_native_operator_profile,
+        runtime_profile=_operator_profile,
     )
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -665,21 +640,26 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
     revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
-            native_profile=_native_operator_profile,
+            runtime_profile=_operator_profile,
         ).output,
     )
     assert Decimal(revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
 
 
 def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence(
-    _native_operator_profile: NativeCliProfileFixture,
+    _operator_profile: PortableHumanCliRuntime,
 ) -> None:
     """The public command cannot infer the motive from kind, casilla, result, or reason."""
-    work_unit_id = _create_m303_work_unit()
-    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        revision=_m303_revision_id(filing_year=2025, period="1T"),
+    )
+    baseline_filing_id = _import_external_m303_baseline(work_unit_id, runtime_profile=_operator_profile)
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    before = _profile_amend_catalogue_state(native_profile=_native_operator_profile, bucket_id=bucket_id)
+    before = _profile_amend_catalogue_state(runtime_profile=_operator_profile, bucket_id=bucket_id)
 
     result = _invoke(
         [
@@ -698,17 +678,21 @@ def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence
             "--set",
             f"07={_M303_CORRECTED_BASE_GENERAL}",
         ],
-        native_profile=_native_operator_profile,
+        runtime_profile=_operator_profile,
     )
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     error = json.loads(result.output)["error"]
-    assert error["code"] == "REFUSED_CLI_BOUNDARY", result.output
-    assert error["context"]["reason"] == "REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE", result.output
-    assert error["context"]["terminal_condition"] == "refused", result.output
-    assert error["context"]["effect"] == "unknown", result.output
-    assert _profile_amend_catalogue_state(native_profile=_native_operator_profile, bucket_id=bucket_id) == before
+    assert error["code"] == "REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE", result.output
+    context = error["context"]
+    assert context["modelo"] == "303", result.output
+    assert context["amendment_kind"] == "rectificativa", result.output
+    assert context["motive_applicable"] == "true", result.output
+    assert context["motive_present"] == "false", result.output
+    assert context["terminal_condition"] == "refused", result.output
+    assert context["effect"] == "unknown", result.output
+    assert _profile_amend_catalogue_state(runtime_profile=_operator_profile, bucket_id=bucket_id) == before
 
 
 def test_work_amend_refuses_free_text_m303_rectificativa_motive_at_the_public_parser() -> None:
@@ -737,7 +721,7 @@ def test_work_amend_refuses_free_text_m303_rectificativa_motive_at_the_public_pa
 
 
 def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
-    _native_operator_profile: NativeCliProfileFixture,
+    _operator_profile: PortableHumanCliRuntime,
 ) -> None:
     """Wizard-derived amend inputs and a hand-built ``work amend`` agree exactly.
 
@@ -780,7 +764,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
         kind=kind,
         motive=motive,
         reason=reason,
-        native_profile=_native_operator_profile,
+        runtime_profile=_operator_profile,
     )
     assert wizard_result.exit_code == 0, wizard_result.output
     wizard_payload = _payload(wizard_result.output)
@@ -795,11 +779,9 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
             "--reason", "hand-built rectificativa",
             "--set", f"07={_M303_CORRECTED_BASE_GENERAL}",
         ],
-        native_profile=_native_operator_profile,
+        runtime_profile=_operator_profile,
     )  # fmt: skip
-    assert hand_built_result.exit_code == 0, (
-        f"{hand_built_result.output}; server failure observations={_NATIVE_RUNTIME_FAILURES}"
-    )
+    assert hand_built_result.exit_code == 0, f"{hand_built_result.output}"
     hand_built_payload = _payload(hand_built_result.output)
 
     # The wizard-derived override set is exactly the hand-typed one.
@@ -815,7 +797,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
     wizard_revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", wizard_payload["calculation_revision_id"]],
-            native_profile=_native_operator_profile,
+            runtime_profile=_operator_profile,
         ).output,
     )
     hand_built_revision = _payload(
@@ -824,7 +806,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
                 "--format", "json",
                 "app", "modelo", "work", "revision", hand_built_payload["calculation_revision_id"],
             ],
-            native_profile=_native_operator_profile,
+            runtime_profile=_operator_profile,
         ).output,
     )  # fmt: skip
     assert (
@@ -844,7 +826,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
     assert wizard_obs["source_refs"] == hand_built_obs["source_refs"]
 
 
-def test_amend_wizard_kind_select_offers_only_period_permitted_kinds() -> None:
+def test_amend_wizard_kind_select_offers_only_period_permitted_kinds(seed_profile: ProfileSeeder) -> None:
     """The amendment-kind SELECT is period-aware: it offers only the legally-available kinds.
 
     M303 2025 1T is post-unification, so the kind SELECT offers ``rectificativa``
@@ -853,7 +835,7 @@ def test_amend_wizard_kind_select_offers_only_period_permitted_kinds() -> None:
     ``complementaria`` and NOT ``rectificativa``. Asserted on the projected
     choice set the operator is actually offered, not on any localized prose.
     """
-    _create_profile()
+    _create_profile(seed_profile)
 
     m303_unit_id = _create_m303_work_unit()
     _import_external_m303_baseline(m303_unit_id)
@@ -868,14 +850,14 @@ def test_amend_wizard_kind_select_offers_only_period_permitted_kinds() -> None:
     assert "rectificativa" not in m130_kinds
 
 
-def test_amend_wizard_scripting_a_non_permitted_kind_is_refused() -> None:
+def test_amend_wizard_scripting_a_non_permitted_kind_is_refused(seed_profile: ProfileSeeder) -> None:
     """Scripting a kind the SELECT does not offer is refused by the substrate, nothing filed.
 
     ``complementaria`` is not a permitted M303 2025 kind, so it is not a choice
     on the amendment-kind SELECT; the scripted driver rejects the unknown token
     with the substrate's typed answer-rejected error rather than filing it.
     """
-    _create_profile()
+    _create_profile(seed_profile)
     work_unit_id = _create_m303_work_unit()
     _import_external_m303_baseline(work_unit_id)
 
@@ -889,14 +871,14 @@ def test_amend_wizard_scripting_a_non_permitted_kind_is_refused() -> None:
         )
 
 
-def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
+def test_amend_wizard_blank_selection_yields_no_corrections(seed_profile: ProfileSeeder) -> None:
     """A blank CHECKBOX selection reads back as no selected casillas.
 
     The selection page is optional, so a scripted blank answer submits with an
     empty selection -- the wizard turns that into the no-corrections refusal
     before any value is asked. Proven at the substrate level the wizard reads.
     """
-    _create_profile()
+    _create_profile(seed_profile)
     work_unit_id = _create_m130_work_unit()
     _import_external_baseline(work_unit_id)
 
@@ -904,13 +886,13 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        unit = load_work_unit_by_id(work_unit_id=work_unit_id)
         assert unit.current_filing_record_id is not None
-        baseline = get_filing_record(
-            unit.current_filing_record_id,
-            ports=build_filing_action_ports(bucket_id=bucket_id),
-        )
         with bundled_indexed_authority().operation() as operation:
+            baseline = persisted_filing_record(
+                unit.current_filing_record_id,
+                ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
+            )
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -939,7 +921,7 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
 
 
 def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(
-    _native_operator_profile: NativeCliProfileFixture,
+    _operator_profile: PortableHumanCliRuntime,
 ) -> None:
     """A non-TTY caller with an amendable baseline gets the substrate's typed refusal.
 
@@ -953,7 +935,7 @@ def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(
 
     result = _invoke(
         ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
-        native_profile=_native_operator_profile,
+        runtime_profile=_operator_profile,
     )
 
     assert result.exit_code != 0
@@ -962,13 +944,13 @@ def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(
     assert error["code"] == "REFUSED_FLOW_UNSUPPORTED_CONSOLE"
 
 
-def test_amend_wizard_refuses_without_evidence_baseline() -> None:
+def test_amend_wizard_refuses_without_evidence_baseline(seed_profile: ProfileSeeder) -> None:
     """A local work unit cannot enter the external-filing amendment path.
 
     The evidence check runs before any flow is constructed, so the refusal is a
     plain instructive parameter error, never the console refusal.
     """
-    _create_profile()
+    _create_profile(seed_profile)
     work_unit_id = _create_m130_work_unit()
 
     result = _invoke(["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id])

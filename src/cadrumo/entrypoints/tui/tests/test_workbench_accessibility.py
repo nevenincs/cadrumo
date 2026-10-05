@@ -89,7 +89,7 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
     app = ScreenHostApp(screen)
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
         await pilot.pause()
-        targets = tuple(screen.home_targets)
+        targets = tuple(screen._targets.values())
         app.exit(None)
 
     assert len(targets) > 1, "the ready fixture must offer more than one row to restore between"

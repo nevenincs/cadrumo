@@ -228,11 +228,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthClientNotRegisteredError",
+        "cadrumo.adapters.outbound.google.errors.GoogleAuthClientMetadataUnavailableError",
         ErrorCode(
-            code="AUTH_GOOGLE_CLIENT_NOT_REGISTERED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_google_client_not_registered",
+            code="REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_client_metadata_unavailable",
             retryable=False,
             runbook_id=None,
         ),
@@ -248,21 +248,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthRevokedError",
+        "cadrumo.adapters.outbound.google.errors.GoogleAuthSignInRequiredError",
         ErrorCode(
-            code="AUTH_GOOGLE_REVOKED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_google_revoked",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthExpiredError",
-        ErrorCode(
-            code="AUTH_GOOGLE_EXPIRED",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_google_expired",
+            code="REFUSED_GOOGLE_SIGN_IN_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_sign_in_required",
             retryable=False,
             runbook_id=None,
         ),
@@ -333,36 +323,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_GOOGLE_PROFILE_UNBOUND",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_google_profile_unbound",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthAdcUnavailableError",
-        ErrorCode(
-            code="FAIL_GOOGLE_ADC_UNAVAILABLE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_google_adc_unavailable",
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthAdcStaleError",
-        ErrorCode(
-            code="FAIL_GOOGLE_ADC_STALE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_google_adc_stale",
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.google.impersonation.GoogleAuthImpersonationRefusedError",
-        ErrorCode(
-            code="REFUSED_GOOGLE_IMPERSONATION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_google_impersonation",
             retryable=False,
             runbook_id=None,
         ),

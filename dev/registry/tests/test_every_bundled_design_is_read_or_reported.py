@@ -62,7 +62,8 @@ from dev.registry.compiler.record_design_schema import (
 )
 
 from ..compiler.record_design import extract_record_design
-from ..compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
+from ..compiler.record_design_pdf_coordinate_repairs import collapse_stuttered_row_prefix
+from ..compiler.record_design_pdf_fragment_repairs import join_wrapped_row_descriptions
 from ..compiler.record_design_pdf_rows import parse_pdf_row
 from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 

@@ -23,6 +23,7 @@ from .certificate_secret_backend import CertificateSecretBackendFactory
 from .certificate_sources import active_certificate_source
 from .operator_scope import active_profile_storage_span
 from .operator_scope_ports import OperatorScopePorts
+from .preferences import profile_auth_provider
 
 
 def resolve_certificate_source_secret(
@@ -134,7 +135,16 @@ def _witnessed_auth_projection_snapshot(
     settings: Settings,
 ) -> ActiveAuthProjectionSnapshot:
     """Build a credential projection from state loaded inside the active route."""
-    provider = _project_provider_kind(requested_provider or state.auth.provider or fallback_provider)
+    from ..user_profile.projections import record_to_path_values
+
+    record = state.active_profile_record()
+    preference = profile_auth_provider(record_to_path_values(record))
+    provider = _project_provider_kind(
+        requested_provider
+        or (preference.value if preference is not None else None)
+        or (state.auth.provider if record is None else None)
+        or fallback_provider
+    )
     credentials = (
         _resolve_witnessed_certificate_credentials(
             state,
@@ -165,7 +175,7 @@ def active_auth_projection_span(
     """Pin one active route while loading state, provider, credentials, and consumers.
 
     ``requested_provider`` has explicit operator precedence. ``fallback_provider``
-    applies only when neither the operator nor the witnessed workflow state
+    applies only when neither the operator nor the witnessed profile has
     selected a provider. Status/test callers omit the fallback so they never
     invent configuration; login/preflight can apply their established default
     without reopening the route.
@@ -220,8 +230,7 @@ def resolve_active_provider_kind(
     This is the one reader of "which provider is configured", shared by the
     operator login surface and the live-read session bring-up so the two
     cannot disagree: the precedence is an explicit ``requested_provider``,
-    then the selection persisted by ``aeat config auth configure`` in the
-    witnessed :class:`application.workflow.state_models.WorkflowState`, then
+    then the encrypted profile preference written by authentication configuration, then
     ``fallback_provider``. :class:`Settings` is a fallback, never an
     override, because the persisted selection is the operator's recorded
     decision while a settings value is only a deployment default.

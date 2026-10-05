@@ -10,6 +10,7 @@ at this adapter boundary.
 
 from __future__ import annotations
 
+from ....core.repository_id import repository_id_violation
 from .errors import PathContainmentError
 
 
@@ -67,24 +68,9 @@ def safe_repository_id(token: str, *, context: str) -> str:
             separator, is the bare ``.`` / ``..`` token, or starts
             with a dot.
     """
-    if not token:
-        raise _containment_error(
-            f"{context} must be non-empty",
-            context=context,
-            violation="empty_repository_id",
-        )
-    if "/" in token or "\\" in token:
-        raise _containment_error(
-            f"{context} must not contain path separators",
-            context=context,
-            violation="repository_id_separator",
-        )
-    if token in {".", ".."} or token.startswith("."):
-        raise _containment_error(
-            f"{context} must not be a relative-path token",
-            context=context,
-            violation="repository_id_dot_token",
-        )
+    violation = repository_id_violation(token)
+    if violation is not None:
+        raise _containment_error(f"{context} {violation.requirement}", context=context, violation=violation.value)
     return token
 
 

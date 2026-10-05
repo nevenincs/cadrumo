@@ -36,6 +36,66 @@ _TOP_LEVEL_KEYS: Final[frozenset[str]] = frozenset(
 )
 
 
+def _parse_runtime_selector(row: Mapping[str, object], context: str, phase: RuntimePhase, minor: str) -> str:
+    """Parse runtime selector."""
+    selector = _require_string(row["selector"], context=f"{context}.selector")
+    if _SELECTOR_RE.fullmatch(selector) is None:
+        raise RuntimeMatrixError(f"{context}.selector is not a Python selector: {selector!r}")
+    if phase is RuntimePhase.STABLE and selector != minor:
+        raise RuntimeMatrixError(f"{context}.selector {selector!r} must select stable minor {minor}")
+    # A bare minor is intentional for the rolling prerelease channel: it lets
+    # uv provision the currently available prerelease instead of naming an RC
+    # that may no longer be available from the configured interpreter source.
+    if phase is RuntimePhase.PRERELEASE and selector != minor and not selector.startswith(f"{minor}."):
+        raise RuntimeMatrixError(
+            f"{context}.selector {selector!r} must be the rolling minor {minor!r} "
+            f"or a versioned selector for that minor",
+        )
+    return selector
+
+
+def _require_stable_runtime_sequence(
+    stable: tuple[RuntimeRecord, ...], minimum_number: int, current_number: int
+) -> None:
+    """Require stable runtime sequence."""
+    expected_minors = tuple(f"3.{number}" for number in range(minimum_number, current_number + 1))
+    observed_minors = tuple(row.minor for row in stable)
+    if observed_minors != expected_minors:
+        raise RuntimeMatrixError(
+            "runtime inventory.stable must list every released minor in order: "
+            f"expected {expected_minors!r}, got {observed_minors!r}",
+        )
+    expected_ids = tuple(f"cp3{number}" for number in range(minimum_number, current_number + 1))
+    observed_ids = tuple(row.identifier for row in stable)
+    if observed_ids != expected_ids:
+        raise RuntimeMatrixError(
+            "runtime inventory.stable ids must follow the minor sequence: "
+            f"expected {expected_ids!r}, got {observed_ids!r}",
+        )
+    if len({row.identifier for row in stable}) != len(stable):  # defensive; sequence check catches normal duplicates
+        raise RuntimeMatrixError("runtime inventory has duplicate stable ids")
+
+
+def _parse_next_runtime(
+    document: Mapping[str, object], current: str, current_number: int, stable: tuple[RuntimeRecord, ...]
+) -> RuntimeRecord:
+    """Parse next runtime."""
+    next_row = _parse_record(document["next"], context="runtime inventory.next", phase=RuntimePhase.PRERELEASE)
+    expected_next_minor = f"3.{current_number + 1}"
+    if next_row.minor != expected_next_minor:
+        raise RuntimeMatrixError(
+            f"runtime inventory.next must immediately follow {current!r}, got {next_row.minor!r}",
+        )
+    expected_next_id = f"cp3{current_number + 1}-next"
+    if next_row.identifier != expected_next_id:
+        raise RuntimeMatrixError(
+            f"runtime inventory.next.id must be {expected_next_id!r}, got {next_row.identifier!r}",
+        )
+    if next_row.identifier in {row.identifier for row in stable}:
+        raise RuntimeMatrixError(f"runtime inventory has duplicate id {next_row.identifier!r}")
+    return next_row
+
+
 class RuntimePhase(StrEnum):
     """The two lifecycle states represented in the inventory."""
 
@@ -134,19 +194,7 @@ def _parse_record(value: object, *, context: str, phase: RuntimePhase) -> Runtim
     _require_exact_keys(row, _RUNTIME_KEYS, context=context)
     identifier = _require_string(row["id"], context=f"{context}.id")
     minor = _parse_minor(row["minor"], context=f"{context}.minor")
-    selector = _require_string(row["selector"], context=f"{context}.selector")
-    if _SELECTOR_RE.fullmatch(selector) is None:
-        raise RuntimeMatrixError(f"{context}.selector is not a Python selector: {selector!r}")
-    if phase is RuntimePhase.STABLE and selector != minor:
-        raise RuntimeMatrixError(f"{context}.selector {selector!r} must select stable minor {minor}")
-    # A bare minor is intentional for the rolling prerelease channel: it lets
-    # uv provision the currently available prerelease instead of naming an RC
-    # that may no longer be available from the configured interpreter source.
-    if phase is RuntimePhase.PRERELEASE and selector != minor and not selector.startswith(f"{minor}."):
-        raise RuntimeMatrixError(
-            f"{context}.selector {selector!r} must be the rolling minor {minor!r} "
-            f"or a versioned selector for that minor",
-        )
+    selector = _parse_runtime_selector(row, context, phase, minor)
     implementation = _require_string(row["implementation"], context=f"{context}.implementation")
     if implementation != "CPython":
         raise RuntimeMatrixError(f"{context}.implementation must be 'CPython', got {implementation!r}")
@@ -203,36 +251,9 @@ def parse_runtime_inventory(payload: object) -> RuntimeInventory:
         _parse_record(value, context=f"runtime inventory.stable[{index}]", phase=RuntimePhase.STABLE)
         for index, value in enumerate(stable_payload)
     )
-    expected_minors = tuple(f"3.{number}" for number in range(minimum_number, current_number + 1))
-    observed_minors = tuple(row.minor for row in stable)
-    if observed_minors != expected_minors:
-        raise RuntimeMatrixError(
-            "runtime inventory.stable must list every released minor in order: "
-            f"expected {expected_minors!r}, got {observed_minors!r}",
-        )
-    expected_ids = tuple(f"cp3{number}" for number in range(minimum_number, current_number + 1))
-    observed_ids = tuple(row.identifier for row in stable)
-    if observed_ids != expected_ids:
-        raise RuntimeMatrixError(
-            "runtime inventory.stable ids must follow the minor sequence: "
-            f"expected {expected_ids!r}, got {observed_ids!r}",
-        )
-    if len({row.identifier for row in stable}) != len(stable):  # defensive; sequence check catches normal duplicates
-        raise RuntimeMatrixError("runtime inventory has duplicate stable ids")
+    _require_stable_runtime_sequence(stable, minimum_number, current_number)
 
-    next_row = _parse_record(document["next"], context="runtime inventory.next", phase=RuntimePhase.PRERELEASE)
-    expected_next_minor = f"3.{current_number + 1}"
-    if next_row.minor != expected_next_minor:
-        raise RuntimeMatrixError(
-            f"runtime inventory.next must immediately follow {current!r}, got {next_row.minor!r}",
-        )
-    expected_next_id = f"cp3{current_number + 1}-next"
-    if next_row.identifier != expected_next_id:
-        raise RuntimeMatrixError(
-            f"runtime inventory.next.id must be {expected_next_id!r}, got {next_row.identifier!r}",
-        )
-    if next_row.identifier in {row.identifier for row in stable}:
-        raise RuntimeMatrixError(f"runtime inventory has duplicate id {next_row.identifier!r}")
+    next_row = _parse_next_runtime(document, current, current_number, stable)
     return RuntimeInventory(
         schema=schema,
         minimum_minor=minimum,

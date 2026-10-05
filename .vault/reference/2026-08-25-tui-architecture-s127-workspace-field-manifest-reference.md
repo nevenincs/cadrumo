@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:bccc1f6ad77b7bfc15d659af45b8c34dff76aa4d75441f4e7a595e0ed105ff52'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+related: []
 ---
 # `tui-architecture` reference: `S127 Workspace field-manifest derivation`
 

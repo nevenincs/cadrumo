@@ -14,6 +14,10 @@ import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
+from cadrumo.application.modelo.declarations_workspace_contracts import (
+    DeclarationsWorkspaceDeclarationRefV1,
+    DeclarationsWorkspaceProjectionV1,
+)
 from cadrumo.application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
 from cadrumo.application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
@@ -42,6 +46,10 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo.application.overview.calendar_models import OverviewPeriodState
 from cadrumo.application.overview.next_actions import declare_next_action
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.workbench_generation_contracts import (
+    WorkbenchGenerationProjectionResultV1,
+    WorkbenchGenerationV1,
+)
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -280,6 +288,41 @@ def test_runtime_create_submits_exact_profile_period_and_refreshes_after_success
     )
     assert submission["expected_session_id"] == _SESSION
     assert isinstance(submission["deadline"], float)
+
+
+def test_runtime_create_returns_the_declaration_the_refreshed_generation_admits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _Client()
+    result = _success_result(reused=False)
+    controller = _Controller(_observation(effect=OperationEffect.UPDATED), result)
+    _bind_submit(monkeypatch, client, controller)
+    created = result.outcome
+    assert not isinstance(created, ModeloWorkCreateRefusal)
+    admitted = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=created.unit.work_unit_id,
+        modelo="303",
+        filing_year=_PERIOD.filing_year,
+        period=_PERIOD,
+        state=WorkUnitState.BORRADOR,
+        has_current_calculation=False,
+        has_current_filing=False,
+    )
+    other = admitted.model_copy(update={"work_unit_id": "f" * 64})
+    # Only the declarations projection of the refreshed generation is read here.
+    refreshed = WorkbenchGenerationV1.model_construct(
+        declarations=WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1].model_construct(
+            projection=DeclarationsWorkspaceProjectionV1.model_construct(declarations=(other, admitted))
+        )
+    )
+    handoff = runtime_work_create.compose_runtime_work_create_handoff(
+        cast(RuntimeFrontendClient, client), refresh_after_success=lambda: refreshed
+    )
+
+    returned = handoff("303", 2026, _PERIOD)
+
+    assert returned.declaration == admitted
+    assert returned.advisory_keys == _ADVISORIES
 
 
 def test_runtime_create_registered_applicability_refusal_preserves_terminal_receipt(

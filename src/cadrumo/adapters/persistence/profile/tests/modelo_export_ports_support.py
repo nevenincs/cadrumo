@@ -21,10 +21,12 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.own_accounts import OwnAccountRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -54,6 +56,8 @@ from cadrumo.domain.modelos.protocols import (
 from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from cadrumo.domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+
+from ..iva_compensation_history import IvaCompensationHistoryRepository
 
 _EMPTY_EXPORT_BUCKET_ID = "ephemeral"
 
@@ -102,10 +106,13 @@ def _compose_modelo_export_ports(
         ),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
+        iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
         justificante=JustificanteRepository(objects=objects),
         prorrata_register=ProrrataRegisterRepository(bucket_id=bucket_id, objects=objects),
         bienes_inversion=BienesInversionIvaRegisterRepository(bucket_id=bucket_id, objects=objects),
+        m360_solicitud=Modelo360SolicitudRepository(bucket_id=bucket_id, objects=objects),
+        own_accounts=OwnAccountRepository(bucket_id=bucket_id, objects=objects),
         transaction=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         draft_review_ports=_draft_review_ports_for_test(bucket_id=bucket_id, objects=objects),
         retencion_observation_ports=RetencionObservationPorts(
@@ -163,6 +170,7 @@ def modelo_export_ports_for_test(
         verification=verification if verification is not None else composed.verification,
         bucket_event=bucket_event if bucket_event is not None else composed.bucket_event,
         observation=observation if observation is not None else composed.observation,
+        iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision=(
             iva_compensation_decision if iva_compensation_decision is not None else composed.iva_compensation_decision
         ),

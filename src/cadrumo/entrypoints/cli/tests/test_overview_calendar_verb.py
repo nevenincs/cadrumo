@@ -27,7 +27,8 @@ from ....application.live.notification_ports import NotificationsSnapshot, Remot
 from ....application.live.notifications import NotificationsService
 from ....application.overview.calendar import build_overview_calendar, shift_reason_statement
 from ....application.overview.calendar_models import OverviewCalendarRange
-from ....application.user_profile.projections import record_to_values
+from ....application.user_profile.projections import projection_for_taxpayer, record_to_values
+from ....application.workflow.persistence import workflow_state_repository
 from ....core.classification.policies import SensitivityClass
 from ....core.config import load_settings, override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
@@ -46,7 +47,6 @@ from ....domain.user_profile.values import ProfileSetupState, create_user_profil
 from ...adapter_composition import build_expedientes_ports
 from ...live_state_composition import compose_notifications_ports
 from ...overview_evidence_composition import live_censo_verified_profile_keys
-from ..common import current_workflow_state, profile_to_taxpayer
 from . import _overview_calendar_support
 from ._overview_calendar_support import (
     _CALENDAR_GATING_FACT_OVERRIDES,
@@ -294,11 +294,14 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
     """Real CLI fleet parity consumes the canonical horizon and application projection."""
     with frozen_clock(now()):
         reference_today = today_madrid()
-        current = current_workflow_state()
-        profile = profile_to_taxpayer(current)
-        record = current.active_profile_record()
+        record = workflow_state_repository().load().active_profile_record()
         with bundled_indexed_authority().operation() as operation:
             raw_values = record_to_values(record, schema=operation.profile_schema()) if record is not None else None
+            profile = (
+                projection_for_taxpayer({})
+                if record is None
+                else projection_for_taxpayer(record, schema=operation.profile_decode_context().schema)
+            )
         supported_years = published_supported_filing_years()
         assert supported_years is not None
 

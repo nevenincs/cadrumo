@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#live-iva-compensation-wallet'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:c581de16f39f47818abdb27617083757fabdef60ddff1b1968476705551517d4'
+modified: '2026-10-03'
+body_hash: 'sha256:5c17bf6a80465eb44e28815817e93ed5ea523f1fec183b4e89701ae8361df62c'
 related: []
 ---
 
@@ -89,9 +89,9 @@ A focused `vaultspec-code-reviewer` check returned no finding on the centralizat
 Verification completed:
 
 - `uv run ruff check` passed for the touched gate, auth, live CLI, auth adapter, and focused test files.
-- `uv run pytest src/aeat/adapters/outbound/aeat/auth/test_gate.py src/aeat/core/access_gate/test_override.py src/aeat/entrypoints/cli/_config/test_auth_round5_surface.py -q` completed with 30 passed.
+- the historical check completed with 30 passed.
 - `uv run pytest` for the four legacy CLI live-gate ordering tests in `test_registry_cli.py` completed with 4 passed, proving pytest-context invocations still refuse before local writes.
-- `uv run pytest src/aeat/application/live/test_iva_live_failure_taxonomy.py src/aeat/application/live/test_iva_wallet_live.py -q` completed with 7 passed and 1 deselected.
+- the historical check completed with 7 passed and 1 deselected.
 
 Residual risk: the broader `AEAT_LIVE_TESTS_ENABLED` inventory and static-guard work remains open under `W11.P25.S94`, `W11.P25.S96`, and `W11.P25.S97`. The earlier `vaultspec-rag search` local-store lock/timeout ambiguity is closed under `W10.P24.S98` as typed tooling diagnostics; upstream service stability remains an external tooling risk, not a silent AEAT discovery claim.
 
@@ -238,9 +238,9 @@ The S73 AST inventory excluded tests, docstrings, and the central external-const
 Remaining findings are not wallet-specific blockers, but they are still centralization work:
 
 - `src/aeat/domain/portals/_entries`: 41 portal catalogue route literals under `/Sede/` or `/wlpl/`.
-- `src/aeat/domain/portals/_categories.py`: 6 AEAT host enum literals.
-- `src/aeat/domain/portals/_metadata.py`: 1 portal metadata regex/error string for `/Sede/procedimientoini/G...shtml`.
-- `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`: 1 JavaScript snippet containing the `ObtenerClaveMovil` browser-global token.
+- the retired module: 6 AEAT host enum literals.
+- the retired module: 1 portal metadata regex/error string for `/Sede/procedimientoini/G...shtml`.
+- the retired module: 1 JavaScript snippet containing the `ObtenerClaveMovil` browser-global token.
 
 S74 resolves the source-of-truth findings: portal catalogue paths and filing/censo path-shape rules now live under the typed external-constants `portal_paths` table, `PortalHost` values are stable registry keys rather than hostnames, portal metadata validation resolves hostnames through the central AEAT domain registry, and the Cl@ve browser-global token is centralized under the Cl@ve surface. S75 now encodes the portal route/host boundary in a static guard; the broader test-tree literal classification remains tracked separately under WALLET-044/S88.
 
@@ -304,7 +304,7 @@ Final S88 inventory is `TOTAL=0` outside `aeat.tests.aeat_literal_fixtures`. Ruf
 
 ## WALLET-054 | MEDIUM | REVIEW-PASSED | Modelo 100 payments-retentions construct expectation drift resolved under S90
 
-During the S88 focused registry verification, `src/aeat/domain/calculations/registry/test_modelo_100_registry.py::test_modelo_100_payments_retentions_construct_excludes_atribucion_bindings` failed independently of the URL migration. The assertion expected `payments_retentions.bindings` to equal the previous-filing bindings filtered only by `"atribucion"`, but current registry state includes `renta-2025-base-liquidable-negativa-general-anterior` in the expected set while the construct does not carry it.
+During the S88 focused registry verification, the retired test:test_modelo_100_payments_retentions_construct_excludes_atribucion_bindings failed independently of the URL migration. The assertion expected `payments_retentions.bindings` to equal the previous-filing bindings filtered only by `"atribucion"`, but current registry state includes `renta-2025-base-liquidable-negativa-general-anterior` in the expected set while the construct does not carry it.
 
 S90 resolved this as test expectation drift. The registry TOML was already coherent: `renta-payments-retentions` is limited to dependency classifications that target payments/retentions, while `renta-2025-base-liquidable-negativa-general-anterior` is a previous-year Modelo 100 carry-forward binding owned by `renta-anexo-c-base-liquidable-negativa-general`, not a payment or retention dependency. The repaired test now derives expected payment/retention bindings and relations from production dependency classifications and explicitly pins the base-negative carry-forward exclusion to the Anexo C construct.
 
@@ -352,7 +352,7 @@ Focused tests prove the typed timeout classification and run a fresh Python subp
 
 2026-06-04 S93 retry follow-up: the first `900000` ms watchdog default was insufficient for the operator/tool environment because the live retry command was bounded externally at 300000 ms. The shell timed out first and left a uv/aeat/python/Playwright/Chrome tree alive. The tree was killed by exact PID and temporary Playwright profile match. S92 was reopened and corrected to `240000` ms, and the settings regression now asserts the default remains below the 300000 ms live retry outer bound.
 
-2026-06-04 containment follow-up: the corrected 240000 ms watchdog returned a typed timeout before the outer shell limit, but the first corrected run still left Chrome processes tied to a new Playwright temp profile. The CLI watchdog now snapshots preexisting Playwright temp-profile tokens and, on timeout, reaps only processes carrying newly-created `playwright_chromiumdev_profile-*` tokens. Local subprocess reaper coverage passes, and a subsequent live timeout retry returned the same typed `remote_state_command` timeout with no matching capture command, Playwright driver, or temp-profile Chrome process remaining.
+2026-06-04 containment follow-up: the corrected 240000 ms watchdog returned a typed timeout before the outer shell limit, but the first corrected run still left Chrome processes tied to a new Playwright temp profile. The CLI watchdog now snapshots preexisting Playwright temp-profile tokens , on timeout, reaps only processes carrying newly-created `playwright_chromiumdev_profile-*` tokens. Local subprocess reaper coverage passes, and a subsequent live timeout retry returned the same typed `remote_state_command` timeout with no matching capture command, Playwright driver, or temp-profile Chrome process remaining.
 
 2026-06-04 reopened status: later process inventory found that the previous no-stale-process claim was incorrect. A stale `capture-remote-state` command and temp-profile Chrome tree from the same read-only live retry were still running and were terminated by exact command/profile match.
 

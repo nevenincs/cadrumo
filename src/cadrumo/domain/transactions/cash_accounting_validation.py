@@ -6,7 +6,9 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.decimal.constants import ZERO
-from ..calculations.registry.iva_schema_vocabulary import require_iva_cash_accounting_treatment
+from ..calculations.registry.iva_cash_accounting_vocabulary import (
+    require_iva_cash_accounting_treatment,
+)
 from ..iva.schema import (
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,

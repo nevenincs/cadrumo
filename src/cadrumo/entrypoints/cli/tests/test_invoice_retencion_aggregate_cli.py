@@ -30,7 +30,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from cadrumo.application.modelo.invoice_withholding_capture_operation import (
+from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -62,6 +62,7 @@ from ....application.modelo.calculation_actions import (
 )
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.aggregation import RetencionClave
+from ....core.i18n.render import lookup_translation
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -562,25 +563,18 @@ def test_issued_invoice_retencion_is_refused_and_not_routed(
             assert stored == ()
 
 
-@pytest.mark.parametrize(
-    ("language", "credit_reason", "non_resident_reason"),
-    (
-        ("en", "the retención on an issued invoice is a credit", "The supplier is not resident in Spain"),
-        ("es", "la retención de una factura emitida es un crédito", "El proveedor no es residente en España"),
-    ),
-)
+@pytest.mark.parametrize("language", ("en", "es"))
 def test_an_invoice_with_two_defects_is_refused_naming_both(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
     language: str,
-    credit_reason: str,
-    non_resident_reason: str,
 ) -> None:
     """An issued invoice from a non-resident is refused once, with both defects, in the operator's language.
 
-    The refusal reaches the registered error envelope rather than a flattened
-    argument error, so a machine reads every defect token and a person reads
-    every explanation, and nothing reaches the per-perceptor store.
+    The refusal crosses the profile worker as stable defect tokens and reaches
+    the registered error envelope rather than a flattened argument error, so a
+    machine reads every defect token and a person reads every explanation, and
+    nothing reaches the per-perceptor store.
     """
     with native_api_cli_session(
         tmp_path,
@@ -598,8 +592,6 @@ def test_an_invoice_with_two_defects_is_refused_naming_both(
     ) as session:
         issued_abroad = session.prepared
         result = session.invoke_password(
-            "--format",
-            "json",
             "--language",
             language,
             "app",
@@ -624,12 +616,15 @@ def test_an_invoice_with_two_defects_is_refused_naming_both(
         error = json.loads(result.output)["error"]
         assert error["code"] == "REFUSED_INVOICE_WITHHOLDING_DEFECTS", error
         assert error["context"]["refusal_code"] == "not_a_retenedor_liability,non_resident_supplier"
-        assert credit_reason in error["context"]["defect_reasons"]
-        assert non_resident_reason in error["context"]["defect_reasons"]
+        for defect in ("not_a_retenedor_liability", "non_resident_supplier"):
+            reason = lookup_translation(f"aggregation.invoice_retencion.defects.{defect}", locale=language)
+            assert reason is not None, defect
+            assert reason in error["context"]["defect_reasons"], error
 
         with password_profile_session(session.profile_id, authority_operation):
             stored = build_retencion_observation_ports(bucket_id=str(session.profile_id)).repository.load_observations(
-                "111", _M111_PERIOD
+                "111",
+                _M111_PERIOD,
             )
             assert stored == ()
 

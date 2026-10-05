@@ -36,6 +36,9 @@ and the verdict-factory and required/optional badge keys stay scanner-visible.
 
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 
 from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
@@ -54,7 +57,9 @@ from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._paths import SRC_DIR
 from .._registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
 from ..fstring_registry import get_registered_keys
-from ..manager import LocaleManager, LocaleNode, locale_catalogue_source
+from ..locale_nodes import LocaleNode
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 from ..wizard_translation_audit import wizard_descriptor_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -233,6 +238,122 @@ def test_dynamic_family_registrations_match_their_producer_sources() -> None:
             f"{prefix} registration diverged from its producer source; "
             f"missing={sorted(source_keys - actual)}, extra={sorted(actual - source_keys)}"
         )
+
+
+def test_declaration_list_families_cover_the_live_producer_vocabularies() -> None:
+    """A new choice or row state cannot vanish behind a registered wildcard."""
+    from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
+    from cadrumo.application.modelo.declarations_list import DeclarationListGroup, declaration_list_rows
+    from cadrumo.application.overview.coverage import CoverageAdviceReason
+    from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
+    from cadrumo.entrypoints.tui.declarations.portfolio_rendering import DECLARATION_GROUP_LOCALE_KEYS
+    from cadrumo.entrypoints.tui.declarations.row_words import row_lines
+
+    producer = ast.parse(inspect.getsource(declaration_list_rows))
+    states = {member.value for member in DeclarationSummaryState}
+    for node in ast.walk(producer):
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "state" for t in node.targets):
+            states.update(
+                c.value for c in ast.walk(node.value) if isinstance(c, ast.Constant) and isinstance(c.value, str)
+            )
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "DeclarationListRow"
+            and len(node.args) > 3
+            and isinstance(node.args[3], ast.Constant)
+            and isinstance(node.args[3].value, str)
+        ):
+            states.add(node.args[3].value)
+    renderer_module = inspect.getmodule(row_lines)
+    assert renderer_module is not None
+    renderer = ast.parse(inspect.getsource(renderer_module))
+    renderer_functions = {node.name: node for node in renderer.body if isinstance(node, ast.FunctionDef)}
+    next_choices: set[str] = set()
+
+    def choice_values(expression: ast.expr) -> set[str]:
+        if isinstance(expression, ast.IfExp):
+            return choice_values(expression.body) | choice_values(expression.orelse)
+        assert isinstance(expression, ast.Constant) and isinstance(expression.value, str)
+        return {expression.value}
+
+    for node in ast.walk(renderer):
+        if isinstance(node, ast.If) and isinstance(node.test, ast.Compare):
+            comparison = node.test
+            if (
+                isinstance(comparison.left, ast.Attribute)
+                and isinstance(comparison.left.value, ast.Name)
+                and comparison.left.value.id == "row"
+                and comparison.left.attr == "state"
+                and len(comparison.ops) == 1
+                and isinstance(comparison.ops[0], ast.Eq)
+                and isinstance(comparison.comparators[0], ast.Constant)
+                and isinstance(comparison.comparators[0].value, str)
+                and any(isinstance(statement, ast.Assign) for statement in node.body)
+            ):
+                # Unconditional explicit branches never translate a state tail.
+                states.discard(comparison.comparators[0].value)
+        if (
+            isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "key" for t in node.targets)
+            and isinstance(node.value, ast.IfExp)
+        ):
+            next_choices.update(choice_values(node.value))
+        if (
+            isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "key" for t in node.targets)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+            and node.value.func.id in renderer_functions
+        ):
+            factory = renderer_functions[node.value.func.id]
+            for statement in ast.walk(factory):
+                if isinstance(statement, ast.Return):
+                    assert statement.value is not None
+                    next_choices.update(choice_values(statement.value))
+    assert states and next_choices, "the actual state and action producers must remain discoverable"
+    screen_module = inspect.getmodule(GroupedDeclarationsScreen)
+    assert screen_module is not None
+    choices: dict[str, set[str]] = {}
+    for node in ast.walk(ast.parse(inspect.getsource(screen_module))):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Tuple):
+            continue
+        for target in node.targets:
+            if not isinstance(target, ast.Name) or target.id not in {"_FILTERS", "_SORTS"}:
+                continue
+            values: set[str] = set()
+            for element in node.value.elts:
+                assert isinstance(element, ast.Constant) and isinstance(element.value, str)
+                values.add(element.value)
+            choices[target.id] = values
+    assert choices.keys() == {"_FILTERS", "_SORTS"}, "the actual screen choice vocabulary must remain discoverable"
+    assert set(DECLARATION_GROUP_LOCALE_KEYS) == set(DeclarationListGroup)
+    assert (
+        DECLARATION_GROUP_LOCALE_KEYS[DeclarationListGroup.AEAT_UNLINKED] == "tui.declarations.list.state.aeat_unlinked"
+    )
+    assert "tui.declarations.list.group.aeat_unlinked" not in get_registered_keys()
+    expected = {
+        "advice": {member.value for member in CoverageAdviceReason},
+        "filter": choices["_FILTERS"],
+        "sort": choices["_SORTS"],
+        "state": states,
+        "next": next_choices,
+    }
+    registered = set(get_registered_keys())
+    for family, values in expected.items():
+        prefix = f"tui.declarations.list.{family}."
+        assert {key for key in registered if key.startswith(prefix)} == {prefix + value for value in values}
+
+
+def test_declaration_list_enrolment_keeps_open_reason_namespaces_unbounded() -> None:
+    """Bounded feature copy must not admit arbitrary optional reason codes."""
+    from ..signal_discovery import dynamic_key_families
+
+    bounded = {f"tui.declarations.list.{family}.*" for family in ("advice", "filter", "sort", "state", "next")}
+    open_reasons = {prefix + ".*" for prefix in OPEN_ENDED_NAMESPACES}
+    finite, unresolved = dynamic_key_families(bounded | open_reasons)
+    assert set(finite) == bounded
+    assert set(unresolved) == open_reasons
 
 
 def test_registry_row_field_enumeration_reports_invalid_source(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
@@ -952,7 +1073,7 @@ def test_every_translation_key_annotated_parameter_is_declared_a_key_kwarg() -> 
     """
     import ast
 
-    from .._ast_scanner import _TRANSLATION_KEY_KWARGS
+    from .._ast_key_policy import _TRANSLATION_KEY_KWARGS
 
     def _names_the_translation_key_type(annotation: ast.expr | None) -> bool:
         if isinstance(annotation, ast.Name):
@@ -1145,7 +1266,8 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
     """
     import ast
 
-    from .._ast_scanner import _flow_confirmed_local_key_names, scan_source_text
+    from .._ast_key_flows import _flow_confirmed_local_key_names
+    from .._ast_scanner import scan_source_text
 
     source = chr(10).join(
         (

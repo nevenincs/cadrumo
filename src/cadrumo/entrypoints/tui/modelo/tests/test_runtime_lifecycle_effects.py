@@ -161,8 +161,8 @@ class _AttestationController:
 
 def _attestation_inputs(session_id: UUID) -> tuple[Any, Any]:
     client = SimpleNamespace(profile_id=uuid4(), session_id=session_id)
-    lifecycle = SimpleNamespace(target=SimpleNamespace(work_unit_id=_WORK_UNIT_ID))
-    return client, lifecycle
+    declaration = SimpleNamespace(work_unit_id=_WORK_UNIT_ID)
+    return client, declaration
 
 
 def _bind_controller_submit(monkeypatch: pytest.MonkeyPatch, controller: _AttestationController) -> None:

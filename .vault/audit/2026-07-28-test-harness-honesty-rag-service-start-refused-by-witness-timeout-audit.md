@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#test-harness-honesty'
 date: '2026-07-28'
-modified: '2026-07-28'
+modified: '2026-10-03'
 body_hash: 'sha256:9cbfb23d5fb55c1ab1836ed613af519b712fad4c761a66230ebb58994c8395d3'
-related:
-  - "[[2026-07-25-test-harness-honesty-plan]]"
+related: []
 ---
 
 # `test-harness-honesty` audit: `The discovery service cannot start under fleet load, and reports the timeout as an identity failure`

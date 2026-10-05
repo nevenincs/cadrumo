@@ -38,7 +38,7 @@ into the local store, the registry, or an AEAT submission.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -66,10 +66,11 @@ from ....application.storage.calc_sheets.export_tables import (
     export_identity_stamps,
 )
 from ....application.storage.calc_sheets.records import SheetCellAddress, SheetExportPlan, SheetValueCell, TabName
+from ....core.external_constants import GOOGLE_DRIVE_FOLDER_MIME_TYPE
 from ....core.json_shapes import str_keyed_mapping, str_keyed_rows
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ..storage.errors import OutboundStorageError, OutboundStorageNetworkError, OutboundStorageValidationError
+from ..storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ._calc_sheets_apply_formatting import (
     build_auto_filter_requests,
     build_base_font_requests,
@@ -97,7 +98,7 @@ from ._calc_sheets_apply_values import (
     coerce_cell_value as coerce_cell_value,
 )
 from ._preconditions import google_terminal_refusal
-from .api import execute_request
+from .api import RequestRetryPolicy, drive_v3_service, execute_request, sheets_v4_service
 from .drive_entries import (
     OWNERSHIP_KEY as _OWNERSHIP_KEY,
 )
@@ -109,7 +110,6 @@ from .drive_entries import (
     require_drive_entry_id,
 )
 
-_FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
 
 
@@ -118,6 +118,9 @@ class CalcSheetsApplyPreconditionCondition(StrEnum):
 
     API_CLIENT_AVAILABLE = "google.calc_sheets.apply.api_client_available"
     ROOT_FOLDER_ID_VALID = "google.calc_sheets.apply.root_folder_id_valid"
+
+
+_CLIENT_UNAVAILABLE_CONDITION: Final[str] = CalcSheetsApplyPreconditionCondition.API_CLIENT_AVAILABLE.value
 
 
 def _calc_sheets_apply_terminal_refusal(
@@ -201,9 +204,8 @@ class CalcSheetsExportPreview(BaseModel):
     """What :func:`apply_export_plan` would clear and (re)write, computed with no write call.
 
     Returned by :func:`preview_export_plan`, which reads Drive and Sheets state
-    only: it never creates a folder or a spreadsheet, never backfills an
-    ownership marker on a fresh lookup, and never issues a ``batchClear`` or
-    ``batchUpdate`` write. The three facts a dry-run promises per the decision
+    only: it never creates a folder or a spreadsheet and never issues a
+    ``batchClear`` or ``batchUpdate`` write. The three facts a dry-run promises per the decision
     record: the per-tab ranges the apply would clear, how many value cells
     would actually change against the current read-back, and how many formula
     cells the apply would (unconditionally) rewrite — the live apply always
@@ -229,45 +231,6 @@ class CalcSheetsExportPreview(BaseModel):
     formula_cells_to_write: NonNegativeInt
 
 
-def _refuse_missing_googleapiclient(exc: ImportError, service_name: str, version: str) -> NoReturn:
-    """Refuse, naming the service, when the optional discovery client is absent."""
-    error = OutboundStorageNetworkError(
-        f"googleapiclient not importable: {exc}",
-        translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
-    )
-    raise _calc_sheets_apply_terminal_refusal(
-        error,
-        CalcSheetsApplyPreconditionCondition.API_CLIENT_AVAILABLE,
-        facts={
-            "client_available": False,
-            "dependency": "google_api_python_client",
-            "service_name": service_name,
-            "service_version": version,
-        },
-        outcome=NoRecoveryOutcome.SAFETY,
-    ) from exc
-
-
-# `google-api-python-client-stubs` types `build` per (service, version) LITERAL.
-# The former shared factory forwarded both as variables, so no literal overload
-# matched and every downstream call went untyped. Each service now spells its own
-# literals, and the import/refusal preamble stays shared.
-def _drive_service(credentials: Credentials) -> DriveResource:
-    try:
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        _refuse_missing_googleapiclient(exc, "drive", "v3")
-    return build("drive", "v3", credentials=credentials, cache_discovery=False)
-
-
-def _sheets_service(credentials: Credentials) -> SheetsResource:
-    try:
-        from googleapiclient.discovery import build
-    except ImportError as exc:
-        _refuse_missing_googleapiclient(exc, "sheets", "v4")
-    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
-
-
 def _find_folder(
     drive: DriveResource,
     *,
@@ -275,7 +238,7 @@ def _find_folder(
     name: str,
 ) -> File | None:
     #
-    # Ownership acceptance, marker backfill, foreign-content refusal,
+    # Ownership acceptance, refusal of unmarked or foreign content,
     # query-name escaping, and entry-id validation are the shared policy in
     # ``drive_entries``; only the MIME type and the action/error text are
     # folder-specific.
@@ -283,9 +246,8 @@ def _find_folder(
         drive,
         parent_id=parent_id,
         name=name,
-        mime_type=_FOLDER_MIME,
+        mime_type=GOOGLE_DRIVE_FOLDER_MIME_TYPE,
         list_action="drive.files.list",
-        backfill_action="drive.files.update.backfill_marker",
         conflict_message=(
             f"folder named {name!r} under parent {parent_id!r} exists but is not marked as "
             "app-owned; refusing to adopt foreign Drive content"
@@ -301,13 +263,14 @@ def _create_folder(
 ) -> File:
     body: File = {
         "name": name,
-        "mimeType": _FOLDER_MIME,
+        "mimeType": GOOGLE_DRIVE_FOLDER_MIME_TYPE,
         "parents": [parent_id],
         "appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE},
     }
     return execute_request(
         drive.files().create(body=body, fields="id,name,appProperties"),
         action="drive.files.create.folder",
+        retry=RequestRetryPolicy.SINGLE_ATTEMPT,
     )
 
 
@@ -330,7 +293,7 @@ def _find_spreadsheet(
     parent_id: str,
     name: str,
 ) -> File | None:
-    # Same shared ownership/backfill/refusal policy as ``_find_folder``; only
+    # Same shared ownership and refusal policy as ``_find_folder``; only
     # the MIME type and the action/error text are spreadsheet-specific.
     return find_owned_drive_entry(
         drive,
@@ -338,7 +301,6 @@ def _find_spreadsheet(
         name=name,
         mime_type=_SPREADSHEET_MIME,
         list_action="drive.files.list.spreadsheet",
-        backfill_action="drive.files.update.backfill_marker.spreadsheet",
         conflict_message=(
             f"spreadsheet {name!r} exists under parent {parent_id!r} but is not marked as "
             "app-owned; refusing to overwrite"
@@ -367,6 +329,7 @@ def _create_spreadsheet(
     spreadsheet = execute_request(
         sheets.spreadsheets().create(body=body, fields="spreadsheetId,spreadsheetUrl,sheets.properties"),
         action="sheets.spreadsheets.create",
+        retry=RequestRetryPolicy.SINGLE_ATTEMPT,
     )
     spreadsheet_id = spreadsheet.get("spreadsheetId")
     if not spreadsheet_id:
@@ -380,6 +343,7 @@ def _create_spreadsheet(
     file_meta = execute_request(
         drive.files().get(fileId=spreadsheet_id, fields="parents"),
         action="drive.files.get.parents",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     remove_parents = ",".join(file_meta.get("parents") or [])
     execute_request(
@@ -391,6 +355,7 @@ def _create_spreadsheet(
             fields="id,parents,appProperties",
         ),
         action="drive.files.update.move_and_stamp",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     return spreadsheet
 
@@ -573,6 +538,7 @@ def _open_or_create_plan_spreadsheet(
                 ),
             ),
             action="sheets.spreadsheets.get",
+            retry=RequestRetryPolicy.REPLAY_SAFE,
         )
     return spreadsheet, period_folder_id
 
@@ -598,6 +564,7 @@ def _force_spreadsheet_locale(*, sheets: Any, spreadsheet_id: str) -> None:
             },
         ),
         action="sheets.spreadsheets.batchUpdate.locale",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
 
 
@@ -627,6 +594,7 @@ def _ensure_plan_tabs_and_grid(
                 body=add_sheet_body,
             ),
             action="sheets.spreadsheets.batchUpdate.add_missing_tabs",
+            retry=RequestRetryPolicy.REPLAY_SAFE,
         )
         for reply in str_keyed_rows(result, "replies"):
             added = str_keyed_mapping(str_keyed_mapping(reply.get("addSheet")).get("properties"))
@@ -647,6 +615,7 @@ def _ensure_plan_tabs_and_grid(
                 body=resize_body,
             ),
             action="sheets.spreadsheets.batchUpdate.resize_grid",
+            retry=RequestRetryPolicy.REPLAY_SAFE,
         )
     return sheet_id_by_tab
 
@@ -733,6 +702,7 @@ def _current_cell_values(
             valueRenderOption="UNFORMATTED_VALUE",
         ),
         action="sheets.spreadsheets.values.batchGet",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     return _current_cell_values_from_response(ranges, response)
 
@@ -827,6 +797,7 @@ def _write_plan_values(
             body=values_body,
         ),
         action="sheets.spreadsheets.values.batchUpdate",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     return payload_written_addresses(data)
 
@@ -851,6 +822,7 @@ def _clear_stale_addresses(
             body={"ranges": list(stale)},
         ),
         action="sheets.spreadsheets.values.batchClear",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
 
 
@@ -892,6 +864,7 @@ def _apply_plan_structural_requests(
                 body=structural_body,
             ),
             action="sheets.spreadsheets.batchUpdate.structural",
+            retry=RequestRetryPolicy.REPLAY_SAFE,
         )
 
 
@@ -914,8 +887,8 @@ def apply_export_plan(
             produced by
             :func:`~application.storage.calc_sheets.engine.build_export_plan`.
         credentials: A ``google.oauth2.credentials.Credentials``-shaped
-            object carrying refresh + access tokens with at least the
-            ``drive.file`` + ``spreadsheets`` scopes.
+            object carrying refresh + access tokens with the
+            ``drive.file`` scope.
         root_folder_id: The operator's Drive root folder id (the same
             folder
             :class:`~adapters.outbound.storage._google_drive.GoogleDriveProvider`
@@ -935,8 +908,8 @@ def apply_export_plan(
     """
     _require_root_folder_id(root_folder_id)
 
-    drive = _drive_service(credentials)
-    sheets = _sheets_service(credentials)
+    drive = drive_v3_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
+    sheets = sheets_v4_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
     tab_titles = tuple(tab.value for tab in TabName)
     spreadsheet, period_folder_id = _open_or_create_plan_spreadsheet(
         drive=drive,
@@ -1061,8 +1034,8 @@ def preview_export_plan(
     """
     _require_root_folder_id(root_folder_id)
 
-    drive = _drive_service(credentials)
-    sheets = _sheets_service(credentials)
+    drive = drive_v3_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
+    sheets = sheets_v4_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
 
     vault_folder = _find_folder(drive, parent_id=root_folder_id, name=_vault_folder_name())
     if vault_folder is None:
@@ -1092,6 +1065,7 @@ def preview_export_plan(
             fields="spreadsheetId,spreadsheetUrl,sheets.properties",
         ),
         action="sheets.spreadsheets.get.preview",
+        retry=RequestRetryPolicy.REPLAY_SAFE,
     )
     spreadsheet_url = str(spreadsheet.get("spreadsheetUrl", ""))
     current_values = _current_cell_values(

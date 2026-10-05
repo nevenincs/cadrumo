@@ -436,7 +436,7 @@ class LedgerAllocateResult(_LedgerMutationResult):
 
 
 class LedgerAttachResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger attach`` and ``aeat app ledger evidence pull``."""
+    """JSON envelope for ``aeat app ledger attach``."""
 
 
 class LedgerDetachResult(_LedgerMutationResult):
@@ -446,42 +446,6 @@ class LedgerDetachResult(_LedgerMutationResult):
     detaching is a mutation of one addressable transaction, so it reports the
     quintet rather than a bespoke payload.
     """
-
-
-class LedgerEvidencePullAllFilePayload(OutputSchema):
-    """One Drive folder child's fetch outcome from ``ledger evidence pull-all``.
-
-    ``fetched`` is ``True`` when the file's bytes were fetched and encrypted
-    into the attachment store (``attachment_id`` set); ``False`` when the
-    fetch was refused (``refusal_reason`` set) — a Drive file outside the
-    ``drive.file`` scope never becomes a link-only evidence row.
-    """
-
-    file_id: str
-    name: str
-    mime_type: str
-    fetched: bool
-    attachment_id: str | None = None
-    refusal_reason: str | None = None
-
-
-class LedgerEvidencePullAllResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger evidence pull-all``.
-
-    Bulk-fetches every PDF/image child of a ``drive.file``-reachable Drive
-    folder into encrypted attachment evidence (never a link-only pointer),
-    reporting one :class:`LedgerEvidencePullAllFilePayload` row per child.
-    Gmail bulk fetch is out of scope pending a separate ``gmail.readonly``
-    scope-upgrade decision.
-    """
-
-    bucket_id: BucketId
-    folder_id: str
-    total_documents: int
-    fetched_count: int
-    refused_count: int
-    skipped_non_document_count: int
-    files: list[LedgerEvidencePullAllFilePayload] = []
 
 
 class LedgerArchiveResult(_LedgerMutationResult):
@@ -1309,8 +1273,6 @@ __all__ = [
     "LedgerClassifyResult",
     "LedgerClassifySingleResult",
     "LedgerDetachResult",
-    "LedgerEvidencePullAllFilePayload",
-    "LedgerEvidencePullAllResult",
     "LedgerExcludeResult",
     "LedgerExportPayload",
     "LedgerExportRowPayload",

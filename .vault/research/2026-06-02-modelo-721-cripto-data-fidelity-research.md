@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:72d865ab9e37e3f87df59f62665bcf98585bfd9b070260c98ef3daac608b1672'
+modified: '2026-10-03'
+body_hash: 'sha256:bff79649698756cc403c01391feacc0337b3efd59e52dafed15467befe07cf63'
 related:
   - "[[2026-06-02-modelo-720-prior-year-baseline-adr]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
@@ -35,7 +35,7 @@ repeats the same three legal errors and overstates the declarable scope.
 
 ### The critical legal-registry defect (mechanism step one)
 
-`src/aeat/_data/registry/aeat/legal/monedas-virtuales.toml` is marked
+the former source file is marked
 `review_status = "reviewed"` (reviewed 2026-05-27) yet registers Modelo 721 under the
 **wrong order and wrong BOE identifier**. Verified against the BOE:
 

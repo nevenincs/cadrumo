@@ -46,7 +46,7 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -60,9 +60,6 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
-    m303_regime_composition_simplified_scope,
-)
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
@@ -126,6 +123,9 @@ from ....adapters.persistence.profile.tests.operator_scope_fakes import (
 )
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -700,7 +700,7 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
         )
 
         with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="current calculation pointer"):
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
@@ -740,7 +740,7 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
         calculations.save(upsert_calculation_revision(calculations.load(), non_presentado))
 
         with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="PRESENTADO"):
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
@@ -811,7 +811,7 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
         )
 
         with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="VIGENTE filing record"):
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
@@ -868,7 +868,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         _indexed_authority_for_test().operation() as operation,
         pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
     ):
-        verify_modelo_revision(
+        verify_modelo_revision_with_preconditions(
             target.calculation_revision_id,
             actor="operator",
             workflow_profile=workflow_profile(),
@@ -927,7 +927,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
             actor="operator",
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )

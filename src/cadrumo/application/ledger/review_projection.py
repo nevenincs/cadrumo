@@ -86,6 +86,7 @@ def _filter_ledger_review_rows(
     rows = _filter_review_rows_by_status(rows, query.status)
     rows = _filter_review_rows_by_classification(rows, query.classification)
     rows = _filter_review_rows_by_direction(rows, query.direction)
+    rows = _filter_review_rows_by_own_account(rows, query.own_account_id)
     rows = _filter_review_rows_by_text(rows, query.text)
     rows = _filter_review_rows_by_event(
         rows,
@@ -136,6 +137,15 @@ def _filter_review_rows_by_classification(
         rows,
         lambda transaction: transaction.business_classification.value == classification,
     )
+
+
+def _filter_review_rows_by_own_account(
+    rows: tuple[Transaction, ...],
+    own_account_id: str | None,
+) -> tuple[Transaction, ...]:
+    if own_account_id is None:
+        return rows
+    return _apply_review_row_filter(rows, lambda transaction: transaction.own_account_id == own_account_id)
 
 
 def _filter_review_rows_by_direction(
@@ -204,6 +214,7 @@ _LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (
     ("classification", "classification"),
     ("text", "text"),
     ("direction", "direction"),
+    ("own_account_id", "account"),
     ("transaction_id", "id"),
 )
 

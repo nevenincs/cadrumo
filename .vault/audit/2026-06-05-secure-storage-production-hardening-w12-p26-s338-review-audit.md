@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:795bfdf17000c93ef7186c98f307057d58f086e076be3990dcd3d4cc7bf254b3'
+modified: '2026-10-03'
+body_hash: 'sha256:59ed45c71135f3b3a781a844994a2a52cff24047f2af057d248c3bebd0866411'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S338-001 | PASS | Amendment repository is runtime-default enrolled
 
-`src/aeat/domain/filing/_complementaria_repository.py` resolves a bucket id through
+The retired module resolves a bucket id through
 `resolve_filing_repository_bucket_id()` and constructs its backing
 `SecureObjectRepository` with `secure_objects_for_filing_bucket()`. That helper delegates
 to the runtime repository factory for the selected bucket, so default construction does
@@ -40,7 +40,7 @@ rollout review does not report false open work.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/domain/filing/_complementaria_repository.py src/aeat/domain/filing/test_amendment_roundtrip.py src/aeat/application/filing/test_complementaria_repository.py src/aeat/domain/filing/test_secure_storage_roundtrip.py`
-- `uv run --no-sync pytest -q src/aeat/domain/filing/test_amendment_roundtrip.py src/aeat/application/filing/test_complementaria_repository.py src/aeat/domain/filing/test_secure_storage_roundtrip.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "ModeloAmendmentRepository complementaria filing amendments secure_object_repository_for_bucket AUDIT encrypted runtime bucket" --type code --port 8766 --max-results 8`

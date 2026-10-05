@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#casilla-schema'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbc3af9157c4fba3c02aba47b2c5987065b75c9651a828bed4f6216fd24f8439'
+body_hash: 'sha256:8d5e2796d1e41555d8ee1a20c07677672f1823bce88c39a98ad65406dc153f7c'
 related:
   - '[[2026-08-10-casilla-schema-blocker-spine-adr]]'
   - '[[2026-08-10-casilla-schema-canonical-derivations-adr]]'
   - '[[2026-08-10-casilla-schema-dead-surface-adr]]'
-  - '[[2026-08-10-casilla-schema-ledger]]'
-  - '[[2026-08-10-casilla-schema-plan]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-10-casilla-schema-research]]'
   - '[[2026-08-11-casilla-schema-audit]]'
@@ -122,14 +120,6 @@ Auto-generated index of all documents tagged with `#casilla-schema`.
 - `2026-08-12-casilla-schema-s41-full-tree-collection-gate-review-audit` - `casilla-schema` audit: `W05.P11.S41 full-tree collection gate review`
 - `2026-08-12-casilla-schema-s82-spanish-casilla-family-review-audit` - `casilla-schema` audit: `S82 Spanish casilla-family rename review`
 - `2026-08-12-casilla-schema-s83-split-fixture-review-audit` - `casilla-schema` audit: `S83 split fixture review`
-
-### exec
-
-- `2026-08-10-casilla-schema-ledger` - `casilla-schema` ledger
-
-### plan
-
-- `2026-08-10-casilla-schema-plan` - `casilla-schema` plan
 
 ### research
 

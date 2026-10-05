@@ -5,7 +5,7 @@ refusal carries: only a refusal about ``NACIMIENTO`` may say that every row must
 declare a birth date. A refusal that names no key, or the wrong one, is rendered
 with a cause that did not happen, so each typed refusal is pinned to its key here.
 
-A missing authority scope is a registry-authority failure rather than something
+A missing authority scope is a caller invariant violation rather than something
 the operator typed, so it must not arrive as an answer-type refusal at all.
 """
 
@@ -13,9 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors.hierarchy import ProfileAnswerTypeError
-from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.governed_fact_scope import outside_governed_fact_validation
+from ....core.errors.hierarchy import InternalInvariantError, ProfileAnswerTypeError
+from ...calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ..descendant_facts import descendant_list_from_facts, parse_descendiente_flag
 from ..guarderia_mensual import parse_guarderia_mensual
 from ..meses_trabajo import parse_meses_trabajo
@@ -100,7 +99,12 @@ def test_every_meses_trabajo_refusal_carries_its_field(raw: str) -> None:
     "raw",
     [f"{_BIRTH},DISCAPACIDAD=0", f"{_BIRTH},RELACION=tutela"],
 )
-def test_a_missing_authority_scope_is_a_registry_failure_not_an_answer_refusal(raw: str) -> None:
-    with outside_governed_fact_validation(), pytest.raises(RegistryValidationError) as raised:
+def test_a_missing_authority_scope_is_an_invariant_failure_not_an_answer_refusal(raw: str) -> None:
+    with (
+        outside_governed_fact_validation(),
+        pytest.raises(
+            InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"
+        ) as raised,
+    ):
         parse_descendiente_flag(raw)
     assert not isinstance(raised.value, ProfileAnswerTypeError)

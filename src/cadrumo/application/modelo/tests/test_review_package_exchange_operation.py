@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
@@ -36,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 @pytest.fixture
 def subject(authority_operation: PinnedAuthorityOperation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Subject:
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(PROFILE_ID))
     return Subject(authority_operation, tmp_path)
 
 
@@ -364,7 +365,7 @@ async def test_wrong_profile_and_wrong_family_request_refuse_before_private_acce
             request, subject.context(request.definition_id)
         )
     request = _request(module.MODELO_REVIEW_PACKAGE_SIGN_OPERATION_DEFINITION_ID, payload)
-    monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(uuid4()))
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(uuid4()))
     with pytest.raises(ProfileAccessRefusedError):
         await module.ReviewPackageExchangeExecutor(subject.compose).execute(
             request, subject.context(request.definition_id)

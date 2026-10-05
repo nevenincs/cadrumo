@@ -123,7 +123,7 @@ from .work_unit_repository import work_unit_catalogue_repository
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .filing_chain_reconciliation import FilingReconciliationResult
+    from .filing_chain_reconciliation import FilingReconciliationPorts, FilingReconciliationResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -252,36 +252,6 @@ def _validate_external_source_registry_values(
         )
 
 
-def _validate_external_source_requirements(
-    *,
-    source: ExternalFilingBaselineSource,
-    bucket_id: str,
-    filing_instance_evidence: FilingInstanceEvidence | None,
-    actor: str,
-    justificante_repository: JustificanteRepositoryProtocol | None,
-) -> JustificanteRepositoryProtocol:
-    """Validate actor/evidence requirements and return the receipt repository."""
-    if source.modelo == Modelo("303").value and filing_instance_evidence is None:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
-        )
-    if not actor.strip():
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_source_actor_blank",
-        )
-    resolved_justificante_repository = justificante_repository or resolve_justificante_repository(bucket_id=bucket_id)
-    require_bound_justificante_artifact(
-        evidence_kind=source.evidence_kind,
-        evidence_reference_id=source.evidence_reference_id.strip(),
-        modelo=source.modelo,
-        filing_year=source.filing_year,
-        period=source.period,
-        expected_tax_id=source.tax_id,
-        justificante_repository=resolved_justificante_repository,
-    )
-    return resolved_justificante_repository
-
-
 def _select_external_source_work_unit(
     target: ExternalFilingTarget,
     *,
@@ -386,70 +356,6 @@ def external_filing_source_casillas(
         lexical_values=lexical_values,
     )
     return lexical_values, decimal_values
-
-
-def import_external_filing_source(
-    source: ExternalFilingBaselineSource,
-    *,
-    bucket_id: str,
-    work_lifecycle_ports: WorkLifecyclePorts,
-    operation: PinnedAuthorityOperation,
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
-    declared_kind: FilingDeclarationKind | None = None,
-    actor: str = "aeat-import",
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    justificante_repository: JustificanteRepositoryProtocol | None = None,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    clock: datetime | None = None,
-) -> ExternalFilingImportResult:
-    """Resolve or create the target work unit and reconcile an amendable baseline.
-
-    Source lexical tokens are retained verbatim on the revision input snapshot;
-    their independently parsed Decimal values feed the filing baseline.
-    """
-    lexical_values, decimal_values = external_filing_source_casillas(source)
-    resolved_justificante_repository = _validate_external_source_requirements(
-        source=source,
-        bucket_id=bucket_id,
-        filing_instance_evidence=filing_instance_evidence,
-        actor=actor,
-        justificante_repository=justificante_repository,
-    )
-
-    wu_repo = work_lifecycle_ports.work_unit_repository
-    work_unit = resolve_external_filing_work_unit(
-        ExternalFilingTarget(
-            modelo=source.modelo,
-            filing_year=source.filing_year,
-            period=source.period,
-            registry_revision_id=source.registry_revision_id,
-        ),
-        bucket_id=bucket_id,
-        actor=actor,
-        ports=work_lifecycle_ports,
-        operation=operation,
-        clock=clock,
-    )
-    return import_external_filing_evidence(
-        work_unit_id=work_unit.work_unit_id,
-        casilla_values=decimal_values,
-        source_lexical_values_by_casilla_id=lexical_values,
-        evidence_kind=source.evidence_kind,
-        evidence_reference_id=source.evidence_reference_id,
-        filing_instance_evidence=filing_instance_evidence,
-        declared_kind=declared_kind,
-        actor=actor,
-        work_unit_repository=wu_repo,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
-        bucket_event_repository=work_lifecycle_ports.bucket_event_repository,
-        justificante_repository=resolved_justificante_repository,
-        observation_repository=observation_repository,
-        expected_tax_id=source.tax_id,
-        clock=clock,
-        operation=operation,
-    )
 
 
 def _load_external_import_target[CasillaKey](
@@ -564,6 +470,7 @@ def _prepare_external_import_values[CasillaKey](
 def _prepare_external_import_revision(
     *,
     repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     work_unit_id: str,
     registry_snapshot_ref: RegistrySnapshotRef,
     input_values_by_casilla_id: dict[CasillaId, str],
@@ -586,7 +493,7 @@ def _prepare_external_import_revision(
         m303_regimen_simplificado_annual_summary_handoff=None,
         source_provenance=(),
     )
-    revisions, revisions_revision_id = repository.load_revisioned()
+    revisions, revisions_revision_id = repository.load_revisioned(operation=operation)
     if revision_id in revisions:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_duplicate_revision",
@@ -699,6 +606,64 @@ class ExternalFilingImportResult:
     reconciliation: FilingReconciliationResult
 
 
+def _external_import_reconciliation_ports(
+    *,
+    work_unit: WorkUnit,
+    wu_repo: WorkUnitCatalogueRepositoryProtocol,
+    fr_repo: ModeloRecordCatalogueRepositoryProtocol,
+    jr_repo: JustificanteRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+) -> FilingReconciliationPorts:
+    """Bind the exact repositories after evidence validation and receipt loading."""
+    from .filing_chain_reconciliation import FilingReconciliationPorts
+
+    return FilingReconciliationPorts(
+        filing_repository=fr_repo,
+        calculation_repository=(
+            calculation_repository
+            or calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id, operation=operation)
+        ),
+        work_lifecycle=WorkLifecyclePorts(
+            work_unit_repository=wu_repo,
+            bucket_event_repository=bucket_event_repository or default_profile_bucket_event_history_repository(),
+        ),
+        observation_repository=observation_repository,
+        justificante_repository=jr_repo,
+    )
+
+
+def _external_import_register_reference(receipt: Justificante | None, cleaned_reference: str) -> AeatRegisterRef:
+    """Retain receipt identifiers or the CSV-register reference without synthesizing a receipt."""
+    return AeatRegisterRef(
+        expediente_id=None if receipt is not None else cleaned_reference,
+        csv=receipt.csv if receipt is not None else None,
+        justificante_number=receipt.presentation_id if receipt is not None else None,
+    )
+
+
+def _reconciled_external_import_result(
+    fr_repo: ModeloRecordCatalogueRepositoryProtocol,
+    result: FilingReconciliationResult,
+    work_unit: WorkUnit,
+) -> ExternalFilingImportResult:
+    """Read the actual stored filing only after the chain reconciles successfully."""
+    from .filing_chain_reconciliation import FilingReconciliationOutcome
+
+    record = fr_repo.load().get(result.filing_record_id) if result.filing_record_id is not None else None
+    if result.outcome is FilingReconciliationOutcome.UNVERIFIABLE or record is None:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_unverifiable",
+            context={
+                "work_unit_id": work_unit.work_unit_id,
+                "notices": ",".join(notice.code.value for notice in result.notices),
+            },
+        )
+    return ExternalFilingImportResult(filing_record=record, reconciliation=result)
+
+
 def import_external_filing_evidence[CasillaKey](
     *,
     work_unit_id: str,
@@ -767,8 +732,6 @@ def import_external_filing_evidence[CasillaKey](
             )
     from .filing_chain_reconciliation import (
         AeatRegisterEntry,
-        FilingReconciliationOutcome,
-        FilingReconciliationPorts,
         reconcile_aeat_register_entry,
     )
 
@@ -796,17 +759,15 @@ def import_external_filing_evidence[CasillaKey](
     )
     receipt = jr_repo.load(cleaned_reference) if is_receipt_bound_external_evidence(evidence_kind) else None
     fr_repo = filing_repository or modelo_record_catalogue_repository(bucket_id=work_unit.bucket_id)
-    ports = FilingReconciliationPorts(
-        filing_repository=fr_repo,
-        calculation_repository=(
-            calculation_repository or calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id)
-        ),
-        work_lifecycle=WorkLifecyclePorts(
-            work_unit_repository=wu_repo,
-            bucket_event_repository=bucket_event_repository or default_profile_bucket_event_history_repository(),
-        ),
+    ports = _external_import_reconciliation_ports(
+        work_unit=work_unit,
+        wu_repo=wu_repo,
+        fr_repo=fr_repo,
+        jr_repo=jr_repo,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
         observation_repository=observation_repository,
-        justificante_repository=jr_repo,
+        operation=operation,
     )
     result = reconcile_aeat_register_entry(
         AeatRegisterEntry(
@@ -814,11 +775,7 @@ def import_external_filing_evidence[CasillaKey](
             modelo=str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period,
-            register=AeatRegisterRef(
-                expediente_id=None if receipt is not None else cleaned_reference,
-                csv=receipt.csv if receipt is not None else None,
-                justificante_number=receipt.presentation_id if receipt is not None else None,
-            ),
+            register=_external_import_register_reference(receipt, cleaned_reference),
             evidence_kind=evidence_kind,
             tax_id=(expected_tax_id or "").strip(),
             declared_kind=declared_kind,
@@ -834,16 +791,7 @@ def import_external_filing_evidence[CasillaKey](
         actor=actor,
         clock=clock or _utc_now(),
     )
-    record = fr_repo.load().get(result.filing_record_id) if result.filing_record_id is not None else None
-    if result.outcome is FilingReconciliationOutcome.UNVERIFIABLE or record is None:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_unverifiable",
-            context={
-                "work_unit_id": work_unit.work_unit_id,
-                "notices": ",".join(notice.code.value for notice in result.notices),
-            },
-        )
-    return ExternalFilingImportResult(filing_record=record, reconciliation=result)
+    return _reconciled_external_import_result(fr_repo, result, work_unit)
 
 
 def prepare_external_filing_revision[CasillaKey](
@@ -859,6 +807,7 @@ def prepare_external_filing_revision[CasillaKey](
     now: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     justificante_repository: JustificanteRepositoryProtocol | None,
 ) -> ExternalFilingRevisionDraft:
     """Validate external filing content and stage its presented revision in memory.
@@ -892,6 +841,7 @@ def prepare_external_filing_revision[CasillaKey](
     # concurrent writer's entry.
     revisions, revisions_revision_id, revision = _prepare_external_import_revision(
         repository=calculation_repository,
+        operation=operation,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
         input_values_by_casilla_id=input_values_by_casilla_id,

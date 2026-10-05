@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from contextlib import suppress
 from dataclasses import replace
 from datetime import datetime
@@ -11,44 +10,22 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
 from ...core.period import Period, PeriodError
-from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.profile_guard import require_access_request_payload, require_operation_profile
+from ..operations.read_capture import capture_read_result
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessAction, AccessDenialCode, DisclosureCategory, DisclosurePermission
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history import assemble_modelo_lifecycle_history
@@ -126,15 +103,9 @@ class ModeloHistoryTimelineExecutor:
         self, request: OperationRequest[ModeloHistoryTimelineRequest], context: OperationExecutorContext
     ) -> str:
         payload = request.payload
-        subject = profile_operation_subject(str(payload.profile_id))
-        if (
-            request.definition_id != MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != str(payload.profile_id)
-        ):
+        if request.definition_id != MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID)
 
         def read() -> ModeloHistoryTimelineProjection:
@@ -161,42 +132,18 @@ class ModeloHistoryTimelineExecutor:
                 events=tuple(ModeloTimelineEvent.from_event(event) for event in history.events),
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="modelo-history-timeline")
+        return await capture_read_result(context, read, task_name="modelo-history-timeline")
 
 
 def build_modelo_history_timeline_definition(factory: ModeloHistoryPortsFactory) -> OperationDefinition:
     """Declare a metadata-only agent timeline with no domain write capability."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
         request_type=ModeloHistoryTimelineRequest,
         result_type=ModeloHistoryTimelineProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloHistoryTimelineRequest,
-            executor_type=ModeloHistoryTimelineExecutor,
-            build=lambda: ModeloHistoryTimelineExecutor(factory),
-        ),
-        phase_codes=(MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=ModeloHistoryTimelineExecutor,
+        build=lambda: ModeloHistoryTimelineExecutor(factory),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.MCP}),
     )
 
@@ -207,14 +154,11 @@ def build_modelo_history_timeline_registration(
     """Require exact profile/period authority and metadata disclosure at release."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if (
-            request.definition_id != MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID
-            or type(payload) is not ModeloHistoryTimelineRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if not isinstance(payload, ModeloHistoryTimelineRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        payload = require_access_request_payload(
+            request,
+            definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
+            payload_type=ModeloHistoryTimelineRequest,
+        )
         periods = frozenset[Period]()
         if payload.year is not None and payload.period is not None:
             with suppress(PeriodError):
@@ -243,14 +187,9 @@ def build_modelo_history_timeline_registration(
             )
         return resolved
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=ModeloHistoryTimelineRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=ModeloHistoryTimelineProjection
-        ),
+        public_result_type=ModeloHistoryTimelineProjection,
         access_resolver=resolve,
     )
 

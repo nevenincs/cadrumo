@@ -35,20 +35,8 @@ from typing import Literal
 from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
 )
-from ...core.prorrata_register import (
-    ProrrataRegisterRegime as _ProrrataRegisterRegime,
-)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    aeat_autorizada_prorrata_provenance as _aeat_autorizada_provenance,
-)
 from ...domain.calculations.registry.prorrata_register_catalogue import carried_prior_definitiva_prorrata_provenance
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    general_prorrata_register_regime as _general_regime,
-)
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    inicio_actividad_prorrata_provenance as _inicio_actividad_provenance,
-)
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.prorrata_register.register import (
     ProrrataProvisionalResolution,
@@ -61,10 +49,12 @@ from ...domain.prorrata_register.register import (
 from ..ledger.persistence_ports import LedgerPersistenceConflictError
 from .ports import (
     ProrrataPriorSettlementSnapshotRepositoryProtocol,
+    ProrrataPriorSettlementSourceSnapshot,
     ProrrataRegisterServiceRepositoryProtocol,
 )
 from .seed import (
     ProrrataPriorDefinitivaSeed,
+    ProrrataPriorDefinitivaSeedEvaluation,
     ProrrataSeedFinding,
     cross_check_prorrata_entry_against_observations,
     evaluate_carried_prior_definitiva_seed_from_observations,
@@ -177,71 +167,6 @@ class ProrrataRegisterService:
         require_prorrata_entry_coordinates_current(entry, operation=self._operation)
         return self._repository.upsert_entry(entry)
 
-    def record_aeat_autorizada(
-        self,
-        *,
-        ejercicio: int,
-        provisional_percentage: Decimal,
-        authorisation_reference: str,
-        sector_id: str | None = None,
-        regime: _ProrrataRegisterRegime | None = None,
-    ) -> ProrrataRegister:
-        """Record an art. 105.Dos AEAT-authorised provisional prorrata override.
-
-        Args:
-            ejercicio: Filing year whose provisional prorrata is authorised.
-            provisional_percentage: AEAT-authorised provisional deduction percentage.
-            authorisation_reference: Operator-held reference for the AEAT authorisation.
-            sector_id: Optional sector identifier for sectores diferenciados.
-            regime: Prorrata regime in force for the entry. Defaults to general.
-
-        Returns:
-            The updated :class:`ProrrataRegister`.
-        """
-        if regime is None:
-            regime = _general_regime()
-        entry = ProrrataRegisterEntry(
-            ejercicio=ejercicio,
-            regime=regime,
-            especial_transition=None,
-            sector_id=sector_id,
-            provisional_percentage=provisional_percentage,
-            provisional_provenance=_aeat_autorizada_provenance(),
-            authorisation_reference=authorisation_reference,
-            source_registry_snapshot_refs=(),
-        )
-        return self.declare(entry)
-
-    def record_inicio_actividad(
-        self,
-        *,
-        ejercicio: int,
-        provisional_percentage: Decimal,
-        proposal_reference: str,
-        sector_id: str | None = None,
-        regime: _ProrrataRegisterRegime | None = None,
-    ) -> ProrrataRegister:
-        """Record an art. 105.Tres start-of-activity provisional override.
-
-        ``proposal_reference`` identifies the operator-held proposal or filing
-        evidence supporting the declared percentage.  The registry supplies
-        the typed provenance token so callers cannot manufacture a vocabulary
-        value outside the pinned authority.
-        """
-        if regime is None:
-            regime = _general_regime()
-        entry = ProrrataRegisterEntry(
-            ejercicio=ejercicio,
-            regime=regime,
-            especial_transition=None,
-            sector_id=sector_id,
-            provisional_percentage=provisional_percentage,
-            provisional_provenance=_inicio_actividad_provenance(),
-            authorisation_reference=proposal_reference,
-            source_registry_snapshot_refs=(),
-        )
-        return self.declare(entry)
-
     def declare_sector(self, definition: SectorDefinition) -> ProrrataRegister:
         """Atomically add or replace a differentiated-sector definition by ``sector_id``.
 
@@ -275,56 +200,29 @@ class ProrrataRegisterService:
         """Carry the prior 303 definitive under source and register revision fences."""
         for attempt in range(4):
             current, register_revision = self._repository.load_revisioned()
-            source = observation_repository.load_prior_m303_settlement_snapshot(ejercicio - 1)
-            evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
+            source, evaluation = _load_whole_seed_evaluation(
                 ejercicio=ejercicio,
-                observations=source.observations,
+                observation_repository=observation_repository,
                 operation=self._operation,
             )
-            if evaluation.blocked:
-                raise ProrrataWholeSeedUnavailableError("source_blocked", findings=evaluation.findings)
-            seed = evaluation.seed
-            if seed is None:
-                raise ProrrataWholeSeedUnavailableError("source_absent", findings=evaluation.findings)
-            existing = current.entry_for(ejercicio, sector_id=None)
-            findings = evaluation.findings
-            if existing is not None:
-                cross_findings = cross_check_prorrata_entry_against_observations(
-                    existing,
-                    observations=source.observations,
-                    operation=self._operation,
-                )
-                if any(finding.blocking for finding in cross_findings):
-                    raise ProrrataWholeSeedUnavailableError("existing_blocked", findings=cross_findings)
-                if (
-                    existing.provisional_provenance is not None
-                    and existing.provisional_provenance != carried_prior_definitiva_prorrata_provenance()
-                ):
-                    raise ProrrataWholeSeedUnavailableError(
-                        "regulated_override_standing",
-                        findings=cross_findings,
-                        existing_provenance=existing.provisional_provenance,
-                    )
-                findings = (*findings, *cross_findings)
+            seed = _require_available_whole_seed(evaluation)
+            findings = _whole_seed_findings_for_register(
+                current,
+                ejercicio=ejercicio,
+                evaluation=evaluation,
+                source=source,
+                operation=self._operation,
+            )
             require_prorrata_entry_coordinates_current(seed.entry, operation=self._operation)
-            retained = tuple(
-                entry for entry in current.entries if (entry.ejercicio, entry.sector_id) != (ejercicio, None)
-            )
-            next_register = ProrrataRegister(
-                entries=(*retained, seed.entry),
-                sector_definitions=current.sector_definitions,
-                activity_rows=current.activity_rows,
-            )
-            try:
-                self._repository.commit_whole_carried_seed(
-                    next_register,
-                    ejercicio=ejercicio,
-                    expected_revision_id=register_revision,
-                    source_snapshot=source,
-                )
-            except LedgerPersistenceConflictError:
-                if attempt == 3:
-                    raise
+            next_register = _register_with_whole_seed(current, ejercicio=ejercicio, seed=seed)
+            if not _commit_whole_seed_candidate(
+                self._repository,
+                next_register,
+                ejercicio=ejercicio,
+                expected_revision_id=register_revision,
+                source=source,
+                attempt=attempt,
+            ):
                 continue
             return ProrrataWholeSeedCommit(register=next_register, seed=seed, findings=findings)
         raise AssertionError("prorrata seed retry loop exited without a result")
@@ -403,6 +301,98 @@ class ProrrataRegisterService:
             entry for entry in candidate_entries if entry.ejercicio == ejercicio and entry.sector_id == sector_id
         )
         return resolve_provisional_percentage((*persisted, *transient))
+
+
+def _load_whole_seed_evaluation(
+    *,
+    ejercicio: int,
+    observation_repository: ProrrataPriorSettlementSnapshotRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ProrrataPriorSettlementSourceSnapshot, ProrrataPriorDefinitivaSeedEvaluation]:
+    source = observation_repository.load_prior_m303_settlement_snapshot(ejercicio - 1)
+    evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
+        ejercicio=ejercicio,
+        observations=source.observations,
+        operation=operation,
+    )
+    return source, evaluation
+
+
+def _require_available_whole_seed(
+    evaluation: ProrrataPriorDefinitivaSeedEvaluation,
+) -> ProrrataPriorDefinitivaSeed:
+    if evaluation.blocked:
+        raise ProrrataWholeSeedUnavailableError("source_blocked", findings=evaluation.findings)
+    if evaluation.seed is None:
+        raise ProrrataWholeSeedUnavailableError("source_absent", findings=evaluation.findings)
+    return evaluation.seed
+
+
+def _whole_seed_findings_for_register(
+    current: ProrrataRegister,
+    *,
+    ejercicio: int,
+    evaluation: ProrrataPriorDefinitivaSeedEvaluation,
+    source: ProrrataPriorSettlementSourceSnapshot,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ProrrataSeedFinding, ...]:
+    existing = current.entry_for(ejercicio, sector_id=None)
+    if existing is None:
+        return evaluation.findings
+    cross_findings = cross_check_prorrata_entry_against_observations(
+        existing,
+        observations=source.observations,
+        operation=operation,
+    )
+    if any(finding.blocking for finding in cross_findings):
+        raise ProrrataWholeSeedUnavailableError("existing_blocked", findings=cross_findings)
+    if (
+        existing.provisional_provenance is not None
+        and existing.provisional_provenance != carried_prior_definitiva_prorrata_provenance()
+    ):
+        raise ProrrataWholeSeedUnavailableError(
+            "regulated_override_standing",
+            findings=cross_findings,
+            existing_provenance=existing.provisional_provenance,
+        )
+    return (*evaluation.findings, *cross_findings)
+
+
+def _register_with_whole_seed(
+    current: ProrrataRegister,
+    *,
+    ejercicio: int,
+    seed: ProrrataPriorDefinitivaSeed,
+) -> ProrrataRegister:
+    retained = tuple(entry for entry in current.entries if (entry.ejercicio, entry.sector_id) != (ejercicio, None))
+    return ProrrataRegister(
+        entries=(*retained, seed.entry),
+        sector_definitions=current.sector_definitions,
+        activity_rows=current.activity_rows,
+    )
+
+
+def _commit_whole_seed_candidate(
+    repository: ProrrataRegisterServiceRepositoryProtocol,
+    next_register: ProrrataRegister,
+    *,
+    ejercicio: int,
+    expected_revision_id: str,
+    source: ProrrataPriorSettlementSourceSnapshot,
+    attempt: int,
+) -> bool:
+    try:
+        repository.commit_whole_carried_seed(
+            next_register,
+            ejercicio=ejercicio,
+            expected_revision_id=expected_revision_id,
+            source_snapshot=source,
+        )
+    except LedgerPersistenceConflictError:
+        if attempt == 3:
+            raise
+        return False
+    return True
 
 
 __all__ = [

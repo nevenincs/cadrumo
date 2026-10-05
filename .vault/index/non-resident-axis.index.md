@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#non-resident-axis'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc5cc16b812730eee1b8b72a0264c23a06119bb690f4904252e993b0f826eef1'
+body_hash: 'sha256:db6210727ceab54675e3b7f8b3d5e2da7754f6c7f41887cfc68d77d7a9a1fbb0'
 related:
-  - '[[2026-06-04-non-resident-axis-adr]]'
   - '[[2026-06-04-non-resident-axis-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#non-resident-axis`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-non-resident-axis-adr` - `non-resident-axis` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

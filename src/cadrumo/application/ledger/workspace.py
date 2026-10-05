@@ -440,13 +440,7 @@ def _project_workspace_areas(
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
             # The review list carries every row with its status; only the
             # rows still pending are work, so a fully reviewed ledger is ready.
-            status=(
-                LedgerWorkspaceStatus.EMPTY
-                if not review_ids
-                else LedgerWorkspaceStatus.NEEDS_ATTENTION
-                if pending
-                else LedgerWorkspaceStatus.READY
-            ),
+            status=_review_area_status(review_ids=review_ids, pending=pending),
             item_count=pending,
         ),
         LedgerWorkspaceAreaStateV1(
@@ -480,6 +474,13 @@ def _project_workspace_areas(
             item_count=reconciliation_count,
         ),
     )
+
+
+def _review_area_status(*, review_ids: tuple[TransactionId, ...], pending: int) -> LedgerWorkspaceStatus:
+    """Keep an empty queue distinct from an all-reviewed queue and pending work."""
+    if not review_ids:
+        return LedgerWorkspaceStatus.EMPTY
+    return LedgerWorkspaceStatus.NEEDS_ATTENTION if pending else LedgerWorkspaceStatus.READY
 
 
 def _evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:

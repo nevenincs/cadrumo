@@ -329,19 +329,7 @@ def _tbx_terms(
         language = _TBX_LANGS.get(code)
         if language is None:
             continue
-        for tig in lang_set.iter("tig"):
-            term_el = tig.find("term")
-            term_text = None if term_el is None else term_el.text
-            if not isinstance(term_text, str) or not term_text.strip():
-                continue
-            reliability = _tbx_reliability(tig)
-            if reliability is not None and reliability < min_reliability:
-                continue
-            label = term_text.strip()
-            status = _tbx_term_status(tig)
-            terms.append(SeedTerm(language=language, label=label, term_status=status))
-            if language is OutputLanguage.ES and status is TermStatus.PREFERRED and spanish_key is None:
-                spanish_key = label
+        spanish_key = _tbx_language_terms(lang_set, language, min_reliability, terms, spanish_key)
     return terms, spanish_key
 
 
@@ -731,3 +719,27 @@ def _today() -> date:
     from cadrumo.core.time.clock import now
 
     return now().date()
+
+
+def _tbx_language_terms(
+    lang_set: XmlElement[str],
+    language: OutputLanguage,
+    min_reliability: int,
+    terms: list[SeedTerm],
+    spanish_key: str | None,
+) -> str | None:
+    """Append admitted terms while preserving the first preferred Spanish key."""
+    for tig in lang_set.iter("tig"):
+        term_el = tig.find("term")
+        term_text = None if term_el is None else term_el.text
+        if not isinstance(term_text, str) or not term_text.strip():
+            continue
+        reliability = _tbx_reliability(tig)
+        if reliability is not None and reliability < min_reliability:
+            continue
+        label = term_text.strip()
+        status = _tbx_term_status(tig)
+        terms.append(SeedTerm(language=language, label=label, term_status=status))
+        if language is OutputLanguage.ES and status is TermStatus.PREFERRED and spanish_key is None:
+            spanish_key = label
+    return spanish_key

@@ -11,7 +11,7 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
-from ...google.tests.drive_media_server import drive_files_list_endpoint
+from ...google.tests.drive_list_server import drive_files_list_endpoint
 from .. import _google_drive as drive_module
 from .. import _google_drive_metadata as drive_metadata_module
 from .._google_drive import GoogleDriveProvider
@@ -106,7 +106,7 @@ _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
         "response_mapping",
         "identifier_present",
     ),
-    "_verify_ownership_or_adopt:OutboundStorageConflictError:Drive folder exists under the configured root but is not marked as owned by this app": _contract(
+    "_require_owned_folder:OutboundStorageConflictError:Drive folder exists under the configured root but is not marked as owned by this app": _contract(
         DriveStoragePreconditionCondition.OWNERSHIP_ALIGNED,
         NoRecoveryOutcome.OPERATOR_DECISION,
         "ownership_aligned",
@@ -244,7 +244,7 @@ _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
         ("response_mapping", "isinstance(created, dict)"),
         ("identifier_present", "isinstance(created, dict) and 'id' in created"),
     ),
-    "_verify_ownership_or_adopt:OutboundStorageConflictError:Drive folder exists under the configured root but is not marked as owned by this app": (
+    "_require_owned_folder:OutboundStorageConflictError:Drive folder exists under the configured root but is not marked as owned by this app": (
         ("ownership_aligned", _literal(False)),
     ),
     "_resolve_namespace_folder:OutboundStorageNetworkError:drive create_namespace_{namespace} returned no id": (
@@ -542,7 +542,19 @@ def test_real_drive_http_failures_have_exact_terminal_contracts(
     )
 
 
-def test_foreign_drive_folder_conflict_has_an_exact_operator_decision_contract() -> None:
+@pytest.mark.parametrize(
+    "entry_properties",
+    (
+        {"appProperties": {"cadrumo_vault_app": "foreign"}},
+        {"appProperties": {}},
+        {},
+    ),
+    ids=("foreign-marker", "empty-properties", "no-properties"),
+)
+def test_drive_folder_without_the_marker_is_refused_with_an_exact_operator_decision_contract(
+    entry_properties: dict[str, object],
+) -> None:
+    """A same-named vault folder is refused whether its marker is foreign or absent."""
     with drive_files_list_endpoint(
         pages=(
             {
@@ -551,7 +563,7 @@ def test_foreign_drive_folder_conflict_has_an_exact_operator_decision_contract()
                         "id": "foreign-vault",
                         "name": "cadrumo-vault",
                         "mimeType": "application/vnd.google-apps.folder",
-                        "appProperties": {"cadrumo_vault_app": "foreign"},
+                        **entry_properties,
                     }
                 ]
             },

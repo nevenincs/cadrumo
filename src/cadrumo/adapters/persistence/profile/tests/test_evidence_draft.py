@@ -13,7 +13,7 @@ See Also:
     :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         CLI-facing resolver that reads stored evidence bytes from secure storage
         and chooses text-layer or on-host vision extraction.
-    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.prepare_invoice_confirmation_from_evidence`
         Confirmation step that re-extracts, applies overrides, and delegates the
         catalogue write.
     :func:`~application.invoices.create_catalogue_invoice`
@@ -45,7 +45,6 @@ from cadrumo.application.ledger.evidence_errors import (
 )
 from cadrumo.application.ledger.evidence_input import EvidenceInput
 from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
-from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
@@ -76,6 +75,7 @@ from ._invoice_confirmation_test_support import (
 )
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]

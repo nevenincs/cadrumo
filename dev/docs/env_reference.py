@@ -74,19 +74,7 @@ def _default_cell(field: FieldInfo, language: OutputLanguage) -> str:
     default = field.default
     if default is PydanticUndefined or field.default_factory is not None:
         return "(derived)"
-    if default is None:
-        return docs_chrome("docs.cli.env.default_unset", language)
-    if isinstance(default, bool):
-        return "`true`" if default else "`false`"
-    if isinstance(default, Enum):
-        return f"`{default.value}`"
-    if isinstance(default, (int, float)):
-        return f"`{default}`"
-    if isinstance(default, str):
-        return f"`{default}`" if default else docs_chrome("docs.cli.env.default_empty", language)
-    if isinstance(default, Path):
-        return "(derived)"
-    return "(derived)"
+    return _plain_default_cell(default, language)
 
 
 def _type_cell(field: FieldInfo) -> str:
@@ -120,6 +108,11 @@ def render_environment_reference() -> str:
         rows.append(
             f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field, language)} | {_escape(description)} |",
         )
+    rows.append(
+        "| `CADRUMO_STORAGE_ROOT` | Path | (derived) | Shared storage root; defaults to the repository's "
+        "var/storage. CADRUMO_LOCAL_STORAGE_ROOT overrides it for the local backend. |"
+    )
+    rows.sort()
     footer = "\n" + docs_chrome("docs.cli.env.secrets_note", language) + "\n"
     return _HEADER + "\n".join(rows) + "\n" + footer
 
@@ -151,6 +144,23 @@ def main(argv: list[str] | None = None) -> int:
     path.write_text(fresh, encoding=_UTF_8, newline="\n")
     print(f"Wrote {path}")
     return 0
+
+
+def _plain_default_cell(default: object, language: OutputLanguage) -> str:
+    """Plain default cell."""
+    if default is None:
+        return docs_chrome("docs.cli.env.default_unset", language)
+    if isinstance(default, bool):
+        return "`true`" if default else "`false`"
+    if isinstance(default, Enum):
+        return f"`{default.value}`"
+    if isinstance(default, (int, float)):
+        return f"`{default}`"
+    if isinstance(default, str):
+        return f"`{default}`" if default else docs_chrome("docs.cli.env.default_empty", language)
+    if isinstance(default, Path):
+        return "(derived)"
+    return "(derived)"
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ from contextlib import asynccontextmanager
 import pytest
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.profile.tests.profile_registration import live_clave_movil_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
@@ -29,9 +30,9 @@ from cadrumo.entrypoints.justificante_composition import (
 )
 
 from ....application.live.errors import LiveApplicationInputError
-from ....application.live.expedientes import capture_expedientes
+from ....application.live.expedientes import capture_expedientes_with_outcome
 from ....application.live.justificante import (
-    capture_justificante_snapshot,
+    capture_justificante_snapshot_outcome,
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....application.live.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
@@ -41,7 +42,9 @@ from ....tests.live_gate import requires_live_enabled
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
-pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("live_clave_movil_profile")]
+
+__all__ = ["live_clave_movil_profile"]
 
 # A quarterly modelo exercises the period-disambiguation path that the
 # annual modelos cannot. The year is the prior calendar year, whose
@@ -58,7 +61,7 @@ async def _fixture_persistence_guard() -> AsyncIterator[None]:
 async def _discover_filed_period(
     *, bucket_id: str, modelo: str, year: int, authority_operation: PinnedAuthorityOperation
 ) -> Period | None:
-    snapshot = await capture_expedientes(
+    outcome = await capture_expedientes_with_outcome(
         bucket_id=bucket_id,
         modelo=modelo,
         year=year,
@@ -69,7 +72,7 @@ async def _discover_filed_period(
         authority_operation=authority_operation,
         effect_guard=_fixture_persistence_guard,
     )
-    for declaration in snapshot.declarations:
+    for declaration in outcome.snapshot.declarations:
         if declaration.modelo == modelo:
             period = declaration.period
             assert period is None or isinstance(period, Period)
@@ -102,8 +105,8 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
             )
 
         try:
-            persisted = asyncio.run(
-                capture_justificante_snapshot(
+            outcome = asyncio.run(
+                capture_justificante_snapshot_outcome(
                     bucket_id=bucket_id,
                     modelo=_LIVE_MODELO,
                     year=year,
@@ -114,12 +117,13 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
                         _OPERATOR_SCOPE_PORTS,
                         operation,
                     ),
-                    registration_ports=build_justificante_registration_ports(),
+                    registration_ports=build_justificante_registration_ports(operation),
                     verifier=build_justificante_authenticity_verifier(),
                 ),
             )
         except LiveApplicationInputError as exc:
             pytest.fail(f"live justificante capture could not resolve/pull the receipt: {exc}")
+    persisted = outcome.snapshot
 
     # Structural / relational assertions only.
     assert persisted.modelo == _LIVE_MODELO

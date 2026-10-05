@@ -42,35 +42,21 @@ class DependencyRequirementSnapshot(BaseModel):
 
     @classmethod
     def from_requirement(cls, requirement: CrossPeriodDependencyRequirement) -> Self:
-        """Copy exactly the registry-derived fields already shown by the CLI."""
+        """Copy every registry-derived field, re-addressing only the period publicly.
+
+        A requirement field this snapshot does not declare is refused by its
+        forbidden-extra config instead of being dropped from the projection.
+        """
         return cls(
-            source_modelo=requirement.source_modelo,
-            filing_year=requirement.filing_year,
+            **requirement.model_dump(exclude={"period"}),
             period=PublicPeriod.from_period(requirement.period),
-            source_casilla_ids=requirement.source_casilla_ids,
-            required_source_casilla_ids=requirement.required_source_casilla_ids,
-            source_presence_groups=requirement.source_presence_groups,
-            origin=requirement.origin,
-            origin_ids=requirement.origin_ids,
-            legal_refs=requirement.legal_refs,
-            source_refs=requirement.source_refs,
-            requires_member_fan_in=requirement.requires_member_fan_in,
         )
 
     def to_requirement(self) -> CrossPeriodDependencyRequirement:
         """Use the canonical requirement invariant for this complete projection."""
         return CrossPeriodDependencyRequirement(
-            source_modelo=self.source_modelo,
-            filing_year=self.filing_year,
+            **self.model_dump(exclude={"period"}),
             period=self.period.to_period(),
-            source_casilla_ids=self.source_casilla_ids,
-            required_source_casilla_ids=self.required_source_casilla_ids,
-            source_presence_groups=self.source_presence_groups,
-            origin=self.origin,
-            origin_ids=self.origin_ids,
-            legal_refs=self.legal_refs,
-            source_refs=self.source_refs,
-            requires_member_fan_in=self.requires_member_fan_in,
         )
 
     @model_validator(mode="after")

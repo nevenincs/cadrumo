@@ -31,7 +31,7 @@ import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
@@ -110,29 +110,33 @@ def _revision_shapes(modelo_root: Path) -> dict[str, dict[str, tuple[WireShape, 
     for manifest_path in sorted(modelo_root.glob("revisions/*/export/_generation.provenance.json")):
         revision = manifest_path.parts[-3]
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        by_identity: dict[str, tuple[WireShape, OfficialStatement]] = {}
-        for entry in manifest.get("field_derivations") or ():
-            field = entry.get("field") or {}
-            parser_field = entry.get("parser_field") or {}
-            # The casilla number is the canonical AEAT identity. An export field exists
-            # to carry a casilla, so the association is known by construction, and a
-            # casilla means the same thing in every revision that declares it. The
-            # generated field NAME does not: most modelos number it per render, so
-            # joining on it compared one modelo of fourteen and called the rest
-            # incomparable. That was wrong, and it understated this screen's reach by
-            # more than it overstated anything.
-            casilla_id = (entry.get("semantic_entry") or {}).get("casilla_id")
-            if casilla_id is None:
-                continue
-            shape = tuple(field.get(name) for name in _WIRE_FACTS)
-            aeat_type = parser_field.get("aeat_type")
-            content = parser_field.get("content")
-            by_identity[str(casilla_id)] = (
-                shape,
-                (aeat_type if isinstance(aeat_type, str) else None, content if isinstance(content, str) else None),
-            )
-        shapes[revision] = by_identity
+        shapes[revision] = _revision_identity_shapes(manifest)
     return shapes
+
+
+def _revision_identity_shapes(manifest: Any) -> dict[str, tuple[WireShape, OfficialStatement]]:
+    by_identity: dict[str, tuple[WireShape, OfficialStatement]] = {}
+    for entry in manifest.get("field_derivations") or ():
+        field = entry.get("field") or {}
+        parser_field = entry.get("parser_field") or {}
+        # The casilla number is the canonical AEAT identity. An export field exists
+        # to carry a casilla, so the association is known by construction, and a
+        # casilla means the same thing in every revision that declares it. The
+        # generated field NAME does not: most modelos number it per render, so
+        # joining on it compared one modelo of fourteen and called the rest
+        # incomparable. That was wrong, and it understated this screen's reach by
+        # more than it overstated anything.
+        casilla_id = (entry.get("semantic_entry") or {}).get("casilla_id")
+        if casilla_id is None:
+            continue
+        shape = tuple(field.get(name) for name in _WIRE_FACTS)
+        aeat_type = parser_field.get("aeat_type")
+        content = parser_field.get("content")
+        by_identity[str(casilla_id)] = (
+            shape,
+            (aeat_type if isinstance(aeat_type, str) else None, content if isinstance(content, str) else None),
+        )
+    return by_identity
 
 
 def cross_revision_wire_shape_transitions(modelos_root: Path | None = None) -> Iterator[WireShapeTransition]:

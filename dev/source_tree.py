@@ -127,54 +127,14 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
     root = root.resolve()
     found: list[str] = []
 
-    def visit(directory: Path, base: str, rules: tuple[_ScopedRules, ...]) -> None:
-        own = _ignore_rules(directory, base)
-        scoped = (*rules, own) if isinstance(own, _ScopedRules) else rules
-        with os.scandir(directory) as entries:
-            children = sorted(entries, key=lambda entry: entry.name)
-        for entry in children:
-            if entry.name == _VCS_ENTRY:
-                continue
-            relative = f"{base}/{entry.name}" if base else entry.name
-            if entry.is_dir(follow_symlinks=False):
-                if not _is_ignored(relative, is_directory=True, rules=scoped) and not is_nested_repository(
-                    Path(entry.path)
-                ):
-                    visit(Path(entry.path), relative, scoped)
-            elif not _is_ignored(relative, is_directory=False, rules=scoped):
-                found.append(relative)
-
     prefixes = tuple(dict.fromkeys(prefix.strip("/") for prefix in under))
     if not prefixes:
-        visit(root, "", ())
+        _visit_repository_directory(root, "", (), found)
         return tuple(sorted(found))
     for prefix in prefixes:
         # Only the named subtree is walked, but every ancestor's rules still
         # apply to it, and an ignored ancestor excludes it outright.
-        parts = prefix.split("/")
-        rules: list[_ScopedRules] = []
-        excluded = False
-        for depth, name in enumerate(parts):
-            base = "/".join(parts[:depth])
-            if name == _VCS_ENTRY or (base and is_nested_repository(root / base)):
-                excluded = True
-                break
-            own = _ignore_rules(root / base if base else root, base)
-            if isinstance(own, _ScopedRules):
-                rules.append(own)
-            candidate = root / "/".join(parts[: depth + 1])
-            is_last = depth == len(parts) - 1
-            is_directory = candidate.is_dir() and not candidate.is_symlink()
-            if _is_ignored("/".join(parts[: depth + 1]), is_directory=is_directory or not is_last, rules=rules):
-                excluded = True
-                break
-        if excluded:
-            continue
-        target = root / prefix
-        if target.is_dir() and not target.is_symlink():
-            visit(target, prefix, tuple(rules))
-        elif target.exists() or target.is_symlink():
-            found.append(prefix)
+        _visit_repository_subtree(root, prefix, found)
     return tuple(sorted(dict.fromkeys(found)))
 
 
@@ -229,15 +189,7 @@ def _line_ending_policy(relative: str, rules: Sequence[_ScopedRules]) -> tuple[_
         for spec, attributes in rule.lines:
             if not spec.match_file(local):
                 continue
-            for attribute in attributes:
-                if attribute in {"-text", "binary"}:
-                    text = "binary"
-                elif attribute == "text":
-                    text = "text"
-                elif attribute == "text=auto":
-                    text = "auto"
-                elif attribute in {"eol=lf", "eol=crlf"}:
-                    eol = "crlf" if attribute == "eol=crlf" else "lf"
+            text, eol = _attribute_line_endings(attributes, text, eol)
     return text, eol
 
 
@@ -310,3 +262,76 @@ def snapshot(root: Path, files: Sequence[str], destination: Path) -> None:
             continue
         target.write_bytes(normalised_content(root, relative, attributes=rules))
         shutil.copystat(source, target)
+
+
+def _visit_repository_directory(directory: Path, base: str, rules: tuple[_ScopedRules, ...], found: list[str]) -> None:
+    """Visit sorted directory entries through their inherited and local ignore rules."""
+    own = _ignore_rules(directory, base)
+    scoped = (*rules, own) if isinstance(own, _ScopedRules) else rules
+    with os.scandir(directory) as entries:
+        children = sorted(entries, key=lambda entry: entry.name)
+    for entry in children:
+        if entry.name == _VCS_ENTRY:
+            continue
+        relative = f"{base}/{entry.name}" if base else entry.name
+        if entry.is_dir(follow_symlinks=False):
+            if not _is_ignored(relative, is_directory=True, rules=scoped) and not is_nested_repository(
+                Path(entry.path)
+            ):
+                _visit_repository_directory(Path(entry.path), relative, scoped, found)
+        elif not _is_ignored(relative, is_directory=False, rules=scoped):
+            found.append(relative)
+
+
+def _visit_repository_subtree(root: Path, prefix: str, found: list[str]) -> None:
+    """Apply each ancestor rule and repository boundary before walking the requested subtree."""
+    parts = prefix.split("/")
+    rules: list[_ScopedRules] = []
+    excluded = False
+    for depth, name in enumerate(parts):
+        base = "/".join(parts[:depth])
+        if _subtree_crosses_repository(root, base, name):
+            excluded = True
+            break
+        own = _ignore_rules(root / base if base else root, base)
+        if isinstance(own, _ScopedRules):
+            rules.append(own)
+        candidate = root / "/".join(parts[: depth + 1])
+        is_last = depth == len(parts) - 1
+        is_directory = candidate.is_dir() and not candidate.is_symlink()
+        if _is_ignored("/".join(parts[: depth + 1]), is_directory=is_directory or not is_last, rules=rules):
+            excluded = True
+            break
+    if excluded:
+        return
+    _visit_selected_target(root, prefix, tuple(rules), found)
+
+
+def _visit_selected_target(root: Path, prefix: str, rules: tuple[_ScopedRules, ...], found: list[str]) -> None:
+    """Walk an admitted real directory or include its existing file or symlink."""
+    target = root / prefix
+    if target.is_dir() and not target.is_symlink():
+        _visit_repository_directory(target, prefix, rules, found)
+    elif target.exists() or target.is_symlink():
+        found.append(prefix)
+
+
+def _subtree_crosses_repository(root: Path, base: str, name: str) -> bool:
+    """Keep VCS entries and nested repositories outside the owning tree census."""
+    return name == _VCS_ENTRY or bool(base and is_nested_repository(root / base))
+
+
+def _attribute_line_endings(
+    attributes: tuple[str, ...], text: _TextState, eol: _LineEnding
+) -> tuple[_TextState, _LineEnding]:
+    """Apply matching attributes in order, with later declarations overriding earlier ones."""
+    for attribute in attributes:
+        if attribute in {"-text", "binary"}:
+            text = "binary"
+        elif attribute == "text":
+            text = "text"
+        elif attribute == "text=auto":
+            text = "auto"
+        elif attribute in {"eol=lf", "eol=crlf"}:
+            eol = "crlf" if attribute == "eol=crlf" else "lf"
+    return text, eol

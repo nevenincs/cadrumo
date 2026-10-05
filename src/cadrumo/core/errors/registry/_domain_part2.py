@@ -308,6 +308,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloResultDispositionUncodifiedError",
+        ErrorCode(
+            code="REFUSED_MODELO_RESULT_DISPOSITION_UNCODIFIED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_result_disposition_uncodified",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.ModeloPriorDomiciliationElectionRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_PRIOR_DOMICILIATION_ELECTION",
@@ -333,6 +343,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_CHARGE_ACCOUNT_MISSING",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_charge_account_missing",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.m360_solicitud_operation.Modelo360SolicitudRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_360_SOLICITUD",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_360_solicitud",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloDomiciliationPastCutoffError",
+        ErrorCode(
+            code="REFUSED_MODELO_DOMICILIATION_PAST_CUTOFF",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_domiciliation_past_cutoff",
             retryable=False,
             runbook_id=None,
         ),
@@ -413,6 +443,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_MODELO_AGGREGATION_BINDING",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_aggregation_binding",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloClearedCasillaSourceFedError",
+        ErrorCode(
+            code="ERROR_MODELO_CLEARED_CASILLA_SOURCE_FED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_cleared_casilla_source_fed",
             retryable=False,
             runbook_id=None,
         ),

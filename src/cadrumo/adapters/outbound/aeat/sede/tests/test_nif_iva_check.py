@@ -11,6 +11,8 @@ Live navigation tests live behind ``@pytest.mark.aeat_live`` and require
 
 from __future__ import annotations
 
+import asyncio
+from typing import Any
 from urllib.parse import urlsplit
 
 import pytest
@@ -21,10 +23,12 @@ from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import (
     AEAT_NON_HOST_AUTHORITY_CANARIES,
+    AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
     aeat_url,
 )
+from .. import nif_iva_check as nif_iva_check_module
 from .._adapter_utils import extract_marker_verdict, is_aeat_auth_gate_redirect
 from ..errors import SedeNavigationError
 from ..nif_iva_check import (
@@ -32,55 +36,16 @@ from ..nif_iva_check import (
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     READ_GUARD_POLICY,
     NifIvaCheckResult,
-    NifIvaCheckSedeDriver,
     SedeNifIvaCheckObservation,
     _assert_query_browser_action,
     assert_nif_iva_read_landing,
+    collect_nif_iva_check_observations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _AEAT = Settings.external_constants().aeat
 _NIF_IVA_ENTRY_URL = f"{_AEAT.domains.sede}{_AEAT.help_pages.nif_iva_landing}"
 _AUTH_GATE_4033_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033}"
-
-
-def test_driver_mode_is_live() -> None:
-    assert NifIvaCheckSedeDriver().mode == "live"
-
-
-def test_planned_operations_lists_entry_form_open_per_nif_discard() -> None:
-    driver = NifIvaCheckSedeDriver()
-
-    operations = driver.planned_operations(
-        b"",
-        expected={"FR12345678901": "valid", "DE111222333": "valid"},
-    )
-
-    # Six steps: entry GET, form GET, open-form, two per-NIF checks (sorted), discard.
-    assert len(operations) == 6
-    _ext = Settings.external_constants()
-    assert operations[0].kind == "http"
-    assert operations[0].method == "GET"
-    assert str(operations[0].url) == f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"
-    assert operations[1].kind == "http"
-    assert operations[1].method == "GET"
-    assert str(operations[1].url) == _ext.aeat.oracles.nif_iva_verification
-    assert operations[2].kind == "browser_action"
-    assert operations[2].action == "open-nif-iva-form"
-    # Per-NIF checks emitted in sorted order so the operation list is deterministic.
-    assert operations[3].kind == "browser_action"
-    assert operations[3].action == "check-nif-DE111222333"
-    assert operations[4].kind == "browser_action"
-    assert operations[4].action == "check-nif-FR12345678901"
-    assert operations[5].kind == "browser_action"
-    assert operations[5].action == "discard-session"
-
-
-def test_planned_operations_rejects_empty_expected() -> None:
-    driver = NifIvaCheckSedeDriver()
-
-    with pytest.raises(RegistryValidationError, match="at least one expected NIF"):
-        driver.planned_operations(b"", expected={})
 
 
 def test_direct_driver_query_guard_rejects_unclassified_browser_action() -> None:
@@ -175,10 +140,120 @@ def test_auth_gate_detector_rejects_non_aeat_hosts() -> None:
     assert not is_aeat_auth_gate_redirect("")
 
 
+@pytest.mark.parametrize(
+    "url",
+    (
+        f"http://{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033}",
+        f"https://{AEAT_SUFFIX_LOOKALIKE_HOST_CANARY}{_AEAT.sede_paths.auth_gate_4033}",
+        f"https://{_AEAT.domains.legacy_host_suffix}{_AEAT.sede_paths.auth_gate_4033}",
+        f"https://[{_AEAT.sede_paths.auth_gate_4033}",
+        f"{_AUTH_GATE_4033_URL.rsplit('/', maxsplit=1)[0]}/unrelated.html",
+    ),
+    ids=("http-downgrade", "deceptive-suffix", "legacy-suffix", "malformed", "unrelated-path"),
+)
+def test_auth_gate_detector_rejects_urls_outside_its_configured_contract(url: str) -> None:
+    assert not is_aeat_auth_gate_redirect(url)
+
+
 @pytest.mark.parametrize("authority", AEAT_NON_HOST_AUTHORITY_CANARIES)
 def test_auth_gate_detector_rejects_non_host_authorities(authority: str) -> None:
     """A credential or port-shaped authority cannot impersonate the AEAT host."""
     assert not is_aeat_auth_gate_redirect(f"https://{authority}{_AEAT.sede_paths.auth_gate_4033}")
+
+
+@pytest.mark.parametrize(
+    ("landing_url", "expected_mode"),
+    (
+        (_AUTH_GATE_4033_URL, "auth_gate_detected"),
+        (_AUTH_GATE_4033_URL.replace("https://", "http://", 1), "live_navigation_failed"),
+        (
+            f"https://{AEAT_SUFFIX_LOOKALIKE_HOST_CANARY}{_AEAT.sede_paths.auth_gate_4033}",
+            "live_navigation_failed",
+        ),
+        (
+            f"https://user@{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033}",
+            "live_navigation_failed",
+        ),
+        (
+            f"https://{_AEAT.domains.sede}:443{_AEAT.sede_paths.auth_gate_4033}",
+            "live_navigation_failed",
+        ),
+        (f"https://[{_AEAT.sede_paths.auth_gate_4033}", "live_navigation_failed"),
+        (
+            f"{_AEAT.domains.sede}/unrelated.html",
+            "live_navigation_failed",
+        ),
+        (
+            f"https://{_AEAT.domains.legacy_host_suffix}{_AEAT.sede_paths.auth_gate_4033}",
+            "live_navigation_failed",
+        ),
+    ),
+    ids=(
+        "https-gate",
+        "http-downgrade",
+        "deceptive-suffix",
+        "userinfo",
+        "explicit-port",
+        "malformed",
+        "other-path",
+        "legacy-suffix",
+    ),
+)
+def test_nif_iva_auth_gate_caller_classifies_only_the_configured_https_landing(
+    landing_url: str,
+    expected_mode: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _Page:
+        def __init__(self) -> None:
+            self.url = ""
+
+        async def set_viewport_size(self, _viewport: object) -> None:
+            return None
+
+        async def wait_for_load_state(self, _state: str, *, timeout: int | None = None) -> None:
+            del timeout
+
+    class _Context:
+        def __init__(self, page: _Page) -> None:
+            self._page = page
+
+        async def new_page(self) -> _Page:
+            return self._page
+
+    class _BrowserSession:
+        def __init__(self, page: _Page) -> None:
+            self._page = page
+
+        async def create_context(self, *, storage_state: dict[str, object]) -> _Context:
+            del storage_state
+            return _Context(self._page)
+
+        async def navigate(self, page: _Page, url: str) -> None:
+            page.url = landing_url if url == _AEAT.oracles.nif_iva_verification else url
+
+    page = _Page()
+    session = _BrowserSession(page)
+
+    async def _browser_session_factory(_settings: Settings) -> Any:
+        return session
+
+    async def _close_resources(*_resources: object, **_kwargs: object) -> None:
+        return None
+
+    monkeypatch.setattr(nif_iva_check_module, "require_playwright_page", lambda raw_page: raw_page)
+    monkeypatch.setattr(nif_iva_check_module, "close_async_resources", _close_resources)
+
+    with pytest.raises(SedeNavigationError) as raised:
+        asyncio.run(
+            collect_nif_iva_check_observations(
+                b"",
+                expected={"DE123456789": "valid"},
+                browser_session_factory=_browser_session_factory,
+            ),
+        )
+
+    assert raised.value.failure_mode == expected_mode
 
 
 def test_nif_iva_read_guard_admits_sibling_load_balancer_host() -> None:

@@ -24,7 +24,8 @@ from cadrumo.application.runtime.profile_access import RuntimeHumanProof
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.user_profile.access_contracts import AccessDenied, AccessSession
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
-from cadrumo.application.user_profile.session_authority import ProfileSessionAuthority, SessionAuthorityFacts
+from cadrumo.application.user_profile.session_authority import ProfileSessionAuthority
+from cadrumo.application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from cadrumo.core.time.clock import now
 
 from ..session_owner import ProfileWorkerSessionOwner

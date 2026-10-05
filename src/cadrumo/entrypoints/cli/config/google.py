@@ -1,13 +1,12 @@
 """Human Google configuration and archive push commands.
 
-Google account, folder, credential-source, and probe commands submit exact-profile
+Google account, folder, and probe commands submit exact-profile
 requests to the authenticated worker. Archive mirroring uses its registered
 profile operation as well.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....adapters.outbound.storage.records import ProviderKind
@@ -35,52 +34,29 @@ from ._archive_push_payloads import (
 from ._google_payloads import (
     GoogleLoginResult,
     GoogleLogoutResult,
-    GoogleRegisterResult,
     GoogleStatusResult,
     GoogleSyncProbeResult,
 )
-from .runtime_google_configuration import run_google_configuration, run_google_register
+from .runtime_google_configuration import run_google_configuration
 
 if TYPE_CHECKING:
     import typer
 
 
-def google_register(ctx: typer.Context, client_json: Path) -> None:
-    """Register a Cloud Console Desktop client through the protected worker input."""
-    projection = run_google_register(ctx, client_json)
-    profile = str(projection.profile_id)
-    result = GoogleRegisterResult(
-        profile=profile,
-        client_id=projection.client_id,
-        project_id=projection.project_id,
-    )
-    emit_envelope(
-        ctx,
-        command="config.google.register",
-        result=result,
-        lines=(
-            "operation\tconfig.google.register",
-            f"profile\t{profile}",
-            f"client_id\t{projection.client_id}",
-            f"project_id\t{projection.project_id}",
-        ),
-    )
-
-
-def google_login(ctx: typer.Context, refresh_only: bool = False) -> None:
-    """Refresh existing metadata or run the worker's human-consented login flow."""
+def google_login(ctx: typer.Context) -> None:
+    """Run the worker's human-consented login flow."""
     client = bound_profile_client(ctx)
     projection = run_google_configuration(
         ctx,
-        GoogleLoginRequest(profile_id=client.profile_id, refresh_only=refresh_only),
+        GoogleLoginRequest(profile_id=client.profile_id),
         result_type=GoogleLoginProjection,
     )
     profile = str(projection.profile_id)
     typed = GoogleLoginResult(
         profile=profile,
-        mode=projection.mode,
         account_email=projection.account_email,
         granted_scopes=list(projection.granted_scopes),
+        root_folder_id=projection.root_folder_id,
     )
     emit_envelope(
         ctx,
@@ -89,8 +65,8 @@ def google_login(ctx: typer.Context, refresh_only: bool = False) -> None:
         lines=(
             "operation\tconfig.google.login",
             f"profile\t{profile}",
-            f"mode\t{projection.mode}",
             f"account_email\t{projection.account_email}",
+            f"root_folder_id\t{projection.root_folder_id}",
             *tuple(f"scope\t{scope}" for scope in projection.granted_scopes),
         ),
     )
@@ -99,14 +75,10 @@ def google_login(ctx: typer.Context, refresh_only: bool = False) -> None:
 def _google_status_result(projection: GoogleStatusProjection) -> GoogleStatusResult:
     return GoogleStatusResult(
         profile=str(projection.profile_id),
-        client_registered=projection.client_registered,
-        client_id=projection.client_id,
         session_present=projection.session_present,
         account_email=projection.account_email,
         granted_scopes=list(projection.granted_scopes),
         issued_at=projection.issued_at,
-        last_refresh_at=projection.last_refresh_at,
-        reauth_required=projection.reauth_required,
     )
 
 
@@ -114,18 +86,13 @@ def _google_status_lines(projection: GoogleStatusProjection) -> tuple[str, ...]:
     lines = [
         "operation\tconfig.google.status",
         f"profile\t{projection.profile_id}",
-        f"client_registered\t{projection.client_registered}",
         f"session_present\t{projection.session_present}",
     ]
-    if projection.client_id is not None:
-        lines.append(f"client_id\t{projection.client_id}")
     if projection.session_present:
         lines.extend(
             (
                 f"account_email\t{projection.account_email}",
                 f"issued_at\t{projection.issued_at}",
-                f"last_refresh_at\t{projection.last_refresh_at}",
-                f"reauth_required\t{projection.reauth_required}",
                 *tuple(f"scope\t{scope}" for scope in projection.granted_scopes),
             ),
         )
@@ -133,7 +100,7 @@ def _google_status_lines(projection: GoogleStatusProjection) -> tuple[str, ...]:
 
 
 def google_status(ctx: typer.Context) -> None:
-    """Report client and non-secret session metadata from the worker."""
+    """Report non-secret session metadata from the worker."""
     client = bound_profile_client(ctx)
     projection = run_google_configuration(
         ctx,
@@ -149,7 +116,7 @@ def google_status(ctx: typer.Context) -> None:
 
 
 def google_logout(ctx: typer.Context) -> None:
-    """Clear session records through the worker while preserving the client record."""
+    """Clear session records through the worker."""
     client = bound_profile_client(ctx)
     projection = run_google_configuration(
         ctx,
@@ -161,7 +128,6 @@ def google_logout(ctx: typer.Context) -> None:
         profile=profile,
         token_removed=projection.token_removed,
         metadata_removed=projection.metadata_removed,
-        client_preserved=projection.client_preserved,
     )
     emit_envelope(
         ctx,
@@ -172,7 +138,6 @@ def google_logout(ctx: typer.Context) -> None:
             f"profile\t{profile}",
             f"token_removed\t{projection.token_removed}",
             f"metadata_removed\t{projection.metadata_removed}",
-            f"client_preserved\t{projection.client_preserved}",
         ),
     )
 
@@ -334,7 +299,6 @@ def profile_archive_push(
 __all__ = [
     "google_login",
     "google_logout",
-    "google_register",
     "google_status",
     "google_sync_probe",
     "profile_archive_push",

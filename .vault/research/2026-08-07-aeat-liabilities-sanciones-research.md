@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:4fd479d972c309cb5ee0196a0921b39355c999e9fe3d95206504ea2df07302ca'
+body_hash: 'sha256:4e22bfa88f0999ad2e5ebd53d7b4593920359c1f77c9da179ca65172fa800b6f'
 related: []
 ---
 
@@ -14,7 +14,7 @@ related: []
 The application has no typed representation of a taxpayer's AEAT-owed liabilities
 — a sanción, a recargo de apremio, a liquidación from a comprobación, a suffered
 intereses de demora, or an aplazamiento/fraccionamiento in force. The only
-existing surface, `PostFilingEventKind` (`src/cadrumo/core/_post_filing_event.py`),
+existing surface, `PostFilingEventKind` ,
 is a closed classification enum that tags pulled notification/expediente rows by
 concepto substring; it carries no amount, no deadline, and no procedural state,
 and it shipped with no governing ADR. Every read surface the app already drives
@@ -46,13 +46,13 @@ algunas deudas" / "pago parcial", each a separate procedure requiring a
 different, payment-specific apoderamiento code (`GENERALLEY58`, `RA19007`
 through `RA19010`) and ending in an NRC. This mirrors the shape the app already
 trusts elsewhere: `Consultar declaraciones presentadas`
-(`src/cadrumo/adapters/outbound/aeat/sede/_declarations.py:1`) is read-only and
+ is read-only and
 distinct from `Mis Expedientes`
-(`src/cadrumo/adapters/outbound/aeat/sede/_walker.py`), which is itself a
+, which is itself a
 *procedures* tree the app already walks read-only — its category tree includes
 a "sanciones, recursos, certificados" branch that every production caller
 currently avoids by always passing an explicit `modelo=` filter
-(`src/cadrumo/adapters/outbound/aeat/sede/_schema.py:89-116`, `Expediente.modelo`
+(the former source file, `Expediente.modelo`
 is `None` for exactly this branch). A debts consulta adapter is a new sibling
 surface, not an extension of the expedientes walker: the debts list is keyed by
 clave de liquidación / objeto tributario, not by expediente id, and AEAT serves
@@ -118,11 +118,11 @@ work:
 
 The registry already carries a casilla-level "Intereses de demora" concept, and
 it is important to name it precisely so it is never confused with this gap. M100
-casilla `0576` (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/c0576.toml`,
+casilla `0576` (the former source file,
 `semantic_role = "irpf_intereses_demora_perdida_transitoria_estatal"`) and its
 sibling regularización casillas (`_REGULARIZACION_PREVIOUS_INTEREST_CASILLAS`,
 grounded and tested in
-`src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_role_legal_refs.py:198-213`)
+
 carry `legal_refs = [..., "ley-58-2003:art-26"]`. That casilla is the taxpayer
 **self-computing** an interés de demora as part of voluntarily regularizing a
 previously-claimed tax benefit within the SAME declaration (`section =
@@ -166,20 +166,19 @@ The sibling family to mirror end-to-end is the expedientes stack, and a new
 the same file per layer:
 
 - **Outbound adapter schema** — new
-  `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`, mirroring
-  `Expediente` (`src/cadrumo/adapters/outbound/aeat/sede/_schema.py:89-140`).
+  the former source file, mirroring
+  `Expediente` .
   A `Deuda(BaseModel)` with `model_config = STRICT_FROZEN_CONFIG`: a validated
   `clave_liquidacion: str` identifier field (pattern TBD from a real specimen —
   see "Not investigated"), `objeto_tributario: str`, `importe_pendiente:
   Decimal = Field(ge=Decimal("0"))` (non-negative, the same precedent the same
-  module's own wallet `pending_amount` field sets at
-  `src/cadrumo/adapters/outbound/aeat/sede/_schema.py:340`, sourced through
+  module's own wallet `pending_amount` field sets , sourced through
   `coerce_decimal_strict`), `periodo: Period | None`, `situacion: DeudaSituacion` (new closed
   enum — see below), and `mode: Literal["read"]`. The walker function
   (`walk_deudas_consulta` or similar, named after `walk_expedientes_tree` /
   `walk_declarations_register`) drives the read-landing guard
   (`assert_read_landing(..., allowed_path_prefixes=_DEUDAS_READ_PATH_PREFIXES)`
-  per `src/cadrumo/adapters/outbound/aeat/sede/_walker.py:109-134`), pinned to
+  ), pinned to
   the debts-consulta path once known — never to any path prefix under the
   payment flow (the three "pagar ..." sub-flows AEAT's own help page
   describes must never be reachable from this adapter).
@@ -199,9 +198,9 @@ the same file per layer:
   debts-consulta row is the sanción's resulting deuda, once liquidated — two
   facts about one procedure, not one fact twice.
 - **Application snapshot service** — new
-  `src/cadrumo/application/live/_deudas.py`, mirroring
+  the former source file, mirroring
   `ExpedientesService` / `PersistedExpedientesSnapshot` / `ExpedientesCapture`
-  (`src/cadrumo/application/live/_expedientes.py:46-140`) exactly: a
+   exactly: a
   `DeudasCapture(BaseModel)` slim wrapper, `PersistedDeudasSnapshot`,
   content-addressed snapshot ids (`_derive_snapshot_id` hashing the canonical
   capture JSON, same pattern), a new bucket-scoped namespace constant
@@ -210,17 +209,17 @@ the same file per layer:
   `StatelessSnapshotService[PersistedDeudasSnapshot, DeudasCapture]`.
   Structurally read-only by construction, same as `ExpedientesService`'s own
   docstring guarantee: no method calls AEAT to mutate state.
-- **CLI entrypoint** — new `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py`
+- **CLI entrypoint** — new the former source file
   and payload models in `_app_live_payloads.py`, exposing
   `aeat app live deudas pull|list|view|latest`, the exact verb shape
   `expedientes` already uses (`aeat app live expedientes pull`, confirmed live
   in `src/cadrumo/application/storage_write_policy.py:194` and
-  `src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py:611-613`).
+
   Per `aeat-cli-contract`, landing this verb requires the same hand-swept
   surfaces expedientes already appears on: the `storage_write_policy.py`
   allowlist, any `default_suggestion` in the error registry pointing at the
   new list verb, and the agent-harness document
-  (`src/cadrumo/_data/agent/rules/cadrumo-operator-orientation-routing.md:62`)
+
   that already enumerates `expedientes pull` alongside `notifications pull`
   and would need `deudas pull` added in the same commit as the verb.
 
@@ -282,19 +281,19 @@ document, per the sensitive-financial-data and never-file mandates.
 
 ## Sources
 
-- `src/cadrumo/core/_post_filing_event.py:1-184` — `PostFilingEventKind`, the only existing classification of post-filing events; no amount/deadline/state.
-- `src/cadrumo/adapters/outbound/aeat/sede/_schema.py:89-140` — `Expediente`, the sibling read-only record shape to mirror (`mode: Literal["read"]`, strict-frozen config).
-- `src/cadrumo/adapters/outbound/aeat/sede/_schema.py:338-340` — `pending_amount: Decimal = Field(ge=Decimal("0"))`, the non-negative-decimal-field precedent for a new `importe_pendiente` field.
+- the former source file — `PostFilingEventKind`, the only existing classification of post-filing events; no amount/deadline/state.
+- the former source file — `Expediente`, the sibling read-only record shape to mirror (`mode: Literal["read"]`, strict-frozen config).
+- the former source file — `pending_amount: Decimal = Field(ge=Decimal("0"))`, the non-negative-decimal-field precedent for a new `importe_pendiente` field.
 - `src/cadrumo/core/aggregation.py` — `BindingSourceKind`, the closed taxonomy of registry `source` tokens; confirmed by full enumeration that no member references any post-filing enforcement concept (sanción, recargo de apremio, deuda), grounding the "never feeds a casilla" claim structurally, not just narratively.
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/c0576.toml` — M100 casilla `0576`, the existing self-computed "Intereses de demora (pérdida transitoria estatal)" casilla, grounded to `ley-58-2003:art-26`; cited to distinguish the already-built self-computed-interest mechanism from this document's gap.
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_role_legal_refs.py:198-213` — test asserting `_REGULARIZACION_PREVIOUS_INTEREST_CASILLAS` cite `ley-58-2003:art-26`, confirming the casilla-level interés de demora is regularización-anterior self-computation, not an AEAT-supplied value.
+- the former source file — M100 casilla `0576`, the existing self-computed "Intereses de demora (pérdida transitoria estatal)" casilla, grounded to `ley-58-2003:art-26`; cited to distinguish the already-built self-computed-interest mechanism from this document's gap.
+- the former source file — test asserting `_REGULARIZACION_PREVIOUS_INTEREST_CASILLAS` cite `ley-58-2003:art-26`, confirming the casilla-level interés de demora is regularización-anterior self-computation, not an AEAT-supplied value.
 - `src/cadrumo/application/storage_write_policy.py:194` — `"app live expedientes pull"` in the write-policy allowlist; a new `deudas pull` verb needs the same entry.
-- `src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py:611-613` — asserts `expedientes latest|list|view` verb identifiers; the shape a new `deudas` verb family must match.
-- `src/cadrumo/_data/agent/rules/cadrumo-operator-orientation-routing.md:59-64` — the agent-harness document enumerating live-read verbs (`expedientes pull`, `notifications pull`, etc.); a new `deudas pull` verb must be added here in the same commit per `aeat-cli-contract`.
-- `src/cadrumo/adapters/outbound/aeat/sede/_walker.py:109-134` — `_RESUMEN_READ_PATH_PREFIXES` / `assert_read_landing`, the read-landing guard pattern a new debts adapter must replicate.
-- `src/cadrumo/adapters/outbound/aeat/sede/_declarations.py:1-26` — module docstring distinguishing the procedures tree (Mis Expedientes, includes a "sanciones, recursos, certificados" category never targeted by any caller) from the canonical filings register.
+- the former source file — asserts `expedientes latest|list|view` verb identifiers; the shape a new `deudas` verb family must match.
+- the former source file — the agent-harness document enumerating live-read verbs (`expedientes pull`, `notifications pull`, etc.); a new `deudas pull` verb must be added here in the same commit per `aeat-cli-contract`.
+- the former source file — `_RESUMEN_READ_PATH_PREFIXES` / `assert_read_landing`, the read-landing guard pattern a new debts adapter must replicate.
+- the former source file — module docstring distinguishing the procedures tree (Mis Expedientes, includes a "sanciones, recursos, certificados" category never targeted by any caller) from the canonical filings register.
 - `src/cadrumo/adapters/outbound/aeat/sede/__init__.py:1-66` — the sede subpackage's public API and navigation-flow docstring; no debts-consulta surface exported.
-- `src/cadrumo/application/live/_expedientes.py:46-140` — `ExpedientesService` / `PersistedExpedientesSnapshot` / `ExpedientesCapture`, the snapshot-service family to mirror for a new `DeudasService`.
+- the former source file — `ExpedientesService` / `PersistedExpedientesSnapshot` / `ExpedientesCapture`, the snapshot-service family to mirror for a new `DeudasService`.
 - `src/cadrumo/_data/corpus/normatives/html/ley-58-2003-art-26.html.extracted.md` — bundled corpus text, interés de demora (LGT art. 26).
 - `src/cadrumo/_data/corpus/normatives/html/ley-58-2003-art-27.html.extracted.md` — bundled corpus text, recargo extemporáneo (LGT art. 27), already built elsewhere; not duplicated here.
 - `src/cadrumo/_data/corpus/normatives/html/ley-58-2003-art-213.html.extracted.md` — bundled corpus text, medios de revisión (LGT art. 213).

@@ -42,7 +42,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PACKAGING = Path(__file__).resolve().parents[1]
 # Modules that record proofs on behalf of the forms that call them.
-_RECORDING_SUPPORT = ("lane_verification_core.py", "python_cohort.py")
+_RECORDING_SUPPORT = (
+    "lane_verification_core.py",
+    "dependency_contract.py",
+    "source_data_contract.py",
+    "python_cohort.py",
+)
 
 
 def _unreachable_nodes(tree: ast.AST) -> set[int]:

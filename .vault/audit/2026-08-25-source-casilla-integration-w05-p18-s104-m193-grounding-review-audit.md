@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:98cc25f503b6fa71047ab62d531dc6d9c6691329ff949bed181fbec72ae855e6'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]"
 ---
 # `source-casilla-integration` audit: `W05 P18 S104 Modelo 193 grounding review`

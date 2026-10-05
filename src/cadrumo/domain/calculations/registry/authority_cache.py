@@ -93,7 +93,7 @@ class RetainedAuthorityValue[V]:
 
 
 @dataclass(frozen=True, slots=True)
-class AuthorityCacheTelemetry:
+class AuthorityCacheStats:
     """Accounted retention state, distinct from process RSS and active leases."""
 
     budget: int
@@ -199,10 +199,10 @@ class AccountedAuthorityCache[K: Hashable, V]:
             self._shared_total = 0
             self._shared_holders.clear()
 
-    def telemetry(self) -> AuthorityCacheTelemetry:
-        """Return retained-accounting telemetry without claiming a process RSS bound."""
+    def stats(self) -> AuthorityCacheStats:
+        """Return retained-accounting statistics without claiming a process RSS bound."""
         with self._lock:
-            return AuthorityCacheTelemetry(
+            return AuthorityCacheStats(
                 budget=self._budget,
                 retained_weight=self._retained_weight(),
                 entries=len(self._values),

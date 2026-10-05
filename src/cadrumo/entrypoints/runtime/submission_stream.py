@@ -9,7 +9,7 @@ from contextlib import suppress
 from threading import BoundedSemaphore
 from uuid import uuid4
 
-from ...adapters.local_runtime.framing import read_secret, write_document
+from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
 from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.operation_access import (
     RuntimeOperationPayloadReady,

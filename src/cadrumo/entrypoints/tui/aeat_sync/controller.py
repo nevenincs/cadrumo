@@ -29,13 +29,24 @@ from .models import (
 )
 
 
-def _singleton_operation_pair(
-    actions: tuple[ActionReference, ...], operations: tuple[OperationDefinitionId, ...]
+def _contract_joined_pair(
+    actions: tuple[ActionReference, ...],
+    operations: tuple[OperationDefinitionId, ...],
+    contract: OperationPublicDefinitionContractV1 | None,
 ) -> tuple[ActionReference, OperationDefinitionId] | None:
-    """Return the only candidate pair, refusing an under- or over-specified row."""
-    if len(actions) != 1 or len(operations) != 1:
+    """Pair a row's single operation with the one row action its contract joins.
+
+    A row may also carry catalogue actions that start no operation, such as
+    listing local filing records; those are not handoff candidates. A row with
+    several operations, or whose contract joins none of its actions, is
+    refused rather than guessed.
+    """
+    if len(operations) != 1 or contract is None:
         return None
-    return actions[0], operations[0]
+    joined = tuple(action for action in actions if action == contract.action_reference)
+    if len(joined) != 1:
+        return None
+    return joined[0], operations[0]
 
 
 def _is_canonical_action_admission(action_catalogue: ActionCatalogue, action_id: str) -> bool:
@@ -128,18 +139,20 @@ class AeatSyncWorkspaceController:
         """Expose only one of the three explicitly registered mutation pairings.
 
         The S397 projection admits action and operation axes independently.  This
-        TUI layer deliberately does not infer a generic pairing: it can hand off
-        only a singleton pair whose exact join is declared by the injected
-        public operation contract.
+        TUI layer deliberately does not infer a generic pairing: it hands off
+        only the row's single operation, paired with the row action that the
+        injected public operation contract declares as its exact join.
         """
-        pair = _singleton_operation_pair(actions, operations)
+        contract = (
+            None if len(operations) != 1 else _operation_contract_for(self.operation_contracts, str(operations[0]))
+        )
+        pair = _contract_joined_pair(actions, operations, contract)
         if pair is None:
             return None
         action, operation = pair
         action_id = str(action.action_id)
         if not _is_canonical_action_admission(self.action_catalogue, action_id):
             return None
-        contract = _operation_contract_for(self.operation_contracts, str(operation))
         if not _contract_admits_tui_action(contract, action):
             return None
         return AeatSyncOperationRequestV1(action=action, operation=operation)
@@ -167,7 +180,9 @@ class AeatSyncWorkspaceController:
         return True
 
     def can_open(self, zone: AeatSyncWorkspaceZone) -> bool:
-        """Allow only observed current or stale projection zones to render bodies."""
+        """Keep the overview reachable to explain unavailable sources."""
+        if zone is AeatSyncWorkspaceZone.OVERVIEW:
+            return self.state_for(zone).availability is not AeatSyncWorkspaceAvailability.LOCKED
         return self.state_for(zone).availability in {
             AeatSyncWorkspaceAvailability.AVAILABLE,
             AeatSyncWorkspaceAvailability.STALE,

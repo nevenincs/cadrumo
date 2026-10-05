@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 import base64
-import binascii
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, JsonValue, model_validator
 
+from ...core.base64_codec import b64_decode_canonical
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
-PROJECTION_PAGE_BYTES = 16_384
+# Base64 leaves room for both runtime and worker authority envelopes within
+# the 64 KiB transport frame, while reducing repeated projection work.
+PROJECTION_PAGE_BYTES = 32_768
 PROJECTION_DOCUMENT_MAX_BYTES = 16_777_216
 
 
@@ -44,14 +46,10 @@ class ProjectionPage(BaseModel):
     def decode(self) -> bytes:
         """Reject malformed or noncanonical base64 and impossible byte ranges."""
         try:
-            data = base64.b64decode(self.encoded, validate=True)
-        except (ValueError, binascii.Error):
+            data = b64_decode_canonical(self.encoded)
+        except ValueError:
             raise ValueError("invalid projection page encoding") from None
-        if (
-            base64.b64encode(data).decode("ascii") != self.encoded
-            or self.offset >= self.total_bytes
-            or len(data) != min(PROJECTION_PAGE_BYTES, self.total_bytes - self.offset)
-        ):
+        if self.offset >= self.total_bytes or len(data) != min(PROJECTION_PAGE_BYTES, self.total_bytes - self.offset):
             raise ValueError("invalid projection page range")
         return data
 

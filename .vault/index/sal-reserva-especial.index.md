@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#sal-reserva-especial'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b57247d13deed94c30b1c53ef8fdcc8d9fbe5c8782962c845166a1c70f60ad3c'
+body_hash: 'sha256:dabf4c0cf2a8cb1b9f0b0962ddc5115c80bd1e988fa6e89c8f183fa336a9fc54'
 related:
-  - '[[2026-06-04-sal-reserva-especial-adr]]'
   - '[[2026-06-04-sal-reserva-especial-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#sal-reserva-especial`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-sal-reserva-especial-adr` - `sal-reserva-especial` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

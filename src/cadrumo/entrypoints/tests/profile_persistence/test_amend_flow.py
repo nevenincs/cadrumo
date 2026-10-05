@@ -56,8 +56,7 @@ from ....application.modelo.export import (
     ModeloExportEvidenceMissingError,
     export_modelo_revision,
 )
-from ....application.modelo.filing_actions import get_filing_record
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import (
     create_work_unit,
     get_work_unit,
@@ -100,6 +99,7 @@ from ...adapter_composition import (
     build_filing_action_ports,
     build_work_lifecycle_ports,
 )
+from ..filing_record_read_support import persisted_filing_record
 from .file_flow_test_support import (
     workflow_profile,
 )
@@ -447,7 +447,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -460,7 +460,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert report.granted_verificado_completo is True
     with bundled_indexed_authority().operation() as operation:
         verified_revision = get_calculation_revision(
@@ -581,9 +581,9 @@ def test_amend_new_filing_records_filing_metadata(repos: _Repos, *, operation: P
 def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, _, _fr_repo, _, _ = repos
-    refreshed_baseline = get_filing_record(
+    refreshed_baseline = persisted_filing_record(
         outcome.baseline.filing_record_id,
-        ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+        ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),
     )
     assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
@@ -697,9 +697,9 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
         )
 
     assert new_filing.member_nif == "A00000000"
-    refreshed_single_filer = get_filing_record(
+    refreshed_single_filer = persisted_filing_record(
         single_filer_filing_id,
-        ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+        ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),
     )
     assert refreshed_single_filer.status is ModeloRecordStatus.VIGENTE
 
@@ -933,7 +933,7 @@ def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos, *, operati
 
     This pins the fact the export evidence guard silently depends on. The
     amend path mints its own BORRADOR -> VERIFICADO_COMPLETO -> PRESENTADO
-    transitions in-process and never calls ``verify_modelo_revision``, so
+    transitions in-process and never calls ``verify_modelo_revision_with_preconditions``, so
     ``_persist_verified_revision_evidence`` — which lives inside verify's
     granted branch — never runs for an amendment. An amendment therefore
     reaches an export-admitted state carrying neither snapshot nor bundle.
@@ -1149,9 +1149,9 @@ def test_amendment_event_and_state_are_both_present_after_success(
     assert refreshed.current_filing_record_id == amended.filing_record_id
     assert refreshed.filed_calculation_revision_id == amended.calculation_revision_id
     assert (
-        get_filing_record(
+        persisted_filing_record(
             baseline.filing_record_id,
-            ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
+            ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),
         ).status
         is ModeloRecordStatus.SUPERSEDIDO
     )

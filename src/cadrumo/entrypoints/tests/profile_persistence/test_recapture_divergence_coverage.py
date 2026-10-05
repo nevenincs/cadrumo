@@ -49,7 +49,7 @@ from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support im
     secure_backend as _secure_backend,
 )
 from cadrumo.application.live.filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
-from cadrumo.application.live.filed_data_capture import recapture_divergence_notices
+from cadrumo.application.live.filed_history_discovery import recapture_divergence_notices
 from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
 from cadrumo.application.storage.sync_runs.records import SyncRunCoverage
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-08-24'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:43653f168c1d1e6b46f3d39b2f6d5f9b6510d235e9dffd539896a905bd7074d8'
 related:
@@ -21,7 +21,6 @@ related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
-  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
   - '[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]'

@@ -3,13 +3,14 @@ tags:
   - '#reference'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:db67ce0011b196bade9b1def1ef2a9a5d49801aa762230f991594be3c9eb4013'
+body_hash: 'sha256:3fedd4d5d1b3b0ea8e68b9ede74df2ee6e2a5cfda74cdfc70a8db317184b0a8c'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit]]"
 ---
+
 # Authority backend implementation and performance review
 
 Implementation assessment as of 2026-09-14, following the post-delta architecture review. The earlier review is the historical baseline; this document records the resulting backend and its measured limits. The accepted ADR owns the architectural decision, the plan owns completion status, and the final audit owns review findings.
@@ -25,9 +26,7 @@ The implemented v5 backend now compiles the full corpus successfully, refuses in
 | Pass | Finding and implemented remedy | Reviewable entry points |
 | --- | --- | --- |
 | Publication integrity | Structural loading could produce a trusted-looking authority, and partial publication could retain unrelated components. Only complete validation now creates the publishable authority. Diagnostics receive structural components. Facts-only publication was removed. | `dev/registry/compiler/authority.py`, `dev/registry/diagnostic_classification.py`, `dev/registry/pipeline/authority_publication.py` |
-| Generation identity | Payload identity alone did not explain source or compiler drift. V5 persists separate source, compiler/schema and complete-component dependency identities, derives generation identity from them, and verifies the payload digest separately. Compiler identity includes conservative transitive code roots, dependency manifests and relevant interpreter/library versions. | `dev/registry/compiler/build_identity.py`, `authority_artifact.py` |
 | Coherent cutover | A candidate could change after validation. Publication captures inputs, performs full conformance, serializes and decodes the candidate, stages and fsyncs bytes, checks fresh receipts, then replaces the artifact. Failed validation or detected drift preserves the previous artifact. | `dev/registry/pipeline/authority_publication.py`, `authority_artifact.py` |
-| Evidence closure | Incomplete or inconsistent evidence could enter the shipped artifact. Admission checks exact legal membership, required source coverage, source metadata consistency, duplicate identifiers and unknown wire members. Evidence is indexed for runtime lookup. | `authority_artifact.py`, `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py` |
 | Reliable runtime | Mutable temporal mappings and deep-copy reconstruction undermined sharing and Modelo 303. Semantic mappings are frozen, immutable IVA values support copying, and snapshots share typed definitions. Provider access avoids repeated schema reconstruction. Modelo 303 compensation is no longer mistaken for a refund merely because the result is negative. | `authority.py`, `binding_temporal.py`, `schema.py`, `src/cadrumo/domain/iva/flow.py`, `src/cadrumo/application/calculations/m303_carry_ingress.py` |
 | Cache correctness and cost | Date-only projections could cross authority generations; metadata-only file caches could retain stale content. Bounded caches now include authority ownership. TOML and quotation identities include content, with manual sidecars in publication receipts. Snapshot results are shared per admitted context. | `governed_fact_scope.py`, `dev/registry/compiler/loader_cache.py`, `dev/registry/compiler/validate_evidence.py` |
 | Corpus blockers | Full validation exposed existing continuity, historical procedural evidence and enum drift. Repairs preserve negative validation: transitive field-specific continuity, explicitly bounded procedural grounding, and nonbranching historical enum evolution. A stale Modelo 200 generated manifest pin was refreshed to the existing generated manifest. | `dev/registry/compiler/validate_cross_revision.py`, `dev/registry/compiler/validate_semantic_roles.py`, `dev/registry/tests/test_procedural_evidence.py`, `dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml` |

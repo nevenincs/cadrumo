@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:2d70656a70603e97fb99b65af50d844a8f0457763331a8611dc780c8e3a615db'
+modified: '2026-10-03'
+body_hash: 'sha256:f99fcdb254b89f9a30fec64f5cf3a9c359e11bf5526f19ce5b42b40ca897c0de'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The focused tests exercise the no-active-session error, locked-session refusal, 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py` passed with 5 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_active_session.py src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py` passed.
+- the historical check passed with 5 tests.
+- the historical check passed.
 - Touched-surface hygiene scan found no direct environment access, settings construction, keyring calls, file I/O calls, fake/stub/monkeypatch markers, skipped/xfail tests, or direct output. The only broad exception match is the logged atexit cleanup guard.
 
 Review-agent note: spawning `vaultspec-code-reviewer` failed with `agent thread limit reached`, so the supervisor completed the same checklist locally.

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:3f3eef63c7473573d5d75c12b244de2715821d62992209d8eac58a9c6fd978a3'
+modified: '2026-10-03'
+body_hash: 'sha256:7ca2846dd1c682b2aa5539865496ded7f544934c87b0d69352106735924855e1'
 related: []
 ---
 
@@ -34,8 +34,8 @@ domain persistence tests.
 
 ## S348-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/justificante/_repository.py src/aeat/domain/justificante/test_repository.py src/aeat/domain/justificante/test_secure_storage_roundtrip.py src/aeat/domain/justificante/test_vocabulary_stable.py src/aeat/tests/aeat_literal_fixtures.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/justificante/test_repository.py src/aeat/domain/justificante/test_secure_storage_roundtrip.py src/aeat/domain/justificante/test_vocabulary_stable.py` passed with 19 tests.
+- the historical check passed.
+- the historical check passed with 19 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with the known PLAN022 warning.
 - `uv run --no-sync vaultspec-rag search "JustificanteRepository SecureBoundRepository AUDIT runtime-default secure-bound secure object encrypted metadata" --type code --port 8766 --max-results 8` returned the repository and shared secure-bound contract evidence.

@@ -11,49 +11,34 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ..operations.access_resolution import (
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+    require_declared_frontend_and_action,
+    require_period_independent_replay_or_authority,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.public_scalar import PublicDecimal
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
+from ..operations.profile_guard import (
+    require_access_request_profile_payload,
+    require_profile_operation_identity,
 )
+from ..operations.public_scalar import PublicDecimal
+from ..operations.read_capture import capture_read_result
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
     Availability,
     DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .llm_diagnostics import (
@@ -66,7 +51,6 @@ from .llm_diagnostics import (
 from .llm_diagnostics_ports import LlmDiagnosticsPorts
 
 LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID = "ledger.llm-diagnostics"
-_FRONTENDS = frozenset(OperationFrontendProjection)
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT})
 
 
@@ -297,18 +281,14 @@ def project_ledger_llm_diagnostics_result(result: BaseModel, receipt: OperationT
     if type(result) is not LedgerLlmDiagnosticsExecutionResult:
         raise ValueError("invalid private LLM diagnostics result")
     projection = result.projection
-    if (
-        receipt.identity.definition_id != LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-    ):
-        raise ValueError("LLM diagnostics result differs from its terminal receipt")
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(projection.profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        message="LLM diagnostics result differs from its terminal receipt",
+    )
     return projection
 
 
@@ -324,13 +304,10 @@ class LedgerLlmDiagnosticsExecutor:
     ) -> str:
         """Store the complete canonical report and publish a NONE effect."""
         payload = request.payload
-        if (
-            request.definition_id != LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(str(payload.profile_id))
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or await asyncio.to_thread(require_active_bucket_id) != str(payload.profile_id)
-        ):
+        if request.definition_id != LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, payload.profile_id)
+        if await asyncio.to_thread(require_active_bucket_id) != str(payload.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID)
 
@@ -360,90 +337,40 @@ class LedgerLlmDiagnosticsExecutor:
                 )
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name=LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID)
+        return await capture_read_result(context, read, task_name=LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID)
 
 
 def resolve_ledger_llm_diagnostics_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require all-period exact-profile access and both public result categories."""
-    payload = request.payload
-    if (
-        request.definition_id != LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID
-        or type(payload) is not LedgerLlmDiagnosticsRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if context.frontend not in _FRONTENDS:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
-    if context.action not in _ACTIONS:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    admitted = context.admitted_request
-    if admitted is not None and context.action in {AccessAction.OBSERVE, AccessAction.RESULT}:
-        if (
-            admitted.profile_id != context.profile_id
-            or admitted.definition_id != request.definition_id
-            or admitted.destination_id != context.destination_id
-            or admitted.action is not AccessAction.SUBMIT
-            or admitted.periods
-            or not admitted.period_independent
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    elif context.authority_operation is None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action is AccessAction.OBSERVE:
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != request.definition_id + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id, projection_id=schema.schema_id, category=category
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=payload.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=_ACTIONS,
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,
+        payload_type=LedgerLlmDiagnosticsRequest,
+        access_profile_id=context.profile_id,
+    )
+    require_declared_frontend_and_action(context, frontends=ALL_OPERATION_FRONTENDS, actions=_ACTIONS)
+    require_period_independent_replay_or_authority(
+        context, profile_id=payload.profile_id, definition_id=request.definition_id
+    )
+    disclosures = operation_disclosures(
+        context,
+        observed_by=frozenset({AccessAction.OBSERVE}),
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+        result_schema_id=request.definition_id + ".result",
+    )
+    return bind_operation_access(
+        context,
+        profile_id=payload.profile_id,
+        definition_id=request.definition_id,
+        actions=_ACTIONS,
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=True,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
     )
 
 
@@ -451,32 +378,14 @@ def build_ledger_llm_diagnostics_definition(
     factory: LedgerLlmDiagnosticsOperationPortsFactory,
 ) -> OperationDefinition:
     """Declare the existing diagnostics report as a read-only registered verb."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,
         request_type=LedgerLlmDiagnosticsRequest,
         result_type=LedgerLlmDiagnosticsExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerLlmDiagnosticsRequest,
-            executor_type=LedgerLlmDiagnosticsExecutor,
-            build=lambda: LedgerLlmDiagnosticsExecutor(factory),
-        ),
-        phase_codes=(LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=_FRONTENDS,
+        executor_type=LedgerLlmDiagnosticsExecutor,
+        build=lambda: LedgerLlmDiagnosticsExecutor(factory),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_STORED_READ_CAPABILITIES,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -486,18 +395,9 @@ def build_ledger_llm_diagnostics_registration(
     """Bind closed request/result schemas and exact-profile disclosure policy."""
     if definition.definition_id != LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID:
         raise ValueError("unexpected ledger LLM diagnostics definition")
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=LedgerLlmDiagnosticsRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=LedgerLlmDiagnosticsProjection,
-        ),
+        public_result_type=LedgerLlmDiagnosticsProjection,
         result_projector=project_ledger_llm_diagnostics_result,
         access_resolver=resolve_ledger_llm_diagnostics_access,
     )

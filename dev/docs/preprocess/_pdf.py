@@ -151,15 +151,7 @@ def _diseno_url(manifest_path: Path, source: Path) -> str:
         stored = artefact.get("stored_path")
         if not isinstance(stored, str) or (manifest_path.parent / stored).resolve() != source.resolve():
             continue
-        if not source.is_file():
-            return ""
-        recorded_sha256 = artefact.get("sha256")
-        if recorded_sha256 is not None and (
-            not isinstance(recorded_sha256, str) or recorded_sha256.strip().lower() != sha256_of(source)
-        ):
-            return ""
-        url = artefact.get("url")
-        return url.strip() if isinstance(url, str) else ""
+        return _verified_diseno_url(artefact, source)
     return ""
 
 
@@ -261,3 +253,16 @@ def extract_pdf(source: Path, *, repo_root: Path) -> list[Path]:
     """
     outputs = build_outputs(source, repo_root=repo_root)
     return write_part_sidecars(source, outputs)
+
+
+def _verified_diseno_url(artefact: dict[str, object], source: Path) -> str:
+    """Verify the matched design artefact before accepting its URL."""
+    if not source.is_file():
+        return ""
+    recorded_sha256 = artefact.get("sha256")
+    if recorded_sha256 is not None and (
+        not isinstance(recorded_sha256, str) or recorded_sha256.strip().lower() != sha256_of(source)
+    ):
+        return ""
+    url = artefact.get("url")
+    return url.strip() if isinstance(url, str) else ""

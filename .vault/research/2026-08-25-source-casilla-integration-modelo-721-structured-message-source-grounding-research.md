@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c809414e2111b22be3afcaec1f93debeb6dc46ac1b13e8df90f0009d9abf3dfd'
+body_hash: 'sha256:850e6a1067f9fd9915d8135d8015833d56cafa7a7bc6c1f015ff6947e619a876'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-25-source-casilla-integration-m721-structured-message-source-owner-deferral-adr]]'
 ---
 
@@ -45,7 +44,6 @@ the exact 2024-01-01 through 2024-12-31 window.
 The independently selected loaded revisions agree: only `2023/0A` and
 `2024/0A` exist, both at applicability grade. No source fact or conclusion in
 this research extends to 2025 or a later exercise.
-`src/cadrumo/domain/calculations/registry/tests/test_modelo_721_registry.py:23`
 
 ### Each era requires a repeated custody-and-valuation fact, not five manual fields
 
@@ -81,7 +79,6 @@ loaded source references are the BOE form-spec and the procedure page, which
 are declaration authority rather than a carrier of an acquired taxpayer fact.
 `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2023/revision.toml:1`
 `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2024/revision.toml:1`
-`src/cadrumo/domain/calculations/registry/tests/test_modelo_721_registry.py:86`
 
 The existing threshold-continuity test persists and reloads manually constructed
 ordered observations through the encrypted calculation-observation repository.
@@ -93,8 +90,6 @@ does not attach capture provenance, a durable external source identity, or an
 explicit source absence state. The verify-time regression independently keeps
 M721 without an evidence binding, so the same observation cannot be falsely
 used as both evidence and declaration.
-`src/cadrumo/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py:349`
-`src/cadrumo/application/modelo/tests/test_modelo_720_redeclaration_e2e.py:413`
 
 The earlier accepted `2026-06-02-modelo-721-cripto-data-fidelity-adr` remains
 the decision home for threshold-continuity and ordered manually entered
@@ -121,7 +116,7 @@ owner today. Exact searches likewise find no M721 binding, source-mesh
 resolver, source-connectivity census row, producer, semantic map, or model
 serializer to redeclare.
 `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md:157`
-`src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:447`
+
 `.vault/audit/2026-08-24-registry-completeness-closure-s80-correction-rereview-audit.md:28`
 
 The outstanding ADR question is therefore whether the real two-era source
@@ -142,11 +137,7 @@ unproven.
 - `src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2024-27528-modelo-721-layout-amendment.pdf.corpus_text.json:1`
 - `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2023/revision.toml:1`
 - `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2024/revision.toml:1`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_721_registry.py:23`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_721_registry.py:86`
-- `src/cadrumo/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py:349`
-- `src/cadrumo/application/modelo/tests/test_modelo_720_redeclaration_e2e.py:413`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:447`
+
 - `.vault/reference/2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference.md:24`
 - `.vault/reference/2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference.md:37`
 - `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md:157`

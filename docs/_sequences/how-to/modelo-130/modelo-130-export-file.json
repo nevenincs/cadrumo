@@ -257,7 +257,7 @@
               "modelo": "130",
               "period": "1T"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
           },
           {

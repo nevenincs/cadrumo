@@ -3,21 +3,16 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7089f73d94b52621a5c209f9b7d1895c5e94241a5fa268fb681ceb7610d02845'
+body_hash: 'sha256:f3a4ef88c5de5b3aa16aa50b0f5e66d8756d6533bb13576b7ef96d3f952a99ca'
 related: []
 ---
-
 # `calculation-correctness-campaign` audit: `every annual-versus-quarterly pair reconciles its base and its retenciones`
 
 ## Scope
 
-## Findings
-
-## Recommendations
-
-## What was swept
+### What was swept
 
 `aeat-calculation-grounding` requires that when a tier or category is added to
 any total, "every downstream total and every return that reconciles against it
@@ -27,7 +22,9 @@ the quarters it summarises, and nothing in the quarterly return would show it.
 Every `annual_summary` relation in the registry was derived and read, grouped
 by the pair it reconciles.
 
-## Verdict: all five pairs are complete
+## Findings
+
+### Verdict: all five pairs are complete
 
 | annual | quarterly | reconciled |
 |---|---|---|
@@ -41,7 +38,7 @@ Both halves are covered everywhere: what was paid, and what was withheld from
 it. The relations are routed -- `RelationPrefillSourceResolver` is enrolled on
 the live calculate mesh -- so these are not dormant declarations.
 
-## A near-miss worth recording
+### A near-miss worth recording
 
 M190 first appeared to reconcile no retenciones at all: intersecting its M111
 source casillas against the nine per-block retención boxes (03, 06, 09 ...)
@@ -55,7 +52,9 @@ parts, and a set difference against the parts reports a false gap when the
 design chose the total. List the actual sources before believing a coverage
 hole.
 
-## Status
+## Recommendations
+
+### Status
 
 Closed for these five pairs. Re-run when a new annual/quarterly pair is
 modelled, or when a block is added to an existing quarterly return.

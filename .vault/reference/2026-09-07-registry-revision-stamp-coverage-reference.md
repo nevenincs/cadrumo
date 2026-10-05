@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-revision-stamp-coverage'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:81785c856786af922765af3981b7b3371e5bd965874cdacf1a66b40b1f116a9a'
+body_hash: 'sha256:675a49a6c5854034cb381d02a3c5927df750c244b8ea7f35080f40f096438c4a'
 related:
   - "[[2026-06-10-period-revision-resolution-adr]]"
 ---
@@ -136,4 +136,3 @@ gate without becoming an alternate registry authority.
 - M303 handoff precedent: `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py:56`.
 - Reconciliation carrier: `src/cadrumo/application/modelo/reconciliation_records.py:161`.
 - Review package: `src/cadrumo/application/modelo/review_package.py:121`.
-- Export custody envelope: `src/cadrumo/application/filing/export_proof.py:45` and `:324`.

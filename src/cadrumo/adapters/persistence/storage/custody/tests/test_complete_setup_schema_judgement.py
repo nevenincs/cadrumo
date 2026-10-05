@@ -39,10 +39,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.application.user_profile.validation import (
@@ -52,6 +49,7 @@ from cadrumo.application.user_profile.validation import (
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
+from ......application.user_profile.tests.record_session_scope import bound_profile_record_session
 from ......domain.calculations.registry.tests.published_authority import published_profile_schema
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

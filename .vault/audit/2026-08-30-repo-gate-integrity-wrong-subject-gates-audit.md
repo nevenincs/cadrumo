@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-30'
-modified: '2026-09-07'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d84e16ce5350b0724cb8ebded735296f3b3e3185f00f740d76d15f1f3b57410'
+body_hash: 'sha256:66b70cda0ffe7ef4c2ec637ccfbda4dda3980ea92af2c4bfc7b70df962d926b9'
 related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]'
 ---
@@ -1289,9 +1289,7 @@ After gating `geometry_band`, the same measurement was applied to its siblings i
 | `key_band` | 1 | name-only tuple in an export assertion |
 | `screen_text` | 1 | name-only tuple in an export assertion |
 
-The single reference in each case is the same line — a tuple of expected export
-names in `dev/tests/test_public_devtool_homes.py`. It asserts the symbols are
-exported. It never executes them.
+It asserts the symbols are exported. It never executes them.
 
 So `capture()` assembles five bands, one of which is now proven per surface and
 four of which are proven to exist. Focus order, key bindings, engine state and
@@ -1598,8 +1596,8 @@ match against and excluded nothing. The result — **58** bare
 rounding-mode defect across production tax code, on the reasoning that Python's
 default is banker's rounding while AEAT expects half-up.
 
-**The real production figure is 4**, and all four are non-tax: two run-health
-diagnostics, one telemetry mean, one percentage-change projection. No filed
+**The real production figure is 3**, and all three are non-tax: two run-health
+diagnostics and one percentage-change projection. No filed
 amount is affected. The tax paths use explicit `ROUND_HALF_UP` (37 occurrences).
 The formula engine's `localcontext()` sets `prec = 28` and no rounding, which
 affects only the 28th significant digit and is immaterial for money.
@@ -2225,7 +2223,7 @@ only the first justifies overturning the claim it supported.
 608 path-like entries across 3,730 gate modules under `dev/tests`, `dev/quality` and every `src/**/tests` package. Classified by what the owning constant DOES rather than by whether the path resolves, because those are different questions:
 
 - **Stale EXCLUSIONS: 0.** This is the load-bearing number. An exclusion naming a vanished path is the shape that silently weakens a gate -- the gate keeps passing, and nobody learns the exemption stopped applying to anything. There are none.
-- **Stale-looking inventory entries: 176**, and the count is not the finding. Two corrections to the measurement itself: the largest single cluster (26 rows in `entrypoints/cli/tests/test_backend_boundary.py`) belongs to a constant named `removed` -- paths that must NOT exist, so absence is the assertion PASSING; and `tests/test_deferred_cross_layer_imports.py` already carries its own `test_no_stale_declaration`, so its rows cannot go stale unnoticed. A detector keyed on "does this path resolve" cannot separate a must-exist inventory from a must-not-exist one, and reporting 176 as though it were a defect count would have been a third instance of the count-without-members error this audit already records.
+- **Stale-looking inventory entries: 176**, and the count is not the finding. Two corrections to the measurement itself: the largest single cluster (26 rows in `entrypoints/cli/tests/test_backend_boundary.py`) belongs to a constant named `removed` -- paths that must NOT exist, so absence is the assertion PASSING. A detector keyed on "does this path resolve" cannot separate a must-exist inventory from a must-not-exist one, and reporting 176 as though it were a defect count would have been a third instance of the count-without-members error this audit already records.
 
 **The gates fail loudly, which is the correct design.** Run against the tree, the modules holding stale-looking rows are RED, not green-while-skipping. Their entries are visible.
 
@@ -2329,12 +2327,7 @@ drift, and a copy that silently falls behind produces a suite passing against a
 taxpayer shape the gate no longer accepts -- green tests over a taxpayer the
 product would refuse.
 
-**Canonical home established, five sites collapsed.**
-`MODELO_READY_PROFILE_FACTS` and `seed_modelo_ready_profile_record` now live
-once in `src/cadrumo/tests/profile_capsule.py`, beside the
-`seed_test_profile_record` they delegate to. The four `_seed_minimal_profile`
-copies in `application/modelo/tests` and the newly added conformance seeder all
-delegate to it; verified at 16 passed across the three heaviest of them.
+The four `_seed_minimal_profile` copies in `application/modelo/tests` and the newly added conformance seeder all delegate to it; verified at 16 passed across the three heaviest of them.
 
 **The remaining ~100 are not swept, deliberately.** They belong to many
 unrelated suites across aggregation, calculations and elsewhere, and a
@@ -2877,12 +2870,7 @@ plausible culprit.
 
 ### The facade gate reads HEAD, so it reports on a tree nobody is running
 
-`dev/tests/test_facade_export_gate.py` fails 4 of 9, naming
-`master_key._active_session` and `BucketSession` among its targets, which looks
-like fallout from this lane promoting five master_key modules to public homes.
-It is not. Checked directly: `BucketSession` resolves, the named consumers
-import cleanly, and the tree-wide dangling-import count is 1 -- the deliberate
-absence-gate fixture.
+It is not. Checked directly: `BucketSession` resolves, the named consumers import cleanly, and the tree-wide dangling-import count is 1 -- the deliberate absence-gate fixture.
 
 The gate resolves imports against **git HEAD**, and
 `master_key/_active_session.py` does not exist at HEAD at all. So it is
@@ -3181,14 +3169,7 @@ behaviour in every file whose variant carried a path the canonical one lacks,
 and the tests would keep passing because each variant is exactly what its own
 test needs.
 
-**Demonstrated cost, today.** The canonical capsule
-(`src/cadrumo/tests/profile_capsule.py`) omitted
-`taxpayer_type.entity_type`, which 92 of the inline copies DO declare -- the
-canonical version was the deviant. That omission silently routed the export
-binding down its ENTITY branch, discarded the taxpayer's surnames, and refused
-the fichero. The `identity.name` and `identity.surnames` facts added just before
-it were read, composed, and thrown away; adding them looked like a fix and
-changed nothing observable.
+That omission silently routed the export binding down its ENTITY branch, discarded the taxpayer's surnames, and refused the fichero. The `identity.name` and `identity.surnames` facts added just before it were read, composed, and thrown away; adding them looked like a fix and changed nothing observable.
 
 **Recorded, not swept.** Consolidating 155 files touches other lanes' fixtures
 while they are active, and the divergence is real rather than accidental, so the
@@ -3284,8 +3265,6 @@ the decision exists.
 
 ### Stale allowlist keys were suppressing eight real complexity regressions
 
-**2026-08-31**, adjudicating S349's `dev/audit/complexity_allowlist.json`.
-
 All 13 stale paths (19 entries) resolve to a current home: twelve are
 private-to-public or stem renames, and one -- `contribuyente/family.py` -- was
 SPLIT into `family_profile.py` and `family_types.py`, which is the
@@ -3324,11 +3303,7 @@ cheap and the wrong answer was fluent.
 
 **2026-08-31**, after landing the repoint and diffing the hotspot sets.
 
-An earlier entry states that stale keys in `dev/audit/complexity_allowlist.json`
-were SUPPRESSING eight complexity regressions, on the evidence that repointing
-raised hotspots in the successor modules from 1 to 9. That reading was wrong,
-and the total gives it away: **64 before and 64 after**. Nothing was suppressed,
-because nothing appeared or disappeared.
+That reading was wrong, and the total gives it away: **64 before and 64 after**. Nothing was suppressed, because nothing appeared or disappeared.
 
 The set diff shows what actually happens. Before the repoint the report listed
 entries like
@@ -3370,7 +3345,6 @@ has two complete implementations:
 |---|---|---|
 | module | 463 lines | 221 lines |
 | ledger | `modelo_branch_classification.toml`, 73 paths | same name, 68 paths |
-| tests | `dev/tests/test_modelo_branch_classification.py` | `dev/registry/tests/test_modelo_branch_classification.py` |
 
 Both declare their own `BranchClassification` StrEnum, their own `BranchSite`
 dataclass, their own error type (`BranchClassificationError` /
@@ -3429,9 +3403,7 @@ or an owner's ruling.
 
 ### The branch-classification gate is green, and it took four different dispositions
 
-**2026-08-31.** `dev/tests/test_modelo_branch_classification.py` went from 3
-failing to **7 passed**. Baseline was captured before any edit, so every step
-is attributable.
+Baseline was captured before any edit, so every step is attributable.
 
 Five ledger rows needed five decisions, and NO TWO WERE THE SAME KIND:
 
@@ -3480,11 +3452,7 @@ capability declaration as an observed event.
 **Found 2026-08-31**, after clearing the census to `unadjudicated: 0,
 stale: 0, ambiguous: 0` (exit 0) from 196 unadjudicated and 112 stale.
 
-`dev/quality/regulatory_drift_census.py` DERIVES findings by walking the source
-tree, so it sees untracked files and demands an adjudication for each. The
-campaign's staleness scan resolves ledger paths against `git ls-files` --
-deliberately, and this row records why: "a walk would absorb untracked and
-mid-relocation files and report a peer's in-flight work as drift".
+The campaign's staleness scan resolves ledger paths against `git ls-files` -- deliberately, and this row records why: "a walk would absorb untracked and mid-relocation files and report a peer's in-flight work as drift".
 
 Those two rules collide. Adjudicating a finding the census derives from an
 untracked file writes a ledger path the staleness scan then reports as stale.
@@ -3513,13 +3481,7 @@ normal consequence of adjudicating a moving file rather than an error in either.
 **2026-08-31**, found by chasing a peer's warning about pinned modules in two
 ledgers this session had just swept to zero stale paths.
 
-Four pins read STALE against `git ls-files`:
-`application/filing/producer_snapshot.py` in
-`dev/quality/modelo_branch_classification.toml`, and `draft_review.py`,
-`export_proof.py`, `producer_snapshot.py` in `dev/audit/complexity_baseline.json`.
-All three files exist ON DISK, untracked. The pins already name the PROMOTED
-PUBLIC paths: the ledgers were updated for an in-flight private-to-public
-relocation AHEAD of its commit.
+All three files exist ON DISK, untracked. The pins already name the PROMOTED PUBLIC paths: the ledgers were updated for an in-flight private-to-public relocation AHEAD of its commit.
 
 **The sweep would have repaired them backwards.** The disposition applied all
 session -- a stale path resolves to its public twin, repoint it -- is exactly
@@ -3584,13 +3546,7 @@ the prompt to ask where the scan got its paths.
 
 ### the-tautology-scan-is-the-only-mechanisable-member-of-this-family | medium | one shape here is decidable by a linter and the rest structurally are not, which is worth stating so the gate is not over-read
 
-A scan now refuses assertions whose verdict is fixed before any operand is
-understood -- constant tests, an `or` against an always-true literal, a value
-compared with itself, `isinstance(x, object)` -- at
-`dev/quality/tautological_assertion_scan.py`, gated by
-`dev/tests/test_tautological_assertion_gate.py`. It is stated as a PROPERTY rather
-than as a list of forms, deliberately, so that constructions nobody has written yet
-fall inside it; a list only ever catches what its author thought of.
+It is stated as a PROPERTY rather than as a list of forms, deliberately, so that constructions nobody has written yet fall inside it; a list only ever catches what its author thought of.
 
 The scan reports zero across 6,540 modules today, which is precisely the condition
 under which a gate is worth least and appears worth most: a scan that matched
@@ -3679,9 +3635,6 @@ opinion.
 
 ### Measured 2026-08-31: the TUI route census claim does not hold
 
-**Pathway:** `src/cadrumo/entrypoints/tui/modelo/routes.py`, and the C2
-accessibility suite that consumes it.
-
 Reported in this family as "a TUI route census built on a hardcoded literal
 set". REFUTED at current HEAD, on reading rather than on relay.
 `declared_destination_ids()` returns
@@ -3701,8 +3654,6 @@ the family's relayed instances to dissolve on measurement, after the sixth that
 this row already records as refuted.
 
 ### Actioned 2026-08-31: the workspace remnant scanner carried a stale exclusion
-
-**Pathway:** `dev/tests/test_workspace_assembly_forbidden_paths.py`.
 
 Reported as "a workspace remnant scanner whose pass condition contradicts a
 legitimate docstring". The contradiction itself was already resolved -- three

@@ -87,7 +87,7 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
         owned_sources=(BindingSourceKind.MANUAL_INPUT,),
     )
     object.__setattr__(invented, "resolver_id", "invented-deferred-owner")
-    object.__setattr__(invented, "owned_sources", (BindingSourceKind.RELATED_PARTY_OPERATION,))
+    object.__setattr__(invented, "owned_sources", (BindingSourceKind.DESIGN_CONSTANT,))
     with pytest.raises(InternalInvariantError, match="manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented))
 
@@ -101,7 +101,7 @@ def test_route_refuses_resolver_class_identity_mutations() -> None:
         )
     with pytest.raises(InternalInvariantError, match="resolver sources drifted"):
         validate_calculation_route_resolver_ownership(
-            (replace(profile, owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,)), *remaining),
+            (replace(profile, owned_sources=(BindingSourceKind.DESIGN_CONSTANT,)), *remaining),
         )
     invented = replace(profile)
     object.__setattr__(invented, "resolver_type", None)

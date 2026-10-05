@@ -20,7 +20,8 @@ from cadrumo.application.user_profile.censal_preview_operation import (
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.entrypoints.cli.config import runtime_censal_preview
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
-from cadrumo.entrypoints.cli.runtime_registered_operation import RegisteredOperationCompletion
+from cadrumo.entrypoints.cli.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo.entrypoints.cli.registered_operation_deadlines import provider_login_settlement_seconds
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
@@ -78,10 +79,12 @@ def _install_bridge(
     return ctx, client, baseline, captured, projection
 
 
+@pytest.mark.parametrize("effect", [OperationEffect.NONE, OperationEffect.UPDATED])
 def test_preview_bridge_submits_prepared_baseline_under_exact_profile_subject(
     monkeypatch: pytest.MonkeyPatch,
+    effect: OperationEffect,
 ) -> None:
-    ctx, client, baseline, captured, projection = _install_bridge(monkeypatch)
+    ctx, client, baseline, captured, projection = _install_bridge(monkeypatch, effect=effect)
 
     preview = runtime_censal_preview.preview_censal_with_runtime(ctx)
 
@@ -98,6 +101,7 @@ def test_preview_bridge_submits_prepared_baseline_under_exact_profile_subject(
         "request_version": 1,
         "result_version": 1,
         "timeout": 120,
+        "settlement_timeout": provider_login_settlement_seconds(after_login=120),
     }
 
 
@@ -105,7 +109,7 @@ def test_preview_bridge_submits_prepared_baseline_under_exact_profile_subject(
     ("projection_profile_id", "effect"),
     [
         (_FOREIGN_PROFILE_ID, OperationEffect.NONE),
-        (_PROFILE_ID, OperationEffect.UPDATED),
+        (_PROFILE_ID, OperationEffect.UNKNOWN),
     ],
 )
 def test_preview_bridge_refuses_profile_or_effect_mismatch_with_operation_identity(
@@ -128,3 +132,22 @@ def test_preview_bridge_refuses_profile_or_effect_mismatch_with_operation_identi
         "effect": effect.value,
         "terminal_condition": OperationTerminalCondition.SUCCEEDED.value,
     }
+
+
+def test_preview_bridge_accepts_the_live_session_write_the_read_commits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``updated`` is a settled outcome of this read, not a frame mismatch.
+
+    The executor combines its live-session write receipt with
+    ``OperationEffect.NONE`` before settling, so an authenticated census read
+    that drove an AEAT session reports ``updated`` while committing nothing of
+    the operator's. The refused half above therefore uses ``unknown``, the
+    extent the executor publishes while the browser phase is still open.
+    """
+    ctx, _client, _baseline, _captured, projection = _install_bridge(
+        monkeypatch,
+        effect=OperationEffect.UPDATED,
+    )
+
+    assert runtime_censal_preview.preview_censal_with_runtime(ctx) is projection

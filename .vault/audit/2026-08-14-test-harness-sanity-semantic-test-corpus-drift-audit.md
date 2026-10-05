@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:bfbc4adb6f96504412a29cce86075ae3e0093517be13017dda574bb9783d4bb8'
-related:
-  - '[[2026-08-14-test-harness-sanity-plan]]'
+related: []
 ---
 # `test-harness-sanity` audit: semantic sweep of test-corpus drift
 

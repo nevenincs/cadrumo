@@ -19,8 +19,9 @@ from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from .. import runtime_modelo_iva_wallet_correction as bridge
+from .. import runtime_profile_operation as profile_operation
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -70,7 +71,7 @@ def _bind(
             refusal_code=refusal_code,
         )
 
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
+    monkeypatch.setattr(profile_operation, "run_registered_operation", submit)
     return submitted, bound_profiles
 
 

@@ -919,7 +919,7 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
 # The honest structural alternative is splitting the enum so preflight's
 # consumer sees only its own reach. That is a cross-surface refactor of the
 # aggregation package, and the shared members are deliberately shared with the
-# renta ledger enum for cross-ledger telemetry, so it is not this module's to
+# renta ledger enum for cross-ledger reporting, so it is not this module's to
 # make.
 _reaching_preflight = (
     IVA_LEDGER_MISSING_FACT_REASONS | IVA_LEDGER_COUNTERPARTY_GATE_REASONS | IVA_LEDGER_DEDUCTION_GATE_REASONS

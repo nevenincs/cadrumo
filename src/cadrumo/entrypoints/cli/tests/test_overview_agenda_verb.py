@@ -19,6 +19,7 @@ pytestmark = [
     pytest.mark.windows_only,
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
+pytest_plugins = ("cadrumo.entrypoints.cli.tests._overview_native_support",)
 
 _PROFILE: ContextVar[NativeCliProfileFixture] = ContextVar("agenda_native_profile")
 

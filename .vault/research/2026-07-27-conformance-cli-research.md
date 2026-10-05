@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#conformance-cli'
 date: '2026-07-27'
-modified: '2026-08-15'
-body_hash: 'sha256:b01922f3ab2c68c238c2528f576815b07e09ccda2822bab0aa7267f689ddef98'
+modified: '2026-10-03'
+body_hash: 'sha256:78618b3cdb4c9b41c7e5098217c0776f0bd0b203d32959822c941f269e38c14a'
 related:
   - '[[2026-07-01-verification-power-adr]]'
   - '[[2026-07-01-verification-contract-coverage-audit]]'
@@ -43,9 +43,9 @@ status boundary, the provenance stamp schema, and the gate posture.
 ### No declared per-modelo status exists; every status today is a derived fold
 
 `manifest.toml` and `revision.toml` carry zero review-provenance or lifecycle
-fields (`src/cadrumo/domain/calculations/registry/_schema.py:1278`, `:1226`).
+fields (the former source file, `:1226`).
 The only per-modelo state machine is the access-gate `AuthorizationState`
-(`unauthorized`/`authorized`, `src/cadrumo/core/access_gate/_authorization.py:81`),
+(`unauthorized`/`authorized`, the former source file),
 derived default-deny from `authorization.d/*.toml` (30 of 73 modelos
 authorized, with a declared `EnrollmentEvidenceClass` of
 `calculation`/`reconciliation`/`data_fidelity`/`threshold_continuity`,
@@ -57,7 +57,7 @@ derivable only: calc-grade closure
 (`registry/_cross_revision_divergence.py`), `is_deprecated`
 (`registry/_support_matrix.py:203`, always False — see dead axes below), and
 `independently_grounded_fraction`
-(`src/cadrumo/application/verification/_verify.py:192`, per-verdict only).
+(the former source file, per-verdict only).
 This declared-vs-derived split is the central design axis: the CLI can either
 keep status purely derived (always honest, never stale, but recomputed each
 run) or add a declared status layer to registry TOML (reviewable, but a new
@@ -68,7 +68,7 @@ drift surface the tool itself must then police).
 `review_status`/`reviewed_at`/`reviewed_by`/`notes` exist solely on
 `LegalReference` (567 entries), `SourceReference` (306, status only), and
 `LegalParameter` (11) in `legal/*.toml`
-(`src/cadrumo/domain/calculations/registry/_schema_references.py:115-118`,
+
 `:162`, `:207-210`). `ReviewStatus` is the degenerate `Literal["reviewed"]`
 (`_schema_base.py:59`) — an unreviewed branch is structurally unreachable
 (`registry/_legal.py:35-39`). `reviewed_by` is free text: ~204 `"operator"`,
@@ -94,7 +94,7 @@ defaults to `filing` despite being the canonical summary); `tax_domain`
 (17 modelos carry the `informative` domain — overlapping but NOT equal to the
 11 `calculation_class` informatives, a live drift signal); the Python-side
 `NON_REGISTRY_MODELOS` / `UNMODELED_OBLIGATIONS` (80 reasons) /
-`OUT_OF_SCOPE_OBLIGATIONS` constants (`src/cadrumo/core/_modelo.py:340-358`);
+`OUT_OF_SCOPE_OBLIGATIONS` constants ;
 and per-dependency `taxpayer_files_source` / `conditional_on_economic_activity`
 (`_schema.py:622`, `:634`). Declared-but-dead axes a conformance report must
 surface as unused rather than passing: `calculation_class="summary"` (0),
@@ -135,16 +135,16 @@ computation: `audit_registry_model_law_coverage` /
 validated snapshots, emits per-tier gap ledger with `.ok`;
 `registry/_coverage.py:90`, `:143`); `build_support_matrix`
 (`registry/_support_matrix.py:265` — but note it probes the LATEST revision
-only, `:60`); `build_capability_matrix` (`dev/registry/matrix/manager.py:127`);
+only, `:60`); `build_capability_matrix` ;
 `inspect_registry_tree` / `verify_registry_tree` / `audit_registry_oracles`
-(`src/cadrumo/application/registry/__init__.py:368`, `:374`, `:421` — already
+(the former source file, `:374`, `:421` — already
 CLI-surfaced at `aeat app registry inspect/verify/audit-oracles`,
-`src/cadrumo/entrypoints/cli/registry.py:162-244`);
+
 `validate_registry_scope` (`registry/_validate_registry_scope.py:31`,
 accumulating diagnostics); `validate_binding_selector_shape`
 (`registry/_bindings.py:986`); `ModeloLocaleManager.coverage_records`
-(`src/cadrumo/locales/_modelo_manager.py:364`); `build_obligation_coverage`
-(`src/cadrumo/application/overview/_coverage.py:126`). Test-trapped fact sets
+; `build_obligation_coverage`
+. Test-trapped fact sets
 worth lifting, in value order: (1) the external-oracle grounding inventory
 and both-direction honesty check — there is NO registry-wide
 `independently_grounded_fraction` anywhere, only the per-verdict one
@@ -153,7 +153,7 @@ fichero-BOE covered-modelo table and required-applicable derivation
 (`application/filing/tests/test_fichero_boe_completeness_parity.py:59`,
 duplicated at `test_export_completeness_gate.py:69` which admits "Mirror the
 gate's required set"); (3) locale honesty detectors + ceiling ratchets
-(`src/cadrumo/tests/test_locale_translation_honesty.py:41-129`); (4) the
+; (4) the
 anti-vacuity floor + shrink-only JSON baseline idiom of
 `entrypoints/cli/tests/test_documented_command_conformance.py:517`, `:783`.
 Enumeration API: `ValidatedRegistryAuthority` (`registry/_authority.py:45`,
@@ -164,7 +164,7 @@ zero-arg `bundled_authority()` `:244`); the non-validating
 ### Placement precedent: a `python -m` Typer trio outside the two `aeat` roots
 
 The `aeat` root surface is contractually two families
-(`ACCEPTED_ROOTS`, `src/cadrumo/application/operator_surface/_contract.py:39`;
+(`ACCEPTED_ROOTS`, the former source file;
 rule `aeat-architecture-boundaries`), and every dev/governance CLI in-tree is
 a `python -m` module CLI: `dev.docs.apidocs`, `cadrumo.locales`,
 `dev.docs.terminology_handbook`, `dev.registry.matrix`,
@@ -179,7 +179,7 @@ stated at `dev/audit/legal_attribution_screen.py:26-31` (report exits 0 while
 a known-wrong worklist exists; promote to a gate once empty), and the
 vacuity refusal at `:184` (`SystemExit` when the input set is empty).
 Import hygiene enforces the dev/product boundary — shipped modules must not
-import `dev.*` (`dev/import_hygiene_scan.py:372`, `:460`) — so any fact
+import `dev.*` (the former source file, `:460`) — so any fact
 computation the product also needs must live under `src/cadrumo/`, with
 `dev/` holding only the rendering shell. Counter-consideration for the ADR:
 the user intent includes agents driving information gathering, and an
@@ -249,38 +249,13 @@ mirroring of any governance report.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_schema.py:219,403,429-443,512-542,618-634,1226,1265-1287,1314-1341`
-- `src/cadrumo/domain/calculations/registry/_schema_base.py:45-68,127-137`
-- `src/cadrumo/domain/calculations/registry/_schema_references.py:88-210`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:202,357,398-433`
-- `src/cadrumo/domain/calculations/registry/_schema_extraction.py:81-106`
-- `src/cadrumo/domain/calculations/registry/_coverage.py:25-143`
-- `src/cadrumo/domain/calculations/registry/_support_matrix.py:60,142-265`
-- `src/cadrumo/domain/calculations/registry/_record_design_coverage.py:148,303,478-504`
-- `src/cadrumo/domain/calculations/registry/_authority.py:45-260`
-- `src/cadrumo/domain/calculations/registry/_validate_registry_scope.py:31`
-- `src/cadrumo/domain/calculations/registry/_bindings.py:944-986`
-- `src/cadrumo/domain/calculations/registry/_legal.py:26-80`
-- `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py:50-227`
-- `src/cadrumo/core/_modelo.py:340-358`
-- `src/cadrumo/core/access_gate/_authorization.py:69-206`
-- `src/cadrumo/application/registry/__init__.py:224-421`
-- `src/cadrumo/application/verification/_verify.py:191-192`
-- `src/cadrumo/application/verification/_schema.py:121-142`
-- `src/cadrumo/application/overview/_coverage.py:83-126`
-- `src/cadrumo/application/operator_surface/_contract.py:39-534`
-- `src/cadrumo/application/filing/tests/test_fichero_boe_completeness_parity.py:59`
-- `src/cadrumo/application/filing/tests/test_export_completeness_gate.py:69`
-- `src/cadrumo/entrypoints/cli/registry.py:162-530`
 - `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py:49-1074`
-- `src/cadrumo/tests/test_locale_translation_honesty.py:41-241`
-- `src/cadrumo/locales/_modelo_manager.py:178-364`
-- `src/cadrumo/locales/cli.py:193-373`
+
 - `dev/docs/terminology_handbook/cli.py:1-186`
-- `dev/registry/matrix/manager.py:46-147`
+
 - `dev/registry/newmodelo/checklist.py:32`
 - `dev/audit/legal_attribution_screen.py:26-196`
-- `dev/import_hygiene_scan.py:372,460`
+
 - `adapters/inbound/sanitizer/tests/test_residual_identity_absence.py:83-121` (under `src/cadrumo/`)
 - `src/cadrumo/_data/corpus/manual_oracles/` (16 files), `src/cadrumo/_data/corpus/parity_replays/renta_web_open/` (5 files)
 - Counts (73 modelos / 90 revisions / ~15,774 casillas / 567+306+11 legal-catalogue entries / 30 authorizations / 67 sidecars) — swept 2026-07-27 from the working tree; re-derive before relying on exact figures.

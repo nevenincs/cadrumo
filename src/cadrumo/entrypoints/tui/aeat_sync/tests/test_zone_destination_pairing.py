@@ -20,8 +20,9 @@ from __future__ import annotations
 import pytest
 
 from .....application.aeat_sync.workspace import AeatSyncWorkspaceZone
-from ..models import AEAT_SYNC_DESTINATION_BY_ZONE
-from ..routes import AEAT_SYNC_ROUTES, declared_aeat_sync_destination_ids
+from ...destination_alias import closed_destination_ids
+from ..models import AEAT_SYNC_DESTINATION_BY_ZONE, AeatSyncDestinationIdV1
+from ..routes import AEAT_SYNC_ROUTES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,7 +57,7 @@ def test_no_two_zones_share_a_destination() -> None:
 
 def test_every_paired_destination_is_one_the_closed_type_declares() -> None:
     """The pairing cannot invent a destination the route table cannot resolve."""
-    assert set(AEAT_SYNC_DESTINATION_BY_ZONE.values()) <= declared_aeat_sync_destination_ids()
+    assert set(AEAT_SYNC_DESTINATION_BY_ZONE.values()) <= closed_destination_ids(AeatSyncDestinationIdV1)
 
 
 def test_the_controller_builds_its_target_from_the_shared_pairing() -> None:

@@ -31,6 +31,9 @@ from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation imp
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     ModeloWorkCalculateExecutor,
+)
+from cadrumo.application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculatePublicResultV2,
     ModeloWorkCalculateRequest,
@@ -144,6 +147,7 @@ def _execute(
             work_unit_id=work_unit.work_unit_id,
             actor="operator",
             ordinary_m303_filing_evidence=evidence,
+            caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
             inputs=inputs or ModeloCalculationInputFieldsV1(),
         ),
     )

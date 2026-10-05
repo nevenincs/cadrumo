@@ -394,7 +394,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
 
 
 def _edit_screen(field):
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     return FieldEditScreen(field)
 
@@ -408,7 +408,7 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
     a row of bullets.
     """
     from ....application.user_profile.overview import MASKED_PLACEHOLDER, ProfileFieldView
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     masked = ProfileFieldView(
         path="access.token",

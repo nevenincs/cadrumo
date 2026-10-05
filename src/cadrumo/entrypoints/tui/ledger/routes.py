@@ -13,10 +13,12 @@ from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
 from ....application.operator_actions.models import ActionReference
+from ....core.i18n.render import tr
+from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .actividad_asset import ActivityAssetTuiActionsV1
 from .classification import LedgerClassificationScreen
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .entries import LedgerEntriesScreen
 from .evidence import LedgerEvidenceScreen
 from .import_flow import LedgerImportScreen
@@ -32,9 +34,9 @@ from .models import (
     LedgerRecordDoorsV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
-    declared_ledger_destination_ids,
 )
 from .overview import LedgerOverviewScreen
+from .own_accounts import LedgerOwnAccountDoorV1
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewScreen
 from .runtime_actividad_asset import compose_runtime_activity_asset_actions
@@ -62,13 +64,13 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
     def compose(self) -> ComposeResult:
         """Render the explicit unavailability and no action affordance."""
         yield Static(
-            ledger_copy("tui.ledger.unavailable.title"),
+            tr("tui.ledger.unavailable.title"),
             classes="cadrumo-banner",
         )
         with ledger_workspace_page() as navigation:
             yield navigation
             yield Static(
-                ledger_copy(self._route_refusal.reason_key),
+                tr(self._route_refusal.reason_key),
                 id="ledger-refusal",
                 classes="ledger-refusal",
                 markup=False,
@@ -120,7 +122,9 @@ def _require_total_routes() -> None:
     ``_SCREEN_BY_AREA`` yields a route with no factory, which reaches the
     operator as a raise rather than a typed refusal.
     """
-    if frozenset(_ROUTES_BY_ID) != declared_ledger_destination_ids() or len(_ROUTES_BY_ID) != len(LEDGER_ROUTES):
+    if frozenset(_ROUTES_BY_ID) != closed_destination_ids(LedgerDestinationIdV1) or len(_ROUTES_BY_ID) != len(
+        LEDGER_ROUTES
+    ):
         raise ValueError("Ledger routes must cover the internal destination catalogue exactly once")
     if tuple(route.area for route in LEDGER_ROUTES) != tuple(LedgerWorkspaceArea):
         raise ValueError("Ledger routes must preserve canonical workspace area order")
@@ -162,6 +166,7 @@ def ledger_screen_factory(
     refresh: LedgerWorkspaceRefreshDoorV1 | None = None,
     activity_asset_actions: ActivityAssetTuiActionsV1 | None = None,
     record_doors: LedgerRecordDoorsV1 | None = None,
+    own_account_door: LedgerOwnAccountDoorV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
     injection = LedgerWorkspaceInjection(
@@ -179,6 +184,7 @@ def ledger_screen_factory(
         refresh=refresh,
         activity_asset_actions=activity_asset_actions,
         record_doors=record_doors,
+        own_account_door=own_account_door,
     )
 
     # Which area performs each injected action. Classification needs an entry

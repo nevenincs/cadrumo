@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:2d4ea698edc4926c34778aefd54d45ac3723e2c1d70fe765b52d1b90eb1b3564'
+modified: '2026-10-03'
+body_hash: 'sha256:a61f02bdd12a5f63e9df7590abd25382ab7dff5b3e4811593cdfad84e6585e0f'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S234-001 | PASS | Binding readiness remains manifest discovery
 
-`src/aeat/application/modelo/_binding_readiness.py` resolves the active
+The retired module resolves the active
 registry authority, derives an annual period when no period is supplied, and
 projects profile-sourced bindings through the shared profile binding resolver.
 It does not construct storage repositories, write secure objects, inspect
@@ -44,7 +44,7 @@ backend or second binding-readiness implementation was found.
 
 ## S234-004 | PASS | Validation
 
-- `uv run --no-sync ruff check --fix src/aeat/application/modelo/_binding_readiness.py src/aeat/application/modelo/test_binding_readiness.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_binding_readiness.py src/aeat/entrypoints/cli/test_bindings_list_missing_filter.py` passed with 3 tests.
+- the historical check passed.
+- the historical check passed with 3 tests.
 
 Disposition: close `AFR-132` as `manifest-discovery`.

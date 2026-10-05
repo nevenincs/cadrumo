@@ -12,11 +12,12 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
@@ -65,9 +66,12 @@ class Gasto193Observation(BaseModel):
     """The annual gastos de administracion y deposito amount (positions 195-206),
     the design's own zeros when none."""
 
-    def _non_negative_gastos(self) -> None:
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _non_negative_gastos(self) -> Self:
         if self.importe_gastos < Decimal("0"):
             raise RegistryValidationError("gasto amounts must be non-negative")
+        return self
 
 
 class Gasto193ContributorProvider(BaseModel):

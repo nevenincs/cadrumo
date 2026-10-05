@@ -1,4 +1,7 @@
-"""Lazy canonical operation composition within one immutable profile worker."""
+"""Lazy canonical operation composition within one immutable profile worker.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +10,7 @@ from collections.abc import AsyncGenerator
 from contextlib import ExitStack, asynccontextmanager
 from datetime import timedelta
 from math import isfinite
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel, JsonValue, TypeAdapter
@@ -36,7 +40,6 @@ from ...application.operations.models import (
     OperationStoredInvocation,
     new_operation_id,
 )
-from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.persistence.journal import OperationRecoveryInventoryDisposition
 from ...application.operations.registry import (
     OperationFrontendProjection,
@@ -55,7 +58,7 @@ from ...application.user_profile.automation_enrollment import AutomationInventor
 from ...application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.projections import projection_for_taxpayer
-from ...application.workbench_generation import WorkbenchGenerationV1
+from ...application.workbench_generation_contracts import WorkbenchGenerationV1
 from ...application.workbench_generation_operation import (
     WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
     WorkbenchGenerationOperationRequest,
@@ -63,9 +66,15 @@ from ...application.workbench_generation_operation import (
 from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
+from ...core.logging import get_logger
 from ...core.operations import OperationLifecycle
+from ...core.startup_phase_log import startup_phase
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+    release_bundled_indexed_authority,
+)
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.deadlines.models import TaxpayerProfile
@@ -74,7 +83,12 @@ from ..workbench_generation_composition import compose_secure_workbench_generati
 from .automation_execution import WorkerAutomationAdministration
 from .operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
 
+if TYPE_CHECKING:
+    from ...application.operations.supervisor import OperationSupervisor
+
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+_log = get_logger(__name__)
+_PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
 
 
 class ProfileWorkerOperationHost:
@@ -124,7 +138,8 @@ class ProfileWorkerOperationHost:
         exchange deadlines. Admission owns this one-time compilation cost while
         the profile is already pinned and before a client can start an operation.
         """
-        self._composed()
+        with startup_phase(_log, "worker_operation_prepare"):
+            self._composed()
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""
@@ -138,15 +153,15 @@ class ProfileWorkerOperationHost:
         return projection_for_taxpayer(record, schema=repository.session.profile_decode_context.schema)
 
     async def _finalize_password_rotation(
-        self, context: OperationExecutorContext, outcome: ProfilePassphraseRotationOutcome
+        self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome
     ) -> None:
         """Retire original custody after encrypted result persistence in COMMIT."""
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        self._execution.retire_password_successor(context.identity, outcome)
+        self._execution.retire_password_successor(identity, outcome)
 
     async def _workbench_generation(
-        self, context: OperationExecutorContext, payload: WorkbenchGenerationOperationRequest
+        self, identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
     ) -> WorkbenchGenerationV1:
         """Retain native read authority through one exact-profile generation capture."""
         execution, services = self._execution, self._services
@@ -154,11 +169,11 @@ class ProfileWorkerOperationHost:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
         def account_session() -> HomeAccountSession:
-            execution.workbench_session(context.identity, payload)
+            execution.workbench_session(identity, payload)
             profile = read_profile_bucket_by_id(str(payload.profile_id), root=self.custody.root)
             if profile is None or profile.bucket_id != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            lease = execution.workbench_session(context.identity, payload)
+            lease = execution.workbench_session(identity, payload)
             return HomeAccountSession(
                 posture=HomeSessionPosture.ACTIVE, profile_label=profile.label, expires_at=lease.expires_at
             )
@@ -175,23 +190,23 @@ class ProfileWorkerOperationHost:
                 account_session()
                 return result
 
-        async with execution.guard(context.identity, AccessAction.START):
+        async with execution.guard(identity, AccessAction.START):
             return await await_cancellation_complete(
                 asyncio.to_thread(capture), task_name="runtime-workbench-generation"
             )
 
     def _automation_administration(
-        self, context: OperationExecutorContext, profile_id: UUID
+        self, identity: OperationIdentity, profile_id: UUID
     ) -> WorkerAutomationAdministration:
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return WorkerAutomationAdministration(self._execution, context.identity, profile_id)
+        return WorkerAutomationAdministration(self._execution, identity, profile_id)
 
-    async def _automation_inventory(self, context: OperationExecutorContext, profile_id: UUID) -> AutomationInventory:
+    async def _automation_inventory(self, identity: OperationIdentity, profile_id: UUID) -> AutomationInventory:
         """Use the canonical operation identity, never caller-supplied authority facts."""
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return await self._execution.automation_inventory(context.identity, profile_id)
+        return await self._execution.automation_inventory(identity, profile_id)
 
     def _pinned(self) -> PinnedAuthorityOperation:
         if self._authority is None:
@@ -309,6 +324,10 @@ class ProfileWorkerOperationHost:
         A terminal failure is settled too; this acknowledgment claims no
         successful domain effect or available private result.
         """
+        supervisor = self._settlement_supervisor(identity, timeout)
+        return await self._await_settlement(supervisor, identity, timeout)
+
+    def _settlement_supervisor(self, identity: OperationIdentity, timeout: float) -> OperationSupervisor:
         original = self._submissions.get(identity.operation_id)
         services = self._services
         if (
@@ -321,10 +340,14 @@ class ProfileWorkerOperationHost:
             or not 0 < timeout <= 5
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        return services.submission.supervisor
+
+    async def _await_settlement(
+        self, supervisor: OperationSupervisor, identity: OperationIdentity, timeout: float
+    ) -> bool:
         wait = asyncio.timeout(timeout)
         try:
             async with wait:
-                supervisor = services.submission.supervisor
                 observed = await supervisor.inspect(identity.operation_id)
                 if observed.identity != identity:
                     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -429,7 +452,13 @@ class ProfileWorkerOperationHost:
             invocation = await self._stored_invocation(operation_id)
             binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
             async with execution.guard_binding(invocation.identity, action, binding) as authorization:
-                if invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID:
+                # The full-owner workbench projection is released only to the
+                # human session that generated it; observing its lifecycle
+                # discloses operation metadata alone and stays caller-independent.
+                if (
+                    action in _PRIVATE_RESULT_RELEASE_ACTIONS
+                    and invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
+                ):
                     execution.require_owner(operation_id, session_id, frontend=frontend)
                 yield authorization
         finally:
@@ -522,6 +551,63 @@ class ProfileWorkerOperationHost:
             document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
             yield document, authorization
 
+    async def submit_financial_input(
+        self,
+        *,
+        session_id: UUID,
+        frontend: OperationFrontendProjection,
+        definition_id: str,
+        subject_ref: str,
+        input_json: str,
+    ) -> OperationSubmission:
+        """Convert volatile human input before binding or journaling the safe request."""
+        from ...application.modelo.edit_operator_input import prepare_modelo_edit_operand
+        from ...application.operations.financial_operand_contract import OperationFinancialOperandRefusedError
+
+        contract = self.contract(session_id, definition_id)
+        if contract.transient_financial_operand is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        try:
+            with validating_governed_facts(self._pinned()):
+                prepared = prepare_modelo_edit_operand(
+                    definition_id=definition_id,
+                    profile_id=self.custody.identity.binding.profile_id,
+                    subject_ref=subject_ref,
+                    input_json=input_json,
+                )
+        except (ValueError, TypeError, RecursionError, OperationFinancialOperandRefusedError):
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+        input_json = ""
+
+        async def transfer() -> OperationSubmission:
+            try:
+                submitted = await self.submit(
+                    session_id=session_id,
+                    frontend=frontend,
+                    request=OperationRequest(
+                        definition_id=definition_id,
+                        subject_ref=subject_ref,
+                        payload=prepared.request,
+                        idempotency_key=None,
+                    ),
+                )
+                operand = prepared.operand
+                if operand is None:
+                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+                supervisor = self._composed().submission.supervisor
+                try:
+                    await supervisor.bind_typed_financial_operand(submitted.receipt.operation_id, operand)
+                except OperationFinancialOperandRefusedError:
+                    await supervisor.refuse_unstarted_financial_input(submitted.receipt.operation_id)
+                    raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
+                finally:
+                    del operand
+                return submitted
+            finally:
+                prepared.release()
+
+        return await await_cancellation_complete(transfer(), task_name="profile-financial-operand-admission")
+
     async def submit_payload(
         self,
         *,
@@ -574,4 +660,7 @@ class ProfileWorkerOperationHost:
         self._drain_result = result
         if not result.needs_containment:
             self._lifetime.close()
+            # The worker admitted the process-shared owner for this lease; close its
+            # database handles with the host rather than at interpreter teardown.
+            release_bundled_indexed_authority()
         return result

@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#ledger-add-idempotency'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:49ea07b26674f2f352ef12fdb7fbb81ef98b65fc2c08e153654f607af79e9e58'
+body_hash: 'sha256:896eacb4f9be7b564ad09ce8a49059c16f4a6a3932372d5bda0f0a22b68be41c'
 related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
-  - '[[2026-06-30-ledger-add-idempotency-ledger]]'
-  - '[[2026-06-30-ledger-add-idempotency-plan]]'
   - '[[2026-06-30-ledger-add-idempotency-research]]'
   - '[[2026-07-01-ledger-add-idempotency-audit]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#ledger-add-idempotency`.
 ### audit
 
 - `2026-07-01-ledger-add-idempotency-audit` - `ledger-add-idempotency` audit: `ledger-add-idempotency close honesty review`
-
-### exec
-
-- `2026-06-30-ledger-add-idempotency-ledger` - `ledger-add-idempotency` ledger
-
-### plan
-
-- `2026-06-30-ledger-add-idempotency-plan` - `ledger-add-idempotency` plan
 
 ### research
 

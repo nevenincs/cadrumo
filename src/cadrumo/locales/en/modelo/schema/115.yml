@@ -9,6 +9,10 @@ modelo:
         official_name: Withholdings and payments on account. Income arising from the
           letting or subletting of urban property.
         title: IRPF withholdings on urban property letting
+      form:
+        page:
+          dr-11501:
+            heading: Page 1 · Withholdings on urban property rentals
       revision:
         2019-y-siguientes:
           casilla:

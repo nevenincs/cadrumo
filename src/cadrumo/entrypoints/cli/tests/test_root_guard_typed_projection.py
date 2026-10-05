@@ -24,9 +24,10 @@ from ..common import (
     preserve_requested_cli_leaf,
     project_cli_policy_refusal,
 )
-from ..errors import CliRefusedBoundaryError, suspend_error_boundary
+from ..errors import CliRefusedBoundaryError
 from ..main import app
 from .cli_runner import cadrumo_click_command
+from .error_boundary_scope import suspend_error_boundary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

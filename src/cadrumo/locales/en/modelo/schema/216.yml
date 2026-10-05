@@ -10,8 +10,8 @@ modelo:
             title: 'Modelo 216: settlement of IRNR withholdings'
       field:
         official_name: Modelo 216. Non-Resident Income Tax. Income obtained without
-          the intermediation of a permanent establishment. Withholdings and payments
-          on account. Return and payment document.
+          a permanent establishment. Withholdings and payments on account. Return
+          and payment document.
         title: IRNR withholdings and payments on account
       revision:
         2020-2023:

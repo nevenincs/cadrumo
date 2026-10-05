@@ -31,7 +31,7 @@ from ....persistence.storage.errors import StorageValidationError
 from ....persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
-from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -44,24 +44,15 @@ _ISSUED_AT = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
 _UNREGISTERED_NAMESPACE = "cadrumo.outbound.google.no-such-namespace"
 
 
-def _client() -> OAuthClient:
-    return OAuthClient(
-        client_id="desktop-client.apps.googleusercontent.com",
-        client_secret="gcp-client-secret",
-        project_id="cadrumo-vault",
-        auth_uri="https://accounts.google.com/o/oauth2/auth",
-        token_uri="https://oauth2.googleapis.com/token",
-        auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
-        redirect_uris=("http://127.0.0.1:8765/callback",),
-    )
-
-
 def _seed() -> None:
     """Persist a complete, genuine login session through the real write path."""
-    session_store.save_client(_PROFILE, _client())
     session_store.save_token(
         _PROFILE,
-        OAuthToken(refresh_token="1//refresh-token", token_uri="https://oauth2.googleapis.com/token"),
+        OAuthToken(
+            refresh_token="1//refresh-token",
+            client_id="desktop-client.apps.googleusercontent.com",
+            token_uri="https://oauth2.googleapis.com/token",
+        ),
     )
     session_store.save_metadata(
         _PROFILE,
@@ -69,13 +60,12 @@ def _seed() -> None:
             account_email="operator@example.com",
             granted_scopes=REQUIRED_SCOPES,
             issued_at=_ISSUED_AT,
-            last_refresh_at=_ISSUED_AT,
         ),
     )
     session_store.save_drive_config(_PROFILE, DriveConfig(root_folder_id="drive-folder-id"))
 
 
-def test_a_clean_logout_clears_both_records_and_keeps_the_registration(tmp_path: Path) -> None:
+def test_a_clean_logout_clears_both_records_and_keeps_the_drive_config(tmp_path: Path) -> None:
     """The positive control, and the contract logout is meant to honour."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed()
@@ -84,9 +74,8 @@ def test_a_clean_logout_clears_both_records_and_keeps_the_registration(tmp_path:
 
         assert session_store.load_token(_PROFILE) is None
         assert session_store.load_metadata(_PROFILE) is None
-        # Registration and Drive config are deliberately untouched, so a later
-        # login reuses the Cloud Console JSON and the same root folder.
-        assert session_store.load_client(_PROFILE) == _client()
+        # The Drive config is deliberately untouched, so a later login reuses
+        # the same root folder.
         assert session_store.load_drive_config(_PROFILE) is not None
 
 

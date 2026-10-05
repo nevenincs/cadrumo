@@ -21,12 +21,10 @@ Domicilio Fiscal* / *Cambio de Domicilio de Notificaciones* / *Baja de
 Domicilio de Notificaciones* buttons whose scripts build relative
 ``ModifDomiDual`` / ``ModifDomiNotif`` targets, and it links the M036
 filing tool. Reading the rendered DOM is a read; driving any of those
-controls is not. This reader therefore navigates and parses only: it
-submits nothing, fills nothing, clicks nothing, and
-:func:`_assert_read_landing` fails closed at runtime if AEAT ever lands
-it on a modification path. That runtime landing guard is the primary
-wall; the module-level string check in the sede write-surface gate is
-the weaker second one.
+controls is not. The subsidiary activities, tax-status and obligations
+consultations open separate tabs. Their exact read routes and named controls
+are guarded before requests leave the browser; modification controls are
+never driven. The landing refusal remains defence in depth.
 
 Public surface: :func:`parse_censal_datos`,
 :func:`fetch_censal_datos`, :func:`censal_datos_url`, and
@@ -55,47 +53,51 @@ from .....core.logging import get_logger
 from .....core.parsing.dates import parse_date
 from .....core.text_fold import fold_diacritics
 from .....core.time.clock import now
-from .....domain.calculations.registry.remote_state_guard import (
-    RemoteOperation,
-    RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
-)
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._html import parse_html
-from .._playwright import Page, PlaywrightError
-from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
-from ..browser.session import BrowserSession
-from ._adapter_utils import assert_read_http_for
+from .._playwright import PlaywrightError
+from ..browser.factory import default_browser_session_factory
+from ._adapter_utils import (
+    assert_landed_url_readable,
+    assert_read_http_for,
+    is_aeat_auth_gate_redirect,
+    redacted_url,
+    require_playwright_page,
+)
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
+from .censal_navigation import CENSAL_READ_POST_PATHS, capture_censal_consultations
+from .censal_tables import census_shape_error, census_source_url
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
-from .walker import assert_landed_url_readable
 
 if TYPE_CHECKING:
+    from .....application.auth.protocols import BrowserSessionFactoryPort
     from .....application.auth.session_types import AeatSession
 
 
 log = get_logger(__name__)
 
 EXTERNAL = Settings.external_constants()
-# NO NUMBERED HOST IS PINNED. AEAT dispatches the authenticated sede across a
-# ``www{n}`` load-balancer pool and assigns the number per session: some
-# numbered hosts do not serve this route at all and others reject a session
-# minted elsewhere, so a pinned ``www6`` is wrong rather than merely brittle.
-# The reader therefore enters through the host-agnostic access selector (which
-# is rooted at the unnumbered ``sede.`` origin) and reads the host AEAT
-# actually assigns off the landed page. The guard admits any subdomain under
-# the AEAT apex so whichever number is dispatched is tolerated.
+# The consulta is requested directly on ``www6`` with the stored session, as
+# the declarations, expedientes and notifications readers do: the Cl@ve login
+# dispatches the session there, and AEAT's own captured consulta page links
+# ``MdcAcceso`` on that host. The access selector is NOT an entry: its
+# authorize control is the Cl@ve login dispatch, which an authenticated
+# session cannot complete. AEAT may still redirect the session across its
+# ``www{n}`` pool, so the guard admits any subdomain under the AEAT apex and
+# the host is read back off the landed page.
 _SEDE_ORIGIN = EXTERNAL.aeat.domains.sede
 _SEDE_HOST = urlsplit(_SEDE_ORIGIN).netloc
+_CENSAL_ORIGIN = EXTERNAL.aeat.domains.www6
 _AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
 _CENSAL_PATH = EXTERNAL.aeat.sede_paths.censal_datos
-_SELECTOR_MARKER = EXTERNAL.aeat.clave_movil.selector_access_path_marker
-_CENSAL_SELECTOR_URL = EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
-    target=quote(_CENSAL_PATH, safe=""),
+# Landings that mean AEAT did not take the stored session to the consulta.
+_SESSION_NOT_ACCEPTED_PATH_MARKERS: Final[tuple[str, ...]] = (
+    EXTERNAL.aeat.clave_movil.selector_access_path_marker,
+    urlsplit(EXTERNAL.aeat.sede_paths.clave_movil_login).path,
 )
-# The sole control this reader drives, and only on the selector page.
-_SELECTOR_AUTHORIZE_ACTION: Final = "clave-movil-authorize"
+_REPRESENTATION_DIALOG_MARKER: Final = EXTERNAL.aeat.clave_movil.dialogo_representacion_path_marker
 
 # Landing fragments that mark a censal MODIFICATION surface. Registry-borne
 # because none of them contains the token an earlier draft forbade
@@ -108,16 +110,16 @@ READ_GUARD_POLICY = RemoteStateGuardPolicy(
     evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
-    # Widened to the AEAT apex so whichever ``www{n}`` the selector dispatches
-    # to is admitted; success detection stays on the censal path and marker.
+    # Widened to the AEAT apex so whichever ``www{n}`` AEAT redirects the
+    # session to is admitted; success detection stays on the censal path and
+    # marker.
     #
     # This is a DELIBERATE divergence from the posture
     # ``remote_state_policy_from_cross_reference`` takes, which sets no host
     # suffixes so a policy admits exactly the hosts its surface declares. That
     # posture carves out a surface whose reads genuinely span AEAT's numbered
-    # pool, and this is one: the route is entered through the host-agnostic
-    # selector and AEAT assigns the number per session, so the answering host
-    # is not knowable when the policy is built.
+    # pool, and this is one: AEAT may redirect the session to another number,
+    # so the answering host is not knowable when the policy is built.
     #
     # The carve-out's own remedy is to ENUMERATE the pool on ``allowed_hosts``,
     # which is what the declarations cross-references do (``www1``, ``www6``
@@ -129,13 +131,13 @@ READ_GUARD_POLICY = RemoteStateGuardPolicy(
     # declarations.
     #
     # Narrowing therefore waits on an operator probe: authenticate, run the
-    # censal read repeatedly, and collect the ``host=`` values
-    # ``_resolve_dispatched_origin`` logs. Enough runs to see the pool repeat
+    # censal read repeatedly, and collect the landed hosts. Enough runs to see the pool repeat
     # gives the enumeration; until then the apex widening is the honest
     # statement of what is known. Note the host guard is not the no-write wall
     # -- ``_FORBIDDEN_LANDING_MARKERS`` is -- so the widening does not loosen
     # the write refusal.
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
+    allowed_read_post_paths=CENSAL_READ_POST_PATHS,
     allowed_browser_action_patterns=EXTERNAL.aeat.live_safety.censal_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,
@@ -281,12 +283,16 @@ def _section_of(table: Tag) -> str | None:
     which is the reliable discriminator: the ``<th>`` heading renders only
     on the first table of each group.
     """
-    raw_title = table.get("title")
-    if not isinstance(raw_title, str):
-        return None
-    title = _fold(raw_title)
-    if title in {_IDENTITY_SECTION, _FISCAL_SECTION, _NOTIFICATION_SECTION}:
-        return title
+    candidates = [table.get("title"), table.get("aria-label")]
+    caption = table.find("caption")
+    heading = table.find("th")
+    nearby = table.find_previous(["h2", "h3", "legend"])
+    candidates.extend(node.get_text(" ", strip=True) for node in (caption, heading, nearby) if isinstance(node, Tag))
+    for candidate in candidates:
+        if isinstance(candidate, str):
+            title = _fold(candidate)
+            if title in {_IDENTITY_SECTION, _FISCAL_SECTION, _NOTIFICATION_SECTION}:
+                return title
     return None
 
 
@@ -302,7 +308,9 @@ def _collect(table: Tag, labels: Mapping[str, str], into: dict[str, str]) -> Non
     for row_labels, row_values in _rows_of(table):
         if row_labels and row_values:
             # Identity shape: label and value share a row.
-            for label, value in zip(row_labels, row_values, strict=False):
+            if len(row_labels) != len(row_values):
+                raise census_shape_error("identity label/value cardinality changed")
+            for label, value in zip(row_labels, row_values, strict=True):
                 _assign(labels, label, value, into)
             pending = []
             continue
@@ -311,7 +319,9 @@ def _collect(table: Tag, labels: Mapping[str, str], into: dict[str, str]) -> Non
             continue
         if pending:
             # Address shape: this value row aligns with the labels above it.
-            for label, value in zip(pending, row_values, strict=False):
+            if len(pending) != len(row_values):
+                raise census_shape_error("address label/value cardinality changed")
+            for label, value in zip(pending, row_values, strict=True):
                 _assign(labels, label, value, into)
             pending = []
 
@@ -320,7 +330,15 @@ def _rows_of(table: Tag) -> Iterator[tuple[list[str], list[str]]]:
     """Yield ``(labels, values)`` for each ``<td>``-bearing row of ``table``."""
     for row in table.find_all("tr"):
         row = _require_tag(row, element="tr")
-        cells = [_require_tag(cell, element="td") for cell in row.find_all("td")]
+        if row.find_parent("table") is not table:
+            continue
+        cells = [_require_tag(cell, element="cell") for cell in row.find_all(["td", "th"], recursive=False)]
+        if len(cells) == 1 and _fold(cells[0].get_text(" ", strip=True)) in {
+            _IDENTITY_SECTION,
+            _FISCAL_SECTION,
+            _NOTIFICATION_SECTION,
+        }:
+            continue
         if not cells:
             continue
         row_labels: list[str] = []
@@ -346,7 +364,9 @@ def _require_tag(value: object, *, element: str) -> Tag:
 
 def _is_label_cell(cell: Tag) -> bool:
     """Return whether a cell is a label — AEAT wraps every label in ``<b>``."""
-    bold = cell.find("b")
+    if cell.name == "th" or cell.find("label") is not None:
+        return True
+    bold = cell.find(["b", "strong"])
     if not isinstance(bold, Tag):
         return False
     return bool(bold.get_text(strip=True))
@@ -356,9 +376,11 @@ def _assign(labels: Mapping[str, str], label: str, value: str, into: dict[str, s
     """Map one AEAT label to its model field and record a non-blank value."""
     field = labels.get(_fold(label))
     if field is None:
-        return
+        raise census_shape_error("unrecognized identity or address label")
     cleaned = _clean(value)
     if cleaned is not None:
+        if field in into and into[field] != cleaned:
+            raise census_shape_error("conflicting values for an identity or address field")
         into[field] = cleaned
 
 
@@ -373,6 +395,8 @@ def _identity_from(fields: Mapping[str, str]) -> CensalObservationIdentity:
     typed: dict[str, Any] = {key: value for key, value in fields.items()}
     raw_birth = typed.pop("fecha_nacimiento", None)
     birth_date = parse_date(raw_birth, fmt="ddmmyyyy", on_error="none") if raw_birth else None
+    if raw_birth and birth_date is None:
+        raise census_shape_error("unrecognized birth-date format")
     for flag in (
         "obligado_notificaciones_electronicas",
         "suscrito_voluntariamente_notificaciones_electronicas",
@@ -391,7 +415,7 @@ def _parse_flag(raw: str | None) -> bool | None:
         return True
     if folded in _NEGATIVE:
         return False
-    return None
+    raise census_shape_error("unrecognized notification-flag value")
 
 
 # ── Live read ──────────────────────────────────────────────────────────────
@@ -405,9 +429,9 @@ async def fetch_censal_datos(
 ) -> CensalObservation:
     """Read the censal consulta surface with the authenticated session.
 
-    The read navigates to the consulta view and parses the rendered DOM.
-    It never submits a form, fills a field, or activates a control, and it
-    refuses at runtime if AEAT lands it on a censal modification path.
+    The read parses the landing and every subsidiary consultation through
+    the page's own read-only controls. Exact navigation routes are guarded,
+    and the result is withheld if any required consultation cannot be read.
 
     Args:
         session: An authenticated :class:`AeatSession` whose encrypted
@@ -432,16 +456,19 @@ async def fetch_censal_datos(
         )
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
-    return await _navigate_and_parse(storage_state, taxpayer_nif=taxpayer_nif, settings=settings)
+    return await _navigate_and_parse(
+        storage_state,
+        taxpayer_nif=taxpayer_nif,
+        settings=settings,
+        browser_session_factory=default_browser_session_factory,
+    )
 
 
 def censal_datos_url(taxpayer_nif: str, *, origin: str) -> str:
     """Build the censal consulta URL for one taxpayer against a resolved origin.
 
-    ``origin`` is required and has no default. It previously defaulted to the
-    unnumbered ``sede.`` origin, which let a caller build a URL against a host
-    that is not known to serve this route while believing it was the reader's
-    own address. The live read passes the host it read off the landed page.
+    ``origin`` is required and has no default: the unnumbered ``sede.``
+    origin is not known to serve this route, so none is assumed here.
 
     Args:
         taxpayer_nif: The authenticated taxpayer's own tax identifier.
@@ -470,32 +497,36 @@ async def _navigate_and_parse(
     *,
     taxpayer_nif: str,
     settings: Settings,
+    browser_session_factory: BrowserSessionFactoryPort,
 ) -> CensalObservation:
-    """Open the censal consulta through the access selector and parse the landing."""
-    browser_session = await default_browser_session_factory(settings)
+    """Request the censal consulta directly with the stored session and parse the landing."""
+    url = censal_datos_url(taxpayer_nif, origin=_CENSAL_ORIGIN)
+    _assert_read_http("GET", url)
+    browser_session = await browser_session_factory(settings)
     context = None
     try:
         context = await browser_session.create_context(storage_state=storage_state)
-        page = await context.new_page()
-        origin = await _resolve_dispatched_origin(page, browser_session=browser_session, settings=settings)
-
-        url = censal_datos_url(taxpayer_nif, origin=origin)
-        _assert_read_http("GET", url)
+        page = require_playwright_page(await context.new_page())
         try:
             await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
         except PlaywrightError as exc:
-            raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
+            raise SedeNavigationError(
+                f"censal consulta navigation failed ({type(exc).__name__}) for {redacted_url(url)}",
+                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            ) from exc
 
         # Follow the redirect chain rather than trusting the requested URL:
-        # re-assert the host AEAT actually served, then refuse outright if
-        # that landing is a censal modification surface.
-        landing_url = _censal_landing_url(page, requested_url=url)
+        # refuse a landing that is not the consulta, re-assert the host AEAT
+        # actually served, then refuse outright if that landing is a censal
+        # modification surface.
+        landing_url = _censal_landing_url(page, requested_url=redacted_url(url) or "")
+        _refuse_non_consulta_landing(landing_url)
         landing = urlsplit(landing_url)
         _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
         _assert_read_landing(landing_url)
 
         html = await page.content()
-        result = parse_censal_datos(html, source_url=url)
+        result = parse_censal_datos(html, source_url=str(census_source_url(landing_url)))
         if result.identity.nif is None and not _censal_marker_present(html):
             raise SedeNavigationError(
                 "AEAT censal navigation returned a page with no censal marker and no identity data; "
@@ -504,14 +535,21 @@ async def _navigate_and_parse(
                 failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
                 translated_message=tr("adapters.sede.errors.censal_bad_landing"),
                 context={
-                    "requested_url": url,
+                    "requested_url": redacted_url(url),
                     "landing_host": landing.netloc,
                     "landing_path": landing.path,
                     "marker_present": False,
                 },
             )
-        log.info("fetch_censal_datos: read censal consulta from %s", landing.path)
-        return result
+        try:
+            consultations = await capture_censal_consultations(page, policy=READ_GUARD_POLICY, settings=settings)
+        except PlaywrightError as exc:
+            raise SedeNavigationError(
+                f"Census consultation browser acquisition failed ({type(exc).__name__})",
+                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            ) from None
+        log.info("fetch_censal_datos: read complete censal consulta from %s", landing.path)
+        return result.model_copy(update={"consultations": consultations})
     finally:
         await close_async_resources(
             context,
@@ -520,121 +558,39 @@ async def _navigate_and_parse(
         )
 
 
-def landed_on_censal_path(landing_url: str) -> bool:
-    """Return whether a landing URL has arrived at the censal consulta path.
+def _refuse_non_consulta_landing(landing_url: str) -> None:
+    """Refuse at once when AEAT answered the consulta request with any page but the consulta.
 
-    The single reader of this condition. The dispatch wait and the judgement
-    that follows it both consult this, so a wait that expires on a page which
-    did land cannot produce a different answer from the check that reports it.
-
-    Args:
-        landing_url: The URL currently loaded.
-
-    Returns:
-        ``True`` when the URL carries the censal consulta path.
+    The access selector, the Cl@ve login and the 4033 gate mean the stored
+    session was not accepted for this surface; the representation dialog is a
+    control this reader does not drive; any other page is not the consulta.
+    Each is refused with its own typed reason instead of being parsed as a
+    consulta or waited on.
     """
-    return _CENSAL_PATH in landing_url
-
-
-async def _resolve_dispatched_origin(
-    page: Page,
-    *,
-    browser_session: BrowserSession | DefaultBrowserSession,
-    settings: Settings,
-) -> str:
-    """Return the scheme+host AEAT dispatched this session to.
-
-    The numbered ``www{n}`` sede hosts are load-balanced per session — some do
-    not serve the censal route and others reject a session minted elsewhere —
-    so the host is never assumed. This enters through the host-agnostic access
-    selector, lets AEAT dispatch, and reads the resulting host off the page.
-
-    The one control driven here is the selector's own authorize button, which
-    is an authentication dispatch rather than a censal control; it is declared
-    in the policy's allowed browser actions. When the selector does not
-    dispatch, this REFUSES rather than degrading to the unnumbered origin —
-    see the raise site for why a fallback produced an illegible failure.
-
-    **Log contract**, because reading a live run depends on it. A ``host=``
-    record at info level is emitted on the resolved path only, and names the
-    host read off the landed page. It therefore establishes that the session
-    reached a numbered host — though not that the authorize click is what took
-    it there, which this function cannot observe. Its absence means the reader
-    either never ran or refused. Neither debug record says anything about
-    dispatch in either direction: one reports only that the wait expired, and
-    the other is the judgement of the landed page.
-
-    Args:
-        page: The Playwright page to drive.
-        browser_session: Session wrapper providing the health-probing navigate.
-        settings: Active settings, for the navigation timeout.
-
-    Returns:
-        An origin string such as ``"https://www12.agenciatributaria.gob.es"``.
-
-    Raises:
-        SedeNavigationError: When the selector does not dispatch the session to
-            a host whose origin can be read off the landed page.
-    """
-    _assert_read_http("GET", _CENSAL_SELECTOR_URL)
-    await browser_session.navigate(page, _CENSAL_SELECTOR_URL)
-    await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
-
-    if _SELECTOR_MARKER in (getattr(page, "url", "") or ""):
-        _assert_read_browser_action(_SELECTOR_AUTHORIZE_ACTION)
-        await page.click(EXTERNAL.aeat.clave_movil.authorize_button_selector)
-        try:
-            await page.wait_for_url(
-                landed_on_censal_path,
-                timeout=settings.cadrumo_browser_navigation_timeout_ms,
-            )
-        except PlaywrightError:
-            # The wait expiring is a fact about the WAIT, never about the
-            # dispatch: the page can land correctly just outside the wait's
-            # window. Say only what happened, and let the single judgement
-            # below decide whether the dispatch arrived.
-            log.debug("censal selector wait expired; judging the landed page instead", exc_info=True)
-        await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
-        # One reader of the condition, evaluated once, after the page settled.
-        if not landed_on_censal_path(getattr(page, "url", "") or ""):
-            log.debug(
-                "censal selector dispatch did not reach the censal path; current_url=%s",
-                getattr(page, "url", None),
-            )
-
-    landed = urlsplit(getattr(page, "url", "") or "")
-    if not landed.scheme or not landed.netloc:
-        # REFUSE rather than fall back to the unnumbered origin. This branch
-        # once degraded to that origin on the assumption it "may well serve
-        # the route"; a measurement on a sibling sede route found it returning
-        # a genuine 404 with a valid session, so the assumption does not hold
-        # in general and is unmeasured here. Worse, a fallback failure is
-        # ILLEGIBLE downstream: the 404 body carries no censal table, so it
-        # surfaces as a page-shape change blaming AEAT, or as a bad landing
-        # telling the operator to re-authenticate — two confidently wrong
-        # diagnoses for one dispatch failure. Refusing here names the actual
-        # cause at the point it occurred.
+    landing = urlsplit(landing_url)
+    context = {"landing_host": landing.netloc, "landing_path": landing.path}
+    if is_aeat_auth_gate_redirect(landing_url) or any(
+        marker in landing.path for marker in _SESSION_NOT_ACCEPTED_PATH_MARKERS
+    ):
         raise SedeNavigationError(
-            "AEAT censal access selector did not dispatch the session to a numbered sede host, "
-            "so no origin could be read off the landed page. The read is refused rather than "
-            "retried against the unnumbered origin, which is not known to serve this route.",
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            translated_message=tr("adapters.sede.errors.censal_no_dispatch"),
-            context={"selector_url": _CENSAL_SELECTOR_URL, "landing_url": getattr(page, "url", None)},
+            "AEAT did not accept the authenticated session for the censal consulta; "
+            "it answered with its access selector, login or auth gate. Re-authenticate and retry.",
+            failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+            context={**context, "refusal": "session_not_accepted"},
         )
-    origin = f"{landed.scheme}://{landed.netloc}"
-    # A dispatch off the AEAT apex must not become the origin we then request.
-    _assert_read_http("GET", f"{origin}{_CENSAL_PATH}")
-    log.info("censal read dispatched to host=%s", landed.netloc)
-    return origin
-
-
-def _assert_read_browser_action(action: str) -> None:
-    """Fail-closed guard: refuse any browser action the censal policy does not declare."""
-    assert_remote_operation_allowed(
-        READ_GUARD_POLICY,
-        RemoteOperation(kind="browser_action", action=action),
-    )
+    if _REPRESENTATION_DIALOG_MARKER in landing.path:
+        raise SedeNavigationError(
+            "AEAT answered the censal consulta with its representation dialog, which this reader does not drive.",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={**context, "refusal": "representation_gate_required"},
+        )
+    if landing.path != _CENSAL_PATH:
+        raise SedeNavigationError(
+            "AEAT answered the censal consulta request with a page that is not the consulta.",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.censal_bad_landing"),
+            context={**context, "refusal": "unrecognised_landing"},
+        )
 
 
 def _assert_read_http(method: str, url: str) -> None:
@@ -704,6 +660,5 @@ __all__ = [
     "censal_datos_url",
     "fetch_censal_datos",
     "forbidden_censal_landing_marker",
-    "landed_on_censal_path",
     "parse_censal_datos",
 ]

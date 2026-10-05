@@ -32,9 +32,9 @@ from cadrumo.adapters.local_runtime.automation_requester import (
     AutomationRequesterJourney,
 )
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
-from cadrumo.adapters.local_runtime.framing import RuntimeTransportCleanup
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
+from cadrumo.adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import (
     ClientCredentialMetadata,
@@ -45,7 +45,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.test_windows_automation_secret_store_native import (
     require_selected_normal_desktop,
 )
-from cadrumo.application.auth.read_operation import (
+from cadrumo.application.auth.auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
     AuthReadProjection,
     AuthReadRequest,
@@ -174,7 +174,7 @@ def _record(value: object) -> dict[str, object]:
 
 def _status(value: object, profile_id: UUID) -> ProfileAccessStatus:
     document = _record(value)
-    assert document["outcome"] == "status"
+    assert document["outcome"] == "status" and "status" in document, document
     status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(document["status"]))
     assert status.profile_id == profile_id
     assert status.connected and status.credential_authenticated and status.profile_bound
@@ -663,9 +663,9 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     proof.value = PROFILE_INPUT
                     progress("approve_enter")
                     decision.query_one("#automation-decision-confirm", Button).press()
-                    await _until(pilot, lambda: decision.settled_outcome is not None and not decision._busy)
+                    await _until(pilot, lambda: decision._outcome is not None and not decision._busy)
                     progress("approve_exit")
-                    outcome = decision.settled_outcome
+                    outcome = decision._outcome
                     assert outcome is not None and outcome.completed and not outcome.access_lost, safe_trace()
                     assert outcome.terminal_condition is OperationTerminalCondition.SUCCEEDED
                     assert outcome.effect is OperationEffect.UPDATED and outcome.operation_id is not None

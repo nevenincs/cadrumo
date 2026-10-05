@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s45-mcp-prompt-identity'
 date: '2026-07-13'
-modified: '2026-07-17'
-body_hash: 'sha256:9ef4ce49cee22e3aa42c18dcde0e7772bed6bfbc2f918af1b8d346e31cd55c29'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:d3c7c1fdc780330fd97dd22cf7dd018ca6766744159283655388b5f1b2a4c842'
+related: []
 ---
 
 # `cadrumo-product-rename-s45-mcp-prompt-identity` audit: `Cadrumo product rename S45 MCP prompt identity audit`
@@ -24,10 +23,10 @@ plan truth, and commit path isolation.
 
 ### execution-scope-omits-the-changed-test | low | The record names only unchanged prompt production code while the closeout changes its direct test
 
-The execution Scope lists only `src/cadrumo/entrypoints/mcp/_prompts.py`, but
+The execution Scope lists only the retired module, but
 that production file is unchanged by the target commit. The only implementation
 surface changed for S45 closeout is
-`src/cadrumo/entrypoints/mcp/tests/test_prompts.py`, where the two authority
+The retired test, where the two authority
 meaning assertions were added. The Outcome and Notes accurately discuss the
 real test coverage, so omitting that path makes the formal scope inconsistent
 with the committed delivery.

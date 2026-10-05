@@ -1,13 +1,12 @@
 # File your modelo at the AEAT portal
 
-This page covers the handoff from a verified draft to a real filing at the
+This page covers the handoff from a checked draft to a real filing at the
 Agencia Estatal de Administración Tributaria (AEAT), as an ordered checklist:
-present the figures yourself at the portal, save the justificante, and record
-the filing locally. You prepare and check a {term}`modelo` with `aeat`, but the
-tool never submits anything to AEAT. You file at the portal yourself, signed
-with your own credentials. The `work file`
-command at the end records a local marker only; it does not and cannot file on
-your behalf.
+present the figures yourself at the portal, save the AEAT receipt, and record
+the filing in Cadrumo. You prepare and check a {term}`modelo` with `aeat`, but
+the tool never submits anything to AEAT. You file at the portal yourself, signed
+with your own credentials. The `work file` command at the end only records the
+filing in Cadrumo; it does not and cannot file on your behalf.
 
 How you present depends on the modelo. Cadrumo holds no AEAT software-developer
 registration, so the export of a modelo whose record design reserves a software
@@ -21,13 +20,12 @@ as Modelo 130, the export leaves those fields blank and shows no such warning.
 
 You need:
 
-- An active taxpayer profile carrying `--name` and `--surnames`, or filing
-  refuses because it cannot stamp the operator name. Create one with
-  `aeat config profile create`; see
-  [Set up your taxpayer profile](profile-setup.md).
-- A verified saved calculation (work unit) for the modelo and period you want
-  to file. If your draft isn't verified yet, see
-  [verification reports](verification-reports.md).
+- An active taxpayer profile carrying `--name` and `--surnames`, or filing refuses
+  because it cannot stamp the taxpayer's name. Create one with `aeat config
+  profile create`; see [Set up your taxpayer profile](profile-setup.md).
+- A saved calculation that passed the check, for the modelo and period you want
+  to file. If your draft hasn't passed the check yet, see [checking a draft
+  declaration](verification-reports.md).
 - Your own AEAT portal credentials, a digital certificate or Cl@ve. These are
   your credentials for AEAT's website, separate from anything configured inside
   `aeat`. The tool's [AEAT authentication](authenticate-with-aeat.md) is for
@@ -49,28 +47,30 @@ If you're new to the workflow as a whole, start with the
 ## The filing chain
 
 The sequence below runs the machine half of the filing. It starts from a
-classified, evidenced Modelo 303 for the first quarter of 2026 that is already
-calculated and verified. It confirms the verified revision, exports a Modelo 303
-file that AEAT will not accept because it carries the development identity, and
-records the local filed marker. Between the export and the marker, you present
-the figures at the AEAT portal yourself (steps 2 and 3). The final frame is the
-reconcile command you run once you have AEAT's justificante on disk; it is shown
-but not run here, because it needs your real receipt:
+classified Modelo 303 for the first quarter of 2026, with supporting documents,
+that is already calculated and checked. It confirms the checked calculation,
+exports a Modelo 303 file that AEAT will not accept because it carries the
+development identity, and records the filing in Cadrumo. Between the export and
+recording the filing, you present the figures at the AEAT portal yourself (steps
+2 and 3). The last step of the sequence is the reconcile command you run once
+you have the AEAT receipt on disk; it is shown but not run here, because it
+needs your real receipt:
 
 ```{cli-sequence} file-at-aeat-chain
-:verify: Confirm the verified draft exports with the development identity and records the local marker.
+:verify: Confirm the checked draft exports with the development identity and records the filing record in Cadrumo.
 ```
 
 The rest of this page walks each step of that chain in order.
 
-## Step 1: confirm the draft is verified
+(step-1-confirm-the-draft-is-verified)=
+## Step 1: confirm the draft passed the check
 
-If no verified calculation exists, `work revision --select latest-verified`
-refuses; run verification first. See
-[verification reports](verification-reports.md).
+If no checked calculation exists, `work revision --select latest-verified`
+refuses; run the check first. See [checking a draft
+declaration](verification-reports.md).
 
-Read the verified figures back with `aeat app modelo work revision`. These are
-the values you present at the portal, box by box.
+Read the checked figures back with `aeat app modelo work revision`. These are the
+values you present at the portal, box by box.
 
 For a modelo that does carry a layout, `export` writes the file in the official
 layout, never a PDF or a spreadsheet: for most modelos a `.boe` file, a
@@ -94,29 +94,32 @@ for you.
    the development identity and the portal offers a file import for your modelo,
    you can try importing the exported file instead. If the portal refuses it,
    enter the figures in the form.
-4. Review the figures the portal shows against your verified calculation.
+4. Review the figures the portal shows against your checked calculation.
 5. Sign and submit.
 
 Portal screens change over time, so the exact labels may differ. If you can't
 find the presentation page for your modelo, AEAT's own help or your advisor is
 the right source. The portal is theirs, not the tool's.
 
-## Step 3: save the justificante
+(step-3-save-the-justificante)=
+## Step 3: save the AEAT receipt
 
-Immediately after submitting, download the {term}`justificante`. AEAT usually offers it as a PDF.
+Immediately after submitting, download the AEAT receipt ({term}`justificante`).
+AEAT usually offers it as a PDF.
 
 Keep it with your tax records. You'll use it in step 5 to reconcile AEAT's
 record against your local one.
 
-## Step 4: record the filing locally
+(step-4-record-the-filing-locally)=
+## Step 4: record the filing
 
 Only after the portal submission succeeds, record the filing in `aeat` with the
-`work file` frame in [the filing chain](#the-filing-chain).
+`work file` step from [the filing chain](#the-filing-chain) above.
 
-`work file` records a local "filed" marker and nothing more. It does not and
-cannot submit anything to AEAT. Add context with the optional flags `--notes
-TEXT` and `--by TEXT`, for example who filed and any portal reference you want
-to remember.
+`work file` only records in Cadrumo that you filed, and nothing more. It does not
+and cannot submit anything to AEAT. Add context with the optional flags `--notes
+TEXT` and `--by TEXT`, for example who filed and any portal reference you want to
+remember.
 
 If the command refuses, the usual causes are:
 
@@ -124,39 +127,39 @@ If the command refuses, the usual causes are:
   has already closed cannot be reopened. Recording is optional, and the refusal
   message names `aeat app modelo export` as the local finish line. See the
   [filing calendar](filing-calendar.md) for window dates.
-- The verification state: the saved calculation isn't verified.
+- The check: the saved calculation hasn't passed the check.
 
 Read the cause shown in the error message before retrying.
 
-## Step 5: reconcile the justificante against your local record
+(step-5-reconcile-the-justificante-against-your-local-record)=
+## Step 5: reconcile the AEAT receipt against your local record
 
 Compare AEAT's receipt against your local record with the `reconcile import`
-command shown as the final frame of [the filing chain](#the-filing-chain). Run
-reconciliation after step 4 so the comparison is against your filed record. It
-reports a verdict of matches or mismatches. The command refuses a PDF it cannot
-read with `The PDF could not be read`. For reading verdicts and handling
-mismatches, see [reconcile a filing](reconcile.md).
+command shown as the last step of [the filing chain](#the-filing-chain). Run
+reconciliation after step 4 so the comparison is against the filing you
+recorded. It reports whether the figures match or not. The command refuses a PDF
+it cannot read with `The PDF could not be read`. For reading the results and
+handling mismatches, see [reconcile a filing](reconcile.md).
 
-With AEAT authentication configured, skip the manual download and let the
-tool fetch the receipt itself. `reconcile pull` pulls the justificante from
-AEAT, stores it as encrypted evidence in your profile, and reconciles in one
-step:
+With AEAT authentication configured, skip the manual download and let the tool
+fetch the receipt itself. `reconcile pull` pulls the AEAT receipt from AEAT,
+stores it encrypted in your profile, and reconciles in one step:
 
 ```{cli-sequence} file-at-aeat-reconcile-pull
 ```
 
-See [Pull and store the justificante](reconcile.md#pull-and-store-the-justificante).
+See {ref}`Pull and store the AEAT receipt <pull-and-store-the-justificante>`.
 
 ## If something goes wrong at the portal
 
-If the submission was rejected or interrupted, or you presented the wrong
-figures, do not record the local filed marker. The marker describes only a
-submission that succeeded at the portal.
+If the submission was rejected or interrupted, or you presented the wrong figures,
+do not record the filing in Cadrumo. The record describes only a submission that
+succeeded at the portal.
 
 Instead:
 
 1. Fix the draft in `aeat`.
-2. Re-verify the calculation.
+2. Check the calculation again.
 3. Read the corrected figures back with `aeat app modelo work revision`.
 4. Retry the presentation at the portal.
 
@@ -170,19 +173,18 @@ explanation.
 
 ## Where to get help
 
-For diagnosing problems on your machine (refused commands, export errors,
-verification failures) see [troubleshooting](troubleshooting.md). Unfamiliar
-terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command
-output to ask for help, remove personal tax identifiers such as your NIF, CIF,
-DNI, NIE, or NII.
+For diagnosing problems on your machine (refused commands, export errors, failed
+checks) see [troubleshooting](troubleshooting.md). Unfamiliar terms are defined in
+the {doc}`glossary </_generated/glossary>`. Before you share command output to ask
+for help, remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
 
 ## Next steps
 
-- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
+- [Import, export, and supporting documents](../reference/import-export-and-evidence.md) -
   distinguish the local upload file from official AEAT filing proof.
-- [Reconcile a filing](reconcile.md) - read verdicts and resolve mismatches.
-- [Verification reports](verification-reports.md) - understand what "verified"
-  means before you file.
+- [Reconcile a filed modelo against its AEAT receipt](reconcile.md) - read the results and resolve mismatches.
+- [Check a draft declaration and act on the issues](verification-reports.md) - understand what a passed
+  check means before you file.
 - [Filing calendar](filing-calendar.md) - see when each period's filing window
   opens and closes.
 - [Read AEAT notifications](check-aeat-notifications.md) - read AEAT's view

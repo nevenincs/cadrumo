@@ -17,20 +17,28 @@ import sys
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
+import psutil
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN
 from dev.packaging.command_execution import run_command
-from dev.quality.import_checker import (
-    Authority,
-    RootPackage,
-    check_authority,
-    has_architectural_warning,
-    read_authority,
+from dev.quality.import_authority import read_authority
+from dev.quality.import_candidate_inventory import module_is_test_scoped
+from dev.quality.import_check_models import Authority, RootPackage
+from dev.quality.import_checker import check_authority
+from dev.quality.import_diagnostics import has_architectural_warning
+from dev.quality.import_gate import (
+    BudgetedRun,
+    StepBudget,
+    StepBudgetExceededError,
+    run_import_gate,
+    run_import_linter,
+    run_subordinate,
+    run_within_budget,
 )
-from dev.quality.import_gate import run_import_gate, run_import_linter, run_subordinate
-from dev.quality.import_health import build_import_health, module_is_test_scoped, render_import_health
+from dev.quality.import_health import build_import_health
+from dev.quality.import_health_rendering import render_import_health
 from dev.quality.import_load_probe import main
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -812,12 +820,12 @@ def test_abnormal_import_linter_status_is_tool_broken(tmp_path: Path) -> None:
     assert run_import_gate(root, lint_executable=sys.executable) == TOOL_BROKEN
 
 
-def test_import_linter_timeout_is_tool_broken(tmp_path: Path) -> None:
+def test_import_linter_without_a_work_budget_is_tool_broken(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     authority = read_authority(root).authority
     assert authority is not None
 
-    component = run_import_linter(authority, executable=sys.executable, timeout=0)
+    component = run_import_linter(authority, executable=sys.executable, budget=StepBudget(0))
 
     assert component.returncode == TOOL_BROKEN
     assert "[TOOL_BROKEN]" in component.output
@@ -832,7 +840,7 @@ def test_import_linter_exception_is_tool_broken(tmp_path: Path, monkeypatch: pyt
         del args, kwargs
         raise RuntimeError("forced Import Linter failure")
 
-    monkeypatch.setattr("dev.quality.import_gate.run_command", fail)
+    monkeypatch.setattr("dev.quality.import_gate.run_within_budget", fail)
     component = run_import_linter(authority, executable=sys.executable)
 
     assert component.returncode == TOOL_BROKEN
@@ -850,16 +858,113 @@ def test_forced_checker_exception_is_nonzero_through_real_recipe(
     assert run_import_gate(root) == TOOL_BROKEN
 
 
-def test_subordinate_timeout_is_tool_broken(tmp_path: Path) -> None:
+def test_subordinate_without_a_work_budget_is_tool_broken(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
 
     authority = read_authority(root).authority
     assert authority is not None
 
-    component, _ = run_subordinate(authority, timeout=0)
+    component, _ = run_subordinate(authority, budget=StepBudget(0))
 
     assert component.returncode == TOOL_BROKEN
     assert "[TOOL_BROKEN]" in component.output
+
+
+#: Far below what any real step consumes: interpreter start-up alone costs more.
+_OVERRUN_BUDGET = StepBudget(cpu_seconds=0.01, stall_seconds=60)
+
+
+def test_a_subordinate_step_that_overruns_its_cpu_budget_is_killed_and_unavailable(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    authority = read_authority(root).authority
+    assert authority is not None
+
+    component, checker = run_subordinate(authority, budget=_OVERRUN_BUDGET)
+
+    assert component.returncode == TOOL_BROKEN, component.output
+    assert "[TOOL_BROKEN] subordinate checker consumed" in component.output
+    assert "work budget" in component.output
+    assert checker.files_scanned == 0
+    assert checker.findings == ()
+
+
+def test_a_gate_whose_steps_overrun_their_budget_is_unavailable_never_green(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = _fixture_root(tmp_path)
+    _compile_load_targets(root)
+
+    assert run_import_gate(root, budget=_OVERRUN_BUDGET) == TOOL_BROKEN
+
+    payload = _health_payload(capsys.readouterr().out)
+    assert payload["classification"] == "tool_failure"
+    assert payload["verdict"] == "failed"
+    graph = _section(payload, "graph_authority")
+    assert graph["status"] == "unavailable"
+    reasons = graph["operational_reasons"]
+    assert isinstance(reasons, list)
+    assert any("work budget" in str(reason) for reason in reasons), reasons
+    assert "subordinate checker produced no governed-file census" in reasons
+    assert _section(payload, "loadability")["status"] == "unavailable"
+    assert payload["step_budget"] == _OVERRUN_BUDGET.as_dict()
+
+
+def test_a_clean_gate_reports_the_cpu_each_step_consumed_inside_its_budget(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = _fixture_root(tmp_path)
+    _compile_load_targets(root)
+
+    assert run_import_gate(root) == 0
+
+    payload = _health_payload(capsys.readouterr().out)
+    budget = _section(payload, "step_budget")
+    cpu = _section(payload, "component_cpu_seconds")
+    assert set(cpu) == {"import_linter", "loadability", "subordinate_checker"}, payload
+    for step, consumed in cpu.items():
+        assert isinstance(consumed, float) and 0 < consumed <= float(str(budget["cpu_seconds"])), step
+
+
+def test_a_runaway_step_is_killed_with_its_whole_process_tree(tmp_path: Path) -> None:
+    # The child spins inside a grandchild so the budget must count, and the
+    # kill must reach, the process the root started rather than the root alone.
+    marker = tmp_path / "grandchild.pid"
+    grandchild_source = (
+        f"import os, pathlib\npathlib.Path({str(marker)!r}).write_text(str(os.getpid()))\nwhile True:\n    pass\n"
+    )
+    source = f"import subprocess, sys\nsubprocess.Popen([sys.executable, '-c', {grandchild_source!r}]).wait()\n"
+
+    with pytest.raises(StepBudgetExceededError, match="work budget"):
+        run_within_budget(
+            [sys.executable, "-c", source],
+            cwd=tmp_path,
+            environment=None,
+            budget=StepBudget(cpu_seconds=1.0, stall_seconds=60),
+        )
+
+    grandchild = int(marker.read_text(encoding=UTF_8))
+    assert not psutil.pid_exists(grandchild) or psutil.Process(grandchild).status() == psutil.STATUS_ZOMBIE
+
+
+def test_a_live_step_that_consumes_no_cpu_is_reported_as_stalled(tmp_path: Path) -> None:
+    with pytest.raises(StepBudgetExceededError, match="consumed no CPU"):
+        run_within_budget(
+            [sys.executable, "-c", "import time\ntime.sleep(120)\n"],
+            cwd=tmp_path,
+            environment=None,
+            budget=StepBudget(cpu_seconds=60, stall_seconds=1.0),
+        )
+
+
+def test_a_step_inside_its_budget_returns_its_output_and_status(tmp_path: Path) -> None:
+    run = run_within_budget(
+        [sys.executable, "-c", "import sys\nprint('out')\nsys.stderr.write('err')\nsys.exit(3)\n"],
+        cwd=tmp_path,
+        environment=None,
+        budget=StepBudget(cpu_seconds=60, stall_seconds=60),
+    )
+
+    assert (run.returncode, run.stdout, run.stderr) == (3, "out\n", "err")
 
 
 def test_component_failures_run_in_authority_then_subordinate_order(tmp_path: Path) -> None:
@@ -903,11 +1008,11 @@ def test_zero_status_with_a_native_warning_fails_the_graph_component(
     authority = read_authority(root).authority
     assert authority is not None
 
-    def fake_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(*args: object, **kwargs: object) -> BudgetedRun:
         del args, kwargs
-        return subprocess.CompletedProcess([], 0, "Warnings: 1\n", "")
+        return BudgetedRun(0, "Warnings: 1\n", "", 0.0)
 
-    monkeypatch.setattr("dev.quality.import_gate.run_command", fake_run)
+    monkeypatch.setattr("dev.quality.import_gate.run_within_budget", fake_run)
 
     component = run_import_linter(authority, executable=sys.executable)
 

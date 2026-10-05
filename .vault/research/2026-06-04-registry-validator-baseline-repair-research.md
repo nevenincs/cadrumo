@@ -3,12 +3,9 @@ tags:
   - '#research'
   - '#registry-validator-baseline-repair'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:a2e3c02f0f1637bbc292217451753ccc1524e5bd796e0bd36fbcabcb7092317b'
-related:
-  - "[[2026-06-04-registry-validator-baseline-repair-plan]]"
-  - "[[2026-06-04-registry-row-width-pressure-plan]]"
-  - '[[2026-06-04-registry-validator-baseline-repair-adr]]'
+modified: '2026-10-03'
+body_hash: 'sha256:79c6ca87cbc122eadc0b7bce76355988b5432ba2fa704d4a35465b3e8587ec1b'
+related: []
 ---
 
 # `registry-validator-baseline-repair` research: `phase two research grounding`
@@ -25,4 +22,6 @@ The linked plan and row-width blocker show the repair was scoped to preserving t
 
 ## Recommendation
 
-Keep this research bridge with the validator-baseline repair ADR and plan. Any future registry reviewability change should create a feature-specific ADR rather than treating this closeout as a broader baseline-raising precedent.
+Historical recommendation (2026-06-04): keep this research bridge with the validator-baseline repair ADR and plan.
+
+Curation update (2026-10-03): the linked ADR was a vault-only alignment record with no new decision or validator behavior change; it has been archived as superfluous authority metadata. This research remains evidence for the completed repair plan and upstream row-width blocker. Future registry reviewability changes still need their own feature-specific decision.

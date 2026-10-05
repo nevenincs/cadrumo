@@ -37,6 +37,7 @@ from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
@@ -290,6 +291,15 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
         stale_wallet=False,
         reason_identity="aeat_wallet_validated",
         wallet_captured_at=_T1,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=selected_amount,
+                source_locator="aeat-wallet:synthetic-fixture",
+                captured_at=_T1,
+                registry_snapshot_refs=(),
+            ),
+        ),
         decided_at=_T1,
     )
 

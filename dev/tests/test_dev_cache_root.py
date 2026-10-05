@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.storage_environment import configured_storage_root
 from cadrumo.tests.env_scope import scoped_env_var
 from dev._paths import REPO_ROOT
 from dev.cache_root import DEFAULT_DEV_CACHE_ROOT, DEV_CACHE_ROOT_ENV, dev_cache_dir, dev_cache_root
@@ -19,10 +20,10 @@ from dev.cache_root import DEFAULT_DEV_CACHE_ROOT, DEV_CACHE_ROOT_ENV, dev_cache
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_the_default_root_is_the_checkouts_own_ignored_cache_directory() -> None:
+def test_the_default_root_is_inside_the_configured_storage_tree() -> None:
     with scoped_env_var(DEV_CACHE_ROOT_ENV, None):
-        assert dev_cache_root() == REPO_ROOT / ".cache"
-    assert DEFAULT_DEV_CACHE_ROOT == REPO_ROOT / ".cache"
+        assert dev_cache_root() == configured_storage_root() / "development" / "cache"
+    assert DEFAULT_DEV_CACHE_ROOT.parts[-2:] == ("development", "cache")
 
 
 def test_an_explicit_root_relocates_every_cache(tmp_path: Path) -> None:
@@ -31,10 +32,18 @@ def test_an_explicit_root_relocates_every_cache(tmp_path: Path) -> None:
         assert dev_cache_dir("corpus-text") == tmp_path / "elsewhere" / "corpus-text"
 
 
+def test_a_relative_cache_root_is_anchored_to_the_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "storage"))
+    monkeypatch.setenv(DEV_CACHE_ROOT_ENV, "development/cache")
+
+    assert dev_cache_root() == tmp_path / "storage" / "development" / "cache"
+
+
 def test_a_blank_root_is_treated_as_unset() -> None:
     """An exported-but-empty variable must not resolve the caches to the CWD."""
     with scoped_env_var(DEV_CACHE_ROOT_ENV, "   "):
-        assert dev_cache_root() == DEFAULT_DEV_CACHE_ROOT
+        assert dev_cache_root() == configured_storage_root() / "development" / "cache"
 
 
 def test_resolving_a_cache_creates_nothing(tmp_path: Path) -> None:

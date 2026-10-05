@@ -8,7 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
-from ...application.inventory.registered_operation import (
+from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
@@ -17,6 +17,7 @@ from ...application.inventory.registered_operation import (
     InventoryValuationPreviewRequest,
 )
 from ...application.operations.public_scalar import PublicDecimal
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
@@ -86,7 +87,7 @@ def inventory_create(
     completion, payload = create_inventory_ledger(ctx, request=request)
     ledger = completion.projection.ledger
     if ledger is None:
-        raise RuntimeError("inventory create bridge returned no canonical ledger")
+        raise InternalInvariantError("inventory create bridge returned no canonical ledger")
     emit_envelope(
         ctx,
         command="ledger.inventory.create",

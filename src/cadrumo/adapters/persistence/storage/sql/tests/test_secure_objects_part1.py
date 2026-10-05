@@ -27,6 +27,7 @@ from ._secure_objects_support import (
     _ephemeral_secure_repo,
     _seed_under_key,
 )
+from .raw_key_writer import save_with_raw_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -561,7 +562,8 @@ def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -
         assert exists_raised.value.context == {"length": 5}
 
         with pytest.raises(StorageValidationError) as save_raised:
-            repo.save_with_raw_key(
+            save_with_raw_key(
+                repo,
                 namespace="cadrumo-test.raw",
                 hashed_object_key=b"short",
                 classification=SensitivityClass.FINANCIAL,

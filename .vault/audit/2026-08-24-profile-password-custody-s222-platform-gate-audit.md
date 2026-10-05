@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6dd9ba72b35250d60e9b82585a15f93cf23253299d6ebbadae6e97adcc9e569b'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+related: []
 ---
 # `profile-password-custody` audit: `S222 platform gate review`
 

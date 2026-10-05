@@ -10,11 +10,11 @@ from ...application.ledger.merge_operation import (
     LedgerMergeOperationResult,
     LedgerMergeRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._ledger_support import ledger_validation_bad
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client
-from .runtime_registered_operation import run_registered_operation, submitted_operation_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def run_ledger_merge(
@@ -58,13 +58,7 @@ def run_ledger_merge(
         or projection.merged_transaction_id in (projection.parent_transaction_id, *projection.source_child_ids)
     )
     if invalid:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 

@@ -9,14 +9,14 @@ from importlib.metadata import PackageNotFoundError, version
 from uuid import UUID
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.adapters.local_runtime.posix import PosixRuntimeEndpoint
-from cadrumo.adapters.local_runtime.runtime_manager_composition import installed_runtime_manager
+from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.paths import effective_storage_root
+from cadrumo.domain.calculations.registry.authority import published_authority_generation
 
 
 class _InstalledClientCleanup:
@@ -40,14 +40,7 @@ async def _close_owned_resource(
     try:
         await close_async_resources(resource, task_name=task_name, primary_error=primary_error)
     except asyncio.CancelledError as cancellation:
-        failures: list[AsyncResourceCleanupError] = []
-        for error in (primary_error, cancellation):
-            if error is None:
-                continue
-            for name in ("async_cleanup_error", "cleanup_error"):
-                failure = error.__dict__.get(name)
-                if isinstance(failure, AsyncResourceCleanupError) and all(failure is not prior for prior in failures):
-                    failures.append(failure)
+        failures = _retained_cleanup_failures(primary_error, cancellation)
         if failures:
             retained = failures[0]
             for failure in failures[1:]:
@@ -61,11 +54,11 @@ async def _close_owned_resource(
 async def open_installed_runtime_client(
     *, profile_id: UUID, frontend: OperationFrontendProjection, timeout: float = 10
 ) -> RuntimeFrontendClient:
-    """Connect to the exact installed owner, or start existing bound provisioning.
+    """Connect to the exact running owner through the installed transport.
 
     This opens no profile and reads no credential. The caller must explicitly
     authenticate the returned connection and own it for its frontend lifetime.
-    Unsupported deployment refuses without enabling startup or direct spawning.
+    An absent or untrusted endpoint returns a typed refusal.
     """
     try:
         root = effective_storage_root().resolve(strict=True)
@@ -81,9 +74,10 @@ async def open_installed_runtime_client(
     try:
         launch = RuntimeLaunchDoor(
             endpoint,
-            expected=RuntimeClientHello(product_version=product_version, storage_identity=endpoint.storage_identity),
-            manager_factory=lambda: installed_runtime_manager(
-                root=root, endpoint=endpoint, product_version=product_version
+            expected=RuntimeClientHello(
+                product_version=product_version,
+                storage_identity=endpoint.storage_identity,
+                authority_generation=published_authority_generation(),
             ),
         )
         client = await RuntimeFrontendClient.open(launch, profile_id=profile_id, frontend=frontend, timeout=timeout)
@@ -105,3 +99,19 @@ async def open_installed_runtime_client(
         )
         raise
     return client
+
+
+def _retained_cleanup_failures(
+    primary_error: BaseException | None,
+    cancellation: asyncio.CancelledError,
+) -> list[AsyncResourceCleanupError]:
+    """Retain each original cleanup owner once when release itself is cancelled."""
+    failures: list[AsyncResourceCleanupError] = []
+    for error in (primary_error, cancellation):
+        if error is None:
+            continue
+        for name in ("async_cleanup_error", "cleanup_error"):
+            failure = error.__dict__.get(name)
+            if isinstance(failure, AsyncResourceCleanupError) and all(failure is not prior for prior in failures):
+                failures.append(failure)
+    return failures

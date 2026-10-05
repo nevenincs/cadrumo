@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#calculation-engine-foundations'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ffac4790bafbbb152e7574dec964d2c660592fce6a27488420066e3ba3a76be'
+body_hash: 'sha256:564f076b477804b625e3e9bf9fab5e17752dcc782bfb00fd6799bfe624bd03e3'
 related:
   - '[[2026-06-10-calculation-engine-foundations-adr]]'
   - '[[2026-06-10-calculation-engine-foundations-audit]]'
-  - '[[2026-06-10-calculation-engine-foundations-ledger]]'
-  - '[[2026-06-10-calculation-engine-foundations-plan]]'
   - '[[2026-06-10-calculation-engine-foundations-research]]'
   - '[[2026-06-11-calculation-engine-foundations-closeout-audit]]'
   - '[[2026-06-11-calculation-engine-foundations-code-review-audit]]'
@@ -34,14 +32,6 @@ Auto-generated index of all documents tagged with `#calculation-engine-foundatio
 - `2026-06-11-calculation-engine-foundations-closeout-audit` - `calculation-engine-foundations` audit: `remaining-step reassessment against period rollout`
 - `2026-06-11-calculation-engine-foundations-code-review-audit` - `calculation-engine-foundations` Code Review
 - `2026-06-12-calculation-engine-foundations-code-review-audit` - `calculation-engine-foundations` Code Review
-
-### exec
-
-- `2026-06-10-calculation-engine-foundations-ledger` - `calculation-engine-foundations` ledger
-
-### plan
-
-- `2026-06-10-calculation-engine-foundations-plan` - `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
 
 ### research
 

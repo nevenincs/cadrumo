@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
     parse_record,
     seal_automation,
 )
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_records import (
     ProtectedControlAnchor,
     SealedAutomationControl,
@@ -39,11 +40,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_secret_store import
     WindowsAutomationSecretStore,
     native_automation_secret_store,
 )
-from cadrumo.adapters.persistence.storage.custody.automation_store import (
-    CONTROL_NAMESPACE,
-    WRAP_NAMESPACE,
-    AutomationControlStore,
-)
+from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import (
     MemoryNativePort,
@@ -77,6 +74,7 @@ from cadrumo.application.user_profile.capsule_restore import restore_profile_cap
 from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 NOW = datetime(2026, 9, 26, tzinfo=UTC)
@@ -648,15 +646,10 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
 @pytest.mark.os_keychain
 @pytest.mark.windows_only
 def test_windows_native_publication_replacement_and_deletion(subject: Subject) -> None:
+    require_os_credential_store()
     native = TrackedWindowsStore()
     store = AutomationControlStore(root=subject.store.root, binding=subject.store.binding, secrets_store=native)
     # The fixture supplies random installation/profile identities and a unique root.
-    try:
-        native._api().read("cadrumo.automation.probe:" + str(uuid4()))
-    except windows_secret_store._WindowsCredentialError as error:
-        if error.winerror == 1312:
-            pytest.skip("Windows Credential Manager is unavailable in this logon session (WinError 1312)")
-        raise
     assert native.read(CONTROL_NAMESPACE, store.account) is None
     primary: BaseException | None = None
     try:

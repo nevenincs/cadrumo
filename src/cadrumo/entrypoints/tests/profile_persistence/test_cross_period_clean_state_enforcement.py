@@ -55,7 +55,7 @@ from ....application.modelo.calculation_actions import (
 from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_actions import file_modelo_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -490,7 +490,7 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
                 approved_verification_report_id=_fixture_report_id(revision_id),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
                 workflow_profile=workflow_profile(),
                 operation=operation,
@@ -534,7 +534,7 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
                 approved_verification_report_id=_fixture_report_id(revision_id),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
                 workflow_profile=workflow_profile(),
                 operation=operation,
@@ -557,7 +557,7 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
         )
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -567,7 +567,7 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
     assert any(
         finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
@@ -601,7 +601,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
             },
         )
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -611,7 +611,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
     withholding_pagos = {"111", "115", "123", "130", "131", "180", "184", "190", "193"}
     blocked = {
@@ -678,7 +678,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
             },
         )
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -688,7 +688,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
     assert report.granted_verificado_completo is True
     assert not any(
@@ -884,7 +884,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                 approved_verification_report_id=_fixture_report_id(revision_id),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
                 workflow_profile=workflow_profile(),
                 operation=operation,
@@ -959,7 +959,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 approved_verification_report_id=_fixture_report_id(revision_id),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
                 workflow_profile=workflow_profile(),
                 operation=operation,
@@ -1055,7 +1055,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                 approved_verification_report_id=_fixture_report_id(revision_id),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
                 workflow_profile=filing_profile,
                 operation=operation,

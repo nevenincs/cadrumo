@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#website-repository-boundary'
 date: '2026-09-22'
-modified: '2026-09-22'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ae49d049a1bf78c9bc79d391cd87da1823db13473b0f0fcf190cd4511b061a08'
+body_hash: 'sha256:9914183e895d26f139e3b38dd996845e55df019198271466b8ed7be076b8fd57'
 related:
   - "[[2026-08-23-website-repository-boundary-adr]]"
 ---
@@ -143,9 +143,7 @@ neither command publishes product documentation.
   command-line entry point. `infra/docs-static-site.yaml` is its CloudFormation
   authority for the private versioned bucket, origin access control, CloudFront
   distribution, certificate/alias integration, and bucket policy.
-- In marketing, `dev/docs_composition.py` validates the pinned `.cli-src/engine`
   gitlink, invokes the product build in user scope, stages only `dist/docs`, and
-  checks the composed artifact. `dev/deploy/publish_site.py` is a distinct
   landing-site publisher whose protected-prefix rule excludes `docs/*` on every
   synchronization pass.
 
@@ -261,12 +259,7 @@ audit is intentionally advisory because it depends on the network.
 - `.gitmodules:1` pins `.cli-src/engine` to the Cadrumo repository. The committed
   gitlink was `b2831163aa24665eeda982d84e644bfbb081394e` at the audited marketing
   commit.
-- `dev/docs_composition.py:392` runs the pinned engine's
-  `python -m dev.docs.build --scope user`; `dev/docs_composition.py:430` resolves an
   optional `CADRUMO_ENGINE` override or the pinned submodule; and
-  `dev/docs_composition.py:442` validates project identity and gitlink equality.
-- `dev/docs_composition.py:2830` safely replaces only `dist/docs`, and
-  `dev/docs_composition.py:2877` builds the landing site, builds pinned user docs,
   normalizes the staged copy, and composes both into one local `dist/` artifact.
   `justfile:58` exposes this as `check-build`; `justfile:84` adds composed-link and
   browser-navigation checks; `justfile:175` aliases it as `docs-build`.
@@ -276,14 +269,8 @@ audit is intentionally advisory because it depends on the network.
   checks with page-only search. It contains no deployment job and no secret
   reference.
 - The live marketing publisher deliberately does not call the composition builder.
-  `dev/deploy/publish_site.py:99` runs only the landing `npm run build` into `build/`.
-  `dev/deploy/publish_site.py:79` declares `docs/*` protected, and
-  `dev/deploy/publish_site.py:172` applies that exclusion to every S3 sync pass.
-  `dev/deploy/publish_site.py:413` refuses all automated environments;
   `justfile:186` exposes a local AWS dry run and `justfile:190` exposes a separately
   confirmed, local-human-only root publish.
-- `dev/deploy/tests/test_publish_site.py:47` pins the protected docs prefix, and
-  `dev/deploy/tests/test_publish_site.py:196` proves every root-publisher sync pass
   excludes it. Marketing can build a docs-bearing local artifact but cannot publish
   live documentation through its deployment command.
 
@@ -298,12 +285,4 @@ last writer or identify the deployed commit. The current-source localized
 `/docs/es/` path returned HTTP 404, so the live surface must not be represented as a
 proven deployment of the audited product commit.
 
-The focused product suites
-`dev/deploy/tests/test_docs_static_site.py`,
-`dev/deploy/tests/test_publish_authority.py`,
-`dev/deploy/tests/test_deploy_lane_isolation.py`, and
-`dev/docs/tests/test_deployment_search_parity.py` passed 55 tests. The marketing
-composition and publisher suites in `dev/docs/tests/test_docs_composition.py` and
-`dev/deploy/tests/test_publish_site.py` also exited successfully. These results prove
-the checked-in boundaries and fail-closed behavior; they do not substitute for a
-successful credentialed dry run, CloudFormation inspection, or release publish.
+The focused product suites `dev/deploy/tests/test_docs_static_site.py`, `dev/deploy/tests/test_publish_authority.py`, `dev/deploy/tests/test_deploy_lane_isolation.py`, and `dev/docs/tests/test_deployment_search_parity.py` passed 55 tests. These results prove the checked-in boundaries and fail-closed behavior; they do not substitute for a successful credentialed dry run, CloudFormation inspection, or release publish.

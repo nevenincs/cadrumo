@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#tui-entrypoint-separation'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca1eccf573230b2bc058b70dd9890ee1a94ece6d3eaa28b29d5d09643b12eab1'
+body_hash: 'sha256:8955e84c7842ae207c7e65d276006def94c5d5cada3e93b5ff7fd5a9fd2050e7'
 related:
   - "[[2026-08-11-tui-interface-adr]]"
-  - "[[2026-09-07-tuimodelo-plan]]"
 ---
 
 # `tui-entrypoint-separation` research: `command capability decoupling`
@@ -19,19 +18,19 @@ The existing global `--tui` request treats command-graph metadata as a TUI routi
 
 ### The command graph currently owns TUI reachability
 
-`TuiCapability` is a two-value enum on every `CommandSpec`, defaulted to `NOT_IMPLEMENTED`; five CLI nodes are manually marked `AVAILABLE`. `src/cadrumo/entrypoints/cli/command_spec.py:732`; `src/cadrumo/entrypoints/cli/_root_command_specs.py:44`; `src/cadrumo/entrypoints/cli/_modelo_work_command_specs.py:305`; `src/cadrumo/entrypoints/cli/config/_custody_command_specs.py:137`; `src/cadrumo/entrypoints/cli/config/_profile_inventory_specs.py:70`.
+`TuiCapability` is a two-value enum on every `CommandSpec`, defaulted to `NOT_IMPLEMENTED`; five CLI nodes are manually marked `AVAILABLE`. `src/cadrumo/entrypoints/cli/command_spec.py:732`; `src/cadrumo/entrypoints/cli/_root_command_specs.py:44`; the former source file; `src/cadrumo/entrypoints/cli/config/_custody_command_specs.py:137`; `src/cadrumo/entrypoints/cli/config/_profile_inventory_specs.py:70`.
 
-The option is not passive metadata. The root captures `--tui`, the runtime enforces it before executable leaves, and `_tui_policy` selects refusal versus full-screen routing. `src/cadrumo/entrypoints/cli/_root_command_specs.py:127`; `src/cadrumo/entrypoints/cli/_root_cli.py:29`; `src/cadrumo/entrypoints/cli/_command_runtime.py:184`; `src/cadrumo/entrypoints/cli/_tui_policy.py:12`.
+The option is not passive metadata. The root captures `--tui`, the runtime enforces it before executable leaves, and `_tui_policy` selects refusal versus full-screen routing. `src/cadrumo/entrypoints/cli/_root_command_specs.py:127`; `src/cadrumo/entrypoints/cli/_root_cli.py:29`; `src/cadrumo/entrypoints/cli/_command_runtime.py:184`; the former source file.
 
 ### Removing the mapping has defined consumers beyond the CLI
 
-The modelo action denominator consumes `TuiCapability`, so deleting the field without changing the gate would either break the development surface or retain the same false coupling under another name. The global-request tests assert the complete available set and TUI tests assert the current request spelling. `dev/quality/modelo_workspace_action_denominator.py`; `src/cadrumo/entrypoints/cli/tests/test_global_tui_request.py:72`; `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py:57`.
+The modelo action denominator consumes `TuiCapability`, so deleting the field without changing the gate would either break the development surface or retain the same false coupling under another name. The global-request tests assert the complete available set and TUI tests assert the current request spelling. the former source file; the former source file; `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py:57`.
 
 Modelo select/review and profile-manager paths also branch on the root request and open destination sessions. A complete separation must remove or relocate those destination-routing branches, not merely turn the capability values off. `src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py:57`; `src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py:20`; `src/cadrumo/entrypoints/cli/config/_manager_dispatch.py:63`.
 
 ### A dedicated launcher already has an import-safe implementation path
 
-The CLI launches the TUI as a child interpreter through a shared entrypoint protocol; it does not import the TUI package. That launcher can be a narrow dedicated-command handler provided command-specific destination routing does not remain in the CLI. `src/cadrumo/entrypoints/cli/_tui_session.py:35`; `src/cadrumo/entrypoints/full_screen_session_protocol.py`.
+The CLI launches the TUI as a child interpreter through a shared entrypoint protocol; it does not import the TUI package. That launcher can be a narrow dedicated-command handler provided command-specific destination routing does not remain in the CLI. the former source file; the former source file.
 
 The active CLI boundary permits only `config` and `app` at the root. Consequently, `aeat tui` is outside the live command contract; `aeat app tui` is the compatible dedicated command form. A root-level `tui` family is an alternative only if its separate root-hierarchy authority and the project rule are amended first. `.codex/rules/aeat-cli-contract.md`; `.codex/rules/aeat-architecture-boundaries.md`; `.vault/adr/2026-07-02-agent-harness-refoundation-adr.md:206`.
 
@@ -47,14 +46,13 @@ The evidence supports three options for the ADR to decide: retain the global map
 - `src/cadrumo/entrypoints/cli/_root_command_specs.py:44`
 - `src/cadrumo/entrypoints/cli/_root_cli.py:29`
 - `src/cadrumo/entrypoints/cli/_command_runtime.py:184`
-- `src/cadrumo/entrypoints/cli/_tui_policy.py:12`
-- `src/cadrumo/entrypoints/cli/_tui_session.py:35`
+
 - `src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py:57`
 - `src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py:20`
 - `src/cadrumo/entrypoints/cli/config/_manager_dispatch.py:63`
-- `src/cadrumo/entrypoints/cli/tests/test_global_tui_request.py:72`
+
 - `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py:57`
-- `dev/quality/modelo_workspace_action_denominator.py`
+
 - `.codex/rules/aeat-cli-contract.md`
 - `.codex/rules/aeat-architecture-boundaries.md`
 - `.vault/adr/2026-07-02-agent-harness-refoundation-adr.md:206`

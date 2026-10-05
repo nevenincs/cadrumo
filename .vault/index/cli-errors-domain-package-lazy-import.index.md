@@ -4,12 +4,11 @@ tags:
   - '#index'
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6919a70c22fd35179d3c0f5d4c6fc06f44ff5268558f39127efb60d605022a2'
+body_hash: 'sha256:7588f60791d445780657746c75ffad03ed41590a70779c10c9e36fd7e25fe102'
 related:
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-adr]]'
-  - '[[2026-06-03-cli-errors-domain-package-lazy-import-plan]]'
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-research]]'
 ---
 
@@ -22,10 +21,6 @@ Auto-generated index of all documents tagged with `#cli-errors-domain-package-la
 ### adr
 
 - `2026-06-03-cli-errors-domain-package-lazy-import-adr` - `cli-errors-domain-package-lazy-import` adr: `Lazy import via PEP 562 dispatch for the user_profile domain package boundary` | (**status:** `accepted`)
-
-### plan
-
-- `2026-06-03-cli-errors-domain-package-lazy-import-plan` - `cli-errors-domain-package-lazy-import` `Lazy domain-package boundary execution` plan
 
 ### research
 

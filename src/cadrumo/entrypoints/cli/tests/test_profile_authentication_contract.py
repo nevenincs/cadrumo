@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
 
+from .._command_secret_contracts import MachineSecretChannelKind, MachineSecretFieldSpec, ProfileSecretChannelKind
 from .._profile_authentication_contract import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
@@ -19,13 +20,8 @@ from .._profile_authentication_contract import (
     resolve_profile_secret_model,
     root_profile_secret_model,
 )
+from ..command_parameter_contracts import OptionSpec
 from ..command_schema import command_registration_metadata, command_registration_projection
-from ..command_spec import (
-    MachineSecretChannelKind,
-    MachineSecretFieldSpec,
-    OptionSpec,
-    ProfileSecretChannelKind,
-)
 from ..command_specs import COMMAND_GRAPH
 from ..config.secure_input import MACHINE_SECRET_MAX_BYTES, ProfileSecretChannel, select_profile_secret_channel
 from ..errors import CliRefusedBoundaryError
@@ -87,7 +83,12 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.profile.archive.import",
         "config.profile.resume",
         "config.profile.automation.approve",
+        "config.profile.automation.create",
+        "config.profile.automation.change",
         "config.auth.certificate.secret.set",
+        "ledger.account.add",
+        "ledger.account.update",
+        "modelo.m360.declare",
     }
     for node in adopters:
         assert node.spec.kind == "leaf"
@@ -156,7 +157,6 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     for profile_free in ("config.provision.status", "config.provision.verify", "config.provision.pull"):
         assert postures[profile_free] is ProfileAuthenticationPosture.NOT_APPLICABLE, profile_free
     assert postures["config.check"] is ProfileAuthenticationPosture.RESUME_FALLBACK
-    assert postures["app.diagnostics.telemetry.flush"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     metadata = {row.command: row.profile_authentication for row in command_registration_metadata()}
     assert metadata == {identity: posture.value for identity, posture in postures.items() if identity is not None}
 

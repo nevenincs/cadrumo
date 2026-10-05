@@ -205,16 +205,15 @@ class TestPullRelationEditGrounding:
     from, when the same value can be a local filing's carry, a live AEAT read or
     a hand edit, and only the provenance tells them apart.
 
-    The projection is exercised through the adapter's own
-    :func:`relation_edit_payload`, so what is asserted is the real emit path
-    rather than a restated dict.
+    The projection is the one the CLI applies to each pulled edit: the typed
+    edit's JSON dump validated by ``ModeloSpreadsheetPullRelationEditPayload``.
     """
 
     def test_every_recovered_grounding_field_survives_the_projection(self) -> None:
         from datetime import UTC, datetime
         from decimal import Decimal
 
-        from ....adapters.outbound.google.calc_sheets_pull_records import RelationEdit, relation_edit_payload
+        from ....adapters.outbound.google.calc_sheets_pull_records import RelationEdit
 
         edit = RelationEdit(
             relation="m130-cuota-carry",
@@ -231,7 +230,7 @@ class TestPullRelationEditGrounding:
 
         raw = _base_pull_payload()
         raw["relation_edits_populated"] = 1
-        raw["relation_edits"] = [relation_edit_payload(edit)]
+        raw["relation_edits"] = [edit.model_dump(mode="json")]
         result = ModeloSpreadsheetPullResult.model_validate(raw)
 
         (row,) = result.relation_edits
@@ -245,7 +244,7 @@ class TestPullRelationEditGrounding:
         assert row.source_casilla_ids == [_INGRESOS_CASILLA]
         assert row.legal_refs == [_LEGAL_REF]
         assert row.source_refs == [_SOURCE_REF]
-        assert row.resolved_at == "2026-03-01T09:30:00+00:00"
+        assert row.resolved_at == "2026-03-01T09:30:00Z"
 
     def test_a_manually_edited_relation_carries_no_invented_grounding(self) -> None:
         """A relation edited without an apply round-trip genuinely has none.
@@ -253,11 +252,11 @@ class TestPullRelationEditGrounding:
         The optional fields must stay absent rather than acquire defaults that
         would assert a provenance the workbook never recorded.
         """
-        from ....adapters.outbound.google.calc_sheets_pull_records import RelationEdit, relation_edit_payload
+        from ....adapters.outbound.google.calc_sheets_pull_records import RelationEdit
 
         raw = _base_pull_payload()
         raw["relation_edits_populated"] = 1
-        raw["relation_edits"] = [relation_edit_payload(RelationEdit(relation="m130-cuota-carry"))]
+        raw["relation_edits"] = [RelationEdit(relation="m130-cuota-carry").model_dump(mode="json")]
         result = ModeloSpreadsheetPullResult.model_validate(raw)
 
         (row,) = result.relation_edits

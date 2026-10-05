@@ -3,10 +3,9 @@ tags:
   - "#audit"
   - "#aeat-cli-userdocs-hardening"
 date: 2026-06-05
-modified: '2026-07-17'
-body_hash: 'sha256:72614ee6ccfe6ab255588a7668978ebbadcbba5955a640cecfc6d6c198ad0ed9'
+modified: '2026-10-03'
+body_hash: 'sha256:22b78e64bd4018125da97835418895196d244be14397cc1b44c449895bf58df5'
 related:
-  - "[[2026-06-04-aeat-cli-userdocs-hardening-plan]]"
   - "[[2026-07-13-docs-cli-sequences-adr]]"
   - "[[2026-06-04-aeat-cli-userdocs-hardening-research]]"
 ---
@@ -25,8 +24,8 @@ The audit used three inputs:
    escape hatches: `work unit`, `calculation revision`, `registry revision`,
    `internal audit IDs`, `checksum`, `SHA-256`, `artifact`, `glossary`,
    `issue tracker`, `Missing Handbook Surfaces`, and related terms.
-2. A zero-context editorial review of `docs/index.md`, `docs/getting-started.md`,
-   `docs/how-to/index.md`, and `docs/tutorials/index.md` against the
+2. A zero-context editorial review of `docs/index.md`, the retired document,
+   `docs/how-to/index.md`, and the retired document against the
    VaultSpec documentation prose and Diataxis rules.
 3. A local Diataxis review of whether each occurrence belonged in a beginner
    route, task recipe, tutorial, explanation, or reference page.
@@ -38,11 +37,11 @@ list instead of helping them continue.
 
 ## Findings applied in this pass
 
-- `docs/getting-started.md` opened with "artifacts" and introduced work units
+- the retired document opened with "artifacts" and introduced work units
   and calculation revisions as core beginner concepts. The page now opens with
   the user outcome and uses "filing target" and "draft calculation" before
   linking to the advanced filing-spine explanation.
-- `docs/tutorials/index.md` used an internal-ID title, sent readers to the
+- the retired document used an internal-ID title, sent readers to the
   glossary before the tutorial story started, exposed a repository fixture path
   as a prerequisite, used "Provision your tax form", and recorded the local
   filed marker before export. The page now uses a learning-outcome title,

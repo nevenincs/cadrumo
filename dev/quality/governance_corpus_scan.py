@@ -297,27 +297,7 @@ def governance_path_hits(tree: ast.Module) -> list[tuple[int, GovernanceRefForm,
     # One walk suffices: it visits a parent before its children, so an
     # f-string's literal parts are marked skipped before they are reached.
     for node in ast.walk(tree):
-        if isinstance(node, ast.JoinedStr):
-            skip.update(id(part) for part in node.values if isinstance(part, ast.Constant))
-            for part in node.values:
-                if not (isinstance(part, ast.Constant) and isinstance(part.value, str)):
-                    continue
-                root = names_governance_directory(part.value)
-                if root is not None:
-                    hits.append((node.lineno, GovernanceRefForm.FSTRING, root, part.value))
-        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
-            root = _is_bare_governance_segment(node.right) or _is_bare_governance_segment(node.left)
-            if root is not None:
-                detail = f'{ast.unparse(node)!s} (path join onto "{root}")'
-                hits.append((node.lineno, GovernanceRefForm.PATH_JOIN, root, detail))
-        elif isinstance(node, ast.Call):
-            assembled = _call_assembled_governance_segment(node)
-            if assembled is not None:
-                hits.append((node.lineno, GovernanceRefForm.CALL_JOIN, assembled[0], assembled[1]))
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skip:
-            root = names_governance_directory(node.value)
-            if root is not None:
-                hits.append((node.lineno, GovernanceRefForm.LITERAL, root, node.value))
+        _collect_governance_path_hit(node, skip, hits)
     return hits
 
 
@@ -385,13 +365,7 @@ def find_governance_prose_violations(
         comments = _comment_lines(source) if _spells_governance_root(source) else []
         for kind, lines in (("string", _prose_string_lines(tree)), ("comment", comments)):
             for lineno, text in lines:
-                if not _spells_governance_root(text):
-                    continue
-                for token in text.split():
-                    root = prose_token_names_governance_tree(token)
-                    if root is not None:
-                        violations.append(GovernanceProseViolation(rel, lineno, kind, root, text.strip()))
-                        break
+                _collect_governance_prose_line(lineno, text, kind, rel, violations)
     report_unread(
         "governance-tree prose scan",
         "these modules were not read or parsed, so a governance-tree reference in a docstring or "
@@ -497,3 +471,55 @@ def live_governance_roots() -> frozenset[str]:
     quietly stop naming anything real.
     """
     return frozenset(root for root in GOVERNANCE_TREE_ROOTS if (REPO_ROOT / root).is_dir())
+
+
+def _collect_governance_path_hit(
+    node: ast.AST, skip: set[int], hits: list[tuple[int, GovernanceRefForm, str, str]]
+) -> None:
+    """Collect governance path hit."""
+    if isinstance(node, ast.JoinedStr):
+        _collect_governance_fstring(node, skip, hits)
+    elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        _collect_governance_path_join(node, hits)
+    elif isinstance(node, ast.Call):
+        assembled = _call_assembled_governance_segment(node)
+        if assembled is not None:
+            hits.append((node.lineno, GovernanceRefForm.CALL_JOIN, assembled[0], assembled[1]))
+    elif isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skip:
+        root = names_governance_directory(node.value)
+        if root is not None:
+            hits.append((node.lineno, GovernanceRefForm.LITERAL, root, node.value))
+
+
+def _collect_governance_prose_line(
+    lineno: int, text: str, kind: str, rel: str, violations: list[GovernanceProseViolation]
+) -> None:
+    """Collect governance prose line."""
+    if not _spells_governance_root(text):
+        return
+    for token in text.split():
+        root = prose_token_names_governance_tree(token)
+        if root is not None:
+            violations.append(GovernanceProseViolation(rel, lineno, kind, root, text.strip()))
+            break
+
+
+def _collect_governance_fstring(
+    node: ast.JoinedStr, skip: set[int], hits: list[tuple[int, GovernanceRefForm, str, str]]
+) -> None:
+    """Collect governance fstring."""
+    skip.update(id(part) for part in node.values if isinstance(part, ast.Constant))
+    for part in node.values:
+        if not (isinstance(part, ast.Constant) and isinstance(part.value, str)):
+            continue
+        root = names_governance_directory(part.value)
+        if root is not None:
+            hits.append((node.lineno, GovernanceRefForm.FSTRING, root, part.value))
+
+
+def _collect_governance_path_join(node: ast.BinOp, hits: list[tuple[int, GovernanceRefForm, str, str]]) -> None:
+    """Collect governance path join."""
+    root = _is_bare_governance_segment(node.right) or _is_bare_governance_segment(node.left)
+    if root is not None:
+        detail = f'{ast.unparse(node)!s} (path join onto "{root}")'
+        hits.append((node.lineno, GovernanceRefForm.PATH_JOIN, root, detail))

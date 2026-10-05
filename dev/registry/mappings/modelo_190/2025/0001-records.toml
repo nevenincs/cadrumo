@@ -1,0 +1,1624 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "190"
+design_epoch = "2025"
+source_ref = "aeat-dr-190-2025"
+source_sha256 = "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-190-declarante"
+record_type = "declarante"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+export_record_id = "modelo-190-perceptor"
+record_type = "perceptor"
+required = false
+repeat = "binding_rows"
+binding_record = "perceptor"
+
+[records.row_field_casilla_ids]
+perceptor_tax_id = "perc.nif"
+perceptor_legal_name = "perc.nombre"
+clave = "perc.clave"
+subclave = "perc.subclave"
+percibido_dinerario = "perc.percepcion-dineraria"
+percibido_especie = "perc.percepcion-especie"
+retencion_practicada = "perc.retenciones-practicadas"
+ingreso_a_cuenta = "perc.ingresos-a-cuenta"
+province_code = "perc.provincia"
+territorial_deduction_clave = "perc.ceuta-melilla"
+perceptor_birth_year = "perc.ano-nacimiento"
+perceptor_situacion_familiar = "perc.situacion-familiar"
+representative_tax_id = "perc.nif-representante-legal"
+ingreso_a_cuenta_repercutido = "perc.ingresos-a-cuenta-repercutidos"
+accrual_year = "perc.ejercicio-devengo"
+spouse_or_unit_titular_tax_id = "perc.nif-conyuge-titular-unidad"
+disability_clave = "perc.discapacidad"
+contract_relation_clave = "perc.contrato-relacion"
+unit_convivencia_titular_clave = "perc.titular-unidad-convivencia"
+geographic_mobility_clave = "perc.movilidad-geografica"
+descendants_under_3_total = "perc.descendientes-menores-3-total"
+descendants_under_3_whole = "perc.descendientes-menores-3-entero"
+descendants_rest_total = "perc.descendientes-resto-total"
+descendants_rest_whole = "perc.descendientes-resto-entero"
+descendants_disabled_33_65_total = "perc.descendientes-discapacidad-33-65-total"
+descendants_disabled_33_65_whole = "perc.descendientes-discapacidad-33-65-entero"
+descendants_disabled_mobility_total = "perc.descendientes-discapacidad-movilidad-total"
+descendants_disabled_mobility_whole = "perc.descendientes-discapacidad-movilidad-entero"
+descendants_disabled_65_plus_total = "perc.descendientes-discapacidad-65-total"
+descendants_disabled_65_plus_whole = "perc.descendientes-discapacidad-65-entero"
+ascendants_under_75_total = "perc.ascendientes-menores-75-total"
+ascendants_under_75_whole = "perc.ascendientes-menores-75-entero"
+ascendants_75_plus_total = "perc.ascendientes-75-mas-total"
+ascendants_75_plus_whole = "perc.ascendientes-75-mas-entero"
+ascendants_disabled_33_65_total = "perc.ascendientes-discapacidad-33-65-total"
+ascendants_disabled_33_65_whole = "perc.ascendientes-discapacidad-33-65-entero"
+ascendants_disabled_mobility_total = "perc.ascendientes-discapacidad-movilidad-total"
+ascendants_disabled_mobility_whole = "perc.ascendientes-discapacidad-movilidad-entero"
+ascendants_disabled_65_plus_total = "perc.ascendientes-discapacidad-65-total"
+ascendants_disabled_65_plus_whole = "perc.ascendientes-discapacidad-65-entero"
+first_child_compute = "perc.computo-hijo-1"
+second_child_compute = "perc.computo-hijo-2"
+third_child_compute = "perc.computo-hijo-3"
+housing_loan_communication_clave = "perc.prestamos-vivienda-clave"
+reducciones_aplicables = "perc.reducciones-aplicables"
+gastos_deducibles = "perc.gastos-deducibles"
+pension_compensatoria = "perc.pension-compensatoria"
+anualidades_alimentos = "perc.anualidades-alimentos"
+incapacity_cash_perception = "perc.incapacidad-dineraria-percepcion"
+incapacity_cash_withholding = "perc.incapacidad-dineraria-retenciones"
+incapacity_kind_value = "perc.incapacidad-especie-valoracion"
+incapacity_kind_ingreso_a_cuenta = "perc.incapacidad-especie-ingresos-a-cuenta"
+incapacity_kind_repercutido = "perc.incapacidad-especie-repercutidos"
+complemento_infancia_clave = "perc.complemento-ayuda-infancia"
+foral_retention_estatal = "perc.retenciones-forales-estatal"
+foral_retention_navarra = "perc.retenciones-forales-navarra"
+foral_retention_araba = "perc.retenciones-forales-araba"
+foral_retention_gipuzkoa = "perc.retenciones-forales-gipuzkoa"
+foral_retention_bizkaia = "perc.retenciones-forales-bizkaia"
+emerging_stock_excess_clave = "perc.excesos-acciones-emergentes"
+startup_fund_rendimientos_clave = "perc.rendimientos-fondos-emprendimiento"
+pension_prestacion_jubilacion = "perc.prestacion-jubilacion"
+pension_prestacion_viudedad = "perc.prestacion-viudedad"
+pension_prestacion_incapacidad = "perc.prestacion-incapacidad"
+pension_prestacion_no_contributiva = "perc.prestacion-no-contributiva"
+pension_prestacion_resto = "perc.prestacion-resto"
+
+[[entries]]
+export_field_id = "modelo-190-decl-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 67
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-190-decl-modelo"
+kind = "literal"
+literal = "190"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 69
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-190-decl-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 71
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-190-decl-nif"
+kind = "header"
+producer_key = "presenter.tax_id"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 75
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-190-decl-apellidos-razon-social"
+kind = "header"
+producer_key = "taxpayer.full_name"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 89
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-190-decl-tipo-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 102
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-190-decl-persona-contacto-telefono"
+kind = "casilla"
+casilla_id = "decl.persona-contacto-telefono"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 105
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "7"
+
+[entries.part]
+offset = 59
+length = 9
+aeat_type = "Numérico"
+statement = "59-67 TELÉFONO: Campo numérico de 9 posiciones."
+
+[[entries]]
+export_field_id = "modelo-190-decl-persona-contacto-nombre"
+kind = "casilla"
+casilla_id = "decl.persona-contacto-nombre"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 105
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "7"
+
+[entries.part]
+offset = 68
+length = 40
+aeat_type = "Alfanumérico"
+statement = "68-107 APELLIDOS Y NOMBRE: Se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden. Rendimientos del trabajo y de actividades económicas, premios y"
+
+[[entries]]
+export_field_id = "modelo-190-decl-numero-identificativo"
+kind = "casilla"
+casilla_id = "decl.numero-identificativo"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 122
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-190-decl-complementaria"
+kind = "casilla"
+casilla_id = "decl.complementaria"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 127
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[entries.part]
+offset = 121
+length = 1
+aeat_type = "Alfabético"
+statement = "121 DECLARACIÓN COMPLEMENTARIA: Se consignará una «C» si la presentación de esta declaración tiene por objeto incluir percepciones que, debiendo haber figurado en otra declaración del mismo ejercicio presentada anteriormente, hubieran sido completamente omitidas en la misma. La presentación de una declaración complementaria que tenga por objeto la modificación del contenido de datos declarados en otra declaración del mismo ejercicio presentada anteriormente se realizará desde el trámite de “consulta y modificación de declaraciones” del procedimiento del modelo 190, en la Sede electrónica de la Agencia Tributaria (https://sede.agenciatriburia.gob.es)."
+
+[[entries]]
+export_field_id = "modelo-190-decl-sustitutiva"
+kind = "casilla"
+casilla_id = "decl.sustitutiva"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 127
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[entries.part]
+offset = 122
+length = 1
+aeat_type = "Alfabético"
+statement = "122 DECLARACIÓN SUSTITUTIVA: Se consignará una «S» si la presentación tiene como objeto anular y sustituir completamente a otra declaración anterior, del mismo ejercicio. Una declaración sustitutiva solo puede anular a una única declaración anterior."
+
+[[entries]]
+export_field_id = "modelo-190-decl-numero-identificativo-anterior"
+kind = "casilla"
+casilla_id = "decl.numero-identificativo-anterior"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-190-decl-total-percepciones"
+kind = "casilla"
+casilla_id = "decl.total-percepciones"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 166
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-190-decl-percepciones-total"
+kind = "casilla"
+casilla_id = "decl.percepciones-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 180
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-190-decl-retenciones-total-integer-part"
+kind = "casilla"
+casilla_id = "decl.retenciones-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 244
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-decl-retenciones-total-fractional-digits"
+kind = "casilla"
+casilla_id = "decl.retenciones-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 248
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-decl-correo-electronico"
+kind = "casilla"
+casilla_id = "decl.correo-electronico"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 251
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-190-decl-blancos-226"
+kind = "filler"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 256
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-190-decl-sello-electronico"
+kind = "filler"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 257
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-190-perc-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 281
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-190-perc-modelo"
+kind = "literal"
+literal = "190"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 283
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-190-perc-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 285
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-190-perc-declarante-nif"
+kind = "header"
+producer_key = "presenter.tax_id"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 289
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-190-perc-nif"
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-190-perc-nif-representante-legal"
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif-representante"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 333
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-190-perc-nombre"
+kind = "binding"
+binding = "modelo-190-perceptor-row-name"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 346
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-190-perc-codigo-provincia"
+kind = "binding"
+binding = "modelo-190-perceptor-row-provincia"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 358
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-190-perc-clave"
+kind = "binding"
+binding = "modelo-190-perceptor-row-clave"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 446
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-190-perc-subclave"
+kind = "binding"
+binding = "modelo-190-perceptor-row-subclave"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 796
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-190-perc-signo-percepcion-dineraria"
+kind = "binding"
+binding = "modelo-190-perceptor-row-percibido-dinerario"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1479
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-percepcion-dineraria"
+kind = "binding"
+binding = "modelo-190-perceptor-row-percibido-dinerario"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1489
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-retenciones-practicadas"
+kind = "binding"
+binding = "modelo-190-perceptor-row-retencion-practicada"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1509
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-signo-percepcion-especie"
+kind = "binding"
+binding = "modelo-190-perceptor-row-percibido-especie"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1545
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-percepcion-especie"
+kind = "binding"
+binding = "modelo-190-perceptor-row-percibido-especie"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1556
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-ingresos-a-cuenta"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ingreso-a-cuenta"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1580
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-ingresos-a-cuenta-repercutidos"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ingreso-a-cuenta-repercutido"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1612
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-ejercicio-devengo"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ejercicio-devengo"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1636
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-190-perc-ceuta-melilla"
+kind = "binding"
+binding = "modelo-190-perceptor-row-territorial-deduccion"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1726
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-190-perc-ano-nacimiento"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ano-nacimiento"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1775
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-190-perc-situacion-familiar"
+kind = "binding"
+binding = "modelo-190-perceptor-row-situacion-familiar"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1782
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-190-perc-nif-conyuge"
+kind = "binding"
+binding = "modelo-190-perceptor-row-nif-conyuge-titular"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1809
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-190-perc-discapacidad"
+kind = "binding"
+binding = "modelo-190-perceptor-row-discapacidad"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1847
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-190-perc-contrato-relacion"
+kind = "binding"
+binding = "modelo-190-perceptor-row-contrato-relacion"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1873
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "19"
+
+[[entries]]
+export_field_id = "modelo-190-perc-titular-unidad-convivencia"
+kind = "binding"
+binding = "modelo-190-perceptor-row-titular-unidad"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1949
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-190-perc-movilidad-geografica"
+kind = "binding"
+binding = "modelo-190-perceptor-row-movilidad-geografica"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1964
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "21"
+
+[[entries]]
+export_field_id = "modelo-190-perc-reducciones-aplicables-integer-part"
+kind = "binding"
+binding = "modelo-190-perceptor-row-reducciones"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2016
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-reducciones-aplicables-fractional-digits"
+kind = "binding"
+binding = "modelo-190-perceptor-row-reducciones"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2020
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-gastos-deducibles-integer-part"
+kind = "binding"
+binding = "modelo-190-perceptor-row-gastos-deducibles"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2064
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-gastos-deducibles-fractional-digits"
+kind = "binding"
+binding = "modelo-190-perceptor-row-gastos-deducibles"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2067
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-pensiones-compensatorias-integer-part"
+kind = "binding"
+binding = "modelo-190-perceptor-row-pension-compensatoria"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2086
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-pensiones-compensatorias-fractional-digits"
+kind = "binding"
+binding = "modelo-190-perceptor-row-pension-compensatoria"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2090
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-anualidades-alimentos-integer-part"
+kind = "binding"
+binding = "modelo-190-perceptor-row-anualidades-alimentos"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2109
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-anualidades-alimentos-fractional-digits"
+kind = "binding"
+binding = "modelo-190-perceptor-row-anualidades-alimentos"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2113
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-menores-3-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-menores-3-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "26"
+
+[entries.part]
+offset = 223
+length = 1
+aeat_type = "Numérico"
+statement = "223 «< 3 años. N.º Total»: Número de descendientes del perceptor que, dando derecho a éste al mínimo por descendientes, sean menores de 3 años de edad el 31 de diciembre del ejercicio al que corresponda la declaración. Los hijos adoptados y los acogidos se computarán en este campo siempre que la adopción o el acogimiento haya tenido lugar en el ejercicio al que corresponda la declaración o en los dos ejercicios anteriores. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-menores-3-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-menores-3-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "26"
+
+[entries.part]
+offset = 224
+length = 1
+aeat_type = "Numérico"
+statement = "224 «< 3 años. Por entero»: Se indicará, en su caso, el número de los descendientes menores de 3 años (posición 223) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-resto-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-resto-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "26"
+
+[entries.part]
+offset = 225
+length = 2
+aeat_type = "Numérico"
+statement = "225-226 «Resto. N.º Total»: Número de los demás descendientes del perceptor que, dando derecho a la aplicación del mínimo por descendientes, no estén incluidos en el campo «< 3 años». En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-resto-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-resto-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2124
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "26"
+
+[entries.part]
+offset = 227
+length = 2
+aeat_type = "Numérico"
+statement = "227-228 «Resto. Por entero»: se indicará, en su caso, el número de los descendientes anteriores (posición 225-226) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-disc-33-65-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-33-65-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "27"
+
+[entries.part]
+offset = 229
+length = 2
+aeat_type = "Numérico"
+statement = "229-230 «≥ 33% y < 65%. N.º Total»: Número de descendientes discapacitados cuyo grado de discapacidad sea igual o superior al 33 por 100 e inferior al 65 por 100. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-disc-33-65-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-33-65-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "27"
+
+[entries.part]
+offset = 231
+length = 2
+aeat_type = "Numérico"
+statement = "231-232 «≥ 33% y < 65%. Por entero»: se indicará, en su caso, el número de los descendientes anteriores (posiciones 229-230) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-disc-movilidad-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-movilidad-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "27"
+
+[entries.part]
+offset = 233
+length = 2
+aeat_type = "Numérico"
+statement = "233-234 «Movilidad Reducida. N.º Total»: Número de descendientes discapacitados que, habiendo sido incluidos en el campo «≥ 33% Y < 65%» anterior (posiciones 229-230) por tener un grado de discapacidad igual o superior al 33 por 100 e inferior al 65 por 100, acrediten, además, necesitar ayuda de terceras personas o movilidad reducida. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-disc-movilidad-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-movilidad-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "27"
+
+[entries.part]
+offset = 235
+length = 2
+aeat_type = "Numérico"
+statement = "235-236 «Movilidad Reducida. Por entero»: Se indicará, en su caso, el número de los descendientes anteriores (posiciones 233-234) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-disc-65-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-65-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "27"
+
+[entries.part]
+offset = 237
+length = 2
+aeat_type = "Numérico"
+statement = "237-238 «≥ 65%. N.º Total»: Número de descendientes discapacitados cuyo grado de discapacidad sea igual o superior al 65 por 100. En cualquier otro caso este campo se rellenará a ceros (0). Rendimientos del trabajo y de actividades económicas, premios y POSICION NATURALEZA DESCRIPCIÓN DE LOS CAMPOS"
+
+[[entries]]
+export_field_id = "modelo-190-perc-descendientes-disc-65-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-descendientes-disc-65-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2173
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "27"
+
+[entries.part]
+offset = 239
+length = 2
+aeat_type = "Numérico"
+statement = "239-240 «≥ 65%. Por entero»: Se indicará, en su caso, el número de los descendientes anteriores (posiciones 237-238) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-menores-75-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-menores-75-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "28"
+
+[entries.part]
+offset = 241
+length = 1
+aeat_type = "Numérico"
+statement = "241 «< 75 años. N.º Total»: Número de ascendientes del perceptor que tengan menos de 75 años de edad el 31 de diciembre del ejercicio al que corresponda la declaración. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-menores-75-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-menores-75-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "28"
+
+[entries.part]
+offset = 242
+length = 1
+aeat_type = "Numérico"
+statement = "242 «< 75 años. Por entero»: Se indicará, en su caso, el número de los ascendientes anteriores (posición 241) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-75-mas-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-75-mas-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "28"
+
+[entries.part]
+offset = 243
+length = 1
+aeat_type = "Numérico"
+statement = "243 «≥ 75 años. N.º Total»: Número total de ascendientes del perceptor que tengan 75 o más años de edad el 31 de diciembre del ejercicio al que corresponda la declaración. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-75-mas-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-75-mas-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2254
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "28"
+
+[entries.part]
+offset = 244
+length = 1
+aeat_type = "Numérico"
+statement = "244 «≥ 75 años. Por entero»: se indicará, en su caso, el número de los ascendientes anteriores (posición 243) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-disc-33-65-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-33-65-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "29"
+
+[entries.part]
+offset = 245
+length = 1
+aeat_type = "Numérico"
+statement = "245 «≥ 33% y < 65%. N.º Total»: Número de ascendientes discapacitados cuyo grado de discapacidad sea igual o superior al 33 por 100 e inferior al 65 por 100. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-disc-33-65-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-33-65-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "29"
+
+[entries.part]
+offset = 246
+length = 1
+aeat_type = "Numérico"
+statement = "246 «≥ 33% y < 65%. Por entero»: se indicará, en su caso, el número de los ascendientes anteriores (posición 245) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-disc-movilidad-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-movilidad-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "29"
+
+[entries.part]
+offset = 247
+length = 1
+aeat_type = "Numérico"
+statement = "247 «Movilidad Reducida. N.º Total»: Número de ascendientes discapacitados que, habiendo sido incluidos en el campo «≥ 33% y < 65%» anterior (posición 245) por tener un grado de discapacidad igual o superior al 33 por 100 e inferior al 65 por 100, acrediten, además, necesitar ayuda de terceras personas o movilidad reducida. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-disc-movilidad-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-movilidad-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "29"
+
+[entries.part]
+offset = 248
+length = 1
+aeat_type = "Numérico"
+statement = "248 «Movilidad Reducida. Por entero»: Se indicará, en su caso, el número de los ascendientes anteriores (posición 247) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-disc-65-total"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-65-total"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "29"
+
+[entries.part]
+offset = 249
+length = 1
+aeat_type = "Numérico"
+statement = "249 «≥ 65%. N.º Total»: Número de ascendientes discapacitados cuyo grado de discapacidad sea igual o superior al 65 por 100. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-ascendientes-disc-65-entero"
+kind = "binding"
+binding = "modelo-190-perceptor-row-ascendientes-disc-65-entero"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2293
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "29"
+
+[entries.part]
+offset = 250
+length = 1
+aeat_type = "Numérico"
+statement = "250 «≥ 65%. Por entero»: Se indicará, en su caso, el número de los ascendientes anteriores (posición 249) que han sido computados por entero a efectos de determinar el tipo de retención. En cualquier otro caso este campo se rellenará a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-computo-hijo-1"
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-1"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "30"
+
+[entries.part]
+offset = 251
+length = 1
+aeat_type = "Numérico"
+statement = "251 «Hijo 1.º»: Se indicará si el primer hijo ha sido computado por entero o por mitad a efectos de determinar el tipo de retención, de acuerdo a los siguientes valores: 1: Computado por entero. 2: Computado por mitad."
+
+[[entries]]
+export_field_id = "modelo-190-perc-computo-hijo-2"
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-2"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "30"
+
+[entries.part]
+offset = 252
+length = 1
+aeat_type = "Numérico"
+statement = "252 «Hijo 2.º»: Se indicará si el segundo hijo ha sido computado por entero o por mitad a efectos de determinar el tipo de retención, de acuerdo a los siguientes valores: 1: Computado por entero. 2: Computado por mitad."
+
+[[entries]]
+export_field_id = "modelo-190-perc-computo-hijo-3"
+kind = "binding"
+binding = "modelo-190-perceptor-row-computo-hijo-3"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2351
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "30"
+
+[entries.part]
+offset = 253
+length = 1
+aeat_type = "Numérico"
+statement = "253 «Hijo 3.º»: Se indicará si el tercer hijo ha sido computado por entero o por mitad a efectos de determinar el tipo de retención, de acuerdo a los siguientes valores: 1: Computado por entero. 2: Computado por mitad. En cualquier otro caso estos campos se rellenarán a ceros (0)."
+
+[[entries]]
+export_field_id = "modelo-190-perc-comunicacion-prestamos-vivienda"
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestamos-vivienda"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2397
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "31"
+
+[[entries]]
+export_field_id = "modelo-190-perc-signo-incapacidad-dineraria"
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-dineraria-percepcion"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2428
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "32"
+
+[entries.part]
+offset = 255
+length = 1
+aeat_type = "Alfanumérico"
+statement = "255 SIGNO DE LA PERCEPCIÓN ÍNTEGRA DERIVADA DE INCAPACIDAD LABORAL: Se cumplimentará este campo cuando las percepciones correspondan a cantidades reintegradas por el perceptor en el ejercicio, como consecuencia de haber sido indebida o excesivamente percibidas en ejercicios anteriores. En este caso se consignará una «N», en cualquier otro caso el contenido de este campo será un espacio."
+
+[[entries]]
+export_field_id = "modelo-190-perc-incapacidad-dineraria-percepcion"
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-dineraria-percepcion"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2428
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "32"
+
+[entries.part]
+offset = 256
+length = 13
+aeat_type = "Numérico"
+statement = "256-268 PERCEPCIÓN ÍNTEGRA (Dineraria) DERIVADA DE INCAPACIDAD LABORAL: Campo numérico de 13 posiciones. Se hará constar, sin signo y sin coma decimal, el importe íntegro anual de las percepciones dinerarias en concepto de incapacidad laboral abonadas directamente por el pagador al trabajador. Cuando la prestación dineraria por incapacidad laboral sea satisfecha por el empleador en virtud del respectivo acuerdo de colaboración con la Seguridad Social (ya sea esta colaboración de carácter voluntario u obligatorio), se hará constar en el campo “Clave de percepción” la clave “A”. En otro caso, estas percepciones se reflejarán en la Clave “B”, subclave 01. Los importes deben consignarse en euros. Este campo se subdivide en dos: 256-266 Parte entera del importe de la percepción íntegra. Si no tiene contenido se consignará a ceros. 267-268 Parte decimal del importe de la percepción íntegra. Si no tiene contenido se Rendimientos del trabajo y de actividades económicas, premios y consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-incapacidad-dineraria-retenciones"
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-dineraria-retenciones"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2428
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "32"
+
+[entries.part]
+offset = 269
+length = 13
+aeat_type = "Numérico"
+statement = "269-281 RETENCIONES PRACTICADAS SOBRE PRESTACIONES DERIVADAS DE INCAPACIDAD LABORAL: Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual efectivamente retenido a cuenta del Impuesto sobre la Renta de las Personas Físicas en relación con las percepciones dinerarias derivadas de incapacidad laboral consignadas en el campo anterior. Si algún perceptor no ha sufrido retención, este campo se consignará relleno a ceros. Los importes deben consignarse en euros. Este campo se subdivide en dos: 269-279 Parte entera del importe de las retenciones practicadas. Si no tiene contenido se consignará a ceros. 280-281 Parte decimal del importe de las retenciones practicadas. Si no tiene contenido se consignará a ceros. POSICION NATURALEZA DESCRIPCIÓN DE LOS CAMPOS"
+
+[[entries]]
+export_field_id = "modelo-190-perc-signo-incapacidad-especie"
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-especie-valoracion"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "33"
+
+[entries.part]
+offset = 282
+length = 1
+aeat_type = "Alfanumérico"
+statement = "282 SIGNO DE LA PERCEPCIÓN EN ESPECIE DERIVADA DE INCAPACIDAD LABORAL: Se cumplimentará este campo cuando el perceptor reintegre en este ejercicio percepciones en especie derivadas de incapacidad laboral, como consecuencia de haber sido indebida o excesivamente percibidas en ejercicios anteriores. En este caso se consignará una «N»; en cualquier otro caso el contenido de este campo será un espacio."
+
+[[entries]]
+export_field_id = "modelo-190-perc-incapacidad-especie-valoracion"
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-especie-valoracion"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "33"
+
+[entries.part]
+offset = 283
+length = 13
+aeat_type = "Numérico"
+statement = "283-295 VALORACIÓN DE LA PERCEPCIÓN EN ESPECIE DERIVADA DE INCAPACIDAD LABORAL: Campo numérico de 13 posiciones. Cuando, en virtud del respectivo acuerdo de colaboración con la Seguridad Social (ya sea esta colaboración de carácter voluntario u obligatorio), el empleador satisfaga prestaciones por incapacidad laboral en forma excepcional de prestaciones en especie, se harán constar en este campo, sin signo y sin coma decimal, la suma de las valoraciones correspondientes a dichas Rendimientos del trabajo y de actividades económicas, premios y percepciones en especie derivadas de incapacidad laboral efectivamente satisfechas en el ejercicio al perceptor de que se trate, determinadas con arreglo a lo establecido en el artículo 43 de la Ley del Impuesto y sin incluir en ningún caso el importe del ingreso a cuenta, haciendo constar en el campo “Clave de percepción” la clave “A”. POSICION NATURALEZA DESCRIPCIÓN DE LOS CAMPOS Los importes deben consignarse en euros. Este campo se subdivide en dos: 283-293 Parte entera del importe de la valoración; si no tiene contenido, se consignará a ceros. 294-295 Parte decimal del importe de la valoración; si no tiene contenido, se consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-incapacidad-especie-ingresos-a-cuenta"
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-especie-ingresos-a-cuenta"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "33"
+
+[entries.part]
+offset = 296
+length = 13
+aeat_type = "Numérico"
+statement = "296-308 INGRESOS A CUENTA EFECTUADOS POR PRESTACIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL: Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual efectivamente ingresado a cuenta por el pagador en relación con las percepciones en especie derivadas de incapacidad laboral consignadas en el campo anterior. Los importes deben consignarse en euros. Este campo se subdivide en dos: 296-306 Parte entera del importe de los ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros. 307-308 Parte decimal del importe de los ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-incapacidad-especie-repercutidos"
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-especie-repercutidos"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2495
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "33"
+
+[entries.part]
+offset = 309
+length = 13
+aeat_type = "Numérico"
+statement = "309-321 INGRESOS A CUENTA REPERCUTIDOS POR PRESTACIONES EN ESPECIE DERIVADAS DE INCAPACIDAD LABORAL: Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual de los ingresos a cuenta efectuados que, en su caso, el pagador de las retribuciones en especie derivadas de incapacidad laboral hubiera repercutido al perceptor. Los importes deben consignarse en euros. Este campo se subdivide en dos: Rendimientos del trabajo y de actividades económicas, premios y POSICION NATURALEZA DESCRIPCIÓN DE LOS CAMPOS 309-319 Parte entera del importe de los ingresos a cuenta repercutidos; si no tiene contenido se consignará a ceros. 320-321 Parte decimal del importe de los ingresos a cuenta repercutidos; si no tiene contenido se consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-complemento-ayuda-infancia"
+kind = "binding"
+binding = "modelo-190-perceptor-row-complemento-ayuda-infancia"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2600
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "34"
+
+[[entries]]
+export_field_id = "modelo-190-perc-retenciones-forales-estatal"
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-estatal"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "35"
+
+[entries.part]
+offset = 323
+length = 13
+aeat_type = "Numérico"
+statement = "323-335 HACIENDA ESTATAL. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refieren el artículo 10.1.f) segundo párrafo, del Convenio Económico entre el Estado y la Comunidad Foral de Navarra, aprobado por la Ley 28/1990, de 26 de diciembre, y el artículo 7.Uno.c) segundo párrafo, del Concierto Económico con la Comunidad Autónoma del País Vasco, aprobado por la Ley 12/2002, de 23 de mayo, efectivamente ingresados en la Hacienda Pública Estatal. No obstante, cuando las retenciones e ingresos a cuenta correspondientes a los rendimientos a que se refiere el párrafo anterior se hayan ingresado exclusivamente a la Hacienda Estatal, únicamente se cumplimentará este subcampo, consignando aquí el sumatorio de las casillas «Retenciones practicadas» (posiciones 95-107) e «Ingresos a cuenta efectuados» (posiciones 122- 134), previamente cumplimentadas, correspondientes a las prestaciones de la Clave E satisfechas a ese perceptor. Los importes deben consignarse en euros. Este campo se subdivide en dos: Rendimientos del trabajo y de actividades económicas, premios y POSICION NATURALEZA DESCRIPCIÓN DE LOS CAMPOS 323-333 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido, se consignará a ceros. 334-335 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido, se consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-retenciones-forales-navarra"
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-navarra"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "35"
+
+[entries.part]
+offset = 336
+length = 13
+aeat_type = "Numérico"
+statement = "336-348 COMUNIDAD FORAL DE NAVARRA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refiere el artículo el artículo 10.1.f) segundo párrafo, del Convenio Económico entre el Estado y la Comunidad Foral de Navarra, aprobado por la Ley 28/1990, de 26 de diciembre, efectivamente ingresados en la Comunidad Foral de Navarra. En otro caso, este campo se consignará relleno a ceros. Los importes deben consignarse en euros. Este campo se subdivide en dos: 336-346 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros. 347-348 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-retenciones-forales-araba"
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-araba"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "35"
+
+[entries.part]
+offset = 349
+length = 13
+aeat_type = "Numérico"
+statement = "349-361 DIPUTACIÓN FORAL DE ARABA/ÁLAVA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refiere el artículo 7.Uno.c) segundo párrafo, del Concierto Económico con la Comunidad Autónoma del País Vasco, aprobado por la Ley 12/2002, de 23 de mayo, efectivamente ingresados en la Diputación Foral de Araba/Álava. En otro caso, este campo se consignará relleno a ceros. Los importes deben consignarse en euros. Este campo se subdivide en dos: Rendimientos del trabajo y de actividades económicas, premios y POSICION NATURALEZA DESCRIPCIÓN DE LOS CAMPOS 349-359 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros. 360-361 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenIdo se consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-retenciones-forales-gipuzkoa"
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-gipuzkoa"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "35"
+
+[entries.part]
+offset = 362
+length = 13
+aeat_type = "Numérico"
+statement = "362-374 DIPUTACIÓN FORAL DE GIPUZKOA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refiere el artículo 7.Uno.c) segundo párrafo, del Concierto Económico con la Comunidad Autónoma del País Vasco, aprobado por la Ley 12/2002, de 23 de mayo, efectivamente ingresados en la Diputación Foral de Gipuzkoa. En otro caso, este campo se consignará relleno a ceros. Los importes deben consignarse en euros. Este campo se subdivide en dos: 362-372 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros. 373-374 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros."
+
+[[entries]]
+export_field_id = "modelo-190-perc-retenciones-forales-bizkaia"
+kind = "binding"
+binding = "modelo-190-perceptor-row-retenciones-forales-bizkaia"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2622
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "35"
+
+[entries.part]
+offset = 375
+length = 13
+aeat_type = "Numérico"
+statement = "375-387 DIPUTACIÓN FORAL DE BIZKAIA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe anual de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refiere el artículo 7.Uno.c) segundo párrafo, del Concierto Económico con la Comunidad Autónoma del País Vasco, aprobado por la Ley 12/2002, de 23 de mayo, efectivamente ingresados en la Diputación Foral de Bizkaia. En otro caso, este campo se consignará relleno a ceros. Los importes deben consignarse en euros. Este campo se subdivide en dos: 375-385 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros. 386-387 Parte decimal del importe de las Rendimientos del trabajo y de actividades económicas, premios y retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros». POSICION NATURALEZA DESCRIPCIÓN DE LOS CAMPOS"
+
+[[entries]]
+export_field_id = "modelo-190-perc-excesos-acciones-emergentes"
+kind = "binding"
+binding = "modelo-190-perceptor-row-excesos-acciones-emergentes"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2826
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "36"
+
+[[entries]]
+export_field_id = "modelo-190-perc-rendimientos-fondos-emprendimiento"
+kind = "binding"
+binding = "modelo-190-perceptor-row-rendimientos-fondos-emprendimiento"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2852
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "37"
+
+[[entries]]
+export_field_id = "modelo-190-perc-prestacion-jubilacion"
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestacion-jubilacion"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "38"
+
+[entries.part]
+offset = 390
+length = 1
+aeat_type = "Numérico"
+statement = "390 01. Jubilación."
+
+[[entries]]
+export_field_id = "modelo-190-perc-prestacion-viudedad"
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestacion-viudedad"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "38"
+
+[entries.part]
+offset = 391
+length = 1
+aeat_type = "Numérico"
+statement = "391 02. Viudedad."
+
+[[entries]]
+export_field_id = "modelo-190-perc-prestacion-incapacidad"
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestacion-incapacidad"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "38"
+
+[entries.part]
+offset = 392
+length = 1
+aeat_type = "Numérico"
+statement = "392 03. Incapacidad permanente total o parcial."
+
+[[entries]]
+export_field_id = "modelo-190-perc-prestacion-no-contributiva"
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestacion-no-contributiva"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "38"
+
+[entries.part]
+offset = 393
+length = 1
+aeat_type = "Numérico"
+statement = "393 04. Pensiones no contributivas por invalidez o jubilación. Rendimientos del trabajo y de actividades económicas, premios y"
+
+[[entries]]
+export_field_id = "modelo-190-perc-prestacion-resto"
+kind = "binding"
+binding = "modelo-190-perceptor-row-prestacion-resto"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2898
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "38"
+
+[entries.part]
+offset = 394
+length = 1
+aeat_type = "Numérico"
+statement = "394), de acuerdo con la siguiente relación: Este campo se divide en cinco: 390 01. Jubilación. 391 02. Viudedad. 392 03. Incapacidad permanente total o parcial. 393 04. Pensiones no contributivas por invalidez o jubilación. Rendimientos del trabajo y de actividades económicas, premios y 394 05. Resto de prestaciones del artículo 17.2.a).1ª de la Ley 35/2006, de 28 de noviembre, no exentas, distintas de las anteriores."
+
+[[entries]]
+export_field_id = "modelo-190-perc-blancos-395"
+kind = "filler"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 2935
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "39"

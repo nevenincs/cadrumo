@@ -23,7 +23,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from cadrumo.application.modelo.aggregate_operation import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -316,7 +316,7 @@ def test_ledger_payroll_capture_refuses_an_unknown_transaction(
 def test_ledger_payroll_capture_refuses_a_second_transport_and_other_modelos(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    """The payroll flag cannot share a command with invoice or hand-typed rows, nor leave Modelo 111."""
+    """The payroll flag cannot share a command with invoice evidence or a second payment, nor leave Modelo 111."""
     with native_api_cli_session(
         tmp_path,
         scope_for_destination=_capture_scope,
@@ -338,31 +338,21 @@ def test_ledger_payroll_capture_refuses_a_second_transport_and_other_modelos(
             allocated_settlement=Decimal("106.00"),
             idempotency_key="invoice-capture",
         ).model_dump_json()
-        manual_row = json.dumps(
-            {
-                "source_kind": "ledger_transaction",
-                "source_object_id": transaction.transaction_id,
-                "perceptor_nif": _EMPLOYEE_NIF,
-                "scheme": "rendimientos_trabajo",
-                "taxable_base": "2400.00",
-                "retencion_amount": "360.00",
-                "accrued_on": _PAID_ON.isoformat(),
-            }
-        )
 
         refusals = (
             _aggregate(
                 session, "111", "--ledger-payment-withholding", payload, "--received-invoice-retencion", invoice_payload
             ),
-            _aggregate(session, "111", "--ledger-payment-withholding", payload, "--retencion-observation", manual_row),
             _aggregate(
                 session, "111", "--ledger-payment-withholding", payload, "--ledger-payment-withholding", payload
             ),
             _aggregate(session, "115", "--ledger-payment-withholding", payload),
         )
 
-        assert [code for code, _output in refusals] == [2, 2, 2, 2], refusals
+        assert [code for code, _output in refusals] == [2, 2, 2], refusals
         assert {json.loads(output)["error"]["code"] for _code, output in refusals} == {"REFUSED_CLI_BOUNDARY"}
+        exclusive_message = json.loads(refusals[0][1])["error"]["message"]
+        assert "--received-invoice-retencion" in exclusive_message, exclusive_message
         assert _stored_q1_retenciones(session, authority_operation) == ()
 
 

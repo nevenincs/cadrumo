@@ -8,7 +8,8 @@ command JSON-contract surface carried by
 :func:`emit_envelope`. These schemas are the CLI projection of the secure,
 profile-local rule engine: persisted :class:`LedgerClassificationRule` records
 are listed and added through :mod:`_ledger_rules_cli`, while
-:func:`apply_classification_rules` owns live mutation semantics. The parent
+:func:`~cadrumo.application.ledger.actions_classification.plan_classification_rules`
+plans the registered executor's mutation. The parent
 :mod:`_ledger_payloads` module re-exports these split schemas so existing ledger
 command emitters keep one payload import surface.
 """
@@ -97,7 +98,8 @@ class RuleApplyMatchPayload(OutputSchema):
     The row reports the first rule that would classify the transaction if the
     operator re-ran without ``--dry-run``. It previews the same priority-ordered
     :class:`LedgerClassificationRule` match selection
-    as :func:`apply_classification_rules`, but remains evidence only: no
+    as :func:`~cadrumo.application.ledger.actions_classification.plan_classification_rules`,
+    but remains evidence only: no
     transaction state or bucket event is written for these :class:`RuleApplyResult`
     rows.
     """

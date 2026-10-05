@@ -7,7 +7,7 @@ aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
 @expect result.casilla_values["decl.numero-operadores"] == "2"
 @expect result.casilla_values["decl.importe-operaciones"] == "8000.00"
-@step Verify the draft before you export it.
+@step Check the draft before you export it.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
 @expect result.completeness_status == "complete"

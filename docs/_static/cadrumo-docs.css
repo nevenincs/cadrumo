@@ -1750,8 +1750,23 @@ a.sd-card:any-link,
 }
 
 @media (max-width: 40em) {
+  .cadrumo-header-wordmark-suffix {
+    display: none;
+  }
+
   .cadrumo-broadcast-message {
     font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 24em) {
+  .cadrumo-header-wordmark {
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
   }
 }
 

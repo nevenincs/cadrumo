@@ -13,18 +13,24 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from datetime import date
 from decimal import Decimal
-from enum import Enum
 from pathlib import Path
+from typing import Never
 from uuid import UUID
 
 import typer
 from pydantic import ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
-from ...application.invoices.catalogue_add_operation import InvoiceAddLine, InvoiceAddRequest
-from ...application.invoices.catalogue_intake_operation import InvoiceImportProjection
+from ...application.invoices.catalogue_add_contracts import (
+    InvoiceAddBusinessPremisesLease,
+    InvoiceAddLine,
+    InvoiceAddRequest,
+    InvoiceAddResult,
+)
+from ...application.invoices.catalogue_intake_contracts import (
+    InvoiceImportProjection,
+)
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ...application.invoices.catalogue_update_operation import InvoiceUpdatePatch
@@ -40,7 +46,7 @@ from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.type_guards import is_object_list_or_tuple
+from ...domain.invoices.business_premises import business_premises_lease_from_inputs
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -71,6 +77,8 @@ from .common import (
 )
 from .common import bad, emit_envelope
 from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import submitted_operation_error
 from .runtime_invoice_catalogue import (
     add_invoice_catalogue,
     read_invoice_catalogue,
@@ -79,73 +87,6 @@ from .runtime_invoice_catalogue import (
     view_invoice_catalogue,
 )
 from .runtime_invoice_intake import submit_invoice_import, submit_invoice_wizard
-from .runtime_registered_operation import submitted_operation_error
-
-# The domain-invoice fields shared by mutation readback and evidence-confirm.
-# Authenticated list/view use the closed application snapshot instead.
-_SHARED_INVOICE_FIELDS: tuple[str, ...] = (
-    "invoice_id",
-    "kind",
-    "invoice_number",
-    "issued_at",
-    "counterparty_name",
-    "counterparty_tax_id",
-    "counterparty_country",
-    "base_total",
-    "iva_total",
-    "grand_total",
-    "currency",
-    "payment_status",
-    "linked_transaction_ids",
-    "notes",
-    # Settlement-side retención sits outside the totals and recargo inside, so
-    # neither is recoverable from the three totals above.
-    "retention_rate",
-    "retention_amount",
-    "recargo_amount",
-    # The euro conversion and its provenance. A foreign-currency invoice
-    # rendered as totals plus a currency code told the operator nothing about
-    # whether those figures had reached euro at all -- and an unconverted
-    # invoice is precisely the one held back from the modelo totals, so the
-    # surface stayed silent on the fact that most needed saying. All six are
-    # ``None`` on a euro invoice (nothing was converted) and the eur trio is
-    # ``None`` on a foreign invoice with no resolvable rate, which is what makes
-    # the refusal visible rather than merely correct.
-    "fx_rate",
-    "fx_rate_date",
-    "fx_rate_source",
-    "base_total_eur",
-    "iva_total_eur",
-    "grand_total_eur",
-)
-
-
-def _wire_scalar(value: object) -> object:
-    """Render one invoice field in its string wire form.
-
-    The evidence-confirm envelope declares every field as ``str``, so its
-    projection needs the rendered form where the catalogue envelope wants the
-    native typed value. Keeping the rendering here means the two differ only in
-    FORM, never in which fields they carry.
-    """
-    if isinstance(value, Decimal):
-        return format(value, "f")
-    if isinstance(value, date):
-        return value.isoformat()
-    if isinstance(value, Enum):
-        return value.value
-    if is_object_list_or_tuple(value):
-        return list(value)
-    return value
-
-
-def catalogue_invoice_shared_fields(invoice: Invoice) -> dict[str, object]:
-    """Project the :class:`Invoice` identity/total fields in their string wire form.
-
-    Consumed by the evidence-confirm verb, whose envelope is all-``str``. Shares
-    :data:`_SHARED_INVOICE_FIELDS` with the canonical evidence-confirm payload.
-    """
-    return {name: _wire_scalar(getattr(invoice, name)) for name in _SHARED_INVOICE_FIELDS}
 
 
 def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:
@@ -372,6 +313,9 @@ def invoice_add(
     rectifies_invoice_number: str | None = None,
     recargo: str | None = None,
     iva_category: IvaCategory | None = None,
+    arrendamiento_local_negocio: bool = False,
+    situacion_inmueble: str | None = None,
+    referencia_catastral: str | None = None,
     line: tuple[str, ...] = (),
     notes: str = "",
 ) -> None:
@@ -385,7 +329,10 @@ def invoice_add(
     calculation can read it. Supplying ``--retention-amount`` (optionally with
     ``--retention-rate``) records a RIRPF art. 95 withholding, which
     ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
-    a received invoice.
+    a received invoice. ``--arrendamiento-local-negocio`` marks an issued
+    invoice as the lease of a local de negocio, with ``--situacion-inmueble``
+    and ``--referencia-catastral`` locating the premises, which Modelo 347
+    relates in its declarado and inmueble records (RD 1065/2007 art. 34.1.d).
     """
     bucket_id = _business_invoice_bucket_id()
     # An explicitly stated treatment WINS over the one derived from the M349
@@ -396,48 +343,31 @@ def invoice_add(
         operation_type,
     )
     try:
-
-        def public_amount(raw: str | None, *, label: str) -> PublicDecimal | None:
-            parsed = parse_optional_decimal_amount(raw, label=label)
-            return None if parsed is None else PublicDecimal(decimal=str(parsed))
-
-        structured_lines = _parse_invoice_lines(line)
-        if structured_lines and (taxable_base is not None or iva_rate is not None):
-            raise InvoiceValidationError("--line cannot be combined with --taxable-base or --iva-rate")
-        if structured_lines:
-            parsed_taxable_base: Decimal | None = None
-            parsed_iva_rate: Decimal | None = None
-        else:
-            if taxable_base is None:
-                raise InvoiceValidationError("--taxable-base is required when --line is not supplied")
-            parsed_taxable_base = parse_decimal_amount(taxable_base, label="taxable-base")
-            parsed_iva_rate = parse_optional_decimal_amount(iva_rate, label="iva-rate")
-        request = InvoiceAddRequest(
-            profile_id=UUID(bucket_id),
+        request = _invoice_add_request(
+            bucket_id=bucket_id,
+            resolved_iva_category=resolved_iva_category,
             kind=kind,
             counterparty_name=counterparty_name,
-            counterparty_tax_id=counterparty_nif,
-            counterparty_country=country_code,
             invoice_number=invoice_number,
-            issued_at=_parse_iso_date(invoice_date, label="invoice-date"),
-            taxable_base=None if parsed_taxable_base is None else PublicDecimal(decimal=str(parsed_taxable_base)),
-            iva_rate=None if parsed_iva_rate is None else PublicDecimal(decimal=str(parsed_iva_rate)),
+            invoice_date=invoice_date,
+            taxable_base=taxable_base,
+            country_code=country_code,
+            iva_rate=iva_rate,
             currency=currency,
-            notes=notes,
-            iva_category=None if resolved_iva_category is None else str(resolved_iva_category),
             operation_type=operation_type,
-            operation_date=(
-                None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")
-            ),
-            retention_rate=public_amount(retention_rate, label="retention-rate"),
-            retention_amount=public_amount(retention_amount, label="retention-amount"),
-            invoice_class=str(
-                default_invoice_class() if invoice_class is None else require_invoice_class(invoice_class)
-            ),
+            operation_date=operation_date,
+            retention_rate=retention_rate,
+            retention_amount=retention_amount,
+            invoice_class=invoice_class,
+            counterparty_nif=counterparty_nif,
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
-            recargo_amount=public_amount(recargo, label="recargo"),
-            lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
+            recargo=recargo,
+            arrendamiento_local_negocio=arrendamiento_local_negocio,
+            situacion_inmueble=situacion_inmueble,
+            referencia_catastral=referencia_catastral,
+            line=line,
+            notes=notes,
         )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
@@ -446,27 +376,7 @@ def invoice_add(
 
     completed, added = add_invoice_catalogue(ctx, request=request)
     if added.outcome == "validation_error":
-        details: dict[str, str] = {
-            "operation_id": str(completed.operation_id),
-            "terminal_condition": completed.terminal_condition.value,
-            "effect": completed.effect.value,
-            "refusal_code": completed.refusal_code or "",
-        }
-        if added.invoice_id is not None:
-            details["invoice_id"] = added.invoice_id
-        error = CliRefusedBoundaryError(
-            translated_message=(
-                "application.invoices.creation.errors.duplicate_invoice"
-                if added.validation_code == "duplicate_invoice"
-                else "errors.refused.refused_cli_validation_boundary"
-            ),
-            context=details,
-        )
-        raise ledger_cli_no_recovery(
-            error,
-            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
-            facts={"invoice_valid": False},
-        ) from None
+        _raise_invoice_add_validation(completed, added)
     try:
         if added.invoice is None:
             raise ValueError("created invoice result is missing its snapshot")
@@ -908,3 +818,115 @@ def invoice_update(
             effect=completed.effect,
             refusal_code=completed.refusal_code,
         ) from None
+
+
+def _invoice_add_request(
+    *,
+    bucket_id: str,
+    resolved_iva_category: IvaCategory | None,
+    kind: InvoiceKind,
+    counterparty_name: str,
+    invoice_number: str,
+    invoice_date: str,
+    taxable_base: str | None,
+    country_code: str,
+    iva_rate: str | None,
+    currency: str,
+    operation_type: IntracomOperationType | None,
+    operation_date: str | None,
+    retention_rate: str | None,
+    retention_amount: str | None,
+    invoice_class: str | None,
+    counterparty_nif: str | None,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    recargo: str | None,
+    arrendamiento_local_negocio: bool,
+    situacion_inmueble: str | None,
+    referencia_catastral: str | None,
+    line: tuple[str, ...],
+    notes: str,
+) -> InvoiceAddRequest:
+    """Construct the exact registered request from the already resolved CLI inputs."""
+
+    def public_amount(raw: str | None, *, label: str) -> PublicDecimal | None:
+        parsed = parse_optional_decimal_amount(raw, label=label)
+        return None if parsed is None else PublicDecimal(decimal=str(parsed))
+
+    structured_lines = _parse_invoice_lines(line)
+    parsed_taxable_base, parsed_iva_rate = _invoice_add_base_and_rate(structured_lines, taxable_base, iva_rate)
+    request = InvoiceAddRequest(
+        profile_id=UUID(bucket_id),
+        kind=kind,
+        counterparty_name=counterparty_name,
+        counterparty_tax_id=counterparty_nif,
+        counterparty_country=country_code,
+        invoice_number=invoice_number,
+        issued_at=_parse_iso_date(invoice_date, label="invoice-date"),
+        taxable_base=None if parsed_taxable_base is None else PublicDecimal(decimal=str(parsed_taxable_base)),
+        iva_rate=None if parsed_iva_rate is None else PublicDecimal(decimal=str(parsed_iva_rate)),
+        currency=currency,
+        notes=notes,
+        iva_category=None if resolved_iva_category is None else str(resolved_iva_category),
+        operation_type=operation_type,
+        operation_date=(None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")),
+        retention_rate=public_amount(retention_rate, label="retention-rate"),
+        retention_amount=public_amount(retention_amount, label="retention-amount"),
+        invoice_class=str(default_invoice_class() if invoice_class is None else require_invoice_class(invoice_class)),
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        recargo_amount=public_amount(recargo, label="recargo"),
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
+            business_premises_lease_from_inputs(
+                lease_selected=arrendamiento_local_negocio,
+                situacion_inmueble=situacion_inmueble,
+                referencia_catastral=referencia_catastral,
+            )
+        ),
+        lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
+    )
+    return request
+
+
+def _invoice_add_base_and_rate(
+    structured_lines: tuple[InvoiceLine, ...], taxable_base: str | None, iva_rate: str | None
+) -> tuple[Decimal | None, Decimal | None]:
+    """Refuse mixed input routes before parsing an unstructured invoice amount."""
+    if structured_lines and (taxable_base is not None or iva_rate is not None):
+        raise InvoiceValidationError("--line cannot be combined with --taxable-base or --iva-rate")
+    if structured_lines:
+        parsed_taxable_base: Decimal | None = None
+        parsed_iva_rate: Decimal | None = None
+    else:
+        if taxable_base is None:
+            raise InvoiceValidationError("--taxable-base is required when --line is not supplied")
+        parsed_taxable_base = parse_decimal_amount(taxable_base, label="taxable-base")
+        parsed_iva_rate = parse_optional_decimal_amount(iva_rate, label="iva-rate")
+    return parsed_taxable_base, parsed_iva_rate
+
+
+def _raise_invoice_add_validation(
+    completed: RegisteredOperationCompletion[InvoiceAddResult], added: InvoiceAddResult
+) -> Never:
+    """Keep the exact invoice validation refusal and its complete settled receipt."""
+    details: dict[str, str] = {
+        "operation_id": str(completed.operation_id),
+        "terminal_condition": completed.terminal_condition.value,
+        "effect": completed.effect.value,
+        "refusal_code": completed.refusal_code or "",
+    }
+    if added.invoice_id is not None:
+        details["invoice_id"] = added.invoice_id
+    error = CliRefusedBoundaryError(
+        translated_message=(
+            "application.invoices.creation.errors.duplicate_invoice"
+            if added.validation_code == "duplicate_invoice"
+            else "errors.refused.refused_cli_validation_boundary"
+        ),
+        context=details,
+    )
+    raise ledger_cli_no_recovery(
+        error,
+        condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+        facts={"invoice_valid": False},
+    ) from None

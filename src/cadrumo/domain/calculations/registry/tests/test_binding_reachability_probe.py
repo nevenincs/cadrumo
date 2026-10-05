@@ -31,15 +31,13 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from .._ledger_binding_resolution import casilla_target_matcher
 from ..ledger_iva_bindings import (
     LedgerIvaProvider,
     _iva_build_matcher,
     _iva_reachability_probe,
 )
-from ..ledger_renta_gastos_pago_fraccionado_bindings import (
-    LedgerRentaGastosPagoFraccionadoProvider,
-    _renta_gastos_pago_fraccionado_build_matcher,
-)
+from ..ledger_renta_gastos_pago_fraccionado_bindings import LedgerRentaGastosPagoFraccionadoProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -198,7 +196,7 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
             target_casilla_id=casilla_id,
             fact="deductible_amount_sum",
         )
-        matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)
+        matcher = casilla_target_matcher(selector)
         probe = _MinimalCasillaObservation(target_casilla_id=selector.target_casilla_id)
         assert matcher(probe), (
             f"the casilla-keyed matcher rejected a probe built from its own selector "

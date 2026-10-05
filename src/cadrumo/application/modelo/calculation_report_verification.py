@@ -461,50 +461,16 @@ def _read_document(
     statement = _check_statement(checks, statement_bytes)
     if statement is None:
         return _DocumentReading(checks=tuple(checks.rows))
-    public_key_hex = statement.signing_key.public_key_hex
-    checks.expect(
-        CalculationSummaryCheckName.SIGNATURE,
-        calculation_report_signature_is_valid(statement_bytes, signature, public_key_hex=public_key_hex),
-        CalculationSummaryVerificationReason.SIGNATURE_INVALID,
+    _check_document_integrity(
+        checks,
+        contents,
+        statement,
+        statement_bytes,
+        signature,
+        report_bytes,
+        csv_bytes,
+        trusted_public_key_hex,
     )
-    if trusted_public_key_hex is not None:
-        checks.expect(
-            CalculationSummaryCheckName.SIGNING_KEY_TRUSTED,
-            public_key_hex == trusted_public_key_hex.strip().lower(),
-            CalculationSummaryVerificationReason.SIGNING_KEY_UNTRUSTED,
-        )
-    checks.expect(
-        CalculationSummaryCheckName.REPORT_DIGEST,
-        sha256_hex(report_bytes) == statement.report_sha256,
-        CalculationSummaryVerificationReason.REPORT_DIGEST_MISMATCH,
-    )
-    checks.expect(
-        CalculationSummaryCheckName.CSV_DIGEST,
-        sha256_hex(csv_bytes) == statement.csv_sha256,
-        CalculationSummaryVerificationReason.CSV_DIGEST_MISMATCH,
-    )
-    expected_metadata = certification_xmp_properties(statement)
-    metadata = contents.product_metadata or {}
-    for name in sorted(set(expected_metadata) | set(metadata)):
-        if expected_metadata.get(name) != metadata.get(name):
-            checks.failed(
-                CalculationSummaryCheckName.METADATA,
-                CalculationSummaryVerificationReason.METADATA_MISMATCH,
-                detail=name,
-            )
-    if not checks.failed_any(CalculationSummaryCheckName.METADATA):
-        checks.passed(CalculationSummaryCheckName.METADATA)
-    checks.expect(
-        CalculationSummaryCheckName.VISIBLE_LAYER,
-        contents.visible_layer_sha256 == statement.visible_layer_sha256,
-        CalculationSummaryVerificationReason.VISIBLE_LAYER_MISMATCH,
-    )
-    for overlay in contents.visible_layer_overlays:
-        checks.failed(
-            CalculationSummaryCheckName.VISIBLE_LAYER_OVERLAY,
-            CalculationSummaryVerificationReason.VISIBLE_LAYER_OVERLAY,
-            detail=overlay,
-        )
     report = _parse_report(report_bytes)
     if report is None or report.canonical_bytes() != report_bytes:
         checks.failed(
@@ -512,26 +478,7 @@ def _read_document(
         )
         return _DocumentReading(checks=tuple(checks.rows), statement=statement)
     checks.passed(CalculationSummaryCheckName.REPORT_CANONICAL)
-    for field in _statement_identifiers_match(statement, report):
-        checks.failed(
-            CalculationSummaryCheckName.REPORT_STATEMENT,
-            CalculationSummaryVerificationReason.REPORT_STATEMENT_MISMATCH,
-            detail=field,
-        )
-    if not checks.failed_any(CalculationSummaryCheckName.REPORT_STATEMENT):
-        checks.passed(CalculationSummaryCheckName.REPORT_STATEMENT)
-    checks.expect(
-        CalculationSummaryCheckName.CSV_DERIVATION,
-        serialize_calculation_report_csv(report) == csv_bytes,
-        CalculationSummaryVerificationReason.CSV_NOT_DERIVED_FROM_REPORT,
-    )
-    gaps = _text_layer_gaps(contents, report=report, statement=statement)
-    for gap in gaps:
-        checks.failed(
-            CalculationSummaryCheckName.TEXT_LAYER, CalculationSummaryVerificationReason.TEXT_LAYER_MISMATCH, detail=gap
-        )
-    if not gaps:
-        checks.passed(CalculationSummaryCheckName.TEXT_LAYER)
+    _check_report_derivation(checks, contents, statement, report, csv_bytes)
     return _DocumentReading(checks=tuple(checks.rows), statement=statement, report=report)
 
 
@@ -592,7 +539,7 @@ def _trace_against_store(
         statement.signing_key.public_key_hex == keypair.public_key_hex,
         CalculationSummaryVerificationReason.SIGNING_KEY_NOT_THIS_PROFILE,
     )
-    revision = export_ports.calculation.load().revisions.get(statement.calculation_revision_id)
+    revision = export_ports.calculation.load(operation=operation).revisions.get(statement.calculation_revision_id)
     if revision is None:
         checks.failed(
             CalculationSummaryCheckName.CALCULATION_REVISION,
@@ -610,42 +557,7 @@ def _trace_against_store(
         revision.registry_snapshot_ref == statement.registry_snapshot_ref,
         CalculationSummaryVerificationReason.REGISTRY_SNAPSHOT_MISMATCH,
     )
-    verification_reports = export_ports.verification.load().for_calculation_revision(revision.calculation_revision_id)
-    recorded_verification = next(
-        (item for item in verification_reports if item.verification_report_id == statement.verification_report_id),
-        None,
-    )
-    checks.expect(
-        CalculationSummaryCheckName.VERIFICATION_REPORT,
-        (statement.verification_report_id is None and not verification_reports)
-        or (
-            recorded_verification is not None
-            and recorded_verification.completeness_status == statement.verification_outcome
-        ),
-        CalculationSummaryVerificationReason.VERIFICATION_REPORT_MISMATCH,
-    )
-    filing_record_ids = _filing_record_ids(revision, export_ports=export_ports)
-    if statement.filing_record_id is None:
-        if filing_record_ids:
-            checks.failed(
-                CalculationSummaryCheckName.FILING_RECORD, CalculationSummaryVerificationReason.FILED_SINCE_EXPORT
-            )
-        else:
-            checks.passed(CalculationSummaryCheckName.FILING_RECORD)
-    else:
-        checks.expect(
-            CalculationSummaryCheckName.FILING_RECORD,
-            str(statement.filing_record_id) in filing_record_ids,
-            CalculationSummaryVerificationReason.FILING_RECORD_MISMATCH,
-        )
-    if revision.state is statement.calculation_revision_state:
-        checks.passed(CalculationSummaryCheckName.REVISION_STATE)
-    else:
-        checks.failed(
-            CalculationSummaryCheckName.REVISION_STATE,
-            CalculationSummaryVerificationReason.REVISION_STATE_CHANGED,
-            detail=revision.state.value,
-        )
+    _check_stored_lifecycle(checks, statement, revision, export_ports, operation)
     if not checks.expect(
         CalculationSummaryCheckName.AUTHORITY_GENERATION,
         operation.generation.logical_generation == statement.authority_logical_generation,
@@ -778,3 +690,138 @@ __all__ = [
     "CalculationSummaryVerificationReason",
     "verify_calculation_summary",
 ]
+
+
+def _check_document_integrity(
+    checks: _Checks,
+    contents: CalculationSummaryPdfContents,
+    statement: CalculationReportCertificationStatement,
+    statement_bytes: bytes,
+    signature: bytes,
+    report_bytes: bytes,
+    csv_bytes: bytes,
+    trusted_public_key_hex: str | None,
+) -> None:
+    """Check signature, exact digests, metadata and visible overlays in original order."""
+    public_key_hex = statement.signing_key.public_key_hex
+    checks.expect(
+        CalculationSummaryCheckName.SIGNATURE,
+        calculation_report_signature_is_valid(statement_bytes, signature, public_key_hex=public_key_hex),
+        CalculationSummaryVerificationReason.SIGNATURE_INVALID,
+    )
+    if trusted_public_key_hex is not None:
+        checks.expect(
+            CalculationSummaryCheckName.SIGNING_KEY_TRUSTED,
+            public_key_hex == trusted_public_key_hex.strip().lower(),
+            CalculationSummaryVerificationReason.SIGNING_KEY_UNTRUSTED,
+        )
+    checks.expect(
+        CalculationSummaryCheckName.REPORT_DIGEST,
+        sha256_hex(report_bytes) == statement.report_sha256,
+        CalculationSummaryVerificationReason.REPORT_DIGEST_MISMATCH,
+    )
+    checks.expect(
+        CalculationSummaryCheckName.CSV_DIGEST,
+        sha256_hex(csv_bytes) == statement.csv_sha256,
+        CalculationSummaryVerificationReason.CSV_DIGEST_MISMATCH,
+    )
+    expected_metadata = certification_xmp_properties(statement)
+    metadata = contents.product_metadata or {}
+    for name in sorted(set(expected_metadata) | set(metadata)):
+        if expected_metadata.get(name) != metadata.get(name):
+            checks.failed(
+                CalculationSummaryCheckName.METADATA,
+                CalculationSummaryVerificationReason.METADATA_MISMATCH,
+                detail=name,
+            )
+    if not checks.failed_any(CalculationSummaryCheckName.METADATA):
+        checks.passed(CalculationSummaryCheckName.METADATA)
+    checks.expect(
+        CalculationSummaryCheckName.VISIBLE_LAYER,
+        contents.visible_layer_sha256 == statement.visible_layer_sha256,
+        CalculationSummaryVerificationReason.VISIBLE_LAYER_MISMATCH,
+    )
+    for overlay in contents.visible_layer_overlays:
+        checks.failed(
+            CalculationSummaryCheckName.VISIBLE_LAYER_OVERLAY,
+            CalculationSummaryVerificationReason.VISIBLE_LAYER_OVERLAY,
+            detail=overlay,
+        )
+
+
+def _check_report_derivation(
+    checks: _Checks,
+    contents: CalculationSummaryPdfContents,
+    statement: CalculationReportCertificationStatement,
+    report: ModeloCalculationReport,
+    csv_bytes: bytes,
+) -> None:
+    """Check report identifiers, derived CSV, and independently readable page facts."""
+    for field in _statement_identifiers_match(statement, report):
+        checks.failed(
+            CalculationSummaryCheckName.REPORT_STATEMENT,
+            CalculationSummaryVerificationReason.REPORT_STATEMENT_MISMATCH,
+            detail=field,
+        )
+    if not checks.failed_any(CalculationSummaryCheckName.REPORT_STATEMENT):
+        checks.passed(CalculationSummaryCheckName.REPORT_STATEMENT)
+    checks.expect(
+        CalculationSummaryCheckName.CSV_DERIVATION,
+        serialize_calculation_report_csv(report) == csv_bytes,
+        CalculationSummaryVerificationReason.CSV_NOT_DERIVED_FROM_REPORT,
+    )
+    gaps = _text_layer_gaps(contents, report=report, statement=statement)
+    for gap in gaps:
+        checks.failed(
+            CalculationSummaryCheckName.TEXT_LAYER, CalculationSummaryVerificationReason.TEXT_LAYER_MISMATCH, detail=gap
+        )
+    if not gaps:
+        checks.passed(CalculationSummaryCheckName.TEXT_LAYER)
+
+
+def _check_stored_lifecycle(
+    checks: _Checks,
+    statement: CalculationReportCertificationStatement,
+    revision: CalculationRevision,
+    export_ports: ModeloExportPorts,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Compare recorded verification, filing, and revision state before authority rebuild."""
+    verification_reports = export_ports.verification.load(operation=operation).for_calculation_revision(
+        revision.calculation_revision_id
+    )
+    recorded_verification = next(
+        (item for item in verification_reports if item.verification_report_id == statement.verification_report_id),
+        None,
+    )
+    checks.expect(
+        CalculationSummaryCheckName.VERIFICATION_REPORT,
+        (statement.verification_report_id is None and not verification_reports)
+        or (
+            recorded_verification is not None
+            and recorded_verification.completeness_status == statement.verification_outcome
+        ),
+        CalculationSummaryVerificationReason.VERIFICATION_REPORT_MISMATCH,
+    )
+    filing_record_ids = _filing_record_ids(revision, export_ports=export_ports)
+    if statement.filing_record_id is None:
+        if filing_record_ids:
+            checks.failed(
+                CalculationSummaryCheckName.FILING_RECORD, CalculationSummaryVerificationReason.FILED_SINCE_EXPORT
+            )
+        else:
+            checks.passed(CalculationSummaryCheckName.FILING_RECORD)
+    else:
+        checks.expect(
+            CalculationSummaryCheckName.FILING_RECORD,
+            str(statement.filing_record_id) in filing_record_ids,
+            CalculationSummaryVerificationReason.FILING_RECORD_MISMATCH,
+        )
+    if revision.state is statement.calculation_revision_state:
+        checks.passed(CalculationSummaryCheckName.REVISION_STATE)
+    else:
+        checks.failed(
+            CalculationSummaryCheckName.REVISION_STATE,
+            CalculationSummaryVerificationReason.REVISION_STATE_CHANGED,
+            detail=revision.state.value,
+        )

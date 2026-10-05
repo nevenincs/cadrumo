@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#multilang-externalization'
 date: '2026-07-12'
-modified: '2026-07-17'
-body_hash: 'sha256:13ccd222fc0a0e48d8b42f376fd73393c6d2b49f2e67934ef6f372cf3c9d33f0'
+modified: '2026-10-03'
+body_hash: 'sha256:e2b9b5c8651985dd913688787a4f68980442301af2d5b27daa65cf99308e5338'
 related:
   - '[[2026-07-12-multilang-externalization-adr]]'
 ---
@@ -21,11 +21,10 @@ searches, and the current localization implementation and conformance tests.
 
 The external-catalogue outcome of the earlier decision is present: the project
 declares `python-i18n`, carries the four YAML catalogues under
-`src/aeat/locales/`, and lazy-initialises the renderer in
-`src/aeat/core/i18n/_render.py`. The supported output-language set is
+`src/aeat/locales/`, and lazy-initialises the renderer . The supported output-language set is
 `es`, `en`, `ca`, and `hu`.
 
-`src/aeat/core/i18n/_translatable.py` defines `Translatable` as a strict
+the former source file defines `Translatable` as a strict
 string subtype for abstract translation keys. It is not the old inline
 multilingual payload: callers import it as `tr` to make keys identifiable and
 the renderer resolves the key from the active catalogue. The current

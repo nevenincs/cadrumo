@@ -39,6 +39,7 @@ from .errors import OverviewAgendaError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .applicability_evidence import FilingYearApplicabilityEvidence
 
 _DEFAULT_HORIZON_DAYS = 14
 """Default forward window for `due_soon` partitioning."""
@@ -106,6 +107,7 @@ def build_overview_agenda(
     horizon_days: int = _DEFAULT_HORIZON_DAYS,
     engine: DeadlineEngine | None = None,
     raw_values: Mapping[str, object] | None = None,
+    applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> OverviewAgenda:
     """Rank upcoming and past-due obligations around ``as_of``.
 
@@ -121,6 +123,8 @@ def build_overview_agenda(
             override; defaults to the registry-backed engine when ``None``.
         raw_values: Optional mapping of registry binding raw values forwarded
             to the deadline engine for context-sensitive deadlines.
+        applicability_evidence: Optional per-filing-year applicability
+            evidence forwarded to the composed calendar.
 
     Composes :func:`application.overview.calendar.build_overview_calendar` over a
     window that spans ``as_of - 90 days`` (so overdue obligations from the
@@ -151,6 +155,7 @@ def build_overview_agenda(
         today=as_of,
         engine=engine,
         raw_values=raw_values,
+        applicability_evidence=applicability_evidence,
     )
 
     horizon_end = as_of + timedelta(days=horizon_days)

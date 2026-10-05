@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:47a06ea2ff34d193f1c305381bf5063a489742b898a29c0fdb9d2f52207219fe'
+modified: '2026-10-03'
+body_hash: 'sha256:6f6436c3ad8dd2380f4b48143759b13f5a53dce80feec5b60f43ee7adc0a0bea'
 related: []
 ---
 
@@ -34,8 +34,8 @@ The missing-transaction test asserts the key and context directly.
 
 ## S215-004 | PASS | Validation
 
-- `uv run --no-sync -q ruff check src/aeat/application/invoices/_linking.py src/aeat/application/invoices/test_linking.py` passed.
-- `uv run --no-sync -q pytest -q src/aeat/application/invoices/test_linking.py` passed with 3 tests.
+- the historical check passed.
+- the historical check passed with 3 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low storage-routing findings

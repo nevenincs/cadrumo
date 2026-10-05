@@ -182,37 +182,6 @@ class RentaFamilyProfile(BaseModel):
             if descendant.dependencia_economica is True and not descendant.convive_con_contribuyente
         )
 
-    def descendientes_menores_3_year_end(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
-        """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
-        return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year, context=context))
-
-    def descendientes_guarderia_count(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
-        """Count of descendants who may carry an Art. 81.2 guardería increase.
-
-        Wider than the Art. 58.2 menor-de-tres count by exactly the turning-three
-        period. Kept separate rather than widening that count, which has its own
-        registry binding and its own statutory meaning for the supplement.
-        """
-        return sum(1 for d in self.descendientes if d.is_eligible_guarderia(filing_year, context=context))
-
-    def gastos_guarderia_reales(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
-        """Sum of the Art. 81.2 guardería spend every descendant contributes in *filing_year*.
-
-        Sums :meth:`DescendantInfo.guarderia_contributing_spend`, which applies
-        the Art. 81.2 month rules per child: every declared month while the child
-        is under three, and only the post-birthday months in the period the child
-        turns three. The turning-three period is INCLUDED here and was not
-        before, which is the campaign's largest measured under-grant — a full
-        birth cohort rather than a minority case, reducing cuota directly.
-
-        Year-parameterised rather than pinned to 2024 because the calculate path
-        derives ``renta_family.gastos_guarderia_reales_{filing_year}`` for
-        whatever year the registry declares a consumer for. A 2024-only accessor
-        would have forced that path to keep its own parallel sum, which is how
-        the monthly map could be declared and contribute nothing.
-        """
-        return sum(d.guarderia_contributing_spend(filing_year, context=context) for d in self.descendientes)
-
     def incremento_guarderia_0613(
         self,
         filing_year: int,
@@ -313,7 +282,7 @@ class RentaFamilyProfile(BaseModel):
 
         Reads :attr:`dependencia_assimilation_available` off this profile rather
         than taking it as an argument, exactly as
-        :meth:`descendientes_eligible_minimum` does, so the anualidades
+        :meth:`DescendantInfo.is_eligible_ordinary does, so the anualidades
         carve-out cannot be applied to the mínimo and skipped for the deducción
         that keys on it.
 
@@ -334,32 +303,6 @@ class RentaFamilyProfile(BaseModel):
                 )
             )
             > 0
-        )
-
-    def descendientes_eligible_minimum(
-        self,
-        filing_year: int,
-        *,
-        thresholds: MinimoDescendientesThresholds,
-        context: FamilyFactResolutionContext,
-    ) -> int:
-        """Count of descendientes eligible for the ordinary Art. 58.1 mínimo.
-
-        A descendant is eligible when cohabiting, under 25 at year-end or
-        carrying any discapacidad, within the Art. 58.1 rentas ceiling, and not
-        excluded by Art. 61 norma 2ª — see
-        :meth:`DescendantInfo.is_eligible_ordinary`.
-        """
-        available = self.dependencia_assimilation_available
-        return sum(
-            1
-            for d in self.descendientes
-            if d.is_eligible_ordinary(
-                filing_year,
-                thresholds=thresholds,
-                context=context,
-                dependencia_assimilation_available=available,
-            )
         )
 
     def minimo_prorrata_factor(

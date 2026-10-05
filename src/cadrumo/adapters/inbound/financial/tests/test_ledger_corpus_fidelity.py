@@ -163,6 +163,7 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
                 assert normalized.status is CurrencyNormalizationStatus.NORMALIZED, (
                     f"foreign row failed to normalize: {raw.description!r} -> {normalized.status}"
                 )
+                assert normalized.eur_amount is not None
                 fx_rate = normalized.rate
                 value_in_eur = abs(normalized.eur_amount)
 

@@ -25,7 +25,9 @@ from ._spelling import load_dictionaries
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
 
-    from .modelo_casilla_catalogue import Values
+    from spylls.hunspell import Dictionary
+
+    from .casilla_catalogue_models import Values
 
 __all__ = [
     "REVIEWED_SPANISH_TERMS",
@@ -57,7 +59,8 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
     # "super" only occurs bound in the official rate name "super-reducido".
     # "inter vivos" is Latin, and "bitcoin" is the asset name.
     # Casilla text plus the interface domains: Latin and asset names, and words that
-    # are transport tokens, field ids or English terms rather than Spanish prose.
+    # are transport tokens, field ids or English terms rather than Spanish prose
+    # ("movil" is the clave_movil provider token).
     "es": frozenset(
         {
             "Coin",
@@ -71,6 +74,7 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
             "impon",
             "inter",
             "modificacion",
+            "movil",
             "name",
             "operacion",
             "pais",
@@ -86,7 +90,7 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
         }
     ),
     # Proper names (Sorolla, Illes Balears, Tokio) and correct inflections:
-    # "sorok" (rows), "egyenleget" (accusative), "nekik" (to them).
+    # "sorok" (rows), "sorod" (your queue), "egyenleget" (accusative), "nekik" (to them).
     "hu": frozenset(
         {
             "Alkulcs",
@@ -103,11 +107,13 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
             "nekik",
             "nyelven",
             "nyelvet",
+            "objektumsorokat",
             "operacion",
             "razon",
             "rendszeren",
             "retencion",
             "retmar",
+            "sorod",
             "sorok",
             "sorokat",
             "sorokhoz",
@@ -139,17 +145,7 @@ def _restorations(word: str, table: Mapping[str, str], known: Callable[[str], bo
     if "n" in table and "ni" in word:
         bases.append(word.replace("ni", "ñ"))
     for base in bases:
-        found: set[str] = {base} if base != word and known(base) else set()
-        positions = [index for index, char in enumerate(base) if char.lower() in table]
-        for size in range(1, _MAX_RESTORED + 1):
-            for chosen in combinations(positions, size):
-                for marks in product(*(table[base[index].lower()] for index in chosen)):
-                    letters = list(base)
-                    for index, mark in zip(chosen, marks, strict=True):
-                        letters[index] = mark.upper() if base[index].isupper() else mark
-                    candidate = "".join(letters)
-                    if known(candidate):
-                        found.add(candidate)
+        found = restorations_for_base(word, base, table, known)
         if found:
             return tuple(sorted(found))
     return ()
@@ -162,22 +158,7 @@ def unaccented_words(
     """Yield every stored casilla word that has lost its diacritics, in key order."""
     dictionaries = load_dictionaries(REPO_ROOT)
     for locale, table in _RESTORABLE.items():
-        dictionary = dictionaries[locale]
-        foreign = [dictionaries[code] for code in _FOREIGN_DICTIONARIES[locale]]
-        accepted = reviewed.get(locale, frozenset())
-        verdicts: dict[str, tuple[str, ...]] = {}
-        for key, value in sorted(values.get(locale, {}).items()):
-            if value is None:
-                continue
-            prose = _NOT_PROSE.sub(" ", _CODE_SPAN.sub(" ", value))
-            for word in sorted(set(_WORD.findall(prose))):
-                if len(word) < _MIN_LENGTH or word.isupper() or word in accepted or _DIACRITICS & set(word.lower()):
-                    continue
-                if word not in verdicts:
-                    plain = dictionary.lookup(word) or any(other.lookup(word) for other in foreign)
-                    verdicts[word] = () if plain else _restorations(word, table, dictionary.lookup)
-                if verdicts[word]:
-                    yield UnaccentedWord(locale, key, word, verdicts[word])
+        yield from unaccented_words_for_locale(locale, table, values, reviewed, dictionaries)
 
 
 #: Spanish tax vocabulary every locale keeps untranslated, and registry identifier stems.
@@ -285,10 +266,7 @@ def _verbatim_runs(text: str, sources: frozenset[str]) -> str:
     while start < len(words):
         end = start
         if words[start][:1].isupper() or words[start][:1].isdigit():
-            while end < len(words) and any(
-                f" {' '.join(words[start : end + 1])} " in source for source in source_texts
-            ):
-                end += 1
+            end = verbatim_run_end(words, start, end, source_texts)
         if end - start >= _MIN_VERBATIM_RUN:
             kept[start:end] = [False] * (end - start)
             start = end
@@ -317,15 +295,106 @@ def spanish_leftovers(
         for key, value in sorted(values.get(locale, {}).items()):
             if value is None:
                 continue
-            leftovers: list[str] = []
-            judged = _QUOTED.sub(_blank_unless_prose, value)
-            prose = _verbatim_runs(judged, sources.get(locale, {}).get(key, frozenset()))
-            for word in _WORD.findall(_NOT_PROSE.sub(" ", prose)):
-                if len(word) < _MIN_LENGTH or not word.islower() or word in _KEPT_SPANISH or word in kept:
-                    continue
-                if word not in verdicts:
-                    verdicts[word] = bool(spanish.lookup(word)) and not target.lookup(word)
-                if verdicts[word]:
-                    leftovers.append(word)
+            leftovers = spanish_leftover_words(
+                value, sources.get(locale, {}).get(key, frozenset()), kept, verdicts, spanish, target
+            )
             if len(leftovers) >= _MIN_LEFTOVERS:
                 yield SpanishLeftover(locale, key, tuple(leftovers))
+
+
+def restorations_for_base(word: str, base: str, table: Mapping[str, str], known: Callable[[str], bool]) -> set[str]:
+    """Collect accepted accent restorations for one candidate base spelling."""
+    found: set[str] = {base} if base != word and known(base) else set()
+    positions = [index for index, char in enumerate(base) if char.lower() in table]
+    for size in range(1, _MAX_RESTORED + 1):
+        for chosen in combinations(positions, size):
+            for marks in product(*(table[base[index].lower()] for index in chosen)):
+                candidate = marked_restoration(base, chosen, marks)
+                if known(candidate):
+                    found.add(candidate)
+    return found
+
+
+def marked_restoration(base: str, chosen: tuple[int, ...], marks: tuple[str, ...]) -> str:
+    """Apply selected diacritics while preserving each source letter's case."""
+    letters = list(base)
+    for index, mark in zip(chosen, marks, strict=True):
+        letters[index] = mark.upper() if base[index].isupper() else mark
+    candidate = "".join(letters)
+    return candidate
+
+
+def skip_unaccented_word(word: str, accepted: frozenset[str]) -> bool:
+    """Skip short, reviewed, uppercase, or already accented words."""
+    return bool(len(word) < _MIN_LENGTH or word.isupper() or word in accepted or _DIACRITICS & set(word.lower()))
+
+
+def cache_unaccented_word_verdict(
+    word: str,
+    table: Mapping[str, str],
+    dictionary: Dictionary,
+    foreign: list[Dictionary],
+    verdicts: dict[str, tuple[str, ...]],
+) -> None:
+    """Memoize native or foreign acceptance before trying accent restorations."""
+    plain = dictionary.lookup(word) or any(other.lookup(word) for other in foreign)
+    verdicts[word] = () if plain else _restorations(word, table, dictionary.lookup)
+
+
+def verbatim_run_end(words: list[str], start: int, end: int, source_texts: list[str]) -> int:
+    """Find the end of the source-quoted word run beginning at start."""
+    while end < len(words) and any(f" {' '.join(words[start : end + 1])} " in source for source in source_texts):
+        end += 1
+    return end
+
+
+def spanish_leftover_words(
+    value: str,
+    source_values: frozenset[str],
+    kept: frozenset[str],
+    verdicts: dict[str, bool],
+    spanish: Dictionary,
+    target: Dictionary,
+) -> list[str]:
+    """Judge visible prose using one locale's cached dictionary verdicts."""
+    leftovers: list[str] = []
+    judged = _QUOTED.sub(_blank_unless_prose, value)
+    prose = _verbatim_runs(judged, source_values)
+    for word in _WORD.findall(_NOT_PROSE.sub(" ", prose)):
+        if skip_spanish_leftover_word(word, kept):
+            continue
+        if word not in verdicts:
+            verdicts[word] = bool(spanish.lookup(word)) and not target.lookup(word)
+        if verdicts[word]:
+            leftovers.append(word)
+    return leftovers
+
+
+def skip_spanish_leftover_word(word: str, kept: frozenset[str]) -> bool:
+    """Skip short, capitalised, structural, or reviewed Spanish terms."""
+    return len(word) < _MIN_LENGTH or not word.islower() or word in _KEPT_SPANISH or word in kept
+
+
+def unaccented_words_for_locale(
+    locale: str,
+    table: Mapping[str, str],
+    values: Values,
+    reviewed: Mapping[str, frozenset[str]],
+    dictionaries: dict[str, Dictionary],
+) -> Iterator[UnaccentedWord]:
+    """Yield one locale's accent losses in stable key and word order."""
+    dictionary = dictionaries[locale]
+    foreign = [dictionaries[code] for code in _FOREIGN_DICTIONARIES[locale]]
+    accepted = reviewed.get(locale, frozenset())
+    verdicts: dict[str, tuple[str, ...]] = {}
+    for key, value in sorted(values.get(locale, {}).items()):
+        if value is None:
+            continue
+        prose = _NOT_PROSE.sub(" ", _CODE_SPAN.sub(" ", value))
+        for word in sorted(set(_WORD.findall(prose))):
+            if skip_unaccented_word(word, accepted):
+                continue
+            if word not in verdicts:
+                cache_unaccented_word_verdict(word, table, dictionary, foreign, verdicts)
+            if verdicts[word]:
+                yield UnaccentedWord(locale, key, word, verdicts[word])

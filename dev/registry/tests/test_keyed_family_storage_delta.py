@@ -9,8 +9,9 @@ import pytest
 from cadrumo.domain.calculations.registry.keyed_families import family_spec
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ..compiler.loader import inherit_keyed_family, load_modelo_directory
-from ..compiler.loader_materialisation import patch_family_sequences
+from ..compiler.keyed_family_inheritance import inherit_keyed_family
+from ..compiler.keyed_family_storage_delta import patch_family_sequences
+from ..compiler.loader import load_modelo_directory
 from .test_restated_family_merge import (
     _BASE_FORMULA,
     _CUOTA_FORMULA,
@@ -110,11 +111,7 @@ def test_a_deadline_is_inherited_only_into_an_edition_filing_its_period(
         revision_id="2025",
         predecessor_id="2024",
         predecessor={"deadline_windows": (member,)},
-        section=spec.section,
-        identity=spec.identity,
-        identity_fields=spec.identity_fields,
-        casilla_identity_fields=spec.casilla_identity_fields,
-        period_scoped=spec.period_scoped,
+        family=spec,
         inherited=(member,),
         inherited_casillas=(),
         successor_casillas=(),

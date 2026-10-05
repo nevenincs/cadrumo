@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import zipfile
-from email.parser import Parser
 from pathlib import Path
 from typing import Final
 
@@ -20,24 +18,20 @@ from packaging.requirements import Requirement
 from dev._paths import UTF_8
 
 from ._distribution_names import normalise_distribution_name
+from .dependency_contract import assert_wheel_metadata_matches_pyproject, validate_frozen_exports, wheel_metadata
 from .hashing import sha256_path
 from .installed_tax_oracle import run_installed_tax_oracle
 from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,
-    assert_wheel_contains_source_data,
-    assert_wheel_metadata_matches_pyproject,
-    expected_wheel_data_paths,
     find_repo_root,
     install_wheel,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
-    validate_frozen_exports,
     venv_cadrumo_path,
     venv_python_path,
-    wheel_metadata,
     write_smoke_manifest,
 )
 from .proof_ledger import record_proof
@@ -45,24 +39,34 @@ from .python_cohort import (
     assert_installed_cohort,
     load_python_cohort,
 )
+from .source_data_contract import assert_wheel_contains_source_data, expected_wheel_data_paths
+from .wheel_metadata import read_wheel_metadata
 
 _UTF_8: Final[str] = UTF_8
 
 
 def _wheel_identity(wheel: Path) -> tuple[str, str]:
     """Return the normalized distribution name and version from one wheel."""
-    with zipfile.ZipFile(wheel) as archive:
-        metadata_names = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
-        if len(metadata_names) != 1:
-            raise SystemExit(
-                f"expected one wheel METADATA member in {wheel}; got {metadata_names!r}",
-            )
-        metadata = Parser().parsestr(archive.read(metadata_names[0]).decode(_UTF_8))
+    metadata = read_wheel_metadata(wheel)
     name = metadata.get("Name")
     version = metadata.get("Version")
     if not name or not version:
         raise SystemExit(f"wheel metadata is missing Name or Version: {wheel}")
     return normalise_distribution_name(name), version
+
+
+def _companion_identities(named_companions: dict[str, Path]) -> dict[str, tuple[str, str]]:
+    identities = {expected_name: _wheel_identity(artifact) for expected_name, artifact in named_companions.items()}
+    mislabeled = {
+        expected_name: observed_name
+        for expected_name, (observed_name, _version) in identities.items()
+        if observed_name != expected_name
+    }
+    if mislabeled:
+        raise SystemExit(
+            f"supplied companion wheel labels do not match their metadata: {mislabeled!r}",
+        )
+    return identities
 
 
 def _assert_complete_wheel_cohort(
@@ -76,16 +80,7 @@ def _assert_complete_wheel_cohort(
         "cadrumo-data-manuals": data_wheel_manuals,
         "cadrumo-data-official": data_wheel_official,
     }
-    identities = {expected_name: _wheel_identity(artifact) for expected_name, artifact in named_companions.items()}
-    mislabeled = {
-        expected_name: observed_name
-        for expected_name, (observed_name, _version) in identities.items()
-        if observed_name != expected_name
-    }
-    if mislabeled:
-        raise SystemExit(
-            f"supplied companion wheel labels do not match their metadata: {mislabeled!r}",
-        )
+    identities = _companion_identities(named_companions)
     root_name, root_version = _wheel_identity(wheel)
     if root_name != "cadrumo":
         raise SystemExit(f"command wheel identity is {root_name!r}, expected 'cadrumo'")

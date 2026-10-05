@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:be2f94b41536173cd108818d4bfd249c9e6c960daace33daa1bc38f2d899f1bb'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-adr]]"
-  - "[[2026-08-24-deadline-window-revision-authority-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
   - "[[2026-07-09-m210-plazo-keying-adr]]"
 ---

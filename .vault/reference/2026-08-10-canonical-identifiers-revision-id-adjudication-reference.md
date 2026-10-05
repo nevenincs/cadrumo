@@ -3,14 +3,15 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:af4ff5e5523a1f1b5b4d8bdb316a0356f1e4716b1e1b80117a0ace6f7eeea424'
-related:
-  - "[[2026-08-07-canonical-identifiers-plan]]"
+body_hash: 'sha256:96d8e5fe9ae8e4835bb364793fa6419440189773a32537b03dc65381239dfff4'
+related: []
 ---
 
 # `canonical-identifiers` reference: revision_id adjudication
+
+## Summary
 
 Grounding for `W05.P07.S35` and `W05.P07.S36`. Produced 2026-08-11. **No code was
 changed.** The row asked for twelve sites in one file; this is the measured population and

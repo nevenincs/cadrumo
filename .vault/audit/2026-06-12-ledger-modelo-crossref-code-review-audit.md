@@ -1,10 +1,9 @@
 ---
 tags: ['#audit', '#ledger-modelo-crossref']
 date: '2026-06-12'
-modified: '2026-07-17'
-body_hash: 'sha256:c43cca4a1dfe7d7e1dbbd0768e01c47dbc9b0c16394fc35f55ee8f765facb729'
+modified: '2026-10-03'
+body_hash: 'sha256:79b81305fab45589e909cf6d66d4ca14c72e7f5726289ecb404d0bd713a1524c'
 related:
-  - '[[2026-06-10-ledger-modelo-crossref-plan]]'
   - '[[2026-06-10-ledger-modelo-crossref-adr]]'
   - '[[2026-06-10-ledger-modelo-crossref-research]]'
 ---
@@ -15,7 +14,7 @@ related:
 
 Status: PASS.
 
-The scoped review covered the plan, ADR, research, checked rows, and the files changed in this session: `src/aeat/domain/modelos/_filing_repository.py`, `src/aeat/domain/modelos/_protocols.py`, `src/aeat/application/modelo/_revision_persistence.py`, and `src/aeat/application/modelo/_verification_actions.py`.
+The scoped review covered the plan, ADR, research, checked rows, and the files changed in this session: the retired module, the retired module, the retired module, and the retired module.
 
 No Critical or High findings were identified. The participation index remains a derived cache; `_blocking_modelo_references` still uses the live calculation-catalogue scan; CLI remains a consumer; and the filed-revision path now uses the filing repository's secure-object `save_many` call to co-emit filing, calculation, and participation writes.
 

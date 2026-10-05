@@ -489,7 +489,7 @@ def test_a_malformed_catalogue_fragment_refuses(tmp_path: Path) -> None:
     a vanished file is a race, and one handler was treating them alike.
     """
     from ..glossary_reference import _legal_permalinks
-    from ..legal_reference import LEGAL_CATALOGUE_RELPATH
+    from ..legal_catalogue import LEGAL_CATALOGUE_RELPATH
 
     catalogue = tmp_path / LEGAL_CATALOGUE_RELPATH
     catalogue.mkdir(parents=True)

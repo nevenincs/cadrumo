@@ -419,6 +419,12 @@ def carries_redaction_placeholder(value: object) -> bool:
 
 
 def _host_only(value: str) -> str:
+    from ..authentication_links import aeat_authentication_url
+
+    # This exact bundled entry point contains no identity or session material.
+    # Any added parameter, fragment, or different path still gets redacted.
+    if value == aeat_authentication_url():
+        return value
     parsed = urlparse(value)
     if not parsed.hostname:
         return "https://[redacted]"
@@ -623,12 +629,26 @@ def _nif_iva_span_absorbs_a_word(span: str) -> bool:
     if len(groups) < 2:
         return False
     bare_prefix = len(groups[0]) == 2 and groups[0].isalpha()
+    if _has_absorbed_nif_iva_word(groups, bare_prefix):
+        return True
+    return _leading_word_is_nif_iva_prefix(groups, bare_prefix)
+
+
+def _has_absorbed_nif_iva_word(groups: list[str], bare_prefix: bool) -> bool:
     for index, group in enumerate(groups[1:], start=1):
-        if not group.isalpha():
-            continue
-        in_key_position = index == 1 and bare_prefix and len(group) <= _NIF_IVA_BODY_MAX_LEADING_LETTERS
-        if not in_key_position:
+        if _nif_iva_word_group_is_absorbed(index, group, bare_prefix):
             return True
+    return False
+
+
+def _nif_iva_word_group_is_absorbed(index: int, group: str, bare_prefix: bool) -> bool:
+    if not group.isalpha():
+        return False
+    in_key_position = index == 1 and bare_prefix and len(group) <= _NIF_IVA_BODY_MAX_LEADING_LETTERS
+    return not in_key_position
+
+
+def _leading_word_is_nif_iva_prefix(groups: list[str], bare_prefix: bool) -> bool:
     if not bare_prefix:
         return False
     from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
@@ -737,92 +757,142 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = _compiled_rule_pattern(rule.pattern)
     protected = _timestamp_spans(value)
     identity_protected = (*protected, *_uuid_spans(value))
-
-    def _sub(
-        replace: Callable[[re.Match[str]], str],
-        spans: tuple[tuple[int, int], ...] = protected,
-    ) -> str:
-        return pattern.sub(_outside_timestamps(replace, spans), value)
-
     if rule.strategy is _RedactionStrategy.ELLIPSIS:
-        return _sub(lambda m: "...")
+        return _pattern_sub(pattern, value, lambda match: "...", protected)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
-        return _sub(lambda m: _sha256_prefix(m.group(0)), identity_protected)
+        return _pattern_sub(pattern, value, lambda match: _sha256_prefix(match.group(0)), identity_protected)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
-        # Imported here, not at module scope: ``core.identity`` reaches
-        # ``core.errors``, which reaches this module — the same cycle the
-        # lazy ``..errors`` imports below step around.
-        from ..identity.documents import is_identity_structurally_shaped
-        from ..identity.nif_iva import normalise_nif_iva
-
-        def _hash_if_identity(span: str) -> str | None:
-            # Normalise through the SAME function the codebase's canonical
-            # same-bearer predicate uses (``same_tax_identifier``), so pattern
-            # and gate agree by construction rather than by coincidence. They
-            # did not: this scan admits a dot as an internal separator while
-            # core identity structural predicate strips spaces, dashes, and
-            # dots, so the
-            # printed ``B.1234567.4`` matched the scan, was refused by the gate
-            # and reached the operator raw -- while ``same_tax_identifier``
-            # answered that it is the very same bearer as the ``B12345674``
-            # this funnel hashes.
-            if not _admits_spanish_identity(normalise_nif_iva(span), is_identity_structurally_shaped):
-                return None
-            return _sha256_prefix(span)
-
-        return _gated_sub(pattern, value, identity_protected, _hash_if_identity)
+        return _apply_identity_rule(pattern, value, identity_protected)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
-        # Imported at call time for the reason the identity arm above states.
-        from ..identity.documents import is_identity_structurally_shaped
-        from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
-
-        def _hash_if_nif_iva(span: str) -> str | None:
-            normalised = normalise_nif_iva(span)
-            prefix, body = normalised[:2], normalised[2:]
-            # No Member State's IVA body opens with more than two letters (the
-            # most are FR's two key characters and Northern Ireland's GD/HA),
-            # so a body that does is the tail of an ordinary WORD the wide scan
-            # joined to a number -- `Probe 3902` read as PR + OBE3902. Hashing
-            # it rewrote operator-chosen profile labels, and the rewritten
-            # label was then quoted back in commands that cannot match it.
-            # Refusing here is safe: _gated_sub re-reads a refused span one
-            # character further in, so a real number inside it is still found.
-            if len(body) - len(body.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) >= _NIF_IVA_BODY_MAX_LEADING_LETTERS + 1:
-                return None
-            if _nif_iva_span_absorbs_a_word(span):
-                return None
-            if prefix == "ES":
-                # Spain is absent from the per-State IVA formats, because its own
-                # identities are the control-character authority's. So the ES
-                # arm asks that authority about the BODY -- which is the whole of
-                # what the prefixed spelling adds.
-                if not _admits_spanish_identity(body, is_identity_structurally_shaped):
-                    return None
-                return _sha256_prefix(span)
-            admitted = None
-            if (admission := tax_identity_admission()) is not None:
-                admitted = admission.admits_nif_iva(normalised)
-            if admitted is None:
-                admitted = is_nif_iva_structurally_shaped(normalised)
-            if not admitted:
-                return None
-            return _sha256_prefix(span)
-
-        return _gated_sub(pattern, value, identity_protected, _hash_if_nif_iva)
+        return _apply_nif_iva_rule(pattern, value, identity_protected)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
-
-        def _hash_if_iban(span: str) -> str | None:
-            canonical = _normalise_iban(span)
-            if _IBAN_SHAPE_RE.match(canonical) and _iban_mod_97(canonical) == 1:
-                return _sha256_prefix(span)
-            return None
-
-        return _gated_sub(pattern, value, identity_protected, _hash_if_iban)
+        return _apply_iban_rule(pattern, value, identity_protected)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
-        return _sub(lambda m: _host_only(m.group(0)))
+        return _pattern_sub(pattern, value, lambda match: _host_only(match.group(0)), protected)
     if rule.strategy is _RedactionStrategy.FINGERPRINT:
-        return _sub(lambda m: _fingerprint(m.group(0)))
+        return _pattern_sub(pattern, value, lambda match: _fingerprint(match.group(0)), protected)
     return value  # pragma: no cover - exhaustive enum
+
+
+def _pattern_sub(
+    pattern: re.Pattern[str],
+    value: str,
+    replace: Callable[[re.Match[str]], str],
+    protected: tuple[tuple[int, int], ...],
+) -> str:
+    return pattern.sub(_outside_timestamps(replace, protected), value)
+
+
+def _apply_identity_rule(
+    pattern: re.Pattern[str],
+    value: str,
+    protected: tuple[tuple[int, int], ...],
+) -> str:
+    # Imported here, not at module scope: ``core.identity`` reaches
+    # ``core.errors``, which reaches this module — the same cycle the lazy
+    # ``..errors`` imports below step around.
+    from ..identity.documents import is_identity_structurally_shaped
+    from ..identity.nif_iva import normalise_nif_iva
+
+    return _gated_sub(
+        pattern,
+        value,
+        protected,
+        lambda span: _identity_replacement(span, normalise_nif_iva, is_identity_structurally_shaped),
+    )
+
+
+def _identity_replacement(
+    span: str,
+    normalise: Callable[[str], str],
+    structurally_shaped: Callable[[object], bool],
+) -> str | None:
+    # The scan admits dots internally. Use the same normaliser as the
+    # same-bearer predicate before consulting the authority-backed gate.
+    if not _admits_spanish_identity(normalise(span), structurally_shaped):
+        return None
+    return _sha256_prefix(span)
+
+
+def _apply_nif_iva_rule(
+    pattern: re.Pattern[str],
+    value: str,
+    protected: tuple[tuple[int, int], ...],
+) -> str:
+    # Imported at call time for the identity-arm import-cycle reason above.
+    from ..identity.documents import is_identity_structurally_shaped
+    from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
+
+    return _gated_sub(
+        pattern,
+        value,
+        protected,
+        lambda span: _nif_iva_replacement(
+            span,
+            is_identity_structurally_shaped,
+            is_nif_iva_structurally_shaped,
+            normalise_nif_iva,
+        ),
+    )
+
+
+def _nif_iva_replacement(
+    span: str,
+    spanish_identity_shape: Callable[[object], bool],
+    nif_iva_shape: Callable[[str], bool],
+    normalise: Callable[[str], str],
+) -> str | None:
+    normalised = normalise(span)
+    prefix, body = normalised[:2], normalised[2:]
+    if _body_has_absorbed_word(body) or _nif_iva_span_absorbs_a_word(span):
+        return None
+    if prefix == "ES":
+        return _spanish_nif_iva_replacement(span, body, spanish_identity_shape)
+    return _other_nif_iva_replacement(span, normalised, nif_iva_shape)
+
+
+def _body_has_absorbed_word(body: str) -> bool:
+    # Member-State IVA bodies open with at most two letters. More is a joined
+    # ordinary word; the gated scan will re-read the inner token separately.
+    leading_letters = len(body) - len(body.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+    return leading_letters >= _NIF_IVA_BODY_MAX_LEADING_LETTERS + 1
+
+
+def _spanish_nif_iva_replacement(
+    span: str,
+    body: str,
+    structurally_shaped: Callable[[object], bool],
+) -> str | None:
+    if not _admits_spanish_identity(body, structurally_shaped):
+        return None
+    return _sha256_prefix(span)
+
+
+def _other_nif_iva_replacement(
+    span: str,
+    normalised: str,
+    structurally_shaped: Callable[[str], bool],
+) -> str | None:
+    admission = tax_identity_admission()
+    admitted = None if admission is None else admission.admits_nif_iva(normalised)
+    if admitted is None:
+        admitted = structurally_shaped(normalised)
+    return _sha256_prefix(span) if admitted else None
+
+
+def _apply_iban_rule(
+    pattern: re.Pattern[str],
+    value: str,
+    protected: tuple[tuple[int, int], ...],
+) -> str:
+    return _gated_sub(pattern, value, protected, _iban_replacement)
+
+
+def _iban_replacement(span: str) -> str | None:
+    canonical = _normalise_iban(span)
+    if _IBAN_SHAPE_RE.match(canonical) and _iban_mod_97(canonical) == 1:
+        return _sha256_prefix(span)
+    return None
 
 
 def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
@@ -939,6 +1009,8 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
 #: Every run of characters a sensitivity-set key name cannot contain, collapsed
 #: to the single ``_`` those names separate their words with.
 _REDACTION_KEY_SEPARATOR_RE = re.compile(r"[^a-z0-9]+")
+_REDACTION_KEY_CAMEL_BOUNDARY_RE = re.compile(r"([a-z0-9])([A-Z])")
+_REDACTION_KEY_ACRONYM_BOUNDARY_RE = re.compile(r"([A-Z])([A-Z][a-z])")
 
 
 def normalise_redaction_key(key: object | None) -> str:
@@ -951,24 +1023,57 @@ def normalise_redaction_key(key: object | None) -> str:
     hold only non-empty tokens -- so the empty answer is "not classified" rather
     than a value a caller must branch on.
 
-    Folding is :meth:`str.casefold`, not :meth:`str.lower`: casefold is the more
-    aggressive of the two, so more spellings collapse onto the ASCII token a
-    sensitivity set names. For a redaction classifier that direction is the safe
-    one -- it can only make a key match a *sensitive* name it would otherwise
-    have missed, never the reverse.
+    Camel-case and acronym-to-word boundaries are separated before punctuation
+    folding, so ``taxId``, ``NIFValue``, and ``profileNIFValue`` reach the same
+    keys as their lower-snake-case forms. Folding is :meth:`str.casefold`, not
+    :meth:`str.lower`: casefold is the more aggressive of the two, so more
+    spellings collapse onto the ASCII token a sensitivity set names. For a
+    redaction classifier that direction is the safe one -- it can only make a
+    key match a *sensitive* name it would otherwise have missed, never the
+    reverse.
     """
     if key is None:
         return ""
     if isinstance(key, str):
         return _normalise_text_redaction_key(key)
-    return _REDACTION_KEY_SEPARATOR_RE.sub("_", str(key).casefold()).strip("_")
+    return _normalise_redaction_key_text(str(key))
 
 
 #: Structured output asks for the same few field names once per value, so the
 #: fold is reused; the keys are schema names, not payload values.
 @lru_cache(maxsize=4096)
 def _normalise_text_redaction_key(key: str) -> str:
-    return _REDACTION_KEY_SEPARATOR_RE.sub("_", key.casefold()).strip("_")
+    return _normalise_redaction_key_text(key)
+
+
+def _normalise_redaction_key_text(key: str) -> str:
+    acronym_split = _REDACTION_KEY_ACRONYM_BOUNDARY_RE.sub(r"\1_\2", key)
+    camel_split = _REDACTION_KEY_CAMEL_BOUNDARY_RE.sub(r"\1_\2", acronym_split)
+    return _REDACTION_KEY_SEPARATOR_RE.sub("_", camel_split.casefold()).strip("_")
+
+
+def is_sensitive_redaction_key(
+    key: object | None,
+    *,
+    additional_exact_terms: frozenset[str] = frozenset(),
+) -> bool:
+    """Return whether a folded key contains a canonical sensitive-key term.
+
+    Longer terms match within composite names, preserving the historical
+    credential/token/secret substring coverage. The short ``nif`` and ``nie``
+    terms must occupy a complete folded component so ordinary words such as
+    ``manifest`` remain useful diagnostic keys. A caller may add a local set of
+    already-folded exact names without broadening those terms' matching rules.
+    """
+    normalised = normalise_redaction_key(key)
+    if not normalised:
+        return False
+    if normalised in additional_exact_terms:
+        return True
+    components = frozenset(normalised.split("_"))
+    return any(
+        term in normalised and (len(term) > 3 or "_" in term or term in components) for term in ALWAYS_REDACT_KEY_TERMS
+    )
 
 
 def _is_cli_profile_reference(value: object) -> bool:
@@ -1037,15 +1142,22 @@ _CLI_PATH_SEPARATORS = frozenset({"/", "\\"})
 def _cli_uuid_is_custody_identity(text: str, start: int, end: int) -> bool:
     """Judge whether one UUID match identifies a profile rather than a directory."""
     before = text[:start]
-    if not before or before[-1] not in _CLI_PATH_SEPARATORS:
-        # Not a path segment at all: a bare identifier token, which is exactly
-        # the surface this redaction exists to hide.
-        return True
-    if end < len(text) and text[end] not in _CLI_PATH_SEPARATORS and not text[end].isspace():
-        # A longer token that merely starts with a UUID shape; leave it to the
-        # remaining passes rather than truncating it into a placeholder.
+    if _uuid_match_is_not_a_path_segment(text, before, end):
+        # Bare ids and UUID-shaped token prefixes are protected identifiers.
         return True
     segments: list[str] = [segment for segment in re.split(r"[\\/]", before) if segment]
+    return _path_segment_is_custody_identity(segments)
+
+
+def _uuid_match_is_not_a_path_segment(text: str, before: str, end: int) -> bool:
+    if not before or before[-1] not in _CLI_PATH_SEPARATORS:
+        return True
+    # A longer token that merely starts with a UUID shape is left to the
+    # remaining passes rather than truncated into a placeholder.
+    return end < len(text) and text[end] not in _CLI_PATH_SEPARATORS and not text[end].isspace()
+
+
+def _path_segment_is_custody_identity(segments: list[str]) -> bool:
     if not segments:
         return True
     if segments[-1].lower() in _CLI_CUSTODY_UUID_PARENTS:
@@ -1183,18 +1295,7 @@ def _redact_structured_for_cli_output(
     key: object | None = None,
     reveal_identifiers: bool = False,
 ) -> object:
-    # An annual-manual coverage locator is a reviewed, bundled official source
-    # reference, not an operator-supplied navigation URL. The CLI contract
-    # intentionally publishes its full path so an operator can re-check the
-    # declared publication disposition. Keep this exception key-scoped: every
-    # other URL value remains host-only under the normal CLI redaction policy.
-    if key == "official_locator" and isinstance(value, str):
-        return value
-    # Registry source-reference identifiers are public authority keys, not
-    # taxpayer identifiers. Their validated kebab-case spelling can contain a
-    # modelo/year/period segment that resembles a separated NIF; redacting that
-    # segment both corrupts the identifier and violates the SourceRefId schema.
-    if key in {"source_refs", "workbook_source"} and isinstance(value, str):
+    if _is_public_cli_reference(key, value):
         return value
     placeholder = _cli_placeholder_for_key(key, value, reveal_identifiers=reveal_identifiers)
     if placeholder is not None:
@@ -1212,6 +1313,14 @@ def _redact_structured_for_cli_output(
     if is_object_tuple(value):
         return _redact_cli_tuple(value, key=key, reveal_identifiers=reveal_identifiers)
     return value
+
+
+def _is_public_cli_reference(key: object | None, value: object) -> bool:
+    """Keep reviewed public source references intact in CLI payloads."""
+    # The official locator is a reviewed bundled source path, and registry
+    # source-reference ids are public authority keys. Their exceptions are
+    # key-scoped so operator URLs and identity-like strings remain redacted.
+    return isinstance(value, str) and (key == "official_locator" or key in {"source_refs", "workbook_source"})
 
 
 def _unique_mapping_key(candidate: object, existing: Mapping[object, object]) -> object:

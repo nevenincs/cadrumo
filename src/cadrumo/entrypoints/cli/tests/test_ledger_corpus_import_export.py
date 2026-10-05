@@ -99,7 +99,7 @@ def test_ofx_and_pdf_providers_import_real_transactions() -> None:
 
     _invoke(["app", "ledger", "reset", "--yes"])
     pdf = _FIN_FIXTURES / "n26" / "n26-savings-2025-01.pdf"
-    pdf_res = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(pdf), "--provider", "pdf"])
+    pdf_res = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(pdf), "--provider", "pdf-n26"])
     assert pdf_res.exit_code == 0, pdf_res.output
     assert len(_list_rows()) > 0
 

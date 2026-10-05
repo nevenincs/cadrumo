@@ -77,9 +77,10 @@ class _ColumnLayout:
     description: float
     validation: float | None
     content: float
+    use: float | None = None
 
     def boundaries(self) -> tuple[float, ...]:
-        return tuple(edge for edge in (self.description, self.validation, self.content) if edge is not None)
+        return tuple(edge for edge in (self.description, self.validation, self.content, self.use) if edge is not None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,20 +118,9 @@ class _RowBuilder:
 
     def add_cells(self, words: Sequence[_Word]) -> None:
         for word in words:
-            if _straddles(word, self.layout):
-                self.valid = False
-            self.reading_order.append(word.text)
-            column = _column_of(word, self.layout)
-            if column == "description":
-                self.description.append(word.text)
-            elif column == "validation":
-                self.validation.append(word.text)
-            else:
-                self.content.append(word.text)
+            _add_word_to_row(self, word)
         for column in ("description", "content"):
-            leftmost = min((word.x0 for word in words if _column_of(word, self.layout) == column), default=None)
-            edge = self.layout.description if column == "description" else self.layout.content
-            if leftmost is not None and not -1.0 <= leftmost - edge <= _CELL_INDENT_LIMIT:
+            if not _has_valid_indentation(words, self.layout, column):
                 self.valid = False
 
     def finish(self, *, ended_by_table_end: bool) -> PdfColumnRow | None:
@@ -147,7 +137,30 @@ class _RowBuilder:
         )
 
 
+def _add_word_to_row(builder: _RowBuilder, word: _Word) -> None:
+    if _straddles(word, builder.layout):
+        builder.valid = False
+    builder.reading_order.append(word.text)
+    column = _column_of(word, builder.layout)
+    if column == "description":
+        builder.description.append(word.text)
+    elif column == "validation":
+        builder.validation.append(word.text)
+    elif column == "content":
+        builder.content.append(word.text)
+    else:
+        builder.valid = False
+
+
+def _has_valid_indentation(words: Sequence[_Word], layout: _ColumnLayout, column: str) -> bool:
+    leftmost = min((word.x0 for word in words if _column_of(word, layout) == column), default=None)
+    edge = layout.description if column == "description" else layout.content
+    return leftmost is None or -1.0 <= leftmost - edge <= _CELL_INDENT_LIMIT
+
+
 def _column_of(word: _Word, layout: _ColumnLayout) -> str:
+    if layout.use is not None and word.centre >= layout.use:
+        return "use"
     if word.centre >= layout.content:
         return "content"
     if layout.validation is not None and word.centre >= layout.validation:
@@ -212,41 +225,80 @@ def _header_layout(
 ) -> _ColumnLayout | str:
     """Read a table header's column starts, or say the line is not a supported header.
 
-    A header is supported only when Contenido is its LAST column. Designs that
-    print a further column after it (``Uso``) have no field slot for that
-    column's text, and their Contenido cells visibly overflow into it, so their
-    rows are left to the line parser rather than split on an uncertain border.
+    A trailing Uso column is supported only while its cells are empty. Text in
+    that column has no field slot and refuses the affected row.
     """
     texts = [fold_diacritics(word.text).lower() for word in line]
-    description = next((index for index, text in enumerate(texts) if text.startswith("descripci")), None)
-    content = next((index for index, text in enumerate(texts) if text == "contenido"), None)
+    columns = _header_columns(line, texts)
+    if isinstance(columns, str):
+        return columns
+    description, validation, content = columns
+    middle = line[0].top + 3.0
+    borders = sorted(x for x, top, bottom in rules if top <= middle <= bottom)
+    description_start = _column_start(
+        line[description],
+        line[description - 1].x1 if description else 0.0,
+        borders,
+    )
+    validation_start = (
+        _column_start(line[validation], line[validation - 1].x1, borders) if validation is not None else None
+    )
+    content_start = _column_start(line[content], line[content - 1].x1, borders)
+    use_start = _column_start(line[content + 1], line[content].x1, borders) if content + 1 < len(line) else None
+    return _ColumnLayout(
+        description=description_start,
+        validation=validation_start,
+        content=content_start,
+        use=use_start,
+    )
+
+
+def _header_columns(
+    line: Sequence[_Word],
+    texts: Sequence[str],
+) -> tuple[int, int | None, int] | str:
+    """Return supported header column indexes or the header refusal state."""
+    description, content = _description_and_content_indexes(texts)
     if description is None or content is None or not _TABLE_HEADER_LEAD_RE.match(" ".join(texts[:description])):
         # Prose mentions both words too ("la descripcion del contenido del
         # campo"); a table header opens with its ordinal and position labels.
         return _HEADER_ABSENT
-    validation = next(
+    validation = _validation_column_index(texts)
+    if not _has_supported_column_order(line, description, validation, content):
+        return _HEADER_UNSUPPORTED
+    return description, validation, content
+
+
+def _description_and_content_indexes(texts: Sequence[str]) -> tuple[int | None, int | None]:
+    description = next((index for index, text in enumerate(texts) if text.startswith("descripci")), None)
+    content = next((index for index, text in enumerate(texts) if text == "contenido"), None)
+    return description, content
+
+
+def _validation_column_index(texts: Sequence[str]) -> int | None:
+    return next(
         (index for index, text in enumerate(texts) if text in {"validacion", "oblig.", "oblig"}),
         None,
     )
-    if (
-        content != len(line) - 1
-        or content < description
-        or (validation is not None and not description < validation < content)
-    ):
-        return _HEADER_UNSUPPORTED
-    middle = line[0].top + 3.0
-    borders = sorted(x for x, top, bottom in rules if top <= middle <= bottom)
 
-    def column_start(label: _Word, floor: float) -> float:
-        # A header label may be centred over its column, so the column's own
-        # border, where the page draws one, is where its cells begin.
-        drawn = [x for x in borders if floor < x <= label.x0 + 1.0]
-        return drawn[-1] if drawn else label.x0 - 1.0
 
-    description_start = column_start(line[description], line[description - 1].x1 if description else 0.0)
-    validation_start = column_start(line[validation], line[validation - 1].x1) if validation is not None else None
-    content_start = column_start(line[content], line[content - 1].x1)
-    return _ColumnLayout(description=description_start, validation=validation_start, content=content_start)
+def _has_supported_column_order(
+    line: Sequence[_Word],
+    description: int,
+    validation: int | None,
+    content: int,
+) -> bool:
+    return (
+        (content == len(line) - 1 or (content == len(line) - 2 and line[-1].text.lower() == "uso"))
+        and content >= description
+        and (validation is None or description < validation < content)
+    )
+
+
+def _column_start(label: _Word, floor: float, borders: Sequence[float]) -> float:
+    """Read a column's left edge from a drawn rule or its header label."""
+    drawn = [x for x in borders if floor < x <= label.x0 + 1.0]
+    return drawn[-1] if drawn else label.x0 - 1.0
 
 
 def _row_key(lead: Sequence[_Word]) -> tuple[tuple[int, ...], tuple[str, ...]] | None:
@@ -285,59 +337,98 @@ def _read_column_rows(
     stopped row is discarded too. Discarded rows are simply left to the line
     parser.
     """
-    rows: list[PdfColumnRow] = []
+    return _ColumnRowsReader().read(pages)
+
+
+@dataclass(slots=True)
+class _ColumnRowsReader:
+    """Accumulate rows while preserving table-end continuation state."""
+
+    rows: list[PdfColumnRow] = field(default_factory=list)
     open_row: _RowBuilder | None = None
     closed_at_table_end: PdfColumnRow | None = None
 
-    def close(builder: _RowBuilder, *, ended_by_table_end: bool) -> PdfColumnRow | None:
-        finished = builder.finish(ended_by_table_end=ended_by_table_end)
-        if finished is not None:
-            rows.append(finished)
-        return finished
+    def read(
+        self, pages: Sequence[tuple[Sequence[_Word], Sequence[tuple[float, float, float]]]]
+    ) -> tuple[PdfColumnRow, ...]:
+        for words, rules in pages:
+            self._read_page(words, rules)
+        if self.open_row is not None:
+            self._close(self.open_row, ended_by_table_end=self.open_row.interrupted)
+        return tuple(self.rows)
 
-    for words, rules in pages:
+    def _read_page(self, words: Sequence[_Word], rules: Sequence[tuple[float, float, float]]) -> None:
         layout: _ColumnLayout | None = None
         for line in _printed_lines(words):
-            header = _header_layout(line, rules)
-            if header != _HEADER_ABSENT:
-                layout = header if isinstance(header, _ColumnLayout) else None
-                if open_row is not None and layout is not None and not open_row.interrupted:
-                    open_row.layout = layout
-                elif open_row is not None:
-                    ended = close(open_row, ended_by_table_end=open_row.interrupted and layout is not None)
-                    closed_at_table_end = ended if open_row.interrupted else None
-                    open_row = None
+            handled, layout = self._read_header(line, rules, layout)
+            if handled:
                 continue
             if layout is None or _is_page_furniture(line):
                 continue
-            lead = [word for word in line if word.centre < layout.description]
-            cells = [word for word in line if word.centre >= layout.description]
-            if lead:
-                opened = _row_key(lead)
-                if opened is None:
-                    if open_row is not None:
-                        open_row.interrupted = True
-                    continue
-                if open_row is not None:
-                    if open_row.interrupted:
-                        open_row.valid = False
-                    close(open_row, ended_by_table_end=False)
-                closed_at_table_end = None
-                key, extra = opened
-                open_row = _RowBuilder(key=key, lead=list(extra), layout=layout)
-                open_row.valid = not any(_straddles(word, layout) for word in lead)
-                open_row.add_cells(cells)
-                continue
-            if open_row is not None and not open_row.interrupted:
-                open_row.add_cells(cells)
-            elif open_row is None and closed_at_table_end is not None:
-                # Text inside a new table before its first row may continue the
-                # row that was closed at the previous table's end.
-                rows[:] = [row for row in rows if row is not closed_at_table_end]
-                closed_at_table_end = None
-    if open_row is not None:
-        close(open_row, ended_by_table_end=open_row.interrupted)
-    return tuple(rows)
+            self._read_table_line(line, layout)
+
+    def _read_header(
+        self,
+        line: Sequence[_Word],
+        rules: Sequence[tuple[float, float, float]],
+        layout: _ColumnLayout | None,
+    ) -> tuple[bool, _ColumnLayout | None]:
+        header = _header_layout(line, rules)
+        if header == _HEADER_ABSENT:
+            return False, layout
+        layout = header if isinstance(header, _ColumnLayout) else None
+        if self.open_row is not None and layout is not None and not self.open_row.interrupted:
+            self.open_row.layout = layout
+        elif self.open_row is not None:
+            ended = self._close(self.open_row, ended_by_table_end=self.open_row.interrupted and layout is not None)
+            self.closed_at_table_end = ended if self.open_row.interrupted else None
+            self.open_row = None
+        return True, layout
+
+    def _read_table_line(self, line: Sequence[_Word], layout: _ColumnLayout) -> None:
+        lead = [word for word in line if word.centre < layout.description]
+        cells = [word for word in line if word.centre >= layout.description]
+        if lead:
+            self._read_leading_line(lead, cells, layout)
+            return
+        if self.open_row is not None:
+            if not self.open_row.interrupted:
+                self.open_row.add_cells(cells)
+        elif self.closed_at_table_end is not None:
+            self._discard_table_end_continuation()
+
+    def _read_leading_line(
+        self,
+        lead: list[_Word],
+        cells: list[_Word],
+        layout: _ColumnLayout,
+    ) -> None:
+        opened = _row_key(lead)
+        if opened is None:
+            if self.open_row is not None:
+                self.open_row.interrupted = True
+            return
+        if self.open_row is not None:
+            if self.open_row.interrupted:
+                self.open_row.valid = False
+            self._close(self.open_row, ended_by_table_end=False)
+        self.closed_at_table_end = None
+        key, extra = opened
+        self.open_row = _RowBuilder(key=key, lead=list(extra), layout=layout)
+        self.open_row.valid = not any(_straddles(word, layout) for word in lead)
+        self.open_row.add_cells(cells)
+
+    def _discard_table_end_continuation(self) -> None:
+        # Text inside a new table before its first row may continue the row
+        # that was closed at the previous table's end.
+        self.rows[:] = [row for row in self.rows if row is not self.closed_at_table_end]
+        self.closed_at_table_end = None
+
+    def _close(self, builder: _RowBuilder, *, ended_by_table_end: bool) -> PdfColumnRow | None:
+        finished = builder.finish(ended_by_table_end=ended_by_table_end)
+        if finished is not None:
+            self.rows.append(finished)
+        return finished
 
 
 def _compact(parts: Iterable[str]) -> str:
@@ -386,31 +477,40 @@ def apply_pdf_column_cells(
     """
     if not rows:
         return sheets
-    cursor = 0
     updated: list[RecordDesignSheet] = []
+    cursor = 0
     for sheet in sheets:
-        replacements: dict[int, RecordDesignField] = {}
-        for index, design_field in sorted(enumerate(sheet.fields), key=lambda item: item[1].row):
-            match = next(
-                (position for position in range(cursor, len(rows)) if _row_matches(design_field, rows[position])),
-                None,
-            )
-            if match is None:
-                continue
-            cursor = match + 1
-            row = rows[match]
-            if not _accepts(design_field, row):
-                continue
-            replacements[index] = design_field.model_copy(
-                update={
-                    "description": join_pdf_parts([*row.lead, *row.description]),
-                    "validation": join_pdf_parts(list(row.validation)) or None,
-                    "content": join_pdf_parts(list(row.content)) or None,
-                    "content_in_contenido_column": bool(row.content),
-                },
-            )
-        if replacements:
-            fields = tuple(replacements.get(index, original) for index, original in enumerate(sheet.fields))
-            sheet = sheet.model_copy(update={"fields": fields})
+        sheet, cursor = _apply_column_rows_to_sheet(sheet, rows, cursor)
         updated.append(sheet)
     return tuple(updated)
+
+
+def _apply_column_rows_to_sheet(
+    sheet: RecordDesignSheet,
+    rows: Sequence[PdfColumnRow],
+    cursor: int,
+) -> tuple[RecordDesignSheet, int]:
+    replacements: dict[int, RecordDesignField] = {}
+    for index, design_field in sorted(enumerate(sheet.fields), key=lambda item: item[1].row):
+        match = next(
+            (position for position in range(cursor, len(rows)) if _row_matches(design_field, rows[position])),
+            None,
+        )
+        if match is None:
+            continue
+        cursor = match + 1
+        row = rows[match]
+        if not _accepts(design_field, row):
+            continue
+        replacements[index] = design_field.model_copy(
+            update={
+                "description": join_pdf_parts([*row.lead, *row.description]),
+                "validation": join_pdf_parts(list(row.validation)) or None,
+                "content": join_pdf_parts(list(row.content)) or None,
+                "content_in_contenido_column": bool(row.content),
+            },
+        )
+    if replacements:
+        fields = tuple(replacements.get(index, original) for index, original in enumerate(sheet.fields))
+        sheet = sheet.model_copy(update={"fields": fields})
+    return sheet, cursor

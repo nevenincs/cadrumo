@@ -17,7 +17,7 @@ from ....application.modelo.filing_record_view_operation import (
     ModeloFilingObservationLayersProjection,
     ModeloFilingObservationOverrideProjection,
 )
-from ....application.modelo.local_observation_operation import (
+from ....application.modelo.local_observation_contracts import (
     MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
     ModeloLocalObservationCasillaValue,
     ModeloLocalObservationMutationProjection,
@@ -33,7 +33,7 @@ from ....core.period import Period
 from .. import runtime_modelo_local_observation as bridge
 from .._filing_chain_payloads import ObservationLayersPayload
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -38,6 +38,7 @@ from .authority_artifact import (
     AuthorityGenerationPin,
     EvidenceComponentQuery,
     ExportLayoutComponentQuery,
+    FormLayoutComponentQuery,
     GovernedFactComponentQuery,
     ModeloDirectoryComponentQuery,
     ModeloRevisionComponentQuery,
@@ -50,7 +51,12 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
-from .authority_store import AuthorityStoreError, SQLiteAuthorityReader
+from .authority_store import (
+    AUTHORITY_DESCRIPTOR_FILENAME,
+    AuthorityDescriptor,
+    AuthorityStoreError,
+    SQLiteAuthorityReader,
+)
 from .errors import AuthorityDescriptorUnavailableError, RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import (
     GovernedFactQuery,
@@ -62,7 +68,7 @@ from .facts.resolution import (
 )
 from .facts.schema import GovernedFact
 from .governed_fact_scope import validating_governed_facts
-from .ids import LegalRefId, RevisionId
+from .ids import RevisionId
 from .schema import (
     ModeloDefinition,
     ModeloRevision,
@@ -74,6 +80,7 @@ from .schema import (
 from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
 from .schema_exports import ExportLayoutDefinition
+from .schema_form_layouts import FormLayoutDefinition
 from .schema_references import LegalReference, SourceReference
 from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
 from .static_inspection import RegistryRevisionInspection
@@ -256,20 +263,6 @@ class ValidatedRegistryAuthority:
     def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
         """Return the registry's single filing-year support envelope."""
         return self.catalogues.require_supported_filing_years()
-
-    def project_filing_year(self, filing_year: int) -> int:
-        """Project an admitted filing year onto the authority's authored horizon."""
-        support = self.catalogues.supported_filing_years
-        if support is None:
-            raise RegistrySnapshotError("the calculation registry declares no supported filing years")
-        projected = support.projection_coordinate(filing_year)
-        if projected is None:
-            ceiling = support.hard_ceiling
-            span = f"{support.floor} and later" if ceiling is None else f"{support.floor}..{ceiling}"
-            raise RegistrySnapshotError(
-                f"filing year {filing_year} is outside the calculation registry's supported span {span}"
-            )
-        return projected
 
     def tax_domain(
         self,
@@ -788,6 +781,22 @@ class PinnedAuthorityOperation:
             raise RegistryValidationError("export layout component decoded to an unexpected type")
         return value
 
+    def form_layout(self, modelo_id: str | Modelo, revision_id: str) -> FormLayoutDefinition | None:
+        """Load a revision's declared form layout, or ``None`` when it declares none.
+
+        Absence is the inspection-only arm, not an error: the revision exists
+        and has no published layout. An unknown revision still refuses.
+        """
+        normalized = Modelo(modelo_id).value
+        query = FormLayoutComponentQuery(normalized, revision_id)
+        if query not in self._reader.component_queries():
+            self.revision(normalized, revision_id)
+            return None
+        value = self._reader.load(query, pin=self.generation)
+        if not isinstance(value, FormLayoutDefinition):
+            raise RegistryValidationError("form layout component decoded to an unexpected type")
+        return value
+
     def legal_evidence(self, legal_reference_id: str) -> PublishedLegalEvidence:
         """Load one publisher-captured legal evidence projection."""
         value = self._reader.load(
@@ -797,19 +806,6 @@ class PinnedAuthorityOperation:
         if not isinstance(value, PublishedLegalEvidence):
             raise RegistryValidationError("legal evidence component decoded to an unexpected type")
         return value
-
-    def legal_reference_ids(self) -> tuple[str, ...]:
-        """Return every published legal declaration identity without hydrating payloads."""
-        return tuple(
-            query.reference_id
-            for query in self._reader.component_queries()
-            if isinstance(query, ReferenceComponentQuery) and query.kind is AuthorityComponentKind.LEGAL_REFERENCE
-        )
-
-    def legal_quotation_is_grounded(self, legal_ref_id: LegalRefId, quotation: str) -> bool:
-        """Answer one citation query from this generation's published legal evidence."""
-        evidence = self.legal_evidence(str(legal_ref_id))
-        return AuthorityEvidenceProjection(legal=(evidence,)).quotation_is_grounded(str(legal_ref_id), quotation)
 
     def capture_law_selected_projection(
         self,
@@ -942,7 +938,7 @@ class IndexedRegistryAuthority:
             self._retired_readers = still_leased
 
 
-_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS = ("registry", "authority", "authority.current.json")
+_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS = ("registry", "authority", AUTHORITY_DESCRIPTOR_FILENAME)
 _bundled_indexed_authority_lock = RLock()
 _bundled_indexed_authority: IndexedRegistryAuthority | None = None
 
@@ -1019,3 +1015,18 @@ def bundled_authority_descriptor_path() -> Path:
     if not packaged.is_file():
         raise AuthorityDescriptorUnavailableError.for_packaged_location(descriptor_path=packaged)
     return packaged
+
+
+def published_authority_generation() -> str | None:
+    """Return the logical generation the selector names now, without admitting its database.
+
+    Processes that must serve one authority cohort -- a runtime and the
+    frontends connecting to it -- compare this value. An editable install
+    keeps its package version while the published generation moves, so the
+    version alone cannot tell them apart. ``None`` means no well-formed
+    descriptor resolves; admission refuses that case where it reads.
+    """
+    try:
+        return AuthorityDescriptor.read(bundled_authority_descriptor_path()).logical_generation
+    except (AuthorityDescriptorUnavailableError, AuthorityStoreError):
+        return None

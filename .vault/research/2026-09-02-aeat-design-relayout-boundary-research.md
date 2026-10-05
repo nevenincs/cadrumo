@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#aeat-design-relayout-boundary'
 date: '2026-09-02'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bfaf6999c5650d657b7b43937758afe968cde652f7d0697a7271a8652f99dd46'
+body_hash: 'sha256:1fdc9aa8a78bc36f76d886a5c66681569f91fd4500451177e8ffe367ca6d0faa'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
@@ -29,9 +29,8 @@ The conservative remediation screen refuses every one of the 156 current 2024
 candidate identities: 141 have a different complete official field signature, 14
 have no exact sibling parser/map anchor, and one has ambiguous segment ownership.
 The accepted partition record's wholesale-copy premise therefore cannot establish
-2024 meaning from the later-year tree. The reproducible measurement is at
-`dev/registry/analysis/m200_2024_sibling_remediation.py:249` and
-`dev/registry/analysis/m200_2024_sibling_remediation.py:355`; the premise being
+2024 meaning from the later-year tree. The reproducible measurement is  and
+the former source file; the premise being
 tested is recorded at
 `.vault/adr/2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr.md:126`.
 
@@ -41,9 +40,8 @@ The restored-semantics audit accepts a repair only when one non-restored 2024 pe
 has the same normalized description template and compatible wire type. Its measured
 restoration cohort produced 9 uniquely repairable payloads and 147 unresolved ones.
 The audit detects direct description/role contradictions instead of ranking a
-nearest candidate; these contracts live at
-`dev/registry/analysis/m200_restored_semantic_audit.py:107` and
-`dev/registry/analysis/m200_restored_semantic_audit.py:235`. This option can
+nearest candidate; these contracts live  and
+the former source file. This option can
 correct a reviewed proposal but cannot invent a semantic role for a unique concept.
 
 ### Cross-revision description matches are useful proposals but insufficient proof
@@ -53,7 +51,7 @@ trailing bracket identity and explicit year, required equal AEAT type and length
 excluded identical parser anchors, and checked legal applicability to 2024. It
 found 32 unique candidates, 13 conflicting candidate sets, and 102 with no
 applicable match. Those counts are produced by
-`dev/registry/analysis/m200_restored_semantic_audit.py`; they describe the
+the former source file; they describe the
 withdrawn restoration cohort and are not deployable registry data.
 
 The governing generator authority separates concerns: the official binary design
@@ -89,10 +87,6 @@ target-first crosswalk, but does not itself authorize one.
 
 ## Sources
 
-- `dev/registry/analysis/m200_2024_sibling_remediation.py:249`
-- `dev/registry/analysis/m200_2024_sibling_remediation.py:355`
-- `dev/registry/analysis/m200_restored_semantic_audit.py:107`
-- `dev/registry/analysis/m200_restored_semantic_audit.py:235`
 - `.vault/adr/2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr.md:126`
 - `.vault/adr/2026-08-10-aeat-export-fragment-generator-authority-adr.md:55`
 - `.vault/adr/2026-08-10-aeat-export-fragment-generator-authority-adr.md:82`

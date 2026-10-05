@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#post-release-distribution'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:76cb30f2aa71f94b4c9a1d3691b2d9914ac9301aebd53148f967170d9b0cbac8'
+body_hash: 'sha256:a74963b4e4c7f1be4ea9b24845e5267924af5471f8fe19b6c889f4d8e2b7cc2e'
 related:
   - '[[2026-07-17-post-release-distribution-audit]]'
-  - '[[2026-07-17-post-release-distribution-ledger]]'
-  - '[[2026-07-17-post-release-distribution-plan]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
   - '[[2026-07-19-post-release-distribution-reference]]'
   - '[[2026-07-21-post-release-distribution-v0-2-1-publication-audit]]'
@@ -33,14 +31,6 @@ Auto-generated index of all documents tagged with `#post-release-distribution`.
 - `2026-07-17-post-release-distribution-audit` - `post-release-distribution` audit: `distribution post-release deferral split`
 - `2026-07-21-post-release-distribution-v0-2-1-publication-audit` - `post-release-distribution` audit: `v0.2.1 publication record and outstanding fast-follow`
 - `2026-07-25-post-release-distribution-close-honesty-review-audit` - `post-release-distribution` audit: `close honesty review`
-
-### exec
-
-- `2026-07-17-post-release-distribution-ledger` - `post-release-distribution` ledger
-
-### plan
-
-- `2026-07-17-post-release-distribution-plan` - `post-release-distribution` plan
 
 ### reference
 

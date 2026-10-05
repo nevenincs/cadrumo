@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:80f7276b759f57d4b52c79817940425dd59c4d0b8a0623fea4ebd69d1dbf5b60'
+modified: '2026-10-03'
+body_hash: 'sha256:40c34cb76e443540131fa67401610345113f8b997522f97e2010ac5dac0de739'
 related: []
 ---
 
@@ -34,8 +34,8 @@ convention instead of emitting a raw id-specific string.
 
 ## S237-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/modelo/_history.py src/aeat/application/modelo/test_history.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_history.py` passed with 7 tests.
+- the historical check passed.
+- the historical check passed with 7 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-135` as `manifest-discovery`.

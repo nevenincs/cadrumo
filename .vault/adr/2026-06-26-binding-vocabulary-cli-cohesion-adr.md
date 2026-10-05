@@ -3,14 +3,17 @@ tags:
   - '#adr'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-07-17'
-body_hash: 'sha256:bc49b618b3e5f1e0cd37db4557f3dfd310ecad499709c92ad68d4a3d5819d13d'
+modified: '2026-10-03'
+body_hash: 'sha256:baa31aaf4e736c9d8a422d92d3639d0abda856597ad36094dd2c4af2707c5853'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]"
   - "[[2026-06-10-cli-pull-file-standard-adr]]"
   - '[[2026-07-05-binding-vocabulary-cli-cohesion-research]]'
+  - '[[2026-06-26-bindings-architecture-unification-adr]]'
+  - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
+  - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
 ---
 # `binding-vocabulary-cli-cohesion` adr: `vocabulary and CLI cohesion: retire the binding homonyms and reconcile the source-pull verb surface` | (**status:** `accepted`)
 
@@ -26,6 +29,10 @@ related:
 > validator already types them at construction), and the F8-absorbed
 > `casilla_noncanonical_reference` `__init__.py` collection repair (recorded for the
 > CasillaId-migration campaign's double-ownership check).
+>
+> Curation clarification (2026-10-03): this is a separate accepted phase 2.4 decision.
+> Its phase label records campaign lineage; the rejected central apex is linked only
+> as provenance and does not govern this ADR.
 
 ## Problem Statement
 

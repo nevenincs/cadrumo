@@ -2,45 +2,23 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.async_cleanup import await_cancellation_complete
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
 from ...domain.buckets.event import bucket_event_order_key
 from ..bucket_event_projection import BucketEventProjection
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.profile_guard import require_profile_operation_identity
+from ..operations.read_capture import capture_read_result
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
@@ -102,12 +80,9 @@ class LedgerHistoryExecutor:
         """Retain canonical history selection and store its encrypted result."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != LEDGER_HISTORY_OPERATION_DEFINITION_ID
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.subject_ref != request.subject_ref
-        ):
+        if request.definition_id != LEDGER_HISTORY_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_profile_operation_identity(request, context, payload.profile_id)
         await context.events.phase(LEDGER_HISTORY_OPERATION_DEFINITION_ID)
 
         def read() -> LedgerHistoryProjection:
@@ -132,58 +107,27 @@ class LedgerHistoryExecutor:
                 event_count=history.event_count,
             )
 
-        async def capture() -> str:
-            result = await asyncio.to_thread(read)
-            reference = await context.operands.put(result, written_at=now())
-            await context.events.effect(OperationEffect.NONE)
-            return reference
-
-        return await await_cancellation_complete(capture(), task_name="ledger-history")
+        return await capture_read_result(context, read, task_name="ledger-history")
 
 
 def build_ledger_history_definition(ports: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare a recorded local read without COMMIT or provider effects."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_HISTORY_OPERATION_DEFINITION_ID,
         request_type=LedgerHistoryRequest,
         result_type=LedgerHistoryProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerHistoryRequest,
-            executor_type=LedgerHistoryExecutor,
-            build=lambda: LedgerHistoryExecutor(ports),
-        ),
-        phase_codes=(LEDGER_HISTORY_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        executor_type=LedgerHistoryExecutor,
+        build=lambda: LedgerHistoryExecutor(ports),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
 def build_ledger_history_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the history schemas and its whole-profile lineage disclosure."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerHistoryRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerHistoryProjection
-        ),
+        public_result_type=LedgerHistoryProjection,
         access_resolver=resolve_ledger_history_access,
     )
 

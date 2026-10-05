@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-10'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:1191f51b18f93bdee35866c04fa2a791ca86ababcb9d8c1520c593b6009b7456'
+body_hash: 'sha256:515c364e2350fc26ca8c51a52a007748337c4e4530de303863f7c42f7988997f'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -233,7 +233,10 @@ a burndown agent applies to get a yes or no without judgement:
 - names a child of the root, at any depth, by string literal or module-local
   constant;
 - calls `Path.home()`, `expanduser`, or a platform-directory lookup to *derive*
-  a location rather than to normalise a path it already holds;
+  a location rather than to normalise a path it already holds (the installed
+  default of the root anchor in `storage_environment.py` is the one sanctioned
+  platform-directory lookup; it is the anchor, not a member, per
+  `2026-10-04-canonical-environment-adr`);
 - creates a directory whose name came from anywhere but a taxonomy member;
 - pins a category to a literal in a test fixture or override instead of
   deriving it from the taxonomy.
@@ -352,12 +355,11 @@ invisible to the gate's own selector because of its name, is declared an
 external executable; the selector widens from name-suffix to `Path`-typed
 annotation so no field can hide by being named inconveniently.
 
-Three root-anchored fields currently reading as oversights get explicit
+Two root-anchored fields currently reading as oversights get explicit
 categories rather than silence: `cadrumo_registry_disk_cache_dir` (an opt-in
-override whose production branch derives under the cache namespace),
+override whose production branch derives under the cache namespace) and
 `cadrumo_wallet_diagnostic_dump_dir` (an opt-in diagnostic capture, off by
-default), and the MCP session-telemetry directory (a full member — it is
-application-chosen and application-written, so it fails no escape test).
+default).
 
 **R7 — The CRUD surface.** `config storage` registers as a
 `LIFECYCLE_OPERATIONS_ONLY` noun-group: an operator cannot create or destroy a
@@ -679,7 +681,7 @@ sites at a layer that has no application imports by design and cannot accept
 them.
 
 *Tier one — collection-time bootstrapping. Exempt, untouched, not a target.*
-`src/cadrumo/tests/_collection_storage_root.py` and its two conftest callers
+the former source file and its two conftest callers
 point the root environment variable at a process-private temporary directory
 **before any import can resolve settings**, so collection never resolves against
 a real platform root on a machine still carrying retired-product state. Verified:
@@ -756,12 +758,12 @@ therefore not the same cardinality by construction, and a ruling that quotes
 one number as if it were the other will drift the moment either axis grows
 independently of the other.
 
-**Verified at committed HEAD `c16bb9a0ae`: nine excluded members, all nine
-carrying a `settings_field`, so both counts currently agree at 9** —
-`LLM_USAGE`, `LLM_RUN_TELEMETRY`, `MCP_TELEMETRY`, `RUNS`, `LLM_CACHE`,
+**Verified at committed HEAD `c16bb9a0ae`: every excluded member carries a
+`settings_field`, so both counts currently agree** —
+`LLM_USAGE`, `RUNS`, `LLM_CACHE`,
 `CORPUS_TEXT_CACHE`, `CORPUS_SEARCH_CACHE`, `VALIDATION_VERDICT_CACHE`,
-`REGISTRY_DISK_CACHE`. The rise from the original eight to nine is not
-drift: two of the nine — `CORPUS_SEARCH_CACHE` and `VALIDATION_VERDICT_CACHE`
+`REGISTRY_DISK_CACHE`. The later additions are not
+drift: two of the members — `CORPUS_SEARCH_CACHE` and `VALIDATION_VERDICT_CACHE`
 — are categories this campaign itself enrolled (R6, R17) that had no
 corresponding settings field for the old eight-field tuple to have read in
 the first place.

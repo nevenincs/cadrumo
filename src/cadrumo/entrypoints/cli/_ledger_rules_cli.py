@@ -8,20 +8,20 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
-from ...application.ledger.rule_operation import (
+from ...application.ledger.rule_contracts import (
     LedgerRuleAddProjection,
     LedgerRuleAddRequest,
     LedgerRuleApplyProjection,
     LedgerRuleApplyRequest,
     LedgerRuleListRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.i18n.render import tr
 from ...domain.transactions.enums import BusinessClassification
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .errors import CliRefusedBoundaryError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_ledger_rules import submit_ledger_rule_add, submit_ledger_rule_apply, submit_ledger_rule_list
-from .runtime_registered_operation import RegisteredOperationCompletion, submitted_operation_error
 
 
 def _short_display_id(value: str) -> str:
@@ -110,13 +110,7 @@ def rule_add(
         _raise_add_refusal(completed, category_id=category_id)
     rule = projection.rule
     if rule is None:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        )
+        raise invalid_completion_error(completed)
     from ._ledger_rule_payloads import RuleAddResult
 
     result = RuleAddResult.model_validate(rule.model_dump(mode="python"))

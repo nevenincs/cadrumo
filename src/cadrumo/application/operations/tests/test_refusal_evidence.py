@@ -21,7 +21,7 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .._supervisor_execution import _validated_refusal_receipt
+from .._supervisor_refusal import _validated_refusal_receipt
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -37,13 +37,12 @@ from ..models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..owner import OperationExecutorContext
 from ..persistence.events import OperationPhaseEvent
 from ..persistence.journal import OperationPersistedSnapshot
 from ..refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,

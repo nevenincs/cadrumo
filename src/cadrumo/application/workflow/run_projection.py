@@ -3,20 +3,16 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
 from typing import Self, cast
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
 from ...core.errors.hierarchy import SiteHealthState
 from ...core.identifier_grammar import NamespacedId
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
-from ...domain.deadlines.models import ObligationStatus
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import (
-    PublicDecimal,
     PublicNamedScalar,
     project_scalar,
     restore_scalar,
@@ -24,112 +20,44 @@ from ..operations.public_scalar import (
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from .abort import WorkflowAbortReason
+from .obligation_snapshot import WorkflowObligationSnapshot
 from .run_models import (
     SiteHealthAlert,
     WorkflowAlreadyFiledDetails,
     WorkflowDeadlineContextDetails,
-    WorkflowDeadlineRecoveryFacts,
-    WorkflowObligationFacts,
     WorkflowResult,
     WorkflowSiteHealthFacts,
     WorkflowStage,
+    WorkflowStep,
     WorkflowStepDetails,
 )
 
 _DETAIL_ADAPTER: TypeAdapter[WorkflowStepDetails] = TypeAdapter(WorkflowStepDetails)
 
 
-class WorkflowDeadlineRecoverySnapshot(BaseModel):
-    """Schema-safe legal and amount facts for one overdue obligation."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    still_filable: bool
-    recargo_band_id: str
-    min_completed_months: int = Field(ge=0)
-    max_completed_months: int | None = Field(default=None, ge=0)
-    surcharge_pct: PublicDecimal
-    interest_applies: bool
-    legal_ref: str
-
-    @classmethod
-    def from_recovery(cls, recovery: WorkflowDeadlineRecoveryFacts) -> Self:
-        """Copy a validated canonical recovery record."""
-        return cls(
-            still_filable=recovery.still_filable,
-            recargo_band_id=recovery.recargo_band_id,
-            min_completed_months=recovery.min_completed_months,
-            max_completed_months=recovery.max_completed_months,
-            surcharge_pct=PublicDecimal(decimal=str(recovery.surcharge_pct)),
-            interest_applies=recovery.interest_applies,
-            legal_ref=recovery.legal_ref,
-        )
-
-    def to_recovery(self) -> WorkflowDeadlineRecoveryFacts:
-        """Restore and validate the canonical recovery invariant."""
-        return WorkflowDeadlineRecoveryFacts(
-            still_filable=self.still_filable,
-            recargo_band_id=self.recargo_band_id,
-            min_completed_months=self.min_completed_months,
-            max_completed_months=self.max_completed_months,
-            surcharge_pct=Decimal(self.surcharge_pct.decimal),
-            interest_applies=self.interest_applies,
-            legal_ref=self.legal_ref,
-        )
-
-    @model_validator(mode="after")
-    def _canonical(self) -> Self:
-        self.to_recovery()
-        return self
+def _detail_snapshot_keys(snapshot: WorkflowDetailSnapshot) -> tuple[str, ...]:
+    return (
+        *[item.key for item in snapshot.scalars],
+        *[item.key for item in snapshot.dates],
+        *[item.key for item in snapshot.strings],
+    )
 
 
-class WorkflowObligationSnapshot(BaseModel):
-    """Lossless public-schema copy of canonical filing obligation facts."""
+def _validate_detail_snapshot_keys(keys: tuple[str, ...]) -> None:
+    if len(set(keys)) != len(keys) or set(keys) & {"kind", "period", "auth_check"}:
+        raise ValueError("workflow detail repeats a fact name")
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    modelo: str
-    period: PublicPeriod
-    opens_on: date
-    closes_on: date
-    payment_cutoff_on: date | None = None
-    status: ObligationStatus
-    boe_references: tuple[str, ...] = ()
-    recovery: WorkflowDeadlineRecoverySnapshot | None = None
 
-    @classmethod
-    def from_obligation(cls, obligation: WorkflowObligationFacts) -> Self:
-        """Copy persisted obligation facts without prose or raw commands."""
-        return cls(
-            modelo=str(obligation.modelo),
-            period=PublicPeriod.from_period(obligation.period),
-            opens_on=obligation.opens_on,
-            closes_on=obligation.closes_on,
-            payment_cutoff_on=obligation.payment_cutoff_on,
-            status=obligation.status,
-            boe_references=obligation.boe_references,
-            recovery=(
-                WorkflowDeadlineRecoverySnapshot.from_recovery(obligation.recovery)
-                if obligation.recovery is not None
-                else None
-            ),
-        )
-
-    def to_obligation(self) -> WorkflowObligationFacts:
-        """Reconstruct the canonical obligation for existing resume/render code."""
-        return WorkflowObligationFacts(
-            modelo=Modelo(self.modelo),
-            period=self.period.to_period(),
-            opens_on=self.opens_on,
-            closes_on=self.closes_on,
-            payment_cutoff_on=self.payment_cutoff_on,
-            status=self.status,
-            boe_references=self.boe_references,
-            recovery=self.recovery.to_recovery() if self.recovery is not None else None,
-        )
-
-    @model_validator(mode="after")
-    def _canonical(self) -> Self:
-        self.to_obligation()
-        return self
+def _restore_detail_snapshot_values(snapshot: WorkflowDetailSnapshot) -> dict[str, object]:
+    values: dict[str, object] = {"kind": snapshot.kind}
+    values.update({item.key: restore_scalar(item.value) for item in snapshot.scalars})
+    values.update({item.key: item.value for item in snapshot.dates})
+    values.update({item.key: item.values for item in snapshot.strings})
+    if snapshot.period is not None:
+        values["period"] = snapshot.period.to_period()
+    if snapshot.auth_check is not None:
+        values["auth_check"] = snapshot.auth_check.to_detail()
+    return values
 
 
 class WorkflowNamedDate(BaseModel):
@@ -191,22 +119,8 @@ class WorkflowDetailSnapshot(BaseModel):
 
     def to_detail(self) -> WorkflowStepDetails:
         """Restore the discriminated canonical variant and reject extra facts."""
-        keys = (
-            *[item.key for item in self.scalars],
-            *[item.key for item in self.dates],
-            *[item.key for item in self.strings],
-        )
-        if len(set(keys)) != len(keys) or set(keys) & {"kind", "period", "auth_check"}:
-            raise ValueError("workflow detail repeats a fact name")
-        values: dict[str, object] = {"kind": self.kind}
-        values.update({item.key: restore_scalar(item.value) for item in self.scalars})
-        values.update({item.key: item.value for item in self.dates})
-        values.update({item.key: item.values for item in self.strings})
-        if self.period is not None:
-            values["period"] = self.period.to_period()
-        if self.auth_check is not None:
-            values["auth_check"] = self.auth_check.to_detail()
-        return _DETAIL_ADAPTER.validate_python(values)
+        _validate_detail_snapshot_keys(_detail_snapshot_keys(self))
+        return _DETAIL_ADAPTER.validate_python(_restore_detail_snapshot_values(self))
 
     @model_validator(mode="after")
     def _canonical(self) -> Self:
@@ -278,32 +192,50 @@ class WorkflowRunSnapshot(BaseModel):
     site_health_alert: WorkflowSiteHealthSnapshot | None
     precondition_verdict: PreconditionVerdictSnapshot | None
 
+    @staticmethod
+    def _summary_detail(run: WorkflowResult, final_step: WorkflowStep | None) -> WorkflowStepDetails | None:
+        return final_step.details if final_step is not None else run.summary_details
+
+    @staticmethod
+    def _summary_stage(final_step: WorkflowStep | None) -> WorkflowStage | None:
+        return final_step.stage if final_step is not None else None
+
+    @staticmethod
+    def _summary_locale_key(run: WorkflowResult, final_step: WorkflowStep | None) -> NamespacedId:
+        return final_step.summary_locale_key if final_step is not None else run.summary_locale_key
+
+    @staticmethod
+    def _obligation_snapshot(run: WorkflowResult) -> WorkflowObligationSnapshot | None:
+        return WorkflowObligationSnapshot.from_obligation(run.obligation) if run.obligation is not None else None
+
+    @staticmethod
+    def _site_health_snapshot(final_step: WorkflowStep | None) -> WorkflowSiteHealthSnapshot | None:
+        if final_step is None or final_step.site_health_alert is None:
+            return None
+        return WorkflowSiteHealthSnapshot.from_alert(final_step.site_health_alert)
+
+    @staticmethod
+    def _verdict_snapshot(final_step: WorkflowStep | None) -> PreconditionVerdictSnapshot | None:
+        if final_step is None or final_step.precondition_verdict is None:
+            return None
+        return PreconditionVerdictSnapshot.from_verdict(final_step.precondition_verdict)
+
     @classmethod
     def from_run(cls, run: WorkflowResult) -> Self:
         """Capture only the terminal step and existing CLI-visible top facts."""
         final_step = run.steps[-1] if run.steps else None
-        detail = final_step.details if final_step is not None else run.summary_details
+        detail = cls._summary_detail(run, final_step)
         return cls(
             run_id=run.run_id,
             started_at=run.started_at,
             final_stage=run.final_stage,
             aborted_reason=run.aborted_reason,
-            obligation=WorkflowObligationSnapshot.from_obligation(run.obligation)
-            if run.obligation is not None
-            else None,
-            summary_stage=final_step.stage if final_step is not None else None,
-            summary_locale_key=final_step.summary_locale_key if final_step is not None else run.summary_locale_key,
+            obligation=cls._obligation_snapshot(run),
+            summary_stage=cls._summary_stage(final_step),
+            summary_locale_key=cls._summary_locale_key(run, final_step),
             summary_details=WorkflowDetailSnapshot.from_detail(detail) if detail is not None else None,
-            site_health_alert=(
-                WorkflowSiteHealthSnapshot.from_alert(final_step.site_health_alert)
-                if final_step is not None and final_step.site_health_alert is not None
-                else None
-            ),
-            precondition_verdict=(
-                PreconditionVerdictSnapshot.from_verdict(final_step.precondition_verdict)
-                if final_step is not None and final_step.precondition_verdict is not None
-                else None
-            ),
+            site_health_alert=cls._site_health_snapshot(final_step),
+            precondition_verdict=cls._verdict_snapshot(final_step),
         )
 
     def validate_period_facts(self) -> None:
@@ -350,7 +282,6 @@ def validate_run_period_facts(run: WorkflowResult) -> None:
 
 
 __all__ = [
-    "WorkflowObligationSnapshot",
     "WorkflowRunSnapshot",
     "validate_run_period_facts",
 ]

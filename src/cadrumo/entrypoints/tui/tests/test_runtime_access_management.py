@@ -13,7 +13,8 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, Input, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.profile_access import RuntimeProfileStatus, RuntimeSessionsLocked
@@ -835,7 +836,7 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
         screen.query_one("#runtime-access-grants", Input).value = str(selected_grant)
         await screen._perform("resume")
         presentation = str(screen.query_one("#runtime-access-status", Static).content)
-        assert tr("tui.runtime_management.availability.unknown") in presentation
+        assert tr("tui.runtime_access.unknown") in presentation
         assert RuntimeRefusalCode.INVALID_FRAME.value in presentation
         assert tr("tui.runtime_access.completed") not in presentation
         assert "private-receipt-proof" not in presentation
@@ -872,7 +873,7 @@ async def test_dispatched_recovery_transport_failure_is_unknown_and_fences_repla
         screen.query_one("#runtime-access-password", Input).value = "private-dispatch-proof"
         await screen._perform("resume")
         presentation = str(screen.query_one("#runtime-access-status", Static).content)
-        assert tr("tui.runtime_management.availability.unknown") in presentation
+        assert tr("tui.runtime_access.unknown") in presentation
         assert "private-dispatch-error-canary" not in presentation and "private-dispatch-proof" not in presentation
         assert recovery.closed and recovery.proof_buffer is not None and not any(recovery.proof_buffer)
         await _assert_resume_replay_fenced(screen, recovery)
@@ -903,7 +904,7 @@ async def test_recovery_pre_dispatch_failure_and_domain_refusal_allow_fresh_proo
             await screen._perform("resume")
             presentation = str(screen.query_one("#runtime-access-status", Static).content)
             assert tr("tui.runtime_access.refused") in presentation
-            assert tr("tui.runtime_management.availability.unknown") not in presentation
+            assert tr("tui.runtime_access.unknown") not in presentation
             assert not screen.query_one("#runtime-access-resume", Button).disabled
             assert screen.query_one("#runtime-access-password", Input).value == ""
             assert proof not in presentation
@@ -947,7 +948,7 @@ async def test_recovery_settled_proof_is_wiped_before_blocked_close_and_cancel_k
             await recovering
         presentation = str(screen.query_one("#runtime-access-status", Static).content)
         assert tr("tui.runtime_access.completed") in presentation
-        assert tr("tui.runtime_management.availability.unknown") not in presentation
+        assert tr("tui.runtime_access.unknown") not in presentation
         assert recovery.closed and screen._resume_receipt is not None
         await _assert_resume_replay_fenced(screen, recovery)
         assert client.session_id == original_session and not client.closed
@@ -987,9 +988,7 @@ async def test_cancelled_failed_recovery_preserves_body_and_retries_close_on_unm
         assert screen.query_one("#runtime-access-password", Input).value == ""
         assert not recovery.closed
         assert recovery.close_calls == 1
-        assert tr("tui.runtime_management.availability.unknown") in str(
-            screen.query_one("#runtime-access-status", Static).content
-        )
+        assert tr("tui.runtime_access.unknown") in str(screen.query_one("#runtime-access-status", Static).content)
         await _assert_resume_replay_fenced(screen, recovery)
     assert recovery.closed
     assert recovery.close_calls == 2

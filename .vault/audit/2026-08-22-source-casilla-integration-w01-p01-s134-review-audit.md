@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:b37b4552d45cbffb0dd563aa83b2f8430369b9dfe72e3159d78db8ddeab2bf85'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-source-casilla-integration-w01-p01-phase-review-audit]]"
 ---
 # `source-casilla-integration` audit: `W01.P01.S134 concrete connected-proof authority review`

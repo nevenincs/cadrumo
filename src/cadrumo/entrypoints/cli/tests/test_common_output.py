@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 import typer
 import typer.main
@@ -65,8 +67,14 @@ def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.Captu
     from ....core.operator_progress import OperatorProgress
     from ..main import _emit_operator_progress
 
-    _emit_operator_progress(
-        OperatorProgress(message="AEAT page verification code: YLL", timeout_seconds=120),
+    asyncio.run(
+        _emit_operator_progress(
+            OperatorProgress(
+                notice_code="auth.clave-movil.approval-pending",
+                message="AEAT page verification code: YLL",
+                timeout_seconds=120,
+            ),
+        )
     )
 
     captured = capsys.readouterr()

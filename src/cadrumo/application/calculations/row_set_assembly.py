@@ -43,7 +43,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Protocol, TypedDict
 
@@ -51,19 +51,14 @@ from pydantic import ValidationError
 
 from ...core.aggregation import BindingAggregationOp, RowSetGroupingKind
 from ...core.decimal.coercion import coerce_decimal
-from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.foreign_asset_obligation import M720AssetClassCode
-from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
-from ...core.parsing.dates import parse_iso8601_date
+from ...core.parsing.dates import require_iso8601_date
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
-    RefundOperationObservation,
-    RelatedPartyOperationObservation,
 )
-from ...domain.calculations.registry.donativo_bindings import DonativoDonorObservation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.gasto193_bindings import Gasto193Observation
 from ...domain.calculations.registry.schema import (
@@ -72,17 +67,15 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.withholding296_bindings import Withholding296Observation
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation, resolve_retencion_clave
+from ...domain.foreign_assets.valuation import M720ValuationEvent
 
 __all__ = [
     "AssembledObservations",
     "assemble_atribucion_observations",
-    "assemble_donativo_observations",
     "assemble_foreign_asset_observations",
     "assemble_gasto193_observations",
     "assemble_observations_for_grouping",
     "assemble_observations_for_snapshot",
-    "assemble_refund_observations",
-    "assemble_related_party_observations",
     "assemble_withholding296_observations",
     "assemble_withholding_observations",
 ]
@@ -96,11 +89,8 @@ _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
     "per_perceptor": RowSetGroupingKind.WITHHOLDING,
     "per_perceptor_clave": RowSetGroupingKind.WITHHOLDING,
     "per_perceptor_clave_devengo": RowSetGroupingKind.WITHHOLDING,
-    "per_related_party_operation": RowSetGroupingKind.RELATED_PARTY,
     "per_foreign_asset": RowSetGroupingKind.FOREIGN_ASSET,
     "per_atribucion_member": RowSetGroupingKind.ATRIBUCION,
-    "per_refund_operation": RowSetGroupingKind.REFUND,
-    "per_donativo_donor": RowSetGroupingKind.DONATIVO,
     "per_gasto193_contribuyente": RowSetGroupingKind.GASTO193,
     "per_perceptor_296": RowSetGroupingKind.WITHHOLDING296,
 }
@@ -109,15 +99,12 @@ _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
 # Tuple of typed observations dispatched by source-kind name. Returned
 # by ``assemble_observations_for_grouping`` as a discriminated union
 # the caller pattern-matches on. The string discriminator avoids
-# pinning ``isinstance`` checks against five separate observation
-# classes at every call site.
+# pinning ``isinstance`` checks against each observation class at
+# every call site.
 AssembledObservations = (
     tuple[str, tuple[WithholdingObservation, ...]]
-    | tuple[str, tuple[RelatedPartyOperationObservation, ...]]
     | tuple[str, tuple[Modelo720RowObservation, ...]]
     | tuple[str, tuple[AtributionMemberObservation, ...]]
-    | tuple[str, tuple[RefundOperationObservation, ...]]
-    | tuple[str, tuple[DonativoDonorObservation, ...]]
     | tuple[str, tuple[Gasto193Observation, ...]]
     | tuple[str, tuple[Withholding296Observation, ...]]
 )
@@ -133,16 +120,10 @@ def _assemble_grouping_kind(
     """Run the assembler selected by an already validated grouping kind."""
     if source_kind == RowSetGroupingKind.WITHHOLDING:
         return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.RELATED_PARTY:
-        return (source_kind, assemble_related_party_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.FOREIGN_ASSET:
         return (source_kind, assemble_foreign_asset_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.ATRIBUCION:
         return (source_kind, assemble_atribucion_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.REFUND:
-        return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.DONATIVO:
-        return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.GASTO193:
         return (source_kind, assemble_gasto193_observations(cells, revision, filing_year=filing_year))
     if source_kind == RowSetGroupingKind.WITHHOLDING296:
@@ -171,8 +152,8 @@ def assemble_observations_for_grouping(
 
     Args:
         grouping: Row-set grouping token; selects which assembler runs
-            (``withholding`` / ``related_party`` / ``foreign_asset`` /
-            ``atribucion`` / ``refund`` / ``donativo``).
+            (``withholding`` / ``foreign_asset`` / ``atribucion`` /
+            ``gasto193`` / ``withholding296``).
         cells: Per-row cell shapes consumed by the chosen assembler.
         revision: The
             :class:`~domain.calculations.registry.schema.ModeloRevision` used to
@@ -184,8 +165,8 @@ def assemble_observations_for_grouping(
 
     Returns a 2-tuple ``(source_kind, observations)`` where
     ``source_kind`` identifies the assembler that ran (``withholding`` /
-    ``related_party`` / ``foreign_asset`` / ``atribucion`` /
-    ``refund`` / ``donativo``). Raises
+    ``foreign_asset`` / ``atribucion`` / ``gasto193`` /
+    ``withholding296``). Raises
     :class:`~domain.calculations.registry.errors.RegistryValidationError` for groupings
     that have no matching assembler — those are registry layout
     declarations the application layer cannot consume yet.
@@ -372,17 +353,6 @@ def _coerce_optional_int(value: Decimal | str | None) -> int | None:
         return None
 
 
-def _coerce_iso_date(value: Decimal | str | None, *, default: date) -> date:
-    if value is None or value == "":
-        return default
-    if isinstance(value, str):
-        try:
-            return parse_iso8601_date(value) or default
-        except ValueError:
-            return default
-    return default
-
-
 def _optional_text_kwarg(
     fields: Mapping[str, Decimal | str],
     key: str,
@@ -441,14 +411,6 @@ def _row_fields_for_assembly(
     return fields
 
 
-class _OperationKindCodeKwarg(TypedDict, total=False):
-    operation_kind_code: TipoOperacionVinculada
-
-
-class _TransferPricingMethodCodeKwarg(TypedDict, total=False):
-    transfer_pricing_method_code: MetodoValoracion
-
-
 def _hydrate_coded_field[EnumT: StrEnum](*, field_name: str, text: str, code_set: type[EnumT]) -> EnumT:
     """Widen a raw registry token into its typed DR23200-style code, or raise.
 
@@ -462,52 +424,6 @@ def _hydrate_coded_field[EnumT: StrEnum](*, field_name: str, text: str, code_set
     except ValueError:
         accepted = ", ".join(repr(str(member)) for member in code_set)
         raise ValueError(f"{field_name} must be one of {accepted}; got {text!r}") from None
-
-
-def _optional_operation_kind_code_kwarg(fields: Mapping[str, Decimal | str]) -> _OperationKindCodeKwarg:
-    """Pass ``operation_kind_code`` only when the row supplies a non-empty value.
-
-    The coded counterpart of :func:`_optional_text_kwarg`: the target field is
-    typed as the closed ``TipoOperacionVinculada`` enum rather than plain
-    text, so it cannot be forwarded as a bare ``str``.
-    """
-    raw = fields.get("operation_kind_code")
-    if raw is None:
-        return {}
-    text = _coerce_text(raw)
-    if not text:
-        return {}
-    return {
-        "operation_kind_code": _hydrate_coded_field(
-            field_name="operation_kind_code",
-            text=text,
-            code_set=TipoOperacionVinculada,
-        ),
-    }
-
-
-def _optional_transfer_pricing_method_code_kwarg(
-    fields: Mapping[str, Decimal | str],
-) -> _TransferPricingMethodCodeKwarg:
-    """Pass ``transfer_pricing_method_code`` only when the row supplies a non-empty value.
-
-    The coded counterpart of :func:`_optional_text_kwarg`: the target field is
-    typed as the closed ``MetodoValoracion`` enum rather than plain text, so
-    it cannot be forwarded as a bare ``str``.
-    """
-    raw = fields.get("transfer_pricing_method_code")
-    if raw is None:
-        return {}
-    text = _coerce_text(raw)
-    if not text:
-        return {}
-    return {
-        "transfer_pricing_method_code": _hydrate_coded_field(
-            field_name="transfer_pricing_method_code",
-            text=text,
-            code_set=MetodoValoracion,
-        ),
-    }
 
 
 class _Withholding296IdentityKwargs(TypedDict, total=False):
@@ -624,19 +540,6 @@ def _assemble_withholding296_row(
         )
     except (ValidationError, ValueError) as exc:
         raise _row_assembly_refusal(row_index, exc) from exc
-
-
-def _coerce_flag(value: Decimal | str | None) -> bool:
-    """Parse a row-set boolean-flag cell (``"1"``/``"0"``) into a real bool.
-
-    Accepts the ``"1"`` / ``"0"`` string convention used by row-set boolean
-    columns and maps it to the observation model's real boolean field.
-    """
-    if value is None:
-        return False
-    if isinstance(value, Decimal):
-        return value != Decimal("0")
-    return value.strip() == "1"
 
 
 def _assemble_withholding_row(
@@ -794,73 +697,6 @@ def assemble_withholding_observations(
     )
 
 
-def assemble_related_party_observations(
-    cells: Iterable[_RowCellShape],
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-) -> tuple[RelatedPartyOperationObservation, ...]:
-    """Reassemble per-operation related-party observations from row-set cells.
-
-    Args:
-        cells: Per-row cell shapes the assembler projects into typed
-            observations.
-        revision: The
-            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
-            look up typed row-set selector projections.
-        filing_year: AEAT filing year carried through to each observation's
-            provenance.
-
-    Returns a tuple of
-    :class:`~domain.calculations.registry.detail_record_bindings.RelatedPartyOperationObservation`
-    instances.
-    """
-    by_row = _cells_by_row(cells)
-    row_field = _row_field_lookup(revision)
-    default_date = date(filing_year, 12, 31)
-
-    observations: list[RelatedPartyOperationObservation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-        try:
-            observations.append(
-                RelatedPartyOperationObservation(
-                    source_id=f"detalle:per_related_party_operation:row-{row_index}",
-                    counterparty_tax_id=_coerce_text(fields.get("counterparty_tax_id")),
-                    counterparty_legal_name=_coerce_text(fields.get("counterparty_legal_name")),
-                    # No invented default: "01" is a real clave (bienes
-                    # tangibles), so substituting it for an absent value
-                    # would declare an operation kind the row never carried.
-                    # The coded-kwarg helpers (rather than the plain-text one)
-                    # because the field is the typed
-                    # TipoOperacionVinculada/MetodoValoracion enum, not text.
-                    # Spread before the generic ``dict[str, str]`` kwargs below:
-                    # a type checker that cannot see a plain dict's key set
-                    # must assume it might supply any parameter, so ordering
-                    # the precisely-keyed ``TypedDict`` spreads first lets it
-                    # narrow the remaining parameter set before that.
-                    **_optional_operation_kind_code_kwarg(fields),
-                    **_optional_transfer_pricing_method_code_kwarg(fields),
-                    # No invented default: modelo 232 declares paraíso-fiscal
-                    # operations, so substituting Spain for an absent country
-                    # marks a tax-haven counterparty as domestic on the exact
-                    # axis the declaration exists to surface.
-                    **_optional_text_kwarg(fields, "country_code"),
-                    transaction_date=default_date,
-                    amount=coerce_decimal(fields.get("amount"), default=Decimal("0")),
-                ),
-            )
-        except (ValidationError, ValueError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
-
-
 def assemble_foreign_asset_observations(
     cells: Iterable[_RowCellShape],
     revision: ModeloRevision,
@@ -874,15 +710,17 @@ def assemble_foreign_asset_observations(
         revision: The
             :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive default
-            acquisition dates.
+        filing_year: Calendar year of the filing; carried for dispatch parity.
 
     Each element in the returned tuple is a
     :class:`~domain.calculations.registry.detail_record_bindings.Modelo720RowObservation`.
+    Every field the record or its euro conversion needs is the operator's to
+    supply: a blank class, country, currency, valuation, valuation event,
+    acquisition date or asset reference is refused, never defaulted.
     """
+    del filing_year
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
-    default_acquisition_date = date(filing_year, 12, 31)
 
     observations: list[Modelo720RowObservation] = []
     for row_index in sorted(by_row):
@@ -894,31 +732,55 @@ def assemble_foreign_asset_observations(
                 continue
             fields[field] = value if value is not None else ""
         try:
+            supplied = {
+                key: text
+                for key in (
+                    "asset_ref",
+                    "asset_class_code",
+                    "country_code",
+                    "currency_code",
+                    "asset_identifier",
+                    "valuation_amount",
+                    "valuation_event",
+                    "valuation_event_date",
+                    "acquisition_date",
+                )
+                for text in _optional_text_kwarg(fields, key).values()
+            }
             observations.append(
-                Modelo720RowObservation(
-                    source_id=f"detalle:per_foreign_asset:row-{row_index}",
-                    asset_class_code=_hydrate_coded_field(
-                        field_name="asset_class_code",
-                        text=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
-                        code_set=M720AssetClassCode,
-                    ),
-                    # No invented default, and Spain least of all: modelo 720
-                    # declares bienes y derechos situados en el EXTRANJERO, so
-                    # ES is not merely unstated here but the one value the
-                    # declaration cannot carry. The observation model already
-                    # requires the field; this fallback was the sole reason
-                    # that requirement never reached a row.
-                    **_optional_text_kwarg(fields, "country_code"),
-                    currency_code=_coerce_text(fields.get("currency_code"), default=DEFAULT_CURRENCY)
-                    or DEFAULT_CURRENCY,
-                    asset_identifier=_coerce_text(fields.get("asset_identifier")),
-                    acquisition_date=_coerce_iso_date(fields.get("acquisition_date"), default=default_acquisition_date),
-                    valuation_amount=coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
+                Modelo720RowObservation.model_validate(
+                    {
+                        "source_id": f"detalle:per_foreign_asset:row-{row_index}",
+                        **supplied,
+                        **_foreign_asset_typed_fields(supplied),
+                    },
                 ),
             )
-        except (ValidationError, RegistryValidationError) as exc:
+        except (ValidationError, RegistryValidationError, ValueError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
+
+
+def _foreign_asset_typed_fields(supplied: Mapping[str, str]) -> dict[str, object]:
+    """Lift the supplied worksheet texts the strict observation model types."""
+    typed: dict[str, object] = {}
+    if "asset_class_code" in supplied:
+        typed["asset_class_code"] = _hydrate_coded_field(
+            field_name="asset_class_code",
+            text=supplied["asset_class_code"],
+            code_set=M720AssetClassCode,
+        )
+    if "valuation_event" in supplied:
+        typed["valuation_event"] = M720ValuationEvent(supplied["valuation_event"])
+    if "valuation_amount" in supplied:
+        try:
+            typed["valuation_amount"] = Decimal(supplied["valuation_amount"])
+        except InvalidOperation as exc:
+            raise ValueError(f"valuation_amount {supplied['valuation_amount']!r} is not a decimal amount") from exc
+    for key in ("acquisition_date", "valuation_event_date"):
+        if key in supplied:
+            typed[key] = require_iso8601_date(supplied[key])
+    return typed
 
 
 def assemble_atribucion_observations(
@@ -968,54 +830,6 @@ def assemble_atribucion_observations(
                     share_percentage=coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
                     base_imponible_assigned=coerce_decimal(fields.get("base_imponible_assigned"), default=Decimal("0")),
                     clave=_coerce_text(fields.get("clave")),
-                ),
-            )
-        except (ValidationError, RegistryValidationError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
-
-
-def assemble_refund_observations(
-    cells: Iterable[_RowCellShape],
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-) -> tuple[RefundOperationObservation, ...]:
-    """Reassemble Modelo 360 refund-operation records from row-set cells.
-
-    Args:
-        cells: Row-set cells exported from the calc sheet.
-        revision: The
-            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
-            map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive default
-            operation dates.
-
-    Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.detail_record_bindings.RefundOperationObservation`.
-    """
-    by_row = _cells_by_row(cells)
-    row_field = _row_field_lookup(revision)
-    default_operation_date = date(filing_year, 12, 31)
-
-    observations: list[RefundOperationObservation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-        try:
-            observations.append(
-                RefundOperationObservation(
-                    source_id=f"detalle:per_refund_operation:row-{row_index}",
-                    **_optional_text_kwarg(fields, "member_state_code"),
-                    **_optional_text_kwarg(fields, "operation_kind_code"),
-                    operation_date=_coerce_iso_date(fields.get("operation_date"), default=default_operation_date),
-                    supplier_tax_id=_coerce_text(fields.get("supplier_tax_id")),
-                    refund_amount=coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
                 ),
             )
         except (ValidationError, RegistryValidationError) as exc:
@@ -1094,54 +908,5 @@ def assemble_gasto193_observations(
                 ),
             )
         except (ValidationError, ValueError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
-
-
-def assemble_donativo_observations(
-    cells: Iterable[_RowCellShape],
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-) -> tuple[DonativoDonorObservation, ...]:
-    """Reassemble Modelo 182 per-donor donativo records from row-set cells.
-
-    Args:
-        cells: Row-set cells exported from the calc sheet.
-        revision: The
-            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
-            map binding ids to row fields.
-        filing_year: Calendar year of the filing; used to derive the default
-            transaction date.
-
-    Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.donativo_bindings.DonativoDonorObservation`.
-    """
-    by_row = _cells_by_row(cells)
-    row_field = _row_field_lookup(revision)
-    default_date = date(filing_year, 12, 31)
-
-    observations: list[DonativoDonorObservation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-        try:
-            observations.append(
-                DonativoDonorObservation(
-                    source_id=f"detalle:per_donativo_donor:row-{row_index}",
-                    donor_tax_id=_coerce_text(fields.get("donor_tax_id")),
-                    donor_legal_name=_coerce_text(fields.get("donor_legal_name")),
-                    transaction_date=default_date,
-                    amount_donated=coerce_decimal(fields.get("amount_donated"), default=Decimal("0")),
-                    deduction_percentage=coerce_decimal(fields.get("deduction_percentage"), default=Decimal("0")),
-                    is_recurrent=_coerce_flag(fields.get("is_recurrent")),
-                ),
-            )
-        except ValidationError as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)

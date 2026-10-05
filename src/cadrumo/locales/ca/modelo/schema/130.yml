@@ -9,6 +9,17 @@ modelo:
         official_name: Impost sobre la Renda de les Persones Físiques. Activitats
           econòmiques en estimació directa. Pagament fraccionat.
         title: IRPF pagament fraccionat estimació directa
+      form:
+        page:
+          dr-13001:
+            heading: Pàgina 1 · Pagament fraccionat
+        section:
+          liquidacion-3-i-actividades-econ-estim-directa:
+            heading: I. Activitats econòmiques en estimació directa
+          liquidacion-3-ii-actividades-agricolas-ga-829910:
+            heading: II. Activitats agrícoles, ramaderes, forestals i pesqueres
+          liquidacion-3-iii-total-liquidacion:
+            heading: III. Total de la liquidació
       revision:
         2019-y-siguientes:
           casilla:

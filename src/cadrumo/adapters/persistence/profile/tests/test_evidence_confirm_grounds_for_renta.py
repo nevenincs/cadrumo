@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
 from cadrumo.domain.invoices.decomposition import InvoiceDecompositionDefect, decompose_invoice
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -39,6 +38,7 @@ from ._invoice_confirmation_test_support import (
     seed_filer_profile,
 )
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

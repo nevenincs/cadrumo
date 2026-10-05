@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#agent-harness'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:61cd9d196d8e122cf37ca305959e7c161d726580b1e8629d693e087d171fd9f5'
+modified: '2026-10-03'
+body_hash: 'sha256:3d9c10ed04d60224acaddd4fd29f77875bfef62742d85cb0cd4b6a6158019045'
 related: []
 ---
 
@@ -33,8 +33,7 @@ system surveyed has converged on (see *External landscape*).
 ## Finding 1 — The backbone is already ~75% agent-ready
 
 The CLI is a thin Typer transport over `aeat.application`/`aeat.domain`, with a
-console entry `main()` → `app(prog_name="aeat")` in
-`src/aeat/entrypoints/cli/__init__.py`. It already carries the machine-facing
+console entry `main()` → `app(prog_name="aeat")` . It already carries the machine-facing
 scaffolding an agent operator needs. This is the project's biggest asset: the
 hard part (a typed, deterministic, instructive tool surface) is done.
 
@@ -46,7 +45,7 @@ identifiers is the `SCHEMA_REGISTRY` key set (the strings passed to
 `_emit_envelope(command=...)`), e.g. `ledger.add`, `modelo.calculate`,
 `modelo.reconcile.pull` — note the envelope drops the `app.` prefix.
 
-**A versioned JSON envelope contract.** Owner: `src/aeat/core/json_contract.py`.
+**A versioned JSON envelope contract.** Owner: the former source file.
 Every `--format json` response is a `SchemaEnvelope` with a shared spine
 (`schema_version`, `command`, `status`, `result`, `notices`),
 `ENVELOPE_SCHEMA_VERSION = "2"`. `result` is a strict, frozen pydantic schema
@@ -96,7 +95,7 @@ mutations routed to the root fallback DB before any verb body runs.
 
 ## Finding 2 — The single highest-leverage gap: an *unexposed* capability manifest
 
-`src/aeat/application/operator_surface/_contract.py` already defines an
+the former source file already defines an
 `OperatorSurfaceContract` that enumerates: the two roots and their
 `required_children`; every `MountedCommandFamily` with its `domain`, `commands`,
 a one-line `operator_question` (intent), `service_owner`, and an

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Never
 
 import typer
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ....application.auth.diagnostic_report_operation import (
     AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE,
@@ -17,23 +17,10 @@ from ....application.auth.diagnostics import AuthDiagnosticPhoneState, AuthDiagn
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..errors import CliRefusedBoundaryError
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import bound_profile_client
-from ..runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    """Refuse a worker result that does not correlate with its registered receipt."""
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from ..runtime_registered_operation import run_registered_operation
 
 
 def report_auth_diagnostic_phone_state(
@@ -76,22 +63,44 @@ def report_auth_diagnostic_phone_state(
         or str(projection.operation_id) != AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID
         or projection.effect is not completed.effect
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
 
     if projection.outcome == "prewrite_refusal":
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.effect is not OperationEffect.NONE
-            or completed.refusal_code != AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE
-            or projection.refusal_code != completed.refusal_code
-            or projection.report is not None
-        ):
-            _invalid(completed)
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.auth.diagnostics.not_found",
-            context={"diagnostic_id": diagnostic_id},
-        )
+        _raise_diagnostic_not_found(completed, projection, diagnostic_id)
 
+    return _auth_diagnostic_report_result(completed, projection, diagnostic_id, phone_state)
+
+
+__all__ = ["report_auth_diagnostic_phone_state"]
+
+
+def _raise_diagnostic_not_found(
+    completed: RegisteredOperationCompletion[AuthDiagnosticReportProjection],
+    projection: AuthDiagnosticReportProjection,
+    diagnostic_id: str,
+) -> Never:
+    """Present only the correlated unchanged diagnostic-not-found refusal."""
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code != AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE
+        or projection.refusal_code != completed.refusal_code
+        or projection.report is not None
+    ):
+        raise invalid_completion_error(completed)
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.auth.diagnostics.not_found",
+        context={"diagnostic_id": diagnostic_id},
+    )
+
+
+def _auth_diagnostic_report_result(
+    completed: RegisteredOperationCompletion[AuthDiagnosticReportProjection],
+    projection: AuthDiagnosticReportProjection,
+    diagnostic_id: str,
+    phone_state: AuthDiagnosticPhoneState,
+) -> AuthDiagnosticReportResult:
+    """Require exact diagnostic identity and phone state after successful mutation."""
     report = projection.report
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
@@ -103,8 +112,5 @@ def report_auth_diagnostic_phone_state(
         or report.diagnostic_id != diagnostic_id
         or report.phone_state is not phone_state
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return report
-
-
-__all__ = ["report_auth_diagnostic_phone_state"]

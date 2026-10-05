@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#data-provenance-consolidation'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:bee71885138abbf294d04416e18178e0206c3863fb8365b8966384724df526f4'
-related:
-  - "[[2026-09-10-data-provenance-consolidation-plan]]"
+related: []
 ---
 
 # `data-provenance-consolidation` audit: `w02 p04 s11 off host alignment review`

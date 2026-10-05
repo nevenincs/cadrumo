@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:cb9ff3aa0d65e546797da4047fa29a4c7ec9f1ddd2b1c1c03462dda7f27549f7'
-related:
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:8cc6fd92e87eda4c4f663c819eaa5f175be48c887052e95dab96d21820369004'
+related: []
 ---
 
 # `aeat-cli-userdocs-hardening` Code Review
@@ -49,7 +48,7 @@ W02 reader review criteria were: task-first handbook routing, no architecture-fi
 
 The final W02 review found no critical or high blockers. It noted one low privacy-warning gap in `docs/how-to/index.md`, which was resolved by adding an explicit warning not to paste unredacted log files.
 
-After that final wording change, rerunning `uv run pytest src/aeat/entrypoints/cli/test_educational_docs_conformance.py -m docs` was blocked during import by an unrelated dirty source file, `src/aeat/adapters/persistence/storage/sql/secure_objects.py`, which currently has an unterminated string literal. A Markdown-only validation of the two edited pages found no non-ASCII text, no overlong lines, and no broken relative links.
+After that final wording change, rerunning the historical check was blocked during import by an unrelated dirty source file, the retired module, which currently has an unterminated string literal. A Markdown-only validation of the two edited pages found no non-ASCII text, no overlong lines, and no broken relative links.
 
 Residual risks remain open in the plan: `S10`, `S11`, `S13`, and `S14` are not complete, and the Sphinx nitpicky build is not proven because it timed out after 10 minutes without a content failure.
 
@@ -63,9 +62,9 @@ Observed behavior: Sphinx's selected-file syntax exists, but the current project
 
 ## REVIEW-008 | INFO | S48 implemented canonical single-page index builds; autobuild remains open
 
-Resolution: `S48` now provides `just docs-page PAGE`, backed by `scripts/build_changed_docs.py --single-page`. The command writes to `docs/_build/html`, keeps generated API/autodoc sources out of the selected source set, forces the generated CLI reference needed by handbook links, uses offline inventory mode, and avoids the rejected `docs/_build/index-preview` output path.
+Resolution: `S48` now provides `just docs-page PAGE`, backed by the retired script. The command writes to `docs/_build/html`, keeps generated API/autodoc sources out of the selected source set, forces the generated CLI reference needed by handbook links, uses offline inventory mode, and avoids the rejected `docs/_build/index-preview` output path.
 
-Validation: `just docs-page docs/index.md` completed in about 11 seconds and wrote current handbook copy to `docs/_build/html/index.html`. The built file includes the task chooser, standard prepare-and-export route, censo lifecycle route, and privacy-safe support language. `docs/_build/index-preview` is absent. `uv run python -m compileall scripts/build_changed_docs.py` also passed.
+Validation: `just docs-page docs/index.md` completed in about 11 seconds and wrote current handbook copy to `docs/_build/html/index.html`. The built file includes the task chooser, standard prepare-and-export route, censo lifecycle route, and privacy-safe support language. `docs/_build/index-preview` is absent. The historical check also passed.
 
 Residual: this is not an autobuild server. The repository has `watchfiles` in the lockfile, but no `sphinx-autobuild`, `docs-watch`, or `docs-serve` recipe. The missing watch/server path is now tracked as open plan step `S49`. For non-root pages, Sphinx may still rewrite the root `index.html` alongside the requested page because the canonical root remains the master document; the index page requested by the user builds as the single requested page.
 
@@ -73,4 +72,4 @@ Residual: this is not an autobuild server. The repository has `watchfiles` in th
 
 The mandatory code reviewer found that the generic `docs-page PAGE` recipe could still be aimed at `docs/api` pages. That made the "without rebuilding generated API/autodoc pages" contract porous even though the requested `docs/index.md` use case was valid.
 
-Resolution: `scripts/build_changed_docs.py` now rejects generated API/autodoc targets in `--single-page` mode, and the `docs-page` recipe comment now says the recipe is for non-API documentation sources. The guard was verified by running an API-page invocation and confirming it exits before Sphinx starts.
+Resolution: the retired script now rejects generated API/autodoc targets in `--single-page` mode, and the `docs-page` recipe comment now says the recipe is for non-API documentation sources. The guard was verified by running an API-page invocation and confirming it exits before Sphinx starts.

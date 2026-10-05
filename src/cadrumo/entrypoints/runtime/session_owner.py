@@ -11,6 +11,7 @@ from threading import Event, Lock, RLock, get_ident
 from uuid import UUID
 
 from ...adapters.local_runtime.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
+from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import RuntimeHumanProof
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
@@ -18,7 +19,7 @@ from ...application.runtime.worker_authorization import WorkerAuthorizationOwner
 from ...application.user_profile.access_contracts import AccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
-from ...application.user_profile.session_authority import SessionAuthorityFacts
+from ...application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from ...core.time.clock import now
 
 
@@ -67,6 +68,8 @@ class ProfileWorkerSessionOwner:
         self._human_connection: UUID | None = None
         self._persist_human_receipt = False
         self._human_receipts: dict[UUID, ProfileHumanLoginReceipt] = {}
+        self._pending_human_receipts: dict[UUID, ProfileWorkerProcess] = {}
+        self._human_sign_ins: dict[UUID, SignInGeneration] = {}
 
     @contextmanager
     def admission_guard(self) -> Generator[None]:
@@ -115,19 +118,9 @@ class ProfileWorkerSessionOwner:
 
     @contextmanager
     def _custody(self) -> Generator[ProfileWorkerProcess]:
-        constructing = False
+        constructing, worker = self._select_worker_for_custody()
         candidate: ProfileWorkerProcess | None = None
-        worker: ProfileWorkerProcess | None = None
         try:
-            with self._lifecycle_guard:
-                if self._lost or self._stopping.is_set():
-                    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-                worker = self._worker
-                if worker is None:
-                    if not self._construction_done.is_set():
-                        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-                    self._construction_done.clear()
-                    constructing = True
             if constructing:
                 candidate = ProfileWorkerProcess(
                     self.identity,
@@ -150,34 +143,63 @@ class ProfileWorkerSessionOwner:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
             yield worker
         except BaseException as error:
-            candidate = (unreturned_profile_worker(error) or candidate) if constructing else None
-            if candidate is not None:
-                with self._lifecycle_guard:
-                    if all(candidate is not retained for retained in self._retiring):
-                        self._retiring.append(candidate)
-                # The constructor has attempted immediate containment. Keep
-                # failed releases and callbacks until settlement outside the
-                # profile guard, even after the exception becomes a wire refusal.
-                self.begin_drain()
-            if constructing and self._stopping.is_set() and candidate is None and worker is None:
-                self._construction_failure = True
-            if candidate is None and isinstance(error, RuntimeRefusalError):
-                with self._lifecycle_guard:
-                    undispatched_timeout = (
-                        error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
-                        and worker is not None
-                        and worker is self._worker
-                        and not worker.stopping
-                    )
-                # The adapter fences every failed dispatched exchange. A wire
-                # queue timeout leaves the exact healthy worker untouched and
-                # must not retire another connection's admitted custody.
-                if not undispatched_timeout:
-                    self.close()
+            candidate = self._retain_failed_candidate(error, constructing, candidate, worker)
+            self._retire_failed_runtime(error, candidate, worker)
             raise
         finally:
             if constructing:
                 self._construction_done.set()
+
+    def _select_worker_for_custody(self) -> tuple[bool, ProfileWorkerProcess | None]:
+        with self._lifecycle_guard:
+            if self._lost or self._stopping.is_set():
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+            worker = self._worker
+            if worker is not None:
+                return False, worker
+            if not self._construction_done.is_set():
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+            self._construction_done.clear()
+            return True, None
+
+    def _retain_failed_candidate(
+        self,
+        error: BaseException,
+        constructing: bool,
+        candidate: ProfileWorkerProcess | None,
+        worker: ProfileWorkerProcess | None,
+    ) -> ProfileWorkerProcess | None:
+        candidate = (unreturned_profile_worker(error) or candidate) if constructing else None
+        if candidate is not None:
+            with self._lifecycle_guard:
+                if all(candidate is not retained for retained in self._retiring):
+                    self._retiring.append(candidate)
+            # The constructor has attempted immediate containment. Keep failed
+            # releases and callbacks owned even after a wire refusal.
+            self.begin_drain()
+        if constructing and self._stopping.is_set() and candidate is None and worker is None:
+            self._construction_failure = True
+        return candidate
+
+    def _retire_failed_runtime(
+        self,
+        error: BaseException,
+        candidate: ProfileWorkerProcess | None,
+        worker: ProfileWorkerProcess | None,
+    ) -> None:
+        if candidate is not None or not isinstance(error, RuntimeRefusalError):
+            return
+        with self._lifecycle_guard:
+            undispatched_timeout = (
+                error.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+                and worker is not None
+                and worker is self._worker
+                and not worker.stopping
+            )
+        # A queue timeout leaves the exact healthy worker untouched; every
+        # other failed dispatched exchange fences custody.
+        if not undispatched_timeout:
+            self.close()
 
     @contextmanager
     def prepare_api_admission(self, connection_id: UUID) -> Generator[float]:
@@ -243,7 +265,9 @@ class ProfileWorkerSessionOwner:
                     self._prepared_human_worker = worker
                     self._human_thread = get_ident()
                     self._human_connection = connection_id
-                    with worker.authenticate_human(proof.secret, method=proof.method) as outcome:
+                    with worker.authenticate_human(
+                        proof.secret, originating_login_id=proof.originating_login_id, method=proof.method
+                    ) as outcome:
                         yield outcome, proof.originating_login_id
             finally:
                 self._prepared_human_worker = None
@@ -272,17 +296,51 @@ class ProfileWorkerSessionOwner:
                 or self._human_connection != session.connection_id
             ):
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        self._human_receipts[session.session_id] = worker.bind_human(
-            session, persist_receipt=self._persist_human_receipt
-        )
+        bound = worker.bind_human(session, persist_receipt=self._persist_human_receipt)
+        self._human_receipts[session.session_id] = bound.receipt
+        if bound.receipt_pending:
+            self._pending_human_receipts[session.session_id] = worker
+
+    def capture_human_sign_in(self, session_id: UUID) -> bool:
+        """Capture, at publication, the sign-in generation a pending receipt will carry.
+
+        The caller holds the admission guard and has just published the session.
+        A missing or unusable generation record is created and fsynced here, so
+        the record exists before any receipt can name it. Return ``False``,
+        writing nothing, when the session's login asked for no receipt.
+        """
+        if session_id not in self._pending_human_receipts:
+            return False
+        sign_in = SignInGenerationCustody(root=self.root, binding=self.identity.binding)
+        self._human_sign_ins[session_id] = sign_in.establish().current
+        return True
+
+    def mint_human_receipt(self, session_id: UUID) -> None:
+        """Mint a still-published session's receipt with the generation captured at publication.
+
+        The caller holds the admission guard. The worker refuses to write when
+        the captured generation has moved since, and reports no persistence.
+        """
+        worker = self._pending_human_receipts.pop(session_id, None)
+        sign_in = self._human_sign_ins.pop(session_id, None)
+        with self._lifecycle_guard:
+            if worker is None or sign_in is None or self._lost or worker is not self._worker:
+                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        self._human_receipts[session_id] = worker.mint_human_receipt(session_id, sign_in)
 
     def take_human_login_receipt(self, session_id: UUID) -> ProfileHumanLoginReceipt | None:
         """Consume the nonsecret acknowledgement after exact-session admission."""
         return self._human_receipts.pop(session_id, None)
 
     def retire(self, session_id: UUID) -> None:
-        """Release an admitted lineage; retirement never starts a replacement worker."""
+        """Release an admitted lineage; retirement never starts a replacement worker.
+
+        The worker discards a pending receipt with the lineage, so a session
+        retired before its mint leaves no receipt.
+        """
         self._human_receipts.pop(session_id, None)
+        self._pending_human_receipts.pop(session_id, None)
+        self._human_sign_ins.pop(session_id, None)
         if self._worker is not None:
             with self._custody() as worker:
                 worker.retire(session_id)
@@ -293,6 +351,8 @@ class ProfileWorkerSessionOwner:
             self._stopping.set()
             self._lost = True
             self._human_receipts.clear()
+            self._pending_human_receipts.clear()
+            self._human_sign_ins.clear()
             worker, self._worker = self._worker, None
             if worker is not None:
                 self._retiring.append(worker)

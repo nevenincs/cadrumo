@@ -21,7 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....application.local_reader import RoleFitnessOutcome, role_model_targets
-from .....application.local_reader_operation import (
+from .....application.local_reader_contracts import (
     LOCAL_READER_OPERATION_DEFINITION_ID,
     LocalReaderProvisionAction,
     LocalReaderProvisionOutcome,
@@ -30,14 +30,16 @@ from .....application.local_reader_operation import (
     LocalReaderSetupStep,
     LocalReaderSetupStepState,
     build_local_reader_load_request,
-    build_local_reader_operation_definition,
-    build_local_reader_operation_registration,
     build_local_reader_setup_request,
     local_reader_fact_mapping,
     local_reader_public_verdict,
     local_reader_setup_phase,
-    provision_local_reader,
 )
+from .....application.local_reader_operation import (
+    build_local_reader_operation_definition,
+    build_local_reader_operation_registration,
+)
+from .....application.local_reader_provisioning import provision_local_reader
 from .....application.operations.composition import OperationComposedServices, compose_operation_services
 from .....application.operations.frontend_requests import (
     OperationObservationRequestV1,

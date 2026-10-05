@@ -16,7 +16,7 @@ family.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -38,9 +38,10 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import Period
+from ...core.spanish_postcode import SpanishPostcode, SpanishProvinceCode
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
@@ -68,11 +69,11 @@ class Modelo180StructuredAddress(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    province_code: str = Field(pattern=r"^\d{2}$")
+    province_code: SpanishProvinceCode
     municipality_code: str = Field(pattern=r"^\d{3}$")
     municipality: str = Field(min_length=1, max_length=30)
     locality: str = Field(min_length=1, max_length=30)
-    postal_code: str = Field(pattern=r"^\d{5}$")
+    postal_code: SpanishPostcode
     street_type: str = Field(min_length=1, max_length=5)
     street_name: str = Field(min_length=1, max_length=50)
     number_type: str = Field(min_length=1, max_length=3)
@@ -102,7 +103,7 @@ class Modelo180PropertyEvidence(BaseModel):
     situation: Literal["1", "2", "3", "4"]
     cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
     address: Modelo180StructuredAddress
-    recipient_province_code: str = Field(pattern=r"^\d{2}$")
+    recipient_province_code: SpanishProvinceCode
     modality: Literal["1", "2"]
     accrual_year: int = Field(ge=1900, le=9999)
     withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
@@ -287,29 +288,46 @@ class RetencionesAggregation(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _totals_match_rollups(self) -> RetencionesAggregation:
-        assert_rollup_totals_match(
-            self.rollups,
-            checks=(
-                ("total_taxable_base", self.total_taxable_base, lambda row: row.total_taxable_base),
-                ("total_retencion", self.total_retencion, lambda row: row.total_retencion),
-            ),
-        )
-        unique_perceptors = {row.perceptor_nif for row in self.rollups}
-        if len(unique_perceptors) != self.total_perceptors:
-            raise ValueError(
-                f"total_perceptors {self.total_perceptors} does not match "
-                f"distinct perceptor NIFs {len(unique_perceptors)}",
-            )
-        if self.type2_record_count != len(self.type2_rows):
-            raise ValueError("type2_record_count must equal the canonical emitted row count")
-        if self.modelo != "180" and self.type2_rows:
-            raise ValueError("Modelo 180 type-2 rows cannot belong to another modelo")
-        if self.modelo == "180" and self.type2_rows:
-            if sum((row.taxable_base for row in self.type2_rows), Decimal("0")) != self.total_taxable_base:
-                raise ValueError("Modelo 180 type-2 bases must reconcile with the declaration total")
-            if sum((row.retencion_amount for row in self.type2_rows), Decimal("0")) != self.total_retencion:
-                raise ValueError("Modelo 180 type-2 withholdings must reconcile with the declaration total")
+        _validate_rollup_totals(self)
+        _validate_perceptor_count(self)
+        _validate_type2_record_count(self)
+        _validate_type2_rows_match_modelo(self)
         return self
+
+
+def _validate_rollup_totals(aggregation: RetencionesAggregation) -> None:
+    assert_rollup_totals_match(
+        aggregation.rollups,
+        checks=(
+            ("total_taxable_base", aggregation.total_taxable_base, lambda row: row.total_taxable_base),
+            ("total_retencion", aggregation.total_retencion, lambda row: row.total_retencion),
+        ),
+    )
+
+
+def _validate_perceptor_count(aggregation: RetencionesAggregation) -> None:
+    unique_perceptors = {row.perceptor_nif for row in aggregation.rollups}
+    if len(unique_perceptors) != aggregation.total_perceptors:
+        raise ValueError(
+            f"total_perceptors {aggregation.total_perceptors} does not match "
+            f"distinct perceptor NIFs {len(unique_perceptors)}",
+        )
+
+
+def _validate_type2_record_count(aggregation: RetencionesAggregation) -> None:
+    if aggregation.type2_record_count != len(aggregation.type2_rows):
+        raise ValueError("type2_record_count must equal the canonical emitted row count")
+
+
+def _validate_type2_rows_match_modelo(aggregation: RetencionesAggregation) -> None:
+    if aggregation.modelo != "180" and aggregation.type2_rows:
+        raise ValueError("Modelo 180 type-2 rows cannot belong to another modelo")
+    if aggregation.modelo != "180" or not aggregation.type2_rows:
+        return
+    if sum((row.taxable_base for row in aggregation.type2_rows), Decimal("0")) != aggregation.total_taxable_base:
+        raise ValueError("Modelo 180 type-2 bases must reconcile with the declaration total")
+    if sum((row.retencion_amount for row in aggregation.type2_rows), Decimal("0")) != aggregation.total_retencion:
+        raise ValueError("Modelo 180 type-2 withholdings must reconcile with the declaration total")
 
 
 @dataclass(frozen=True, slots=True)
@@ -330,9 +348,7 @@ def _resolved_withholding_scheme_fact(
     enclosing operation is used, exactly as the retención rate facts resolve.
     With neither there is no authority to answer and the resolution refuses.
     """
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise ValueError("withholding-scheme resolution requires a generation-pinned governed-fact source")
+    authority = require_governed_fact_authority(authority, subject="withholding-scheme resolution")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m111-m115-m123-withholding-scheme-catalogue",
@@ -352,6 +368,15 @@ def registry_work_income_retencion_treatments(
 ) -> Mapping[RetencionScheme, WorkIncomeRetencionTreatment]:
     """Resolve work-income treatment declarations from the dated fact mapping."""
     resolved = _resolved_withholding_scheme_fact(effective_date, authority=authority)
+    scheme_tokens, treatment_values = _work_income_declarations(resolved)
+    if len(treatment_values) != 1:
+        raise ValueError("withholding scheme catalogue must declare exactly one work-income treatment mapping")
+    treatments = _parse_work_income_treatments(treatment_values[0], scheme_tokens)
+    _require_fixed_and_variable_treatments(treatments)
+    return treatments
+
+
+def _work_income_declarations(resolved: ResolvedMappingFact) -> tuple[set[RetencionScheme], list[str]]:
     scheme_tokens: set[RetencionScheme] = set()
     treatment_values: list[str] = []
     for entry in resolved.payload.entries:
@@ -361,31 +386,47 @@ def registry_work_income_retencion_treatments(
             scheme_tokens.update(RetencionScheme(token.strip()) for token in entry.value.split(",") if token.strip())
         elif entry.key == "retencion.work_income.treatment":
             treatment_values.append(entry.value)
-    if len(treatment_values) != 1:
-        raise ValueError("withholding scheme catalogue must declare exactly one work-income treatment mapping")
+
+    return scheme_tokens, treatment_values
+
+
+def _parse_work_income_treatments(
+    declaration_text: str, scheme_tokens: set[RetencionScheme]
+) -> dict[RetencionScheme, WorkIncomeRetencionTreatment]:
     treatments: dict[RetencionScheme, WorkIncomeRetencionTreatment] = {}
-    for declaration in (token.strip() for token in treatment_values[0].split(",") if token.strip()):
-        scheme_token, separator, fixed_flag = declaration.partition("=")
-        scheme_token = scheme_token.strip()
-        fixed_flag = fixed_flag.strip()
-        if not separator or not scheme_token or fixed_flag not in {"true", "false"}:
-            raise ValueError(f"malformed work-income treatment declaration {declaration!r}")
-        scheme = RetencionScheme(scheme_token)
-        if scheme not in scheme_tokens:
-            raise ValueError(f"work-income treatment names undeclared scheme {scheme.value!r}")
-        if scheme in treatments:
-            raise ValueError(f"duplicate work-income treatment declaration for {scheme.value!r}")
-        treatments[scheme] = WorkIncomeRetencionTreatment(
-            scheme=scheme,
-            is_fixed_rate=fixed_flag == "true",
-        )
+    for declaration in (token.strip() for token in declaration_text.split(",") if token.strip()):
+        _add_work_income_treatment(declaration, scheme_tokens=scheme_tokens, treatments=treatments)
     if not treatments:
         raise ValueError("work-income treatment mapping is empty")
+    return treatments
+
+
+def _add_work_income_treatment(
+    declaration: str,
+    *,
+    scheme_tokens: set[RetencionScheme],
+    treatments: dict[RetencionScheme, WorkIncomeRetencionTreatment],
+) -> None:
+    scheme_token, separator, fixed_flag = declaration.partition("=")
+    scheme_token = scheme_token.strip()
+    fixed_flag = fixed_flag.strip()
+    if not separator or not scheme_token or fixed_flag not in {"true", "false"}:
+        raise ValueError(f"malformed work-income treatment declaration {declaration!r}")
+    scheme = RetencionScheme(scheme_token)
+    if scheme not in scheme_tokens:
+        raise ValueError(f"work-income treatment names undeclared scheme {scheme.value!r}")
+    if scheme in treatments:
+        raise ValueError(f"duplicate work-income treatment declaration for {scheme.value!r}")
+    treatments[scheme] = WorkIncomeRetencionTreatment(scheme=scheme, is_fixed_rate=fixed_flag == "true")
+
+
+def _require_fixed_and_variable_treatments(
+    treatments: Mapping[RetencionScheme, WorkIncomeRetencionTreatment],
+) -> None:
     if not any(treatment.is_fixed_rate for treatment in treatments.values()) or not any(
         not treatment.is_fixed_rate for treatment in treatments.values()
     ):
         raise ValueError("work-income treatment mapping must include fixed and non-fixed declarations")
-    return treatments
 
 
 # Selected withholding schemes come from the pinned revision and dated mapping fact.
@@ -411,22 +452,31 @@ def _registry_retenciones_catalogue(
             raise TypeError("withholding scheme mapping entries must be string-to-string")
         if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
             continue
-        model_id = entry.key[len(prefix) : -len(suffix)].strip()
-        if not model_id or model_id in model_schemes:
-            raise ValueError(f"duplicate or empty withholding scheme declaration key {entry.key!r}")
-        tokens = tuple(token.strip() for token in entry.value.split(",") if token.strip())
-        if not tokens:
-            raise ValueError(f"withholding scheme declaration {entry.key!r} is empty")
-        try:
-            schemes = frozenset(RetencionScheme(token) for token in tokens)
-        except ValueError as exc:
-            raise ValueError(f"withholding scheme declaration {entry.key!r} contains an unknown scheme") from exc
-        if len(schemes) != len(tokens):
-            raise ValueError(f"withholding scheme declaration {entry.key!r} contains duplicate schemes")
+        model_id, schemes = _parse_model_scheme_declaration(
+            entry.key, entry.value, existing_model_ids=model_schemes.keys()
+        )
         model_schemes[model_id] = schemes
     if modelo not in model_schemes:
         raise ValueError(f"withholding scheme catalogue has no declaration for modelo {modelo!r}")
     return _RetencionesRegistryCatalogue(model_schemes=model_schemes)
+
+
+def _parse_model_scheme_declaration(
+    key: str, value: str, *, existing_model_ids: Iterable[str]
+) -> tuple[str, frozenset[RetencionScheme]]:
+    model_id = key[len("modelo.") : -len(".schemes")].strip()
+    if not model_id or model_id in existing_model_ids:
+        raise ValueError(f"duplicate or empty withholding scheme declaration key {key!r}")
+    tokens = tuple(token.strip() for token in value.split(",") if token.strip())
+    if not tokens:
+        raise ValueError(f"withholding scheme declaration {key!r} is empty")
+    try:
+        schemes = frozenset(RetencionScheme(token) for token in tokens)
+    except ValueError as exc:
+        raise ValueError(f"withholding scheme declaration {key!r} contains an unknown scheme") from exc
+    if len(schemes) != len(tokens):
+        raise ValueError(f"withholding scheme declaration {key!r} contains duplicate schemes")
+    return model_id, schemes
 
 
 def _aggregate_for_modelo(
@@ -560,6 +610,23 @@ def aggregate_retenciones_180(
         period=period,
         operation=operation,
     )
+    filtered = _filtered_modelo180_observations(observations, period=period, operation=operation)
+    type2_rows = _modelo180_type2_rows(filtered, filing_year=period.filing_year)
+    return RetencionesAggregation(
+        modelo=aggregation.modelo,
+        period=aggregation.period,
+        rollups=aggregation.rollups,
+        total_perceptors=aggregation.total_perceptors,
+        total_taxable_base=aggregation.total_taxable_base,
+        total_retencion=aggregation.total_retencion,
+        type2_rows=tuple(type2_rows),
+        type2_record_count=len(type2_rows),
+    )
+
+
+def _filtered_modelo180_observations(
+    observations: tuple[RetencionObservation, ...], *, period: Period, operation: PinnedAuthorityOperation
+) -> tuple[RetencionObservation, ...]:
     filtered = filter_observations_for_modelo(
         observations,
         modelo=Modelo("180").value,
@@ -573,71 +640,76 @@ def aggregate_retenciones_180(
     )
     if any(row.modelo_180_property is None for row in filtered):
         raise ValueError("Modelo 180 annual detail is incomplete")
+    return filtered
+
+
+def _modelo180_type2_rows(
+    observations: tuple[RetencionObservation, ...], *, filing_year: int
+) -> list[Modelo180Type2Row]:
     grouped: dict[tuple[object, ...], list[RetencionObservation]] = {}
-    for row in filtered:
+    for row in observations:
         detail = row.modelo_180_property
         if detail is None:
             raise AssertionError("complete Modelo 180 detail must be present")
-        sign = "reimbursement" if row.taxable_base < 0 else "positive"
-        key = (
-            period.filing_year,
-            row.perceptor_nif,
-            detail.modality,
-            detail.accrual_year,
-            detail.identity,
-            sign,
-        )
+        key = _modelo180_type2_group_key(row, detail, filing_year=filing_year)
         grouped.setdefault(key, []).append(row)
-    type2_rows: list[Modelo180Type2Row] = []
-    for _key, members in sorted(grouped.items(), key=lambda item: tuple(str(value) for value in item[0])):
-        detail = members[0].modelo_180_property
-        if detail is None:
-            raise AssertionError("complete Modelo 180 detail must be present")
-        # Percentage is evidence for the individual observation, not part of
-        # the official emitted-row identity.  The design directs us to show
-        # the last percentage applied in the year, so different earlier rates
-        # do not fragment the row.  Every other property-detail value must
-        # still agree rather than being guessed or silently selected.
-        detail_without_percentage = detail.model_dump(exclude={"withholding_percentage"})
-        if any(
-            member.modelo_180_property is None
-            or member.modelo_180_property.model_dump(exclude={"withholding_percentage"}) != detail_without_percentage
-            for member in members[1:]
-        ):
-            raise ValueError("Modelo 180 property detail conflicts within one emitted row")
-        names = {member.perceptor_name for member in members if member.perceptor_name}
-        if len(names) > 1:
-            raise ValueError("Modelo 180 recipient detail conflicts within one emitted row")
-        latest_accrued_on = max(member.accrued_on for member in members)
-        latest_percentages = {
-            member.modelo_180_property.withholding_percentage
-            for member in members
-            if member.accrued_on == latest_accrued_on and member.modelo_180_property is not None
-        }
-        if len(latest_percentages) != 1:
-            raise ValueError("Modelo 180 last-applied withholding percentage is ambiguous")
-        type2_rows.append(
-            Modelo180Type2Row(
-                filing_year=period.filing_year,
-                perceptor_nif=members[0].perceptor_nif,
-                perceptor_name=next(iter(names), ""),
-                property_detail=detail,
-                observations_count=len(members),
-                taxable_base=sum((member.taxable_base for member in members), Decimal("0")),
-                retencion_amount=sum((member.retencion_amount for member in members), Decimal("0")),
-                withholding_percentage=next(iter(latest_percentages)),
-            )
-        )
-    return RetencionesAggregation(
-        modelo=aggregation.modelo,
-        period=aggregation.period,
-        rollups=aggregation.rollups,
-        total_perceptors=aggregation.total_perceptors,
-        total_taxable_base=aggregation.total_taxable_base,
-        total_retencion=aggregation.total_retencion,
-        type2_rows=tuple(type2_rows),
-        type2_record_count=len(type2_rows),
+    return [
+        _modelo180_group_row(members, filing_year=filing_year)
+        for _key, members in sorted(grouped.items(), key=lambda item: tuple(str(value) for value in item[0]))
+    ]
+
+
+def _modelo180_type2_group_key(
+    row: RetencionObservation, detail: Modelo180PropertyEvidence, *, filing_year: int
+) -> tuple[object, ...]:
+    sign = "reimbursement" if row.taxable_base < 0 else "positive"
+    return filing_year, row.perceptor_nif, detail.modality, detail.accrual_year, detail.identity, sign
+
+
+def _modelo180_group_row(members: list[RetencionObservation], *, filing_year: int) -> Modelo180Type2Row:
+    detail = members[0].modelo_180_property
+    if detail is None:
+        raise AssertionError("complete Modelo 180 detail must be present")
+    _require_matching_property_evidence(members, detail)
+    names = {member.perceptor_name for member in members if member.perceptor_name}
+    if len(names) > 1:
+        raise ValueError("Modelo 180 recipient detail conflicts within one emitted row")
+    latest_percentages = _latest_modelo180_percentages(members)
+    return Modelo180Type2Row(
+        filing_year=filing_year,
+        perceptor_nif=members[0].perceptor_nif,
+        perceptor_name=next(iter(names), ""),
+        property_detail=detail,
+        observations_count=len(members),
+        taxable_base=sum((member.taxable_base for member in members), Decimal("0")),
+        retencion_amount=sum((member.retencion_amount for member in members), Decimal("0")),
+        withholding_percentage=next(iter(latest_percentages)),
     )
+
+
+def _require_matching_property_evidence(members: list[RetencionObservation], detail: Modelo180PropertyEvidence) -> None:
+    # Percentage is evidence for the individual observation, not part of the
+    # official emitted-row identity. The last applied rate is selected below;
+    # every other detail value must match across the grouped observations.
+    identity = detail.model_dump(exclude={"withholding_percentage"})
+    if any(
+        member.modelo_180_property is None
+        or member.modelo_180_property.model_dump(exclude={"withholding_percentage"}) != identity
+        for member in members[1:]
+    ):
+        raise ValueError("Modelo 180 property detail conflicts within one emitted row")
+
+
+def _latest_modelo180_percentages(members: list[RetencionObservation]) -> set[Decimal]:
+    latest_accrued_on = max(member.accrued_on for member in members)
+    percentages = {
+        member.modelo_180_property.withholding_percentage
+        for member in members
+        if member.accrued_on == latest_accrued_on and member.modelo_180_property is not None
+    }
+    if len(percentages) != 1:
+        raise ValueError("Modelo 180 last-applied withholding percentage is ambiguous")
+    return percentages
 
 
 def aggregate_retenciones_190(

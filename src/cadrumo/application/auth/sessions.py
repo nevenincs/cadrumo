@@ -39,7 +39,7 @@ from ...core.identity.tax_id import (
 )
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.utc import validate_utc_aware
+from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
@@ -573,10 +573,7 @@ def session_metadata_datetime(value: object, *, field: str) -> datetime:
     if isinstance(value, datetime):
         return value
     if isinstance(value, str):
-        text = value.strip()
-        if text.endswith("Z"):
-            text = f"{text[:-1]}+00:00"
-        parsed = datetime.fromisoformat(text)
+        parsed = parse_iso_datetime(value.strip())
         validate_utc_aware(parsed)
         return parsed
     raise SessionDeserializationError(
@@ -688,17 +685,6 @@ def _prepare_clave_auth(
             profile_decode_context=profile_decode_context,
         )
         return settings, facts.tax_id or None
-    if provider_kind is AuthProviderKind.CLAVE_MOVIL and facts.clave_movil_route is None:
-        raise ClaveCredentialsIncompleteError(
-            translated_message="application.auth.sessions.errors.clave_route_missing",
-            context={
-                "provider": provider_kind.value,
-                "route_field": _profile_field_label(
-                    _CLAVE_MOVIL_ROUTE_PATH,
-                    profile_decode_context=profile_decode_context,
-                ),
-            },
-        )
     bound_settings = bind_clave_credentials_to_settings(
         settings,
         credentials,
@@ -787,7 +773,6 @@ def resolve_clave_credentials(
 
 
 _CLAVE_DNI_NIE_PATH = "auth.dni_nie"
-_CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
 _CLAVE_NUMERO_SOPORTE_PATH = "auth.numero_soporte"
 _CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 
@@ -823,9 +808,10 @@ def _require_clave_credentials(
 
     Every Cl@ve mode needs the DNI/NIE that identifies the person. The
     contraste - the numero de soporte for a NIE, the validity date for a
-    DNI - is read only by the non-QR fallback form, so it is required
-    exactly when that route is selected; the QR route asks for neither
-    and must not be refused for their absence.
+    DNI - is read only by the app-request form, so it is required exactly
+    when that route is in effect. That is the default route, so a profile
+    that never chose one is refused here too; an explicit QR route asks for
+    neither and must not be refused for their absence.
     """
     if not credentials.dni_nie:
         raise ClaveCredentialsIncompleteError(
@@ -997,7 +983,10 @@ def bind_clave_credentials_to_settings(
     The outbound providers read their credentials from :class:`Settings`,
     so a value the profile holds is inert until it is bound here. When the
     profile carries nothing the caller's settings are returned unchanged,
-    which keeps the environment-configured path byte-identical.
+    which keeps the environment-configured path byte-identical. A profile
+    that never chose a Cl@ve Movil route therefore keeps the settings route,
+    whose default is :data:`~core.auth_provider.DEFAULT_CLAVE_MOVIL_ROUTE`;
+    only an explicit profile choice overrides it.
     """
     overrides: dict[str, object] = {}
     if credentials.profile_dni_nie:

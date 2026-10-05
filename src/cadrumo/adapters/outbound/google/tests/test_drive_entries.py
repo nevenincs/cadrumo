@@ -13,7 +13,7 @@ Three properties are pinned:
   than closing it early;
 - an app-owned entry with an absent or blank ``id`` is refused with a typed
   storage error instead of surfacing a raw :exc:`KeyError` to the caller;
-- both lookups run the same ownership/backfill/refusal policy, so the
+- both lookups run the same ownership and refusal policy, so the
   behaviour cannot drift between them.
 """
 
@@ -37,11 +37,26 @@ from ..drive_entries import (
     OWNERSHIP_KEY,
     OWNERSHIP_VALUE,
     build_owned_entry_query,
-    escape_drive_query_name,
+    is_app_owned,
     require_drive_entry_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+@pytest.mark.parametrize(
+    ("app_properties", "expected"),
+    [
+        ({OWNERSHIP_KEY: OWNERSHIP_VALUE}, True),
+        ({OWNERSHIP_KEY: OWNERSHIP_VALUE, "other": "kept"}, True),
+        ({}, False),
+        ({OWNERSHIP_KEY: "someone-else"}, False),
+        ({"unrelated": "value"}, False),
+    ],
+)
+def test_only_the_exact_marker_counts_as_app_owned(app_properties: dict[str, str], expected: bool) -> None:
+    assert is_app_owned(app_properties) is expected
+
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
@@ -111,7 +126,7 @@ class _RecordedFiles:
 
 
 class _RecordedDrive:
-    """Minimal Drive service double capturing queries and backfill updates."""
+    """Minimal Drive service double capturing queries and any update issued."""
 
     def __init__(self, entries: object) -> None:
         self.entries = entries
@@ -141,17 +156,17 @@ def _owned(entry_id: str | None, name: str = "target") -> dict[str, Any]:
 
 
 def test_apostrophe_in_name_is_escaped_into_the_query_literal() -> None:
-    """A name containing an apostrophe must not close the query literal early."""
-    assert escape_drive_query_name("va'ult") == "va\\'ult"
     query = build_owned_entry_query(parent_id="root", name="va'ult", mime_type=_FOLDER_MIME)
     assert "name = 'va\\'ult'" in query
     assert "name = 'va'ult'" not in query
 
 
-def test_backslash_is_escaped_before_the_apostrophe_escape() -> None:
-    """The backslash replacement must run first so it cannot double-escape."""
-    assert escape_drive_query_name("a\\b") == "a\\\\b"
-    assert escape_drive_query_name("a\\'b") == "a\\\\\\'b"
+def test_query_builder_escapes_parent_id_name_and_mime_literals() -> None:
+    query = build_owned_entry_query(parent_id="root'\\id", name="va'ult", mime_type="mime'type")
+
+    assert query == (
+        "'root\\'\\\\id' in parents and name = 'va\\'ult' and mimeType = 'mime\\'type' and trashed = false"
+    )
 
 
 def test_folder_lookup_escapes_the_configured_name_on_the_real_call_path() -> None:
@@ -203,10 +218,10 @@ def test_spreadsheet_lookup_refuses_an_id_less_owned_entry() -> None:
         _find_spreadsheet(_as_drive_resource(drive), parent_id="folder", name="target")
 
 
-def test_backfill_does_not_issue_an_update_for_an_id_less_entry() -> None:
-    """Identity is validated before the marker-backfill call is issued."""
+def test_unmarked_entry_without_an_id_is_refused_without_any_update() -> None:
+    """An unmarked entry is refused on ownership before its identity matters."""
     drive = _RecordedDrive([{"name": "target"}])
-    with pytest.raises(OutboundStorageValidationError):
+    with pytest.raises(OutboundStorageConflictError):
         _find_folder(_as_drive_resource(drive), parent_id="root", name="target")
     assert drive.updates == []
 
@@ -255,13 +270,26 @@ def test_non_mapping_ownership_metadata_is_an_explicit_validation_outcome() -> N
     )
 
 
-def test_unmarked_entry_is_backfilled_and_adopted() -> None:
-    """A pre-marker entry this app created is stamped, then returned."""
-    drive = _RecordedDrive([{"id": "legacy-1", "name": "target"}])
-    found = _find_folder(_as_drive_resource(drive), parent_id="root", name="target")
-    assert found is not None
-    assert found["id"] == "legacy-1"
-    assert drive.updates == ["legacy-1"]
+def test_unmarked_entry_is_refused_on_both_lookups_and_never_stamped() -> None:
+    """A same-named entry without the marker is not adopted, and nothing is written to it."""
+    folder_drive = _RecordedDrive([{"id": "unmarked-1", "name": "target"}])
+    with pytest.raises(OutboundStorageConflictError) as folder_error:
+        _find_folder(_as_drive_resource(folder_drive), parent_id="root", name="target")
+    _assert_closed_operator_review(
+        folder_error.value,
+        condition_id="google.drive_entry.ownership_aligned",
+        facts={"parent_id": "root", "entry_name": "target", "ownership_aligned": False},
+    )
+    assert folder_drive.updates == []
+    spreadsheet_drive = _RecordedDrive([{"id": "unmarked-2", "name": "target", "appProperties": {}}])
+    with pytest.raises(OutboundStorageConflictError) as spreadsheet_error:
+        _find_spreadsheet(_as_drive_resource(spreadsheet_drive), parent_id="folder", name="target")
+    _assert_closed_operator_review(
+        spreadsheet_error.value,
+        condition_id="google.drive_entry.ownership_aligned",
+        facts={"parent_id": "folder", "entry_name": "target", "ownership_aligned": False},
+    )
+    assert spreadsheet_drive.updates == []
 
 
 def test_foreign_owned_entry_is_refused_on_both_lookups() -> None:

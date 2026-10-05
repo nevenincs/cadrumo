@@ -1,6 +1,448 @@
 modelo:
   schema:
     '390':
+      binding:
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj2o8:
+          label: 'Dades estadístiques: altra activitat 1'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj4o8:
+          label: 'Dades estadístiques: altra activitat 2'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj6o8:
+          label: 'Dades estadístiques: altra activitat 3'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmj8o8:
+          label: 'Dades estadístiques: altra activitat 4'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lnn8sj1ecmjao8:
+          label: 'Dades estadístiques: altra activitat 5'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm2bb1cdq6itj9chgm8pbj5lo74qbecdkn0obc:
+          label: 'Dades estadístiques: activitat principal'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd65gg:
+          label: 'Dades estadístiques, altra activitat 1: codi d''activitat'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd69gg:
+          label: 'Dades estadístiques, altra activitat 2: codi d''activitat'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6dgg:
+          label: 'Dades estadístiques, altra activitat 3: codi d''activitat'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6hgg:
+          label: 'Dades estadístiques, altra activitat 4: codi d''activitat'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbfehp62spd6lgg:
+          label: 'Dades estadístiques, altra activitat 5: codi d''activitat'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm4bb3dti6iprf5li6abb1cdq6itj9chgm8bbge9kmsor9e1gmo:
+          label: 'Dades estadístiques, activitat principal: codi d''activitat'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd65ng:
+          label: 'Dades estadístiques, altra activitat 1: epígraf IAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd69ng:
+          label: 'Dades estadístiques, altra activitat 2: epígraf IAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6dng:
+          label: 'Dades estadístiques, altra activitat 3: epígraf IAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6hng:
+          label: 'Dades estadístiques, altra activitat 4: epígraf IAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbfehp62spd6lng:
+          label: 'Dades estadístiques, altra activitat 5: epígraf IAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm6bb5e1kmesj1cpiiqq9dc4mmabbge9kmsor9e1gmo:
+          label: 'Dades estadístiques, activitat principal: epígraf IAE'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8bb4clhmoobic5hmirre5lgmstb1dgmmus35e9gm6bb3dtn2qt35e9hmasj1ecmn0pbiednmsobj
+        : label: Declaració anual d'operacions amb tercers
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8pb3dhgn4ob3d5nmsbb3dtn6ktbeehgiqrj9co:
+          label: 'Declaració conjunta: NIF'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp31ehnn6bb5edq62p39edq6iorfecmm8pb3dhgn4ob3d5nmsbb3dtn6ktbeehgiqsj1f9nmsbbjdthmiobc:
+          label: 'Declaració conjunta: raó social'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp35epimsprf5lpnasrkd5q7at39epgg:
+          label: Declaració substitutiva
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoisp35epimsprf5lpnasrkd5q7at39epgiqs3fe8mn4pb3ehkmcqb3c5hmirre5li6abb3elnn8obj:
+          label: Declaració substitutiva per rectificació de quotes
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb1e1imor39chnn6bbp5ln6urb2e9iiqsj1f9nmsbbjdthmiobc
+        : label: 'Representant: cognoms i nom o raó social'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb3c5m6op9de1t62bb1epi62
+        : label: 'Representant: carrer, plaça o avinguda'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb3dti6iprf5lo6usrkc5m0
+        : label: 'Representant: codi postal'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bb5edhg
+        : label: 'Representant: escala'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbdeln6ior9e1kmu
+        : label: 'Representant: municipi'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbed5j0
+        : label: 'Representant: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbedtmm4sj55li6abbcc4mncqb15lo7aojcd5hm2
+        : label: 'Representant: nom de la via pública'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbeelmmasjf
+        : label: 'Representant: número'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbgd5pmu
+        : label: 'Representant: pis'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbge9nncqbecdkm2
+        : label: 'Representant: província'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbge9q62
+        : label: 'Representant: porta'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5lj6isr9cdgn6bb3dtmnarj9cgmm4qb5dpin6bbiclo74pbjcln78bbkclm6apjfdpng
+        : label: 'Representant: telèfon'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Indica la data amb dia, mes i any, en format DDMMAAAA.
+          label: 'Representant (persona jurídica) 1: data del poder'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrj9co:
+          label: 'Representant (persona jurídica) 1: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Representant (persona jurídica) 1: nom i cognoms'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5koiqrjfehgn4qb1:
+          label: 'Representant (persona jurídica) 1: notaria'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Indica la data amb dia, mes i any, en format DDMMAAAA.
+          label: 'Representant (persona jurídica) 2: data del poder'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrj9co:
+          label: 'Representant (persona jurídica) 2: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Representant (persona jurídica) 2: nom i cognoms'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kp2qrjfehgn4qb1:
+          label: 'Representant (persona jurídica) 2: notaria'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqpj5cdk62bbgdti6ashdchi6qrb1c5gm2
+        : help: Indica la data amb dia, mes i any, en format DDMMAAAA.
+          label: 'Representant (persona jurídica) 3: data del poder'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrj9co:
+          label: 'Representant (persona jurídica) 3: NIF'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrjfdlh74p9df4mm2s35dhm6ip3fec
+        : label: 'Representant (persona jurídica) 3: nom i cognoms'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissj5e1p6asr5dpq62rjkckmn0pbiednmsobj5ll7asj9chkm6obj5lp6as3iclpmarjk5kpiqrjfehgn4qb1:
+          label: 'Representant (persona jurídica) 3: notaria'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmm8pbgcln68qb5dpq6a:
+          label: 'Subjecte passiu: entitat dependent?'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmm8rrdd5n62rjkck:
+          label: 'Subjecte passiu: entitat dominant?'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmmsqb65limst39chgm8bb4dtmmirj1dpq6a:
+          label: 'Subjecte passiu: NIF de l''entitat dominant'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmmstbdclp6ubb4ckmmesjle1ng:
+          label: 'Subjecte passiu: número de grup'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn4pb7d5mmarhdclpn0pb3d5gmobb4clm2qprielo6ubb4ckmmarjkd5i62p35ec:
+          label: 'Subjecte passiu: règim especial del grup d''entitats'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn4pb7d5pn8sjf5li6abb4clr6ur3lcdkmurhddlimssrlc5m0:
+          label: 'Subjecte passiu: registre de devolució mensual'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsoissrld9in8rpde1gn6qbmdsmn8qbgdsmn4pb7d5mmarhdclpn0pb3d5gmobb1e1m6ior1c9m6abb1e9q2qc9m6cmn6pbod5in6bb3d5n66rpdedkiqrpddpng
+        : label: 'Subjecte passiu: tipus de règim especial, article 163 sexies.cinco'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+          help: Deixa-ho en blanc si la pàgina no és complementària; indica C si ho
+            és.
+          label: Indicador de pàgina complementària
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdnm8qb7ds
+        : label: 'Activitat agrícola o ramadera 1: codi'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K1
+          label: 'Activitat agrícola o ramadera 1: quota derivada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315li6atj5dpjm2p31
+        : label: 'Activitat agrícola o ramadera 1: quota meritada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dcdqmut315lpmus3fe9q62p31
+        : label: 'Activitat agrícola o ramadera 1: quota suportada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9dd5n68qb3ckmm6tbfehgg
+        : label: 'Activitat agrícola o ramadera 1: índex de quota'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reducció aplicable per l'activitat realitzada en municipis afectats
+            per la DANA.
+          label: 'Activitat agrícola o ramadera 1: reducció per la DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qc9depnmotbdcln2qqbectp6asrfec
+        : label: 'Activitat agrícola o ramadera 1: volum d''ingressos'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdnm8qb7ds
+        : label: 'Activitat agrícola o ramadera 2: codi'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K2
+          label: 'Activitat agrícola o ramadera 2: quota derivada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315li6atj5dpjm2p31
+        : label: 'Activitat agrícola o ramadera 2: quota meritada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdcdqmut315lpmus3fe9q62p31
+        : label: 'Activitat agrícola o ramadera 2: quota suportada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdd5n68qb3ckmm6tbfehgg
+        : label: 'Activitat agrícola o ramadera 2: índex de quota'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchde9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reducció aplicable per l'activitat realitzada en municipis afectats
+            per la DANA.
+          label: 'Activitat agrícola o ramadera 2: reducció per la DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qchdepnmotbdcln2qqbectp6asrfec
+        : label: 'Activitat agrícola o ramadera 2: volum d''ingressos'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdnm8qb7ds
+        : label: 'Activitat agrícola o ramadera 3: codi'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K3
+          label: 'Activitat agrícola o ramadera 3: quota derivada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315li6atj5dpjm2p31
+        : label: 'Activitat agrícola o ramadera 3: quota meritada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdcdqmut315lpmus3fe9q62p31
+        : label: 'Activitat agrícola o ramadera 3: quota suportada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdd5n68qb3ckmm6tbfehgg
+        : label: 'Activitat agrícola o ramadera 3: índex de quota'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpde9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reducció aplicable per l'activitat realitzada en municipis afectats
+            per la DANA.
+          label: 'Activitat agrícola o ramadera 3: reducció per la DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qcpdepnmotbdcln2qqbectp6asrfec
+        : label: 'Activitat agrícola o ramadera 3: volum d''ingressos'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdnm8qb7ds
+        : label: 'Activitat agrícola o ramadera 4: codi'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6oqb6
+        : box_number: K4
+          label: 'Activitat agrícola o ramadera 4: quota derivada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315li6atj5dpjm2p31
+        : label: 'Activitat agrícola o ramadera 4: quota meritada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dcdqmut315lpmus3fe9q62p31
+        : label: 'Activitat agrícola o ramadera 4: quota suportada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1dd5n68qb3ckmm6tbfehgg
+        : label: 'Activitat agrícola o ramadera 4: índex de quota'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reducció aplicable per l'activitat realitzada en municipis afectats
+            per la DANA.
+          label: 'Activitat agrícola o ramadera 4: reducció per la DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd1depnmotbdcln2qqbectp6asrfec
+        : label: 'Activitat agrícola o ramadera 4: volum d''ingressos'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdnm8qb7ds
+        : label: 'Activitat agrícola o ramadera 5: codi'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315li6asj9epgm8o9de9imeqbdcln2qsr9dlo6o
+        : box_number: K5
+          label: 'Activitat agrícola o ramadera 5: quota derivada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315li6atj5dpjm2p31
+        : label: 'Activitat agrícola o ramadera 5: quota meritada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dcdqmut315lpmus3fe9q62p31
+        : label: 'Activitat agrícola o ramadera 5: quota suportada'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9dd5n68qb3ckmm6tbfehgg
+        : label: 'Activitat agrícola o ramadera 5: índex de quota'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9de9im8tb3cdkmurhdc5o6oqb3c5h6op9de1nn4
+        : help: Reducció aplicable per l'activitat realitzada en municipis afectats
+            per la DANA.
+          label: 'Activitat agrícola o ramadera 5: reducció per la DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2ork5lgmesj9cdnmoobj5lsiqpr1dpgm8pbic5piqob3ehkncqb4c5i2qd9depnmotbdcln2qqbectp6asrfec
+        : label: 'Activitat agrícola o ramadera 5: volum d''ingressos'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd64
+        : label: 'Activitat 1, mòdul 1: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd68
+        : label: 'Activitat 1, mòdul 2: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6c
+        : label: 'Activitat 1, mòdul 3: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6g
+        : label: 'Activitat 1, mòdul 4: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6k
+        : label: 'Activitat 1, mòdul 5: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6o
+        : label: 'Activitat 1, mòdul 6: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6s
+        : label: 'Activitat 1, mòdul 7: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kog
+        : label: 'Activitat 1, mòdul 1: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kp0
+        : label: 'Activitat 1, mòdul 2: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kpg
+        : label: 'Activitat 1, mòdul 3: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kq0
+        : label: 'Activitat 1, mòdul 4: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kqg
+        : label: 'Activitat 1, mòdul 5: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5kr0
+        : label: 'Activitat 1, mòdul 6: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb25lkmqs3fe9q6abbddti7ar3f5krg
+        : label: 'Activitat 1, mòdul 7: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb35lhnarrkc4mm8pbmcln6eob4c4mmus35e9gm6qbfdpin6bb3dtp74qb5dpq6aso
+        : label: 'Activitat 1: quota meritada en operacions corrents'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb3elnn8o9dchin4qbmc5i62bbicljmirb5domn6qbde1m6ipj9cdgm8rpdd8og
+        : box_number: J1
+          label: 'Activitat 1: quota derivada del règim simplificat'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb45lhnarrkc4mn6rrgdtp78ob4c5piqrrgclp62or9dtn6aspdcdnn4sj9cln78pbj
+        : label: 'Activitat 1: quota suportada en operacions corrents'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb55lkmsp39cdiiqorfe9p6aorkdtp0
+        : label: 'Activitat 1: índex corrector'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb5e1kmesj1cpiiqq9dc4mma:
+          box_number: '66'
+          label: 'Activitat 1: epígraf IAE'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
+        : help: 'Només per als epígrafs 691.9 i 722: indica 1 o 2 segons l''activitat.
+            En els altres casos, deixa-ho en blanc.'
+          label: 'Activitat 1: indicador auxiliar de l''epígraf IAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb65lp6asrldhq62p3f:
+          label: 'Activitat 1: resultat'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb75lo6usj3cln78obackmm6tbfehgiqrb9dpkmqo8
+        : label: 'Activitat 1: percentatge de quota mínima'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb85li6atjfdhqm6qbfdomm6tbfehgn6bbjdto6usjkc5i62spddtq74rrj5lo62qbjclpg
+        : label: 'Activitat 1: devolució de quotes suportades en altres països'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bb95lhnarrkc4mmqqbed5mm2:
+          label: 'Activitat 1: quota mínima'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbcdtp66o8:
+          label: 'Activitat 1: reducció de Lorca'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5limobbkclp6qqbe
+        : label: 'Activitat 1: reducció en el terme municipal de Lorca'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5lmnarj9cdkn0
+        : label: 'Activitat 1: reducció per municipis afectats per la DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj2bbicli7aor3d5nmspbj5lq6ut31dg
+        : label: 'Activitat 1: reduccions (total)'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd64
+        : label: 'Activitat 2, mòdul 1: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd68
+        : label: 'Activitat 2, mòdul 2: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6c
+        : label: 'Activitat 2, mòdul 3: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6g
+        : label: 'Activitat 2, mòdul 4: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6k
+        : label: 'Activitat 2, mòdul 5: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6o
+        : label: 'Activitat 2, mòdul 6: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb15ln6ubbldpkm8ob4clpiqrbfchqmorpd6s
+        : label: 'Activitat 2, mòdul 7: nombre d''unitats'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kog
+        : label: 'Activitat 2, mòdul 1: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kp0
+        : label: 'Activitat 2, mòdul 2: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kpg
+        : label: 'Activitat 2, mòdul 3: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kq0
+        : label: 'Activitat 2, mòdul 4: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kqg
+        : label: 'Activitat 2, mòdul 5: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5kr0
+        : label: 'Activitat 2, mòdul 6: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb25lkmqs3fe9q6abbddti7ar3f5krg
+        : label: 'Activitat 2, mòdul 7: import'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb35lhnarrkc4mm8pbmcln6eob4c4mmus35e9gm6qbfdpin6bb3dtp74qb5dpq6aso
+        : label: 'Activitat 2: quota meritada en operacions corrents'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb3elnn8o9dchin4qbmc5i62bbicljmirb5domn6qbde1m6ipj9cdgm8rpdd8p0
+        : box_number: J2
+          label: 'Activitat 2: quota derivada del règim simplificat'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb45lhnarrkc4mn6rrgdtp78ob4c5piqrrgclp62or9dtn6aspdcdnn4sj9cln78pbj
+        : label: 'Activitat 2: quota suportada en operacions corrents'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb55lkmsp39cdiiqorfe9p6aorkdtp0
+        : label: 'Activitat 2: índex corrector'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb5e1kmesj1cpiiqq9dc4mma:
+          box_number: '66'
+          label: 'Activitat 2: epígraf IAE'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb5e1kmesj1cpiiqqb1ckmmirj4d5hm2p3fe8mm2tbod5m6iobi5li6abb1cdq6itj9chgm8bb5dommar1dcdgn6
+        : help: 'Només per als epígrafs 691.9 i 722: indica 1 o 2 segons l''activitat.
+            En els altres casos, deixa-ho en blanc.'
+          label: 'Activitat 2: indicador auxiliar de l''epígraf IAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb65lp6asrldhq62p3f:
+          label: 'Activitat 2: resultat'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb75lo6usj3cln78obackmm6tbfehgiqrb9dpkmqo8
+        : label: 'Activitat 2: percentatge de quota mínima'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb85li6atjfdhqm6qbfdomm6tbfehgn6bbjdto6usjkc5i62spddtq74rrj5lo62qbjclpg
+        : label: 'Activitat 2: devolució de quotes suportades en altres països'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bb95lhnarrkc4mmqqbed5mm2:
+          label: 'Activitat 2: quota mínima'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbcdtp66o8:
+          label: 'Activitat 2: reducció de Lorca'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5limobbkclp6qqbe
+        : label: 'Activitat 2: reducció en el terme municipal de Lorca'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmsbb1e1m6ior1c9m6abbgdtp2qob3ehkncqb4c5i2qsj5c5m6iuj1chgiqpbe5lmnarj9cdkn0
+        : label: 'Activitat 2: reducció per municipis afectats per la DANA'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm2orkd5r6ip31cgmj4bbicli7aor3d5nmspbj5lq6ut31dg
+        : label: 'Activitat 2: reduccions (total)'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bb9epgiqsrfe1nn4t31chniqpbe5lgm8sbld5pmior9dtn2qp355lgm6t39epnn6bb6d5l6uso
+        : box_number: '80'
+          label: 'Règim simplificat: IVA suportat en l''adquisició d''actius fixos'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bbicljnar31e9knkob3d5nmsbb4ckmm4qb5dpin6bb4ckmmirjmclp76qbfdo
+        : box_number: '81'
+          label: 'Règim simplificat: regularització de béns d''inversió'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmm8pb4elhm6qbfdpin6bbjelmm2bb4ckmm8pb4elhm6qbfdpin6
+        : box_number: '82'
+          label: 'Règim simplificat: suma de deduccions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5limsbb1chonaqbjd5hmirreclpiqqbeehp62orfdlqmsqbkc5p6iobj
+        : box_number: '76'
+          label: 'Règim simplificat: IVA meritat en adquisicions intracomunitàries'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lknco9dchincpbectgm8rpdcln2qpbeehp6apr1ecmm8p9dc5hn8qbmdtpiqpj9d9nn6
+        : box_number: '78'
+          label: 'Règim simplificat: IVA meritat en lliuraments d''actius fixos'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lknco9dchincpbectgm8rpde1nn4bb9dpr6asjjd5nmsbb4clm2qsrld9in8rpde1gn6qbmds
+        : box_number: '77'
+          label: 'Règim simplificat: IVA meritat per inversió del subjecte passiu'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lpnarb15lhnarrkc5piqob3ehkncqb4c5i6aspdc5jn4qb35ljm2rj1cgmnibb6dtp6asrk
+        : box_number: '75'
+          label: Suma de quotes d'activitats agrícoles, ramaderes i forestals
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmmitj15li6atj5dpjm2p3f5lpnarb15lhnarrkc5piqob3ehkncqb4c5i6aspddpniqob7e9km6bb7c5n62p1df4mmcrriclpn8
+        : box_number: '74'
+          label: Suma de quotes d'activitats no agrícoles, ramaderes ni forestals
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsqisrrgclp62or9dtn6aspde9imebbjd5mn0r39cpkm6ob4dsmn4pbjelm78ob4dsmn4pb7d5mmarhdedkmqs3cd5j6ior1chng
+        : box_number: '83'
+          label: Resultat del règim simplificat
+        x-dlnm8pbcdsmj6e9g5po62pr5bsrisqbechkm6ob4dtp2qp355lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+          help: Deixa-ho en blanc si la pàgina no és complementària; indica C si ho
+            és.
+          label: Indicador de pàgina complementària
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 1: activitat desenvolupada'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 1: codi CNAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 1: import de les operacions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 1: import de les operacions amb dret a deducció'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 1: percentatge de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqc9dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Indica G o E, o deixa-ho en blanc.
+          label: 'Prorrata 1: tipus de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 2: activitat desenvolupada'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 2: codi CNAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 2: import de les operacions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 2: import de les operacions amb dret a deducció'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 2: percentatge de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqchdehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Indica G o E, o deixa-ho en blanc.
+          label: 'Prorrata 2: tipus de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 3: activitat desenvolupada'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 3: codi CNAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 3: import de les operacions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 3: import de les operacions amb dret a deducció'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpde1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 3: percentatge de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqcpdehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Indica G o E, o deixa-ho en blanc.
+          label: 'Prorrata 3: tipus de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 4: activitat desenvolupada'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 4: codi CNAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 4: import de les operacions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 4: import de les operacions amb dret a deducció'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 4: percentatge de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd1dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Indica G o E, o deixa-ho en blanc.
+          label: 'Prorrata 4: tipus de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dc5hn8qbmd5i62p1dchin6obie9nmor31chgg:
+          label: 'Prorrata 5: activitat desenvolupada'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dcdnm8qb7dsmm6rj1ck:
+          box_number: '114'
+          label: 'Prorrata 5: codi CNAE'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpg:
+          box_number: '115'
+          label: 'Prorrata 5: import de les operacions'
+        ? x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dd5mn0rriehiiqp355lnn0pbic5hmirreclpiqorfdomm8pbiclhmgrpdc4mm8pb4elhm6qbfdo
+        : box_number: '116'
+          label: 'Prorrata 5: import de les operacions amb dret a deducció'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9de1nn4or5dpq62qj55li6abbge9nn4sj1ehgg:
+          box_number: '118'
+          label: 'Prorrata 5: percentatge de prorrata'
+        x-dlnm8pbcdsmj6e9g5po62pr5bsriss3idtp74obkc5piqd9dehkn0rpdchiiqs3idtp74obkc4:
+          box_number: '117'
+          help: Indica G o E, o deixa-ho en blanc.
+          label: 'Prorrata 5: tipus de prorrata'
       casilla:
         continuidad:
           filing-year:
@@ -1154,6 +1596,256 @@ modelo:
         official_name: Modelo 390. Declaració-resum anual de l'Impost sobre el Valor
           Afegit.
         title: IVA. Declaració-resum anual
+      form:
+        column:
+          actividad-desarrollada:
+            heading: Activitat desenvolupada
+          fecha-poder-ddmmaaaa:
+            heading: Data del poder
+          nif:
+            heading: NIF
+          nombre-y-apellidos:
+            heading: Nom i cognoms
+          notaria:
+            heading: Notaria
+          reduccion-aplicable-por-actividad-realiza-8322da:
+            heading: Reducció per activitat en municipis afectats per la DANA
+          reducciones-total:
+            heading: Reduccions (total)
+          regularizacion-de-inversiones:
+            heading: Regularització d'inversions
+          suma-de-deducciones:
+            heading: Suma de deduccions
+        page:
+          pag-1:
+            heading: Pàgina 1
+          pag-2:
+            heading: Pàgina 2
+          pag-2-bis:
+            heading: Pàgina 2 bis
+          pag-3:
+            heading: Pàgina 3
+          pag-4:
+            heading: Pàgina 4
+          pag-5:
+            heading: Pàgina 5
+          pag-6:
+            heading: Pàgina 6
+          pag-7:
+            heading: Pàgina 7
+          pag-8:
+            heading: Pàgina 8
+        row:
+          '1':
+            heading: Línia 1
+          '2':
+            heading: Línia 2
+          '3':
+            heading: Línia 3
+          '4':
+            heading: Línia 4
+          '5':
+            heading: Línia 5
+          actividad-1:
+            heading: Activitat 1
+          actividad-2:
+            heading: Activitat 2
+          bienes-corrientes:
+            heading: Béns corrents
+          bienes-inversion:
+            heading: Béns d'inversió
+          bienes-y-servic:
+            heading: Béns i serveis corrents
+          compensac-reg-especial-agric-ganad-pesca:
+            heading: Compensacions del règim especial d'agricultura, ramaderia i pesca
+          cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
+            heading: Quotes deduïbles per resolució o sentència ferma amb tipus no
+              vigents
+          importes-de-las-adquisiciones-de-bienes-r-d3ef1e:
+            heading: Adquisicions de béns en el règim especial del criteri de caixa
+          importes-de-las-entregas-de-bienes-regime-fa8564:
+            heading: Lliuraments de béns en el règim especial del criteri de caixa
+          iva-deveng-invers-sujeto-pasivo:
+            heading: IVA meritat per inversió del subjecte passiu
+          modific-recargo-equiv-concurso-acreedores:
+            heading: Modificació del recàrrec d'equivalència per concurs de creditors
+          modific-recargo-equivalencia:
+            heading: Modificació del recàrrec d'equivalència
+          modificac-bases-cuotas-concurso-acreedores:
+            heading: Modificació de bases i quotes per concurs de creditors
+          modificac-bases-y-cuotas:
+            heading: Modificació de bases i quotes
+          modificac-bases-y-cuotas-intragrupo:
+            heading: Modificació de bases i quotes d'operacions intragrup
+          rectificacion-de-deducciones:
+            heading: Rectificació de deduccions
+          rectificacion-de-deducciones-intragrupo:
+            heading: Rectificació de deduccions d'operacions intragrup
+          represent-1:
+            heading: Representant 1
+          represent-2:
+            heading: Representant 2
+          represent-3:
+            heading: Representant 3
+          tipo-0-26-pct:
+            heading: Tipus 0,26 %
+          tipo-0-5-pct:
+            heading: Tipus 0,5 %
+          tipo-0-62-pct:
+            heading: Tipus 0,62 %
+          tipo-0-pct:
+            heading: Tipus 0 %
+          tipo-1-4-pct:
+            heading: Tipus 1,4 %
+          tipo-1-75-pct:
+            heading: Tipus 1,75 %
+          tipo-1-pct:
+            heading: Tipus 1 %
+          tipo-10-pct:
+            heading: Tipus 10 %
+          tipo-2-pct:
+            heading: Tipus 2 %
+          tipo-21-pct:
+            heading: Tipus 21 %
+          tipo-4-pct:
+            heading: Tipus 4 %
+          tipo-5-2-pct:
+            heading: Tipus 5,2 %
+          tipo-5-pct:
+            heading: Tipus 5 %
+          tipo-7-5-pct:
+            heading: Tipus 7,5 %
+          total-adqui-intra-bienes-corrientes:
+            heading: Total adquisicions intracomunitàries de béns corrents
+          total-adqui-intra-bienes-inversion:
+            heading: Total adquisicions intracomunitàries de béns d'inversió
+          total-adqui-intra-servicios:
+            heading: Total adquisicions intracomunitàries de serveis
+          total-bases-y-cuotas-iva:
+            heading: Total bases i quotes d'IVA
+          total-import-bienes-corrientes:
+            heading: Total importacions de béns corrents
+          total-importacion-bienes-inversion:
+            heading: Total importacions de béns d'inversió
+          total-oper-inter-bienes-de-inversion:
+            heading: Total operacions interiors amb béns d'inversió
+          total-oper-inter-corrientes-bienes-y-servic:
+            heading: Total operacions interiors corrents de béns i serveis
+          total-oper-intra-bienes-de-inversion:
+            heading: Total operacions intragrup amb béns d'inversió
+          total-oper-intragrupo-corrientes:
+            heading: Total operacions intragrup corrents
+        section:
+          1-sujeto-pasivo:
+            heading: 1. Subjecte passiu
+          10-volumen-de-operaciones:
+            heading: 10. Volum d'operacions
+          11-oper-especificas:
+            heading: 11. Operacions específiques
+          12-prorratas:
+            heading: 12. Prorrates
+          13-reg-deducc-diferenc:
+            heading: Deduccions diferenciades
+          13-reg-deducc-diferenc-1:
+            heading: Deduccions diferenciades · sector 1
+          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
+            heading: Sector 1 · IVA deduïble en adquisicions intracomunitàries
+          13-reg-deducc-diferenc-1-iva-ded-importaciones:
+            heading: Sector 1 · IVA deduïble en importacions
+          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
+            heading: Sector 1 · IVA deduïble en operacions interiors
+          13-reg-deducc-diferenc-2:
+            heading: Deduccions diferenciades · sector 2
+          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
+            heading: Sector 2 · IVA deduïble en adquisicions intracomunitàries
+          13-reg-deducc-diferenc-2-iva-ded-importaciones:
+            heading: Sector 2 · IVA deduïble en importacions
+          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
+            heading: Sector 2 · IVA deduïble en operacions interiors
+          13-reg-deducc-diferenc-3:
+            heading: Deduccions diferenciades · sector 3
+          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
+            heading: Sector 3 · IVA deduïble en adquisicions intracomunitàries
+          13-reg-deducc-diferenc-3-iva-ded-importaciones:
+            heading: Sector 3 · IVA deduïble en importacions
+          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
+            heading: Sector 3 · IVA deduïble en operacions interiors
+          2-devengo:
+            heading: 2. Meritació
+          3-datos-estadisticos:
+            heading: 3. Dades estadístiques
+          3-datos-estadisticos-a:
+            heading: 3. Dades estadístiques · A
+          3-datos-estadisticos-a-actividades:
+            heading: 3. Dades estadístiques · A · Activitats
+          3-datos-estadisticos-b:
+            heading: 3. Dades estadístiques · B
+          3-datos-estadisticos-c:
+            heading: 3. Dades estadístiques · C
+          4-representante-personas-fisicas-comunid-bienes:
+            heading: 4. Representant · Persones físiques i comunitats de béns
+          4-representante-personas-juridicas:
+            heading: 4. Representant · Persones jurídiques
+          5-operaciones-reg-gral:
+            heading: 5. Operacions en règim general
+          5-operaciones-reg-gral-base-imponible-y-c-0050f7:
+            heading: 5. Règim general · Meritat · Règim especial d'agències de viatges
+          5-operaciones-reg-gral-base-imponible-y-c-542bb5:
+            heading: 5. Règim general · Meritat · Adquisicions intracomunitàries de
+              serveis
+          5-operaciones-reg-gral-base-imponible-y-c-5505bd:
+            heading: 5. Règim general · Meritat · Règim especial del criteri de caixa
+          5-operaciones-reg-gral-base-imponible-y-c-93d4a1:
+            heading: 5. Règim general · Meritat · Règim especial de béns usats
+          5-operaciones-reg-gral-base-imponible-y-c-9faf8e:
+            heading: 5. Règim general · Meritat · Adquisicions intracomunitàries de
+              béns
+          5-operaciones-reg-gral-base-imponible-y-c-a46fd9:
+            heading: 5. Règim general · Meritat · Operacions intragrup
+          5-operaciones-reg-gral-base-imponible-y-c-f2cdb2:
+            heading: 5. Règim general · Meritat · Règim ordinari
+          5-operaciones-reg-gral-base-imponible-y-c-fef341:
+            heading: 5. Règim general · Meritat · Recàrrec d'equivalència
+          5-operaciones-reg-gral-base-imponible-y-cuota:
+            heading: 5. Règim general · Base imposable i quota
+          5-operaciones-reg-gral-iva-deducible:
+            heading: 5. Règim general · IVA deduïble
+          5-operaciones-reg-gral-iva-deducible-adqu-315b09:
+            heading: 5. Règim general · Deduïble · Adquisicions intracomunitàries
+              de serveis
+          5-operaciones-reg-gral-iva-deducible-adqu-812147:
+            heading: 5. Règim general · Deduïble · Adquisicions intracomunitàries
+              de béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-adqu-84c649:
+            heading: 5. Règim general · Deduïble · Adquisicions intracomunitàries
+              de béns corrents
+          5-operaciones-reg-gral-iva-deducible-impo-56be24:
+            heading: 5. Règim general · Deduïble · Importacions de béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-impo-f31793:
+            heading: 5. Règim general · Deduïble · Importacions de béns corrents
+          5-operaciones-reg-gral-iva-deducible-oper-0e46cf:
+            heading: 5. Règim general · Deduïble · Operacions intragrup corrents
+          5-operaciones-reg-gral-iva-deducible-oper-3192c1:
+            heading: 5. Règim general · Deduïble · Operacions intragrup amb béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-oper-5198bd:
+            heading: 5. Règim general · Deduïble · Operacions interiors amb béns d'inversió
+          5-operaciones-reg-gral-iva-deducible-oper-6cb02a:
+            heading: 5. Règim general · Deduïble · Operacions interiors corrents de
+              béns i serveis
+          6-operaciones-reg-simplificado:
+            heading: 6. Operacions en règim simplificat
+          6-operaciones-reg-simplificado-act-agrico-8df6bd:
+            heading: 6. Règim simplificat · Activitats agrícoles i ramaderes
+          6-operaciones-reg-simplificado-actividad-1:
+            heading: 6. Règim simplificat · Activitat 1
+          6-operaciones-reg-simplificado-actividad-2:
+            heading: 6. Règim simplificat · Activitat 2
+          7-resultado-liquidacion-anual:
+            heading: 7. Resultat de la liquidació anual
+          8-tributacion-razon-de-territorio:
+            heading: 8. Tributació per raó de territori
+          9-resultado-de-las-liquidaciones:
+            heading: 9. Resultat de les liquidacions
       revision:
         '2021':
           casilla:

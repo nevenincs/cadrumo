@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:75bedd2bb224b0dc8441f58b2cccb8cca5c048f148aafabb39b14e3970ce0f74'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"
 ---
 # `casilla-schema` audit: `S14 Official Box Status Audit`

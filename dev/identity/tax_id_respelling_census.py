@@ -258,28 +258,7 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
     seen_lines: set[tuple[int, str]] = set()
 
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Module):
-            continue
-        enclosing = getattr(node, "name", "<module>")
-        scan = _FunctionScan(rel, lines, enclosing)
-        for child in ast.iter_child_nodes(node):
-            scan.visit(child)
-        for finding in scan.findings:
-            marker = (finding.line, finding.kind)
-            if marker not in seen_lines:
-                seen_lines.add(marker)
-                findings.append(finding)
-
-        # A respelling bound but never classified is still a respelling. A
-        # binding whose value DOES reach a comparison or a key is already
-        # reported there, so counting it again here would inflate the
-        # denominator with the very sites the census just explained.
-        for name, line in scan.normalised.items():
-            if name not in scan.consumed and (line, "unclassified") not in seen_lines:
-                seen_lines.add((line, "unclassified"))
-                findings.append(
-                    Finding(rel, line, name, "unclassified", scan._snippet(line), enclosing),
-                )
+        _record_function_normalisation(node, rel, lines, findings, seen_lines)
 
     # Every remaining tax-id-shaped chain, wherever it sits.
     #
@@ -340,6 +319,34 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{kind}: {tally[kind]}")
     print(f"total: {len(findings)}")
     return 0
+
+
+def _record_function_normalisation(
+    node: ast.AST, rel: str, lines: list[str], findings: list[Finding], seen_lines: set[tuple[int, str]]
+) -> None:
+    """Record function normalisation."""
+    if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Module):
+        return
+    enclosing = getattr(node, "name", "<module>")
+    scan = _FunctionScan(rel, lines, enclosing)
+    for child in ast.iter_child_nodes(node):
+        scan.visit(child)
+    for finding in scan.findings:
+        marker = (finding.line, finding.kind)
+        if marker not in seen_lines:
+            seen_lines.add(marker)
+            findings.append(finding)
+
+    # A respelling bound but never classified is still a respelling. A
+    # binding whose value DOES reach a comparison or a key is already
+    # reported there, so counting it again here would inflate the
+    # denominator with the very sites the census just explained.
+    for name, line in scan.normalised.items():
+        if name not in scan.consumed and (line, "unclassified") not in seen_lines:
+            seen_lines.add((line, "unclassified"))
+            findings.append(
+                Finding(rel, line, name, "unclassified", scan._snippet(line), enclosing),
+            )
 
 
 if __name__ == "__main__":

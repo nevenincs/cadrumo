@@ -32,13 +32,6 @@ class JustificanteDeclaration:
 
 
 @dataclass(frozen=True, slots=True)
-class JustificanteExpediente:
-    """Minimal Sede procedure-tree entry needed to fetch a receipt."""
-
-    expediente_id: str
-
-
-@dataclass(frozen=True, slots=True)
 class CapturedJustificante:
     """Authenticated receipt bytes and Sede references returned by a live read."""
 
@@ -108,17 +101,17 @@ class JustificanteRegistrationPorts:
 
 
 class JustificanteLiveReadPort(Protocol):
-    """Read the declaration register, procedure tree, and selected receipt."""
+    """Read the declaration register and its selected receipt."""
 
-    async def declarations_and_expedientes(
+    async def declarations(
         self,
         *,
         modelo: str,
         year: int,
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
-    ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
-        """Read declarations and their matching procedure-tree entries."""
+    ) -> Sequence[JustificanteDeclaration]:
+        """Read the period-bearing declaration register."""
         ...
 
     async def capture(self, *, expediente_id: str) -> CapturedJustificante:

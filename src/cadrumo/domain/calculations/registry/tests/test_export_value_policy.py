@@ -251,7 +251,7 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
     # EVERY consumer goes through it -- naming only one would let a second consumer
     # reach the policy module directly and stay unseen.
     for consumer in (
-        src_root / "application/filing/_record_field_renderer.py",
+        src_root / "application/filing/record_field_renderer.py",
         src_root / "application/filing/export_verification.py",
         src_root / "adapters/outbound/aeat/export/registry_record_renderer.py",
     ):

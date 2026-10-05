@@ -122,8 +122,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 # (numerico) and 79-80 CODIGO PAIS (alfabetico). Each half is its own field.
 [[entries]]
 export_field_id = "m347-2011.declarado.f009a"
-kind = "casilla"
-casilla_id = "contraparte.provincia-codigo"
+kind = "binding"
+binding = "modelo-347-contraparte-row-provincia-codigo"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 [entries.anchor]
@@ -211,8 +211,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f014"
-kind = "casilla"
-casilla_id = "contraparte.arrendamiento-local-negocio"
+kind = "binding"
+binding = "modelo-347-contraparte-row-arrendamiento-local-negocio"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -402,4 +402,3 @@ sheet = "Tipo 2 - Registro De Declarado"
 source_row = 729
 ordinal = "26"
 record_identity = "Tipo 2 - Registro De Declarado"
-

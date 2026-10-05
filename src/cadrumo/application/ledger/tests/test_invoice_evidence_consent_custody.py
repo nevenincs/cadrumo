@@ -9,6 +9,7 @@ from typing import cast
 
 import pytest
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operations import OperationEffect
 from ...operations.owner import OperationExecutorContext
 from ..invoice_evidence_consent_custody import InvoiceEvidenceConsentCustody
@@ -68,7 +69,7 @@ def test_custody_hook_refuses_event_loop_thread_to_avoid_deadlock() -> None:
         recorder = _Recorder()
         context = cast(OperationExecutorContext, type("Context", (), {"cancellation": recorder, "events": recorder})())
         custody = InvoiceEvidenceConsentCustody(context)
-        with pytest.raises(RuntimeError, match="worker thread"):
+        with pytest.raises(InternalInvariantError, match="worker thread"):
             custody.before_save()
         assert recorder.timeline == []
 

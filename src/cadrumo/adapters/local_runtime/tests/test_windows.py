@@ -22,6 +22,7 @@ from cadrumo.application.runtime.contracts import (
 
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake
 from ..windows import WindowsRuntimeEndpoint
+from ..worker_native_identity import verify_worker_native_pid
 
 if TYPE_CHECKING:
     from _win32typing import PyHANDLE
@@ -215,7 +216,7 @@ async def test_retained_pipe_peer_verifier_accepts_exact_process_and_refuses_oth
 
     from cadrumo.core.async_cleanup import AsyncCloseable, async_cleanup_failures, close_async_resources
 
-    from ..framing import RuntimeTransportCleanup
+    from ..runtime_transport_cleanup import RuntimeTransportCleanup
     from ..windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
 
     endpoint = WindowsRuntimeEndpoint(storage_root=tmp_path)
@@ -265,6 +266,9 @@ async def test_retained_pipe_peer_verifier_accepts_exact_process_and_refuses_oth
         wrong_handle = int(wrong_native.Detach())
         owners.append(RuntimeTransportCleanup(WindowsOwnedProcess(handle=wrong_handle, pid=child.pid)))
         assert scope.contains_process(wrong_handle)
+        with pytest.raises(RuntimeRefusalError) as outside_job:
+            verify_worker_native_pid(client, scope, client.peer.os_owner_id)
+        assert outside_job.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
         with pytest.raises(RuntimeRefusalError) as wrong:
             client.verify_peer_process(wrong_handle)
         assert wrong.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
@@ -285,71 +289,4 @@ async def test_retained_pipe_peer_verifier_accepts_exact_process_and_refuses_oth
             *resources.values(),
             task_name="pipe-retained-peer-detector-close",
             primary_error=primary[0] if primary else None,
-        )
-
-
-@pytest.mark.windows_only
-@pytest.mark.asyncio
-async def test_native_runtime_stop_latch_owner_security_manual_reset_and_collision() -> None:
-    """Real creator/opener handles prove disposition security without inherited authority."""
-    import win32api
-    import win32security
-
-    from cadrumo.core.async_cleanup import AsyncCloseable, async_cleanup_failures, close_async_resources
-
-    from .. import windows_managed_stop
-    from .windows_managed_runtime_fixture import windows_fixture_owner_sid
-
-    owner = windows_fixture_owner_sid()
-    name = "Local\\cadrumo-runtime-stop-" + uuid4().hex
-    resources: list[AsyncCloseable] = []
-    primary: list[BaseException] = []
-    refused: list[BaseException] = []
-    try:
-        created = windows_managed_stop.WindowsRuntimeStopLatch(expected_owner=owner, name=name, create=True)
-        resources.append(created.cleanup_owner)
-        opened = windows_managed_stop.WindowsRuntimeStopLatch(expected_owner=owner, name=name, create=False)
-        resources.append(opened.cleanup_owner)
-        for latch in (created, opened):
-            # Read only these known retained handles while their defining owner
-            # excludes release; the test never closes or duplicates a borrow.
-            with latch._lock:
-                handle = latch._handle
-                assert handle is not None
-                assert win32api.GetHandleInformation(handle) & 1 == 0
-                descriptor = win32security.GetSecurityInfo(
-                    handle,
-                    win32security.SE_KERNEL_OBJECT,
-                    win32security.OWNER_SECURITY_INFORMATION | win32security.DACL_SECURITY_INFORMATION,
-                )
-                assert win32security.ConvertSidToStringSid(descriptor.GetSecurityDescriptorOwner()) == owner
-                assert descriptor.GetSecurityDescriptorControl()[0] & 0x1000
-                dacl = descriptor.GetSecurityDescriptorDacl()
-                assert dacl is not None and dacl.GetAceCount() == 1
-                (kind, flags), access, principal = dacl.GetAce(0)
-                assert kind == 0 and flags == 0 and access == 0x001F0003
-                assert win32security.ConvertSidToStringSid(principal) == owner
-        assert not created.wait(0)
-        with pytest.raises(RuntimeRefusalError) as collision:
-            windows_managed_stop.WindowsRuntimeStopLatch(expected_owner=owner, name=name, create=True)
-        refused.append(collision.value)
-        assert collision.value.reason is RuntimeRefusalCode.PEER_UNTRUSTED
-        assert not created.wait(0)
-        opened.set()
-        assert created.wait(0)
-        assert created.wait(0)
-        opened.set()
-        assert created.wait(0)
-    except BaseException as error:
-        primary.append(error)
-        raise
-    finally:
-        errors = (*primary, *refused)
-        for error in errors:
-            for failure in async_cleanup_failures(error):
-                for resource in failure.resources:
-                    if all(resource is not previous for previous in resources):
-                        resources.append(resource)
-        await close_async_resources(
-            *resources, task_name="native-stop-latch-detector-release", primary_error=primary[0] if primary else None
         )

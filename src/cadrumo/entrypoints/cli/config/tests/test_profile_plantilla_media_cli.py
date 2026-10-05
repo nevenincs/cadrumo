@@ -109,12 +109,16 @@ def test_an_undeclared_year_and_a_non_number_refuse_without_writing(profile_stor
             "plantilla-media-refusals", "set", "--year", "2025", "--average-workforce", "doce", "--state", "observed"
         )
         extra_places = _run(
-            "plantilla-media-refusals", "set", "--year", "2025", "--average-workforce", "12.505", "--state", "observed"
+            "plantilla-media-refusals", "set", "--year", "2025", "--average-workforce", "12.5055", "--state", "observed"
+        )
+        scientific = _run(
+            "plantilla-media-refusals", "set", "--year", "2025", "--average-workforce", "1e1", "--state", "observed"
         )
         listed = _run("plantilla-media-refusals", "list")
 
     assert undeclared[0] != 0
     assert not_a_number[0] != 0
+    assert scientific[0] != 0
     assert extra_places[0] != 0
     assert listed[0] == 0, listed[1]
     assert _years(listed[1]) == []

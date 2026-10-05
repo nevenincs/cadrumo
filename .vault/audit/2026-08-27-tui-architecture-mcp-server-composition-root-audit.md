@@ -3,15 +3,20 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:434e23a8cb1a8d89601be90729795cd00de836538dd5c4458a126bd3e75a90f6'
+body_hash: 'sha256:ef7336393f734d40e6a963c5952171e660ed1074f8d562627519e0e5945dffac'
 related: []
 ---
-
 # `tui-architecture` audit: `the cadrumo-mcp server has no composition root`
 
-## Finding
+## Scope
+
+Review how the cadrumo-mcp server composes its dependencies relative to the CLI and TUI entrypoints.
+
+## Findings
+
+### Finding
 
 `cadrumo-mcp` is a third product entrypoint with its own console script
 (`cadrumo_harness.mcp:main` -> `_server.serve`), and it composes NOTHING.
@@ -28,7 +33,7 @@ Every custody-touching tool therefore fails at runtime with
 This is a production defect, not a test artefact: the failure is in the shipped
 console script, and 21 harness tests reproduce it.
 
-## Why it was invisible
+### Why it was invisible
 
 The whole harness suite failed at COLLECTION -- nine modules imported
 `.session` for a module named `_session` -- so `pytest src/cadrumo-harness`
@@ -40,7 +45,7 @@ The harness was rehomed out of this repository (`0a4c5377ef`) and later
 restored (`415181debc`). The restore brought the client back without the
 composition wiring the product's entrypoints grew in the meantime.
 
-## The structural half
+### The structural half
 
 Two composition roots already exist and are near-duplicates of each other:
 
@@ -57,16 +62,7 @@ enter it.
 Fixing this in the TEST helper alone would be worse than leaving it: it would
 turn a live production defect into green tests.
 
-## Remediation
-
-1. Extract one canonical adapter-composition context manager from the CLI root
-   and the TUI launcher, in a public defining module, with the CLI/TUI
-   difference (if genuine) expressed as an argument rather than two bodies.
-2. Enter it from `serve()` so `cadrumo-mcp` composes what it depends on.
-3. Keep the 21 connected-session tests as the proof; they fail today and must
-   pass without any composition added to the test helper.
-
-## Correction to this audit
+### Correction to this audit
 
 The structural half above overstated the duplication. `profile_storage_scope`
 in `entrypoints/tui/launcher.py` is called ONLY by `tui/devtools/fixture.py`
@@ -80,7 +76,18 @@ The fixture's thirteen bindings were a strict subset of the CLI's twenty, so
 the extracted scope needed no argument to express a CLI/TUI difference: there
 was none to express.
 
-## Resolution
+### Remediation
+
+1. Extract one canonical adapter-composition context manager from the CLI root
+   and the TUI launcher, in a public defining module, with the CLI/TUI
+   difference (if genuine) expressed as an argument rather than two bodies.
+2. Enter it from `serve()` so `cadrumo-mcp` composes what it depends on.
+3. Keep the 21 connected-session tests as the proof; they fail today and must
+   pass without any composition added to the test helper.
+
+## Recommendations
+
+### Resolution
 
 `entrypoints/adapter_composition.py` now declares `profile_adapter_composition`,
 and the CLI root, the TUI devtools fixture and the MCP server all enter it. The
@@ -99,6 +106,6 @@ The composition is entered once per process and deliberately never unwound: a
 ContextVar token can only be reset in the context that created it, so an
 exit-time unbind raises.
 
-## Status
+### Status
 
 Closed.

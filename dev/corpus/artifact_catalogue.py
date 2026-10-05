@@ -45,6 +45,32 @@ if TYPE_CHECKING:
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 
 
+def _close_catalogue_roles(
+    role_claims: dict[PurePosixPath, set[ArtifactRole]], compilation: _CatalogueCompilation
+) -> dict[PurePosixPath, ArtifactRole]:
+    """Close catalogue roles."""
+    roles: dict[PurePosixPath, ArtifactRole] = {}
+    for path, claims in role_claims.items():
+        if len(claims) != 1:
+            compilation.diagnostic(
+                ArtifactDiagnosticKind.CONFLICTING_IDENTITY,
+                path,
+                "a bundled path has more than one catalog role",
+            )
+            continue
+        roles[path] = next(iter(claims))
+    return roles
+
+
+def _validate_identity_source_url(source_url: str) -> None:
+    """Validate identity source url."""
+    if not isinstance(source_url, str):
+        raise ValueError("source_url must be an absolute HTTP(S) URL")
+    parsed = urlparse(source_url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("source_url must be an absolute HTTP(S) URL")
+
+
 def _bundled_path(value: str | PurePosixPath, *, field_name: str) -> PurePosixPath:
     """Validate and return a canonical bundled-data-relative POSIX path."""
     raw = str(value)
@@ -113,11 +139,7 @@ class ArtifactIdentity:
         object.__setattr__(self, "sha256", _sha256(self.sha256, field_name="sha256"))
         if not isinstance(self.bytes, int) or isinstance(self.bytes, bool) or self.bytes <= 0:
             raise ValueError("bytes must be positive")
-        if not isinstance(self.source_url, str):
-            raise ValueError("source_url must be an absolute HTTP(S) URL")
-        parsed = urlparse(self.source_url)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-            raise ValueError("source_url must be an absolute HTTP(S) URL")
+        _validate_identity_source_url(self.source_url)
         if self.publisher is not None and (not isinstance(self.publisher, str) or not self.publisher.strip()):
             raise ValueError("publisher must be non-empty when declared")
         if type(self.retrieved_at) is not date:
@@ -229,6 +251,30 @@ class ArtifactCatalogue:
     diagnostics: tuple[ArtifactDiagnostic, ...]
 
 
+@dataclass
+class _CatalogueCompilation:
+    """Accumulate role claims and diagnostics inside one supplied corpus boundary."""
+
+    known: set[PurePosixPath]
+    diagnostics: list[ArtifactDiagnostic]
+    identities: dict[PurePosixPath, ArtifactIdentity]
+    role_claims: dict[PurePosixPath, set[ArtifactRole]]
+
+    def diagnostic(self, kind: ArtifactDiagnosticKind, path: PurePosixPath | None, message: str) -> None:
+        self.diagnostics.append(ArtifactDiagnostic(kind=kind, path=path, message=message))
+
+    def claim_role(self, path: PurePosixPath, role: ArtifactRole) -> bool:
+        if path not in self.known:
+            self.diagnostic(
+                ArtifactDiagnosticKind.ORPHANED_TARGET,
+                path,
+                "catalog role claim lies outside the supplied corpus boundary",
+            )
+            return False
+        self.role_claims.setdefault(path, set()).add(role)
+        return True
+
+
 def compile_artifact_catalogue(
     *,
     known_paths: Sequence[str | PurePosixPath],
@@ -253,111 +299,29 @@ def compile_artifact_catalogue(
     identities: dict[PurePosixPath, ArtifactIdentity] = {}
     role_claims: dict[PurePosixPath, set[ArtifactRole]] = {}
 
-    def diagnostic(kind: ArtifactDiagnosticKind, path: PurePosixPath | None, message: str) -> None:
-        diagnostics.append(ArtifactDiagnostic(kind=kind, path=path, message=message))
-
-    def claim_role(path: PurePosixPath, role: ArtifactRole) -> bool:
-        if path not in known:
-            diagnostic(
-                ArtifactDiagnosticKind.ORPHANED_TARGET,
-                path,
-                "catalog role claim lies outside the supplied corpus boundary",
-            )
-            return False
-        role_claims.setdefault(path, set()).add(role)
-        return True
+    compilation = _CatalogueCompilation(known, diagnostics, identities, role_claims)
 
     for declared_identity in official_identities:
-        if isinstance(declared_identity, ArtifactIdentityInput):
-            try:
-                identity = declared_identity.to_identity()
-            except (TypeError, ValueError) as error:
-                try:
-                    path = _bundled_path(declared_identity.path, field_name="path")
-                except (TypeError, ValueError):
-                    path = None
-                diagnostic(
-                    ArtifactDiagnosticKind.MALFORMED_IDENTITY,
-                    path,
-                    f"official identity claim is malformed: {error}",
-                )
-                continue
-        else:
-            identity = declared_identity
-        if not claim_role(identity.path, ArtifactRole.OFFICIAL_ARTIFACT):
-            continue
-        existing = identities.get(identity.path)
-        if existing is not None and existing != identity:
-            diagnostic(
-                ArtifactDiagnosticKind.CONFLICTING_IDENTITY,
-                identity.path,
-                "multiple official identity declarations disagree for this bundled path",
-            )
-        else:
-            identities.setdefault(identity.path, identity)
+        _compile_official_identity(declared_identity, compilation)
     for derivative in derived_artifacts:
-        in_boundary = claim_role(derivative.path, ArtifactRole.DERIVED_ARTIFACT)
-        source = identities.get(derivative.input_path)
-        if not in_boundary:
-            continue
-        if source is None:
-            diagnostic(
-                ArtifactDiagnosticKind.STALE_DERIVATIVE,
-                derivative.path,
-                "derived artifact names an input that has no official identity",
-            )
-        elif source.sha256 != derivative.input_sha256:
-            diagnostic(
-                ArtifactDiagnosticKind.STALE_DERIVATIVE,
-                derivative.path,
-                "derived artifact input digest differs from the current official identity",
-            )
+        _compile_derivative(derivative, compilation)
 
     for annotation in semantic_annotations:
-        in_boundary = claim_role(annotation.path, ArtifactRole.SEMANTIC_ANNOTATION)
-        if not in_boundary:
-            continue
-        if annotation.target_path not in known:
-            diagnostic(
-                ArtifactDiagnosticKind.ORPHANED_TARGET,
-                annotation.path,
-                "semantic annotation names a target outside the supplied corpus boundary",
-            )
+        _compile_annotation(annotation, compilation)
 
     for fixture in fixtures:
-        claim_role(fixture, ArtifactRole.FIXTURE)
+        compilation.claim_role(fixture, ArtifactRole.FIXTURE)
 
     for disposition in dispositions:
-        in_boundary = claim_role(disposition.declaration_path, ArtifactRole.DISPOSITION)
-        if in_boundary and disposition.target_path is not None and disposition.target_path not in known:
-            diagnostic(
-                ArtifactDiagnosticKind.ORPHANED_TARGET,
-                disposition.target_path,
-                "disposition names a target outside the supplied corpus boundary",
-            )
+        _compile_disposition(disposition, compilation)
 
     for registry_identity in registry_identities:
-        official_identity = identities.get(registry_identity.path)
-        if official_identity != registry_identity:
-            diagnostic(
-                ArtifactDiagnosticKind.BROKEN_REGISTRY_BINDING,
-                registry_identity.path,
-                "registry source identity does not exactly bind an official catalog identity",
-            )
+        _compile_registry_binding(registry_identity, compilation)
 
-    roles: dict[PurePosixPath, ArtifactRole] = {}
-    for path, claims in role_claims.items():
-        if len(claims) != 1:
-            diagnostic(
-                ArtifactDiagnosticKind.CONFLICTING_IDENTITY,
-                path,
-                "a bundled path has more than one catalog role",
-            )
-            continue
-        roles[path] = next(iter(claims))
+    roles = _close_catalogue_roles(role_claims, compilation)
 
     for path in sorted(known - set(role_claims), key=str):
-        diagnostic(
+        compilation.diagnostic(
             ArtifactDiagnosticKind.UNKNOWN_FILE,
             path,
             "bundled path has no catalog role",
@@ -540,3 +504,91 @@ def declared_dispositions(
         )
         for row in rows
     )
+
+
+def _compile_official_identity(
+    declared_identity: ArtifactIdentity | ArtifactIdentityInput, compilation: _CatalogueCompilation
+) -> None:
+    """Compile official identity."""
+    if isinstance(declared_identity, ArtifactIdentityInput):
+        try:
+            identity = declared_identity.to_identity()
+        except (TypeError, ValueError) as error:
+            try:
+                path = _bundled_path(declared_identity.path, field_name="path")
+            except (TypeError, ValueError):
+                path = None
+            compilation.diagnostic(
+                ArtifactDiagnosticKind.MALFORMED_IDENTITY,
+                path,
+                f"official identity claim is malformed: {error}",
+            )
+            return
+    else:
+        identity = declared_identity
+    if not compilation.claim_role(identity.path, ArtifactRole.OFFICIAL_ARTIFACT):
+        return
+    existing = compilation.identities.get(identity.path)
+    if existing is not None and existing != identity:
+        compilation.diagnostic(
+            ArtifactDiagnosticKind.CONFLICTING_IDENTITY,
+            identity.path,
+            "multiple official identity declarations disagree for this bundled path",
+        )
+    else:
+        compilation.identities.setdefault(identity.path, identity)
+
+
+def _compile_derivative(derivative: DerivedArtifact, compilation: _CatalogueCompilation) -> None:
+    """Compile derivative."""
+    in_boundary = compilation.claim_role(derivative.path, ArtifactRole.DERIVED_ARTIFACT)
+    source = compilation.identities.get(derivative.input_path)
+    if not in_boundary:
+        return
+    if source is None:
+        compilation.diagnostic(
+            ArtifactDiagnosticKind.STALE_DERIVATIVE,
+            derivative.path,
+            "derived artifact names an input that has no official identity",
+        )
+    elif source.sha256 != derivative.input_sha256:
+        compilation.diagnostic(
+            ArtifactDiagnosticKind.STALE_DERIVATIVE,
+            derivative.path,
+            "derived artifact input digest differs from the current official identity",
+        )
+
+
+def _compile_annotation(annotation: SemanticAnnotation, compilation: _CatalogueCompilation) -> None:
+    """Compile annotation."""
+    in_boundary = compilation.claim_role(annotation.path, ArtifactRole.SEMANTIC_ANNOTATION)
+    if not in_boundary:
+        return
+    if annotation.target_path not in compilation.known:
+        compilation.diagnostic(
+            ArtifactDiagnosticKind.ORPHANED_TARGET,
+            annotation.path,
+            "semantic annotation names a target outside the supplied corpus boundary",
+        )
+
+
+def _compile_disposition(disposition: ArtifactDisposition, compilation: _CatalogueCompilation) -> None:
+    """Compile disposition."""
+    in_boundary = compilation.claim_role(disposition.declaration_path, ArtifactRole.DISPOSITION)
+    if in_boundary and disposition.target_path is not None and disposition.target_path not in compilation.known:
+        compilation.diagnostic(
+            ArtifactDiagnosticKind.ORPHANED_TARGET,
+            disposition.target_path,
+            "disposition names a target outside the supplied corpus boundary",
+        )
+
+
+def _compile_registry_binding(registry_identity: ArtifactIdentity, compilation: _CatalogueCompilation) -> None:
+    """Compile registry binding."""
+    official_identity = compilation.identities.get(registry_identity.path)
+    if official_identity != registry_identity:
+        compilation.diagnostic(
+            ArtifactDiagnosticKind.BROKEN_REGISTRY_BINDING,
+            registry_identity.path,
+            "registry source identity does not exactly bind an official catalog identity",
+        )

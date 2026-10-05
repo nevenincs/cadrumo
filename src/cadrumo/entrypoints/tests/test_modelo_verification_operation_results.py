@@ -16,13 +16,6 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.application.modelo.calculation import visible_calculation_casilla_values
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.operation_definitions import (
-    ModeloWorkAmendBaseline,
-    ModeloWorkAmendOverride,
-    ModeloWorkAmendRequest,
-    ModeloWorkVerifyPublicResultV2,
-    ModeloWorkVerifyRequest,
-)
 from cadrumo.application.modelo.revision_inventory_operation import (
     MODELO_WORK_REVISIONS_OPERATION_DEFINITION_ID,
     ModeloWorkRevisionsProjection,
@@ -34,6 +27,15 @@ from cadrumo.application.modelo.revision_snapshot_operation import (
     ModeloWorkRevisionSnapshotProjection,
     ModeloWorkRevisionSnapshotRequest,
 )
+from cadrumo.application.modelo.work_amend_contracts import (
+    ModeloWorkAmendBaseline,
+    ModeloWorkAmendOverride,
+    ModeloWorkAmendRequest,
+)
+from cadrumo.application.modelo.work_verification_contracts import (
+    ModeloWorkVerifyPublicResultV2,
+    ModeloWorkVerifyRequest,
+)
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
@@ -44,7 +46,7 @@ from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, AccessScope, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.access_policy import operation_scope_refusal
+from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation

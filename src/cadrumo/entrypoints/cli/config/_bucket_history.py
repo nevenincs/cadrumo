@@ -80,7 +80,7 @@ def profile_history(
         object_id=object_id,
         actor=actor,
     )
-    from ....application.user_profile.history_operation import ProfileHistoryRequest
+    from ....application.user_profile.history_contracts import ProfileHistoryRequest
 
     projection = read_profile_history_for_cli(
         ctx,

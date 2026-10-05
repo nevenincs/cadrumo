@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#google-sa-impersonation'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:64635f8c819bda289eb832325b2c02f886db69a41ab6f1f228af47f54b9bc6f8'
+body_hash: 'sha256:2007357fab58d5c39d4263d3c982bf0b5adb811253a374494111b028a0ba2426'
 related:
   - '[[2026-07-04-google-sa-impersonation-adr]]'
   - '[[2026-07-10-google-sa-impersonation-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#google-sa-impersonation`.
 
 ### adr
 
-- `2026-07-04-google-sa-impersonation-adr` - `google-sa-impersonation` adr: `Google service-account impersonation credential source` | (**status:** `accepted`)
+- `2026-07-04-google-sa-impersonation-adr` - `google-sa-impersonation` adr: `Google service-account impersonation credential source` | (**status:** `deprecated`)
 
 ### research
 

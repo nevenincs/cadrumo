@@ -16,7 +16,7 @@ from ..diagnostics import (
     _DiagnosticPayload,
     _summary_from_payload,
     diagnostic_payload,
-    record_auth_diagnostic_phone_state,
+    prepare_auth_diagnostic_phone_state,
 )
 from ..errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
@@ -183,12 +183,12 @@ def test_diagnostic_payload_refusals_author_no_sentence(
     assert resolved and resolved != error.translated_message
 
 
-def test_record_phone_state_refusal_authors_no_sentence() -> None:
+def test_prepare_phone_state_refusal_authors_no_sentence() -> None:
     """An unknown phone state carries the token as a fact, not authored prose."""
     from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
     with pytest.raises(AuthDiagnosticPhoneStateError) as raised:
-        record_auth_diagnostic_phone_state(
+        prepare_auth_diagnostic_phone_state(
             "diag-1",
             "not_a_known_state",
             persistence=_UnusedDiagnosticPersistence(),

@@ -74,6 +74,22 @@ def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
     return names
 
 
+def _pinned_export_rows(output: str) -> tuple[str, ...]:
+    lines: list[str] = []
+    for raw in output.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith(("./", "../", "-e ", "-r ", "file:")):
+            raise SystemExit(f"uv export emitted a non-pinned local row: {stripped!r}")
+        if "==" not in stripped:
+            raise SystemExit(f"uv export row is not version-pinned: {stripped!r}")
+        lines.append(stripped)
+    if not lines:
+        raise SystemExit("uv export produced an empty runtime constraint closure")
+    return tuple(lines)
+
+
 def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     """Return the pinned third-party runtime requirement lines from ``uv.lock``.
 
@@ -112,19 +128,7 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     )
     if result.returncode != 0:
         raise SystemExit(f"uv export failed: {result.stderr.strip()}")
-    lines: list[str] = []
-    for raw in result.stdout.splitlines():
-        stripped = raw.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if stripped.startswith(("./", "../", "-e ", "-r ", "file:")):
-            raise SystemExit(f"uv export emitted a non-pinned local row: {stripped!r}")
-        if "==" not in stripped:
-            raise SystemExit(f"uv export row is not version-pinned: {stripped!r}")
-        lines.append(stripped)
-    if not lines:
-        raise SystemExit("uv export produced an empty runtime constraint closure")
-    return tuple(lines)
+    return _pinned_export_rows(result.stdout)
 
 
 def render_constraints_file(lines: tuple[str, ...], *, min_uv_version: str | None = None) -> str:

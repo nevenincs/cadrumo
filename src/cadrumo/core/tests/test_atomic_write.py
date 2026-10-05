@@ -36,16 +36,17 @@ import pytest
 from ...tests.attribute_scope import scoped_attribute
 from .. import atomic_write
 from ..atomic_write import (
-    _write_all,
+    DurableWriteBatch,
     atomic_write_best_effort_bytes,
     atomic_write_best_effort_text,
     atomic_write_bytes,
     atomic_write_hardened_bytes,
     atomic_write_hardened_text,
     atomic_write_text,
-    durable_write_batch,
+    hardened_staged_bytes_publication,
     hardened_staged_publication,
 )
+from ..descriptor_write import write_all
 from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..errors.hierarchy import InternalInvariantError
 
@@ -135,7 +136,7 @@ def _no_reader_backpressure_child() -> None:
         os.set_blocking(write_fd, False)
         _fill_nonblocking_pipe(write_fd)
         try:
-            _write_all(write_fd, b"blocked")
+            write_all(write_fd, b"blocked")
         except BlockingIOError:
             return
         raise AssertionError("full nonblocking pipe did not propagate backpressure")
@@ -163,7 +164,7 @@ def _blocking_pipe_completion_child() -> None:
         reader.start()
         reader_started.set()
         try:
-            _write_all(write_fd, _PIPE_PAYLOAD)
+            write_all(write_fd, _PIPE_PAYLOAD)
         finally:
             _close_fd(write_fd)
             write_fd = -1
@@ -187,11 +188,11 @@ def _positive_short_write_continuation_child() -> None:
     outcome = 0
     try:
         # With no reader, the first internal os.write accepts a real positive
-        # capacity-bounded prefix. _write_all must then make another call,
+        # capacity-bounded prefix. write_all must then make another call,
         # which encounters real nonblocking backpressure.
         os.set_blocking(write_fd, False)
         try:
-            _write_all(write_fd, _PIPE_PAYLOAD)
+            write_all(write_fd, _PIPE_PAYLOAD)
         except BlockingIOError:
             pass
         else:
@@ -248,9 +249,9 @@ def _signal_interrupted_short_write_completion_child() -> None:
     try:
         # The first blocking os.write fills the real pipe and then blocks.
         # SIGALRM starts the reader and interrupts that call after a positive
-        # prefix, forcing _write_all to resume from its recorded offset.
+        # prefix, forcing write_all to resume from its recorded offset.
         setitimer(itimer_real, 0.01)
-        _write_all(write_fd, _PIPE_PAYLOAD)
+        write_all(write_fd, _PIPE_PAYLOAD)
     finally:
         setitimer(itimer_real, 0.0)
         signal.signal(sigalrm, prior_handler)
@@ -439,6 +440,127 @@ class TestHardenedTier:
         atomic_write_hardened_bytes(target, b"\x00\x01secret\xff")
         assert target.read_bytes() == b"\x00\x01secret\xff"
 
+    def test_staged_bytes_publication_uses_its_original_descriptor_and_defers_replace(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        target = tmp_path / "secret.bin"
+        earlier = b"previous secret"
+        payload = b"replacement\nsecret\x00bytes"
+        target.write_bytes(earlier)
+
+        real_open = os.open
+        real_write = os.write
+        real_write_all = atomic_write.write_all
+        stage_descriptors: list[int] = []
+        written_descriptors: list[int] = []
+        write_calls = 0
+
+        def observe_open(
+            raw_path: str | bytes | os.PathLike[str],
+            flags: int,
+            mode: int = 0o777,
+            *,
+            dir_fd: int | None = None,
+        ) -> int:
+            if dir_fd is None:
+                descriptor = real_open(raw_path, flags, mode)
+            else:
+                descriptor = real_open(raw_path, flags, mode, dir_fd=dir_fd)
+            candidate = Path(os.fsdecode(raw_path))
+            if (
+                flags & os.O_EXCL
+                and candidate.parent == target.parent
+                and candidate.name.startswith(f"{target.name}.")
+                and candidate.name.endswith(".tmp")
+            ):
+                stage_descriptors.append(descriptor)
+            return descriptor
+
+        def short_write(descriptor: int, data: bytes | bytearray | memoryview) -> int:
+            nonlocal write_calls
+            write_calls += 1
+            return real_write(descriptor, data[:3])
+
+        def observe_write_all(descriptor: int, data: bytes) -> None:
+            written_descriptors.append(descriptor)
+            real_write_all(descriptor, data)
+
+        with (
+            scoped_attribute(os, "open", observe_open),
+            scoped_attribute(os, "write", short_write),
+            scoped_attribute(atomic_write, "write_all", observe_write_all),
+            hardened_staged_bytes_publication(target, payload) as staged,
+        ):
+            assert target.read_bytes() == earlier, "staging must not change the published target"
+            assert staged.path.read_bytes() == payload, "short writes must complete through write_all"
+            assert len(stage_descriptors) == 1
+            assert len(written_descriptors) == 1
+            assert stage_descriptors[0] == written_descriptors[0]
+            staged.publish()
+
+        assert write_calls > 1, "the controlled writer must exercise positive short writes"
+        assert target.read_bytes() == payload
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_published_bytes_context_does_not_remove_a_recreated_stage_path(self, tmp_path: Path) -> None:
+        target = tmp_path / "secret.bin"
+        target.write_bytes(b"previous secret")
+        recreated_stage: Path
+
+        with hardened_staged_bytes_publication(target, b"published secret") as staged:
+            recreated_stage = staged.path
+            staged.publish()
+            recreated_stage.write_bytes(b"later file at consumed stage path")
+
+        assert target.read_bytes() == b"published secret"
+        assert recreated_stage.read_bytes() == b"later file at consumed stage path"
+        recreated_stage.unlink()
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_staged_bytes_publication_cleans_up_when_the_descriptor_makes_no_progress(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        target = tmp_path / "secret.bin"
+        earlier = b"previous secret"
+        target.write_bytes(earlier)
+        calls = 0
+
+        def stalled_write(_descriptor: int, _data: bytes | bytearray | memoryview) -> int:
+            nonlocal calls
+            calls += 1
+            return 0
+
+        with (
+            pytest.raises(OSError),
+            scoped_attribute(os, "write", stalled_write),
+            hardened_staged_bytes_publication(target, b"unpublished secret"),
+        ):
+            pytest.fail("a zero-progress descriptor must refuse before publication")
+
+        assert calls == 1
+        assert target.read_bytes() == earlier
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_staged_bytes_publication_discards_completed_bytes_on_an_interrupt(self, tmp_path: Path) -> None:
+        target = tmp_path / "secret.bin"
+        earlier = b"previous secret"
+        target.write_bytes(earlier)
+        sentinel = KeyboardInterrupt("operator stopped publication")
+
+        with (
+            pytest.raises(KeyboardInterrupt) as caught,
+            hardened_staged_bytes_publication(target, b"complete but unpublished secret") as staged,
+        ):
+            assert staged.path.read_bytes() == b"complete but unpublished secret"
+            assert target.read_bytes() == earlier
+            raise sentinel
+
+        assert caught.value is sentinel
+        assert target.read_bytes() == earlier
+        assert _tmp_leftovers(tmp_path) == []
+
     def test_write_all_completes_capacity_limited_real_pipe(self) -> None:
         """A blocking capacity-limited OS pipe receives the complete payload."""
         assert _bounded_child_exitcode(_blocking_pipe_completion_child) == 0
@@ -553,40 +675,23 @@ class TestDurableWriteBatch:
         """
         payload = b"\x00evidence-bytes\xff"
 
-        with durable_write_batch() as batch:
-            for index in range(8):
-                atomic_write_hardened_bytes(tmp_path / f"blob{index}.bin", payload, batch=batch)
+        batch = DurableWriteBatch()
+        for index in range(8):
+            atomic_write_hardened_bytes(tmp_path / f"blob{index}.bin", payload, batch=batch)
 
+        batch.commit()
         for index in range(8):
             assert (tmp_path / f"blob{index}.bin").read_bytes() == payload
         assert _tmp_leftovers(tmp_path) == []
 
     def test_commit_is_idempotent(self, tmp_path: Path) -> None:
-        """An explicit commit inside the scope must not double-sync on exit."""
-        with durable_write_batch() as batch:
-            atomic_write_hardened_bytes(tmp_path / "one.bin", b"payload", batch=batch)
-            batch.commit()
-            batch.commit()
+        """Repeated commits must not repeat a completed directory sync."""
+        batch = DurableWriteBatch()
+        atomic_write_hardened_bytes(tmp_path / "one.bin", b"payload", batch=batch)
+        batch.commit()
+        batch.commit()
 
         assert (tmp_path / "one.bin").read_bytes() == b"payload"
-
-    def test_an_exception_mid_batch_still_commits_what_landed(self, tmp_path: Path) -> None:
-        """A failure must not leave completed writes LESS durable than unbatched.
-
-        The commit runs from a ``finally``, so raising part-way through a bulk
-        ingest still syncs the records that already landed. Without that, an
-        interrupted import would be more exposed than the per-file path it
-        replaced — a batch may defer durability, never abandon it.
-        """
-        sentinel = RuntimeError("ingest aborted part-way")
-
-        with pytest.raises(RuntimeError) as caught, durable_write_batch() as batch:
-            atomic_write_hardened_bytes(tmp_path / "landed.bin", b"kept", batch=batch)
-            raise sentinel
-
-        assert caught.value is sentinel
-        assert (tmp_path / "landed.bin").read_bytes() == b"kept"
-        assert _tmp_leftovers(tmp_path) == []
 
     def test_batching_defers_the_per_write_sync(self) -> None:
         """Batched writes must issue no per-file sync; unbatched must issue one each.
@@ -626,11 +731,11 @@ class TestDurableWriteBatch:
             with tempfile.TemporaryDirectory() as raw_batched:
                 batched_dir = Path(raw_batched)
                 calls = 0
-                with durable_write_batch() as batch:
-                    for index in range(writes):
-                        atomic_write_hardened_bytes(batched_dir / f"blob{index}.bin", payload, batch=batch)
-                    during_batch = calls
-
+                batch = DurableWriteBatch()
+                for index in range(writes):
+                    atomic_write_hardened_bytes(batched_dir / f"blob{index}.bin", payload, batch=batch)
+                during_batch = calls
+                batch.commit()
         # Positive control: the counter genuinely observes the unbatched path,
         # so a zero on the batched side means deferral rather than a blind
         # instrument.

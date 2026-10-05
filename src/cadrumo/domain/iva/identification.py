@@ -54,9 +54,10 @@ from typing import TYPE_CHECKING
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import validate_spanish_tax_id
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.tax_id_format import runtime_tax_id_format, tax_id_format_value
 from .establishment import country_code_for_printed_tax_identifier
-from .schema import EUMemberState, require_eu_member_state
+from .schema import EUMemberState
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation

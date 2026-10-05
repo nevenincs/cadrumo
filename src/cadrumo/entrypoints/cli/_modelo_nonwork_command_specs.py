@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ._modelo_m360_command_specs import MODELO_M360_COMMAND_SPECS
 from ._modelo_nonwork_bindings_command_specs import MODELO_NONWORK_BINDINGS_COMMAND_SPECS
 from ._modelo_nonwork_calculations_command_specs import MODELO_NONWORK_CALCULATION_COMMAND_SPECS
 from ._modelo_nonwork_discovery_command_specs import MODELO_NONWORK_DISCOVERY_COMMAND_SPECS
@@ -27,6 +28,7 @@ MODELO_NONWORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *MODELO_NONWORK_RECONCILE_COMMAND_SPECS,
     *MODELO_NONWORK_M036_COMMAND_SPECS,
     *MODELO_NONWORK_M145_COMMAND_SPECS,
+    *MODELO_M360_COMMAND_SPECS,
     *MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS,
     *MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS,
     *MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS,

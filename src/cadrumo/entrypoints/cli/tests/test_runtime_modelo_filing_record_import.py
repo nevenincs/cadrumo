@@ -17,13 +17,13 @@ from ....application.modelo.filing_chain_reconciliation import (
     FilingReconciliationOutcome,
     FilingReconciliationResult,
 )
-from ....application.modelo.filing_record_import_operation import (
+from ....application.modelo.filing_record_import_contracts import (
     MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
     ModeloFilingRecordImportProjection,
     ModeloFilingRecordImportReconciliationProjection,
     ModeloFilingRecordImportRequest,
 )
-from ....application.modelo.filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from ....application.modelo.filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -43,7 +43,7 @@ from ....domain.modelos.work_unit import derive_work_unit_id
 from .. import runtime_modelo_filing_record_import as bridge
 from .._modelo_payloads import FilingRecordImportResult
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

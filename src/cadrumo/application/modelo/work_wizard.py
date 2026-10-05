@@ -315,18 +315,6 @@ class ModeloWorkWizardRun:
 
 
 @contextmanager
-def open_modelo_work_wizard(
-    unit: WorkUnit,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> Generator[ModeloWorkWizardRun]:
-    """Discover canonical steps, then open their copy-scoped wizard run."""
-    steps = discover_modelo_work_wizard_steps(unit, operation=operation)
-    with open_modelo_work_wizard_from_steps(unit, steps=steps) as run:
-        yield run
-
-
-@contextmanager
 def open_modelo_work_wizard_from_steps(
     unit: WorkUnit,
     *,
@@ -352,6 +340,5 @@ __all__ = [
     "ModeloWorkWizardStep",
     "discover_modelo_work_wizard_steps",
     "modelo_work_wizard_follow_up_step",
-    "open_modelo_work_wizard",
     "open_modelo_work_wizard_from_steps",
 ]

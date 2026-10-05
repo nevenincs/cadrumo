@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -28,16 +28,21 @@ from cadrumo.application.operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.errors import OperationDeclarationError
+from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+    OperationPublicNoticeEventV1,
+)
 from cadrumo.application.operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from cadrumo.application.operations.observation import OperationObservationService
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import OperationNoticeEvent
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -57,6 +62,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.core.operator_progress import OperatorProgress, emit_operator_progress
 
 from .supervision_support import run_to_settlement
 
@@ -146,6 +152,31 @@ class UndeclaredResourceExecutor:
         self.snapshot_before_attempt = context.snapshot
         self.resource = CloseProbe()
         context.cleanup.own(self.resource, family=OperationOwnedResource.ASYNC_TASK)
+
+
+_PROGRESS_MESSAGE = "Free progress text that must stay with the emitter"
+
+
+class OperatorProgressExecutor:
+    """Concrete executor whose adapter-level code reports operator progress without frontend wiring."""
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> None:
+        del request, context
+        await emit_operator_progress(
+            OperatorProgress(
+                notice_code="auth.clave-movil.approval-pending",
+                display_code="YLL",
+                message=_PROGRESS_MESSAGE,
+                timeout_seconds=120,
+            )
+        )
+        await emit_operator_progress(
+            OperatorProgress(notice_code="auth.clave-movil.qr-scan-pending", message=_PROGRESS_MESSAGE)
+        )
 
 
 def _capabilities() -> OperationCapabilities:
@@ -314,3 +345,54 @@ def test_supervisor_context_refuses_undeclared_resource_ownership_without_journa
         )
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert executor.resource.close_calls == 0
+
+
+def test_supervisor_journals_executor_operator_progress_as_public_notice_events(tmp_path: Path) -> None:
+    """Progress emitted inside the worker reaches the public event page as notice code and display code only."""
+    executor = OperatorProgressExecutor()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        registry = _registry(executor_type=type(executor), build=lambda: executor)
+        supervisor = _supervisor(registry=registry, journal=journal, leases=leases, operands=operands)
+        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+
+        settled = asyncio.run(run_to_settlement(supervisor, operation_id))
+        assert settled.lifecycle is OperationLifecycle.TERMINAL
+
+        observed = asyncio.run(
+            OperationObservationService(reader=journal, registry=registry).observe(
+                OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=50)
+            )
+        )
+        assert isinstance(observed, OperationObservationSuccessV1)
+        public_notices = [
+            (event.notice_code, event.display_code)
+            for event in observed.event_page.events
+            if isinstance(event, OperationPublicNoticeEventV1)
+        ]
+        assert public_notices == [
+            ("operation.started", None),
+            ("auth.clave-movil.approval-pending", "YLL"),
+            ("auth.clave-movil.qr-scan-pending", None),
+        ]
+        journal_files = list(storage_root.rglob(f"{operation_id}*"))
+        assert journal_files
+        assert all(_PROGRESS_MESSAGE.encode() not in path.read_bytes() for path in journal_files if path.is_file())
+    # Outside the supervised run no sink is armed, so emitting is a silent no-op.
+    asyncio.run(emit_operator_progress(OperatorProgress(notice_code="auth.clave-movil.approval-pending", message="x")))
+
+
+@pytest.mark.parametrize("display_code", ("yll", "AB", "ABCDEFGHI", "Y L L", "code YLL"))
+def test_operator_display_code_refuses_anything_but_a_short_comparison_code(display_code: str) -> None:
+    with pytest.raises(ValidationError):
+        OperatorProgress(notice_code="auth.clave-movil.approval-pending", display_code=display_code, message="x")
+    with pytest.raises(ValidationError):
+        OperationPublicNoticeEventV1(
+            revision=1,
+            sequence=1,
+            timestamp=_NOW,
+            code="auth.clave-movil.approval-pending",
+            notice_code="auth.clave-movil.approval-pending",
+            display_code=display_code,
+        )

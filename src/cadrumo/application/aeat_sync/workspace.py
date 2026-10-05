@@ -16,17 +16,19 @@ from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAd
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
-from ...core.hex import HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_64, Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
 from ...domain.modelos.codes import ModeloCode
+from ..modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationEvidenceKind
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationPublicContractSetV1
 from ..operator_actions.catalogue import ActionCatalogue
 from ..operator_actions.models import ActionReference
+from ..user_profile.censal_observation import CensalObservation
 
 AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
@@ -100,6 +102,7 @@ class AeatSyncSourceState(StrEnum):
     ACCEPTED = "accepted"
     REJECTED = "rejected"
     CONFLICT = "conflict"
+    INCOMPLETE = "incomplete"
 
 
 class AeatSyncDiscrepancyKind(StrEnum):
@@ -111,6 +114,7 @@ class AeatSyncDiscrepancyKind(StrEnum):
     STATE_MISMATCH = "state_mismatch"
     CONTRADICTORY_SOURCE = "contradictory_source"
     UNOBSERVED = "unobserved"
+    INCOMPLETE = "incomplete"
 
 
 class AeatSyncOverviewArea(StrEnum):
@@ -304,14 +308,7 @@ class AeatSyncWorkspaceOverviewRowV1(AeatSyncWorkspaceActionRowV1):
 
 
 class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
-    """One census field's local-versus-AEAT status.
-
-    Carries no value yet, and the docstring no longer claims that as a safety
-    property: it is a GAP. Nothing produces these rows outside fixtures, and
-    their AEAT side stays never-captured until a pull happens, so there is no
-    captured value to carry. When a producer exists the values belong here, on
-    the same reasoning as every other authenticated surface.
-    """
+    """One profile field compared with its stored AEAT census evidence."""
 
     path: str = Field(min_length=1, max_length=256)
     category: AeatSyncCensusCategory
@@ -406,11 +403,6 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
     document_custody_observed_at: UtcInstant | None = None
     selection_key: AeatSyncNotificationSelectionKey | None = None
 
-    @property
-    def issue_date(self) -> date:
-        """Return the notification issue date."""
-        return self.issued_on
-
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _coherent(self) -> Self:
@@ -466,6 +458,14 @@ class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
     """One reconciliation item, its two sides and how it was resolved."""
 
     reconciliation_state: AeatSyncReconciliationState
+    evidence_kind: ModeloReconciliationEvidenceKind | None = None
+    diffs: tuple[ModeloReconciliationDiff, ...] = ()
+    advisory_count: NonNegativeInt = 0
+    comparison_id: Hex64Str | None = None
+    calculation_revision_id: Hex64Str | None = None
+    work_unit_id: Hex64Str | None = None
+    evidence_id: Hex64Str | None = None
+    historical: bool = False
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -511,6 +511,7 @@ class AeatSyncWorkspaceProjectionV1(BaseModel):
     zones: tuple[AeatSyncWorkspaceZoneStateV1, ...]
     overview: tuple[AeatSyncWorkspaceOverviewRowV1, ...] = ()
     census: tuple[AeatSyncWorkspaceCensusRowV1, ...] = ()
+    census_observation: CensalObservation | None = None
     filed_declarations: tuple[AeatSyncWorkspaceFiledDeclarationRowV1, ...] = ()
     notifications: tuple[AeatSyncWorkspaceNotificationRowV1, ...] = ()
     evidence_comparison: tuple[AeatSyncWorkspaceEvidenceComparisonRowV1, ...] = ()
@@ -602,6 +603,8 @@ def _compared_values(
 def _discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState, kind: AeatSyncDiscrepancyKind) -> None:
     if AeatSyncSourceState.NOT_OBSERVED in {local, aeat}:
         expected = AeatSyncDiscrepancyKind.UNOBSERVED
+    elif AeatSyncSourceState.INCOMPLETE in {local, aeat}:
+        expected = AeatSyncDiscrepancyKind.INCOMPLETE
     elif local == aeat:
         expected = AeatSyncDiscrepancyKind.NONE
     elif local is AeatSyncSourceState.ABSENT:
@@ -624,6 +627,7 @@ class _AeatSyncWorkspaceProjectionArguments(TypedDict):
     operation_contracts: OperationPublicContractSetV1
     overview: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...]]
     census: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...]]
+    census_observation: NotRequired[AeatSyncWorkspaceFactV1[CensalObservation] | None]
     filed_declarations: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...]]
     notifications: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...]]
     evidence_comparison: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...]]

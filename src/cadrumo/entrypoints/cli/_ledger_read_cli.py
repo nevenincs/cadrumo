@@ -502,6 +502,7 @@ def ledger_list(
     sort_by: LedgerSortField | None = None,
     sort_order: LedgerSortOrder = LedgerSortOrder.ASC,
     hide_llm_rejected: bool = False,
+    account: str | None = None,
 ) -> None:
     """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
     from ...application.review.errors import FilterParseError
@@ -515,6 +516,8 @@ def ledger_list(
         resolved_filters.append(f"period={period}")
     if year is not None:
         resolved_filters.append(f"year={year}")
+    if account is not None:
+        resolved_filters.append(f"account={account}")
     try:
         spec = LedgerReviewFilterSpec.from_strings(resolved_filters)
     except FilterParseError as exc:

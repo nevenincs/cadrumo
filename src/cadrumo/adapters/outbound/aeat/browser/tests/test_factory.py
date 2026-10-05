@@ -13,7 +13,7 @@ from ......application.auth.protocols import BrowserSessionPort
 from ......application.provisioning_browser import required_browser_builds
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ...tests.process_support import wait_for_process_exit
+from ...tests.process_support import wait_for_process_exit, wait_for_task_readiness
 from ..errors import BrowserError, BrowserPreconditionCondition
 from ..factory import (
     BrowserRuntimeResourceScope,
@@ -48,25 +48,6 @@ async def _wait_for_descendants(
         await asyncio.sleep(0.1)
         observed = _descendant_pids(pid)
     return observed
-
-
-async def _wait_for_owner_entry(
-    entered: asyncio.Event,
-    owner_task: asyncio.Task[None],
-    *,
-    timeout_seconds: float = 20.0,
-) -> None:
-    """Wait for a real owner boundary while observing early task failure."""
-    deadline = time.monotonic() + timeout_seconds
-    while not entered.is_set():
-        if owner_task.done():
-            await owner_task
-            pytest.fail("Playwright owner exited before reaching its body boundary")
-        if time.monotonic() >= deadline:
-            owner_task.cancel()
-            await asyncio.gather(owner_task, return_exceptions=True)
-            pytest.fail("Playwright owner did not reach its body boundary")
-        await asyncio.sleep(0.01)
 
 
 @pytest.mark.asyncio
@@ -120,10 +101,15 @@ async def test_shared_playwright_runtime_finishes_real_teardown_under_cancellati
             await hold_body.wait()
 
     owner_task = asyncio.create_task(cancelled_owner())
-    await _wait_for_owner_entry(entered, owner_task)
-    owner_task.cancel()
-    with pytest.raises(asyncio.CancelledError):
-        await owner_task
+    try:
+        await wait_for_task_readiness(entered.wait(), owner_task, after="shared runtime entry")
+        owner_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await owner_task
+    finally:
+        if not owner_task.done():
+            owner_task.cancel()
+        await asyncio.gather(owner_task, return_exceptions=True)
 
     assert driver_pid > 0
     await wait_for_process_exit(driver_pid, after="session close")
@@ -150,12 +136,17 @@ async def test_opened_browser_page_reaps_all_real_owners_under_repeated_cancella
                 await hold_body.wait()
 
     owner_task = asyncio.create_task(cancelled_owner())
-    await _wait_for_owner_entry(entered, owner_task)
-    owner_task.cancel()
-    await asyncio.sleep(0)
-    owner_task.cancel()
-    with pytest.raises(asyncio.CancelledError):
-        await owner_task
+    try:
+        await wait_for_task_readiness(entered.wait(), owner_task, after="opened browser page entry")
+        owner_task.cancel()
+        await asyncio.sleep(0)
+        owner_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await owner_task
+    finally:
+        if not owner_task.done():
+            owner_task.cancel()
+        await asyncio.gather(owner_task, return_exceptions=True)
 
     assert driver_pid > 0
     await wait_for_process_exit(driver_pid, after="session close")
@@ -273,7 +264,7 @@ async def test_launch_failure_is_a_factual_typed_safety_outcome(
         directory = cache / build.directory_name
         directory.mkdir(parents=True)
         (directory / "INSTALLATION_COMPLETE").write_text("", encoding="utf-8")
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(cache))
+    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(cache))
     session = await create_browser_session(Settings(), _profile("launch-hint"))
     try:
         with pytest.raises(BrowserError) as excinfo:

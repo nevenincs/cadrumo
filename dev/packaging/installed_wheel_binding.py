@@ -181,6 +181,19 @@ print(hashlib.sha256(payload).hexdigest())
     return digest
 
 
+def _assert_windows_launcher(resolved: Path, entry_point: str, expected_script: bytes) -> None:
+    try:
+        with zipfile.ZipFile(resolved) as launcher:
+            if launcher.namelist() != ["__main__.py"] or launcher.read("__main__.py") != expected_script:
+                raise RuntimeError("console entry-point launcher semantics drifted")
+        peer_name = "cadrumo-mcp.exe" if entry_point == "aeat" else "aeat.exe"
+        peer = resolved.with_name(peer_name).resolve(strict=True)
+        if _launcher_stub_projection(resolved.read_bytes()) != _launcher_stub_projection(peer.read_bytes()):
+            raise RuntimeError("console entry-point launcher stub drifted")
+    except (OSError, struct.error, zipfile.BadZipFile) as exc:
+        raise RuntimeError("console entry-point launcher is malformed") from exc
+
+
 def assert_installed_console_entry_point(
     executable: Path,
     *,
@@ -208,16 +221,7 @@ def assert_installed_console_entry_point(
         f"    sys.exit({callable_name}())\n"
     ).encode(UTF_8)
     if resolved.suffix.lower() == ".exe":
-        try:
-            with zipfile.ZipFile(resolved) as launcher:
-                if launcher.namelist() != ["__main__.py"] or launcher.read("__main__.py") != expected_script:
-                    raise RuntimeError("console entry-point launcher semantics drifted")
-            peer_name = "cadrumo-mcp.exe" if entry_point == "aeat" else "aeat.exe"
-            peer = resolved.with_name(peer_name).resolve(strict=True)
-            if _launcher_stub_projection(resolved.read_bytes()) != _launcher_stub_projection(peer.read_bytes()):
-                raise RuntimeError("console entry-point launcher stub drifted")
-        except (OSError, struct.error, zipfile.BadZipFile) as exc:
-            raise RuntimeError("console entry-point launcher is malformed") from exc
+        _assert_windows_launcher(resolved, entry_point, expected_script)
     elif resolved.read_bytes() != expected_script:
         raise RuntimeError("console entry-point launcher semantics drifted")
     script = r"""

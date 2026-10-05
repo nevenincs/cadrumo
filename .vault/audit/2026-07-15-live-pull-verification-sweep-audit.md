@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#live-pull-verification-sweep'
 date: '2026-07-15'
-modified: '2026-07-15'
-body_hash: 'sha256:2368d9c9fe37f59afdf4ec082d4b7c6ae7715f8b0c35a03080b121d5e1e1450f'
-related:
-  - "[[2026-06-12-live-pull-verification-sweep-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:629c22ff003654aec7d69efab1ffcdb9e4304d588bea2dd54cd3715a05ce7973'
+related: []
 ---
 
 # `live-pull-verification-sweep` audit: `forbidden git stash incident during justificante fix`
@@ -24,7 +23,7 @@ the operator, and reviewing the offending session's output before trusting it.
 ### stash-push-violation | high | A dispatched agent ran `git stash push` on a single file, then self-reported
 
 While repairing `_expand_matching_branches` the agent ran
-`git stash push -- src/cadrumo/adapters/outbound/aeat/sede/_walker.py` — a
+Historical command omitted; its target was retired.
 forbidden command with no exceptions in this worktree. Mitigations observed:
 the agent did NOT run `stash pop`/`apply`/`drop`; it recovered its own change
 via the read-only `git show stash@{0}:<path>` and a fresh write; it verified

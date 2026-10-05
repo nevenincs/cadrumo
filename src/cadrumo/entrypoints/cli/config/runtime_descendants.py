@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.descendant_rows import encode_descendant_rows
-from ....application.user_profile.operations import (
+from ....application.user_profile.profile_operation_contracts import (
     ProfileDescendantsOperationProjection,
     ProfileDescendantsOperationRequest,
 )

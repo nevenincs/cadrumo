@@ -10,11 +10,11 @@ refusing a year the catalogue cannot ground.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import date
-from typing import TYPE_CHECKING, TypeGuard
+from typing import TYPE_CHECKING
 
 from cadrumo.core.citation_grounding import CitationGrounding
+from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.core.validity_window import years_covered_by_every_group
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
 from cadrumo.domain.iva.errors import IvaCatalogueError
@@ -22,11 +22,6 @@ from cadrumo.domain.iva.schema import IvaCatalogue, IvaCategory, IvaCitation, Iv
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-
-
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow one runtime component to an object-keyed mapping before validation."""
-    return isinstance(value, Mapping)
 
 
 def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogue:
@@ -38,7 +33,7 @@ def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogu
     from cadrumo.domain.calculations.registry.runtime_catalogues import PublishedIvaRegulation
 
     loaded = operation.runtime_catalogue("iva_regulations")
-    if not _is_object_mapping(loaded):
+    if not is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority IVA regulation component has an invalid shape")
     loaded_values = tuple(loaded.values())
     if not all(isinstance(value, PublishedIvaRegulation) for value in loaded_values):

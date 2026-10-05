@@ -40,6 +40,7 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     CounterpartyEstablishmentProjectionV1,
     InvoiceConfirmationProjectionV1,
     InvoiceDraftProjectionV1,
+    LabelReadingFallbackProjectionV1,
 )
 from cadrumo.application.ledger.structured_invoice_ports import (
     StructuredInvoiceClassification,
@@ -253,10 +254,7 @@ def test_invoice_draft_projection_carries_all_fields_and_private_facturae_class(
     decoded = InvoiceDraftProjectionV1.model_validate_json(projected.model_dump_json())
 
     assert decoded == projected
-    assert set(type(source).model_fields) == set(type(projected).model_fields) - {
-        "facturae_invoice_class",
-        "label_reading_fallback",
-    }
+    assert set(type(source).model_fields) == set(type(projected).model_fields) - {"facturae_invoice_class"}
     assert projected.facturae_invoice_class is not None
     assert projected.facturae_invoice_class.source_code == "R1"
     assert projected.facturae_invoice_class.kind is StructuredInvoiceClassificationKind.CORRECTIVE
@@ -278,12 +276,13 @@ def test_invoice_projection_preserves_label_fallback_across_json(cause: LabelRea
         failed_condition_id="llm.inference_slot",
     )
     source = _draft().with_label_reading_fallback(fallback)
-    projected = InvoiceDraftProjectionV1.from_draft(source)
-    decoded = InvoiceDraftProjectionV1.model_validate_json(projected.model_dump_json())
+    assert source.label_reading_fallback is not None
+    projected = LabelReadingFallbackProjectionV1.from_fallback(source.label_reading_fallback)
+    decoded = LabelReadingFallbackProjectionV1.model_validate_json(projected.model_dump_json())
 
-    assert decoded.label_reading_fallback is not None
-    assert decoded.label_reading_fallback.to_fallback() == fallback
-    assert decoded.provenance == projected.provenance
+    assert decoded.to_fallback() == fallback
+    # The fallback travels beside the reviewed draft, so it never moves the review digest.
+    assert InvoiceDraftProjectionV1.from_draft(source) == InvoiceDraftProjectionV1.from_draft(_draft())
 
 
 @pytest.mark.parametrize("created", [True, False])

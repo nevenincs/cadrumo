@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:04b271c8b304a5d7829d635d83e5010f1916a5a991cf4ff5e847423729acd3e3'
+modified: '2026-10-05'
+body_hash: 'sha256:1c0f668356f10509afdf6414c1c2063e36bab4a95da3938153b7473e78c59654'
 related:
   - "[[2026-07-08-mcp-protocol-hardening-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -21,7 +21,7 @@ second class of gaps: places where the console's use of the protocol is
 incomplete, lossy, or fragile regardless of how the surface is shaped. The
 sharpest is operational: every tool call is one blocking subprocess run with
 no timeout, no progress notification, and no cancellation
-(`src/cadrumo/entrypoints/mcp/_server.py`, lines 225–271), so a Playwright-backed
+(the former source file, lines 225–271), so a Playwright-backed
 AEAT portal pull that legitimately takes minutes hangs the client — and many
 clients time out a `tools/call` well under a minute, reading a legitimate
 slow pull as failure. Around it cluster: per-verb input schemas that
@@ -30,7 +30,7 @@ default-on boolean flag; annotation axes inferred from hand-listed leaf
 frozensets with `openWorldHint` never populated; every result inlining its
 full payload with the spec's `resource_link` mechanism unused; 35 prompts
 with `arguments=[]` and no completions handler; an undeclared localization
-boundary; unbounded telemetry growth; and two protocol-security stances
+boundary; and two protocol-security stances
 (untrusted portal content, secret collection) that are held in practice but
 recorded nowhere. This ADR decides each so the paired plan can close them.
 
@@ -129,13 +129,6 @@ recorded nowhere. This ADR decides each so the paired plan can close them.
   so the locale parity gates know their boundary and the next audit does
   not read English descriptions as drift.
 
-### H6 — Telemetry retention
-
-- **Chosen — bounded retention.** Age- and count-based pruning of
-  per-session trajectory files at server start, a documented read path,
-  and a conformance test that the pruning never touches the newest N
-  sessions. Payload-free posture unchanged.
-
 ### H7 — Untrusted external content boundary
 
 - *Relay portal-derived text verbatim (status quo):* rejected as
@@ -209,8 +202,8 @@ High-level layering; the paired plan owns steps and sequencing.
   observations, evidence lists, corpus excerpts); move bulk arrays to
   resource links backed by the existing read handlers; update output
   schemas; size-budget check.
-- **Boundaries and retention.** The localization-boundary gate; the
-  no-markup live-family conformance gate; telemetry pruning; the
+- **Boundaries.** The localization-boundary gate; the
+  no-markup live-family conformance gate; the
   capability-set conformance test; the potion revision pin and cache-dir
   passthrough.
 
@@ -229,8 +222,8 @@ H4 aligns token economics with the R9 funnel using the spec's own
 mechanism (F4). H5, H7, and H8 record stances that were true-in-practice
 but invisible, exactly the class of gap the campaign-close honesty reviews
 keep re-finding; deciding them now is cheaper than re-litigating them in
-every future audit. H6 and H9 are small operational debts named by the
-audit (F7, F9, F10). The companion discovery ADR consumes H3's
+every future audit. H9 is a small operational debt named by the
+audit (F9, F10). The companion discovery ADR consumes H3's
 classification and H4's links; the two are separable campaigns with an
 explicit sequencing note rather than one oversized landing.
 
@@ -241,8 +234,8 @@ bounded hangs, clean cancellation — the single most will-bite-in-practice
 defect closed. Schemas stop lying about defaults and gain full flag
 expressiveness. A new mutating verb can no longer ship unclassified.
 Calculation results get materially cheaper for clients while bulk evidence
-stays one fetch away. Five implicit postures (localization, external
-content, secrets, capabilities, retention) become declared, gated
+stays one fetch away. Four implicit postures (localization, external
+content, secrets, capabilities) become declared, gated
 contracts.
 
 **Honest difficulties.** Progress heartbeats depend on the client having

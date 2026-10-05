@@ -13,9 +13,9 @@ from uuid import UUID
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.local_runtime.server import RuntimeListener, RuntimeTransportServer
+from cadrumo.adapters.local_runtime.server import RuntimeListener
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner
-from cadrumo.adapters.persistence.storage.custody.automation_store import CONTROL_NAMESPACE, WRAP_NAMESPACE
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CONTROL_NAMESPACE, WRAP_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.runtime.contracts import (
     RuntimeByteChannel,
@@ -25,6 +25,7 @@ from cadrumo.application.runtime.contracts import (
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from . import native_api_cli_support
 
 pytestmark = [pytest.mark.hex_entrypoint]
@@ -59,7 +60,7 @@ def _terminal_owner(
 ) -> tuple[NativeRuntimeFixtureOwner, _Listener, Future[None], Event]:
     listener, stop, drained = _Listener(failures=listener_failures), Event(), Event()
     stop.set()
-    server = RuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
+    server = RetainedRuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
     server.DRAIN_SECONDS = 0.01
     pending: Future[None] = Future()
     if incomplete:
@@ -141,7 +142,7 @@ async def test_live_serve_timeout_retains_future_and_executor_without_joining() 
             assert release.wait(3)
 
     listener = HeldListener()
-    server = RuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
+    server = RetainedRuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
     owner = NativeRuntimeFixtureOwner(listener, stop, timeout=0.01)
     owner.server = server
     owner.executor = ThreadPoolExecutor(max_workers=1)
@@ -333,7 +334,7 @@ async def test_direct_close_cancellation_retains_live_serve_future_for_retry() -
             assert release.wait(3)
 
     listener = HeldListener()
-    server = RuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
+    server = RetainedRuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
     owner = NativeRuntimeFixtureOwner(listener, stop, timeout=0.02)
     owner.server = server
     owner.executor = ThreadPoolExecutor(max_workers=1)
@@ -370,7 +371,7 @@ async def test_direct_serve_primary_retains_fixture_when_later_listener_release_
             raise primary
 
     listener = RefusingListener(failures=2)
-    server = RuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
+    server = RetainedRuntimeTransportServer(listener, product_version="fixture-cleanup", stop=stop)
     with pytest.raises(OSError) as serve_error:
         server.serve()
     assert serve_error.value is primary and listener.closes == 1
@@ -406,7 +407,7 @@ def _api_context(
         ) -> None:
             super().__init__(endpoint, stop, timeout=0.01, drained=drained)
 
-    class ControlledServer(RuntimeTransportServer):
+    class ControlledServer(RetainedRuntimeTransportServer):
         DRAIN_SECONDS = 0.01
 
         @override
@@ -433,7 +434,7 @@ def _api_context(
     monkeypatch.setattr(native_api_cli_support, "owner_id", lambda: "synthetic-owner")
     monkeypatch.setattr(native_api_cli_support, "WindowsRuntimeEndpoint", endpoint)
     monkeypatch.setattr(native_api_cli_support, "PosixRuntimeEndpoint", endpoint)
-    monkeypatch.setattr(native_api_cli_support, "RuntimeTransportServer", ControlledServer)
+    monkeypatch.setattr(native_api_cli_support, "RetainedRuntimeTransportServer", ControlledServer)
     monkeypatch.setattr(native_api_cli_support, "NativeRuntimeFixtureOwner", ShortOwner)
     native = MemoryNativePort()
     context = native_api_cli_support.native_api_cli_session(

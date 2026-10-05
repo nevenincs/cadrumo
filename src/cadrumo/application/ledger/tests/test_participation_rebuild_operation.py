@@ -122,7 +122,7 @@ class _Context:
         self.operands = _Operands()
 
 
-def _unexpected_ports(*, bucket_id: str) -> ParticipationIndexRebuildPorts:
+def _unexpected_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ParticipationIndexRebuildPorts:
     """Keep policy resolution independent from the encrypted repositories."""
     raise AssertionError(f"access resolution composed rebuild repositories for {bucket_id}")
 
@@ -263,7 +263,7 @@ async def test_rebuild_refuses_foreign_index_bucket_before_source_reads_or_repla
         participation_index_repository=target,
     )
 
-    def ports_factory(*, bucket_id: str) -> ParticipationIndexRebuildPorts:
+    def ports_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ParticipationIndexRebuildPorts:
         assert bucket_id == str(_PROFILE)
         return ports
 

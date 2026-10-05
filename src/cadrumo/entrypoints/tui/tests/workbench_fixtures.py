@@ -65,14 +65,14 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSourceObservationV1,
     project_declarations_calendar,
 )
-from ....application.modelo.declarations_workspace import (
+from ....application.modelo.declarations_workspace import project_declarations_workspace
+from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
 from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
@@ -136,7 +136,7 @@ from ..aeat_sync.screens import (
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.controller import DeclarationsWorkspaceController
-from ..declarations.models import DeclarationsDestinationIdV1
+from ..declarations.models import DeclarationsDestinationIdV1, DeclarationsWorkspaceWiringV1
 from ..declarations.overview import DeclarationsModeloWorkspaceLauncherScreen
 from ..declarations.routes import resolve_declarations_screen
 from ..home import HomeScreen
@@ -250,6 +250,7 @@ def _operation_contracts() -> OperationPublicContractSetV1:
         browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=unopened_censal_fetch,
+        provider_preflight=lambda _profile_id, _operation: None,
     ).model_copy(update={"action_reference": ActionReference(action_id="operator.profile.edit")})
     contract = build_censal_operation_registration(definition).contract
     return OperationPublicContractSetV1.build((contract,))
@@ -594,10 +595,12 @@ def _declaration_controller(scenario: WorkbenchFixtureScenario) -> DeclarationsW
     return DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         projection,
-        work_action=action("operator.modelo.work.list"),
-        revisions_action=action("operator.modelo.work.revisions"),
-        filing_action=action("operator.modelo.filing_record.list"),
-        calendar_projection=_calendar_projection(scenario),
+        DeclarationsWorkspaceWiringV1(
+            work_action=action("operator.modelo.work.list"),
+            revisions_action=action("operator.modelo.work.revisions"),
+            filing_action=action("operator.modelo.filing_record.list"),
+            calendar_projection=_calendar_projection(scenario),
+        ),
     )
 
 
@@ -877,6 +880,8 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
     from ....application.operator_actions.catalogue import lookup_action
     from ....application.operator_actions.models import ActionReference
     from ..ledger.controller import LedgerWorkspaceController
+    from ..ledger.own_accounts import LedgerOwnAccountDoorV1
+    from ..ledger.tests.own_account_fixtures import MemoryOwnAccountDoor
 
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
@@ -887,6 +892,7 @@ def _ledger_controller(scenario: WorkbenchFixtureScenario) -> LedgerWorkspaceCon
             evidence_action=ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id),
             evidence_items=(),
             link_action=ActionReference(action_id=lookup_action("operator.ledger.link").action_id),
+            own_account_door=cast(LedgerOwnAccountDoorV1, MemoryOwnAccountDoor()),
         ),
     )
     # The scenarios that used to be handed an injected classification target now

@@ -17,7 +17,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
-from urllib.parse import quote, urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit
 
 from pydantic import AnyUrl
 
@@ -76,12 +76,12 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _PRE303_PRESENTATION_URL = f"{EXTERNAL.aeat.domains.sede}{PRE303.presentation_service_path}"
-_PRE303_SELECTOR_URL = EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
-    target=quote(PRE303.presentation_service_path, safe=""),
-)
-_WALLET_SELECTOR_URL = EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
-    target=quote(EXTERNAL.aeat.sede_paths.iva_compensation_wallet, safe=""),
-)
+# Both pages are requested directly on ``www6`` with the stored session, as the
+# declarations, expedientes and notifications readers do. The access selector
+# is not an entry: its authorize control is the Cl@ve login dispatch, which an
+# authenticated session cannot complete, so reaching it is a refused session.
+_PRE303_ENTRY_URL = f"{EXTERNAL.aeat.domains.www6}{PRE303.presentation_service_path}"
+_WALLET_ENTRY_URL = f"{EXTERNAL.aeat.domains.www6}{WALLET_PATH}"
 _OWN_NAME_REPRESENTATION_ACTION = PRE303.representation_own_name_action_label
 _WALLET_DISCOVERED_ENTRYPOINT_ACTION = PRE303.wallet_discovered_entrypoint_action_label
 _WALLET_EXECUTE_READ_ACTION = PRE303.wallet_execute_read_action_label
@@ -179,7 +179,7 @@ async def _open_wallet_for_fetch(
             page,
             browser_session=browser_session,
             settings=settings,
-            selector_url=_PRE303_SELECTOR_URL,
+            target_url=_PRE303_ENTRY_URL,
             target_path=PRE303.presentation_service_path,
             expected_url=_PRE303_PRESENTATION_URL,
             surface="pre303_presentation_service",
@@ -210,7 +210,7 @@ async def _open_wallet_for_fetch(
             page,
             browser_session=browser_session,
             settings=settings,
-            selector_url=_WALLET_SELECTOR_URL,
+            target_url=_WALLET_ENTRY_URL,
             target_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
             expected_url=WALLET_URL,
             surface="iva_compensation_wallet",
@@ -219,7 +219,9 @@ async def _open_wallet_for_fetch(
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
-            f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {WALLET_URL!r}: {exc}",
+            f"Pre303/wallet navigation failed ({type(exc).__name__}) "
+            f"for {_PRE303_ENTRY_URL!r} -> {_WALLET_ENTRY_URL!r}",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         ) from exc
 
 
@@ -308,37 +310,36 @@ async def _open_authenticated_surface(
     *,
     browser_session: DefaultBrowserSession,
     settings: Settings,
-    selector_url: str,
+    target_url: str,
     target_path: str,
     expected_url: str,
     surface: str,
     target_year: int,
     target_period: Period,
 ) -> bool:
-    """Open an aeat app through the selector so Cl@ve app-local state is minted."""
-    _assert_read_http("GET", selector_url)
-    await browser_session.navigate(page, selector_url)
+    """Request an AEAT app page directly with the stored session and continue only in own name."""
+    _assert_read_http("GET", target_url)
+    await browser_session.navigate(page, target_url)
     await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
     current_url = getattr(page, "url", "") or ""
-    selector_marker = EXTERNAL.aeat.clave_movil.selector_access_path_marker
-    if selector_marker in current_url:
-        _assert_read_browser_action("clave-movil-authorize")
-        await page.click(EXTERNAL.aeat.clave_movil.authorize_button_selector)
-        try:
-            await page.wait_for_url(
-                lambda url: target_path in url or is_aeat_auth_gate_redirect(url) or _is_representation_gate_url(url),
-                timeout=settings.cadrumo_browser_navigation_timeout_ms,
-            )
-        except PlaywrightError:
-            log.debug(
-                "IVA wallet selector dispatch did not reach expected surface=%s expected_url=%s current_url=%s",
-                surface,
-                expected_url,
-                getattr(page, "url", None),
-                exc_info=True,
-            )
-        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
-    current_url = getattr(page, "url", "") or ""
+    if EXTERNAL.aeat.clave_movil.selector_access_path_marker in urlsplit(current_url).path:
+        raise SedeNavigationError(
+            "AEAT did not accept the authenticated session for the IVA wallet read; "
+            "it answered with its access selector. Re-authenticate and retry.",
+            failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+            context={
+                "landing_url": redacted_url(current_url),
+                "expected_url": redacted_url(expected_url),
+                "surface": surface,
+                "refusal": "session_not_accepted",
+            },
+        )
+    _raise_if_wallet_auth_gate(
+        page,
+        message="AEAT rejected the authenticated session with 4033 before the IVA wallet read",
+        expected_url=expected_url,
+        surface=surface,
+    )
     if _is_representation_gate_url(current_url):
         await _continue_own_name_representation(
             page,

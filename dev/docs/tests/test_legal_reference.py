@@ -16,13 +16,9 @@ from docutils.core import publish_doctree
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
-from ..legal_reference import (
-    LegalProvisionRecord,
-    LegalReferenceError,
-    generate_legal_reference,
-    load_legal_provisions,
-    render_legal_reference,
-)
+from ..legal_catalogue import load_legal_provisions
+from ..legal_reference import generate_legal_reference, render_legal_reference
+from ..legal_reference_models import LegalProvisionRecord, LegalReferenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

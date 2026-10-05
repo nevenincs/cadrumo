@@ -9,22 +9,18 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from ..command_spec import (
-    ArgumentSpec,
-    CommandSpec,
-    CommandSpecFamily,
-    CommandSpecGraph,
+from ..command_graph import CommandSpecFamily, CommandSpecGraph
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import (
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
     ValueContract,
 )
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

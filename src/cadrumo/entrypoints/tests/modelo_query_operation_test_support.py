@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ...application.modelo.data_inventory import data_inventory_checklist
-from ...application.modelo.mcp_query_operation import (
+from ...application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSafeLedgerIssue,
     ModeloReadinessSafeMissingRequirement,
@@ -17,7 +17,7 @@ from ...application.modelo.mcp_query_operation import (
     ModeloReadinessSummaryProjection,
     ModeloTypedBindingValue,
 )
-from ...application.modelo.query_read_operation import (
+from ...application.modelo.query_read_contracts import (
     ModeloBindingOverride,
     ModeloBindingRowV1,
     ModeloBindingsListProjection,
@@ -151,7 +151,7 @@ def prepare_modelo_query_conformance_case(
         )
     if definition_id not in {"modelo.readiness", "modelo.readiness.summary"}:
         raise ValueError(f"unknown modelo query operation: {definition_id}")
-    ports = build_modelo_query_read_ports(bucket_id=str(profile_id))
+    ports = build_modelo_query_read_ports(bucket_id=str(profile_id), operation=operation)
     readiness = build_modelo_readiness_reports(
         (ModeloReadinessRequest(modelo="303", revision_id=report.revision, filing_year=2025, period=period),),
         active_profile_id=str(profile_id),

@@ -1,0 +1,46 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "193"
+design_epoch = "2019"
+source_ref = "aeat-dr-193-2019"
+source_sha256 = "bd38312bbe1583f8196f2fcf967ae8e93f10356edd71f93bf4c82d2a3059de69"
+entries = []
+variable_envelopes = []
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-193-declarante"
+record_type = "declarante"
+required = true
+row_field_casilla_ids = []
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+export_record_id = "modelo-193-perceptor"
+record_type = "perceptor"
+required = false
+repeat = "binding_rows"
+binding_record = "perceptor"
+row_field_casilla_ids = [["accrual_year", "perc.ejercicio-devengo"], ["base_retenciones", "perc.base"], ["clave", "perc.clave"], ["clave_codigo", "perc.clave-codigo"], ["codigo_cuenta", "perc.codigo-cuenta"], ["codigo_emisor", "perc.codigo-emisor"], ["compensaciones", "perc.compensaciones"], ["fecha_inicio_prestamo", "perc.fecha-inicio-prestamo"], ["fecha_vencimiento_prestamo", "perc.fecha-vencimiento-prestamo"], ["garantias", "perc.garantias"], ["naturaleza", "perc.naturaleza"], ["naturaleza_declarante", "perc.naturaleza-declarante"], ["pago", "perc.pago"], ["penalizaciones", "perc.penalizaciones"], ["pendiente_flag", "perc.pendiente"], ["perceptor_legal_name", "perc.nombre"], ["perceptor_mediador_flag", "perc.mediador"], ["perceptor_tax_id", "perc.nif"], ["percibido_dinerario", "perc.percepciones"], ["porcentaje_retencion", "perc.porcentaje"], ["province_code", "perc.provincia"], ["reducciones", "perc.reducciones"], ["representative_tax_id", "perc.nif-representante"], ["retencion_practicada", "perc.retenciones"], ["tipo_codigo", "perc.tipo-codigo"], ["tipo_percepcion", "perc.tipo-percepcion"]]
+
+[records.discriminator]
+offset = 208
+length = 293
+requires = "non_blank"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+export_record_id = "modelo-193-gastos"
+record_type = "gastos"
+required = false
+repeat = "binding_rows"
+binding_record = "gastos"
+row_field_casilla_ids = [["contributor_legal_name", "gasto.nombre"], ["contributor_tax_id", "gasto.nif"], ["importe_gastos", "gasto.importe"], ["representative_tax_id", "gasto.nif-representante"]]
+
+[records.discriminator]
+offset = 208
+length = 293
+requires = "blank"

@@ -6,9 +6,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 import typer
-from pydantic import BaseModel
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...application.live.notifications_read_operation import (
     NOTIFICATIONS_LATEST_DEFINITION_ID,
     NOTIFICATIONS_LIST_DEFINITION_ID,
@@ -20,15 +18,10 @@ from ...application.live.notifications_read_operation import (
     NotificationsShowPublicResultV1,
     NotificationsShowRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_profile_operation import settled_profile_projection, submit_profile_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,69 +48,24 @@ class NotificationsLatestRead:
     projection: NotificationsLatestPublicResultV1
 
 
-def _submit[ResultT: BaseModel](
-    client: RuntimeFrontendClient,
-    profile_id: UUID,
-    request: BaseModel,
-    *,
-    result_type: type[ResultT],
-    definition_id: str,
-) -> RegisteredOperationCompletion[ResultT]:
-    """Submit one registered read over the client bound to the active profile."""
-    return run_registered_operation(
-        client,
-        request,
-        definition_id=definition_id,
-        subject_ref=profile_operation_subject(str(profile_id)),
-        result_type=result_type,
-        request_version=1,
-        result_version=1,
-        timeout=120,
-    )
-
-
-def _require_settled_none[ResultT: BaseModel](completed: RegisteredOperationCompletion[ResultT]) -> None:
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.NONE
-    ):
-        raise ValueError("notification read result disagrees with its settled receipt")
-
-
-def _correlated_invalid_frame[ResultT: BaseModel](
-    completed: RegisteredOperationCompletion[ResultT],
-) -> Exception:
-    return submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
-
-
 def read_notifications_list_for_cli(ctx: typer.Context) -> NotificationsListRead:
     """Read exact-profile local notification snapshot summaries."""
     profile_id = UUID(require_active_bucket_id())
     client = require_profile_client(ctx, expected_profile_id=profile_id)
     request = NotificationsListRequest(profile_id=profile_id)
-    completed = _submit(
+    completed = submit_profile_operation(
         client,
         profile_id,
         request,
         definition_id=NOTIFICATIONS_LIST_DEFINITION_ID,
         result_type=NotificationsListPublicResultV1,
     )
-    try:
-        projection = completed.projection
-        if not isinstance(projection, NotificationsListPublicResultV1):
-            raise ValueError("notification list projection has an invalid type")
-        if projection.bucket_id != str(profile_id) or projection.count != len(projection.rows):
-            raise ValueError("notification list result does not match its submitted profile and rows")
-        _require_settled_none(completed)
-    except Exception:
-        raise _correlated_invalid_frame(completed) from None
+
+    def correlate(projection: NotificationsListPublicResultV1) -> None:
+        if projection.count != len(projection.rows):
+            raise ValueError("notification list result does not match its rows")
+
+    projection = settled_profile_projection(completed, NotificationsListPublicResultV1, profile_id, correlate)
     return NotificationsListRead(completion=completed, projection=projection)
 
 
@@ -126,26 +74,19 @@ def read_notifications_show_for_cli(ctx: typer.Context, *, snapshot_id: str) -> 
     profile_id = UUID(require_active_bucket_id())
     client = require_profile_client(ctx, expected_profile_id=profile_id)
     request = NotificationsShowRequest(profile_id=profile_id, snapshot_id=snapshot_id)
-    completed = _submit(
+    completed = submit_profile_operation(
         client,
         profile_id,
         request,
         definition_id=NOTIFICATIONS_SHOW_DEFINITION_ID,
         result_type=NotificationsShowPublicResultV1,
     )
-    try:
-        projection = completed.projection
-        if not isinstance(projection, NotificationsShowPublicResultV1):
-            raise ValueError("notification show projection has an invalid type")
-        if (
-            projection.bucket_id != str(profile_id)
-            or not projection.snapshot_id.startswith(request.snapshot_id)
-            or projection.row_count != len(projection.rows)
-        ):
-            raise ValueError("notification show result does not match its submitted profile, prefix and rows")
-        _require_settled_none(completed)
-    except Exception:
-        raise _correlated_invalid_frame(completed) from None
+
+    def correlate(projection: NotificationsShowPublicResultV1) -> None:
+        if not projection.snapshot_id.startswith(request.snapshot_id) or projection.row_count != len(projection.rows):
+            raise ValueError("notification show result does not match its submitted prefix and rows")
+
+    projection = settled_profile_projection(completed, NotificationsShowPublicResultV1, profile_id, correlate)
     return NotificationsShowRead(completion=completed, projection=projection)
 
 
@@ -154,22 +95,16 @@ def read_notifications_latest_for_cli(ctx: typer.Context) -> NotificationsLatest
     profile_id = UUID(require_active_bucket_id())
     client = require_profile_client(ctx, expected_profile_id=profile_id)
     request = NotificationsLatestRequest(profile_id=profile_id)
-    completed = _submit(
+    completed = submit_profile_operation(
         client,
         profile_id,
         request,
         definition_id=NOTIFICATIONS_LATEST_DEFINITION_ID,
         result_type=NotificationsLatestPublicResultV1,
     )
-    try:
-        projection = completed.projection
-        if not isinstance(projection, NotificationsLatestPublicResultV1):
-            raise ValueError("notification latest projection has an invalid type")
-        if projection.bucket_id != str(profile_id):
-            raise ValueError("notification latest result does not match its submitted profile")
-        _require_settled_none(completed)
-    except Exception:
-        raise _correlated_invalid_frame(completed) from None
+    projection = settled_profile_projection(
+        completed, NotificationsLatestPublicResultV1, profile_id, lambda _projection: None
+    )
     return NotificationsLatestRead(completion=completed, projection=projection)
 
 

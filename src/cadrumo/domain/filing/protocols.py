@@ -147,13 +147,8 @@ class DeadlineStatus(Protocol):
     """Result of a deadline check for a (modelo, period) tuple."""
 
     @property
-    def due_date(self) -> date:
-        """Return the AEAT-published due date."""
-        ...
-
-    @property
     def is_overdue(self) -> bool:
-        """Return ``True`` when the reference date is past ``due_date``."""
+        """Return ``True`` when the reference date is past the filing deadline."""
         ...
 
 

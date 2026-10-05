@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from concurrent.futures import Future
 from contextlib import contextmanager
 from contextvars import copy_context
@@ -13,8 +13,8 @@ from uuid import UUID
 
 import typer
 
-from ...adapters.local_runtime.framing import RuntimeTransportCleanup
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
@@ -78,32 +78,9 @@ def _release_profile_client(client: RuntimeFrontendClient, primary: BaseExceptio
             else:
                 # A synchronous Click scope can be entered by an SDK caller on an
                 # active loop. The transport release has no callback to that loop.
-                try:
-                    context = copy_context()
-                    result: Future[None] = Future()
-
-                    def threaded_release() -> None:
-                        try:
-                            context.run(release)
-                        except BaseException as error:
-                            result.set_exception(error)
-                        else:
-                            result.set_result(None)
-
-                    thread = Thread(target=threaded_release, name="cli-profile-transport-close")
-                    thread.start()
-                except BaseException as error:
-                    _raise_release_setup_failure(owner, error, release_primary)
-                try:
-                    result.result()
-                finally:
-                    thread.join()
+                _release_profile_transport_thread(release, owner, release_primary)
     finally:
-        if owner.released and release_primary is not None:
-            for field in ("async_cleanup_error", "cleanup_error"):
-                cleanup = release_primary.__dict__.get(field)
-                if isinstance(cleanup, AsyncResourceCleanupError):
-                    cleanup.discard_released_resources(owner)
+        _discard_released_profile_cleanup(owner, release_primary)
     if rendered is not None and _has_retained_cleanup(rendered):
         raise rendered from None
 
@@ -145,3 +122,38 @@ def require_profile_client(ctx: typer.Context, *, expected_profile_id: UUID) -> 
     if client.profile_id != expected_profile_id:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return client
+
+
+def _release_profile_transport_thread(
+    release: Callable[[], None], owner: RuntimeTransportCleanup, release_primary: BaseException | None
+) -> None:
+    """Bridge synchronous release through a joined thread while retaining failed native custody."""
+    try:
+        context = copy_context()
+        result: Future[None] = Future()
+
+        def threaded_release() -> None:
+            try:
+                context.run(release)
+            except BaseException as error:
+                result.set_exception(error)
+            else:
+                result.set_result(None)
+
+        thread = Thread(target=threaded_release, name="cli-profile-transport-close")
+        thread.start()
+    except BaseException as error:
+        _raise_release_setup_failure(owner, error, release_primary)
+    try:
+        result.result()
+    finally:
+        thread.join()
+
+
+def _discard_released_profile_cleanup(owner: RuntimeTransportCleanup, release_primary: BaseException | None) -> None:
+    """Drop retained resource references only after their native owner reports release."""
+    if owner.released and release_primary is not None:
+        for field in ("async_cleanup_error", "cleanup_error"):
+            cleanup = release_primary.__dict__.get(field)
+            if isinstance(cleanup, AsyncResourceCleanupError):
+                cleanup.discard_released_resources(owner)

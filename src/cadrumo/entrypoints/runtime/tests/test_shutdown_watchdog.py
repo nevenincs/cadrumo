@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.adapters.local_runtime.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo.adapters.local_runtime.windows_process import WindowsProcessScope
+from cadrumo.application.runtime.contracts import RuntimeExitReason
 from cadrumo.entrypoints.runtime.shutdown import RuntimeShutdownWatchdog
 
 pytestmark = [
@@ -25,7 +26,9 @@ pytestmark = [
 _FIXTURE = "cadrumo.entrypoints.runtime.tests.shutdown_watchdog_fixture"
 
 
-@pytest.mark.parametrize("mode,exit_code,cleanup", [("blocked", 2, False), ("healthy", 0, True)])
+@pytest.mark.parametrize(
+    "mode,exit_code,cleanup", [("blocked", RuntimeExitReason.DRAIN_WATCHDOG.value, False), ("healthy", 0, True)]
+)
 def test_shutdown_watchdog_ends_owner_and_its_contained_child(
     tmp_path: Path, mode: str, exit_code: int, cleanup: bool
 ) -> None:

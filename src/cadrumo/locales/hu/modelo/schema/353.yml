@@ -1,6 +1,173 @@
 modelo:
   schema:
     '353':
+      binding:
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 1: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 1: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 1: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 1: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 10: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 10: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 10: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 10: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 11: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 11: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 11: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 11: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 12: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 12: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 12: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 12: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 13: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 13: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 13: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 13: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 14: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 14: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 14: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 14: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 15: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 15: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 15: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 15: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 16: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 16: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 16: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 16: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 17: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 17: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 17: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 17: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 18: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 18: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 18: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 18: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 19: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 19: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 19: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 19: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 2: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 2: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 2: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 2: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Függő entitás 20: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Függő entitás 20: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Függő entitás 20: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Függő entitás 20: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 3: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 3: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 3: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 3: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 4: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 4: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 4: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 4: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 5: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 5: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 5: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 5: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 6: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 6: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 6: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 6: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 7: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 7: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 7: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 7: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 8: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 8: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 8: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 8: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Függő entitás 9: részesedés (%) az időszak végén'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Függő entitás 9: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Függő entitás 9: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Függő entitás 9: eredmény'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9ddommibb6:
+          label: 'Domináns entitás: NIF'
+        ? x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9ddpqmqpbidsmm8p9dd9qn6t39cpkm6obeehig
+        : label: 'Domináns entitás: a Modelo 322 igazolásának száma'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9de9in6tbcehgm8ro:
+          label: 'Domináns entitás: eredmény'
       casilla:
         continuidad:
           filing-period:
@@ -36,7 +203,7 @@ modelo:
       construct:
         modelo-353-iva-grupo-agregado:
           field:
-            title: '353-as nyomtatvány: az áfacsoport havi összesített önadózása'
+            title: 'Modelo 353 nyomtatvány: az áfacsoport havi összesített önadózása'
       field:
         official_name: Modelo 353. Hozzáadottérték-adó. Cégcsoport. Összesített nyomtatvány.
           Havi önbevallás.

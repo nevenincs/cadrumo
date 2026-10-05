@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_utf8_spanning_page_boundary_reassembles_exact_canonical_document() -> None:
     """Pages are byte slices even when a multibyte character spans a boundary."""
-    document: dict[str, JsonValue] = {"text": "ñ" * 20_000, "count": 7}
+    document: dict[str, JsonValue] = {"text": "ñ" * (PROJECTION_PAGE_BYTES * 3 // 4), "count": 7}
     expected = canonical_json_bytes(document)
     assert expected[PROJECTION_PAGE_BYTES - 1 : PROJECTION_PAGE_BYTES + 1] == "ñ".encode()
 

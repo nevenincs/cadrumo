@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#m303-compensacion-revision-split'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8bd846e09f8a621e4358532b4fe540d205a6145fd353db74463c50355dbc675e'
-related:
-  - "[[2026-08-13-registry-suite-red-at-head-audit]]"
+body_hash: 'sha256:82b29f044035d39fb032963cd708cce6a16143a2706bde436732afe60129d3ad'
+related: []
 ---
 
 # `m303-compensacion-revision-split` research: `M303 compensacion carry across the 2024 revision split`
@@ -52,15 +51,13 @@ below.
 ### The runtime carry resolves across the split, because it never names a revision
 
 The fold requirement is keyed by modelo, year and period — not by revision id.
-`relation_source_requirements` at
-`src/cadrumo/domain/calculations/registry/_relations.py:134` calls
+`relation_source_requirements`  calls
 `_derive_offset_source_anchor`, keeps the returned `period_year_delta`, adds it to
 the source year at `_relations.py:139`, and emits a `RegistryFoldRequirement`
 carrying `(source_modelo, source_year, source_periods, source_casilla_id, ...)`.
 
 The consumer resolves observations from that triple.
-`_gather_observations_for_snapshot` at
-`src/cadrumo/application/calculations/_relation_prefill.py:144` iterates
+`_gather_observations_for_snapshot`  iterates
 `requirement.periods`, builds `Period.from_year_and_code(requirement.filing_year,
 period)`, and pulls the stored casilla observations for that modelo, year and
 period. Which revision half produced the source period never enters the lookup.
@@ -74,8 +71,7 @@ too, because the runtime applied the year delta.
 
 ### The check fails on two faults, neither of which the runtime shares
 
-**It discards the year.** `apply_period_offset` at
-`src/cadrumo/domain/calculations/registry/_period_offset_math.py:28` returns
+**It discards the year.** `apply_period_offset`  returns
 `(year_delta, derived_period)` and documents the delta as "negative = prior year";
 for 1T at offset -1 it yields `(-1, "4T")`. `_derive_offset_source_anchor` at
 `_relations.py:344` preserves that pair, but the convenience wrapper
@@ -105,12 +101,11 @@ individual clause is true of the check's model.
 Both halves declare the same relation shape —
 `source_period_offset_from_target = -1`, `source_revision_selector.filing_year_delta = 0`,
 `period_alignment.mode = "previous_quarter"`, `aggregation.op = "copy"` — at
-`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/relations/0001-relations.toml`
+
 and its `2024-desde-09-y-3t` sibling, differing only in `target_periods`
 (`["1T", "2T"]` and `["3T", "4T"]`) and `source_refs`.
 
-`RelationRevisionSelector` at
-`src/cadrumo/domain/calculations/registry/_schema_surfaces.py:602` offers `year`,
+`RelationRevisionSelector`  offers `year`,
 `year_from`, `year_to` and `filing_year_delta`, and its validator refuses mixing
 absolute bounds with a delta. There is indeed no axis naming a sibling revision
 within a year. The first pass treated that as the defect. On the runtime evidence
@@ -125,12 +120,10 @@ This was carried as open in the first draft and is now closed. All three
 `RegistryFoldRequirement` consumers address their source the same way — modelo,
 year and period — and none resolves a source revision.
 
-`_requirements_from_relation` and `_requirements_from_previous_filing` at
-`src/cadrumo/application/calculations/_cross_period_clean_state.py:592` and `:578`
+`_requirements_from_relation` and `_requirements_from_previous_filing`  and `:578`
 each build `Period.from_year_and_code(requirement.filing_year, period)` and emit a
 `CrossPeriodDependencyRequirement` keyed by `(source_modelo, filing_year, period)`.
-`_requirement_strictly_before_activity_start` at
-`src/cadrumo/application/calculations/_binding_prefill.py:623` uses the same
+`_requirement_strictly_before_activity_start`  uses the same
 construction, and only to compare date spans. No revision id appears on the source
 side of any of the three paths.
 
@@ -160,8 +153,7 @@ not re-confirm a 2T source stamp, the carry would be silently **dropped** rather
 than mis-valued.
 
 The re-confirmation resolves purely from the law-determined triple.
-`revision_carry_outcome` at
-`src/cadrumo/application/calculations/_revision_carry_gate.py:45` calls
+`revision_carry_outcome`  calls
 `authority.snapshot(source_modelo, filing_year=..., period=...)` at `:77` with **no
 `revision_id` argument**, then refuses on indeterminate resolution or a divergent
 stamp and passes a matching one. So the whole question reduces to whether that
@@ -238,33 +230,23 @@ larger one hide the smaller.
 
 ## Sources
 
-`src/cadrumo/domain/calculations/registry/_relations.py:134`,
 `_relations.py:139`, `_relations.py:339`, `_relations.py:344`
 
-`src/cadrumo/domain/calculations/registry/_period_offset_math.py:28`
-
-`src/cadrumo/domain/calculations/registry/_schema_surfaces.py:602`,
 `_schema_surfaces.py:698`
 
-`src/cadrumo/domain/calculations/registry/tests/test_relation_consistency.py:51`,
 `test_relation_consistency.py:123`, `test_relation_consistency.py:156`
 
-`src/cadrumo/application/calculations/_relation_prefill.py:144`,
 `_relation_prefill.py:145`, `_relation_prefill.py:157`
 
-`src/cadrumo/application/calculations/_binding_prefill.py:623`,
 `_cross_period_clean_state.py:167-171`, `_cross_period_clean_state.py:176`,
 `_cross_period_clean_state.py:578`, `_cross_period_clean_state.py:592`
 
-`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/relations/0001-relations.toml`
 and the `2024-desde-09-y-3t` sibling fragment
 
 Commit `4395a2db04` (2026-08-10), which introduced the split revisions
 
-`src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`
 for the 2015 and 2018 coverage gaps
 
-`src/cadrumo/application/calculations/_revision_carry_gate.py:45`,
 `_revision_carry_gate.py:77`
 
 Revision-resolution probe: read-only, run against `bundled_authority()` on

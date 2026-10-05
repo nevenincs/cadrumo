@@ -299,6 +299,7 @@ def _verification_predicate_expression_failures(
             expression,
             operator_name=op_name,
             casillas=casillas,
+            casilla_by_id=casilla_by_id,
         )
     return []
 

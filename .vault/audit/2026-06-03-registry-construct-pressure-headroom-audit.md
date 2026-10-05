@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-construct-pressure'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:0b3274391f19593cdc6fb9a14904bd8b1bf728fdbd318253decd343b7338b517'
-related:
-  - '[[2026-06-03-registry-construct-pressure-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:576ceaa832144973a597b7a329e113c52ec21465ed2bff61697e0a0901350a9e'
+related: []
 ---
 
 # `registry-construct-pressure` audit: `Post-split registry fragment headroom`
@@ -26,23 +25,23 @@ the M200 construct split landed.
   `constructs.part-002b.toml` is 753 lines and `constructs.part-002a.toml` is
   716 lines.
 - OBSERVED: One TOML file remains above the 1,200-line soft review band:
-  `src/aeat/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml`
+  the retired data file
   at 1,218 lines.
 - OBSERVED: The largest row is 572 characters in
-  `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas/0618-0552.toml`.
+  the retired data file.
 
 ## Largest files
 
 - 1,218 lines:
-  `src/aeat/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml`
+  the retired data file
 - 1,039 lines:
-  `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml`
+  the retired data file
 - 969 lines:
-  `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0003-export-layout.part-001.toml`
+  the retired data file
 - 969 lines:
-  `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0003-export-layout.part-001.toml`
+  the retired data file
 - 954 lines:
-  `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0010-modelo-200-page-007.toml`
+  the retired data file
 
 ## Recommendations
 

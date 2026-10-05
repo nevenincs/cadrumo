@@ -64,9 +64,6 @@ from ._capsule_filesystem import (
     rename_windows_directory_by_handle as _rename_windows_directory_by_handle,
 )
 from ._capsule_filesystem import (
-    renameat2_noreplace as _renameat2_noreplace,
-)
-from ._capsule_filesystem import (
     windows_stage_snapshot as _windows_stage_snapshot,
 )
 from ._capsule_filesystem import (
@@ -132,6 +129,7 @@ from .filesystem_primitives import ensure_real_directory as _ensure_real_directo
 from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
 from .filesystem_primitives import posix_mkdir_child_directory as _posix_mkdir_child_directory
 from .filesystem_primitives import posix_open_child_directory as _posix_open_child_directory
+from .filesystem_primitives import rename_noreplace_at as _rename_noreplace_at
 from .filesystem_primitives import write_exclusive_fsynced as _write_exclusive_fsynced
 from .filesystem_primitives import write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd
 from .paths import profile_custody_path
@@ -358,7 +356,7 @@ def rename_profile_custody_capsule_for_deletion(
     )
     if os.name != "nt":
         with _posix_directory_fd(source.parent) as parent_fd:
-            _renameat2_noreplace(
+            _rename_noreplace_at(
                 source_fd=parent_fd,
                 source_name=source.name,
                 destination_fd=parent_fd,
@@ -602,7 +600,7 @@ def _publish_profile_custody_capsule_posix(
             if stage_only:
                 retained_stage = True
                 return capsules_root / staging_name
-            _renameat2_noreplace(
+            _rename_noreplace_at(
                 source_fd=root_fd,
                 source_name=staging_name,
                 destination_fd=root_fd,
@@ -658,7 +656,7 @@ def publish_staged_profile_custody_capsule(
     )
     if os.name != "nt":
         with _posix_directory_fd(destination.parent) as parent_fd:
-            _renameat2_noreplace(
+            _rename_noreplace_at(
                 source_fd=parent_fd, source_name=stage.name, destination_fd=parent_fd, destination_name=destination.name
             )
             os.fsync(parent_fd)

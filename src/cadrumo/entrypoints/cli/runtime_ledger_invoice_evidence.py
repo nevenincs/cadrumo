@@ -2,30 +2,30 @@
 
 from __future__ import annotations
 
-from typing import Never
 from uuid import UUID
 
 import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.invoice_evidence_operation import (
+from ...application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
-    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
+)
+from ...application.ledger.invoice_evidence_extract_operation import (
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
@@ -36,27 +36,18 @@ def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
     return require_profile_client(ctx, expected_profile_id=expected_profile_id)
 
 
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
-
-
 def _submit[ProjectionT: BaseModel](
     ctx: typer.Context,
     request: BaseModel,
     *,
     definition_id: str,
     result_type: type[ProjectionT],
+    result_version: int,
 ) -> RegisteredOperationCompletion[ProjectionT]:
     """Submit one request through the exact profile-bound runtime frontend."""
     profile_id = getattr(request, "profile_id", None)
     if not isinstance(profile_id, UUID):
-        raise RuntimeError("invoice evidence request has no typed profile identity")
+        raise InternalInvariantError("invoice evidence request has no typed profile identity")
     client = _client(ctx, profile_id)
     return run_registered_operation(
         client,
@@ -65,7 +56,7 @@ def _submit[ProjectionT: BaseModel](
         subject_ref=profile_operation_subject(str(client.profile_id)),
         result_type=result_type,
         request_version=1,
-        result_version=1,
+        result_version=result_version,
         timeout=120,
         allow_refusal_detail=True,
     )
@@ -81,6 +72,7 @@ def submit_invoice_evidence_extract(
         request,
         definition_id=LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceExtractProjection,
+        result_version=2,
     )
     projection = completed.projection
     if (
@@ -93,7 +85,7 @@ def submit_invoice_evidence_extract(
         or completed.refusal_code is not None
         or projection.consent_audit_effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -107,6 +99,7 @@ def submit_invoice_evidence_confirm(
         request,
         definition_id=LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceConfirmProjection,
+        result_version=2,
     )
     projection = completed.projection
     if (
@@ -119,7 +112,7 @@ def submit_invoice_evidence_confirm(
         or completed.effect is not OperationEffect.UPDATED
         or completed.refusal_code is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 

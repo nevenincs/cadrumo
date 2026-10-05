@@ -13,7 +13,8 @@ import pytest
 from cadrumo.application.runtime.contracts import RuntimeShutdownIncompleteError
 from cadrumo.application.runtime.profile_access import RuntimeProfileDrainResult, RuntimeProfileHandler
 
-from ..server import RuntimeListener, RuntimeTransportServer
+from ..server import RuntimeListener
+from .retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -52,7 +53,7 @@ class _ProfilesWithoutRelease(_Profiles):
         return self.result
 
 
-class _BlockedRequestServer(RuntimeTransportServer):
+class _BlockedRequestServer(RetainedRuntimeTransportServer):
     def __init__(
         self, listener: RuntimeListener, *, stop: Event, profiles: RuntimeProfileHandler, entered: Event, release: Event
     ) -> None:

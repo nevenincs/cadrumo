@@ -7,7 +7,7 @@ resumes or creates the work unit
 (:func:`application.modelo.work_addressing.ensure_modelo_work_unit_for_active_target`),
 calculates a draft revision
 (:func:`application.modelo.calculate_input.calculate_modelo_work_revision`), verifies it
-(:func:`application.modelo.verification_actions.verify_modelo_revision`), and exports the
+(:func:`application.modelo.verification_actions.verify_modelo_revision_with_preconditions`), and exports the
 verified revision to a local fichero-BOE artefact
 (:func:`application.modelo.export.export_modelo_revision`).
 
@@ -29,7 +29,7 @@ directly.
 See Also:
     :func:`application.modelo.calculate_input.calculate_modelo_work_revision`:
         The calculate stage this orchestrator drives.
-    :func:`application.modelo.verification_actions.verify_modelo_revision`:
+    :func:`application.modelo.verification_actions.verify_modelo_revision_with_preconditions`:
         The verify stage; a non-granted report halts the chain.
     :func:`application.modelo.export.export_modelo_revision`:
         The terminal local export stage.
@@ -59,6 +59,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
+from ...domain.transactions.own_accounts import OwnAccountId
 from ..auth.operator_probe_ports import OperatorProbePorts
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..operator_actions.models import PreconditionVerdict
@@ -68,7 +69,7 @@ from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_rev
 from .calculation_action_ports import CalculationActionPorts
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPorts
-from .verification_actions import verify_modelo_revision
+from .verification_actions import verify_modelo_revision_with_preconditions
 from .verification_repository_ports import VerificationRepositoryBundle
 from .work_addressing import (
     ensure_modelo_work_unit_for_active_target,
@@ -192,6 +193,8 @@ class QuickfileCommand(BaseModel):
         actor: Operator label recorded into each stage's lifecycle event.
         refund_election: Per-filing negative-result disposition threaded into the
             export's fichero declaration type.
+        charge_account_id: Per-filing charge own account for the export.
+        refund_account_id: Per-filing refund own account for the export.
     """
 
     model_config = _STRICT_FROZEN
@@ -206,7 +209,27 @@ class QuickfileCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection | None = None
+    charge_account_id: OwnAccountId | None = None
+    refund_account_id: OwnAccountId | None = None
     filing_instance_evidence: FilingInstanceEvidence | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _QuickfileRunContext:
+    command: QuickfileCommand
+    certificate_secret_backend_factory: CertificateSecretBackendFactory
+    operator_probe_ports: OperatorProbePorts
+    operator_scope_ports: OperatorScopePorts
+    operation: PinnedAuthorityOperation
+    verification_repositories: VerificationRepositoryBundle
+    calculation_action_ports: CalculationActionPorts
+    modelo_export_ports: ModeloExportPorts
+    read_ports: StateProjectionReadPorts
+    workflow_profile: TaxpayerProfile
+    build_calculation_inputs: Callable[[str], WorkCalculateInputBundle]
+    profile: ModeloWorkProfile | None
+    before_stage: Callable[[QuickfileStage], None] | None
+    mutation_writer: Callable[[Callable[[], None]], None] | None
 
 
 def _refusal_outcome(stage: QuickfileStage, exc: CadrumoError) -> QuickfileStageOutcome:
@@ -288,22 +311,72 @@ def run_modelo_quickfile(
         A :class:`QuickfileResult` whose ``completed`` flag is ``True`` only when
         the terminal export wrote a local fichero-BOE artefact.
     """
+    context = _QuickfileRunContext(
+        command=command,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=operator_probe_ports,
+        operator_scope_ports=operator_scope_ports,
+        operation=operation,
+        verification_repositories=verification_repositories,
+        calculation_action_ports=calculation_action_ports,
+        modelo_export_ports=modelo_export_ports,
+        read_ports=read_ports,
+        workflow_profile=workflow_profile,
+        build_calculation_inputs=build_calculation_inputs,
+        profile=profile,
+        before_stage=before_stage,
+        mutation_writer=mutation_writer,
+    )
     stages: list[QuickfileStageOutcome] = []
-    if before_stage is not None:
-        before_stage(QuickfileStage.READINESS)
+    selection = _run_readiness_stage(context, stages)
+    if isinstance(selection, QuickfileResult):
+        return selection
+    registry_revision_id, readiness = selection
 
-    # ── Stage 1: readiness ────────────────────────────────────────────────
-    # Resolving the law-determined registry revision is the hard precondition
-    # for the whole chain; a failure here refuses at readiness. The readiness
-    # projection itself is advisory: a not-ready verdict is a WARNING because a
-    # caller-supplied --binding may still satisfy a source the projection reads
-    # as missing.
+    created = _run_create_stage(context, registry_revision_id, stages, readiness)
+    if isinstance(created, QuickfileResult):
+        return created
+    calculated = _run_calculate_stage(context, registry_revision_id, stages, readiness, created)
+    if isinstance(calculated, QuickfileResult):
+        return calculated
+    verified = _run_verify_stage(context, registry_revision_id, stages, readiness, created, calculated)
+    if isinstance(verified, QuickfileResult):
+        return verified
+    exported = _run_export_stage(context, registry_revision_id, stages, readiness, created, calculated, verified)
+    if isinstance(exported, QuickfileResult):
+        return exported
+    return QuickfileResult(
+        modelo=command.modelo,
+        filing_year=command.filing_year,
+        period=command.period,
+        registry_revision_id=registry_revision_id,
+        stages=tuple(stages),
+        completed=True,
+        stopped_at_stage=None,
+        readiness=readiness,
+        work_unit=created,
+        calculation_revision=calculated,
+        verification_report=verified,
+        export_result=exported,
+    )
+
+
+def _before_stage(context: _QuickfileRunContext, stage: QuickfileStage) -> None:
+    if context.before_stage is not None:
+        context.before_stage(stage)
+
+
+def _run_readiness_stage(
+    context: _QuickfileRunContext, stages: list[QuickfileStageOutcome]
+) -> tuple[RevisionId, ProjectionModeloReadiness | None] | QuickfileResult:
+    command = context.command
+    _before_stage(context, QuickfileStage.READINESS)
     try:
         registry_revision_id = law_selected_revision_for_work_target(
             modelo=command.modelo,
             filing_year=command.filing_year,
             period=command.period,
-            operation=operation,
+            operation=context.operation,
             requested_revision_id=command.registry_revision_id,
         )
     except ProfileAccessRefusedError:
@@ -325,21 +398,27 @@ def run_modelo_quickfile(
             verification_report=None,
             export_result=None,
         )
-
     readiness = _resolve_readiness(
         command,
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=operator_probe_ports,
-        operator_scope_ports=operator_scope_ports,
+        certificate_secret_backend_factory=context.certificate_secret_backend_factory,
+        operator_probe_ports=context.operator_probe_ports,
+        operator_scope_ports=context.operator_scope_ports,
         registry_revision_id=registry_revision_id,
-        read_ports=read_ports,
-        operation=operation,
+        read_ports=context.read_ports,
+        operation=context.operation,
     )
     stages.append(_readiness_outcome(readiness))
+    return registry_revision_id, readiness
 
-    # ── Stage 2: create / resume the work unit ────────────────────────────
-    if before_stage is not None:
-        before_stage(QuickfileStage.CREATE)
+
+def _run_create_stage(
+    context: _QuickfileRunContext,
+    registry_revision_id: RevisionId,
+    stages: list[QuickfileStageOutcome],
+    readiness: ProjectionModeloReadiness | None,
+) -> WorkUnit | QuickfileResult:
+    command = context.command
+    _before_stage(context, QuickfileStage.CREATE)
     try:
         ensure_result = ensure_modelo_work_unit_for_active_target(
             bucket_id=command.bucket_id,
@@ -348,10 +427,10 @@ def run_modelo_quickfile(
             period=command.period,
             registry_revision_id=registry_revision_id,
             actor=command.actor,
-            catalogue=calculation_action_ports.work_lifecycle_ports.work_unit_repository.load(),
-            ports=calculation_action_ports.work_lifecycle_ports,
-            operation=operation,
-            profile=profile,
+            catalogue=context.calculation_action_ports.work_lifecycle_ports.work_unit_repository.load(),
+            ports=context.calculation_action_ports.work_lifecycle_ports,
+            operation=context.operation,
+            profile=context.profile,
         )
     except ProfileAccessRefusedError:
         raise
@@ -372,20 +451,28 @@ def run_modelo_quickfile(
             context={"work_unit_id": work_unit.work_unit_id},
         ),
     )
+    return work_unit
 
-    # ── Stage 3: calculate ────────────────────────────────────────────────
-    if before_stage is not None:
-        before_stage(QuickfileStage.CALCULATE)
+
+def _run_calculate_stage(
+    context: _QuickfileRunContext,
+    registry_revision_id: RevisionId,
+    stages: list[QuickfileStageOutcome],
+    readiness: ProjectionModeloReadiness | None,
+    work_unit: WorkUnit,
+) -> CalculationRevision | QuickfileResult:
+    command = context.command
+    _before_stage(context, QuickfileStage.CALCULATE)
     try:
-        calculation_inputs = build_calculation_inputs(work_unit.work_unit_id)
+        calculation_inputs = context.build_calculation_inputs(work_unit.work_unit_id)
         filing_instance_evidence = command.filing_instance_evidence or calculation_inputs.filing_instance_evidence
         calculation_inputs = replace(calculation_inputs, filing_instance_evidence=filing_instance_evidence)
         calculation = calculate_modelo_work_revision(
             work_unit_id=work_unit.work_unit_id,
             actor=command.actor,
             inputs=calculation_inputs,
-            ports=calculation_action_ports,
-            profile=profile,
+            ports=context.calculation_action_ports,
+            profile=context.profile,
         )
     except ProfileAccessRefusedError:
         raise
@@ -398,28 +485,37 @@ def run_modelo_quickfile(
             readiness=readiness,
             work_unit=work_unit,
         )
-    calculation_revision = calculation.revision
+    revision = calculation.revision
     stages.append(
         QuickfileStageOutcome(
             stage=QuickfileStage.CALCULATE,
             status=QuickfileStageStatus.OK,
-            context={"calculation_revision_id": calculation_revision.calculation_revision_id},
+            context={"calculation_revision_id": revision.calculation_revision_id},
         ),
     )
+    return revision
 
-    # ── Stage 4: verify ───────────────────────────────────────────────────
-    if before_stage is not None:
-        before_stage(QuickfileStage.VERIFY)
+
+def _run_verify_stage(
+    context: _QuickfileRunContext,
+    registry_revision_id: RevisionId,
+    stages: list[QuickfileStageOutcome],
+    readiness: ProjectionModeloReadiness | None,
+    work_unit: WorkUnit,
+    calculation_revision: CalculationRevision,
+) -> VerificationReport | QuickfileResult:
+    command = context.command
+    _before_stage(context, QuickfileStage.VERIFY)
     try:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             calculation_revision.calculation_revision_id,
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=operator_scope_ports,
-            verification_repositories=verification_repositories,
+            certificate_secret_backend_factory=context.certificate_secret_backend_factory,
+            operator_scope_ports=context.operator_scope_ports,
+            verification_repositories=context.verification_repositories,
             actor=command.actor,
-            workflow_profile=workflow_profile,
-            operation=operation,
-        )
+            workflow_profile=context.workflow_profile,
+            operation=context.operation,
+        ).report
     except ProfileAccessRefusedError:
         raise
     except CadrumoError as exc:
@@ -433,22 +529,11 @@ def run_modelo_quickfile(
             calculation_revision=calculation_revision,
         )
     if not report.granted_verificado_completo:
-        blocking = tuple(f for f in report.findings if _is_blocking(f))
-        refusal = QuickfileStageOutcome(
-            stage=QuickfileStage.VERIFY,
-            status=QuickfileStageStatus.REFUSED,
-            message="verification did not grant verificado-completo",
-            context={
-                "granted_verificado_completo": "false",
-                "blocking_finding_count": str(len(blocking)),
-                "verification_report_id": report.verification_report_id,
-            },
-        )
         return _halted(
             command,
             registry_revision_id=registry_revision_id,
             stages=stages,
-            refusal=refusal,
+            refusal=_verification_refusal(report),
             readiness=readiness,
             work_unit=work_unit,
             calculation_revision=calculation_revision,
@@ -464,10 +549,34 @@ def run_modelo_quickfile(
             },
         ),
     )
+    return report
 
-    # ── Stage 5: export (local fichero-BOE; never contacts AEAT) ───────────
-    if before_stage is not None:
-        before_stage(QuickfileStage.EXPORT)
+
+def _verification_refusal(report: VerificationReport) -> QuickfileStageOutcome:
+    blocking = tuple(finding for finding in report.findings if _is_blocking(finding))
+    return QuickfileStageOutcome(
+        stage=QuickfileStage.VERIFY,
+        status=QuickfileStageStatus.REFUSED,
+        message="verification did not grant verificado-completo",
+        context={
+            "granted_verificado_completo": "false",
+            "blocking_finding_count": str(len(blocking)),
+            "verification_report_id": report.verification_report_id,
+        },
+    )
+
+
+def _run_export_stage(
+    context: _QuickfileRunContext,
+    registry_revision_id: RevisionId,
+    stages: list[QuickfileStageOutcome],
+    readiness: ProjectionModeloReadiness | None,
+    work_unit: WorkUnit,
+    calculation_revision: CalculationRevision,
+    report: VerificationReport,
+) -> ModeloExportResult | QuickfileResult:
+    command = context.command
+    _before_stage(context, QuickfileStage.EXPORT)
     try:
         export_result = export_modelo_revision(
             ModeloExportCommand(
@@ -477,11 +586,13 @@ def run_modelo_quickfile(
                 refund_election=command.refund_election,
                 payment_election=command.payment_election,
                 prior_domiciliation_election=command.prior_domiciliation_election,
+                charge_account_id=command.charge_account_id,
+                refund_account_id=command.refund_account_id,
             ),
-            workflow_profile=workflow_profile,
-            export_ports=modelo_export_ports,
-            operation=operation,
-            mutation_writer=mutation_writer,
+            workflow_profile=context.workflow_profile,
+            export_ports=context.modelo_export_ports,
+            operation=context.operation,
+            mutation_writer=context.mutation_writer,
         )
     except ProfileAccessRefusedError:
         raise
@@ -506,21 +617,7 @@ def run_modelo_quickfile(
             },
         ),
     )
-
-    return QuickfileResult(
-        modelo=command.modelo,
-        filing_year=command.filing_year,
-        period=command.period,
-        registry_revision_id=registry_revision_id,
-        stages=tuple(stages),
-        completed=True,
-        stopped_at_stage=None,
-        readiness=readiness,
-        work_unit=work_unit,
-        calculation_revision=calculation_revision,
-        verification_report=report,
-        export_result=export_result,
-    )
+    return export_result
 
 
 def _halted(

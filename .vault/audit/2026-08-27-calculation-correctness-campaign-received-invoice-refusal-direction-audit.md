@@ -3,21 +3,20 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dfb7a37d492984487dbc1ce16cdb2f054657a42acb1ba77aa34955dd589c510e'
+body_hash: 'sha256:f40b577a11d61c5997686e8ef78079eee712e2ce319c68312ca7b4250088e94e'
 related: []
 ---
-
 # `calculation-correctness-campaign` audit: `a purchase-invoice guard refuses citing under-declaration on the over-payment direction`
 
 ## Scope
 
+Trace whether a received invoice without deduction authority should refuse the whole filing or only be withheld from the calculation.
+
 ## Findings
 
-## Recommendations
-
-## Finding
+### Finding
 
 `application/aggregation/_modelo_bindings.py` refuses the whole filing when a
 withheld invoice's cuota is not carried by the transaction ledger
@@ -39,7 +38,7 @@ A RECEIVED invoice carries IVA soportado. If the ledger does not carry it, the
 taxpayer deducts LESS input IVA than the invoice would support: they over-pay.
 That is the opposite direction from the one the guard says it is protecting.
 
-## Why this is worth a decision rather than a patch
+### Why this is worth a decision rather than a patch
 
 The surrounding comment already draws the distinction the code then does not
 keep: "Withholding an unauthorised input row is unconditional; REFUSING the
@@ -53,7 +52,7 @@ tax is unaffected by the missing purchase evidence.
     under-declaration ... deliberately probe the opposite direction -- the
     structural tell is a RESTRICTIVE PROVISION USED AS A DEFAULT.
 
-## Corroboration
+### Corroboration
 
 `test_iva_source_mesh_withholds_received_invoice_without_deduction_authority`
 encodes the opposite expectation: a received invoice with an empty ledger
@@ -66,13 +65,15 @@ The sibling case that DOES refuse
 (`reason == "invoice_domestic_iva_not_in_transaction_ledger"`) is the
 output-side one, where a ledger shortfall genuinely under-declares.
 
-## Not changed here
+### Not changed here
 
 Whether a purchase invoice absent from the ledger should block a filing is a
 tax-semantics decision, not a test repair. Making the test pass by relaxing the
 guard, or making the guard pass by rewriting the test, would each settle that
 question silently. Both directions need the owner.
 
-## Status
+## Recommendations
+
+### Status
 
 Open. One test red, and it is red about something real.

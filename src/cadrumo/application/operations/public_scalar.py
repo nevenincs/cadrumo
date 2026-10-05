@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
-from typing import Self
+from typing import Self, overload
 
 from pydantic import BaseModel, model_validator
 
@@ -49,6 +49,14 @@ def restore_facts(values: tuple[PublicNamedScalar, ...]) -> dict[str, str | int 
     if len({item.key for item in values}) != len(values):
         raise ValueError("duplicate public fact name")
     return {item.key: restore_scalar(item.value) for item in values}
+
+
+@overload
+def project_scalar(value: Decimal) -> PublicDecimal: ...
+
+
+@overload
+def project_scalar(value: str | int | bool | Decimal) -> PublicScalar: ...
 
 
 def project_scalar(value: str | int | bool | Decimal) -> PublicScalar:

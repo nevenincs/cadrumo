@@ -21,7 +21,9 @@ import pytest
 
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+from ....adapters.persistence.profile.tests.profile_registration import live_clave_movil_profile
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.wallet_history import load_decision_history
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -38,7 +40,9 @@ from ....core.period import Period
 from ....tests.live_gate import requires_live_enabled
 from ...live_state_composition import compose_live_state
 
-pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("live_clave_movil_profile")]
+
+__all__ = ["live_clave_movil_profile"]
 
 
 def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> None:
@@ -62,6 +66,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
     composition = compose_live_state(
         output_root=settings.cadrumo_live_state_dir / "iva-wallet",
         bucket_id=bucket_id,
+        operation=published_authority_operation(),
     )
     report = asyncio.run(
         capture_iva_compensation_wallet(
@@ -75,7 +80,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
         composition.output_root,
     ).load_iva_wallet_observation(Path(report.observation_path))
     decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_filing_period)
-    history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_filing_period)
+    history = load_decision_history(IvaWalletDecisionRepository(), taxpayer_nif, target_filing_period)
 
     if decision is None:
         pytest.fail("live IVA wallet capture did not persist a reconciliation decision")

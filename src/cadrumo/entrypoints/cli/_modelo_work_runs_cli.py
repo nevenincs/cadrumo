@@ -57,7 +57,7 @@ from .modelo_aux_payloads import (
     WorkRunResult,
     WorkRunsResult,
 )
-from .runtime_registered_operation import submitted_operation_error
+from .registered_operation_errors import submitted_operation_error
 from .runtime_workflow_resume import read_workflow_resume_context
 from .runtime_workflow_runs import read_workflow_run, read_workflow_runs
 

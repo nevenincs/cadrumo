@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
-from typing import Never
+from types import SimpleNamespace
+from typing import Never, cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -19,24 +21,31 @@ from ....core.operations import (
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
+from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from ....domain.iva.classification import InvoiceKind
+from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
+from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
+from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_add_operation as add_operation
-from ..catalogue_add_operation import (
+from ..catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
+    InvoiceAddBusinessPremisesLease,
     InvoiceAddExecutionResult,
-    InvoiceAddExecutor,
     InvoiceAddLine,
     InvoiceAddRequest,
+    project_invoice_add_result,
+)
+from ..catalogue_add_operation import (
+    InvoiceAddExecutor,
     build_invoice_add_definition,
     build_invoice_add_registration,
-    project_invoice_add_result,
 )
 from ..catalogue_creation_ports import CatalogueCreationPorts
 from ..tests._catalogue_creation_fakes import in_memory_catalogue_creation_ports
@@ -127,6 +136,7 @@ def test_request_json_roundtrip_keeps_decimal_meaning_and_refuses_incomplete_lin
     ),
 )
 def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str, object], monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
 
@@ -152,6 +162,44 @@ def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str,
     assert len(ports.invoice_repository.load()) == 0
 
 
+def test_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+    request = OperationRequest[InvoiceAddRequest](
+        definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=_request(),
+    )
+    events = _Events()
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            identity=OperationIdentity(
+                operation_id="a" * 64,
+                definition_id=request.definition_id,
+                subject_ref=request.subject_ref,
+            ),
+            events=events,
+        ),
+    )
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(uuid4()))
+    factory_calls: list[str] = []
+
+    def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
+        factory_calls.append(bucket_id)
+        pytest.fail("foreign active profile reached invoice creation ports")
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(InvoiceAddExecutor(unused_factory).execute(request, context))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert events.phases == events.effects == []
+    assert factory_calls == []
+
+
+def test_invoice_add_lease_wire_requires_python_enum_values() -> None:
+    with pytest.raises(ValidationError):
+        InvoiceAddBusinessPremisesLease(situacion_inmueble="1")
+
+
 def test_registration_requires_profile_scoped_commit_and_secure_request_storage() -> None:
     def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
         raise AssertionError(f"registration composed profile ports for {bucket_id}")
@@ -159,10 +207,35 @@ def test_registration_requires_profile_scoped_commit_and_secure_request_storage(
     definition = build_invoice_add_definition(unused_factory)
     registration = build_invoice_add_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    expected_lease = BusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+        referencia_catastral="9872023VH5797S0001WX",
+    )
+    wire_request = _request(
+        kind=InvoiceKind.ISSUED,
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(expected_lease),
+    )
+    decoded = registry.decode_request_payload(
+        INVOICE_ADD_OPERATION_DEFINITION_ID,
+        wire_request.model_dump_json(),
+    )
+    assert isinstance(decoded, InvoiceAddRequest)
+    assert decoded.business_premises_lease is not None
+    assert decoded.business_premises_lease.to_domain() == expected_lease
+    invalid_wire = wire_request.model_dump(mode="json")
+    invalid_wire["business_premises_lease"] = {
+        "situacion_inmueble": SituacionInmueble.ABROAD.value,
+        "referencia_catastral": "9872023VH5797S0001WX",
+    }
+    with pytest.raises(ValidationError):
+        registry.decode_request_payload(
+            INVOICE_ADD_OPERATION_DEFINITION_ID,
+            json.dumps(invalid_wire),
+        )
     request = OperationRequest[InvoiceAddRequest](
         definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
-        payload=_request(),
+        payload=decoded,
     )
     context = OperationAccessContext(
         profile_id=_PROFILE,
@@ -203,7 +276,7 @@ class _Events:
     async def log(self, **_kwargs: object) -> None:
         raise AssertionError("invoice creation does not publish logs")
 
-    async def notice(self, notice_code: str) -> None:
+    async def notice(self, notice_code: str, *, display_code: str | None = None) -> None:
         raise AssertionError("invoice creation does not publish notices")
 
     async def diagnostic(self, diagnostic_ref: str) -> None:
@@ -275,7 +348,7 @@ class _Context:
         raise AssertionError("invoice creation does not consume secrets")
 
     @property
-    def financial_operand(self) -> Never:
+    def typed_financial_operand(self) -> Never:
         raise AssertionError("invoice creation does not consume financial submissions")
 
     @property
@@ -288,6 +361,7 @@ class _Context:
 
 
 def test_executor_uses_canonical_builder_and_writer_with_commit_fenced_publication(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
     events = _Events()
@@ -338,6 +412,7 @@ def test_executor_uses_canonical_builder_and_writer_with_commit_fenced_publicati
 
 
 def test_duplicate_is_a_typed_refusal_with_secure_detail_and_no_second_write(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
 
@@ -398,6 +473,7 @@ def test_duplicate_is_a_typed_refusal_with_secure_detail_and_no_second_write(mon
 
 
 def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
 
@@ -440,3 +516,134 @@ def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch)
         refusal_detail_ref=refusal.detail_ref,
     )
     assert project_invoice_add_result(context.operands.value, receipt) == result
+
+
+def _execute_add(
+    payload: InvoiceAddRequest, monkeypatch: pytest.MonkeyPatch
+) -> tuple[_Context, CatalogueCreationPorts]:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    ports = in_memory_catalogue_creation_ports()
+
+    def factory(*, bucket_id: str) -> CatalogueCreationPorts:
+        assert bucket_id == str(_PROFILE)
+        return ports
+
+    with private_authority_lease() as authority_operation:
+        context = _Context(authority_operation)
+        asyncio.run(
+            InvoiceAddExecutor(factory).execute(
+                OperationRequest[InvoiceAddRequest](
+                    definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+                    subject_ref=profile_operation_subject(str(_PROFILE)),
+                    payload=payload,
+                ),
+                context,
+            )
+        )
+    return context, ports
+
+
+def test_an_issued_business_premises_lease_reaches_the_stored_invoice(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The one add operation every frontend submits carries the lessor's lease facts into the aggregate."""
+    context, ports = _execute_add(
+        _request(
+            kind=InvoiceKind.ISSUED,
+            business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
+                BusinessPremisesLease(
+                    situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+                    referencia_catastral="9872023VH5797S0001WX",
+                )
+            ),
+        ),
+        monkeypatch,
+    )
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.outcome == "created"
+    (stored,) = ports.invoice_repository.load().values()
+    assert stored.business_premises_lease == BusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+        referencia_catastral="9872023VH5797S0001WX",
+    )
+
+
+def test_a_lease_on_a_received_invoice_is_an_invalid_invoice_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, ports = _execute_add(
+        _request(
+            kind=InvoiceKind.RECEIVED,
+            business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
+                BusinessPremisesLease(
+                    situacion_inmueble=SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE,
+                )
+            ),
+        ),
+        monkeypatch,
+    )
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.validation_code == "invalid_invoice"
+    assert len(ports.invoice_repository.load()) == 0
+
+
+@pytest.mark.parametrize(
+    ("situation", "reference"),
+    (
+        pytest.param(
+            SituacionInmueble.ABROAD,
+            "9872023VH5797S0001WX",
+            id="domain-invalid-situation-reference-pair",
+        ),
+        pytest.param(
+            "1",
+            "9872023VH5797S0001WX",
+            id="poisoned-raw-enum-string",
+        ),
+    ),
+)
+def test_executor_rechecks_poisoned_lease_before_creating_ports(
+    monkeypatch: pytest.MonkeyPatch,
+    situation: object,
+    reference: str,
+) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    valid_payload = _request(kind=InvoiceKind.ISSUED)
+    payload_values = valid_payload.model_dump(mode="python")
+    lease_values = InvoiceAddBusinessPremisesLease(
+        situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+    ).model_dump(mode="python")
+    lease_values["situacion_inmueble"] = situation
+    lease_values["referencia_catastral"] = reference
+    payload_values["business_premises_lease"] = InvoiceAddBusinessPremisesLease.model_construct(**lease_values)
+    poisoned_payload = InvoiceAddRequest.model_construct(**payload_values)
+    poisoned_request = OperationRequest[InvoiceAddRequest].model_construct(
+        definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=poisoned_payload,
+    )
+    factory_calls: list[str] = []
+
+    def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
+        factory_calls.append(bucket_id)
+        pytest.fail("invalid lease reached creation-port composition")
+
+    with private_authority_lease() as authority_operation:
+        context = _Context(authority_operation)
+        result = asyncio.run(InvoiceAddExecutor(unused_factory).execute(poisoned_request, context))
+
+    assert isinstance(result, OperationRefusalEvidence)
+    assert result.refusal_code == INVOICE_ADD_VALIDATION_REFUSAL_CODE
+    assert factory_calls == []
+    assert context.events.phases == [INVOICE_ADD_OPERATION_DEFINITION_ID]
+    assert context.events.effects == []
+    assert context.operands.value is not None
+    assert context.operands.value.result.validation_code == "invalid_invoice"
+
+
+def test_the_request_refuses_a_situacion_outside_the_record_design() -> None:
+    with pytest.raises(ValidationError):
+        _request(
+            kind=InvoiceKind.ISSUED,
+            business_premises_lease={"situacion_inmueble": "5"},
+        )

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#corpus-data-hydration'
 date: '2026-07-21'
-modified: '2026-07-21'
-body_hash: 'sha256:94209545e3eb5bb3a43337b670cd9bf852aef15017501e4a4e81d540a6a0b4fa'
+modified: '2026-10-03'
+body_hash: 'sha256:85c1d63c3691d4c3969d7a32240884f2d1d964fa9ea44969fd16734e55355b5d'
 related: []
 ---
 
@@ -46,7 +46,7 @@ primary artifact tests now handle real `.xlsm` files correctly. Two downstream
 contracts still drift: `_classify` in `dev/docs/preprocess/_golden_queries.py` does not
 recognize `.xlsm` as a corpus or Diseño source, so the retrieval trust gate can reject
 a valid Modelo 220 hit; and the source-binary constants in
-`src/cadrumo/tests/test_wheel_content_boundary.py` and
+The retired test and
 `src/cadrumo/tests/test_data_size_budget.py` omit the already-supported `.docx` and
 `.zip` types even though both exist in the tracked corpus and are excluded to the
 official companion. The latter misclassifies those bytes into the runtime budget and
@@ -54,7 +54,7 @@ makes the narrower wheel assertion unable to detect those leak types.
 
 ### record-design-currentness | medium | The sync gate cannot detect changed or newly published official sources
 
-`dev/packaging/sync_aeat_record_design_corpus.py` treats the 53-entry `_REQUIRED`
+The retired module treated the 53-entry `_REQUIRED`
 tuple as the completeness authority and skips every URL already present in a manifest
 when `--pull` runs. Its default `check()` only rehashes local files against their local
 manifests. Consequently, a mutable AEAT URL can change, or a new supported-period link
@@ -81,7 +81,7 @@ another supported family without failing.
 ### xlsm-extractor-contract-docs | low | XLSM behavior is implemented and tested but omitted from extractor documentation
 
 The workbook dispatcher, preprocess rule, real `.xlsm` parity test, and committed
-sidecars are coherent, but `dev/docs/preprocess/_workbook.py` still states that the
+sidecars are coherent, but the retired module still states that the
 corpus has only two workbook formats and documents `build_outputs` and
 `extract_workbook` as accepting only `.xls` or `.xlsx`. That contract is now inaccurate
 for the newly supported `.xlsm` path.

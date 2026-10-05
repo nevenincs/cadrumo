@@ -22,6 +22,7 @@ as an inline constraint at each carrier.
 
 from __future__ import annotations
 
+import re
 from typing import Annotated
 
 from pydantic import StringConstraints
@@ -94,4 +95,26 @@ codebase that had accumulated dozens of parallel spellings of one shape, the
 convention cost more than it bought.
 """
 
-__all__ = ["HEX_PATTERN_16", "HEX_PATTERN_64", "HEX_PATTERN_128", "Hex16Str", "Hex64Str"]
+_HEX_16 = re.compile(HEX_PATTERN_16)
+_HEX_64 = re.compile(HEX_PATTERN_64)
+
+
+def is_hex16(value: str) -> bool:
+    """Whether ``value`` is exactly 16 lowercase hex characters, with no surrounding text."""
+    return _HEX_16.fullmatch(value) is not None
+
+
+def is_hex64(value: str) -> bool:
+    """Whether ``value`` is exactly 64 lowercase hex characters, with no surrounding text."""
+    return _HEX_64.fullmatch(value) is not None
+
+
+__all__ = [
+    "HEX_PATTERN_16",
+    "HEX_PATTERN_64",
+    "HEX_PATTERN_128",
+    "Hex16Str",
+    "Hex64Str",
+    "is_hex16",
+    "is_hex64",
+]

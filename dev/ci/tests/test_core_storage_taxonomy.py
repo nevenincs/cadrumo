@@ -30,15 +30,15 @@ from cadrumo.core.storage_taxonomy import (
     StorageScope,
 )
 from cadrumo.core.storage_taxonomy_locations import (
-    FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
-    STORAGE_FIELD_CATEGORIES,
     STORAGE_TAXONOMY,
     bucket_scoped_storage_path,
     storage_location,
     storage_path,
     storage_tree_targets,
 )
+from cadrumo.core.tests.storage_taxonomy_views import FINGERPRINT_EXCLUDED_STORAGE_FIELDS, STORAGE_FIELD_CATEGORIES
+from cadrumo.tests.env_scope import isolated_aeat_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -353,6 +353,7 @@ def test_a_root_override_re_derives_every_non_overridden_category(tmp_path: Path
     second = tmp_path / "second-root"
 
     with (
+        isolated_aeat_env(),
         override_settings(cadrumo_local_storage_root=first),
         override_settings(cadrumo_local_storage_root=second) as rebuilt,
     ):

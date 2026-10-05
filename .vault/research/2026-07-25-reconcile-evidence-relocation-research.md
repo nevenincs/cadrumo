@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#reconcile-evidence-relocation'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:de740196f83ec6ce4a4ee98565057dbfbf9d88e147de72c7385b1766423be176'
+modified: '2026-10-03'
+body_hash: 'sha256:2ed4ad0c4c2238207f8218eed4e3419af1b8b210f972e330e772707816e0e985'
 related: []
 ---
 
@@ -26,12 +26,12 @@ that, and the correction changes how the option space reads.
 ### The cap is a per-value constraint on the shared bucket-event substrate
 
 `_PayloadValue` is `Annotated[str, StringConstraints(strip_whitespace=True,
-min_length=0, max_length=500)]` at `src/cadrumo/domain/buckets/_event.py:52-55`, applied
-to each value of `BucketEvent.payload` at `src/cadrumo/domain/buckets/_event.py:313`.
+min_length=0, max_length=500)]` , applied
+to each value of `BucketEvent.payload` .
 The cap is per VALUE, not per payload. Exceeding it raises a plain pydantic
 `ValidationError` at `BucketEvent(...)` construction — not the module's own
 `BucketEventValidationError`, which fires only on a derived-id mismatch
-(`src/cadrumo/domain/buckets/_event.py:327`). There is no error code and no
+. There is no error code and no
 instructive refusal.
 
 The `500` is an inline literal in the domain model rather than a central-config or
@@ -42,18 +42,17 @@ than one reconcile can renegotiate for itself.
 
 ### The detail is one unbounded JSON array in a single payload value
 
-`_finalise_reconciliation` builds the payload at
-`src/cadrumo/application/modelo/_reconcile.py:714-721`, where `"diffs_detail":
+`_finalise_reconciliation` builds the payload , where `"diffs_detail":
 _encode_diffs(diffs)`. `_encode_diffs`
-(`src/cadrumo/application/modelo/_reconcile.py:1133-1139`) is
+ is
 `json.dumps([diff.model_dump(mode="json") for diff in diffs], separators=(",", ":"))`
 — every diff for the run concatenated into one value. There is no truncation, no
 chunking across keys, and no `try`/`except` around the `BucketEvent(...)` construction
-at `src/cadrumo/application/modelo/_reconcile.py:735-745`, so the overflow surfaces as
+, so the overflow surfaces as
 an unhandled validation error before `catalogue_repo.save(...)`.
 
 `ModeloReconciliationDiff`
-(`src/cadrumo/application/modelo/_reconcile.py:166-192`) carries seven fields, and
+ carries seven fields, and
 `model_dump` emits all seven regardless of defaults. A `casilla` or `total` diff
 carries the reconciling casilla's or verification expectation's `legal_refs` /
 `source_refs`; `header_field` diffs carry empty grounding.
@@ -82,9 +81,9 @@ it.
 
 This is reachable in production, not only under a fixture. Modelo 100 is enrolled in
 `_DECLARATION_CASILLA_RECONCILE_MODELOS`
-(`src/cadrumo/application/modelo/_reconcile.py:66-68`), and
+, and
 `_reconcile_declaracion_casillas`
-(`src/cadrumo/application/modelo/_reconcile.py:986-1007`) compares the whole computed
+ compares the whole computed
 casilla set, so a real divergent declaración produces many diffs at once rather than
 one or two.
 
@@ -100,18 +99,18 @@ bounded metadata. The `ledger reset` overflow recorded as EDGE-HIGH-1 in
 `2026-06-18-aeat-user-docs-hardening-audit` — a joined `removed_transaction_ids`
 string that bricked reset at eight or more rows — is also fixed at HEAD: the reset
 event now carries `"removed_transaction_count": str(len(removed_ids))`
-(`src/cadrumo/application/ledger/_actions_lifecycle.py:550-554`), and
+, and
 `removed_transaction_ids` is a `tuple[str, ...]` on the report
-(`src/cadrumo/application/ledger/_models.py:701`) rather than a joined payload value.
+ rather than a joined payload value.
 
 Two are live. Besides `diffs_detail`, the `LEDGER_TRANSACTION_REMOVED` event joins two
 unbounded id lists into payload values at
-`src/cadrumo/application/ledger/_actions_lifecycle.py:764-770`:
+
 `"purchase_invoice_evidence_ids": ",".join(purchase_evidence_ids)` and
 `"attachment_ids": ",".join(attachment_ids)`. `AttachmentId` is exactly hex-64
-(`src/cadrumo/domain/attachments/_ids.py:18`), so seven attachment ids fit at 454
+, so seven attachment ids fit at 454
 characters and the eighth overflows at 519; a purchase-invoice evidence id is a
-16-hex-char digest (`src/cadrumo/application/ledger/_evidence.py:136-160`), so
+16-hex-char digest , so
 twenty-nine fit and the thirtieth overflows at 509. Removing one transaction carrying
 eight or more attachments therefore cannot construct its own removal event. The same
 payload already carries `"cascade_count"`, so the bounded-metadata remedy is present
@@ -119,8 +118,8 @@ alongside the unbounded joins rather than instead of them.
 
 A third, narrower inconsistency sits in the reconcile payload itself:
 `ModeloReconciliationBytesCommand.source_ref` is `Field(min_length=1, max_length=512)`
-at `src/cadrumo/application/modelo/_reconcile.py:247` and is written into the payload
-as `"source_path"` (`src/cadrumo/application/modelo/_reconcile.py:717`), so a
+ and is written into the payload
+as `"source_path"` , so a
 501-512 character reference passes the command boundary and then overflows the cap.
 
 None of these are fixed by relocating the diffs, and they are named here because they
@@ -144,9 +143,8 @@ around.
 ### The detail round-trips through the app API but no CLI surface renders it
 
 `list_modelo_reconciliations`
-(`src/cadrumo/application/modelo/_reconcile.py:1179-1226`) reads the bucket-event
-catalogue and decodes `payload["diffs_detail"]` at
-`src/cadrumo/application/modelo/_reconcile.py:1221`, populating
+ reads the bucket-event
+catalogue and decodes `payload["diffs_detail"]` , populating
 `ModeloReconciliationHistoryEntry.diffs` with grounding intact. It is exported from
 `src/cadrumo/application/modelo/__init__.py:800`.
 
@@ -162,7 +160,7 @@ the persisted copy.
 
 The round-trip is nonetheless defended by a test:
 `test_history_persists_which_total_diverged_not_just_a_count`
-(`src/cadrumo/application/modelo/tests/test_reconcile_value_comparison.py:246-262`)
+
 asserts `diff_kind`, `field_name` and `"rd-439-2007:art-110" in
 entry.diffs[0].legal_refs` after a read-back. It binds only to the public API, never to
 the payload, so any storage site satisfies it provided `list_modelo_reconciliations`
@@ -187,7 +185,7 @@ casilla-level reconciliation that multiplies the diff volume into the overflow.
 ### "There is no parallel reconciliation store" is a docstring assertion, never a decision
 
 `ModeloReconciliationHistoryEntry`'s docstring
-(`src/cadrumo/application/modelo/_reconcile.py:140-150`) states that
+ states that
 "`modelo_reconcile` persists no stored record" and "there is no parallel reconciliation
 store". A search of the `.vault/` corpus for that phrasing returns no source document:
 the only hit is `.vault/data/search-data/qdrant/.../storage.sqlite`, a generated search
@@ -200,14 +198,12 @@ persists IVA-wallet reconciliation decisions — "authority source, local recurr
 value, remote evidence references, divergence status" — through profile secure storage
 rather than a bucket event, and the namespaces exist:
 `IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE` and
-`IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE` at
-`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:445-464`, both
+`IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE` , both
 `SensitivityClass.AUDIT`, `StorageNamespaceScope.PROFILE_LOCAL`,
 `StorageCustodyDisposition.STRUCTURED_CUSTODY`. Sibling analogues include
 `CALCULATION_OBSERVATIONS_NAMESPACE`
-(`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:397`) and
+ and
 `AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`
-(`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:779`).
 
 ### The calculation-revision envelope is a poor structural fit
 
@@ -216,14 +212,14 @@ Relocating into the encrypted revision envelope under
 
 Lifecycle: the ledger bundle is computed and frozen onto the revision at VERIFY by
 `_persist_verified_revision_evidence`
-(`src/cadrumo/application/modelo/_verification_actions.py:897-944`), which stamps
+, which stamps
 `ledger_filing_evidence` together with `state=VERIFICADO_COMPLETO`. A reconcile runs
 after filing and only READS the persisted revision
-(`src/cadrumo/application/modelo/_reconcile.py:1078-1090`). Attaching reconcile records
+. Attaching reconcile records
 would require writing into an already-frozen, content-addressed record.
 
 Cardinality: `LedgerFilingEvidence`
-(`src/cadrumo/domain/modelos/_ledger_filing_snapshot.py:216`) is one bundle per
+ is one bundle per
 revision, written once. Reconciliation is explicitly repeatable — the `history` verb
 exists, and the entry's own docstring calls it "repeatable on demand". The envelope has
 no slot for N dated verdicts per revision.
@@ -231,8 +227,8 @@ no slot for N dated verdicts per revision.
 Existence: reconcile runs with no revision at all. Both
 `_reconcile_receipt_totals` and `_reconcile_declaracion_casillas` emit a
 `no_persisted_revision` advisory and still produce a report and an event
-(`src/cadrumo/application/modelo/_reconcile.py:863-865`,
-`src/cadrumo/application/modelo/_reconcile.py:978`). Identity-header reconcile needs no
+
+the former source file). Identity-header reconcile needs no
 revision. Evidence keyed to a revision cannot store those runs.
 
 Conceptually the two are also different things: a `LedgerEvidenceRow` projects a ledger
@@ -266,12 +262,12 @@ becomes unreadable. Either way, historical evidence stops being self-describing,
 is what `carried-observations-stamp-their-revision` exists to prevent.
 
 A secondary problem: a `total` diff's grounding comes from the verification expectation
-(`src/cadrumo/application/modelo/_reconcile.py:920-927`), not a `CasillaDefinition`, so
+, not a `CasillaDefinition`, so
 re-deriving it means re-folding the verification policy as well.
 
 One point does favour the option: the work unit remains resolvable after a discard,
 because `discard_work_unit`
-(`src/cadrumo/application/modelo/_work_lifecycle.py:269-310`) is a soft tombstone and
+ is a soft tombstone and
 `catalogue.get(...)` still returns the row.
 
 ### Why the established bounded-metadata remedy is lossy for reconcile
@@ -295,7 +291,7 @@ measuring the encoder, not by driving a reconcile against the portal. The exact 
 sizes for modelos other than 100 were not enumerated — Modelo 100 is the binding case,
 though 111, 130, 190, 303 and 390 are also enrolled in casilla-level reconciliation. The
 migration disposition for already-persisted `diffs_detail` values was not examined; the
-`PRE_RELEASE` regime at `src/cadrumo/core/compatibility_lifecycle.py:53` and
+`PRE_RELEASE` regime  and
 `no-legacy-compatibility` imply deletion rather than migration, but that is an ADR
 question.
 
@@ -308,24 +304,10 @@ roundtrip obligations.
 
 ## Sources
 
-- `src/cadrumo/domain/buckets/_event.py:52-55`, `:313`, `:327`
-- `src/cadrumo/application/modelo/_reconcile.py:66-68`, `:140-150`, `:166-192`, `:247`, `:714-721`, `:735-745`, `:863-865`, `:920-927`, `:978`, `:986-1007`, `:1078-1090`, `:1133-1139`, `:1179-1226`
 - `src/cadrumo/application/modelo/__init__.py:800`
 - `src/cadrumo/application/modelo/_calculation_helpers.py:82-118`, `:131-136`
-- `src/cadrumo/application/modelo/_verification_actions.py:897-944`
-- `src/cadrumo/application/modelo/_work_lifecycle.py:269-310`
-- `src/cadrumo/application/modelo/tests/test_reconcile_value_comparison.py:246-262`
+
 - `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py:129-140`, `:302-372`
 - `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py:101-120`
-- `src/cadrumo/domain/modelos/_ledger_filing_snapshot.py:216`
-- `src/cadrumo/domain/modelos/_calculation_revision.py:202-226`, `:288-360`, `:549-564`
-- `src/cadrumo/application/modelo/_revision_persistence.py:225-258`
-- `src/cadrumo/application/ledger/_actions_manual.py:612-650`
-- `src/cadrumo/application/ledger/_actions_lifecycle.py:550-554`, `:764-770`
-- `src/cadrumo/application/ledger/_models.py:701`
-- `src/cadrumo/application/ledger/_evidence.py:136-160`
-- `src/cadrumo/domain/attachments/_ids.py:18`
-- `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py:163-193`
-- `src/cadrumo/adapters/persistence/storage/_namespace_registry.py:397`, `:445-464`, `:779`
-- `src/cadrumo/core/compatibility_lifecycle.py:53`, `:62`
+
 - `src/cadrumo/_data/registry/aeat/modelos/100/revisions` (11,374 casilla grounding entries measured)

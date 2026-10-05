@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#codebase-health-remediation'
 date: '2026-07-21'
-modified: '2026-07-21'
-body_hash: 'sha256:fd95a5c3520539b4d64b80d691e366ea6260c05aa2194a2935d5fa34d3c9dc72'
+modified: '2026-10-03'
+body_hash: 'sha256:a6dee526bc233e765c08083ee626ab0233166a628f2e0dff3549d92795b80c96'
 related:
   - "[[2026-07-17-adr-code-reconciliation-audit]]"
 ---
@@ -328,7 +328,7 @@ in `src/cadrumo/core/async_cleanup.py` is the clearest campaign-introduced
 regression: WP10 reduced its cyclomatic grade but its cognitive complexity now
 measures 32, above the threshold — the decomposition traded one metric for the
 other. The maintainability index of `src/cadrumo/application/config_reset.py`
-(WP1) and `src/cadrumo/application/auth/_operator.py` (WP2) both newly grade B,
+(WP1) and the retired module (WP2) both newly grade B,
 the arithmetic consequence of splitting large functions into many helpers in
 the same module. `_m369_unresolved_oss_source_finding` was improved from C(19)
 to C(11) by WP7 but remains above the C threshold and so is newly listed.

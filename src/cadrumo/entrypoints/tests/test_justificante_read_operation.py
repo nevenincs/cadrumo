@@ -7,6 +7,7 @@ import base64
 import hashlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -26,6 +27,7 @@ from cadrumo.application.live.justificante import (
 from cadrumo.application.live.justificante_read_operation import (
     JUSTIFICANTE_LIST_DEFINITION_ID,
     JUSTIFICANTE_SHOW_DEFINITION_ID,
+    JustificanteListExecutor,
     JustificanteListPublicResultV1,
     JustificanteListRequest,
     JustificanteShowPublicResultV1,
@@ -41,13 +43,15 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.models import OperationIdentity, OperationRequest
+from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -61,6 +65,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
 _SNAPSHOT_ID = "9" * 64
+_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+_OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 
 
 class _SnapshotPersistence:
@@ -156,6 +162,136 @@ def _service_factory(bucket_id: str, snapshots: tuple[JustificanteCaptureSnapsho
 async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
     await supervisor.start(operation_id)
     return await supervisor.settled(operation_id)
+
+
+class _ExecutorEvents:
+    def __init__(self) -> None:
+        self.phases: list[str] = []
+        self.effects: list[OperationEffect] = []
+
+    async def phase(self, value: str) -> None:
+        self.phases.append(value)
+
+    async def effect(self, value: OperationEffect) -> None:
+        self.effects.append(value)
+
+
+class _ExecutorOperands:
+    def __init__(self) -> None:
+        self.values: list[BaseModel] = []
+
+    async def put(self, value: BaseModel, *, written_at: datetime) -> str:
+        assert written_at.tzinfo is not None
+        self.values.append(value)
+        return "synthetic-encrypted-result-reference"
+
+
+def _executor_context(
+    definition_id: str,
+    *,
+    subject_ref: str | None = None,
+    events: _ExecutorEvents,
+) -> tuple[OperationExecutorContext, _ExecutorOperands]:
+    identity = OperationIdentity(
+        operation_id="e" * 64,
+        definition_id=definition_id,
+        subject_ref=subject_ref or profile_operation_subject(str(_PROFILE)),
+    )
+    operands = _ExecutorOperands()
+    return cast(
+        OperationExecutorContext,
+        SimpleNamespace(identity=identity, events=events, operands=operands),
+    ), operands
+
+
+@pytest.mark.parametrize(
+    ("request_definition_id", "context_definition_id", "context_subject_ref"),
+    [
+        (
+            "live.justificante.list.other",
+            "live.justificante.list.other",
+            profile_operation_subject(str(_PROFILE)),
+        ),
+        (
+            JUSTIFICANTE_LIST_DEFINITION_ID,
+            "live.justificante.other",
+            profile_operation_subject(str(_PROFILE)),
+        ),
+        (
+            JUSTIFICANTE_LIST_DEFINITION_ID,
+            JUSTIFICANTE_LIST_DEFINITION_ID,
+            profile_operation_subject(str(_OTHER_PROFILE)),
+        ),
+    ],
+)
+def test_list_executor_refuses_request_or_context_identity_mismatch_before_work(
+    monkeypatch: pytest.MonkeyPatch,
+    request_definition_id: str,
+    context_definition_id: str,
+    context_subject_ref: str,
+) -> None:
+    import cadrumo.application.live.justificante_read_operation as operation
+
+    events = _ExecutorEvents()
+    factory_buckets: list[str] = []
+    context, operands = _executor_context(
+        context_definition_id,
+        subject_ref=context_subject_ref,
+        events=events,
+    )
+    request = OperationRequest[JustificanteListRequest](
+        definition_id=request_definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=JustificanteListRequest(profile_id=_PROFILE),
+    )
+    monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+
+    def unexpected_factory(bucket_id: str) -> JustificanteCaptureSnapshotService:
+        factory_buckets.append(bucket_id)
+        raise AssertionError("identity refusal must happen before composing the snapshot service")
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(JustificanteListExecutor(unexpected_factory).execute(request, context))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert events.phases == []
+    assert events.effects == []
+    assert factory_buckets == []
+    assert operands.values == []
+
+
+def test_list_executor_preserves_missing_profile_precedence_before_work(monkeypatch: pytest.MonkeyPatch) -> None:
+    import cadrumo.application.live.justificante_read_operation as operation
+
+    events = _ExecutorEvents()
+    factory_buckets: list[str] = []
+    context, operands = _executor_context(
+        "live.justificante.other",
+        subject_ref=profile_operation_subject(str(_OTHER_PROFILE)),
+        events=events,
+    )
+    request = OperationRequest[JustificanteListRequest](
+        definition_id=JUSTIFICANTE_LIST_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=JustificanteListRequest(profile_id=_PROFILE),
+    )
+
+    def no_active_profile() -> str:
+        raise NoActiveProfileError(translated_message="synthetic missing active profile")
+
+    monkeypatch.setattr(operation, "require_active_bucket_id", no_active_profile)
+
+    def unexpected_factory(bucket_id: str) -> JustificanteCaptureSnapshotService:
+        factory_buckets.append(bucket_id)
+        raise AssertionError("missing active profile must refuse before composing the snapshot service")
+
+    with pytest.raises(NoActiveProfileError):
+        asyncio.run(JustificanteListExecutor(unexpected_factory).execute(request, context))
+
+    assert events.phases == []
+    assert events.effects == []
+    assert factory_buckets == []
+    assert operands.values == []
 
 
 def test_registered_justificante_reads_project_only_existing_cli_fields(tmp_path: Path) -> None:

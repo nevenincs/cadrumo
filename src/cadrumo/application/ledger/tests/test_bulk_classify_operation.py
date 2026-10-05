@@ -76,7 +76,9 @@ def subject(
     authority_operation: PinnedAuthorityOperation,
     transactions: tuple[Transaction, Transaction],
 ) -> BulkClassifySubject:
-    monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(PROFILE_ID))
+    monkeypatch.setattr(
+        "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(PROFILE_ID)
+    )
     return BulkClassifySubject(operation=authority_operation, transactions=transactions)
 
 
@@ -238,7 +240,9 @@ def test_exact_profile_and_authority_mismatch_refuses_before_csv_storage(
 ) -> None:
     request = _request("transaction_id,classification")
     if defect == "active_profile":
-        monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(uuid4()))
+        monkeypatch.setattr(
+            "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(uuid4())
+        )
     elif defect == "subject":
         request = request.model_copy(update={"subject_ref": profile_operation_subject(str(uuid4()))})
     elif defect == "authority":

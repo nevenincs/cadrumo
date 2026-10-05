@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#python-runtime-compatibility'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c663f58556acc585b160e1ed0806aed5145520c665d83f885560a20f2ed34a08'
+body_hash: 'sha256:3bec7c2cbe99cf8924298be7e7b8e19c686a968031afe7014e7d0a9836599a1a'
 related:
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -31,7 +31,7 @@ The immutable release cohort intentionally records and refuses any builder other
 
 ### A separate compatibility workflow avoids destabilizing protected lanes
 
-The existing CI jobs have stable names and timing contracts, and the quick/release-cohort workflows deliberately reject matrix expansion (`.github/workflows/ci.yml:169`, `dev/packaging/tests/test_packaging_quick_workflow.py:48`, `dev/packaging/tests/test_packaging_smoke_workflow.py:61`). A dedicated workflow can execute 3.13.11, 3.14, and 3.15 prerelease/final without renaming protected checks or multiplying expensive cohort construction. The existing pin gate already permits a genuine matrix only when it contains the exact canonical pin, but does not require such a matrix (`dev/ci/tests/test_python_version_pin.py:33`).
+The existing CI jobs have stable names and timing contracts, and the quick/release-cohort workflows deliberately reject matrix expansion (`.github/workflows/ci.yml:169`, the former source file, the former source file). A dedicated workflow can execute 3.13.11, 3.14, and 3.15 prerelease/final without renaming protected checks or multiplying expensive cohort construction. The existing pin gate already permits a genuine matrix only when it contains the exact canonical pin, but does not require such a matrix (`dev/ci/tests/test_python_version_pin.py:33`).
 
 ### Release artifacts require runtime proof, not only source tests
 
@@ -72,8 +72,7 @@ The checkout contains unresolved and unrelated changes in workflows, `pyproject.
 - `dev/packaging/release_cohort.py:51`
 - `dev/packaging/release_cohort.py:217`
 - `dev/packaging/runtime_wheelhouse.py:37`
-- `dev/packaging/tests/test_packaging_quick_workflow.py:48`
-- `dev/packaging/tests/test_packaging_smoke_workflow.py:61`
+
 - `dev/audit/security.py:54`
 - `src/cadrumo_harness/_workspace.py:536`
 - `src/cadrumo/application/modelo/workspace_manifest.py:599`

@@ -18,16 +18,19 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from collections.abc import Callable, Mapping
 from importlib.util import find_spec
 from pathlib import Path
 
 from pydantic import BaseModel, model_validator
 
+from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance
+from ..core.storage_environment import configured_storage_root, resolve_storage_path
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_location
 from ..core.type_guards import is_object_dict, is_object_list
 from .operator_actions.models import ActionReference, ConditionEvidence, PreconditionVerdict
 from .provisioning import DependencyStatus
@@ -87,28 +90,34 @@ class BrowserBuild(BaseModel):
         return f"{self.name.replace('-', '_')}-{self.revision}"
 
 
-def playwright_browsers_root(cache_root: Path | None = None, *, env: Mapping[str, str] | None = None) -> Path:
+def playwright_browsers_root(
+    cache_root: Path | None = None,
+    *,
+    env: Mapping[str, str] | None = None,
+    settings: Settings | None = None,
+) -> Path:
     """Return the directory Playwright installs browser binaries into.
 
-    Uses an explicit ``cache_root`` when supplied, otherwise honours
-    ``PLAYWRIGHT_BROWSERS_PATH`` then falls back to the per-OS default cache.
-    The cache is vendor-owned: Cadrumo reads it and lets the vendor installer
-    write it, and it is intentionally not a Cadrumo storage setting. ``env`` is
-    injectable so the override precedence is testable without mutating the
-    process environment.
+    Uses an explicit ``cache_root`` when supplied. Otherwise the Cadrumo
+    ``CADRUMO_PLAYWRIGHT_BROWSERS_DIR`` setting controls the managed cache,
+    rooted under the configured storage root by default. Injectable ``env`` and
+    ``settings`` allow precedence checks without changing ambient process state.
     """
     if cache_root is not None:
         return cache_root
     environment = os.environ if env is None else env
-    override = environment.get("PLAYWRIGHT_BROWSERS_PATH")
-    if override:
-        return Path(override)
-    if sys.platform == "win32":
-        base = environment.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-        return Path(base) / "ms-playwright"
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Caches" / "ms-playwright"
-    return Path.home() / ".cache" / "ms-playwright"
+    if settings is not None and "cadrumo_playwright_browsers_dir" in settings.model_fields_set:
+        return settings.cadrumo_playwright_browsers_dir
+    storage_root = configured_storage_root(environ=environment)
+    cadrumo_override = environment.get("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", "").strip()
+    if cadrumo_override:
+        return resolve_storage_path(cadrumo_override, root=storage_root)
+    if settings is not None:
+        return settings.cadrumo_playwright_browsers_dir
+    if env is None:
+        return load_settings().cadrumo_playwright_browsers_dir
+    default = storage_location(StorageCategory.PLAYWRIGHT_BROWSERS).relative_path()
+    return resolve_storage_path(default, root=storage_root)
 
 
 def _installed_manifest_path() -> Path | None:
@@ -117,6 +126,32 @@ def _installed_manifest_path() -> Path | None:
     if spec is None or spec.origin is None:
         return None
     return Path(spec.origin).parent / "driver" / "package" / "browsers.json"
+
+
+def _browser_manifest_entries(document: object) -> dict[object, dict[object, object]] | None:
+    if not is_object_dict(document):
+        return None
+    entries = document.get("browsers")
+    if not is_object_list(entries):
+        return None
+    by_name: dict[object, dict[object, object]] = {}
+    for entry in entries:
+        if is_object_dict(entry):
+            by_name[entry.get("name")] = entry
+    return by_name
+
+
+def _browser_build_from_manifest(
+    name: str,
+    by_name: dict[object, dict[object, object]],
+) -> BrowserBuild | None:
+    found = by_name.get(name)
+    if found is None or found.get("revisionOverrides"):
+        return None
+    revision = found.get("revision")
+    if not isinstance(revision, str) or not revision:
+        return None
+    return BrowserBuild(name=name, revision=revision)
 
 
 def required_browser_builds(manifest_path: Path | None = None) -> tuple[BrowserBuild, ...] | None:
@@ -133,24 +168,15 @@ def required_browser_builds(manifest_path: Path | None = None) -> tuple[BrowserB
         document: object = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    if not is_object_dict(document):
+    by_name = _browser_manifest_entries(document)
+    if by_name is None:
         return None
-    entries = document.get("browsers")
-    if not is_object_list(entries):
-        return None
-    by_name: dict[object, dict[object, object]] = {}
-    for entry in entries:
-        if is_object_dict(entry):
-            by_name[entry.get("name")] = entry
     builds: list[BrowserBuild] = []
     for name in _REQUIRED_MANIFEST_NAMES:
-        found = by_name.get(name)
-        if found is None or found.get("revisionOverrides"):
+        build = _browser_build_from_manifest(name, by_name)
+        if build is None:
             return None
-        revision = found.get("revision")
-        if not isinstance(revision, str) or not revision:
-            return None
-        builds.append(BrowserBuild(name=name, revision=revision))
+        builds.append(build)
     return tuple(builds)
 
 
@@ -183,6 +209,7 @@ def probe_playwright_browser(
     cache_root: Path | None = None,
     *,
     manifest_path: Path | None = None,
+    settings: Settings | None = None,
 ) -> DependencyStatus:
     """Report whether every Chromium build the installed Playwright launches is present.
 
@@ -190,7 +217,7 @@ def probe_playwright_browser(
     manifest (Playwright absent or its layout unrecognised) is refused without a
     recovery action, because installing a browser cannot repair it.
     """
-    root = playwright_browsers_root(cache_root)
+    root = playwright_browsers_root(cache_root, settings=settings)
     builds = required_browser_builds(manifest_path)
     if builds is None:
         facts: dict[str, ProvisioningFactValue] = {

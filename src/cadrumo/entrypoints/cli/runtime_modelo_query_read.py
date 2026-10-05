@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Never
 from uuid import UUID
 
 import typer
@@ -11,11 +10,7 @@ from pydantic import BaseModel
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
 from ...application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
-from ...application.modelo.query_read_operation import (
-    MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID,
-    MODELO_BINDINGS_RESOLVE_OPERATION_DEFINITION_ID,
-    MODELO_READINESS_OPERATION_DEFINITION_ID,
-    MODELO_REQUIRES_OPERATION_DEFINITION_ID,
+from ...application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,
     ModeloBindingsResolveProjection,
@@ -26,18 +21,22 @@ from ...application.modelo.query_read_operation import (
     ModeloRequiresProjection,
     ModeloRequiresRequest,
 )
+from ...application.modelo.query_read_operation import (
+    MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID,
+    MODELO_BINDINGS_RESOLVE_OPERATION_DEFINITION_ID,
+    MODELO_READINESS_OPERATION_DEFINITION_ID,
+    MODELO_REQUIRES_OPERATION_DEFINITION_ID,
+)
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.state_projection import ProjectionModeloBindingRequirement, ProjectionModeloReadiness
 from ...core.aggregation import BindingSourceKind
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
@@ -45,16 +44,6 @@ def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
     if profile_id != expected:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return require_profile_client(ctx, expected_profile_id=expected)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _submit[ProjectionT: BaseModel](
@@ -83,7 +72,7 @@ def _submit[ProjectionT: BaseModel](
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -102,17 +91,11 @@ def read_modelo_bindings_list(
     )
     result = completed.projection
     if (
-        result.profile_id != request.profile_id
-        or result.authority_generation != expected_authority_generation
-        or result.modelo_filter != request.modelo
-        or result.year_filter != request.year
-        or result.period_filter != request.period_code
-        or result.missing_filter != request.missing
-        or result.catalogue_only != request.catalogue_only
+        _bindings_list_scope_invalid(result, request, expected_authority_generation)
         or result.binding_count != len(result.bindings)
         or (result.catalogue_only and result.bindings)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -139,7 +122,7 @@ def read_modelo_bindings_resolve(
         or result.override_count != len(request.overrides)
         or result.binding_count != len(result.bindings)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -165,7 +148,7 @@ def read_modelo_requires(
         or result.language is not request.language
         or result.authority_generation != expected_authority_generation
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -192,7 +175,7 @@ def read_modelo_readiness(
         or (request.period is not None and result.period != request.period)
         or (request.revision_id is not None and result.revision_id != request.revision_id)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -275,3 +258,20 @@ __all__ = [
     "to_data_inventory_checklist",
     "to_modelo_readiness_report",
 ]
+
+
+def _bindings_list_scope_invalid(
+    result: ModeloBindingsListProjection,
+    request: ModeloBindingsListRequest,
+    expected_authority_generation: ContentDigest,
+) -> bool:
+    """Require every requested catalogue and period filter under the pinned authority generation."""
+    return (
+        result.profile_id != request.profile_id
+        or result.authority_generation != expected_authority_generation
+        or result.modelo_filter != request.modelo
+        or (result.year_filter != request.year)
+        or (result.period_filter != request.period_code)
+        or (result.missing_filter != request.missing)
+        or (result.catalogue_only != request.catalogue_only)
+    )

@@ -24,17 +24,53 @@
 # recipe does from one machine to the next.
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-CommandWithArgs", '''$global:LASTEXITCODE = 0; . ([scriptblock]::Create($args[0] + [Environment]::NewLine + 'if (-not $?) { exit $(if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }) }'))''']
 
-# ── Dev-loop storage root ────────────────────────────────────────────────────
-# Keep a developer's state inside the checkout instead of the platform
-# user-data directory. This is DEV CONFIGURATION, not product behaviour: the
-# application always defaults to the platform directory and never inspects the
-# filesystem for a `pyproject.toml` or `.git` marker to decide otherwise. A
-# tax-filing product does not classify its own installation, so the dev loop
-# opts in through the ordinary override channel like any operator would.
-export CADRUMO_LOCAL_STORAGE_ROOT := env_var_or_default(
-    "CADRUMO_LOCAL_STORAGE_ROOT",
-    justfile_directory() / "var" / "storage",
-)
+# ── Shared application and development storage root ─────────────────────────
+storage_root_override := trim(env_var_or_default("CADRUMO_STORAGE_ROOT", ""))
+export CADRUMO_STORAGE_ROOT := if storage_root_override == "" { justfile_directory() / "var" / "storage" } else { storage_root_override }
+
+# Bootstrap exports bind tools before Python imports the shared resolver.
+local_storage_root := trim(env_var_or_default("CADRUMO_LOCAL_STORAGE_ROOT", ""))
+resolved_storage_root := absolute_path(if local_storage_root == "" { CADRUMO_STORAGE_ROOT } else { local_storage_root })
+docs_build_root_override := trim(env_var_or_default("CADRUMO_DOCS_BUILD_ROOT", ""))
+export CADRUMO_DOCS_BUILD_ROOT := if docs_build_root_override == "" { resolved_storage_root / "development/build/docs" } else if docs_build_root_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { docs_build_root_override } else { resolved_storage_root / docs_build_root_override }
+uv_cache_dir_override := trim(env_var_or_default("CADRUMO_UV_CACHE_DIR", ""))
+export UV_CACHE_DIR := if uv_cache_dir_override == "" { resolved_storage_root / "development/cache/uv" } else if uv_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_cache_dir_override } else { resolved_storage_root / uv_cache_dir_override }
+uv_python_install_dir_override := trim(env_var_or_default("CADRUMO_UV_PYTHON_DIR", ""))
+export UV_PYTHON_INSTALL_DIR := if uv_python_install_dir_override == "" { resolved_storage_root / "development/python" } else if uv_python_install_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_python_install_dir_override } else { resolved_storage_root / uv_python_install_dir_override }
+uv_tool_dir_override := trim(env_var_or_default("CADRUMO_UV_TOOL_DIR", ""))
+export UV_TOOL_DIR := if uv_tool_dir_override == "" { resolved_storage_root / "development/tools/uv" } else if uv_tool_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_tool_dir_override } else { resolved_storage_root / uv_tool_dir_override }
+npm_config_cache_override := trim(env_var_or_default("CADRUMO_NPM_CACHE_DIR", ""))
+export npm_config_cache := if npm_config_cache_override == "" { resolved_storage_root / "development/cache/npm" } else if npm_config_cache_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { npm_config_cache_override } else { resolved_storage_root / npm_config_cache_override }
+cargo_target_dir_override := trim(env_var_or_default("CADRUMO_CARGO_TARGET_DIR", ""))
+export CARGO_TARGET_DIR := if cargo_target_dir_override == "" { resolved_storage_root / "development/build/cargo" } else if cargo_target_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { cargo_target_dir_override } else { resolved_storage_root / cargo_target_dir_override }
+pythonpycacheprefix_override := trim(env_var_or_default("CADRUMO_PYTHON_CACHE_DIR", ""))
+export PYTHONPYCACHEPREFIX := if pythonpycacheprefix_override == "" { resolved_storage_root / "development/cache/pycache" } else if pythonpycacheprefix_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { pythonpycacheprefix_override } else { resolved_storage_root / pythonpycacheprefix_override }
+xdg_cache_home_override := trim(env_var_or_default("CADRUMO_TOOL_CACHE_DIR", ""))
+export XDG_CACHE_HOME := if xdg_cache_home_override == "" { resolved_storage_root / "development/cache/tools" } else if xdg_cache_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_cache_home_override } else { resolved_storage_root / xdg_cache_home_override }
+
+uv_tool_bin_dir_override := trim(env_var_or_default("CADRUMO_UV_TOOL_BIN_DIR", ""))
+export UV_TOOL_BIN_DIR := if uv_tool_bin_dir_override == "" { resolved_storage_root / "development/tools/bin" } else if uv_tool_bin_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { uv_tool_bin_dir_override } else { resolved_storage_root / uv_tool_bin_dir_override }
+pip_cache_dir_override := trim(env_var_or_default("CADRUMO_PIP_CACHE_DIR", ""))
+export PIP_CACHE_DIR := if pip_cache_dir_override == "" { resolved_storage_root / "development/cache/pip" } else if pip_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { pip_cache_dir_override } else { resolved_storage_root / pip_cache_dir_override }
+cargo_home_override := trim(env_var_or_default("CADRUMO_CARGO_HOME", ""))
+export CARGO_HOME := if cargo_home_override == "" { resolved_storage_root / "development/cache/cargo" } else if cargo_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { cargo_home_override } else { resolved_storage_root / cargo_home_override }
+
+xdg_config_home_override := trim(env_var_or_default("CADRUMO_TOOL_CONFIG_DIR", ""))
+export XDG_CONFIG_HOME := if xdg_config_home_override == "" { resolved_storage_root / "development/config/tools" } else if xdg_config_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_config_home_override } else { resolved_storage_root / xdg_config_home_override }
+xdg_data_home_override := trim(env_var_or_default("CADRUMO_TOOL_DATA_DIR", ""))
+export XDG_DATA_HOME := if xdg_data_home_override == "" { resolved_storage_root / "development/data/tools" } else if xdg_data_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_data_home_override } else { resolved_storage_root / xdg_data_home_override }
+xdg_state_home_override := trim(env_var_or_default("CADRUMO_TOOL_STATE_DIR", ""))
+export XDG_STATE_HOME := if xdg_state_home_override == "" { resolved_storage_root / "development/state/tools" } else if xdg_state_home_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { xdg_state_home_override } else { resolved_storage_root / xdg_state_home_override }
+ruff_cache_dir_override := trim(env_var_or_default("CADRUMO_RUFF_CACHE_DIR", ""))
+export RUFF_CACHE_DIR := if ruff_cache_dir_override == "" { resolved_storage_root / "development/cache/ruff" } else if ruff_cache_dir_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { ruff_cache_dir_override } else { resolved_storage_root / ruff_cache_dir_override }
+
+# Homebrew's mutable tool state uses the same canonical bootstrap bindings.
+homebrew_cache_override := trim(env_var_or_default("CADRUMO_HOMEBREW_CACHE_DIR", ""))
+export HOMEBREW_CACHE := if homebrew_cache_override == "" { resolved_storage_root / "development/cache/homebrew" } else if homebrew_cache_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_cache_override } else { resolved_storage_root / homebrew_cache_override }
+homebrew_logs_override := trim(env_var_or_default("CADRUMO_HOMEBREW_LOGS_DIR", ""))
+export HOMEBREW_LOGS := if homebrew_logs_override == "" { resolved_storage_root / "development/logs/homebrew" } else if homebrew_logs_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_logs_override } else { resolved_storage_root / homebrew_logs_override }
+homebrew_temp_override := trim(env_var_or_default("CADRUMO_HOMEBREW_TEMP_DIR", ""))
+export HOMEBREW_TEMP := if homebrew_temp_override == "" { resolved_storage_root / "tmp/homebrew" } else if homebrew_temp_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { homebrew_temp_override } else { resolved_storage_root / homebrew_temp_override }
 
 # Direct product commands use the same published generation as the developer
 # tooling. Blank overrides are unset, as they are in the product settings.
@@ -52,33 +88,46 @@ default:
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
-# Everything a developer needs in a new worktree: `setup`, then the RAG service
-# with its models and MCP integration, then the runtime authority. The editable
-# build inside `uv sync` usually publishes the authority already, so publication
-# runs only when the published generation is stale for this tree.
-[doc('Initialize a new worktree for development: setup, RAG, and the runtime authority.')]
+# Complete new-worktree provisioning. The first command owns the locked Python
+# sync and default Vaultspec enrollment. Browser provisioning reuses installed
+# channels or installs missing resources. RAG then provisions its managed models,
+# Qdrant binary, and MCP integration. Authority publication runs so the
+# installed application consumes a generation compiled from the final tree.
+# The configuration report comes last so it describes what was provisioned; it
+# is advisory, never a reason to call provisioning failed.
+[doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, and runtime authority.')]
 [group('setup')]
-init: setup setup-browser
+init:
+    just setup
+    just setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
     -uv run --no-sync aeat config check
 
-# The locked Python environment, local configuration, and repository tooling.
-# CI and the devcontainer run this; each step is idempotent, so re-running it
-# converges an existing checkout. Browser and workstation tools are optional
-# and have their own recipes below.
-[doc('Sync the locked Python environment, env/.env, and repository tooling.')]
+# Minimal checkout setup, shared by init and CI. It creates
+# the pinned Python environment, installs repository tooling, and materializes
+# local environment configuration. Workstation tools and browser binaries are
+# optional to the minimal setup; full init provisions browsers as well.
+# `just doctor-product` reports the resulting configuration.
+[doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
 [group('setup')]
 setup:
-    uv sync --locked --extra workbook-windows --group dev
-    uv run --no-sync python -m dev.env setup
-    uv run --no-sync vaultspec-core install --upgrade
-    uv run --no-sync python -m dev.actionlint --install
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init all
+
+[doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
+[group('setup')]
+setup-repository-tools:
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init tools
 
 [doc('Install the pinned Hunspell dictionaries used by check-locales.')]
 [group('setup')]
 setup-locale-spelling:
     npm ci --ignore-scripts --no-audit --no-fund
+
+[doc('Check checkout setup state without writing a report or changing files.')]
+[group('setup')]
+setup-check:
+    uv run --isolated --no-project --python 3.13 -- python -m dev.init check
 
 # Optional workstation CLI prerequisites for non-Python audit recipes. This is
 # deliberately outside the minimal checkout setup.
@@ -268,11 +317,10 @@ check-registry:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry --signal registry-health -- uv run --no-sync python -m dev.registry.analysis.registry_status --check --json
 
 # `--strict` is not decoration: without it the screen returns 0 whatever it
-# finds, so the recipe passed unless the tool itself crashed. The flag is
-# reachable -- nine call sites raise an actionable error finding, and the
-# gate at bindings.py:1157 fails on any of them. Measured before adding it:
-# the live corpus reports 0 errors and 18 warnings, so this changes no
-# verdict today and changes the one that matters on the day an error lands.
+# finds, so the recipe passed unless the tool itself crashed. It fails on any
+# actionable error finding, including a filing-grade binding that no bound
+# casilla, formula or export consumes. Only the typed consumer census proves
+# use; a form input or construct membership is reported as evidence, not use.
 [doc('Measure binding declarations, consumers, provider enrollment, temporal coherence, and advisory resolution routes.')]
 [group('check')]
 [no-exit-message]
@@ -660,6 +708,11 @@ registry-modelo-new-edition MODELO REVISION VALID_FROM YEAR_FROM PERIOD:
 registry-modelo-checklist:
     @uv run --no-sync python -m dev.registry.newmodelo checklist
 
+[doc('Report declared form layouts and casilla placement coverage for every modelo revision.')]
+[group('report')]
+report-registry-form-layout-coverage:
+    @uv run --no-sync python -m dev.registry.form_layout coverage
+
 [doc('Write declared registry governance provenance for one named revision.')]
 [group('maintenance')]
 registry-governance-stamp REGISTRY_ROOT MODELO REVISION ENGINEERED_BY="" CLEAR_ENGINEERED_BY="false" REVIEW_STATUS="" REVIEWED_BY="" REVIEWED_AT="":
@@ -676,9 +729,10 @@ report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR:
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}}
 
 # The dev.tui command family is limited to visual-review artefacts: inventory,
-# render, snapshot, rasterise, and diff. It has no service-control or test
-# authority, so one subject wrapper is truthful here.
-[doc('Run visual-review inventory, rendering, snapshot, rasterisation, or diff operations.')]
+# render, snapshot, rasterise, diff, and the foreground review server with its
+# notes. It has no service-control or test authority, so one subject wrapper is
+# truthful here.
+[doc('Run visual-review inventory, rendering, snapshot, rasterisation, diff, review-server, or notes operations.')]
 [group('tui')]
 tui-review *ARGS:
     @uv run --no-sync python -m dev.tui {{ARGS}}
@@ -764,8 +818,8 @@ test-tui:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py || failed=1
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial TUI tests are currently declared."
@@ -781,9 +835,9 @@ test-tui:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/tests/test_import_quality_gate.py
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial TUI tests are currently declared.'
@@ -880,8 +934,8 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service" dev/acceptance dev/agent_eval/tests
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/acceptance dev/agent_eval/tests
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
@@ -1056,8 +1110,10 @@ test-integration-serial:
 # only way to select them. The capability is a property of the logon session: run
 # this from an INTERACTIVE DESKTOP SESSION. A headless CI runner, or an agent
 # reaching the host over SSH, holds a network logon that carries no credentials,
-# so the store refuses every call and these cases fail at an explicit precondition
-# naming the missing custody -- which is a true report of the host, not a defect.
+# so the store refuses every call and the cases that need it are SKIPPED at an
+# explicit precondition, each under a warning naming the missing custody. A green
+# run carrying those warnings verified nothing about custody: it is a true report
+# of the host, not coverage.
 #
 # Runs with -n0 deliberately. The OS credential store is MACHINE-global, and these
 # cases mint and remove session keys under fixed bucket ids, so xdist workers delete
@@ -1077,7 +1133,12 @@ test-integration-serial:
 [doc('Run Windows-only packaging, registry publication, and authentication frontend tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m windows_only dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py src/cadrumo/entrypoints/cli/config/tests src/cadrumo/entrypoints/cli/tests/test_ledger_llm_classify.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_autosplit.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_split.py src/cadrumo/entrypoints/cli/tests/test_ledger_llm_saturate.py src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_review_native.py src/cadrumo/entrypoints/tui dev/agent_eval/tests/test_runtime_automation_management_parity.py
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain" --ignore=dev/packaging/tests/test_installed_oracles.py dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py dev/agent_eval/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints
+
+[doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
+[group('test')]
+test-native-host:
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and not os_keychain" src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py src/cadrumo/adapters/local_runtime/tests/test_macos_peer_process_version_native.py src/cadrumo/adapters/persistence/storage/custody/tests/test_atomic_rename_primitives.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_native_gnome_collection_suitability.py
 
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
@@ -1358,7 +1419,7 @@ docs-synonyms-maintain OBSERVATIONS:
 [doc('Build one localized documentation root into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-lang LANG:
-    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}} --out-dir docs/_build/html/{{LANG}}
+    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}} --out-dir "{{CADRUMO_DOCS_BUILD_ROOT}}/html/{{LANG}}"
 
 # Build the user-scope documentation for every translation language, each into
 # its own root beside the English one. These are plain local builds: for the

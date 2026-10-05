@@ -5,11 +5,11 @@ from __future__ import annotations
 import typer
 
 from ...application.modelo.export import modelo_export_readiness_refusal
-from ...application.modelo.query_read_operation import ModeloReadinessOperationRequest
+from ...application.modelo.query_read_contracts import ModeloReadinessOperationRequest
 from ...application.operations.public_period import PublicPeriod
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core.external_constants import OutputLanguage
-from ...core.i18n.render import output_language
+from ...core.i18n.render import output_language, tr
 from ...core.identity.digest import ContentDigest
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.period import Period, PeriodError
@@ -199,10 +199,7 @@ def _readiness_lines(
     lines.extend(_readiness_ledger_export_lines(report, export_context))
     lines.extend(_readiness_detail_lines(report))
     if _ledger_ready_but_bindings_missing(report):
-        lines.append(
-            "readiness_note\tledger_ready only means the period ledger rows passed transaction preflight; "
-            "missing_bindings/source_binding_ready still decide source completeness.",
-        )
+        lines.append(f"readiness_note\t{tr('cli.app.modelo.readiness.sources_still_missing')}")
     return lines
 
 
@@ -281,10 +278,7 @@ def _readiness_notices(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="modelo.readiness.ledger_preflight_scope",
-                message=(
-                    "ledger_ready only means the period ledger rows passed transaction preflight; "
-                    "missing_bindings/source_binding_ready still decide source completeness."
-                ),
+                message=tr("cli.app.modelo.readiness.sources_still_missing"),
                 context={
                     "ledger_ready": "true",
                     "binding_ready": "false",

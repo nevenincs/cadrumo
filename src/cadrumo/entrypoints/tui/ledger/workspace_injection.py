@@ -35,6 +35,7 @@ from .models import (
 if TYPE_CHECKING:
     from .actividad_asset import ActivityAssetTuiActionsV1
     from .models import LedgerRecordDoorsV1
+    from .own_accounts import LedgerOwnAccountDoorV1
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +76,8 @@ class LedgerWorkspaceInjection:
     """Shared encrypted activity-asset operations; absent means no asset affordance."""
     record_doors: LedgerRecordDoorsV1 | None = None
     """Bucket-bound canonical invoice and transaction detail operations."""
+    own_account_door: LedgerOwnAccountDoorV1 | None = None
+    """Registered own bank account operations; absent means no account setup affordance."""
 
     def __post_init__(self) -> None:
         """Refuse a miswired action."""

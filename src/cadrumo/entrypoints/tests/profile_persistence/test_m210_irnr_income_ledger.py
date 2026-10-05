@@ -37,14 +37,13 @@ from cadrumo.application.modelo.action_errors import ModeloAggregationBindingErr
 from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -66,6 +65,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -667,7 +667,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(
             ).revision
 
         with bundled_indexed_authority().operation() as operation:
-            verification = verify_modelo_revision(
+            verification = verify_modelo_revision_with_preconditions(
                 ledger.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -677,7 +677,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         verified_ledger = calculation_repository.load().get(ledger.calculation_revision_id)
 
     assert verification.granted_verificado_completo is True

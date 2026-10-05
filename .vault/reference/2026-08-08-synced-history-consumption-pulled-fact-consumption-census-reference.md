@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#synced-history-consumption'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a4c52c603b4e08352bc6726f73e8b12531eeec591d2caf69c59721bbf89218c'
+body_hash: 'sha256:dd3713f18a712cc15a7f51699efb08277f6daee3e915ebc0617c19dcc185e823'
 related:
-  - "[[2026-08-08-synced-history-consumption-plan]]"
   - "[[2026-08-08-synced-history-consumption-research]]"
 ---
 
@@ -15,12 +14,7 @@ related:
 
 ## Summary
 
-Every figure below is derived from the LOADED registry material through
-`bundled_authority()` in `src/cadrumo/domain/calculations/registry/_authority.py`,
-by iterating each `ModeloDefinition.revisions` mapping and reading the compiled
-`bindings`, `relations` and `dependency_classifications` off each
-`ModeloRevision`. No count comes from a directory listing or a file-shape glob,
-so directory-mode fragments are included by construction.
+No count comes from a directory listing or a file-shape glob, so directory-mode fragments are included by construction.
 
 ## The denominator
 
@@ -86,12 +80,7 @@ synced-history defect:
 
 ## The pull-support boundary is registry-declared
 
-Whether a modelo can be pulled from the AEAT declarations register is decided by
-`_filed_capture_unsupported_reason` in
-`src/cadrumo/application/live/_filed_data_capture.py`, which requires the
-revision to carry a `live_cross_references` entry whose `surface` is
-`authenticated_read_surface` and whose id ends `filed-declarations-read`. That
-makes the boundary measurable from the snapshot rather than inferred.
+That makes the boundary measurable from the snapshot rather than inferred.
 
 23 of the 73 modelos declare that surface on at least one revision: 100, 111,
 115, 123, 130, 131, 180, 184, 190, 193, 232, 303, 308, 309, 322, 347, 349, 353,
@@ -102,27 +91,9 @@ absence: neither 200 nor 202 is pullable.
 
 Reachability joins the pull's write path against each channel's read path.
 
-**Write path.** `finalize_filed_capture` in
-`src/cadrumo/application/live/_filed_capture_finalizer.py` calls
-`persist_filed_calculation_observation`, which writes the registry-grounded
-observation into `CalculationObservationRepository` with
-`source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE`. It is not scoped to
-one modelo: every active (ALTA) filed observation of every pulled modelo is
-written. All three capture routes — single, bulk and source — reach it, and the
-CLI verb `app.live.filed.pull` reports the resulting
-`calculation_observation_count`.
+It is not scoped to one modelo: every active (ALTA) filed observation of every pulled modelo is written. All three capture routes — single, bulk and source — reach it, and the CLI verb `app.live.filed.pull` reports the resulting `calculation_observation_count`.
 
-**Read path.** `resolve_bindings_from_local_store`
-(`src/cadrumo/application/calculations/_binding_prefill.py`) and
-`resolve_relations_from_local_store`
-(`src/cadrumo/application/calculations/_relation_prefill.py`) both load from that
-same repository by `(modelo, filing_year, period)` key. Neither applies a
-provenance filter. `_gathered_observation(..., source_kind=payload.source_kind)`
-reads the persisted provenance and REPORTS it; `_source_kind_for_binding`
-likewise reports rather than gates. `_LOCAL_FILING_PROVENANCE` is a default value
-on the `PrefilledBinding` and `LocalIvaCompensationRecurrence` model fields, not a
-predicate. Both resolvers are enrolled on the live calculate mesh in
-`src/cadrumo/application/modelo/_calculation_actions.py`.
+Neither applies a provenance filter. `_gathered_observation(..., source_kind=payload.source_kind)` reads the persisted provenance and REPORTS it; `_source_kind_for_binding` likewise reports rather than gates. `_LOCAL_FILING_PROVENANCE` is a default value on the `PrefilledBinding` and `LocalIvaCompensationRecurrence` model fields, not a predicate.
 
 The resulting channel table:
 

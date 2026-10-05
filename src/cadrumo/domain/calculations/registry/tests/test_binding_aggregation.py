@@ -107,10 +107,8 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
         "fact": "cash_received_sum",
     },
     "profile": {"profile_key": "tax.id"},
-    "related_party_operation": {"fact": "row_field", "row_field": "amount"},
     "foreign_asset": {"fact": "row_field", "row_field": "valuation_amount"},
     "atribucion_member": {"fact": "row_field", "row_field": "base_imponible_assigned"},
-    "refund_operation": {"fact": "row_field", "row_field": "refund_amount"},
     "prorrata_regularizacion": {
         "source_modelo": "303",
         "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
@@ -202,10 +200,8 @@ def test_binding_aggregation_round_trips_through_strict_model() -> None:
 # Enumerated independently from the plan's declared mapping, not from the
 # accessor under test.
 _ROWS_DEFAULT_SOURCES: tuple[str, ...] = (
-    "related_party_operation",
     "foreign_asset",
     "atribucion_member",
-    "refund_operation",
 )
 _SUM_DEFAULT_SOURCES: tuple[str, ...] = (
     "previous_filing",

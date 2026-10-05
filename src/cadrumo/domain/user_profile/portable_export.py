@@ -11,20 +11,17 @@ site; the package initializer is inert and provides no alternate import path.
 
 from __future__ import annotations
 
-import base64
-import binascii
 from collections.abc import Iterable, Mapping
-from datetime import datetime
 from types import MappingProxyType
 from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...core.base64_codec import b64_decode_canonical
 from ...core.classification.policies import SensitivityClass
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
-from ...core.time.utc import UtcInstant, validate_utc_aware
+from ...core.time.utc import UtcInstant
 from ..modelos.calculation_revision import CalculationRevision as _CalculationRevision
 from ..modelos.filing_record import ModeloRecord as _ModeloRecord
 from ..modelos.work_unit import WorkUnit as _WorkUnit
@@ -42,12 +39,9 @@ def _clean_required_text(value: str, *, field_name: str) -> str:
 def _decode_canonical_base64(value: str, *, field_name: str) -> bytes:
     text = _clean_required_text(value, field_name=field_name)
     try:
-        decoded = base64.b64decode(text.encode("ascii"), validate=True)
-    except (binascii.Error, UnicodeEncodeError) as exc:
+        return b64_decode_canonical(text)
+    except ValueError as exc:
         raise ValueError(f"{field_name} must be canonical base64") from exc
-    if base64.b64encode(decoded).decode("ascii") != text:
-        raise ValueError(f"{field_name} must be canonical base64")
-    return decoded
 
 
 class CarriedSecureObject(BaseModel):
@@ -79,18 +73,6 @@ class CarriedSecureObject(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: UtcInstant
     payload_b64: str = Field(min_length=1)
-
-    @field_validator("written_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _written_at_is_utc(cls, value: datetime) -> datetime:
-        """Reject a carried write instant that is naive or not UTC.
-
-        The bundle serialises as JSON, which preserves the offset, so a
-        carried object can be held to the canonical instant contract rather
-        than transporting an ambiguous local time into another bucket.
-        """
-        return validate_utc_aware(value)
 
     @field_validator("namespace", "object_key")
     @classmethod

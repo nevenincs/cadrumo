@@ -1,4 +1,7 @@
-"""Atomic replacement of a profile's declared descendant family."""
+"""Atomic replacement of a profile's declared descendant family.
+
+Core types: :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 
@@ -61,6 +64,39 @@ def encode_descendant_rows(
     )
 
 
+def _supplied_descendant_facts(descendants: tuple[ProfileDescendantRow, ...]) -> dict[str, str]:
+    return {
+        f"renta_family.descendiente.{index}.{fact.field_key}": fact.value
+        for index, row in enumerate(descendants)
+        for fact in row.facts
+    }
+
+
+def _validated_descendant_facts(
+    descendants: tuple[ProfileDescendantRow, ...], operation: PinnedAuthorityOperation
+) -> tuple[tuple[DescendantInfo, ...], dict[str, str]]:
+    supplied = _supplied_descendant_facts(descendants)
+    validated = descendant_list_from_facts(supplied, authority=operation)
+    pairs = dict(descendant_facts_from_list(validated, authority=operation))
+    # Unknown fields, omitted birth dates and noncanonical values must not
+    # disappear when the domain decoder constructs its supported record.
+    if len(validated) != len(descendants) or any(pairs.get(path) != value for path, value in supplied.items()):
+        raise UserProfileValidationError("descendant replacement contains unsupported or noncanonical facts")
+    return validated, pairs
+
+
+def _replaced_descendant_facts(current: UserProfileRecord, pairs: dict[str, str]) -> tuple[UserProfileFact, ...]:
+    stale_paths = {
+        fact.path
+        for fact in current.facts
+        if fact.path.startswith("renta_family.descendiente.") or fact.path == "renta_family.descendientes_count"
+    }
+    return (
+        *(UserProfileFact(path=path, value=None) for path in sorted(stale_paths - pairs.keys())),
+        *(UserProfileFact(path=path, value=value) for path, value in pairs.items()),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class DescendantFamilyMutation:
     """Published revision and actual change, without duplicating private rows."""
@@ -89,26 +125,8 @@ def replace_profile_descendants(
     if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
         raise ProfileRecordConflictError("descendant family replacement baseline is stale")
     with validating_governed_facts(operation):
-        supplied = {
-            f"renta_family.descendiente.{index}.{fact.field_key}": fact.value
-            for index, row in enumerate(descendants)
-            for fact in row.facts
-        }
-        validated = descendant_list_from_facts(supplied, authority=operation)
-        pairs = dict(descendant_facts_from_list(validated, authority=operation))
-        # Unknown fields, omitted birth dates and noncanonical values must not
-        # disappear when the domain decoder constructs its supported record.
-        if len(validated) != len(descendants) or any(pairs.get(path) != value for path, value in supplied.items()):
-            raise UserProfileValidationError("descendant replacement contains unsupported or noncanonical facts")
-        stale_paths = {
-            fact.path
-            for fact in current.facts
-            if fact.path.startswith("renta_family.descendiente.") or fact.path == "renta_family.descendientes_count"
-        }
-        changes = (
-            *(UserProfileFact(path=path, value=None) for path in sorted(stale_paths - pairs.keys())),
-            *(UserProfileFact(path=path, value=value) for path, value in pairs.items()),
-        )
+        validated, pairs = _validated_descendant_facts(descendants, operation)
+        changes = _replaced_descendant_facts(current, pairs)
         published = apply_profile_fact_changes(
             profile_id=profile_id,
             changes=changes,

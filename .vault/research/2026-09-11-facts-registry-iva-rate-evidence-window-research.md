@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:1b481076620e7a55135c93b34f60f6d9109d0e3536b849c935faabe36478e743'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` research: `iva-rate-evidence-window`
 

@@ -1,0 +1,73 @@
+cmake_minimum_required(VERSION 4.4)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR "Use an out-of-source build directory")
+endif()
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/tmp")
+
+# Toolchain versions have one authored owner. Set compiler-selection inputs before project().
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/native/toolchain.json" toolchain)
+foreach(key cmake msvc windows_sdk rust rust_target)
+  string(JSON CADRUMO_PIN_${key} GET "${toolchain}" ${key})
+endforeach()
+if(NOT CMAKE_VERSION VERSION_EQUAL CADRUMO_PIN_cmake)
+  message(FATAL_ERROR "CMake ${CADRUMO_PIN_cmake} is required")
+endif()
+if(NOT CMAKE_HOST_WIN32)
+  message(FATAL_ERROR "Native distribution builds are currently implemented for Windows only")
+endif()
+if(NOT CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/native/cmake/WindowsToolchain.cmake")
+endif()
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Supported build configurations" FORCE)
+set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+include(native/cmake/Identity.cmake)
+if(NOT CADRUMO_TARGET STREQUAL "windows-x86-64")
+  message(FATAL_ERROR "This source backend builds windows-x86-64; other runtime backends are still in flight")
+endif()
+project(CADRUMO VERSION "${CADRUMO_ID_VERSION}"
+  DESCRIPTION "${CADRUMO_ID_DESCRIPTION}" HOMEPAGE_URL "${CADRUMO_ID_HOMEPAGE}"
+  SPDX_LICENSE "${CADRUMO_ID_LICENSE}" LANGUAGES C)
+if(WIN32)
+  enable_language(RC)
+endif()
+if(NOT CMAKE_C_COMPILER MATCHES "/MSVC/${CADRUMO_PIN_msvc}/"
+    OR NOT CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION STREQUAL CADRUMO_PIN_windows_sdk)
+  message(FATAL_ERROR "The selected compiler/SDK does not match native/toolchain.json")
+endif()
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/install" CACHE PATH "Default local installation prefix" FORCE)
+endif()
+if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8 OR NOT MSVC)
+  message(FATAL_ERROR "Only Windows x64 with MSVC is implemented")
+endif()
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release)$")
+  message(FATAL_ERROR "Select CMAKE_BUILD_TYPE=Debug or Release")
+endif()
+find_program(CADRUMO_DEV_PYTHON NAMES python python3
+  PATHS "${PROJECT_SOURCE_DIR}/.venv/Scripts" "${PROJECT_SOURCE_DIR}/.venv/bin"
+  NO_DEFAULT_PATH DOC "Development Python")
+if(NOT EXISTS "${CADRUMO_DEV_PYTHON}")
+  message(FATAL_ERROR "Set CADRUMO_DEV_PYTHON to the project's development interpreter")
+endif()
+execute_process(COMMAND git rev-list --count HEAD WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  OUTPUT_VARIABLE build_number OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+set(CADRUMO_BUILD_NUMBER "${build_number}" CACHE STRING "Numeric build identifier")
+string(TIMESTAMP build_date "%Y-%m-%dT%H:%M:%SZ" UTC)
+set(CADRUMO_BUILD_DATE "${build_date}" CACHE STRING "Build date; SOURCE_DATE_EPOCH controls the default")
+option(CADRUMO_INCLUDE_DEVELOPMENT_BINARY "Include the development interpreter in the assembled package" OFF)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/native/toolchain.json"
+  "${PROJECT_SOURCE_DIR}/native/package-layout.json")
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "import json; from dev.packaging.native.layout import load_layout; print(json.dumps(load_layout()))"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE package_layout
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+string(JSON CADRUMO_PLATFORM GET "${package_layout}" platform)
+string(JSON CADRUMO_BACKEND GET "${package_layout}" backend)
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+include(CTest)
+add_subdirectory(native)
+include(native/cmake/Packaging.cmake)

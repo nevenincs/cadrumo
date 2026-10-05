@@ -1,6 +1,23 @@
 modelo:
   schema:
     '347':
+      binding:
+        modelo-347-declarante-importe-total-anual-operaciones:
+          help: Dato declarado en el modelo 347, declaración anual de operaciones
+            con terceras personas.
+          label: IMPORTE TOTAL ANUAL DE LAS OPERACIONES
+        modelo-347-declarante-importe-total-arrendamiento-locales:
+          help: Dato declarado en el modelo 347, declaración anual de operaciones
+            con terceras personas.
+          label: IMPORTE TOTAL DE LAS OPERACIONES DE ARRENDAMIENTO DE LOCALES DE NEGOCIO
+        modelo-347-declarante-numero-inmuebles:
+          help: Dato declarado en el modelo 347, declaración anual de operaciones
+            con terceras personas.
+          label: NÚMERO TOTAL DE INMUEBLES
+        modelo-347-declarante-numero-personas-entidades:
+          help: Dato declarado en el modelo 347, declaración anual de operaciones
+            con terceras personas.
+          label: NÚMERO TOTAL DE PERSONAS Y ENTIDADES
       casilla:
         continuidad:
           arrendamiento-local-negocio:
@@ -70,15 +87,6 @@ modelo:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
             label: IMPORTE PERCIBIDO EN METÁLICO
-          importe-total-anual-operaciones:
-            help: Dato declarado en el modelo 347, declaración anual de operaciones
-              con terceras personas.
-            label: IMPORTE TOTAL ANUAL DE LAS OPERACIONES
-          importe-total-arrendamiento-locales:
-            help: Dato declarado en el modelo 347, declaración anual de operaciones
-              con terceras personas.
-            label: IMPORTE TOTAL DE LAS OPERACIONES DE ARRENDAMIENTO DE LOCALES DE
-              NEGOCIO
           importe-transmisiones-inmuebles:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
@@ -138,18 +146,6 @@ modelo:
             label: SITUACIÓN DEL INMUEBLE
           tipo-declaracion:
             label: Tipo de declaración (originaria / sustitutiva / complementaria)
-          tipo-soporte:
-            help: Dato declarado en el modelo 347, declaración anual de operaciones
-              con terceras personas.
-            label: TIPO DE SOPORTE
-          total-inmuebles:
-            help: Dato declarado en el modelo 347, declaración anual de operaciones
-              con terceras personas.
-            label: NÚMERO TOTAL DE INMUEBLES
-          total-personas-entidades:
-            help: Dato declarado en el modelo 347, declaración anual de operaciones
-              con terceras personas.
-            label: NÚMERO TOTAL DE PERSONAS Y ENTIDADES
       construct:
         modelo-347-informative:
           field:

@@ -19,6 +19,7 @@ from ...core.identity.bucket import BucketId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.export import (
     clasificar_casillas_oficiales,
@@ -47,7 +48,7 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
-from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision import CalculationRevision, persisted_boolean_binding_value
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -142,7 +143,7 @@ def _current_revision(
     revision_id = work_unit.current_calculation_revision_id
     if revision_id is None:
         return None
-    revision = repository.load().get(revision_id)
+    revision = repository.load(operation=operation).get(revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",
@@ -170,7 +171,7 @@ def _latest_verification(
     if revision is None:
         return None
     reports = require_verification_report_coordinates_current(
-        repository.load(),
+        repository.load(operation=operation),
         operation=operation,
     ).for_calculation_revision(revision.calculation_revision_id)
     return reports[-1] if reports else None
@@ -185,9 +186,18 @@ def _persisted_decimal_bindings(
         return empty_bindings
     enum_ids = enum_consumed_binding_ids(snapshot.revision)
     date_ids = revision_date_binding_ids(snapshot.revision)
+    channels = {binding.id: binding.value.channel for binding in snapshot.revision.bindings}
     decimal_bindings: dict[BindingId, Decimal] = {}
     for binding_id, raw_value in revision.binding_overrides.items():
         if binding_id in enum_ids or binding_id in date_ids:
+            continue
+        # A boolean-channel binding is persisted as a truth token, which is a
+        # fact about the taxpayer rather than a quantity to replay. A 1/0 on the
+        # same binding still reads as a decimal, as the runtime accepts it.
+        if (
+            channels.get(binding_id) is BindingValueChannel.BOOLEAN
+            and persisted_boolean_binding_value(str(raw_value)) is not None
+        ):
             continue
         try:
             parsed_value: Decimal = Decimal(str(raw_value))

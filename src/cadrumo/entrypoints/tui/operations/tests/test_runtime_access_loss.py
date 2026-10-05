@@ -14,7 +14,7 @@ from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
-from .....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from .....application.operations.frontend_contracts import (
     OperationCancellationResultV1,
     OperationDetachResultV1,

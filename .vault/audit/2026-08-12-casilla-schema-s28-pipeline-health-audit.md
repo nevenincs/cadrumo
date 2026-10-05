@@ -3,18 +3,17 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:139c87bb0f288b165d4c9a905df40b9a24e232ebc59adf4e57b8e9bcdefca645'
+body_hash: 'sha256:adcb79c44f3c11a14ee29d9511b49374923fb6501c6aa5045b8e1a12be0b7bc2'
 related:
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
-  - "[[2026-08-10-casilla-schema-plan]]"
 ---
 # `casilla-schema` audit: `S28 pipeline-health persisted-readiness review`
 
 ## Scope
 
-Reviewed the S28 delta in `src/cadrumo/application/overview/_pipeline_health.py`, `src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py`, the exact S28 leaves in the Catalan, English, Spanish, and Hungarian locale catalogues, and the S28 execution record. The accepted read-model ADR and the `W03.P08.S28` plan row were the governing contract.
+Reviewed the S28 delta in the retired module, `src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py`, the exact S28 leaves in the Catalan, English, Spanish, and Hungarian locale catalogues, and the S28 execution record. The accepted read-model ADR and the `W03.P08.S28` plan row were the governing contract.
 
 The review checked that conclusive filed lifecycle states alone retain precedence; every non-filed readiness state is derived from the latest persisted `VerificationReport` or the absence of one; finding severities remain display counters; the internal enum stem is `INCOMPLETO` while the wire value is `incomplete`; the parity test crosses the real CLI and encrypted `VerificationReportCatalogueRepository`; all four locale leaves resolve; and the delta stays within the declared shared-worktree surface.
 

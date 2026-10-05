@@ -1,4 +1,7 @@
-"""Bind the local quickfile chain to one worker profile and retained authority pin."""
+"""Bind the local quickfile chain to one worker profile and retained authority pin.
+
+Core types: :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+"""
 
 from __future__ import annotations
 

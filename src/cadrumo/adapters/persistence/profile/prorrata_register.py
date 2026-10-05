@@ -37,7 +37,6 @@ from ....core.logging import get_logger
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
-    ProrrataActivityRow,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
@@ -339,23 +338,6 @@ class ProrrataRegisterRepository:
                 entries=current.entries,
                 sector_definitions=(*retained, definition),
                 activity_rows=current.activity_rows,
-            )
-
-        return self._storage.mutate(_apply)
-
-    def upsert_activity_row(self, row: ProrrataActivityRow) -> ProrrataRegister:
-        """Atomically add or replace one row by its ``(ejercicio, activity_id)`` key."""
-
-        def _apply(current: ProrrataRegister) -> ProrrataRegister:
-            retained = tuple(
-                existing
-                for existing in current.activity_rows
-                if (existing.ejercicio, existing.activity_id) != (row.ejercicio, row.activity_id)
-            )
-            return ProrrataRegister(
-                entries=current.entries,
-                sector_definitions=current.sector_definitions,
-                activity_rows=(*retained, row),
             )
 
         return self._storage.mutate(_apply)

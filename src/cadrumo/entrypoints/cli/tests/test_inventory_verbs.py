@@ -14,7 +14,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....domain.contribuyente.inventory.records import (
+from ....domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,

@@ -18,6 +18,7 @@ from ....application.user_profile.access_contracts import AccessAction, Availabi
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
+from .. import ratios_contracts as contracts
 from .. import ratios_operation as ratios
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -51,19 +52,19 @@ def _registry() -> tuple[OperationRegistry, dict[str, OperationPublicDefinitionR
 
 def _request(definition_id: str, *, profile_id: UUID = _PROFILE) -> OperationRequest[BaseModel]:
     payload = {
-        ratios.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID: ratios.LedgerRatiosListRequest(
+        contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID: contracts.LedgerRatiosListRequest(
             profile_id=profile_id, year=2026
         ),
-        ratios.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID: ratios.LedgerRatiosSetRequest(
+        contracts.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID: contracts.LedgerRatiosSetRequest(
             profile_id=profile_id, category=_CATEGORY, ratio="0.5", year=2026
         ),
-        ratios.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID: ratios.LedgerRatiosUnsetRequest(
+        contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID: contracts.LedgerRatiosUnsetRequest(
             profile_id=profile_id, category=_CATEGORY
         ),
-        ratios.LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID: ratios.LedgerRatiosEligibleRequest(
+        contracts.LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID: contracts.LedgerRatiosEligibleRequest(
             profile_id=profile_id, year=2026
         ),
-        ratios.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID: ratios.LedgerRatiosValidateRequest(
+        contracts.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID: contracts.LedgerRatiosValidateRequest(
             profile_id=profile_id
         ),
     }[definition_id]
@@ -101,11 +102,11 @@ def _receipt(
 @pytest.mark.parametrize(
     ("definition_id", "commit_required"),
     [
-        (ratios.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID, False),
-        (ratios.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID, True),
-        (ratios.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID, True),
-        (ratios.LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID, False),
-        (ratios.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID, False),
+        (contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID, False),
+        (contracts.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID, True),
+        (contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID, True),
+        (contracts.LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID, False),
+        (contracts.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID, False),
     ],
 )
 def test_every_ratio_operation_is_period_independent_and_mutations_require_commit(
@@ -138,11 +139,11 @@ def test_every_ratio_operation_is_period_independent_and_mutations_require_commi
     assert isinstance(
         request.payload,
         (
-            ratios.LedgerRatiosListRequest,
-            ratios.LedgerRatiosSetRequest,
-            ratios.LedgerRatiosUnsetRequest,
-            ratios.LedgerRatiosEligibleRequest,
-            ratios.LedgerRatiosValidateRequest,
+            contracts.LedgerRatiosListRequest,
+            contracts.LedgerRatiosSetRequest,
+            contracts.LedgerRatiosUnsetRequest,
+            contracts.LedgerRatiosEligibleRequest,
+            contracts.LedgerRatiosValidateRequest,
         ),
     )
     assert request.payload.profile_id == _PROFILE
@@ -150,7 +151,7 @@ def test_every_ratio_operation_is_period_independent_and_mutations_require_commi
 
 def test_read_access_refuses_a_foreign_profile_subject() -> None:
     registry, registrations = _registry()
-    request = _request(ratios.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID, profile_id=_OTHER_PROFILE)
+    request = _request(contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID, profile_id=_OTHER_PROFILE)
 
     with pytest.raises(ProfileAccessRefusedError):
         resolve_operation_access(
@@ -168,27 +169,27 @@ def test_read_access_refuses_a_foreign_profile_subject() -> None:
 
 
 def test_request_schema_is_closed_and_ratio_is_a_bounded_unit_value() -> None:
-    request = ratios.LedgerRatiosSetRequest(
+    request = contracts.LedgerRatiosSetRequest(
         profile_id=_PROFILE,
         category=_CATEGORY,
         ratio="0.50",
         year=2026,
     )
-    schema = ratios.LedgerRatiosSetRequest.model_json_schema()
+    schema = contracts.LedgerRatiosSetRequest.model_json_schema()
 
     assert request.category == _CATEGORY
     assert schema["additionalProperties"] is False
     assert schema["properties"]["category"]["type"] == "string"
-    assert ratios.LedgerRatiosSetRequest.model_validate_json(request.model_dump_json()) == request
+    assert contracts.LedgerRatiosSetRequest.model_validate_json(request.model_dump_json()) == request
     with pytest.raises(ValidationError):
-        ratios.LedgerRatiosSetRequest(
+        contracts.LedgerRatiosSetRequest(
             profile_id=_PROFILE,
             category=_CATEGORY,
             ratio="1.5",
             year=2026,
         )
     with pytest.raises(ValidationError):
-        ratios.LedgerRatiosSetRequest(
+        contracts.LedgerRatiosSetRequest(
             profile_id=_PROFILE,
             category=_CATEGORY,
             ratio="0.5",
@@ -198,7 +199,7 @@ def test_request_schema_is_closed_and_ratio_is_a_bounded_unit_value() -> None:
 
 
 def test_list_censo_mismatch_requires_registered_refusal_receipt() -> None:
-    result = ratios.LedgerRatiosListResult(
+    result = contracts.LedgerRatiosListResult(
         profile_id=_PROFILE,
         year=2026,
         outcome="censo_mismatch",
@@ -206,10 +207,10 @@ def test_list_censo_mismatch_requires_registered_refusal_receipt() -> None:
         count=0,
     )
     refusal = _receipt(
-        ratios.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
         condition=OperationTerminalCondition.REFUSED,
         effect=OperationEffect.NONE,
-        refusal_code=ratios.LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
+        refusal_code=contracts.LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE,
     )
 
     assert ratios._project_list_result(result, refusal).outcome == "censo_mismatch"
@@ -221,7 +222,7 @@ def test_list_censo_mismatch_requires_registered_refusal_receipt() -> None:
 
 
 def test_unset_no_override_projects_only_with_the_registered_refusal_receipt() -> None:
-    result = ratios.LedgerRatiosUnsetResult(
+    result = contracts.LedgerRatiosUnsetResult(
         profile_id=_PROFILE,
         requested_category="vehicle-alias",
         category=_CATEGORY,
@@ -229,22 +230,22 @@ def test_unset_no_override_projects_only_with_the_registered_refusal_receipt() -
         prior_ratio=None,
     )
     refusal = _receipt(
-        ratios.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
         condition=OperationTerminalCondition.REFUSED,
         effect=OperationEffect.NONE,
-        refusal_code=ratios.LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE,
+        refusal_code=contracts.LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE,
     )
 
     assert ratios._project_unset_result(result, refusal).requested_category == "vehicle-alias"
     with pytest.raises(ValueError):
         ratios._project_unset_result(
             result,
-            refusal.model_copy(update={"refusal_ref": ratios.LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE}),
+            refusal.model_copy(update={"refusal_ref": contracts.LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE}),
         )
 
 
 def test_set_result_retains_the_raw_category_token_for_bridge_correlation() -> None:
-    result = ratios.LedgerRatiosSetResult(
+    result = contracts.LedgerRatiosSetResult(
         profile_id=_PROFILE,
         requested_category="vehicle-alias",
         category=_CATEGORY,
@@ -255,7 +256,7 @@ def test_set_result_retains_the_raw_category_token_for_bridge_correlation() -> N
     projection = ratios._project_set_result(
         result,
         _receipt(
-            ratios.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
+            contracts.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
             effect=OperationEffect.UPDATED,
         ),
     )

@@ -21,6 +21,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
     from ...core.profile_session import ProfileSessionRefusalReason
+    from .access_contracts import ProfileAccessBinding
     from .login_handover import ProfileLoginHandoverJournal
 
 
@@ -106,6 +107,20 @@ class ProfilePersistedSessionPort(Protocol):
     @property
     def absolute_deadline(self) -> datetime:
         """The immutable cap no resume can extend."""
+        ...
+
+
+class ProfileSignInGenerationPort(Protocol):
+    """One captured position in a profile's durable human sign-in sequence."""
+
+    @property
+    def lineage(self) -> UUID:
+        """The random lineage the position belongs to."""
+        ...
+
+    @property
+    def generation(self) -> int:
+        """The counter within that lineage."""
         ...
 
 
@@ -235,8 +250,17 @@ class ProfileLoginSessionPort(Protocol):
         now: datetime,
         idle_minutes: int,
         absolute_minutes: int,
-    ) -> ProfilePersistedSessionPort:
-        """Mint and return the canonical persisted acceleration receipt."""
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
+        sign_in_generation: ProfileSignInGenerationPort,
+    ) -> ProfilePersistedSessionPort | None:
+        """Mint and return the canonical persisted acceleration receipt.
+
+        The receipt binds ``login_id``, the originating OS login, and exactly
+        ``sign_in_generation``, captured for ``sign_in_binding``'s custody
+        when its session was published. Return ``None``, having written
+        nothing, when that generation is no longer the durable current one.
+        """
         ...
 
     def resume_acceleration_receipt(
@@ -256,11 +280,8 @@ class ProfileLoginSessionPort(Protocol):
         *,
         storage_root: Path,
         profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Borrow the existing human wrap key for a trusted protected channel."""
+        """Read only the keychain proof the receipt locator names; never unwrap or delete."""
         ...
 
     def resume_acceleration_receipt_with_key(
@@ -272,8 +293,14 @@ class ProfileLoginSessionPort(Protocol):
         dek_epoch: str,
         now: datetime,
         receipt_key: bytearray,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Verify a supplied human wrap key without consulting the OS store."""
+        """Verify a supplied human wrap key against ``login_id`` and the current sign-in generation.
+
+        It never reads a key from the OS store. A receipt refused for its own
+        metadata or binding is deleted by this runtime-side reader.
+        """
         ...
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
@@ -339,6 +366,7 @@ __all__ = [
     "ProfileLoginThrottleEvaluationPort",
     "ProfilePersistedSessionPort",
     "ProfileSessionResumeOutcomePort",
+    "ProfileSignInGenerationPort",
     "bind_profile_login_session_port",
     "profile_current_bucket_session",
     "profile_login_session_port",

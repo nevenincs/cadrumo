@@ -15,13 +15,10 @@ from ._modelo_nonwork_common_command_parameters import (
     _optional_text_option,
     _optional_whole_number_option,
 )
-from .command_spec import (
-    ArgumentSpec,
-    CommandSpec,
+from .command_parameter_contracts import ArgumentSpec, OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -29,6 +26,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 RECONCILE_TARGET_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
     _optional_text_argument("work_unit_id", "cli.app.modelo.reconcile.work_unit_id_help"),
@@ -37,6 +35,9 @@ RECONCILE_TARGET_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
     _optional_text_option("period", ("--period",), "cli.app.modelo.work.period_help"),
     _optional_text_option("revision", ("--revision",), "cli.app.modelo.work.revision_help"),
     _optional_text_option("bucket_id", ("--bucket-id",), "cli.app.modelo.work.bucket_id_help"),
+    _optional_text_option(
+        "calculation_revision", ("--calculation-revision",), "cli.app.modelo.reconcile.calculation_revision_help"
+    ),
     _optional_text_option("actor", ("--by",), "cli.app.modelo.work.actor_help"),
 )
 
@@ -49,7 +50,26 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.app.modelo.reconcile.pull_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=RECONCILE_TARGET_PARAMETERS,
+        parameters=(
+            *RECONCILE_TARGET_PARAMETERS,
+            OptionSpec(
+                name="source",
+                declarations=("--source",),
+                value=ValueContract(
+                    DeferredTarget(
+                        "...application.modelo.reconciliation_records",
+                        "ModeloReconciliationEvidenceKind",
+                        __package__,
+                    )
+                ),
+                default=ParameterDefault.value("justificante"),
+                help_key=TranslationKey("cli.app.modelo.reconcile.source_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+        ),
         policy=_BROWSER_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("._modelo_reconcile_cli", "reconcile_pull_verb", __package__)),
         result_schema=ResultSchemaSpec(

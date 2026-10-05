@@ -10,7 +10,6 @@ builds the report lives in the application layer.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date
 from decimal import Decimal
 from typing import Annotated
 
@@ -18,26 +17,20 @@ from pydantic import BaseModel, Field, NonNegativeInt
 
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ..calculations.registry.schema_base import DateAxis
+from ..calculations.registry.authority import PinnedAuthorityOperation
 from .carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
 )
-
-_CARRY_WINDOW_FACT_ID = "liva-art-99-compensation-carry-window-years"
+from .carry_window import resolve_iva_compensation_carry_window_years
 
 CompensationExpiryYear = Annotated[int, Field(ge=2000, le=2200)]
-"""The year an unused compensation lot lapses.
+"""A coarse year-level carry-window review boundary for a compensation lot.
 
-Deliberately wider than :obj:`~cadrumo.core.filing_year.FilingYear`. This is a
-DERIVED year based on the configured carry window for the earliest still-active lot --
-so it may legitimately fall beyond the last year a return can be filed for, and
-narrowing it to the filing-year range would refuse a balance the engine can
-correctly produce.
+Deliberately wider than FilingYear. This derived review year may fall beyond
+the last year a return can be filed for. It is not an exact statutory filing
+deadline.
 
 Declared once because the CLI wallet payload projects the same field. The bound
 was written out at both sites identically, which is the shape that drifts: the
@@ -62,19 +55,20 @@ class IvaWalletBalanceReport(BaseModel):
 def build_iva_wallet_balance_report(
     carry_forward: IvaCompensationCarryForwardReport,
     *,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaWalletBalanceReport:
     """Summarise a carry-forward report into a balance snapshot.
 
-    ``total_balance`` is the gross remaining balance across all positive lots.
-    ``active_balance`` is the portion still inside the statutory compensation
-    window, including lots due for expiry review. ``expired_balance`` is the
-    portion past that window and therefore not usable without separate review.
+    Total balance is the gross remaining balance across all positive lots.
+    Active balance is the portion inside the coarse year-level review window,
+    including lots due for review. Expired balance is the portion beyond that
+    review window and therefore not usable without separate review.
 
-    ``next_expiry_year`` is the source filing year plus the configured carry
-    window for the earliest non-expired lot that still carries a non-zero
-    remaining balance. ``None`` when no non-expired lots
-    with remaining balance exist.
+    Next expiry year is the earliest source-year plus carry-window projection
+    among non-expired lots with a non-zero remaining balance. Each lot resolves
+    its window from its own period end through the supplied held authority
+    operation. None when no non-expired lots with remaining balance exist. This
+    year projection is not an exact statutory filing deadline.
 
     Returns an :class:`IvaWalletBalanceReport`.
     """
@@ -89,7 +83,7 @@ def build_iva_wallet_balance_report(
         active_balance=active_balance,
         expired_balance=expired_balance,
         lot_count=len(carry_forward.lots),
-        next_expiry_year=_next_expiry_year(active_lots_with_balance, authority=authority),
+        next_expiry_year=_next_expiry_year(active_lots_with_balance, operation=operation),
         unallocated_applied_amount=carry_forward.unallocated_applied_amount,
     )
 
@@ -104,8 +98,8 @@ def _partition_balance_lots(
         if lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
     ]
     # Include ACTIVE and EXPIRY_REVIEW_DUE lots. EXPIRED_REVIEW_REQUIRED lots
-    # have passed the statutory boundary and are not usable without a separate
-    # policy review.
+    # are beyond the coarse year-level review window and require a separate
+    # review before inclusion in the active balance.
     active_lots = [
         lot
         for lot in lots_with_balance
@@ -118,48 +112,22 @@ def _sum_lot_balances(lots: Iterable[IvaCompensationCarryForwardLot]) -> Decimal
     return sum((lot.remaining_amount for lot in lots), Decimal("0"))
 
 
-def _resolve_carry_window_years(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource | None = None,
-) -> int:
-    """Resolve the carry-window scalar through the validated registry authority."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "IVA compensation carry-window resolution requires an explicit authority operation or scope",
-        )
-    resolved = authority.resolve_governed_fact(
-        ScalarFactQuery(
-            fact_id=_CARRY_WINDOW_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedScalarFact):
-        raise RegistryValidationError("IVA compensation carry-window fact must resolve as a scalar fact")
-    value = resolved.payload.value
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise RegistryValidationError(
-            f"IVA compensation carry-window fact {resolved.fact_id!r} resolved non-integer payload {value!r}",
-        )
-    return value
-
-
 def _next_expiry_year(
     lots: Iterable[IvaCompensationCarryForwardLot],
     *,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> int | None:
     lot_list = tuple(lots)
     if not lot_list:
         return None
-    earliest_source_year = min(int(lot.source_filing_year) for lot in lot_list)
-    carry_window_years = _resolve_carry_window_years(
-        effective_date=date(earliest_source_year, 1, 1),
-        authority=authority,
+    return min(
+        int(lot.source_filing_year)
+        + resolve_iva_compensation_carry_window_years(
+            effective_date=lot.source_period.end_date,
+            operation=operation,
+        )
+        for lot in lot_list
     )
-    return min(int(lot.source_filing_year) + carry_window_years for lot in lot_list)
 
 
 __all__ = [

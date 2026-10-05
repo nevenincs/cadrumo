@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:cc7538b38942a9b3e1ea203a17d62444ee2c239e844a548d978f033445c30710'
+modified: '2026-10-03'
+body_hash: 'sha256:21fc4f29eeed3f9b2fa60fc0431d9a0039728b4556c86be9980bcfe1891d42c5'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-research]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
@@ -27,7 +27,7 @@ The `aeat` CLI workflow these gates sit behind is the surface an autonomous LLM 
 
 ## Considerations
 
-- **The predicate DSL already supports this shape.** `implies_nonzero(["antecedent_id","consequent_id"])` is a shipped, validated operator (`KNOWN_VERIFICATION_PREDICATE_OPERATORS`, `src/cadrumo/domain/calculations/registry/_schema.py:1011-1043`); no schema change is required for M202, M123, M151, M714, or the M210 general/UE-branch guard.
+- **The predicate DSL already supports this shape.** `implies_nonzero(["antecedent_id","consequent_id"])` is a shipped, validated operator (`KNOWN_VERIFICATION_PREDICATE_OPERATORS`, the former source file); no schema change is required for M202, M123, M151, M714, or the M210 general/UE-branch guard.
 - **No construct/binding coverage sweep applies.** `verification_predicates` is a revision-scoped array with no `ConstructDefinition` membership requirement (`_schema.py:643-665`); registry-build validation (`_validate_surfaces.py:196-249`) checks only legal_refs resolution, casilla id existence, and operator-name validity. Each addition is a clean, isolated registry-authoring change.
 - **Legal grounding pre-exists for every recommended guard.** Five binding provisions (`ley-27-2014:art-40-3`/`art-40`, `rd-439-2007:art-90`, `ley-35-2006:art-93`, `ley-19-1991:art-30`, `trlirnr-rdleg-5-2004:art-24`) are already authored in the legal catalogue with `corpus_ref` pointing at bundled, reviewed BOE text (`review_status = "reviewed"`, dated 2026-05-05 through 2026-06-02) — no new legal-catalogue authoring is required, per `registry-calculation-legal-grounding` and `legal-grounding-verifies-bundled-authoritative-corpus`.
 - **Two structurally different risk shapes exist.** M202, M151, and the M210 general-branch guards are "formula-defended" (the consequent is already formula-derived from the antecedent, so the guard is declarative/defensive, mirroring M131's `01→02`), where a registry regression — not an operator omission — is the realistic trigger. M714 is "operator-skippable" (sequential manual casillas, no formula linkage), the closer analogue to M200's pre-ADR `00500→00501` gap and the most analogous case for a future Phase-2 derivation effort.

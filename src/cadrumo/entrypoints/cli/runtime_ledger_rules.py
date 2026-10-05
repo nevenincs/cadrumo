@@ -2,18 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Never
 from uuid import UUID
 
 import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.ledger.rule_operation import (
-    LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
-    LEDGER_RULE_VALIDATION_REFUSAL_CODE,
+from ...application.ledger.rule_contracts import (
     LedgerRuleAddProjection,
     LedgerRuleAddRequest,
     LedgerRuleApplyProjection,
@@ -21,15 +16,19 @@ from ...application.ledger.rule_operation import (
     LedgerRuleListProjection,
     LedgerRuleListRequest,
 )
+from ...application.ledger.rule_operation import (
+    LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
+    LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
+    LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
+)
+from ...application.ledger.rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
@@ -38,16 +37,6 @@ def _client(ctx: typer.Context, profile_id: UUID) -> RuntimeFrontendClient:
     if profile_id != expected_profile_id:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return require_profile_client(ctx, expected_profile_id=expected_profile_id)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _submit[ProjectionT: BaseModel](
@@ -90,34 +79,11 @@ def submit_ledger_rule_add(
     )
     projection = completed.projection
     if projection.profile_id != request.profile_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     if projection.outcome == "validation_error":
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.effect is not OperationEffect.NONE
-            or completed.refusal_code != LEDGER_RULE_VALIDATION_REFUSAL_CODE
-            or projection.rule is not None
-            or projection.validation_code is None
-            or not projection.validation_messages
-        ):
-            _invalid(completed)
-        return completed
+        return _ledger_rule_add_refusal(completed, projection)
 
-    rule = projection.rule
-    expected_category = request.category_id.strip() or None if request.category_id is not None else None
-    expected_actor = request.actor or str(request.profile_id) or "operator"
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.UPDATED
-        or completed.refusal_code is not None
-        or rule is None
-        or rule.description_pattern != request.description_pattern
-        or rule.classification is not request.classification
-        or rule.category_id != expected_category
-        or rule.priority != request.priority
-        or rule.actor != expected_actor
-    ):
-        _invalid(completed)
+    _require_created_rule(completed, request)
     return completed
 
 
@@ -139,7 +105,7 @@ def submit_ledger_rule_list(
         or completed.refusal_code is not None
         or completed.projection.profile_id != request.profile_id
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -157,18 +123,94 @@ def submit_ledger_rule_apply(
     )
     projection = completed.projection
     if projection.profile_id != request.profile_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     if projection.outcome == "validation_error":
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.effect not in {OperationEffect.NONE, OperationEffect.PARTIAL}
-            or completed.refusal_code != LEDGER_RULE_VALIDATION_REFUSAL_CODE
-            or projection.validation_code is None
-            or not projection.validation_messages
-        ):
-            _invalid(completed)
-        return completed
+        return _ledger_rule_apply_refusal(completed, projection)
 
+    valid_receipt = _ledger_rule_apply_receipt_valid(completed, projection)
+    if not valid_receipt:
+        raise invalid_completion_error(completed)
+
+    if projection.outcome == "dry_run":
+        if not request.dry_run or projection.dry_run is not True:
+            raise invalid_completion_error(completed)
+    elif request.dry_run:
+        raise invalid_completion_error(completed)
+    return completed
+
+
+__all__ = ["submit_ledger_rule_add", "submit_ledger_rule_apply", "submit_ledger_rule_list"]
+
+
+def _ledger_rule_add_refusal(
+    completed: RegisteredOperationCompletion[LedgerRuleAddProjection], projection: LedgerRuleAddProjection
+) -> RegisteredOperationCompletion[LedgerRuleAddProjection]:
+    """Require the closed rule validation refusal and its admitted effects."""
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code != LEDGER_RULE_VALIDATION_REFUSAL_CODE
+        or projection.rule is not None
+        or projection.validation_code is None
+        or not projection.validation_messages
+    ):
+        raise invalid_completion_error(completed)
+    return completed
+
+
+def _require_created_rule(
+    completed: RegisteredOperationCompletion[LedgerRuleAddProjection], request: LedgerRuleAddRequest
+) -> None:
+    """Correlate the complete created rule with every submitted option."""
+    projection = completed.projection
+    rule = projection.rule
+    expected_category = _created_rule_category(request)
+    expected_actor = request.actor or str(request.profile_id) or "operator"
+    if (
+        _created_rule_terminal_invalid(completed)
+        or rule is None
+        or rule.description_pattern != request.description_pattern
+        or rule.classification is not request.classification
+        or (rule.category_id != expected_category)
+        or (rule.priority != request.priority)
+        or (rule.actor != expected_actor)
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _created_rule_terminal_invalid(completed: RegisteredOperationCompletion[LedgerRuleAddProjection]) -> bool:
+    """Require successful persisted rule creation without refusal."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.UPDATED
+        or completed.refusal_code is not None
+    )
+
+
+def _created_rule_category(request: LedgerRuleAddRequest) -> str | None:
+    """Retain exact optional category normalization."""
+    return request.category_id.strip() or None if request.category_id is not None else None
+
+
+def _ledger_rule_apply_refusal(
+    completed: RegisteredOperationCompletion[LedgerRuleApplyProjection], projection: LedgerRuleApplyProjection
+) -> RegisteredOperationCompletion[LedgerRuleApplyProjection]:
+    """Require the closed rule validation refusal and its admitted effects."""
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.effect not in {OperationEffect.NONE, OperationEffect.PARTIAL}
+        or completed.refusal_code != LEDGER_RULE_VALIDATION_REFUSAL_CODE
+        or projection.validation_code is None
+        or not projection.validation_messages
+    ):
+        raise invalid_completion_error(completed)
+    return completed
+
+
+def _ledger_rule_apply_receipt_valid(
+    completed: RegisteredOperationCompletion[LedgerRuleApplyProjection], projection: LedgerRuleApplyProjection
+) -> bool:
+    """Correlate dry-run or event-bearing rule application with its terminal receipt."""
     if projection.outcome == "dry_run":
         valid_receipt = (
             completed.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -182,15 +224,4 @@ def submit_ledger_rule_apply(
             and completed.effect is expected_effect
             and completed.refusal_code is None
         )
-    if not valid_receipt:
-        _invalid(completed)
-
-    if projection.outcome == "dry_run":
-        if not request.dry_run or projection.dry_run is not True:
-            _invalid(completed)
-    elif request.dry_run:
-        _invalid(completed)
-    return completed
-
-
-__all__ = ["submit_ledger_rule_add", "submit_ledger_rule_apply", "submit_ledger_rule_list"]
+    return valid_receipt

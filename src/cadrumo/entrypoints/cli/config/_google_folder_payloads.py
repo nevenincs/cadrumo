@@ -9,16 +9,8 @@ from __future__ import annotations
 from ....core.json_contract import OutputSchema
 
 
-class GoogleFolderSetResult(OutputSchema):
-    """Persisted Drive-root selection returned by ``folder set``."""
-
-    operation: str = "config.google.folder.set"
-    profile: str
-    root_folder_id: str
-
-
 class GoogleFolderViewResult(OutputSchema):
-    """Current optional Drive-root selection returned by ``folder view``."""
+    """The Drive root folder created for the profile, as returned by ``folder view``."""
 
     operation: str = "config.google.folder.view"
     profile: str
@@ -26,4 +18,4 @@ class GoogleFolderViewResult(OutputSchema):
     root_folder_id: str | None = None
 
 
-__all__ = ["GoogleFolderSetResult", "GoogleFolderViewResult"]
+__all__ = ["GoogleFolderViewResult"]

@@ -16,7 +16,8 @@ from ....core.config import load_settings, override_settings
 from ....core.directory_scan import (
     scan_directory,
 )
-from ....core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
+from ....core.storage_environment import STORAGE_ROOT
+from ....core.storage_materialization import ensure_storage_tree
 from ....core.storage_taxonomy import StorageArea, StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ..models import StorageAreaDisposition, StorageOccupancy, StorageTreeIssueKind
@@ -135,7 +136,7 @@ class TestTreeCheckReportsWithoutRepairing:
 
         found = [issue for issue in drifted.issues if issue.kind is StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED]
         if os.name != "nt":
-            assert stat.S_IMODE(tmp_path.stat().st_mode) != STORAGE_ROOT_MODE, (
+            assert stat.S_IMODE(tmp_path.stat().st_mode) != STORAGE_ROOT.posix_directory_mode, (
                 "the platform accepted a mode change without applying it, so the drift assertion below "
                 "would pass against a check that never looked"
             )

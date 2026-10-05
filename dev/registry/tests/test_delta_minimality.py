@@ -34,7 +34,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.delta_minimality import (
     EDITION_LOCAL_FIELDS,
-    LINEAGE_CLAIM_FIELDS,
     MinimalityVerdict,
     RowJudgement,
     definition_findings,
@@ -48,6 +47,7 @@ from ..analysis.delta_minimality import (
     stated_casillas,
 )
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

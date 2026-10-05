@@ -2,47 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import replace
+from typing import Protocol
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_certificado import AeatCertificadoId
-from ...core.identity.profile import canonical_profile_bucket_id
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
-from ...core.time.clock import now
+from ...core.operations import OperationEffect
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
+from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.profile_guard import require_access_request_profile_payload
+from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -53,6 +32,13 @@ from ..user_profile.access_contracts import (
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_data_ports import FiledEffectGuard
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
+from .live_operation_execution import (
+    own_provider_browser,
+    publish_live_capture_report,
+    require_exact_profile_worker,
+    require_live_executor_identity,
+)
+from .live_operation_registration import build_live_operation_definition, require_live_capture_receipt
 from .notification_document_read_operation import (
     NotificationDocumentServiceFactory,
     NotificationDocumentViewPublicResultV1,
@@ -94,14 +80,15 @@ class NotificationDocumentCapturePublicResultV1(NotificationDocumentViewPublicRe
     already_in_custody: bool
 
 
-NotificationDocumentCaptureCompositionFactory = Callable[[], NotificationsCaptureComposition]
+class NotificationDocumentCaptureCompositionFactory(Protocol):
+    """Compose notification-document dependencies under their held authority operation."""
+
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> NotificationsCaptureComposition:
+        """Return the exact worker-local notification composition."""
+        ...
 
 
-def _require_exact_profile(profile_id: UUID, subject_ref: str) -> str:
-    canonical_id = canonical_profile_bucket_id(profile_id)
-    if require_active_bucket_id() != canonical_id or subject_ref != profile_operation_subject(canonical_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return canonical_id
+_RECEIPT_CONTRADICTION = "notification document custody contradicts its terminal receipt"
 
 
 def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -110,18 +97,13 @@ def _project_capture(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
     report = NotificationDocumentCaptureOperationReport.model_validate(result, strict=True)
     custody = report.custody
     record = custody.record
-    expected_effect = OperationEffect.NONE if custody.already_in_custody else OperationEffect.UPDATED
-    if (
-        receipt.identity.definition_id != NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(record.bucket_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not expected_effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-    ):
-        raise ValueError("notification document custody contradicts its terminal receipt")
+    require_live_capture_receipt(
+        receipt,
+        definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,
+        bucket_id=str(record.bucket_id),
+        stored=not custody.already_in_custody,
+        message=_RECEIPT_CONTRADICTION,
+    )
     view = project_notification_document_record(record)
     return NotificationDocumentCapturePublicResultV1.model_validate(
         {**view.model_dump(mode="python"), "already_in_custody": custody.already_in_custody}, strict=True
@@ -149,20 +131,17 @@ class NotificationDocumentCaptureExecutor:
         context: OperationExecutorContext,
     ) -> str:
         payload = request.payload
-        bucket_id = _require_exact_profile(payload.profile_id, request.subject_ref)
-        if (
-            request.definition_id != NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        bucket_id = require_exact_profile_worker(
+            payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
+        )
+        require_live_executor_identity(request, context, definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID)
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
-        composition = self._composition_factory()
+        composition = self._composition_factory(operation=context.authority_operation)
         service = self._document_service_factory()
-        browser_resources = self._browser_resources_factory()
-        context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
-        await context.events.phase(_PHASES[1])
+        browser_resources = await own_provider_browser(
+            context, self._browser_resources_factory, acquire_phase=_PHASES[1]
+        )
 
         @asynccontextmanager
         async def fresh_custody_guard() -> AsyncGenerator[None]:
@@ -189,12 +168,12 @@ class NotificationDocumentCaptureExecutor:
         if str(custody.record.bucket_id) != bucket_id or custody.record.certificado_id != payload.certificado_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         effect = OperationEffect.NONE if custody.already_in_custody else OperationEffect.UPDATED
-        await context.events.phase(_PHASES[3])
-        await context.events.effect(session_receipt.combine(effect))
-        async with context.cancellation.irreversible_section():
-            return await context.operands.put(
-                NotificationDocumentCaptureOperationReport(custody=custody), written_at=now()
-            )
+        return await publish_live_capture_report(
+            context,
+            NotificationDocumentCaptureOperationReport(custody=custody),
+            result_phase=_PHASES[3],
+            effect=session_receipt.combine(effect),
+        )
 
 
 def build_notification_document_capture_definition(
@@ -210,34 +189,14 @@ def build_notification_document_capture_definition(
             composition_factory, document_service_factory, browser_resources_factory, provider_preflight
         )
 
-    return OperationDefinition(
+    return build_live_operation_definition(
         definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,
         request_type=NotificationDocumentCaptureRequest,
         result_type=NotificationDocumentCaptureOperationReport,
-        executor_factory=OperationExecutorFactory(
-            request_type=NotificationDocumentCaptureRequest,
-            executor_type=NotificationDocumentCaptureExecutor,
-            build=build,
-        ),
+        executor_type=NotificationDocumentCaptureExecutor,
+        build=build,
         phase_codes=_PHASES,
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset({OperationOwnedResource.PROCESS}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES,
     )
 
 
@@ -245,11 +204,13 @@ def resolve_notification_document_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile document disclosure and a fresh COMMIT fence."""
-    if request.definition_id != NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID or not isinstance(
-        request.payload, NotificationDocumentCaptureRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    payload = require_access_request_profile_payload(
+        request,
+        definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,
+        payload_type=NotificationDocumentCaptureRequest,
+        access_profile_id=context.profile_id,
+    )
+    resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
     disclosures = resolved.policy.disclosures
     if context.action is AccessAction.RESULT:
         schema = context.contract.result_schema
@@ -277,18 +238,9 @@ def build_notification_document_capture_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind a safe summary, exact-profile policy and truthful effect receipt."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=NotificationDocumentCaptureRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=NotificationDocumentCapturePublicResultV1,
-        ),
+        public_result_type=NotificationDocumentCapturePublicResultV1,
         result_projector=_project_capture,
         access_resolver=resolve_notification_document_capture_access,
     )

@@ -10,6 +10,7 @@ that actually runs semgrep over the tree lives in ``test_security_scan``.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -20,12 +21,33 @@ from ..security import (
     _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
     SecurityOutcome,
     SecurityResult,
+    _semgrep_environment,
     classify_semgrep_output,
     render_console_report,
     semgrep_command,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_scanner_state_uses_existing_controlled_directories(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Native scanner overrides cannot redirect the managed scan outside storage."""
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path))
+    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+    for variable in ("CADRUMO_TOOL_CONFIG_DIR", "CADRUMO_TOOL_CACHE_DIR", "CADRUMO_TOOL_STATE_DIR", "CADRUMO_TEMP_DIR"):
+        monkeypatch.delenv(variable, raising=False)
+    monkeypatch.setenv("SEMGREP_SETTINGS_FILE", str(tmp_path / "ambient-settings.yml"))
+    monkeypatch.setenv("CADRUMO_TOOL_STATE_DIR", "scanner-state")
+    environment = _semgrep_environment()
+    for variable in ("SEMGREP_SETTINGS_FILE", "SEMGREP_LOG_FILE", "SEMGREP_VERSION_CACHE_PATH"):
+        path = Path(environment[variable])
+        assert path.is_relative_to(tmp_path)
+        assert path.parent.is_dir()
+    assert Path(environment["SEMGREP_LOG_FILE"]) == tmp_path / "scanner-state" / "semgrep" / "semgrep.log"
+    assert Path(environment["SEMGREP_SETTINGS_FILE"]) != tmp_path / "ambient-settings.yml"
+    assert Path(environment["TEMP"]).is_dir()
+    assert Path(environment["TEMP"]).is_relative_to(tmp_path)
+
 
 # A real captured semgrep --json payload, trimmed from a scoped run against
 # src/cadrumo/core (2 of the 11 real results, the 1 real parse error, and a

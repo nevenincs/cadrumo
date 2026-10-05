@@ -14,16 +14,18 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.local_runtime.windows_process import WindowsOwnedProcess
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.runtime.contracts import RuntimeExitReason
 from cadrumo.application.runtime.login import RuntimeLoginInventory
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeProfileStatus, RuntimeSessionRequest
-from cadrumo.application.user_profile.access_contracts import LoginEligibility
+from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo.core.config import override_settings
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from .. import main
 from ..profile_connections import RuntimeProfileConnections
 from .test_profile_connections import LoginObservation, connect, login
@@ -54,7 +56,7 @@ def test_inventory_absence_drains_only_after_verified_eligibility(tmp_path: Path
     current = RuntimeLoginInventory((native,), complete=True)
     assert profiles._login_contexts() == (native,)
     assert profiles._private_work_available()
-    native.locked = True
+    native.lock_state = OsLockState.LOCKED
     current = RuntimeLoginInventory((native,), complete=False)
     profiles._login_contexts()
     assert profiles._private_work_available() and not stop.is_set()
@@ -165,7 +167,10 @@ def test_login_witness_loss_drains_real_worker_without_revoking_grants(tmp_path:
             login_inventory=lambda: current,
             secret_store=lambda: subject.native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         clients = []
         native_handles: list[int] = []
         with ThreadPoolExecutor(max_workers=1) as pool:
@@ -271,7 +276,7 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
         prepared.append(profiles)
 
     class ServerPort:
-        DRAIN_SECONDS = RuntimeTransportServer.DRAIN_SECONDS
+        DRAIN_SECONDS = RetainedRuntimeTransportServer.DRAIN_SECONDS
 
         def __init__(
             self, endpoint: object, *, profiles: RuntimeProfileConnections, stop: Event, **_options: object
@@ -293,7 +298,7 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
             assert inventory_owners == ["1000", "1000"]
 
     def watchdog(stop: Event, *, timeout: float) -> AbstractContextManager[None]:
-        assert not stop.is_set() and timeout == RuntimeTransportServer.DRAIN_SECONDS + 2
+        assert not stop.is_set() and timeout == RetainedRuntimeTransportServer.DRAIN_SECONDS + 2
         return nullcontext()
 
     monkeypatch.setattr(main, "sys", SimpleNamespace(platform="linux"))
@@ -314,18 +319,19 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
             signal=lambda number, handler: signal_calls.append((number, handler)),
         ),
     )
-    assert (
-        main.run(
-            [
-                "--storage-root",
-                str(tmp_path),
-                "--storage-identity",
-                "unit-storage",
-                "--expected-version",
-                "unit-version",
-            ]
+    with override_settings(cadrumo_dev_runtime_session_override="0"):
+        assert (
+            main.run(
+                [
+                    "--storage-root",
+                    str(tmp_path),
+                    "--storage-identity",
+                    "unit-storage",
+                    "--expected-version",
+                    "unit-version",
+                ]
+            )
+            == RuntimeExitReason.LOGIN_WITNESS_LOSS
         )
-        == 0
-    )
     assert released == [True] and len(prepared) == 1
     assert signal_calls[-2:] == list(original_handlers.items())

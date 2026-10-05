@@ -25,9 +25,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     GovernedFactQuery,
     MappingFactQuery,
     OverrideFactQuery,
+    ResolvedGovernedFact,
     ScalarFactQuery,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.authority import compiled_bundled_authority
@@ -220,12 +221,22 @@ def cross_domain_fact_findings(
     probes: tuple[CrossDomainFactProbe, ...] = CROSS_DOMAIN_FACT_PROBES,
 ) -> tuple[CrossDomainFactFinding, ...]:
     """Return every cross-domain authority, evidence, or refusal defect."""
-    findings: list[CrossDomainFactFinding] = []
     evidence = EvidenceValidator(
         legal_refs=authority.catalogues.legal,
         source_refs=authority.catalogues.sources,
         source_root=source_root,
     )
+    _require_supported_probe_coordinate(authority)
+    findings = (
+        finding
+        for probe in probes
+        for finding in _probe_findings(probe, authority=authority, evidence=evidence, source_root=source_root)
+    )
+    return tuple(findings)
+
+
+def _require_supported_probe_coordinate(authority: ValidatedRegistryAuthority) -> None:
+    """Refuse if the fixed filing-period probe lies outside the authority span."""
     supported = authority.catalogues.supported_filing_years
     if supported is not None and not supported.admits_filing_year(_SUPPORTED_PROBE_DATE.year):
         raise RegistryValidationError(
@@ -233,97 +244,135 @@ def cross_domain_fact_findings(
             "move it inside, or every probe below reports an out-of-support refusal rather than the "
             "authority behaviour it exists to measure"
         )
-    for probe in probes:
+
+
+def _probe_findings(
+    probe: CrossDomainFactProbe,
+    *,
+    authority: ValidatedRegistryAuthority,
+    evidence: EvidenceValidator,
+    source_root: Path,
+) -> tuple[CrossDomainFactFinding, ...]:
+    """Check one supported coordinate, retaining findings in contract order."""
+    try:
+        resolved = authority.resolve_governed_fact(probe.query)
+    except RegistryValidationError as error:
+        return (
+            CrossDomainFactFinding(
+                CrossDomainFactFindingKind.RESOLUTION_FAILED,
+                probe.domain,
+                probe.query.fact_id,
+                str(error),
+            ),
+        )
+
+    findings: list[CrossDomainFactFinding] = []
+    if not resolved.legal_refs and not resolved.source_refs:
+        findings.append(
+            CrossDomainFactFinding(
+                CrossDomainFactFindingKind.PROVENANCE_MISSING,
+                probe.domain,
+                resolved.fact_id,
+                "resolved fact carries neither legal nor source provenance",
+            )
+        )
+    findings.extend(_legal_reference_findings(probe, resolved, authority=authority, source_root=source_root))
+    findings.extend(_source_reference_findings(probe, resolved, authority=authority, evidence=evidence))
+    unsupported_finding = _unsupported_query_finding(probe, authority=authority)
+    if unsupported_finding is not None:
+        findings.append(unsupported_finding)
+    return tuple(findings)
+
+
+def _legal_reference_findings(
+    probe: CrossDomainFactProbe,
+    resolved: ResolvedGovernedFact,
+    *,
+    authority: ValidatedRegistryAuthority,
+    source_root: Path,
+) -> tuple[CrossDomainFactFinding, ...]:
+    findings: list[CrossDomainFactFinding] = []
+    for legal_ref_id in resolved.legal_refs:
+        reference = authority.catalogues.legal.get(legal_ref_id)
+        if reference is None:
+            findings.append(
+                CrossDomainFactFinding(
+                    CrossDomainFactFindingKind.LEGAL_REFERENCE_UNREGISTERED,
+                    probe.domain,
+                    resolved.fact_id,
+                    f"resolved legal reference {legal_ref_id!r} is not registered",
+                )
+            )
+            continue
         try:
-            resolved = authority.resolve_governed_fact(probe.query)
+            verify_legal_reference_grounding(reference, source_root=source_root)
         except RegistryValidationError as error:
             findings.append(
                 CrossDomainFactFinding(
-                    CrossDomainFactFindingKind.RESOLUTION_FAILED,
-                    probe.domain,
-                    probe.query.fact_id,
-                    str(error),
-                )
-            )
-            continue
-
-        if not resolved.legal_refs and not resolved.source_refs:
-            findings.append(
-                CrossDomainFactFinding(
-                    CrossDomainFactFindingKind.PROVENANCE_MISSING,
+                    CrossDomainFactFindingKind.CORPUS_GROUNDING_FAILED,
                     probe.domain,
                     resolved.fact_id,
-                    "resolved fact carries neither legal nor source provenance",
+                    f"legal reference {legal_ref_id!r}: {error}",
                 )
             )
-        for legal_ref_id in resolved.legal_refs:
-            reference = authority.catalogues.legal.get(legal_ref_id)
-            if reference is None:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.LEGAL_REFERENCE_UNREGISTERED,
-                        probe.domain,
-                        resolved.fact_id,
-                        f"resolved legal reference {legal_ref_id!r} is not registered",
-                    )
-                )
-                continue
-            try:
-                verify_legal_reference_grounding(reference, source_root=source_root)
-            except RegistryValidationError as error:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.CORPUS_GROUNDING_FAILED,
-                        probe.domain,
-                        resolved.fact_id,
-                        f"legal reference {legal_ref_id!r}: {error}",
-                    )
-                )
-        source_ref_ids = set(authority.catalogues.sources)
-        for source_ref_id in resolved.source_refs:
-            if source_ref_id not in source_ref_ids:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.SOURCE_REFERENCE_UNREGISTERED,
-                        probe.domain,
-                        resolved.fact_id,
-                        f"resolved source reference {source_ref_id!r} is not registered",
-                    )
-                )
-                continue
-            citations = tuple(
-                citation for citation in resolved.source_citations if citation.source_ref == source_ref_id
-            )
-            failures = evidence.validate_source_citations(
-                "cross-domain governed fact",
-                f"{resolved.fact_id}:{resolved.variant_id}",
-                (source_ref_id,),
-                citations,
-                str(authority.catalogues.sources[source_ref_id].evidence_tier),
-            )
-            for failure in failures:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.SOURCE_CITATION_INVALID,
-                        probe.domain,
-                        resolved.fact_id,
-                        failure,
-                    )
-                )
+    return tuple(findings)
 
-        try:
-            authority.resolve_governed_fact(probe.unsupported_query)
-        except RegistryValidationError:
-            continue
-        findings.append(
-            CrossDomainFactFinding(
-                CrossDomainFactFindingKind.UNSUPPORTED_APPLICABILITY_ACCEPTED,
-                probe.domain,
-                probe.query.fact_id,
-                "unsupported applicability coordinate resolved instead of refusing",
+
+def _source_reference_findings(
+    probe: CrossDomainFactProbe,
+    resolved: ResolvedGovernedFact,
+    *,
+    authority: ValidatedRegistryAuthority,
+    evidence: EvidenceValidator,
+) -> tuple[CrossDomainFactFinding, ...]:
+    findings: list[CrossDomainFactFinding] = []
+    source_ref_ids = set(authority.catalogues.sources)
+    for source_ref_id in resolved.source_refs:
+        if source_ref_id not in source_ref_ids:
+            findings.append(
+                CrossDomainFactFinding(
+                    CrossDomainFactFindingKind.SOURCE_REFERENCE_UNREGISTERED,
+                    probe.domain,
+                    resolved.fact_id,
+                    f"resolved source reference {source_ref_id!r} is not registered",
+                )
             )
+            continue
+        citations = tuple(citation for citation in resolved.source_citations if citation.source_ref == source_ref_id)
+        failures = evidence.validate_source_citations(
+            "cross-domain governed fact",
+            f"{resolved.fact_id}:{resolved.variant_id}",
+            (source_ref_id,),
+            citations,
+            str(authority.catalogues.sources[source_ref_id].evidence_tier),
+        )
+        findings.extend(
+            CrossDomainFactFinding(
+                CrossDomainFactFindingKind.SOURCE_CITATION_INVALID,
+                probe.domain,
+                resolved.fact_id,
+                failure,
+            )
+            for failure in failures
         )
     return tuple(findings)
+
+
+def _unsupported_query_finding(
+    probe: CrossDomainFactProbe,
+    *,
+    authority: ValidatedRegistryAuthority,
+) -> CrossDomainFactFinding | None:
+    try:
+        authority.resolve_governed_fact(probe.unsupported_query)
+    except RegistryValidationError:
+        return None
+    return CrossDomainFactFinding(
+        CrossDomainFactFindingKind.UNSUPPORTED_APPLICABILITY_ACCEPTED,
+        probe.domain,
+        probe.query.fact_id,
+        "unsupported applicability coordinate resolved instead of refusing",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

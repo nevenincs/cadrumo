@@ -3,12 +3,13 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ab898cb92f42fd7e0979ff5949b97f92ba95f5d485ce66a47a8e49af53977124'
+body_hash: 'sha256:45dc431f90ee2bf1297deb02237003d0530dce127f699a0894e8a983b9505f2f'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
+
 # `canonical-identifiers` reference: `AEAT identifier taxonomy census`
 
 Grounds an ADR deciding a canonical document-identifier type system: one
@@ -301,10 +302,7 @@ AEAT-issued identifier that does not appear in the 589 at all, because the
 generating heuristic matched identifier SUFFIXES (`_id`, `_ref`, `_code`,
 `_key`, `_number`, `_csv`) and a plain Spanish noun carries none.
 
-A suffix-independent sweep now exists (`dev/identifier_noun_census.py`), reading
-a field's DOCUMENTATION rather than its name and marking every record with
-whether the original heuristic would also have caught it. Against the pinned
-tree:
+Against the pinned tree:
 
 | measure | count |
 | --- | --- |
@@ -430,13 +428,7 @@ target alias for two names:
 | `short_work_unit_id` | 3 | `Hex16Str` (exists) | per census |
 | `short_calculation_revision_id` | 2 | `Hex16Str` (exists) | per census |
 
-**Both target aliases are withdrawn as factually wrong.** `core.Hex16Str`
-(`src/cadrumo/core/_hex.py:57-60`) is
-`StringConstraints(strip_whitespace=True, min_length=16, max_length=16, pattern=HEX_PATTERN_16)`
-— exactly sixteen lowercase hex characters. Every value these fields carry
-is **twelve**. The proposal does not narrow the population; it refuses all
-of it. The rows above are left in place, and marked in the live table, so
-the plan rows and the ADR sentence written from them stay legible.
+Every value these fields carry is **twelve**. The proposal does not narrow the population; it refuses all of it. The rows above are left in place, and marked in the live table, so the plan rows and the ADR sentence written from them stay legible.
 
 ### Why "per census" cannot support the conclusion it was used for
 

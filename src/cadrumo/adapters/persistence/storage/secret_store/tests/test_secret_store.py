@@ -31,6 +31,7 @@ from ...errors import (
 )
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..store import SecretRecord, SecretStore
+from .digest_inventory import list_digests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _STORE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.secret_store.store"
@@ -304,7 +305,7 @@ class TestListDigests:
     def test_list_yields_one_digest_per_record(self, store: SecretStore) -> None:
         for i in range(4):
             store.put(_make_record(key=f"aeat:test:k{i}"))
-        digests = list(store.list_digests())
+        digests = list(list_digests(store))
         assert len(digests) == 4
         assert all(len(d) == 64 for d in digests)
 
@@ -377,13 +378,13 @@ class TestDeleteOwnershipOrdering:
                 store.delete("aeat:test:ordering")
 
             # Ownership survived the failure rather than being dropped ahead of it.
-            assert list(store.list_digests()) != []
+            assert list(list_digests(store)) != []
 
         # The obstruction restored the payload on exit, so the same delete now
         # succeeds: the failure left a retryable state, not a half-deleted one.
         store.delete("aeat:test:ordering")
 
-        assert list(store.list_digests()) == []
+        assert list(list_digests(store)) == []
         assert _payload_paths(tmp_path / "store-root") == []
 
     def test_successful_delete_removes_both_the_payload_and_the_index_entry(
@@ -398,7 +399,7 @@ class TestDeleteOwnershipOrdering:
         store.delete("aeat:test:ordering")
 
         assert _payload_paths(tmp_path / "store-root") == []
-        assert list(store.list_digests()) == []
+        assert list(list_digests(store)) == []
         with pytest.raises(SecretNotFoundError):
             store.get("aeat:test:ordering")
 

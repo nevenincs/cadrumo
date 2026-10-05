@@ -1,6 +1,10 @@
 modelo:
   schema:
     '100':
+      binding:
+        renta-modelo-100-estimacion-directa-es-normal:
+          help: 'Sí: modalidad normal (N). No: modalidad simplificada (S).'
+          label: ¿Aplicas la modalidad normal de estimación directa?
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -3739,6 +3743,30 @@ modelo:
         official_name: Modelo 100. Declaración del Impuesto sobre la Renta de las
           Personas Físicas.
         title: IRPF declaración anual
+      form:
+        section:
+          bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
+            heading: Bienes inmuebles a disposición de sus titulares, arrendados o
+              cedidos a terceros, o afectos a actividades económicas
+          ganancias-patrimoniales-por-cambio-de-res-0c81c7:
+            heading: Ganancias patrimoniales por cambio de residencia fuera del territorio
+              español (artículo 95 bis de la Ley del Impuesto)
+          ganancias-y-perdidas-patrimoniales-deriva-0655e2:
+            heading: Ganancias y pérdidas patrimoniales derivadas de la transmisión
+              o permuta de monedas virtuales
+          ganancias-y-perdidas-patrimoniales-deriva-73c62b:
+            heading: Ganancias y pérdidas patrimoniales derivadas de la transmisión
+              de derechos de suscripción
+          ganancias-y-perdidas-por-la-transmision-d-3735fe:
+            heading: Ganancias y pérdidas por la transmisión de sociedades y fondos
+              de inversión y de SOCIMIS
+          ganancias-y-perdidas-por-la-transmision-d-5aa38b:
+            heading: Ganancias y pérdidas por la transmisión de participaciones de
+              fondos cotizados (ETF) y de acciones de SICAV índice cotizadas
+          rendimientos-de-trabajo:
+            heading: Rendimientos de trabajo
+          transmision-de-acciones-negociadas:
+            heading: Transmisión de acciones negociadas
       revision:
         '2020':
           casilla:
@@ -4268,10 +4296,10 @@ modelo:
             0459:
               label: Si no tiene NIF o NIE, marque con una "X" esta casilla
             '0460':
-              label: "Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440]\
-                \ - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] -\
-                \ [0446] - [0449] - [0450] - [0451] - [0452] - [0453] \x96[0454] -\
-                \ [0455] - [0448] )"
+              label: Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440]
+                - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446]
+                - [0449] - [0450] - [0451] - [0452] - [0453] - [0454] - [0455] - [0448]
+                )
             '0461':
               label: 'Reducción para unidades familiares que opten por la tributación
                 conjunta.: Importe'

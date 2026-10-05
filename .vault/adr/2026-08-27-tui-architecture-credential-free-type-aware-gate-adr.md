@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:830cb7031aabc5eaba1cffc9d3eaa9fbb0da48b31e93fa71aafbe2cdc1e2eb9c'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - '[[2026-08-11-tui-architecture-research]]'
 ---
 # `tui-architecture` adr: `type-aware operation payload credential-free schema check` | (**status:** `accepted`)

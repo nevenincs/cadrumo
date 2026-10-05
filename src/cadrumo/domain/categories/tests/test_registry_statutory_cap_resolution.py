@@ -15,8 +15,9 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.facts.payloads import MappingFactEntry, MappingFactPayload
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...calculations.registry.facts.schema import FactSelector, MappingFactEntry, MappingFactPayload
+from ...calculations.registry.facts.variants import FactSelector
 from ...calculations.registry.schema_base import DateAxis
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import CategoryValidationError

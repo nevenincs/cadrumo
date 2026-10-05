@@ -87,7 +87,7 @@ def test_verify_with_work_unit_id_hints_at_calculate() -> None:
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
-    assert "is a work unit, not a calculation revision" in collapsed
+    assert "is a declaration, not a saved calculation" in collapsed
     assert f"--work-unit-id {work_unit_id}" in collapsed
     assert '"action_id":"operator.modelo.work.calculate"' in collapsed
     assert f"work calculate {work_unit_id}" not in collapsed
@@ -100,7 +100,7 @@ def test_file_with_work_unit_id_hints_at_calculate() -> None:
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
-    assert "is a work unit, not a calculation revision" in collapsed
+    assert "is a declaration, not a saved calculation" in collapsed
     assert f"--work-unit-id {work_unit_id}" in collapsed
     assert '"action_id":"operator.modelo.work.calculate"' in collapsed
     assert f"work calculate {work_unit_id}" not in collapsed

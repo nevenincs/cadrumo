@@ -88,6 +88,32 @@ def _require(condition: bool, code: AutomationCustodyCode = AutomationCustodyCod
         raise AutomationCustodyError(code)
 
 
+def _owner_uid() -> int:
+    if sys.platform == "linux":
+        return os.getuid()
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
+def _directory_flags() -> int:
+    if os.name == "posix":
+        _require(sys.platform == "linux", AutomationCustodyCode.UNAVAILABLE)
+        return os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
+def _unix_socket() -> socket.socket:
+    if sys.platform == "linux":
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
+def _peer_credentials(sock: _MetadataSocketProtocol) -> tuple[int, int, int]:
+    if sys.platform == "linux":
+        pid, uid, gid = struct.unpack("3i", sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+        return pid, uid, gid
+    raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+
 def _one(body: tuple[Any, ...]) -> Any:
     _require(isinstance(body, tuple) and len(body) == 1)
     return body[0]
@@ -136,9 +162,7 @@ def gnome_collection_id(collection: str) -> bytes:
             result.append(int(hexadecimal, 16))
             index += 3
     _require(bool(result) and 0 not in result)
-    roundtrip = "".join(
-        chr(value) if chr(value).isascii() and chr(value).isalnum() else f"_{value:02x}" for value in result
-    )
+    roundtrip = _collection_path_spelling(result)
     _require(roundtrip == encoded)
     return bytes(result)
 
@@ -194,11 +218,11 @@ def _control_directory(control: object) -> tuple[Path, int]:
     )
     path = Path(str(control))
     _require(path.is_absolute() and str(path) == control and ".." not in path.parts, AutomationCustodyCode.UNAVAILABLE)
-    uid = os.getuid()
+    uid = _owner_uid()
     for parent in reversed(path.parents):
         info = parent.lstat()
         _require(
-            stat.S_ISDIR(info.st_mode) and info.st_uid in (0, uid) and not info.st_mode & 0o022,
+            _parent_directory_suitable(info, uid),
             AutomationCustodyCode.UNAVAILABLE,
         )
     info = path.lstat()
@@ -206,7 +230,7 @@ def _control_directory(control: object) -> tuple[Path, int]:
         stat.S_ISDIR(info.st_mode) and info.st_uid == uid and stat.S_IMODE(info.st_mode) == 0o700,
         AutomationCustodyCode.UNAVAILABLE,
     )
-    descriptor = os.open(path, os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    descriptor = os.open(path, _directory_flags())
     try:
         pinned = os.fstat(descriptor)
         _require(
@@ -223,20 +247,25 @@ def _control_directory(control: object) -> tuple[Path, int]:
 class _MetadataRpc:
     """Closed read-only V1 subset; each frame shares the existing deadline."""
 
+    deadline: float
+    sock: _MetadataSocketProtocol
+
     def __init__(self, directory_fd: int, *, provider_pid: int, deadline: float) -> None:
+        if sys.platform != "linux":
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         self.deadline = deadline
-        self.sock: _MetadataSocketProtocol = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock: _MetadataSocketProtocol = _unix_socket()
         try:
             observed = os.stat("pkcs11", dir_fd=directory_fd, follow_symlinks=False)
             _require(
-                stat.S_ISSOCK(observed.st_mode) and observed.st_uid == os.getuid() and not observed.st_mode & 0o077,
+                stat.S_ISSOCK(observed.st_mode) and observed.st_uid == _owner_uid() and not observed.st_mode & 0o077,
                 AutomationCustodyCode.UNAVAILABLE,
             )
             self.sock.settimeout(self.remaining())
             # The pinned directory descriptor avoids re-traversing its pathname.
             self.sock.connect(f"/proc/self/fd/{directory_fd}/pkcs11")
-            pid, uid, _gid = struct.unpack("3i", self.sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
-            _require(pid == provider_pid and uid == os.getuid(), AutomationCustodyCode.UNAVAILABLE)
+            pid, uid, _gid = _peer_credentials(self.sock)
+            _require(pid == provider_pid and uid == _owner_uid(), AutomationCustodyCode.UNAVAILABLE)
             after = os.stat("pkcs11", dir_fd=directory_fd, follow_symlinks=False)
             _require(
                 (observed.st_dev, observed.st_ino, observed.st_uid, observed.st_mode)
@@ -409,10 +438,7 @@ def require_protected_gnome_collection(bus: GnomeCollectionBusProtocol, collecti
                 )
             )
         )
-        _require(values[_TOKEN] == b"\x01" and values[_TRANSIENT] == b"\0", AutomationCustodyCode.UNAVAILABLE)
-        _require(
-            not locked and values[_LOCKED] == b"\0" and values[_TRUSTED] == b"\x01", AutomationCustodyCode.NEEDS_USER
-        )
+        _require_metadata_suitability(values, locked)
     except AutomationCustodyError as error:
         if error.reason is AutomationCustodyCode.UNSUPPORTED:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
@@ -421,3 +447,20 @@ def require_protected_gnome_collection(bus: GnomeCollectionBusProtocol, collecti
         raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
     except Exception:
         raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+
+
+def _collection_path_spelling(result: bytearray) -> str:
+    roundtrip = "".join(
+        chr(value) if chr(value).isascii() and chr(value).isalnum() else f"_{value:02x}" for value in result
+    )
+    return roundtrip
+
+
+def _parent_directory_suitable(info: os.stat_result, uid: int) -> bool:
+    return stat.S_ISDIR(info.st_mode) and info.st_uid in (0, uid) and not info.st_mode & 0o022
+
+
+def _require_metadata_suitability(values: dict[int, bytes], locked: bool) -> None:
+    """Require the observed persistent unlocked protected collection before item access."""
+    _require(values[_TOKEN] == b"\x01" and values[_TRANSIENT] == b"\0", AutomationCustodyCode.UNAVAILABLE)
+    _require(not locked and values[_LOCKED] == b"\0" and values[_TRUSTED] == b"\x01", AutomationCustodyCode.NEEDS_USER)

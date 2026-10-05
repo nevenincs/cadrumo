@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#docs-lifecycle-tutorials'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c624f259d216ecc55d09e21bf5b706f13677437e8173489984d2662ea381d46'
+body_hash: 'sha256:a3364b6da8872695e3be50704857a1953d5caa4dc27693f47bfbcd53cd231975'
 related:
   - '[[2026-07-13-docs-lifecycle-tutorials-adr]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-audit]]'
-  - '[[2026-07-13-docs-lifecycle-tutorials-ledger]]'
-  - '[[2026-07-13-docs-lifecycle-tutorials-plan]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-research]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#docs-lifecycle-tutorials`.
 ### audit
 
 - `2026-07-13-docs-lifecycle-tutorials-audit` - `docs-lifecycle-tutorials` audit: `campaign-close honesty review`
-
-### exec
-
-- `2026-07-13-docs-lifecycle-tutorials-ledger` - `docs-lifecycle-tutorials` ledger
-
-### plan
-
-- `2026-07-13-docs-lifecycle-tutorials-plan` - `docs-lifecycle-tutorials` plan
 
 ### research
 

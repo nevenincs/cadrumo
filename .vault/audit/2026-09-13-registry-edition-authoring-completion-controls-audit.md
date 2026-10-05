@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-edition-authoring'
 date: '2026-09-13'
-modified: '2026-09-13'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:ebcf0313c4e81eda6178428c10aa19a9ae43d26046d43621e153c0ca0bbfa22e'
+body_hash: 'sha256:cc2a1172511a2cc8d0b79882cccdbff5ba7a73d6a72afcbcf6b1ac87bc733a79'
 related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
   - "[[2026-08-24-registry-completeness-closure-adr]]"
@@ -39,7 +39,7 @@ Live code already permits modelo-local planning: `dev/registry/edition_delta_mig
 
 `source_default_dispositions.<family>.kind = "underivable"` and `reason` record that no common reference prefix can be lifted. The census finds 40 such family declarations across 28 manifests. The source-default algorithm can determine that fact. The screen suppresses the associated finding when the family is declared; schema validation rejects a disposition alongside a declared default but does not itself establish underivability.
 
-Recommend removing this authored shape and its presence-based closure condition after replacing them with a shared derivation: default available, no useful default, or measurement failed. No useful default is a completed optimization check, not unfinished registry content. Evidence: `source_default_dispositions.py:1`, `schema.py:969`, `dev/registry/analysis/edition_delta_status.py:2197` and `:2281`.
+Recommend removing this authored shape and its presence-based closure condition after replacing them with a shared derivation: default available, no useful default, or measurement failed. No useful default is a completed optimization check, not unfinished registry content.
 
 ### roots-as-backlog | high | Temporary inability to inherit is stored alongside permanent legal structure
 
@@ -75,7 +75,7 @@ Replace the writable verified boolean with a generated verification receipt; ret
 
 The census finds 18,082 authored continuity IDs, 8,409 row origins, 4,477 row evidence fields, and 738 sidecar attestations. These are overlapping representations, not additive completion measures. A row's origin/evidence describe its own predecessor edge and cannot be inherited as if they described the next edge.
 
-The sidecar mechanism is now present and wired into loader validation. It is the correct place to preserve continuation evidence when a semantically unchanged row is dropped. It must also be consumed consistently by grounding and totality readers; this audit did not rerun that integration proof. Absence origins belong on rows, and sidecars reject them. Evidence: `lineage_attestation.py:69`; `dev/registry/compiler/_loader_internals.py:510`.
+The sidecar mechanism is now present and wired into loader validation. It is the correct place to preserve continuation evidence when a semantically unchanged row is dropped. It must also be consumed consistently by grounding and totality readers; this audit did not rerun that integration proof. Absence origins belong on rows, and sidecars reject them.
 
 Therefore the historical claim that 317 of 318 rows cannot be dropped is evidence of the earlier measured representation, not a permanent design limit or a live recount. Re-prove candidates after evidence relocation.
 

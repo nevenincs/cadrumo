@@ -10,7 +10,7 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from threading import RLock
+from threading import Lock, RLock
 from typing import override
 from uuid import UUID, uuid4
 
@@ -38,7 +38,11 @@ from ...application.runtime.worker_authorization import (
     WorkerAutomationInventoryRequest,
     WorkerResponseScopeRequest,
 )
-from ...application.runtime.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
+from ...application.runtime.worker_enrollment import (
+    WorkerApprovalPublication,
+    WorkerApprovalPublicationPhase,
+    WorkerApprovalRequest,
+)
 from ...application.user_profile.access_contracts import (
     AccessAction,
     AccessAllowed,
@@ -52,11 +56,8 @@ from ...application.user_profile.access_contracts import (
     ProfileAccessState,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
-from ...application.user_profile.automation_administration import (
-    AutomationAdministrationService,
-    enrollment_review_digest,
-    inspect_automation_inventory,
-)
+from ...application.user_profile.automation_administration import enrollment_review_digest, inspect_automation_inventory
+from ...application.user_profile.automation_administration_service import AutomationAdministrationService
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import (
     AdministrationFacts,
@@ -71,7 +72,8 @@ from ...application.user_profile.automation_operations import (
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
 )
 from ...application.user_profile.custody_ports import bind_profile_custody_port
-from ...application.user_profile.session_authority import ProfileSessionAuthority, SessionAuthorityFacts
+from ...application.user_profile.session_authority import ProfileSessionAuthority
+from ...application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from ...core.operations import profile_operation_subject
 from ...core.time.clock import now
 from .session_owner import ProfileWorkerSessionOwner
@@ -189,6 +191,7 @@ class RuntimeProfileHost:
         self._recipient = recipient
         self._wall_clock = wall_clock
         self.guard = RLock()
+        self._replacement_retirement_guard = Lock()
         self._lock_fence: ProfileGlobalLockState | None = None
         self._password_rotation: OperationIdentity | None = None
         self.issuer = CustodyAutomationKeyIssuer()
@@ -286,10 +289,21 @@ class RuntimeProfileHost:
     ) -> EnrollmentTransition | None:
         """Publish on the existing fence thread, retaining exact invocation identity."""
         binding = command.binding
+        self._require_approval_publication_authority(authority, binding, command.phase)
+        # Reentrant only on the native thread already holding the same guard.
+        with self.authorize(authority):
+            return self._apply_approval_publication(binding, command)
+
+    def _require_approval_publication_authority(
+        self,
+        authority: WorkerAuthorizationRequest,
+        binding: RuntimeApprovalBinding,
+        phase: WorkerApprovalPublicationPhase,
+    ) -> None:
         self._require_approval_binding(binding)
         expected = (
             AUTOMATION_DECLINE_OPERATION_DEFINITION_ID
-            if command.phase == "decline"
+            if phase == "decline"
             else AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
         )
         if (
@@ -301,17 +315,19 @@ class RuntimeProfileHost:
             or not authority.policy.requires_human
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        # Reentrant only on the native thread already holding the same guard.
-        with self.authorize(authority):
-            if command.phase == "decline":
-                return self._approval_service(binding).decline(
-                    binding.enrollment_request_id, review_digest=binding.review_digest
-                )
-            if command.phase == "commit_review":
-                return self.approvals.commit_review(binding)
-            if command.phase == "publish_candidate":
-                return self.approvals.publish_candidate(binding)
-            return self.approvals.activate(binding)
+
+    def _apply_approval_publication(
+        self, binding: RuntimeApprovalBinding, command: WorkerApprovalPublication
+    ) -> EnrollmentTransition | None:
+        if command.phase == "decline":
+            return self._approval_service(binding).decline(
+                binding.enrollment_request_id, review_digest=binding.review_digest
+            )
+        if command.phase == "commit_review":
+            return self.approvals.commit_review(binding)
+        if command.phase == "publish_candidate":
+            return self.approvals.publish_candidate(binding)
+        return self.approvals.activate(binding)
 
     @contextmanager
     def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed | OperationResponseScopeAllowed]:
@@ -510,43 +526,48 @@ class RuntimeProfileHost:
         leave that invocation alone. An unreadable binding also retires access
         without claiming that a successor was committed.
         """
-        if not self.guard.acquire(blocking=False):
+        # Only one caller may prove retirement. Another admission must not
+        # mistake the denial fence for completed process containment.
+        if not self._replacement_retirement_guard.acquire(blocking=False):
             return None
         try:
-            if self.owner.lost:
-                return False
-            binding = self.store.binding
+            if not self.guard.acquire(blocking=False):
+                return None
             try:
-                current = current_automation_profile_binding(
-                    profile_id=binding.profile_id,
-                    installation_id=binding.installation_id,
-                    os_owner_id=binding.os_owner_id,
-                    root=self.store.root,
-                )
-            except AutomationCustodyError:
-                current = None
-            if current == binding:
-                return False
-            worker = self.owner.begin_drain()
-        finally:
-            self.guard.release()
-        # Worker callbacks may still need the profile guard to release their
-        # exact permit. No host or connection lock is held while waiting here.
-        self.approvals.close()
-        if worker is not None:
-            # An independently fenced or crashed worker may supply no receipt.
-            # It still must pass the containment and callback checks below;
-            # its persisted operations retain their reconciliation obligations.
-            with suppress(RuntimeRefusalError, AutomationCustodyError, ProfileAccessRefusedError):
+                binding = self.store.binding
                 try:
-                    if current is not None and self._password_rotation is not None:
-                        worker.settlement(
-                            self._password_rotation, timeout=max(0.001, min(5.0, deadline - time.monotonic()))
-                        )
-                finally:
-                    worker.drain(deadline=deadline)
-        if not self.owner.wait_construction(deadline=deadline):
-            raise RuntimeShutdownIncompleteError()
-        self.owner.settle(deadline=deadline)
-        asyncio.run(self.authority.close())
-        return True
+                    current = current_automation_profile_binding(
+                        profile_id=binding.profile_id,
+                        installation_id=binding.installation_id,
+                        os_owner_id=binding.os_owner_id,
+                        root=self.store.root,
+                    )
+                except AutomationCustodyError:
+                    current = None
+                if current == binding:
+                    return False
+                worker = self.owner.begin_drain()
+            finally:
+                self.guard.release()
+            # Worker callbacks may still need the profile guard to release their
+            # exact permit. No host or connection lock is held while waiting here.
+            self.approvals.close()
+            if worker is not None:
+                # An independently fenced or crashed worker may supply no receipt.
+                # It still must pass the containment and callback checks below;
+                # its persisted operations retain their reconciliation obligations.
+                with suppress(RuntimeRefusalError, AutomationCustodyError, ProfileAccessRefusedError):
+                    try:
+                        if current is not None and self._password_rotation is not None:
+                            worker.settlement(
+                                self._password_rotation, timeout=max(0.001, min(5.0, deadline - time.monotonic()))
+                            )
+                    finally:
+                        worker.drain(deadline=deadline)
+            if not self.owner.wait_construction(deadline=deadline):
+                raise RuntimeShutdownIncompleteError()
+            self.owner.settle(deadline=deadline)
+            asyncio.run(self.authority.close())
+            return True
+        finally:
+            self._replacement_retirement_guard.release()

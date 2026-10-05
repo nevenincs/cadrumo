@@ -345,7 +345,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
     assert before.exit_code == 0
     before_row = next(row for row in _payload(before.output)["modelos"] if row["modelo"] == "130")
     assert before_row["state"] == ModeloReadinessState.CALCULATED.value
-    assert before_row["summary"] != "Modelo 130: verification incomplete."
+    assert before_row["summary"] != "Modelo 130: check incomplete."
 
     run_at = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
     report_id = derive_verification_report_id(
@@ -400,7 +400,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
     after_row = next(row for row in payload["modelos"] if row["modelo"] == "130")
     assert after_row["state"] == ModeloReadinessState.INCOMPLETO.value
     assert after_row["blocking_finding_count"] == 0
-    assert after_row["summary"] == "Modelo 130: verification incomplete."
+    assert after_row["summary"] == "Modelo 130: check incomplete."
     assert payload["ready"] is False
     assert any(notice["code"] == "overview.pipeline.modelo.incomplete" for notice in _notices(after.output))
 

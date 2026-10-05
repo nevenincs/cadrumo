@@ -1,0 +1,551 @@
+schema_version = 1
+fragment_id = "perceptor"
+modelo = "193"
+design_epoch = "2019"
+source_ref = "aeat-dr-193-2019"
+source_sha256 = "bd38312bbe1583f8196f2fcf967ae8e93f10356edd71f93bf4c82d2a3059de69"
+records = []
+variable_envelopes = []
+
+[[entries]]
+export_field_id = "modelo-193-perc-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 309
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-modelo"
+kind = "literal"
+literal = "193"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 311
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 313
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-declarante-nif"
+kind = "header"
+producer_key = "presenter.tax_id"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 316
+ordinal = "4"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-nif"
+kind = "binding"
+binding = "modelo-193-perceptor-row-nif"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 319
+ordinal = "5"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-nif-representante"
+kind = "binding"
+binding = "modelo-193-perceptor-row-nif-representante"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 348
+ordinal = "6"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-nombre"
+kind = "binding"
+binding = "modelo-193-perceptor-row-name"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 357
+ordinal = "7"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-mediador"
+kind = "binding"
+binding = "modelo-193-perceptor-row-mediador"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 376
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-provincia"
+kind = "binding"
+binding = "modelo-193-perceptor-row-provincia"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 404
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-clave-codigo"
+kind = "binding"
+binding = "modelo-193-perceptor-row-clave-codigo"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 443
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-codigo-emisor"
+kind = "binding"
+binding = "modelo-193-perceptor-row-codigo-emisor"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 454
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-clave"
+kind = "binding"
+binding = "modelo-193-perceptor-row-clave"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 507
+ordinal = "12"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-naturaleza"
+kind = "binding"
+binding = "modelo-193-perceptor-row-naturaleza"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 560
+ordinal = "13"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-pago"
+kind = "binding"
+binding = "modelo-193-perceptor-row-pago"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 724
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-tipo-codigo"
+kind = "binding"
+binding = "modelo-193-perceptor-row-tipo-codigo"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 735
+ordinal = "15"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-codigo-cuenta"
+kind = "binding"
+binding = "modelo-193-perceptor-row-codigo-cuenta"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 753
+ordinal = "16"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-pendiente"
+kind = "binding"
+binding = "modelo-193-perceptor-row-pendiente"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 784
+ordinal = "17"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-ejercicio-devengo"
+kind = "binding"
+binding = "modelo-193-perceptor-row-ejercicio-devengo"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 842
+ordinal = "18"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-tipo-percepcion"
+kind = "binding"
+binding = "modelo-193-perceptor-row-tipo-percepcion"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 859
+ordinal = "19"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-percepciones-src-123"
+kind = "binding"
+binding = "modelo-193-perceptor-row-percibido"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 893
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-percepciones-src-134"
+kind = "binding"
+binding = "modelo-193-perceptor-row-percibido"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 896
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perceptor-reservado-136"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 899
+ordinal = "21"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-reducciones-src-139"
+kind = "binding"
+binding = "modelo-193-perceptor-row-reducciones"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 926
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-reducciones-src-150"
+kind = "binding"
+binding = "modelo-193-perceptor-row-reducciones"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 928
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-base-src-152"
+kind = "binding"
+binding = "modelo-193-perceptor-row-base"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 966
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-base-src-163"
+kind = "binding"
+binding = "modelo-193-perceptor-row-base"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 970
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-porcentaje-src-165"
+kind = "binding"
+binding = "modelo-193-perceptor-row-porcentaje"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1022
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-porcentaje-src-167"
+kind = "binding"
+binding = "modelo-193-perceptor-row-porcentaje"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1026
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-retenciones-src-169"
+kind = "binding"
+binding = "modelo-193-perceptor-row-retencion"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1046
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-retenciones-src-180"
+kind = "binding"
+binding = "modelo-193-perceptor-row-retencion"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1048
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-penalizaciones"
+kind = "binding"
+binding = "modelo-193-perceptor-row-penalizaciones"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1057
+ordinal = "26"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perceptor-reservado-193"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1070
+ordinal = "27"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-naturaleza-declarante"
+kind = "binding"
+binding = "modelo-193-perceptor-row-naturaleza-declarante"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1071
+ordinal = "28"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-fecha-inicio"
+kind = "binding"
+binding = "modelo-193-perceptor-row-fecha-inicio"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1167
+ordinal = "29"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-fecha-vencimiento"
+kind = "binding"
+binding = "modelo-193-perceptor-row-fecha-vencimiento"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1185
+ordinal = "30"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-compensaciones-src-225"
+kind = "binding"
+binding = "modelo-193-perceptor-row-compensaciones"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1208
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-compensaciones-src-235"
+kind = "binding"
+binding = "modelo-193-perceptor-row-compensaciones"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1217
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-garantias-src-237"
+kind = "binding"
+binding = "modelo-193-perceptor-row-garantias"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1230
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-garantias-src-247"
+kind = "binding"
+binding = "modelo-193-perceptor-row-garantias"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1232
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-193-perc-reserved-tail"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 1236
+ordinal = "33"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"

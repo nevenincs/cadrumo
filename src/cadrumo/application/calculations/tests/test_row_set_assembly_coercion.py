@@ -9,13 +9,12 @@ than hoping the public-API tests stumble across each one.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core.decimal.coercion import coerce_decimal as _coerce_decimal
-from ..row_set_assembly import _coerce_iso_date, _coerce_text
+from ..row_set_assembly import _coerce_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -84,31 +83,3 @@ def test_coerce_text_formats_decimal_without_scientific_notation() -> None:
 
 def test_coerce_text_preserves_empty_string() -> None:
     assert _coerce_text("") == ""
-
-
-# ---------------------------------------------------------------------------
-# _coerce_iso_date
-# ---------------------------------------------------------------------------
-
-
-def test_coerce_iso_date_parses_iso_format() -> None:
-    assert _coerce_iso_date("2025-06-15", default=date(1900, 1, 1)) == date(2025, 6, 15)
-
-
-def test_coerce_iso_date_returns_default_for_none() -> None:
-    assert _coerce_iso_date(None, default=date(2025, 12, 31)) == date(2025, 12, 31)
-
-
-def test_coerce_iso_date_returns_default_for_empty_string() -> None:
-    assert _coerce_iso_date("", default=date(2025, 12, 31)) == date(2025, 12, 31)
-
-
-def test_coerce_iso_date_returns_default_for_malformed_string() -> None:
-    """Operator-typed dates in non-ISO format fall back rather than crashing."""
-    assert _coerce_iso_date("15/06/2025", default=date(2025, 12, 31)) == date(2025, 12, 31)
-    assert _coerce_iso_date("June 15, 2025", default=date(2025, 12, 31)) == date(2025, 12, 31)
-
-
-def test_coerce_iso_date_returns_default_for_decimal_input() -> None:
-    """A numeric cell value cannot be a date; fall back."""
-    assert _coerce_iso_date(Decimal("20250615"), default=date(2025, 12, 31)) == date(2025, 12, 31)

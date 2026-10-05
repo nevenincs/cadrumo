@@ -1688,6 +1688,36 @@ required_text = [
     "declaración anual de operaciones con terceras personas",
 ]
 
+[legal."rd-1619-2012:disp-adicional-4.7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012.html#dacuaa"
+document_id = "BOE-A-2012-14696"
+article = "disposición adicional cuarta.7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#dacuaa"
+published_at = 2012-12-01
+effective_from = 2018-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-03
+reviewed_by = "agent-review"
+notes = """\
+RD 1619/2012 disposicion adicional cuarta, apartado 7: las agencias de viajes que expidan las \
+facturas de esta disposicion consignan en la declaracion anual de operaciones con terceras \
+personas (Modelo 347), letra a) en concepto de ventas los servicios documentados mediante esas \
+facturas, y letra b) en concepto de compras las prestaciones en que intervienen como mediadoras. \
+Es la base de que las claves F (ventas agencia viaje) y G (compras agencia viaje) se sumen con las \
+entregas y con las adquisiciones, respectivamente, al juzgar el umbral del art 33.1 RGAT. El \
+apartado 7 esta en la redaccion del RD 1075/2017 (BOE-A-2017-15843), en vigor desde el 1 de enero \
+de 2018 segun las notas de vigencia del mismo real decreto en el consolidado; por eso se fecha en \
+2018. Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1619-2012.html.\
+"""
+required_text = [
+    "deberán consignar, en su caso, la siguiente información en la declaración anual de operaciones con terceras personas",
+    "En concepto de ventas, la información relativa a los servicios documentados mediante las referidas facturas",
+    "En concepto de compras, la información relativa a las prestaciones de servicios en cuya realización intervienen actuando como mediadoras",
+]
+
 [legal."rd-1619-2012:art-15"]
 evidence_tier = "legal_authority"
 authority = "boe"

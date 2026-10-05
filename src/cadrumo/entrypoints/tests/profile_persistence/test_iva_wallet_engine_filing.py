@@ -24,10 +24,11 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
@@ -51,6 +52,7 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _secure_backend,
     _snapshot_303,
     _store_operator_profile_with_tax_id,
+    _store_prior_303_compensation,
     _wallet_observation,
     _work_unit_repositories,
     _work_unit_repositories_with_modelo_303_work_unit,
@@ -67,21 +69,26 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+_FILING_WALLET_CAPTURED_AT = datetime(2026, 7, 15, 8, 0, 0, tzinfo=UTC)
+
+
 def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_preflight(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X1234567L"
-    with _secure_backend(tmp_path):
+    with frozen_clock(_FILING_WALLET_CAPTURED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303()
         with bundled_indexed_authority().operation() as operation:
             report = reconcile_modelo_303_iva_compensation(
                 snapshot,
                 taxpayer_nif=taxpayer_nif,
-                wallet=_wallet_observation(pending=Decimal("1200.00"), taxpayer_nif=taxpayer_nif),
+                wallet=_wallet_observation(
+                    pending=Decimal("1200.00"), taxpayer_nif=taxpayer_nif, captured_at=_FILING_WALLET_CAPTURED_AT
+                ),
                 repository=CalculationObservationRepository(),
                 decision_repository=IvaWalletDecisionRepository(),
-                decided_at=_DECIDED_AT,
+                decided_at=_FILING_WALLET_CAPTURED_AT,
                 local_recurrence=None,
                 prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
                 operation=operation,
@@ -111,7 +118,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 iva_compensation_decision=report.decision,
                 filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_97,
-                clock=_DECIDED_AT,
+                clock=_FILING_WALLET_CAPTURED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-filing", operation=operation
                 ),
@@ -124,8 +131,9 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             bucket_event_repository=event_repo,
             operation=operation,
         )
+        _store_prior_303_compensation(CalculationObservationRepository(), amount=Decimal("1200"))
         with bundled_indexed_authority().operation() as operation:
-            verification_report = verify_modelo_revision(
+            verification_report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -138,7 +146,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 clock=datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert verification_report.granted_verificado_completo is True
 
         with bundled_indexed_authority().operation() as operation:
@@ -148,7 +156,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 actor="operator",
                 workflow_profile=workflow_profile(taxpayer_nif),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                 settings=Settings(
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
@@ -196,7 +204,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
         datetime(2026, 7, 16, 10, 0, 0, tzinfo=UTC),
     )
-    with _secure_backend(tmp_path):
+    with frozen_clock(_FILING_WALLET_CAPTURED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
@@ -207,14 +215,17 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         filings = []
 
         for index, wallet_pending in enumerate((Decimal("1200.00"), Decimal("600.00"))):
+            _store_prior_303_compensation(CalculationObservationRepository(), amount=wallet_pending)
             with bundled_indexed_authority().operation() as operation:
                 report = reconcile_modelo_303_iva_compensation(
                     snapshot,
                     taxpayer_nif=taxpayer_nif,
-                    wallet=_wallet_observation(pending=wallet_pending, taxpayer_nif=taxpayer_nif),
+                    wallet=_wallet_observation(
+                        pending=wallet_pending, taxpayer_nif=taxpayer_nif, captured_at=_FILING_WALLET_CAPTURED_AT
+                    ),
                     repository=CalculationObservationRepository(),
                     decision_repository=IvaWalletDecisionRepository(),
-                    decided_at=_DECIDED_AT,
+                    decided_at=_FILING_WALLET_CAPTURED_AT,
                     local_recurrence=None,
                     prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
                     operation=operation,
@@ -237,7 +248,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     iva_compensation_decision=report.decision,
                     filing_period_date=date(2026, 6, 30),
                     ports=calculation_ports,
-                    clock=_DECIDED_AT,
+                    clock=_FILING_WALLET_CAPTURED_AT,
                     filing_instance_evidence=general_m303_filing_evidence(
                         work_unit.period,
                         reference="test:iva-wallet-engine-filing-supersession",
@@ -253,8 +264,9 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     bucket_event_repository=event_repo,
                     operation=operation,
                 )
+            _store_prior_303_compensation(CalculationObservationRepository(), amount=wallet_pending)
             with bundled_indexed_authority().operation() as operation:
-                verification = verify_modelo_revision(
+                verification = verify_modelo_revision_with_preconditions(
                     revision.calculation_revision_id,
                     certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                     verification_repositories=build_test_verification_repository_bundle(),
@@ -267,7 +279,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     clock=verification_times[index],
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     operation=operation,
-                )
+                ).report
             assert verification.granted_verificado_completo is True
             with bundled_indexed_authority().operation() as operation:
                 filing = file_modelo_revision(
@@ -276,7 +288,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     actor="operator",
                     workflow_profile=workflow_profile(taxpayer_nif),
                     certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                    ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                     settings=Settings(
                         cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                         cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
@@ -344,7 +356,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
     filing_profile = workflow_profile(taxpayer_nif).model_copy(
         update={"activity_start_date": date(2026, 1, 1)},
     )
-    with _secure_backend(tmp_path):
+    with frozen_clock(_DECIDED_AT), _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot_1t = _snapshot_303(period="1T")
         with bundled_indexed_authority().operation() as operation:
@@ -395,7 +407,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert generated_carry > Decimal("0")
 
         with bundled_indexed_authority().operation() as operation:
-            verification = verify_modelo_revision(
+            verification = verify_modelo_revision_with_preconditions(
                 revision_1t.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -408,7 +420,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 clock=datetime(2026, 4, 15, 9, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert verification.granted_verificado_completo is True
 
         with bundled_indexed_authority().operation() as operation:
@@ -418,7 +430,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 actor="operator",
                 workflow_profile=filing_profile,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
                 settings=Settings(
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
@@ -443,7 +455,11 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert filing.settlement.credit_snapshot.remaining_amount == history.available_end_amount
         assert filing.settlement.refund_election_intent is False
         assert filing.settlement.refund_state is IvaSettlementRefundState.NOT_REQUESTED
-        balance = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
+        balance = query_iva_wallet_balance(
+            as_of_year=2026,
+            repository=IvaCompensationHistoryRepository(),
+            operation=operation,
+        )
         assert balance.total_balance == generated_carry
         assert balance.lot_count == 1
 

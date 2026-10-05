@@ -25,18 +25,19 @@ from uuid import uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.persistence.storage.custody import macos_keychain_store as native
-from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.adapters.persistence.storage.custody.automation_store import (
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import (
     CLIENT_NAMESPACE,
     CONTROL_NAMESPACE,
     WRAP_NAMESPACE,
 )
+from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
     AutomationCustodyError,
     NativeSecretBackend,
 )
+
+from .. import macos_keychain_contracts, macos_keychain_policy, macos_login_keychain
 
 pytestmark = [
     pytest.mark.integration,
@@ -83,27 +84,30 @@ def _select(expectation: str) -> None:
         pytest.skip("a different native Keychain expectation was explicitly selected")
 
 
-def _ui(api: native._LoginKeychain) -> int:
+def _ui(api: macos_login_keychain.LoginKeychain) -> int:
     value = ctypes.c_ubyte()
-    assert api.ui_get(ctypes.byref(value)) == native._SUCCESS
+    assert api.ui_get(ctypes.byref(value)) == macos_keychain_contracts.SUCCESS
     assert value.value in (0, 1)
     return value.value
 
 
-def _trace_queries(monkeypatch: pytest.MonkeyPatch) -> list[native._ItemIdentity]:
-    original = native._LoginKeychain._query
-    observed: list[native._ItemIdentity] = []
+def _trace_queries(monkeypatch: pytest.MonkeyPatch) -> list[macos_keychain_contracts.KeychainItemIdentity]:
+    original = macos_login_keychain.LoginKeychain._query
+    observed: list[macos_keychain_contracts.KeychainItemIdentity] = []
 
     @contextmanager
     def inspect_query(
-        api: native._LoginKeychain, identity: native._ItemIdentity, *, adding: bool = False
+        api: macos_login_keychain.LoginKeychain,
+        identity: macos_keychain_contracts.KeychainItemIdentity,
+        *,
+        adding: bool = False,
     ) -> Generator[int]:
         with original(api, identity, adding=adding) as query:
             cf = api.cf
             constants = api.constants
             assert cf.text(cf.field(query, constants["kSecAttrService"])) == identity.namespace
             assert cf.text(cf.field(query, constants["kSecAttrAccount"])) == identity.account
-            assert identity.keychain_path == native._login_path()
+            assert identity.keychain_path == macos_keychain_policy.login_keychain_path()
             assert _ui(api) == 0
             if adding:
                 keychain = cf.field(query, constants["kSecUseKeychain"])
@@ -117,7 +121,7 @@ def _trace_queries(monkeypatch: pytest.MonkeyPatch) -> list[native._ItemIdentity
             observed.append(identity)
             yield query
 
-    monkeypatch.setattr(native._LoginKeychain, "_query", inspect_query)
+    monkeypatch.setattr(macos_login_keychain.LoginKeychain, "_query", inspect_query)
     return observed
 
 
@@ -146,7 +150,7 @@ def test_native_login_keychain_replaces_reopens_and_deletes_exact_binary_item_wi
 ) -> None:
     _select("protected")
     queries = _trace_queries(monkeypatch)
-    api = native._LoginKeychain()
+    api = macos_login_keychain.LoginKeychain()
     previous_ui = _ui(api)
     store = native_automation_secret_store(NativeSecretBackend.MACOS_KEYCHAIN)
     assert store.backend is NativeSecretBackend.MACOS_KEYCHAIN
@@ -173,13 +177,13 @@ def test_native_login_keychain_replaces_reopens_and_deletes_exact_binary_item_wi
     assert queries
     assert {query.namespace for query in queries} == {namespace}
     assert {query.account for query in queries} == {account, other_account}
-    assert {query.keychain_path for query in queries} == {native._login_path()}
+    assert {query.keychain_path for query in queries} == {macos_keychain_policy.login_keychain_path()}
 
 
 def test_native_locked_login_context_refuses_every_path_before_item_query(monkeypatch: pytest.MonkeyPatch) -> None:
     _select("needs-user")
     queries = _trace_queries(monkeypatch)
-    api = native._LoginKeychain()
+    api = macos_login_keychain.LoginKeychain()
     previous_ui = _ui(api)
     store = native_automation_secret_store(NativeSecretBackend.MACOS_KEYCHAIN)
     assert store.backend is NativeSecretBackend.MACOS_KEYCHAIN

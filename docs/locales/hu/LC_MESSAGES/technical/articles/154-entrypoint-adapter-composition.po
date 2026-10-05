@@ -1,0 +1,485 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-05 11:02+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:1
+msgid "Entrypoint adapter composition"
+msgstr "Belépésipont-adapterek összeállítása"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:3
+msgid ""
+"[Technical overview](../architecture.md) · [Article index](catalogue.md) "
+"· [Snapshot and reading guide](../reading-guide.md)"
+msgstr ""
+"[Műszaki áttekintés](../architecture.md) · [Cikkjegyzék](catalogue.md) · "
+"[Pillanatkép és olvasási útmutató](../reading-guide.md)"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:5
+msgid ""
+"This page describes the analyzed source snapshot. Its findings and "
+"limitations are not a certification of the current branch."
+msgstr ""
+"Ez az oldal az elemzett forráspillanatképet írja le. Megállapításai és "
+"korlátai nem tanúsítják az aktuális ág állapotát."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:7
+msgid ""
+"**Report:** `STAGE-2-154` · **Topic:** [Operator interfaces, part 1: "
+"command graph and principal workflows](../topics/operator-interfaces-"
+"part-1.md)"
+msgstr ""
+"**Jelentés:** `STAGE-2-154` · **Téma:** [Kezelői felületek, 1. rész: "
+"parancsgráf és fő munkafolyamatok](../topics/operator-interfaces-"
+"part-1.md)"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:10
+msgid "Scope"
+msgstr "Hatókör"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:12
+msgid ""
+"This chunk covers 30 files (5,465 lines; 47,645 measured tokens) under "
+"`entrypoints`. It defines the lazy shared adapter-composition root and "
+"specialized builders for profile-bound calculation, filing, evidence, "
+"authentication, Google configuration, AEAT captures, diagnostics, and "
+"model-specific operations. These are wiring and trust-boundary modules; "
+"most business decisions are delegated to application services. The "
+"concrete adapters are referenced but not re-reviewed here."
+msgstr ""
+"Ez a részlet 30 fájlt fed le (5,465 sor; 47,645 mért token) az "
+"`entrypoints` alatt. Definiálja a késleltetett közös adapter-"
+"összeállítási gyökeret és a profilhoz kötött számítás, bevallás, "
+"bizonyíték, hitelesítés, Google-konfiguráció, AEAT-rögzítések, "
+"diagnosztika és nyomtatványspecifikus műveletek szakosított építőit. Ezek"
+" huzalozási és bizalmi határmodulok; az üzleti döntések többségét "
+"alkalmazásszolgáltatásokra delegálják. A konkrét adapterekre hivatkoznak,"
+" de itt nem vizsgálják felül őket újra."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:14
+msgid "Product capabilities"
+msgstr "Termékképességek"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:16
+msgid ""
+"`ProfileAdapterComposition` and its context manager provide a single "
+"place to bind persistence, identity admission, auth selection, "
+"transaction/usage-ratio repositories, evidence parsing, and related "
+"application ports for a CLI/TUI session. The root package remains inert, "
+"while child properties and function-local imports delay loading storage "
+"and outbound integrations until a command actually uses them. `ExitStack`"
+" owns the lifetime of bound dependencies and removes them on exit. "
+"Operation builders assemble groups of repositories against a selected "
+"profile bucket and, where calculations depend on taxpayer facts or tax "
+"rules, pass a retained `PinnedAuthorityOperation` through the whole "
+"bundle (shared composition "
+"(`src/cadrumo/entrypoints/adapter_composition.py`), calculation binding "
+"(`src/cadrumo/entrypoints/calculation_revision_composition.py`))."
+msgstr ""
+"A `ProfileAdapterComposition` és kontextuskezelője egyetlen helyet "
+"biztosít a tartósítás, azonosságalapú engedélyezés, hitelesítésválasztás,"
+" tranzakció-/használatiarány-tárak, bizonyítékfeldolgozás és kapcsolódó "
+"alkalmazásportok kötéséhez egy CLI/TUI-munkamenet számára. A gyökércsomag"
+" tétlen marad, míg a gyermektulajdonságok és függvényhelyi importok "
+"késleltetik a tárolási és kifelé irányuló integrációk betöltését addig, "
+"amíg egy parancs ténylegesen használja őket. Az `ExitStack` birtokolja a "
+"kötött függőségek élettartamát, és kilépéskor eltávolítja őket. A "
+"műveletépítők tárak csoportjait állítják össze egy kiválasztott "
+"profilrekeszhez, és ahol a számítások adózói tényektől vagy "
+"adószabályoktól függenek, a teljes csomagon át megtartott "
+"`PinnedAuthorityOperation` objektumot adnak tovább (közös összeállítás "
+"(`src/cadrumo/entrypoints/adapter_composition.py`), számítási kötés "
+"(`src/cadrumo/entrypoints/calculation_revision_composition.py`))."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:18
+msgid ""
+"Specialized builders connect high-impact workflows. Filing and "
+"verification receive calculation, filing, observation, workflow-gate, "
+"participation, IVA history, and ledger-membership ports. Modelo export "
+"carries a development mock software identity that is graded so generated "
+"files cannot be mistaken for presentable AEAT submissions. Censo, "
+"notification, expediente, justificante, and IVA-wallet paths translate "
+"adapter errors into application errors and persist snapshots or "
+"observations through secure repositories. Live history capture can defer "
+"artefact writes until an effect guard is acquired; wallet capture reloads"
+" stored observations and reconciliation decisions to check that "
+"persistence matches the captured result (filing bundle "
+"(`src/cadrumo/entrypoints/adapter_composition.py`), wallet reconciliation"
+" (`src/cadrumo/entrypoints/live_state_composition.py`))."
+msgstr ""
+"A szakosított építők nagy hatású munkafolyamatokat kapcsolnak össze. A "
+"benyújtás és ellenőrzés számítási, benyújtási, megfigyelési, "
+"munkafolyamatkapu-, részesedési, IVA-előzmény- és főkönyvitagság-portokat"
+" kap. A nyomtatványexport fejlesztési próba-szoftverazonosságot hordoz, "
+"olyan minősítéssel, hogy a generált fájlokat ne lehessen benyújtható "
+"AEAT-bevallásnak tekinteni. A nyilvántartási, értesítési, ügyirat-, "
+"igazolás- és IVA-tárcaútvonalak az adapterhibákat alkalmazáshibákra "
+"fordítják, és biztonságos tárakon keresztül tartósítják a pillanatképeket"
+" vagy megfigyeléseket. Az élő előzményrögzítés elhalaszthatja az "
+"artefaktumírásokat a hatásvédő megszerzéséig; a tárcarögzítés újratölti a"
+" tárolt megfigyeléseket és egyeztetési döntéseket annak ellenőrzésére, "
+"hogy a tartósítás egyezik-e a rögzített eredménnyel (benyújtási csomag "
+"(`src/cadrumo/entrypoints/adapter_composition.py`), tárcaegyeztetés "
+"(`src/cadrumo/entrypoints/live_state_composition.py`))."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:20
+msgid ""
+"Credential and external-provider flows have explicit admission points. "
+"Google configuration binds an exact profile, checks the request identity "
+"again per run, invokes terminal admission before OAuth handoff, and uses "
+"commit/handoff callbacks around credential writes. Invoice intake runs "
+"provider admission before constructing the rate provider and again before"
+" each rate lookup. Invoice evidence composition checks the active "
+"profile, records paired consent-save callbacks, classifies off-host "
+"consent, and binds the resulting token to evidence content identity. LLM "
+"classification composition supplies local text/vision readers, evidence "
+"resolvers, run records, and typed error translation; it records provider,"
+" duration, success, and error class rather than prompt contents (Google "
+"dispatch "
+"(`src/cadrumo/entrypoints/google_configuration_operation_composition.py`),"
+" invoice provider admission "
+"(`src/cadrumo/entrypoints/invoice_intake_operation_composition.py`), "
+"evidence consent "
+"(`src/cadrumo/entrypoints/invoice_evidence_operation_composition.py`), "
+"LLM composition (`src/cadrumo/entrypoints/ledger_llm_composition.py`))."
+msgstr ""
+"A hitelesítőadat- és külsőszolgáltató-folyamatoknak kifejezett "
+"engedélyezési pontjaik vannak. A Google-konfiguráció pontos profilt köt, "
+"futásonként újra ellenőrzi a kérés azonosságát, az OAuth-átadás előtt "
+"terminálengedélyezést hív meg, és véglegesítési/átadási visszahívásokat "
+"használ a hitelesítőadat-írások körül. A számlabefogadás az "
+"árfolyamszolgáltató létrehozása előtt, majd minden árfolyamlekérdezés "
+"előtt szolgáltatói engedélyezést futtat. A számlabizonyíték-összeállítás "
+"ellenőrzi az aktív profilt, páros hozzájárulásmentési visszahívásokat "
+"rögzít, osztályozza a gépen kívüli feldolgozáshoz adott hozzájárulást, és"
+" az eredményül kapott tokent a bizonyíték tartalomazonosságához köti. Az "
+"LLM-osztályozás összeállítása helyi szöveg-/képolvasókat, "
+"bizonyítékfeloldókat, futási rekordokat és típusos hibafordítást "
+"biztosít; a szolgáltatót, időtartamot, sikert és hibaosztályt rögzíti, "
+"nem a prompttartalmat (Google-indítás "
+"(`src/cadrumo/entrypoints/google_configuration_operation_composition.py`),"
+" számlaszolgáltató engedélyezése "
+"(`src/cadrumo/entrypoints/invoice_intake_operation_composition.py`), "
+"bizonyíték-hozzájárulás "
+"(`src/cadrumo/entrypoints/invoice_evidence_operation_composition.py`), "
+"LLM-összeállítás (`src/cadrumo/entrypoints/ledger_llm_composition.py`))."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:22
+msgid ""
+"Many dedicated operation builders enforce equality between the active "
+"bucket and the immutable worker profile before composing repositories. "
+"The check is present for auth/apoderado work, invoice evidence and "
+"inspection, evidence ingestion, ledger export/linkage, M036 lifecycle, "
+"maritime preview, audit, dependency, query, and diagnostics operations. "
+"This establishes a consistent exact-profile pattern at much of the "
+"registered-operation boundary (worker check "
+"(`src/cadrumo/entrypoints/auth_apoderado_composition.py`), query boundary"
+" (`src/cadrumo/entrypoints/modelo_query_read_operation_composition.py`))."
+msgstr ""
+"Sok célzott műveletépítő a tárak összeállítása előtt kikényszeríti az "
+"aktív rekesz és a munkafolyamat megváltoztathatatlan profilja közötti "
+"egyenlőséget. Az ellenőrzés jelen van a hitelesítési/meghatalmazotti "
+"munkában, számlabizonyíték- és számlavizsgálatban, "
+"bizonyítékbefogadásban, főkönyvexportban/-kapcsolásban, "
+"M036-életciklusban, tengerészeti előnézetben, audit-, függőségi, "
+"lekérdezési és diagnosztikai műveletekben. Ez következetes pontosprofil-"
+"mintát alakít ki a regisztrált műveletek határának nagy részén "
+"(munkafolyamat-ellenőrzés "
+"(`src/cadrumo/entrypoints/auth_apoderado_composition.py`), lekérdezési "
+"határ "
+"(`src/cadrumo/entrypoints/modelo_query_read_operation_composition.py`))."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:24
+msgid "Security and quality assessment"
+msgstr "Biztonsági és minőségi értékelés"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:26
+msgid ""
+"The composition layer centralizes adapter selection, pinned "
+"registry/schema contexts, bucket-scoped persistence, admission callbacks,"
+" and application-facing error translation. It avoids eager imports for "
+"commands that do not touch profile data and generally shares one secure-"
+"object repository across related writes. External live readers use "
+"authenticated sessions, while receipts and state captures are represented"
+" as local evidence rather than turning this wiring layer into an AEAT "
+"write path. Taxpayer identifiers are projected into short one-way "
+"references in remote-state reports. These are useful boundaries, though "
+"runtime guarantees still depend on the secure repository and worker "
+"infrastructure outside this chunk."
+msgstr ""
+"Az összeállítási réteg központosítja az adapterválasztást, a rögzített "
+"regiszter-/sémakontextusokat, a rekeszre korlátozott tartósítást, az "
+"engedélyezési visszahívásokat és az alkalmazás felé történő "
+"hibafordítást. Elkerüli az azonnali importokat a profiladatokat nem "
+"érintő parancsoknál, és általában egyetlen biztonságosobjektum-tárat oszt"
+" meg az összetartozó írások között. A külső élő olvasók hitelesített "
+"munkameneteket használnak, míg a nyugták és állapotrögzítések helyi "
+"bizonyítékként jelennek meg, nem alakítják e huzalozási réteget AEAT-"
+"írási útvonallá. Az adózóazonosítókat rövid, egyirányú hivatkozásokká "
+"vetítik a távoli állapotjelentésekben. Ezek hasznos határok, bár a "
+"futásidejű garanciák továbbra is az e részleten kívüli biztonságos tár és"
+" munkafolyamat-infrastruktúra függvényei."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:28
+msgid ""
+"One exact-profile gap is visible in the IVA live-state composition. "
+"`compose_live_state` accepts an explicit `bucket_id`, resolves storage "
+"for that ID, and does not verify that it equals the active worker bucket."
+" The resulting `AppIvaRemoteStatePort.active_storage_span` later confirms"
+" only that the *currently active* bucket has a live storage session; the "
+"port does not retain its composed bucket ID to compare with that session."
+" This does not prove a cross-profile read or write—the secure-object "
+"repository and application worker may independently bind access—but the "
+"local adapter boundary does not establish the same exact-bucket invariant"
+" used by neighboring operation builders. Bind and retain the bucket "
+"identity in the port and require equality before storage, or prove the "
+"repository layer makes this impossible (live-state composition "
+"(`src/cadrumo/entrypoints/live_state_composition.py`), storage guard "
+"(`src/cadrumo/entrypoints/live_state_composition.py`))."
+msgstr ""
+"Az IVA élőállapot-összeállításában egy pontosprofil-hiányosság látható. A"
+" `compose_live_state` kifejezett `bucket_id` értéket fogad, ehhez az "
+"azonosítóhoz old fel tárolást, és nem ellenőrzi, hogy egyezik-e az aktív "
+"munkafolyamat rekeszével. Az eredményül kapott "
+"`AppIvaRemoteStatePort.active_storage_span` később csak azt erősíti meg, "
+"hogy a *jelenleg aktív* rekeszhez élő tárolási munkamenet tartozik; a "
+"port nem őrzi meg az összeállításkor használt rekeszazonosítót, hogy "
+"összevesse e munkamenettel. Ez nem bizonyít profilok közötti olvasást "
+"vagy írást, mert a biztonságosobjektum-tár és az alkalmazás "
+"munkafolyamata önállóan kötheti a hozzáférést, de a helyi adapterhatár "
+"nem igazolja ugyanazt a pontosrekesz-invariánst, amelyet a szomszédos "
+"műveletépítők használnak. A rekeszazonosságot a porthoz kell kötni és "
+"megőrizni, tárolás előtt egyenlőséget kell megkövetelni, vagy bizonyítani"
+" kell, hogy a tárolóréteg ezt lehetetlenné teszi (élőállapot-összeállítás"
+" (`src/cadrumo/entrypoints/live_state_composition.py`), tárolási védelem "
+"(`src/cadrumo/entrypoints/live_state_composition.py`))."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:30
+msgid ""
+"The evidence-followup composer similarly verifies that the requested "
+"bucket is active, then returns every entry from "
+"`EvidenceConsentLedger.load_entries()` without filtering on each entry’s "
+"`profile_bucket_id`. That ledger row includes bucket identity, content "
+"address, provider/model, surface, and time, so this may expose other "
+"profiles’ consent metadata to a single-profile operation unless the "
+"application filters it after receipt. Scope the tuple in the composition "
+"boundary or verify the consumer enforces the profile filter (consent "
+"reader "
+"(`src/cadrumo/entrypoints/evidence_followup_operation_composition.py`))."
+msgstr ""
+"A bizonyíték-utánkövetés összeállítója hasonlóan ellenőrzi, hogy a kért "
+"rekesz aktív-e, majd az `EvidenceConsentLedger.load_entries()` minden "
+"bejegyzését visszaadja anélkül, hogy az egyes bejegyzések "
+"`profile_bucket_id` értékére szűrne. E főkönyvsor rekeszazonosságot, "
+"tartalomcímet, szolgáltatót/modellt, felületet és időt tartalmaz, így más"
+" profilok hozzájárulási metaadatait is feltárhatja egyetlen profil "
+"művelete számára, hacsak az alkalmazás fogadás után nem szűri. Az "
+"összeállítási határon kell szűkíteni a tuple-t, vagy ellenőrizni kell, "
+"hogy a fogyasztó kikényszeríti-e a profilszűrőt (hozzájárulás-olvasó "
+"(`src/cadrumo/entrypoints/evidence_followup_operation_composition.py`))."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:32
+msgid ""
+"Several lower-level builders are less explicit than the registered "
+"operation wrappers. `build_justificante_capture_service(bucket_id)` binds"
+" a bucket repository without checking the active bucket, while the "
+"sibling registration builder derives the active bucket itself. "
+"`compose_ledger_action_ports` and `compose_ledger_llm` also take a bucket"
+" directly; some callers wrap them with an exact-profile check, but their "
+"own signatures do not require one. Confirm that only admitted worker "
+"paths can call these lower-level functions with profile-bound data, or "
+"put the check in the builders that serve as capability boundaries "
+"(capture service (`src/cadrumo/entrypoints/justificante_composition.py`),"
+" ledger action ports "
+"(`src/cadrumo/entrypoints/ledger_action_composition.py`), ledger LLM "
+"ports (`src/cadrumo/entrypoints/ledger_llm_composition.py`))."
+msgstr ""
+"Több alacsonyabb szintű építő kevésbé kifejezett a regisztrált "
+"műveletburkolóknál. A `build_justificante_capture_service(bucket_id)` az "
+"aktív rekesz ellenőrzése nélkül köt rekesztárat, míg a testvér "
+"regisztrációépítő maga vezeti le az aktív rekeszt. A "
+"`compose_ledger_action_ports` és a `compose_ledger_llm` szintén "
+"közvetlenül kap rekeszt; egyes hívók pontosprofil-ellenőrzéssel veszik "
+"körül őket, de saját szignatúrájuk nem követel ilyet. Meg kell erősíteni,"
+" hogy e profilhoz kötött adatokat kezelő alacsonyabb szintű függvényeket "
+"csak engedélyezett munkafolyamat-útvonalak hívhatják, vagy az ellenőrzést"
+" a képességhatárként szolgáló építőkbe kell helyezni (rögzítési "
+"szolgáltatás (`src/cadrumo/entrypoints/justificante_composition.py`), "
+"főkönyvi műveletportok "
+"(`src/cadrumo/entrypoints/ledger_action_composition.py`), főkönyvi LLM-"
+"portok (`src/cadrumo/entrypoints/ledger_llm_composition.py`))."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:34
+msgid "Dependencies and follow-up"
+msgstr "Függőségek és további vizsgálatok"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:36
+msgid ""
+"These modules compose application ports over SQL/encrypted persistence, "
+"AEAT browser and document adapters, Google/LLM providers, profile "
+"custody, and compiled registry authority operations. They should be "
+"reviewed together with the operation registry and worker lifecycle, "
+"because a correct builder is only protective if every route uses it and "
+"the active-profile context cannot change between admission and use. "
+"Verify the IVA port’s exact-bucket guard, scope consent metadata to the "
+"requested bucket, and audit direct call sites for the lower-level "
+"builders noted above. Confirm the effect guard spans every irreversible "
+"file/database write and that injectable repositories always share the "
+"intended secure backend. No application or network workflow was executed;"
+" this review assesses the visible composition contracts only."
+msgstr ""
+"E modulok SQL-/titkosított tartósítás, AEAT-böngésző- és "
+"dokumentumadapterek, Google-/LLM-szolgáltatók, profilőrzés és lefordított"
+" regiszterhez tartozó mérvadó műveletek fölé állítanak össze "
+"alkalmazásportokat. A műveletregiszterrel és a munkafolyamatok "
+"életciklusával együtt kell felülvizsgálni őket, mert a helyes építő csak "
+"akkor véd, ha minden útvonal használja, és az aktívprofil-kontextus nem "
+"változhat az engedélyezés és használat között. Ellenőrizni kell az IVA-"
+"port pontosrekesz-védelmét, a hozzájárulási metaadatokat a kért rekeszre "
+"kell korlátozni, és auditálni kell a fent említett alacsonyabb szintű "
+"építők közvetlen hívási helyeit. Meg kell erősíteni, hogy a hatásvédő "
+"minden visszafordíthatatlan fájl-/adatbázisírást lefed, és a "
+"befecskendezhető tárak mindig a szándékolt biztonságos háttérrendszert "
+"osztják meg. Nem hajtottam végre alkalmazás- vagy hálózati "
+"munkafolyamatot; e felülvizsgálat csak a látható összeállítási "
+"szerződéseket értékeli."
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:38
+msgid "Complete assigned-file coverage"
+msgstr "Az összes kijelölt fájl teljes lefedettsége"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:40
+msgid "`src/cadrumo/entrypoints/__init__.py`"
+msgstr "`src/cadrumo/entrypoints/__init__.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:41
+msgid "`src/cadrumo/entrypoints/actividad_asset_composition.py`"
+msgstr "`src/cadrumo/entrypoints/actividad_asset_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:42
+msgid "`src/cadrumo/entrypoints/adapter_composition.py`"
+msgstr "`src/cadrumo/entrypoints/adapter_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:43
+msgid "`src/cadrumo/entrypoints/auth_apoderado_composition.py`"
+msgstr "`src/cadrumo/entrypoints/auth_apoderado_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:44
+msgid "`src/cadrumo/entrypoints/auth_read_composition.py`"
+msgstr "`src/cadrumo/entrypoints/auth_read_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:45
+msgid "`src/cadrumo/entrypoints/calculation_report_verification_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/calculation_report_verification_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:46
+msgid "`src/cadrumo/entrypoints/calculation_revision_composition.py`"
+msgstr "`src/cadrumo/entrypoints/calculation_revision_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:47
+msgid "`src/cadrumo/entrypoints/calendar_evidence_composition.py`"
+msgstr "`src/cadrumo/entrypoints/calendar_evidence_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:48
+msgid "`src/cadrumo/entrypoints/diagnostics_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/diagnostics_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:49
+msgid "`src/cadrumo/entrypoints/diagnostics_run_health_composition.py`"
+msgstr "`src/cadrumo/entrypoints/diagnostics_run_health_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:50
+msgid "`src/cadrumo/entrypoints/evidence_followup_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/evidence_followup_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:51
+msgid "`src/cadrumo/entrypoints/exchange_rate_composition.py`"
+msgstr "`src/cadrumo/entrypoints/exchange_rate_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:52
+msgid "`src/cadrumo/entrypoints/google_configuration_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/google_configuration_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:53
+msgid "`src/cadrumo/entrypoints/invoice_evidence_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/invoice_evidence_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:54
+msgid "`src/cadrumo/entrypoints/invoice_inspection_composition.py`"
+msgstr "`src/cadrumo/entrypoints/invoice_inspection_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:55
+msgid "`src/cadrumo/entrypoints/invoice_intake_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/invoice_intake_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:56
+msgid "`src/cadrumo/entrypoints/justificante_composition.py`"
+msgstr "`src/cadrumo/entrypoints/justificante_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:57
+msgid "`src/cadrumo/entrypoints/ledger_action_composition.py`"
+msgstr "`src/cadrumo/entrypoints/ledger_action_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:58
+msgid "`src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`"
+msgstr "`src/cadrumo/entrypoints/ledger_evidence_extraction_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:59
+msgid "`src/cadrumo/entrypoints/ledger_evidence_ingestion_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/ledger_evidence_ingestion_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:60
+msgid "`src/cadrumo/entrypoints/ledger_export_link_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/ledger_export_link_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:61
+msgid "`src/cadrumo/entrypoints/ledger_llm_composition.py`"
+msgstr "`src/cadrumo/entrypoints/ledger_llm_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:62
+msgid "`src/cadrumo/entrypoints/ledger_llm_diagnostics_composition.py`"
+msgstr "`src/cadrumo/entrypoints/ledger_llm_diagnostics_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:63
+msgid "`src/cadrumo/entrypoints/live_borrador_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/live_borrador_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:64
+msgid "`src/cadrumo/entrypoints/live_state_composition.py`"
+msgstr "`src/cadrumo/entrypoints/live_state_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:65
+msgid "`src/cadrumo/entrypoints/m036_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/m036_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:66
+msgid "`src/cadrumo/entrypoints/modelo_audit_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/modelo_audit_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:67
+msgid "`src/cadrumo/entrypoints/modelo_dependency_composition.py`"
+msgstr "`src/cadrumo/entrypoints/modelo_dependency_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:68
+msgid "`src/cadrumo/entrypoints/modelo_maritime_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/modelo_maritime_operation_composition.py`"
+
+#: ../../technical/articles/154-entrypoint-adapter-composition.md:69
+msgid "`src/cadrumo/entrypoints/modelo_query_read_operation_composition.py`"
+msgstr "`src/cadrumo/entrypoints/modelo_query_read_operation_composition.py`"

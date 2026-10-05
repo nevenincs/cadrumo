@@ -39,6 +39,7 @@ reported the same way, by both modes.
 
 from __future__ import annotations
 
+import argparse
 import sys
 
 from .checks import (
@@ -62,59 +63,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.mode == "refresh":
-        try:
-            written, problems, advisories = refresh_sequences(
-                docs_root=args.docs_root,
-                goldens_root=args.goldens_root,
-                page=args.page,
-                sequence_id=args.sequence,
-            )
-        except SequenceEngineError as exc:
-            print(f"problem: {exc}", file=sys.stderr)
-            return 1
-        for target in written:
-            print(f"refreshed: {target}")
-        for advisory in advisories:
-            print(f"advisory: {advisory}")
-        for problem in problems:
-            print(f"problem: {problem}", file=sys.stderr)
-        if not written and not problems:
-            print("no enrolled cli-sequence directives matched; nothing to refresh")
-        if written and not problems:
-            print(f"{len(written)} golden(s) rewritten; review the git diff and commit them")
-        return 1 if problems else 0
+        return _refresh_mode(args)
 
     if args.coherence:
-        if args.sequence is not None:
-            print("--coherence is a page-level tier; scope with --page, not --sequence", file=sys.stderr)
-            return 2
-        try:
-            coherence_problems = (
-                check_page_coherence(docs_root=args.docs_root, page=args.page)
-                if args.timeout is None
-                else check_page_coherence_in_subprocess(
-                    docs_root=args.docs_root,
-                    page=args.page,
-                    timeout=args.timeout,
-                )
-            )
-        except SequenceEngineError as exc:
-            print(f"FAIL: {exc}", file=sys.stderr)
-            return 1
-        if coherence_problems:
-            for problem in coherence_problems:
-                print(f"FAIL: {problem}", file=sys.stderr)
-            print(
-                f"{len(coherence_problems)} page-coherence failure(s). This tier runs a page's "
-                "sequences cumulatively in one sandbox, in page order — fix the page's prose or "
-                "sequences so a reader following it top to bottom gets the described results. "
-                "Goldens are the separate per-sequence isolated contract; a refresh does not "
-                "apply here.",
-                file=sys.stderr,
-            )
-            return 1
-        print("cli-sequence page coherence: clean")
-        return 0
+        return _coherence_mode(args)
 
     try:
         if args.timeout is None:
@@ -149,23 +101,81 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print("cli-sequence goldens: clean")
     if args.sequence is not None:
-        # A single-sequence pass is NOT a verification. Sequences on one page
-        # share the in-process CLI tree, so a clean run in isolation can hide a
-        # divergence that only appears once the page's earlier sequences have
-        # run ahead of it — observed on `filing-spine-file`, which passed alone
-        # and failed under its page. Say so at the point of use rather than
-        # letting a green line be mistaken for the gate.
-        owning_page = _owning_page(
-            args.sequence,
-            docs_root=args.docs_root,
-        )
-        target = owning_page or "<docname>"
-        print(
-            f"advisory: a single-sequence pass does not verify {args.sequence!r}; sequences on a "
-            "page share the in-process CLI tree, so run the page-level gate before trusting this: "
-            f"python -m dev.docs.sequences check --page {target}",
-        )
+        _single_sequence_advisory(args)
     return 0
+
+
+def _refresh_mode(args: argparse.Namespace) -> int:
+    """Refresh mode."""
+    try:
+        written, problems, advisories = refresh_sequences(
+            docs_root=args.docs_root,
+            goldens_root=args.goldens_root,
+            page=args.page,
+            sequence_id=args.sequence,
+        )
+    except SequenceEngineError as exc:
+        print(f"problem: {exc}", file=sys.stderr)
+        return 1
+    for target in written:
+        print(f"refreshed: {target}")
+    for advisory in advisories:
+        print(f"advisory: {advisory}")
+    for problem in problems:
+        print(f"problem: {problem}", file=sys.stderr)
+    if not written and not problems:
+        print("no enrolled cli-sequence directives matched; nothing to refresh")
+    if written and not problems:
+        print(f"{len(written)} golden(s) rewritten; review the git diff and commit them")
+    return 1 if problems else 0
+
+
+def _coherence_mode(args: argparse.Namespace) -> int:
+    """Coherence mode."""
+    if args.sequence is not None:
+        print("--coherence is a page-level tier; scope with --page, not --sequence", file=sys.stderr)
+        return 2
+    try:
+        coherence_problems = (
+            check_page_coherence(docs_root=args.docs_root, page=args.page)
+            if args.timeout is None
+            else check_page_coherence_in_subprocess(
+                docs_root=args.docs_root,
+                page=args.page,
+                timeout=args.timeout,
+            )
+        )
+    except SequenceEngineError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 1
+    if coherence_problems:
+        for problem in coherence_problems:
+            print(f"FAIL: {problem}", file=sys.stderr)
+        print(
+            f"{len(coherence_problems)} page-coherence failure(s). This tier runs a page's "
+            "sequences cumulatively in one sandbox, in page order — fix the page's prose or "
+            "sequences so a reader following it top to bottom gets the described results. "
+            "Goldens are the separate per-sequence isolated contract; a refresh does not "
+            "apply here.",
+            file=sys.stderr,
+        )
+        return 1
+    print("cli-sequence page coherence: clean")
+    return 0
+
+
+def _single_sequence_advisory(args: argparse.Namespace) -> None:
+    """Single sequence advisory."""
+    owning_page = _owning_page(
+        args.sequence,
+        docs_root=args.docs_root,
+    )
+    target = owning_page or "<docname>"
+    print(
+        f"advisory: a single-sequence pass does not verify {args.sequence!r}; sequences on a "
+        "page share the in-process CLI tree, so run the page-level gate before trusting this: "
+        f"python -m dev.docs.sequences check --page {target}",
+    )
 
 
 if __name__ == "__main__":

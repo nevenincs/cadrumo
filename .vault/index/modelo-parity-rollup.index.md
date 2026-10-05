@@ -4,17 +4,14 @@ tags:
   - '#index'
   - '#modelo-parity-rollup'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a24eecb2b8e55c6a248fa97f65b2f1aeed85b59a871a583dc3e8eec80104b4a'
+body_hash: 'sha256:5212e039adeb7f1e6006f541cdd315091969869ae99447d183dd045c36e58f7d'
 related:
-  - '[[2026-08-05-modelo-parity-rollup-W04-P11-summary]]'
   - '[[2026-08-05-modelo-parity-rollup-denominator-research]]'
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
-  - '[[2026-08-05-modelo-parity-rollup-ledger]]'
   - '[[2026-08-05-modelo-parity-rollup-m100-2021-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-m100-2022-audit]]'
-  - '[[2026-08-05-modelo-parity-rollup-plan]]'
   - '[[2026-08-05-modelo-parity-rollup-remediation-review-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s02-projection-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s02-review-audit]]'
@@ -79,15 +76,6 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 - `2026-08-05-modelo-parity-rollup-s17-fifth-sol-ruling-audit` - `modelo-parity-rollup` audit: `S17 fifth SOL ruling`
 - `2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit` - `modelo-parity-rollup` audit: `Modelo parity rollup semantic decision boundary`
 - `2026-08-05-modelo-parity-rollup-tranche-review-audit` - `modelo-parity-rollup` audit: `Luna Max parity tranche code review`
-
-### exec
-
-- `2026-08-05-modelo-parity-rollup-W04-P11-summary` - `modelo-parity-rollup` P11 summary
-- `2026-08-05-modelo-parity-rollup-ledger` - `modelo-parity-rollup` ledger
-
-### plan
-
-- `2026-08-05-modelo-parity-rollup-plan` - `modelo-parity-rollup` plan
 
 ### research
 

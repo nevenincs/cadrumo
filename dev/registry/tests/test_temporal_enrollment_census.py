@@ -8,13 +8,15 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
-from ..analysis.temporal_enrollment_census import (
-    LiteralEnrollmentAudit,
-    RegistryRevisionSubject,
-    TemporalEnrollmentExclusionPin,
+from ..analysis.temporal_enrollment_audit import (
     audit_registry_test_enrollment_literals,
     audit_temporal_enrollment_source,
     law_selectable_revision_subjects,
+)
+from ..analysis.temporal_enrollment_models import (
+    LiteralEnrollmentAudit,
+    RegistryRevisionSubject,
+    TemporalEnrollmentExclusionPin,
 )
 from ..compiler.authority import compiled_bundled_authority
 

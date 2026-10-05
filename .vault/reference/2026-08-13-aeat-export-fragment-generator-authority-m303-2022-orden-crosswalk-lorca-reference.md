@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a4404e7cac64e92f5a1240c0745d4f4cd3b4993bd5cc57e6aa3a8e71fa9b961a'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 # `aeat-export-fragment-generator-authority` reference: `M303 2022 Orden, crosswalk, and Lorca authority`
 

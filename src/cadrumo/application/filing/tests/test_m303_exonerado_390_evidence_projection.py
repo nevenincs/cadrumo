@@ -19,8 +19,10 @@ from ....core.filing_projection_ref import (
     M303Exonerado390OperacionesTercerosProjectionRef,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import SourceReference
 from ....domain.filing.errors import FilingExportError

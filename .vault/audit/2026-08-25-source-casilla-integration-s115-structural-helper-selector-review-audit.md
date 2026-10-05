@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:5f3e0d16f0aa58cb2b149c42b4feadefecdf0342b0af4b7aad73c2b6089c12fc'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 # `source-casilla-integration` audit: `S115 structural helper selector review`
 

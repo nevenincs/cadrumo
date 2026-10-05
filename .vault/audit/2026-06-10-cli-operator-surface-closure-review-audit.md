@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:2ca4512f0a69df6ea8de7e94a1f29d9ae4a5fc773ce3ec2c618f7a6ab7c62a3a'
+modified: '2026-10-03'
+body_hash: 'sha256:9ba619026fc6e36dab97c83ff93bf284f9db981e339b2abafc36ae44401b941c'
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'
@@ -21,7 +21,7 @@ Fresh-context honesty review (the mandatory campaign-close gate per the campaign
 
 ### F-OK1 D1 switch-replaces-unlock landed and behaves (VERIFIED-OK)
 
-Commit `f2e1b0c5e` (`relocation:switch`). Live `aeat config --help` lists `aeat config switch NAME` and `aeat config bucket --help` returns No such command bucket; `unlock` is absent. `switch` wires to the session-unlock mechanics underneath: `src/aeat/entrypoints/cli/_config/_custody.py:19` documents `_register_switch_command` as Select and unlock pointer through the canonical profile lifecycle span. Hard rename, no surviving alias. Matches the D1 claim.
+Commit `f2e1b0c5e` (`relocation:switch`). Live `aeat config --help` lists `aeat config switch NAME` and `aeat config bucket --help` returns No such command bucket; `unlock` is absent. `switch` wires to the session-unlock mechanics underneath: the retired module documents `_register_switch_command` as Select and unlock pointer through the canonical profile lifecycle span. Hard rename, no surviving alias. Matches the D1 claim.
 
 ### F-OK2 reset-state to reset-progress landed (VERIFIED-OK)
 
@@ -33,7 +33,7 @@ Commit `68b86138f` (`relocation:bucket-history`). Live `aeat config profile --he
 
 ### F-OK4 D4 single strict period grammar landed and behaves (VERIFIED-OK)
 
-Commit `7c150c749` (D4 rework). Live `aeat app ledger preflight --help` advertises Filing period as an AEAT token 1T-4T and the new `--year INTEGER [required]`. `aeat app ledger preflight --period 2026Q1 --year 2026` is refused with Unrecognized period 2026Q1. Use an AEAT token 1T-4T. `src/aeat/entrypoints/cli/_common.py:247` `_canonical_period` validates through the registry period union (`aeat.core._period`) and converts AEAT-token+year to the internal calendar shape; no re-declared accepted token set. The old `_PERIOD_RE` calendar grammar is gone (only docstring mentions of 2026Q1 survive, describing what is now refused). D4 matches the claim. Sub-item: the `--filter period=` mini-grammar (which carries no `--year`) retains a year-qualified 2026-1T AEAT-token form (`_common.py:278` `_FILTER_YEAR_QUALIFIED_RE`), which the D4 amendment text described as removed. A defensible deviation (the filter clause has no separate `--year` to pair the bare token with) but a documented-claim-vs-implementation divergence. Low harm; worth a one-line ADR reconciliation.
+Commit `7c150c749` (D4 rework). Live `aeat app ledger preflight --help` advertises Filing period as an AEAT token 1T-4T and the new `--year INTEGER [required]`. `aeat app ledger preflight --period 2026Q1 --year 2026` is refused with Unrecognized period 2026Q1. Use an AEAT token 1T-4T. The retired module `_canonical_period` validates through the registry period union (`aeat.core._period`) and converts AEAT-token+year to the internal calendar shape; no re-declared accepted token set. The old `_PERIOD_RE` calendar grammar is gone (only docstring mentions of 2026Q1 survive, describing what is now refused). D4 matches the claim. Sub-item: the `--filter period=` mini-grammar (which carries no `--year`) retains a year-qualified 2026-1T AEAT-token form (`_common.py:278` `_FILTER_YEAR_QUALIFIED_RE`), which the D4 amendment text described as removed. A defensible deviation (the filter clause has no separate `--year` to pair the bare token with) but a documented-claim-vs-implementation divergence. Low harm; worth a one-line ADR reconciliation.
 
 ### F-OK5 D8 preflight defaults --revision-id (VERIFIED-OK)
 
@@ -45,19 +45,19 @@ Commit `ced5ef49a`. The D6 ordering picked outcome one, make it work: `aeat --la
 
 ### F-OK7 D5 self-referential-string + enum conformance gate green (VERIFIED-OK)
 
-Commit `2ac338d4b`. The gate lives at `src/aeat/entrypoints/cli/tests/test_self_referential_string_conformance.py` (371 lines). Ran it plus `test_json_schema_conformance.py` under `-m integration`: 155 passed. The advertised-enum-vs-handler and hint-resolves-to-live-command contracts hold at HEAD.
+Commit `2ac338d4b`. The gate lives at the retired test (371 lines). Ran it plus `test_json_schema_conformance.py` under `-m integration`: 155 passed. The advertised-enum-vs-handler and hint-resolves-to-live-command contracts hold at HEAD.
 
 ### F-OK8 IVA-wallet correct guard is sound, never-live intact (VERIFIED-OK)
 
-W04.P10 IVA-wallet correction (one of the unreviewed-by-independent-agent landings). `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py:294` requires `--confirm` (refuses without it, `:310`), requires a non-empty `--reason` recorded into an audit event, and the underlying action `correct_iva_compensation_period_for_bucket` in `src/aeat/application/modelo/_iva_wallet_seed.py:172` refuses when a sealed (already-filed) Modelo 303 consumed the seeded basis (`_iva_wallet_seed.py:83,89,190`). The honest-record and never-live-submission boundary is preserved; guard parity with the forward set-aside verbs holds.
+W04.P10 IVA-wallet correction (one of the unreviewed-by-independent-agent landings). The retired module requires `--confirm` (refuses without it, `:310`), requires a non-empty `--reason` recorded into an audit event, and the underlying action `correct_iva_compensation_period_for_bucket` in the retired module refused when a sealed (already-filed) Modelo 303 consumed the seeded basis (`_iva_wallet_seed.py:83,89,190`). The honest-record and never-live-submission boundary is preserved; guard parity with the forward set-aside verbs holds.
 
 ### F-OK9 M036 + reconciliation-history read-backs are typed, no parallel write path (VERIFIED-OK)
 
-Commits `0a76a01d8` (M036) and `6cb36cd2d` (reconciliation-history). `src/aeat/application/modelo/_m036_lifecycle.py:185` `list_m036_declarations` and `:200` `read_m036_declaration` both return typed `M036DeclarationResult` read through a `SecureSnapshotRepository` (`:158`), a read path through the owning repository, not a parallel writer. `reconciliation-history` is registered at `src/aeat/entrypoints/cli/_modelo_reconcile_cli.py:36` over a typed modelo.reconciliation_history schema (`_modelo_payloads.py:1345`). Read-back baseline (D7) is genuinely present for the in-scope surfaces.
+Commits `0a76a01d8` (M036) and `6cb36cd2d` (reconciliation-history). The retired module `list_m036_declarations` and `:200` `read_m036_declaration` both return typed `M036DeclarationResult` read through a `SecureSnapshotRepository` (`:158`), a read path through the owning repository, not a parallel writer. `reconciliation-history` is registered at the retired module over a typed modelo.reconciliation_history schema (`_modelo_payloads.py:1345`). Read-back baseline (D7) is genuinely present for the in-scope surfaces.
 
 ### F-OK10 D2 ledger restore verb present with full hardening (VERIFIED-OK; brief commit hash was wrong)
 
-The brief listed `afcb56c8b` as the restore commit; that hash is in fact an auth-tests typing commit (widen x509.NameAttribute), unrelated to restore. The restore work nonetheless landed: `src/aeat/application/ledger/_actions_lifecycle.py:133` `restore_manual_transaction` emits BucketEventType.LEDGER_TRANSACTION_RESTORED (`:193`); the CLI verb is registered at `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py:59` (`ledger_restore`, `:327`) accepting `--id`, `--reason`, `--yes`, `--actor`. D2 is real; only the brief commit attribution was incorrect. No gap.
+The brief listed `afcb56c8b` as the restore commit; that hash is in fact an auth-tests typing commit (widen x509.NameAttribute), unrelated to restore. The restore work nonetheless landed: the retired module `restore_manual_transaction` emits BucketEventType.LEDGER_TRANSACTION_RESTORED (`:193`); the CLI verb is registered at the retired module (`ledger_restore`, `:327`) accepting `--id`, `--reason`, `--yes`, `--actor`. D2 is real; only the brief commit attribution was incorrect. No gap.
 
 ### F-OK11 retired-verb subsystem removal is behaviour-neutral (VERIFIED-OK)
 
@@ -65,7 +65,7 @@ Commit `44a859855` removed RETIRED_OPERATOR_SURFACES, retired_surface_suggestion
 
 ### F1 Operator-facing bucket noun NOT renamed -- D1 family incomplete (REAL GAP, MEDIUM)
 
-ADR D1 queued the operator-facing bucket noun where the operator means profile for the same hard-rename discipline, and plan step `W03.P07.S37` is rename the operator-facing bucket noun to profile across CLI help and locale strings, keeping bucket only where it names the internal encrypted-storage concept. The command-path rename (F-OK3) landed, but the NOUN did not. Live help leaks it: `aeat config profile create --help` renders Initialize a new active profile and config bucket and Create a local tax profile bucket. `src/aeat/locales/en.yml` carries 121 bucket occurrences, many operator-facing: `:417` registered profile bucket, `:420` No active profile bucket, `:1113` List inventory ledgers in the active bucket, `:1386` Filter by bucket, `:2029` and `:2056` Initialize a new active profile and config bucket. D6 made help honest in both locales, so the leak is now visible to Spanish operators too. This is an operator-vocabulary leak the campaign own D1 discipline targets, left unclosed.
+ADR D1 queued the operator-facing bucket noun where the operator means profile for the same hard-rename discipline, and plan step `W03.P07.S37` is rename the operator-facing bucket noun to profile across CLI help and locale strings, keeping bucket only where it names the internal encrypted-storage concept. The command-path rename (F-OK3) landed, but the NOUN did not. Live help leaks it: `aeat config profile create --help` renders Initialize a new active profile and config bucket and Create a local tax profile bucket. The retired data file carried 121 bucket occurrences, many operator-facing: `:417` registered profile bucket, `:420` No active profile bucket, `:1113` List inventory ledgers in the active bucket, `:1386` Filter by bucket, `:2029` and `:2056` Initialize a new active profile and config bucket. D6 made help honest in both locales, so the leak is now visible to Spanish operators too. This is an operator-vocabulary leak the campaign own D1 discipline targets, left unclosed.
 
 ### F2 Plan checkboxes are almost entirely OPEN while the code landed (REAL GAP -- bookkeeping, MEDIUM)
 
@@ -81,11 +81,11 @@ Because commit `44a859855` deleted the retired-verb subsystem AFTER D1 landed, t
 
 ### F5 Envelope-token shadow: config.bucket.history retained for config profile history (REAL TENSION -- recommend KEEP, document)
 
-`src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py:81` keeps a _PATH_KEY_OVERRIDES map mapping config.profile.history to config.bucket.history: the operator command path is config profile history but the JSON envelope registry token stays config.bucket.history. The comment at `:73-80` states the token is a STABLE MACHINE API deliberately kept unchanged so existing machine consumers are not broken. Assessment: honest, asserted, exact, not an allowlist mute; the no-allowlist gate stays exact and catches any OTHER mismatch, and it is documented, NOT a silent bridge. But it IS, strictly, a token-level shadow against ADR caveat 1, no alias synonym shadow or deprecation window survives. The tension is real: the campaign that nuked the retired-verb deprecation subsystem on the no-shims principle simultaneously retained a machine-token shadow on the same principle surface. Recommendation: KEEP the token stable, renaming it breaks machine consumers for zero operator benefit and the JSON token is not an operator-facing spelling, but make the exception explicit in the ADR no-shadow caveat. The caveat targets operator-facing verbs and spellings; a stable machine-API token is a legitimate carve-out the ADR should name rather than leave as a test-file-only override. Do not rename.
+The retired test keeps a _PATH_KEY_OVERRIDES map mapping config.profile.history to config.bucket.history: the operator command path is config profile history but the JSON envelope registry token stays config.bucket.history. The comment at `:73-80` states the token is a STABLE MACHINE API deliberately kept unchanged so existing machine consumers are not broken. Assessment: honest, asserted, exact, not an allowlist mute; the no-allowlist gate stays exact and catches any OTHER mismatch, and it is documented, NOT a silent bridge. But it IS, strictly, a token-level shadow against ADR caveat 1, no alias synonym shadow or deprecation window survives. The tension is real: the campaign that nuked the retired-verb deprecation subsystem on the no-shims principle simultaneously retained a machine-token shadow on the same principle surface. Recommendation: KEEP the token stable, renaming it breaks machine consumers for zero operator benefit and the JSON token is not an operator-facing spelling, but make the exception explicit in the ADR no-shadow caveat. The caveat targets operator-facing verbs and spellings; a stable machine-API token is a legitimate carve-out the ADR should name rather than leave as a test-file-only override. Do not rename.
 
 ### F-OK12 peer-regression attribution spot-checks (VERIFIED, mostly peer-attributable)
 
-- Profile-lifecycle BUCKET_DEK_V1: `src/aeat/application/user_profile/tests/test_lifecycle.py` runs 15 passed at HEAD. The coordinator failing claim is STALE or already-fixed; not failing now and not attributable to this campaign.
+- Profile-lifecycle BUCKET_DEK_V1: the retired test ran 15 passed at HEAD. The coordinator failing claim is STALE or already-fixed; not failing now and not attributable to this campaign.
 - educational-docs index.md: `test_educational_docs_conformance.py` fails on `docs/how-to/index.md` citing aeat reconcile troubleshooting authenticate-with-aeat. Lines 220-226 are doc-slug list items inside a code fence, page names reconcile troubleshooting authenticate-with-aeat, not a CLI command; the conformance parser over-reaches on the doc-index fence. Last authored by `df71ba94a`, the parent userdocs campaign; fence originates in `c9d1a496f`, unrelated. Genuinely peer-attributable parser false-positive, not a regression this campaign introduced.
 - M130/M202 source-bound-casilla: the candidate tests test_dormant_ledger_resolvers_fire_live and test_source_boundary_and_enrollment belong to the concurrent calculation-engine-foundations campaign, recent commits `ab903b06b` and `a85e601cf`, entirely outside the cli-operator-surface diff. Credibly peer-attributable.
 
@@ -100,7 +100,7 @@ The ADR explicitly defers the gestor cross-profile bulk gap, CRUD F-04, its own 
 Punch-list of items to close or formally defer before declaring the campaign structurally complete. Each is a trackable follow-up. None is CRITICAL or HIGH.
 
 - FU-1, F2, MEDIUM: Tick the plan checkboxes in `2026-06-10-cli-operator-surface-plan.md` to reflect HEAD via vaultspec-core vault plan step check, OR convert the genuinely-open steps to explicit deferrals. The plan currently mis-reports most landed work as unstarted.
-- FU-2, F1, MEDIUM: Execute plan step `W03.P07.S37`, rename the operator-facing bucket noun to profile across CLI help and locale strings in `src/aeat/locales/en.yml` and siblings, keeping bucket only for the internal encrypted-storage concept. This is the unclosed half of the D1 family.
+- FU-2, F1, MEDIUM: Execute plan step `W03.P07.S37`, rename the operator-facing bucket noun to profile across CLI help and locale strings in the retired data file and siblings, keeping bucket only for the internal encrypted-storage concept. This is the unclosed half of the D1 family.
 - FU-3, F3, LOW: De-jargon the reset-progress help text, remove envelope and workflow-state envelope storage nouns in favour of operator intent vocabulary, via the aeat.locales CLI.
 - FU-4, F5, recommend KEEP plus document: Add an explicit machine-API carve-out sentence to the ADR no-shadow caveat 1 naming the retained config.bucket.history envelope token as a deliberate stable-machine-API exception. Do NOT rename the token. This closes the strict-caveat tension without breaking consumers.
 - FU-5, F4 plus D4 sub-item, LOW: Add a one-line amendment note to the operator-surface ADR or an exec record reconciling, first, the `44a859855` removal of the `_RETIRED_VERBS` subsystem with D1 and `W03.P06.S33` references to it, and second, the retained `--filter` 2026-1T year-qualified form the D4 amendment described as removed.

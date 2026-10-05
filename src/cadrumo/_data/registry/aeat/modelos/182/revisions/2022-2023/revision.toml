@@ -44,3 +44,8 @@ source_refs = [
     "enrolled-modelo-182-layout",
 ]
 review_status = "pending_review"
+
+[revisions."2022-2023".family_dispositions.bindings]
+reason = "A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every casilla of this edition is informational or manual: the tipo 1 header data and the tipo 2 registro de declarado fields (NIF, apellidos y nombre, porcentaje de deduccion, importe and recurrencia of each donor, design positions 18-26, 36-75, 79-83, 84-96 and 132) are stated by the declaring entity from its own donation records, and no ledger, profile or earlier-filing source is enrolled for them. The donor row bindings once declared here were removed because no calculation route resolved them and no export layout of this applicability-grade modelo wrote them."
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-182-2021-2023"]

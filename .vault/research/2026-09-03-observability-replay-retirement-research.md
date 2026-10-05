@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#observability-replay-retirement'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c02b3fd8bdb7198dd2d2e3308059bcec28ca588b5b922605226c062247bfa352'
+body_hash: 'sha256:bf59f4fa2cf2030a5d784b78ed8994e30e6e61e59699a30cd39ee06f0b2e4700'
 related: []
 ---
 
@@ -17,11 +17,11 @@ The live tree has retired generic `replay_run`; what remains is a redacted run-t
 
 ### Generic argv re-entry was not hermetic
 
-The retired runner reconstructed positional and flag records, but recovered `ENV`, `CONFIG`, and `DEFAULT` values from the current environment. Its only pre-invocation refusals were corpus-hash drift and a two-name obsolete-write-flag denylist; it neither resolved the entrypoint through current command authority nor confined execution to synthetic/read-only scenarios. `commit ac0e7fff6c^:src/cadrumo/core/observability/replay.py:55-117`, `commit ac0e7fff6c^:src/cadrumo/core/observability/replay.py:174-192`.
+The retired runner reconstructed positional and flag records, but recovered `ENV`, `CONFIG`, and `DEFAULT` values from the current environment. Its only pre-invocation refusals were corpus-hash drift and a two-name obsolete-write-flag denylist; it neither resolved the entrypoint through current command authority nor confined execution to synthetic/read-only scenarios. `commit ac0e7fff6c^:the former source file`, `commit ac0e7fff6c^:the former source file`.
 
-The runner constructed current `Settings()` and re-entered CLI dispatch, whose preflight resumes or authenticates the currently selected profile. A historical trace was not a sealed input or credential capsule. `commit ac0e7fff6c^:src/cadrumo/core/observability/replay.py:183-225`, `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py:157-251`, `src/cadrumo/entrypoints/cli/_command_runtime.py:205-224`.
+The runner constructed current `Settings()` and re-entered CLI dispatch, whose preflight resumes or authenticates the currently selected profile. A historical trace was not a sealed input or credential capsule. `commit ac0e7fff6c^:the former source file`, `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py:157-251`, `src/cadrumo/entrypoints/cli/_command_runtime.py:205-224`.
 
-The trace is a redacted diagnostic artifact, not executable secret storage. Producers must redact secret-named arguments; persistence applies DIAGNOSTIC redaction and retains a certificate fingerprint rather than credentials. `src/cadrumo/core/observability/models.py:16-79`, `src/cadrumo/core/observability/models.py:369-400`, `src/cadrumo/core/observability/store.py:180-185`. The optional `db_sha256` check ran after invocation and only for hermetic roots, so it supplied no current-state precondition. `commit ac0e7fff6c^:src/cadrumo/core/observability/replay.py:149-158`, `commit ac0e7fff6c^:src/cadrumo/core/observability/replay.py:233-256`.
+The trace is a redacted diagnostic artifact, not executable secret storage. Producers must redact secret-named arguments; persistence applies DIAGNOSTIC redaction and retains a certificate fingerprint rather than credentials. `src/cadrumo/core/observability/models.py:16-79`, `src/cadrumo/core/observability/models.py:369-400`, `src/cadrumo/core/observability/store.py:180-185`. The optional `db_sha256` check ran after invocation and only for hermetic roots, so it supplied no current-state precondition. `commit ac0e7fff6c^:the former source file`, `commit ac0e7fff6c^:the former source file`.
 
 ### Output assurance needs capture fidelity, not execution fidelity
 
@@ -47,7 +47,7 @@ Observability does not require replay authority: `run_context` records a trace a
 - `.vault/adr/2026-07-01-determinism-replay-residual-adr.md:62-138`
 - `.vault/adr/2026-07-28-cli-authority-verb-conformance-adr.md:66-124`
 - `commit ac0e7fff6c`
-- `commit ac0e7fff6c^:src/cadrumo/core/observability/replay.py:55-256`
+- `commit ac0e7fff6c^:the former source file`
 - `src/cadrumo/core/observability/models.py:16-400`
 - `src/cadrumo/core/observability/context.py:229-307`
 - `src/cadrumo/core/observability/store.py:180-366`

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#data-provenance-consolidation'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:88e5002bb83289425979b7a2c10fe5e62976e60dcb74dbb452c1073563902719'
-related:
-  - "[[2026-09-10-data-provenance-consolidation-plan]]"
+related: []
 ---
 
 # `data-provenance-consolidation` audit: `w02 p04 s12 sync rejection review`

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -34,19 +34,20 @@ msgstr ""
 
 #: ../../how-to/manage-invoices.md:7
 msgid ""
-"A business invoice is not the same as a purchase receipt you attach as "
-"evidence. Receipts support a deductible expense on a ledger transaction "
-"(see [Attach invoices and receipts](ledger-evidence.md)). Business "
-"invoices recorded here are the commercial documents themselves: an "
-"*issued* invoice (you billed a customer) or a *received* invoice (a "
-"supplier billed you)."
+"A business invoice is not the same as a purchase receipt you attach as a "
+"supporting document. Receipts support a deductible expense on a "
+"transaction in your records (see [Attach invoices and receipts to "
+"transactions](ledger-evidence.md)). Business invoices recorded here are "
+"the commercial documents themselves: an *issued* invoice (you billed a "
+"customer) or a *received* invoice (a supplier billed you)."
 msgstr ""
 "Una factura de negoci no és el mateix que un rebut de compra que adjuntes"
-" com a prova. Els rebuts justifiquen una despesa deduïble en una "
-"transacció del ledger (consulta [Adjunta factures i rebuts](ledger-"
-"evidence.md)). Les factures de negoci que es registren aquí són els "
-"documents comercials mateixos: una factura *emesa* (has facturat a un "
-"client) o una factura *rebuda* (un proveïdor t'ha facturat)."
+" com a justificant. Els rebuts justifiquen una despesa deduïble en un "
+"moviment dels teus registres (consulta [Adjunta factures i rebuts als "
+"moviments](ledger-evidence.md)). Les factures de negoci que es registren "
+"aquí són els documents comercials mateixos: una factura *emesa* (has "
+"facturat a un client) o una factura *rebuda* (un proveïdor t'ha "
+"facturat)."
 
 #: ../../how-to/manage-invoices.md:13
 msgid "Before you start"
@@ -103,21 +104,21 @@ msgstr ""
 msgid ""
 "Every invoice you record is linkable and calculable. Match it to a bank "
 "transaction with `aeat app ledger link`, and a calculation reads it "
-"directly - for example the Modelo 349 recapitulative declaration of "
-"intra-community operations."
+"directly, for example the Modelo 349 recapitulative declaration of intra-"
+"community operations."
 msgstr ""
-"Cada factura que registres es pot vincular i calcular. Fes-la coincidir "
-"amb una transacció bancària amb `aeat app ledger link`, i un càlcul la "
-"llegeix directament: per exemple, el Modelo 349, declaració "
-"recapitulativa d'operacions intracomunitàries."
+"Cada factura que registres és enllaçable i calculable. Vincula-la a un "
+"moviment bancari amb `aeat app ledger link`, i un càlcul la llegeix "
+"directament, per exemple el Modelo 349, declaració recapitulativa "
+"d'operacions intracomunitàries."
 
-#: ../../how-to/manage-invoices.md:38
+#: ../../how-to/manage-invoices.md:37
 msgid ""
 "Record every invoice with `invoice add`. There is no second copy to "
 "create."
 msgstr "Registra cada factura amb `invoice add`. No cal crear-ne cap segona còpia."
 
-#: ../../how-to/manage-invoices.md:40
+#: ../../how-to/manage-invoices.md:39
 msgid ""
 "`invoice add` requires `--kind issued` or `--kind received`, and `invoice"
 " list` accepts it as a filter. *Issued* means a customer owes you; "
@@ -131,11 +132,11 @@ msgstr ""
 "`remove` només prenen l'id de la factura. `invoice add` també requereix "
 "`--country-code`, el codi de país de dues lletres de la contrapart."
 
-#: ../../how-to/manage-invoices.md:46
+#: ../../how-to/manage-invoices.md:45
 msgid "Record an issued invoice"
 msgstr "Registra una factura emesa"
 
-#: ../../how-to/manage-invoices.md:48
+#: ../../how-to/manage-invoices.md:47
 msgid ""
 "Record an invoice you sent to a customer. The command returns the new "
 "`invoice_id`, the computed totals, and the values you entered:"
@@ -143,7 +144,7 @@ msgstr ""
 "Registra una factura que has enviat a un client. L'ordre retorna el nou "
 "`invoice_id`, els totals calculats i els valors que has introduït:"
 
-#: ../../how-to/manage-invoices.md:55
+#: ../../how-to/manage-invoices.md:54
 msgid ""
 "Record the `invoice_id`; you address the invoice by it (or by an "
 "unambiguous prefix)."
@@ -151,21 +152,21 @@ msgstr ""
 "Anota l'`invoice_id`; amb ell (o amb un prefix inequívoc) indiques de "
 "quina factura parles."
 
-#: ../../how-to/manage-invoices.md:58
+#: ../../how-to/manage-invoices.md:57
 msgid "Record a received invoice"
 msgstr "Registra una factura rebuda"
 
-#: ../../how-to/manage-invoices.md:60
+#: ../../how-to/manage-invoices.md:59
 msgid "Record an invoice a supplier sent you. Its `kind` reads `received`:"
 msgstr ""
 "Registra una factura que t'ha enviat un proveïdor. El seu `kind` és "
 "`received`:"
 
-#: ../../how-to/manage-invoices.md:66
+#: ../../how-to/manage-invoices.md:65
 msgid "List, view, update, and remove"
 msgstr "Llista, consulta, actualitza i elimina"
 
-#: ../../how-to/manage-invoices.md:68
+#: ../../how-to/manage-invoices.md:67
 msgid ""
 "List both kinds or filter to one, add a note to a stored invoice, then "
 "remove it. The view of one invoice takes its id (or an unambiguous "
@@ -175,11 +176,11 @@ msgstr ""
 "desada i, tot seguit, elimina-la. La consulta d'una factura pren el seu "
 "id (o un prefix inequívoc):"
 
-#: ../../how-to/manage-invoices.md:75
+#: ../../how-to/manage-invoices.md:74
 msgid "Record an intra-community invoice"
 msgstr "Registra una factura intracomunitària"
 
-#: ../../how-to/manage-invoices.md:77
+#: ../../how-to/manage-invoices.md:76
 msgid ""
 "A supply to, or acquisition from, a VAT-registered business in another EU"
 " country is an intra-community operation. Record it on the issued or "
@@ -192,7 +193,7 @@ msgstr ""
 "la contrapart i el seu NIF-IVA de la UE, més el tipus d'operació del "
 "Modelo 349:"
 
-#: ../../how-to/manage-invoices.md:86
+#: ../../how-to/manage-invoices.md:85
 msgid ""
 "`--operation-type` takes one M349 operation key: `E` supplies of goods, "
 "`M` supplies after an exempt import, `H` the same via a fiscal "
@@ -207,12 +208,13 @@ msgstr ""
 "les claus d'existències de reserva (call-off stock) `R` (transferències),"
 " `D` (devolucions) i `C` (substitucions)."
 
-#: ../../how-to/manage-invoices.md:92
+#: ../../how-to/manage-invoices.md:91
 msgid ""
 "`invoice update` corrects the note, counterparty name and country, "
-"operation type and date, IVA category, retention, invoice class, series, "
-"and the rectified invoice number. To correct the invoice number, date, "
-"tax id, currency, or totals, remove the invoice and record it again."
+"operation type and date, VAT category, withholding, invoice class, "
+"series, and the rectified invoice number. To correct the invoice number, "
+"date, tax id, currency, or totals, remove the invoice and record it "
+"again."
 msgstr ""
 "`invoice update` corregeix la nota, el nom i el país de la contrapart, el"
 " tipus i la data de l'operació, la categoria d'IVA, la retenció, la "
@@ -220,11 +222,11 @@ msgstr ""
 "corregir el número de la factura, la data, el NIF, la moneda o els "
 "totals, elimina la factura i torna-la a registrar."
 
-#: ../../how-to/manage-invoices.md:97
+#: ../../how-to/manage-invoices.md:96
 msgid "Feed a calculation from the catalogue"
 msgstr "Alimenta un càlcul des del catàleg"
 
-#: ../../how-to/manage-invoices.md:99
+#: ../../how-to/manage-invoices.md:98
 msgid ""
 "Every invoice in the catalogue reaches a modelo calculation and can be "
 "linked to a bank transaction. The sequence records an intra-community "
@@ -232,13 +234,13 @@ msgid ""
 " Modelo 349 recapitulative declaration for the period the invoice falls "
 "in:"
 msgstr ""
-"Totes les factures del catàleg arriben al càlcul d'un modelo i es poden "
-"vincular a una transacció bancària. La seqüència registra un lliurament "
+"Totes les factures del catàleg arriben al càlcul d'un model i es poden "
+"vincular a un moviment bancari. La seqüència registra un lliurament "
 "intracomunitari, llista i inspecciona el catàleg i, després, crea i "
 "calcula la declaració recapitulativa del Modelo 349 per al període en què"
 " cau la factura:"
 
-#: ../../how-to/manage-invoices.md:108
+#: ../../how-to/manage-invoices.md:107
 msgid ""
 "For an intra-community operation, pass `--operation-type` so the invoice "
 "carries the classification the Modelo 349 calculation reads. Use `E`, "
@@ -255,7 +257,7 @@ msgstr ""
 " de reserva; les files de rectificació utilitzen camps separats de "
 "període rectificat i de base."
 
-#: ../../how-to/manage-invoices.md:114
+#: ../../how-to/manage-invoices.md:113
 msgid ""
 "An invoice is counted in the period of the date you record with "
 "`--operation-date`, so record the devengo date that LIVA art. 75 sets. "
@@ -273,43 +275,43 @@ msgstr ""
 "factura la substitueix. El Modelo 349 llegeix les factures estrictament "
 "per aquesta data, sense arrossegar res de períodes anteriors."
 
-#: ../../how-to/manage-invoices.md:122
+#: ../../how-to/manage-invoices.md:121
 msgid "Link a catalogue invoice to a transaction"
-msgstr "Vincula una factura del catàleg a una transacció"
+msgstr "Vincula una factura del catàleg a un moviment"
 
-#: ../../how-to/manage-invoices.md:124
+#: ../../how-to/manage-invoices.md:123
 msgid ""
 "Link a catalogue invoice to the bank transaction that paid or collected "
 "it. The example starts with one bank transaction and one issued invoice, "
 "links them, and confirms the link on the invoice:"
 msgstr ""
-"Vincula una factura del catàleg a la transacció bancària que la va pagar "
-"o cobrar. L'exemple parteix d'una transacció bancària i una factura "
-"emesa, les vincula i confirma el vincle a la factura:"
+"Vincula una factura del catàleg al moviment bancari que la va pagar o "
+"cobrar. L'exemple parteix d'un moviment bancari i una factura emesa, els "
+"vincula i confirma el vincle a la factura:"
 
-#: ../../how-to/manage-invoices.md:132
+#: ../../how-to/manage-invoices.md:131
 msgid ""
 "Remove a catalogue invoice you created by mistake, confirming with "
 "`--yes`. If the invoice is still linked to a transaction, the removal is "
 "refused, so the bank transaction never ends up citing an invoice that no "
 "longer exists. `aeat` has no command that unlinks an invoice. Removing "
 "the linked transaction releases the link (see [Correct mistakes in your "
-"ledger](correct-ledger-entries.md)). The example removes an invoice that "
-"has no link:"
+"records](correct-ledger-entries.md)). The example removes an invoice that"
+" has no link:"
 msgstr ""
 "Elimina una factura del catàleg que hagis creat per error, confirmant amb"
-" `--yes`. Si la factura encara està vinculada a una transacció, "
-"l'eliminació es rebutja, de manera que la transacció bancària mai no "
-"acaba citant una factura que ja no existeix. `aeat` no té cap ordre que "
-"desvinculi una factura. Eliminar la transacció vinculada allibera el "
-"vincle (consulta [Corregeix els errors del teu ledger](correct-ledger-"
-"entries.md)). L'exemple elimina una factura que no té cap vincle:"
+" `--yes`. Si la factura encara està vinculada a un moviment, l'eliminació"
+" es rebutja, de manera que el moviment bancari mai no acaba citant una "
+"factura que ja no existeix. `aeat` no té cap ordre que desvinculi una "
+"factura. Eliminar el moviment vinculat allibera el vincle (consulta "
+"[Corregeix els errors dels teus registres](correct-ledger-entries.md)). "
+"L'exemple elimina una factura que no té cap vincle:"
 
-#: ../../how-to/manage-invoices.md:143
+#: ../../how-to/manage-invoices.md:142
 msgid "Which modelos read your invoices"
-msgstr "Quins modelos llegeixen les teves factures"
+msgstr "Quins models llegeixen les teves factures"
 
-#: ../../how-to/manage-invoices.md:145
+#: ../../how-to/manage-invoices.md:144
 msgid ""
 "Catalogue invoices feed **Modelo 349** (the recapitulative declaration of"
 " intra-community operations) through the operation type you stamp on them"
@@ -320,30 +322,30 @@ msgid ""
 msgstr ""
 "Les factures del catàleg alimenten el **Modelo 349** (la declaració "
 "recapitulativa d'operacions intracomunitàries) a través del tipus "
-"d'operació que hi assignes quan les crees. Aquest és el modelo que les "
+"d'operació que hi assignes quan les crees. Aquest és el model que les "
 "teves factures emeses i rebudes alimenten directament. Els càlculs del "
-"Modelo 100 també llegeixen la factura vinculada a una transacció d'ingrés"
-" o de despesa, per exemple la retenció que hi consta."
+"Modelo 100 també llegeixen la factura vinculada a un moviment d'ingrés o "
+"de despesa, per exemple la retenció que hi consta."
 
-#: ../../how-to/manage-invoices.md:151
+#: ../../how-to/manage-invoices.md:150
 msgid ""
-"Modelo 303 (quarterly IVA) and Modelo 390 (annual IVA summary) take their"
-" amounts from your classified ledger, not from the invoice catalogue. "
-"They do check the catalogue: if an invoice's IVA for the period exceeds "
-"what the ledger carries, the calculation refuses until you record and "
-"classify the matching transactions (see [Classify transactions](classify-"
-"transactions.md)). Recording an invoice here does not add it to a Modelo "
-"303."
+"Modelo 303 (quarterly VAT) and Modelo 390 (annual VAT summary) take their"
+" amounts from the transactions you have classified in your records, not "
+"from the invoice catalogue. They do check the catalogue: if an invoice's "
+"VAT for the period exceeds what your records carry, the calculation "
+"refuses until you record and classify the matching transactions (see "
+"[Classify transactions](classify-transactions.md)). Recording an invoice "
+"here does not add it to a Modelo 303."
 msgstr ""
 "El Modelo 303 (IVA trimestral) i el Modelo 390 (resum anual d'IVA) prenen"
-" els seus imports del teu ledger classificat, no del catàleg de factures."
-" Sí que comproven el catàleg: si l'IVA d'una factura per al període "
-"supera el que porta el ledger, el càlcul es nega fins que registres i "
-"classifiques les transaccions corresponents (consulta [Classifica les "
-"transaccions](classify-transactions.md)). Registrar una factura aquí no "
-"l'afegeix a un Modelo 303."
+" els seus imports dels moviments que has classificat als teus registres, "
+"no del catàleg de factures. Sí que comproven el catàleg: si l'IVA d'una "
+"factura per al període supera el que porten els teus registres, el càlcul"
+" es nega fins que registres i classifiques els moviments corresponents "
+"(consulta [Classifica els moviments](classify-transactions.md)). "
+"Registrar una factura aquí no l'afegeix a un Modelo 303."
 
-#: ../../how-to/manage-invoices.md:158
+#: ../../how-to/manage-invoices.md:157
 msgid ""
 "Cross-border B2C sales under the One-Stop-Shop scheme (Modelo 369) are a "
 "separate flow not yet reachable from `invoice add`; record those through "
@@ -353,27 +355,27 @@ msgstr ""
 "(Modelo 369) segueixen un flux a part, encara no accessible des "
 "d'`invoice add`; registra-les mitjançant el flux específic d'OSS."
 
-#: ../../how-to/manage-invoices.md:162
+#: ../../how-to/manage-invoices.md:161
 msgid "Where to go next"
 msgstr "On anar després"
 
+#: ../../how-to/manage-invoices.md:163
+msgid "[Attach invoices and receipts to transactions](ledger-evidence.md)"
+msgstr "[Adjunta factures i rebuts als moviments](ledger-evidence.md)"
+
 #: ../../how-to/manage-invoices.md:164
-msgid "[Attach invoices and receipts](ledger-evidence.md)"
-msgstr "[Adjunta factures i rebuts](ledger-evidence.md)"
+msgid "[Import and manage transactions](import-bank-statements.md)"
+msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
 #: ../../how-to/manage-invoices.md:165
-msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr "[Importa i gestiona les transaccions](import-bank-statements.md)"
-
-#: ../../how-to/manage-invoices.md:166
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/manage-invoices.md:167
-msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
+#: ../../how-to/manage-invoices.md:166
+msgid "[Prepare a Modelo 303 VAT filing](modelo-303.md)"
 msgstr "[Prepara una presentació d'IVA del Modelo 303](modelo-303.md)"
 
-#: ../../how-to/manage-invoices.md:168
+#: ../../how-to/manage-invoices.md:167
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
 

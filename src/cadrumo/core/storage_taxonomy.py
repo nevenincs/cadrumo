@@ -51,6 +51,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .errors.hierarchy import pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
+from .storage_environment import STORAGE_ROOT
 
 
 class StorageNodeKind(StrEnum):
@@ -180,8 +181,11 @@ class FingerprintParticipation(StrEnum):
     EXCLUDED = "excluded"
 
 
-STORAGE_ROOT_SETTINGS_FIELD: Final[str] = "cadrumo_local_storage_root"
+STORAGE_ROOT_SETTINGS_FIELD: Final[str] = STORAGE_ROOT.variable.lower()
 """The settings field naming the anchor every root-scoped member resolves against.
+
+Derived from the root declaration in :mod:`core.storage_environment`, which
+owns the variable, its precedence and its defaults.
 
 Neither a member nor an escape, and given its own name so it cannot be mistaken
 for either. It is not a member because the taxonomy declares locations
@@ -203,6 +207,14 @@ class StorageCategory(StrEnum):
 
     # ── State substrate and identity ────────────────────────────────────────
     TOKENS = "tokens"
+    CHROMIUM_DATA = "chromium-data"
+    TEMPORARY_FILES = "temporary-files"
+    RUNTIME_SOCKETS = "runtime-sockets"
+    PLAYWRIGHT_BROWSERS = "playwright-browsers"
+    OLLAMA_MODELS = "ollama-models"
+    OLLAMA_HOME = "ollama-home"
+    GNOME_EXTENSIONS = "gnome-extensions"
+    DESKTOP_WEBVIEW = "desktop-webview"
     SECRETS = "secrets"
     BLOBS = "blobs"
     LIVE_STATE = "live-state"
@@ -213,17 +225,18 @@ class StorageCategory(StrEnum):
     LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY = "live-state.iva-remote-state.filed-history"
     LIVE_STATE_IVA_REMOTE_STATE_WALLET = "live-state.iva-remote-state.wallet"
 
-    # ── Diagnostic and append-only telemetry logs ───────────────────────────
+    # ── Diagnostic and append-only run-record logs ───────────────────────────
     LOGS = "logs"
     LOG_FILE = "logs.file"
     LLM_USAGE = "llm-usage"
-    LLM_RUN_TELEMETRY = "llm-run-telemetry"
+    LLM_RUN_RECORD = "llm-run-telemetry"
     RUNS = "runs"
 
     # ── Regenerable, evictable caches ───────────────────────────────────────
     LLM_CACHE = "llm-cache"
     CORPUS_SEARCH_CACHE = "corpus-search-cache"
     CORPUS_SEARCH_INDEX = "corpus-search-cache.index"
+    PYWIN32_GENERATED_CACHE = "pywin32-generated-cache"
     # ── Durable generated outputs ───────────────────────────────────────────
     SUBMISSIONS = "submissions"
     SUBMISSIONS_AMENDMENT_RESULTS = "submissions.amendment-results"
@@ -260,6 +273,11 @@ class StorageCategory(StrEnum):
     PROFILE_CUSTODY_LABEL_HEAD = "profile-custody-label-head"
     LOCAL_READER_FITNESS_VERDICTS = "local-reader-fitness-verdicts"
 
+    # ── Fixed layout: runtime-written records under ``.runtime/`` ───────────
+    # Distinct from ``RUNTIME_SOCKETS``: that directory holds POSIX endpoints;
+    # these records sit beside the installation identity in ``.runtime/``.
+    RUNTIME_BOOT_RECORD = "runtime-boot-record"
+
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"
     BUCKET_DATABASE_FILE = "bucket.db-file"
@@ -284,6 +302,7 @@ class StorageCategory(StrEnum):
     KEYSTORE_PROFILE_SESSION = "keystore.profile-session"
     KEYSTORE_PROFILE_SESSION_RETIREMENT = "keystore.profile-session-retirement"
     KEYSTORE_LOGIN_THROTTLE = "keystore.login-throttle"
+    KEYSTORE_SIGN_IN_GENERATION = "keystore.sign-in-generation"
 
 
 class StorageLocation(BaseModel):

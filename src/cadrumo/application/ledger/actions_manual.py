@@ -89,6 +89,7 @@ from .actions_common import (
 from .actions_import import apply_fx_conversion as _apply_fx_conversion
 from .evidence import PurchaseInvoiceEvidence
 from .models import (
+    LedgerRemovalBlocker,
     LedgerReviewQuery,
     LedgerReviewQueryResult,
     LedgerStatusReport,
@@ -124,7 +125,7 @@ _EVIDENCE_PATCH_FIELDS = frozenset({"purchase_invoice_evidence_id", "attachment_
 #: re-addressing ordinary movements whose content had not changed. Each field
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
-_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id"})
+_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "own_account_id"})
 
 
 def create_manual_transaction(
@@ -824,42 +825,13 @@ def update_manual_transaction(
         catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     _require_expected_current_transaction(current=current, expected_current=expected_current)
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-        raise TransactionValidationError(
-            "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
-            context={
-                "transaction_id": transaction_id,
-                "lifecycle_state": current.lifecycle_state.value,
-            },
-        )
-    if not _evidence_authority and (
-        command.purchase_invoice_evidence_id != current.purchase_invoice_evidence_id
-        or command.attachment_ids != current.attachment_ids
-    ):
-        raise TransactionValidationError(
-            "purchase evidence and attachments are managed only by `aeat app ledger attach`; "
-            "a generic ledger transaction update must not change purchase_invoice_evidence_id or attachment_ids",
-            context={"transaction_id": transaction_id},
-        )
-    blockers = blocking_modelo_references(
-        bucket_id=command.bucket_id,
-        transaction_ids=transaction_modelo_source_ids(current),
-        work_unit_repository=ports.work_unit_repository,
-        calculation_repository=ports.calculation_repository,
+    blockers, evidence_only = _manual_update_preconditions(
+        current=current,
+        command=command,
+        ports=ports,
+        transaction_id=transaction_id,
+        evidence_authority=_evidence_authority,
     )
-    # An evidence-only attachment cannot disturb a finalized revision (stable
-    # transaction id, unchanged row fingerprint, frozen bundled evidence), so it
-    # is exempt from the write guard — otherwise the documented remedy for an
-    # export evidence refusal would itself be blocked by the calculation that
-    # raised it. The cited revisions are reported back as stale so the operator
-    # is told to recalculate; the exemption never widens past evidence fields.
-    evidence_only = is_evidence_only_command(command, current)
-    if blockers and not evidence_only:
-        raise_finalized_modelo_blocked(
-            operation="ledger transaction update",
-            transaction_ids=transaction_modelo_source_ids(current),
-            blockers=blockers,
-        )
     prepared = _prepare_manual_transaction_update(
         current=current,
         command=command,
@@ -898,6 +870,53 @@ def update_manual_transaction(
         tuple(event.event_id for event in events),
         stale_finalized_revisions=blockers if evidence_only else (),
     )
+
+
+def _manual_update_preconditions(
+    *,
+    current: Transaction,
+    command: ManualLedgerTransactionCommand,
+    ports: LedgerActionPorts,
+    transaction_id: str,
+    evidence_authority: bool,
+) -> tuple[tuple[LedgerRemovalBlocker, ...], bool]:
+    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
+            context={
+                "transaction_id": transaction_id,
+                "lifecycle_state": current.lifecycle_state.value,
+            },
+        )
+    if not evidence_authority and (
+        command.purchase_invoice_evidence_id != current.purchase_invoice_evidence_id
+        or command.attachment_ids != current.attachment_ids
+    ):
+        raise TransactionValidationError(
+            "purchase evidence and attachments are managed only by `aeat app ledger attach`; "
+            "a generic ledger transaction update must not change purchase_invoice_evidence_id or attachment_ids",
+            context={"transaction_id": transaction_id},
+        )
+    blockers = blocking_modelo_references(
+        bucket_id=command.bucket_id,
+        transaction_ids=transaction_modelo_source_ids(current),
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+    )
+    # An evidence-only attachment cannot disturb a finalized revision (stable
+    # transaction id, unchanged row fingerprint, frozen bundled evidence), so it
+    # is exempt from the write guard — otherwise the documented remedy for an
+    # export evidence refusal would itself be blocked by the calculation that
+    # raised it. The cited revisions are reported back as stale so the operator
+    # is told to recalculate; the exemption never widens past evidence fields.
+    evidence_only = is_evidence_only_command(command, current)
+    if blockers and not evidence_only:
+        raise_finalized_modelo_blocked(
+            operation="ledger transaction update",
+            transaction_ids=transaction_modelo_source_ids(current),
+            blockers=blockers,
+        )
+    return blockers, evidence_only
 
 
 def _require_expected_current_transaction(
@@ -1213,6 +1232,7 @@ def _command_from_patch(
         current.counterparty_identification_state,
     )
     group_label = optional_patched(patch, patch_fields, "group_label", current.group_label)
+    own_account_id = optional_patched(patch, patch_fields, "own_account_id", current.own_account_id)
     # The three prorrata declarations carry forward from the stored row. They
     # were absent here, so a reclassify rebuilt the command with all three as
     # ``None`` and the write erased them: an operator who had declared a
@@ -1280,6 +1300,7 @@ def _command_from_patch(
             patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
         ),
         group_label=group_label,
+        own_account_id=own_account_id,
         art_104_tres_exclusion=art_104_tres_exclusion,
         input_classification=input_classification,
         prorrata_sector_id=prorrata_sector_id,
@@ -1594,7 +1615,7 @@ def _transaction_from_command(
         "import_fingerprint": (
             import_fingerprint
             if import_fingerprint is not None
-            else derive_import_fingerprint(raw, direction=command.direction)
+            else derive_import_fingerprint(raw, direction=command.direction, own_account_id=command.own_account_id)
         ),
         "notes": command.notes,
         "iva_category": command.iva_category,
@@ -1605,6 +1626,7 @@ def _transaction_from_command(
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,
         "group_label": command.group_label,
+        "own_account_id": command.own_account_id,
         # D6: created_at is stamped once (defaults to occurred_at on first
         # construction) and carried verbatim through edits; modified_at
         # re-stamps to occurred_at on every mutating construction.

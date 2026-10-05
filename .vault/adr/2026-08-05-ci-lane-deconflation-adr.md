@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e09f760d4643638845b45508672fb425a3442acb94da70cad42591ced8b69e41'
 related:
   - "[[2026-07-21-ci-discipline-adr]]"
   - "[[2026-07-20-ci-speed-redesign-adr]]"
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 ---
 # `ci-lane-deconflation` adr: `one consolidated plan, and verdict granularity follows determinism` | (**status:** `accepted`)

@@ -70,11 +70,14 @@ _NESTED_PAIRS: tuple[tuple[str, type[BaseModel], type[BaseModel]], ...] = (
 #: CALL rather than about the document. Named explicitly so a NEW unexplained
 #: payload-only field is visible rather than absorbed.
 #:
-#: The first three are the operator's own reference into the call. The last two
+#: The first three are the operator's own reference into the call. The next two
 #: record how the read was authorised to travel, and they belong here for the
 #: same structural reason: consent is granted per invocation, so it is a
 #: property of the call and has no per-field draft origin to mirror. Putting
-#: them on the draft would have forced a per-field copy of a single fact.
+#: them on the draft would have forced a per-field copy of a single fact. The
+#: last three bind the result to the exact bytes the call read and reviewed and
+#: to the consent audit effect it produced -- also call facts, not fields the
+#: document itself states.
 _REFERENCE_FIELDS = frozenset(
     {
         "bucket_id",
@@ -82,6 +85,23 @@ _REFERENCE_FIELDS = frozenset(
         "attachment_id",
         "off_host_provider",
         "off_host_acknowledged_surface",
+        "source_sha256",
+        "draft_review_sha256",
+        "consent_audit_effect",
+    },
+)
+
+#: Draft facts the payload mirrors that nonetheless read as "extra" in the
+#: model-fields diff above, because :class:`InvoiceDraft` exposes them through
+#: a read-only property backed by a private attribute rather than a declared
+#: pydantic field (`set_facturae_invoice_class`, `with_label_reading_fallback`).
+#: They ARE about the document, not the call, so they do not belong in
+#: ``_REFERENCE_FIELDS``; they are absent from ``InvoiceDraft.model_fields`` for
+#: an implementation reason, not because the payload invented them.
+_PRIVATE_ATTRIBUTE_DRAFT_FIELDS = frozenset(
+    {
+        "facturae_invoice_class",
+        "label_reading_fallback",
     },
 )
 
@@ -102,7 +122,12 @@ def test_the_payload_adds_nothing_beyond_the_declared_reference_fields() -> None
     draft field plus arbitrary invented ones, which is a different contract from
     the one the waist claims.
     """
-    extra = set(EvidenceExtractResult.model_fields) - set(InvoiceDraft.model_fields) - _REFERENCE_FIELDS
+    extra = (
+        set(EvidenceExtractResult.model_fields)
+        - set(InvoiceDraft.model_fields)
+        - _REFERENCE_FIELDS
+        - _PRIVATE_ATTRIBUTE_DRAFT_FIELDS
+    )
     assert not extra, f"the extract payload carries fields with no draft origin: {sorted(extra)}"
 
 
@@ -119,6 +144,9 @@ def test_every_populated_draft_value_survives_into_the_payload() -> None:
         "bucket_id": "bucket-1",
         "evidence_id": "ev-1",
         "attachment_id": None,
+        "source_sha256": "a" * 64,
+        "draft_review_sha256": "b" * 64,
+        "consent_audit_effect": "none",
         **dumped,
     }
 
@@ -140,7 +168,15 @@ def test_the_provenance_envelopes_arrive_whole() -> None:
     """
     draft = _fully_populated_draft()
     dumped = json.loads(draft.model_dump_json())
-    payload = {"bucket_id": "bucket-1", "evidence_id": "ev-1", "attachment_id": None, **dumped}
+    payload = {
+        "bucket_id": "bucket-1",
+        "evidence_id": "ev-1",
+        "attachment_id": None,
+        "source_sha256": "a" * 64,
+        "draft_review_sha256": "b" * 64,
+        "consent_audit_effect": "none",
+        **dumped,
+    }
 
     result = EvidenceExtractResult.model_validate_json(json.dumps(payload))
     emitted = result.model_dump(mode="json")["provenance"]

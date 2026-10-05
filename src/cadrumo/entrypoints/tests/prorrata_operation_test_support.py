@@ -14,8 +14,7 @@ from ...adapters.persistence.profile.calculation_observations import Calculation
 from ...adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ...application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFactory
-from ...application.prorrata_register.registered_operations import (
+from ...application.prorrata_register.operation_requests import (
     PRORRATA_DECLARE_SECTOR_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID,
     PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
@@ -27,17 +26,20 @@ from ...application.prorrata_register.registered_operations import (
     ProrrataDeclareSectorRequest,
     ProrrataElectEspecialRequest,
     ProrrataElectGeneralRequest,
+    ProrrataListRequest,
+    ProrrataRevokeEspecialRequest,
+    ProrrataSeedRequest,
+    ProrrataSeedSectorRequest,
+    ProrrataSettleSectorRequest,
+)
+from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFactory
+from ...application.prorrata_register.projection_contracts import (
     ProrrataEntryProjection,
     ProrrataFindingProjection,
     ProrrataListProjection,
-    ProrrataListRequest,
     ProrrataMutationProjection,
-    ProrrataRevokeEspecialRequest,
     ProrrataSectorDefinitionProjection,
-    ProrrataSeedRequest,
-    ProrrataSeedSectorRequest,
     ProrrataSeedSourceProjection,
-    ProrrataSettleSectorRequest,
 )
 from ...application.prorrata_register.sector_lifecycle import (
     seed_sector_carried_definitive_from_register,
@@ -47,9 +49,10 @@ from ...application.prorrata_register.seed import (
     ProrrataPriorDefinitivaSeed,
     ProrrataSeedFinding,
     cross_check_prorrata_entry_against_observations,
-    evaluate_carried_prior_definitiva_seed,
+    evaluate_carried_prior_definitiva_seed_from_observations,
 )
 from ...application.prorrata_register.service import ProrrataRegisterService
+from ...application.prorrata_register.tests.provisional_override import record_aeat_autorizada
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...core.operations import OperationEffect
@@ -60,7 +63,6 @@ from ...core.prorrata_register import (
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.prorrata_register_catalogue import (
-    aeat_autorizada_prorrata_provenance,
     carried_prior_definitiva_prorrata_provenance,
     especial_prorrata_register_regime,
     general_prorrata_register_regime,
@@ -69,6 +71,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     revocacion_prorrata_transition,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.tests.provisional_catalogue import aeat_autorizada_prorrata_provenance
 from ...domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
@@ -413,9 +416,9 @@ def _prepare_case(
             observation_repository=observations,
             operation=operation,
         )
-        evaluation = evaluate_carried_prior_definitiva_seed(
+        evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
             ejercicio=_SEED_TARGET_YEAR,
-            observation_repository=observations,
+            observations=tuple(observations.iter_modelo(Modelo("303").value)),
             operation=operation,
         )
         if evaluation.seed is None or evaluation.blocked:
@@ -562,7 +565,8 @@ def prepare_prorrata_whole_seed_refusal_case(
         service = _service(profile_id, repository_factory=repository_factory, operation=operation)
         expected_provenance: str | None = None
         if refusal_reason == "regulated_override_standing":
-            register = service.record_aeat_autorizada(
+            register = record_aeat_autorizada(
+                service,
                 ejercicio=_SEED_TARGET_YEAR,
                 provisional_percentage=Decimal("55.00"),
                 authorisation_reference="AEAT-PRORRATA-STANDING-2026",
@@ -577,9 +581,9 @@ def prepare_prorrata_whole_seed_refusal_case(
                 operation=operation,
             )
         else:
-            evaluation = evaluate_carried_prior_definitiva_seed(
+            evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
                 ejercicio=_SEED_TARGET_YEAR,
-                observation_repository=observations,
+                observations=tuple(observations.iter_modelo(Modelo("303").value)),
                 operation=operation,
             )
             if evaluation.seed is None or evaluation.blocked:

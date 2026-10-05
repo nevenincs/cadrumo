@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:803bf42ce9b136adf50f34a95fab98b725f79a67903e5a7404c5c3d05710e19d'
 related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'

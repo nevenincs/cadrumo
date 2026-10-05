@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0b041d1e22d631de95a5e522c7c7d82d89b2980dd993ddb53df99ce5ed61bd39'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:210e742d863c62ba195ce44ad61be5c1a241026f40c0acd04e890dfa0c62f363'
+related: []
 ---
 
 # `source-casilla-integration` research: `Modelo 296 withholding row source grounding`
@@ -104,14 +103,9 @@ box 04 must not be represented as a connected M296 recipient-row source.
 
 - `src/cadrumo/_data/registry/aeat/legal/irnr.toml:881`
 - `src/cadrumo/_data/registry/aeat/legal/irpf.toml:2713`
-- `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/revision.toml:1`
-- `src/cadrumo/domain/calculations/registry/_withholding296_bindings.py:1`
-- `src/cadrumo/application/calculations/_row_set_assembly.py:872`
-- `src/cadrumo/application/aggregation/_retencion_observations_repository.py:1`
-- `src/cadrumo/application/aggregation/_retenciones.py:55`
-- `src/cadrumo/_data/source_connectivity/census.toml:332`
+
 - `src/cadrumo/application/filing/_m296_projection.py:1`
-- `src/cadrumo/application/filing/_producer_snapshot.py:274`
+
 - https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497&p=20240131&tn=1
 - https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI22.shtml
 - https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR_296_2024.pdf

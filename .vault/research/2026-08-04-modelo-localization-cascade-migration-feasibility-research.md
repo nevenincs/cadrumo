@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-localization-cascade'
 date: '2026-08-04'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e10dafc200164c9022283d8157edeebfba9534ff605800c45e25716bd49cb940'
+body_hash: 'sha256:4a22db43958e6aeacd3d8bd2f48ea454279e0004039ce98d5ccf82c18837ac22'
 related:
   - '[[2026-08-04-modelo-localization-cascade-research]]'
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
@@ -18,7 +18,7 @@ This investigation asks whether a disposable migration application can replace t
 
 ### The current loader is a deterministic extraction oracle
 
-The current locale compiler reads Modelo-root catalogues by `continuidad_id`, reads revision catalogues by revision-local `casilla.id`, validates both key spaces, and applies revision values after Modelo values. `CasillaDefinition.get_label` then falls back to the official Spanish label, while `get_help` returns no value when localization is absent. These contracts expose the full pre-migration resolved matrix without reconstructing behavior from files: `src/cadrumo/domain/calculations/registry/_loader_locales.py:112`, `src/cadrumo/domain/calculations/registry/_loader_locales.py:181`, `src/cadrumo/domain/calculations/registry/_loader_locales.py:207`, `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:313`, and `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:317`.
+The current locale compiler reads Modelo-root catalogues by `continuidad_id`, reads revision catalogues by revision-local `casilla.id`, validates both key spaces, and applies revision values after Modelo values. `CasillaDefinition.get_label` then falls back to the official Spanish label, while `get_help` returns no value when localization is absent. These contracts expose the full pre-migration resolved matrix without reconstructing behavior from files: the former source file, the former source file, the former source file, the former source file, and the former source file.
 
 The live registry locale parity test passed both cases on 2026-08-04. It loads the complete registry tree and verifies representative English, Catalan, and Hungarian resolutions, so extraction can use the production loader rather than a hand-copied resolver: `src/cadrumo/domain/calculations/registry/tests/test_registry_locales_parity.py:18`; verification command `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_registry_locales_parity.py -q` returned `2 passed`.
 
@@ -26,23 +26,23 @@ The live registry locale parity test passed both cases on 2026-08-04. It loads t
 
 A read-only inventory found 73 directory-mode Modelos, 90 revisions, 15,774 casilla occurrences, and 281 locale TOML files. Of the locale files, 278 live under revision subtrees and three live at the Modelo 100 root. The files contain 42,057 localization leaves: 25,737 revision labels, 16,296 revision help values, and 24 Modelo-root leaves. Their only table families are `[labels]` and `[help]`; no tombstone, suppression, Modelo metadata, revision metadata, or grouped-applicability syntax exists.
 
-The manager already exposes a typed extraction row containing Modelo, revision, scope, field, storage key, source casilla id, source continuity id, and official Spanish label. It also rejects duplicate keys across fragments and writes deterministic sorted TOML: `src/cadrumo/locales/_modelo_manager.py:118`, `src/cadrumo/locales/_modelo_manager.py:288`, `src/cadrumo/locales/_modelo_manager.py:669`, `src/cadrumo/locales/_modelo_manager.py:1085`, and `src/cadrumo/locales/_modelo_manager.py:1093`.
+The manager already exposes a typed extraction row containing Modelo, revision, scope, field, storage key, source casilla id, source continuity id, and official Spanish label. It also rejects duplicate keys across fragments and writes deterministic sorted TOML: the former source file, the former source file, the former source file, the former source file, and the former source file.
 
 These properties make deterministic occurrence addressing and shared-catalogue enrollment mechanical. A migration application can derive a sealed source coordinate such as `modelo/<modelo>/revision/<revision>/casilla/<casilla-id>/<field>` from validated schema identities. That slash-delimited coordinate is useful migration evidence, but it is not the production locale key and does not need to be authored into each revision record.
 
 ### The existing locale-key contract fixes the production notation
 
-The application already derives standardized dotted locale keys from schema structure. User-profile section and field identities become `profile.schema.section.<section>.title` and `profile.schema.field.<section>.<field>.label`, then the registry scanner enrols the complete derived set in the shared locale toolchain: `src/cadrumo/domain/user_profile/_labels.py:61`, `src/cadrumo/domain/user_profile/_labels.py:73`, and `src/cadrumo/locales/_registry_scanner.py:44`. The shared CLI also accepts dotted keys as its authoring address: `src/cadrumo/locales/manager.py:367`.
+The application already derives standardized dotted locale keys from schema structure. User-profile section and field identities become `profile.schema.section.<section>.title` and `profile.schema.field.<section>.<field>.label`, then the registry scanner enrols the complete derived set in the shared locale toolchain: the former source file, the former source file, and the former source file. The shared CLI also accepts dotted keys as its authoring address: the former source file.
 
-The in-flight disposable migration currently names its slash-delimited source coordinate `canonical_key`: `dev/registry/migration/manager.py:334`. That record is deterministic and suitable for manifest joins, but allowing it to become the runtime key would create a second localization-key grammar beside the established dotted contract. Reconciliation therefore preserves existing sealed manifests as migration evidence, treats their slash values as migration-only occurrence addresses, and derives dotted Modelo locale keys at the emission boundary. Target values enroll in the existing shared runtime catalogues; Modelo-root and revision-local TOML remain extraction inputs only and are deleted after the owning Modelo passes enrollment and parity.
+The in-flight disposable migration currently names its slash-delimited source coordinate `canonical_key`: the former source file. That record is deterministic and suitable for manifest joins, but allowing it to become the runtime key would create a second localization-key grammar beside the established dotted contract. Reconciliation therefore preserves existing sealed manifests as migration evidence, treats their slash values as migration-only occurrence addresses, and derives dotted Modelo locale keys at the emission boundary. Target values enroll in the existing shared runtime catalogues; Modelo-root and revision-local TOML remain extraction inputs only and are deleted after the owning Modelo passes enrollment and parity.
 
 ### Continuity coverage is the blocker to automatic semantic collapse
 
 Only 18 casilla occurrences participate in four grounded continuity chains; 15,756 occurrences carry no `continuidad_id`. Across the corpus, 2,358 casilla-id groups repeat in more than one revision. Four groups, covering the 18 grounded occurrences, are fully grounded. The remaining 2,354 groups, covering 11,755 occurrences, are fully ungrounded.
 
-The continuity contract intentionally forbids treating a repeated numeric id or label as proof of cross-revision identity. `CasillaDefinition.id` identifies an occurrence inside a selected revision, while `continuidad_id` owns cross-revision semantic identity: `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:210`, `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:285`, and `2026-05-27-schema-hardening-casilla-continuity-contract-adr`.
+The continuity contract intentionally forbids treating a repeated numeric id or label as proof of cross-revision identity. `CasillaDefinition.id` identifies an occurrence inside a selected revision, while `continuidad_id` owns cross-revision semantic identity: the former source file, the former source file, and `2026-05-27-schema-hardening-casilla-continuity-contract-adr`.
 
-The live evolution corpus contains `unchanged`, label evolution, legal-reference evolution, combined label/legal evolution, and one retirement. It contains no `repurposed` declaration. Four revisions opt into strict continuity validation. The one retirement is grounded at `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/continuidad/1038-2024-2025-retired.toml:1`. No duplicate continuity id was found inside one revision.
+The live evolution corpus contains `unchanged`, label evolution, legal-reference evolution, combined label/legal evolution, and one retirement. It contains no `repurposed` declaration. Four revisions opt into strict continuity validation. The one retirement is grounded . No duplicate continuity id was found inside one revision.
 
 A lossless migration therefore needs no continuity inference: ungrounded occurrences can move as exact shared-catalogue revision keys. Achieving broad deduplication requires approving continuity chains or expanding the identity contract; a migration application may propose candidates but must not promote them silently.
 
@@ -52,7 +52,7 @@ The 2,354 ungrounded repeated-id groups divide into 1,835 groups whose measured 
 
 Only 88 ungrounded groups resolve uniformly across all three translated locales and both fields. Authored label variants occur in 1,548 Catalan groups, 1,708 English groups, and 1,860 Hungarian groups. Forty-six Catalan groups collapse after conservative Unicode normalization, whitespace normalization, case folding, and trailing punctuation removal. Help observations are more regular: in each locale, 2,177 groups have one authored help variant plus missing revisions, and 177 have no authored help.
 
-The stored quality states also matter. The corpus contains 24 Hungarian key-echo labels, 24 Hungarian key-echo help values, and 9,453 help values that mirror a label. No blank values were found. The existing manager classifies these states explicitly and counts only authored values as translated: `src/cadrumo/locales/_modelo_manager.py:51`, `src/cadrumo/locales/_modelo_manager.py:1017`.
+The stored quality states also matter. The corpus contains 24 Hungarian key-echo labels, 24 Hungarian key-echo help values, and 9,453 help values that mirror a label. No blank values were found. The existing manager classifies these states explicitly and counts only authored values as translated: the former source file, the former source file.
 
 A generated review register can therefore group all occurrences by candidate chain, list distinct values once per locale and field, and attach the revisions that use each variant. One reviewer decision can resolve an entire chain. Reviewing 42,057 leaves individually is unnecessary.
 
@@ -98,7 +98,7 @@ The migration should run parity mode first. Canonicalization can then consume ex
 
 ### Exact revision overrides do not fully collapse repeated variants
 
-The accepted ADR serializes an override under one exact `(revision_id, casilla_id)` address. That representation preserves behavior, but it repeats one divergent value when several revisions share the same variant. Implicit chronological inheritance is unsafe because revision applicability is law-determined and need not form one linear chain: `src/cadrumo/domain/calculations/registry/_temporal.py:58`.
+The accepted ADR serializes an override under one exact `(revision_id, casilla_id)` address. That representation preserves behavior, but it repeats one divergent value when several revisions share the same variant. Implicit chronological inheritance is unsafe because revision applicability is law-determined and need not form one linear chain: the former source file.
 
 The evidence favors one declaration per distinct value plus an explicit revision applicability set. The ADR must decide a representation equivalent to:
 
@@ -112,11 +112,11 @@ Applicability must reference existing revisions, may not overlap for the same fi
 
 ### Official Spanish becomes the mandatory source catalogue
 
-Current locale files contain English, Catalan, and Hungarian values. Official Spanish casilla labels remain natural-language fields on `CasillaDefinition`, and `ModeloDefinition.title`, `ModeloDefinition.official_name`, and `ModeloRevision.label` are also schema text: `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:234`, `src/cadrumo/domain/calculations/registry/_schema.py:999`, `src/cadrumo/domain/calculations/registry/_schema.py:1094`, and `src/cadrumo/domain/calculations/registry/_schema.py:1095`.
+Current locale files contain English, Catalan, and Hungarian values. Official Spanish casilla labels remain natural-language fields on `CasillaDefinition`, and `ModeloDefinition.title`, `ModeloDefinition.official_name`, and `ModeloRevision.label` are also schema text: the former source file, the former source file, the former source file, and the former source file.
 
 Replacing injected localization maps, repeated translated values, and schema text with derived keys is mechanical because Modelo, revision, casilla, and field already determine the key. The operator directive requires migration to copy every official Spanish value verbatim into the shared `es` catalogue before removing the schema field. Spanish becomes the mandatory source locale from which other locales are translated. Regulatory and export consumers must resolve the same key through a strict official-Spanish channel with no humanized, cross-locale, or missing-value fallback.
 
-This pattern already exists elsewhere in the application. Typed records carry translation keys, validation proves the key has an authoritative Spanish catalogue value, and all four locales resolve at read time. `LedgerImportDiagnostic.message` is a typed key whose validator refuses a missing Spanish value: `src/cadrumo/application/transactions/_diagnostics.py:59`, `src/cadrumo/application/transactions/_diagnostics.py:79`. The renderer's strict mode treats a key echo as missing, and locale audits resolve Spanish, English, Catalan, and Hungarian through the same key surface: `src/cadrumo/core/i18n/tests/test_key_echo_resolution.py:1`, `src/cadrumo/application/wizard/_translations.py:27`.
+This pattern already exists elsewhere in the application. Typed records carry translation keys, validation proves the key has an authoritative Spanish catalogue value, and all four locales resolve at read time. `LedgerImportDiagnostic.message` is a typed key whose validator refuses a missing Spanish value: the former source file, the former source file. The renderer's strict mode treats a key echo as missing, and locale audits resolve Spanish, English, Catalan, and Hungarian through the same key surface: `src/cadrumo/core/i18n/tests/test_key_echo_resolution.py:1`, the former source file.
 
 The language-neutral schema boundary must distinguish localizable natural-language fields from identifiers and evidence. Legal references, source references, fixed AEAT codes, and bundled evidence bytes remain schema or corpus data. Every operator-facing or regulatory natural-language field in Modelo and casilla definitions must instead carry or derive a localization key. A migration inventory must enumerate these fields rather than assuming the current label/help scope is exhaustive.
 
@@ -128,7 +128,7 @@ The application should execute five stages: extract, classify, emit, compare, an
 
 Extraction records source hashes and the complete old resolved matrix before production localization injection changes. Emission writes a staging tree outside the live registry. Comparison evaluates every `(modelo, revision, casilla, locale, field)` through the target resolver and records exact equality or an approved difference.
 
-The current registry cache fingerprints every revision locale file together with schema data, and the compiled loader injects locales before constructing `ModeloDefinition`: `src/cadrumo/domain/calculations/registry/_loader.py:232`, `src/cadrumo/domain/calculations/registry/_loader.py:287`, and `src/cadrumo/domain/calculations/registry/_loader.py:1192`. The target design must separate schema and locale fingerprints before cutover.
+The current registry cache fingerprints every revision locale file together with schema data, and the compiled loader injects locales before constructing `ModeloDefinition`: the former source file, the former source file, and the former source file. The target design must separate schema and locale fingerprints before cutover.
 
 Generated shared-catalogue changes and enrollment records can be reviewed Modelo by Modelo. For each Modelo, source hashes must still match extraction and the new resolver must pass exhaustive parity before production switches that Modelo and deletes all of its root and revision locale files. Mixed ownership is permitted only between Modelos during the campaign, never inside an enrolled Modelo. A final negative gate rejects every Modelo-local locale file, injected locale map, duplicate logical leaf, unresolved required translation, and production old-layout reader.
 
@@ -138,34 +138,10 @@ The analysis classified stored and resolved values but did not judge linguistic 
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_loader_locales.py:112`
-- `src/cadrumo/domain/calculations/registry/_loader_locales.py:181`
-- `src/cadrumo/domain/calculations/registry/_loader_locales.py:207`
-- `src/cadrumo/domain/calculations/registry/_loader.py:232`
-- `src/cadrumo/domain/calculations/registry/_loader.py:287`
-- `src/cadrumo/domain/calculations/registry/_loader.py:1192`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:210`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:234`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:285`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:313`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:317`
-- `src/cadrumo/domain/calculations/registry/_schema.py:999`
-- `src/cadrumo/domain/calculations/registry/_schema.py:1094`
-- `src/cadrumo/domain/calculations/registry/_schema.py:1095`
-- `src/cadrumo/domain/calculations/registry/_temporal.py:58`
-- `src/cadrumo/locales/_modelo_manager.py:51`
-- `src/cadrumo/locales/_modelo_manager.py:118`
-- `src/cadrumo/locales/_modelo_manager.py:288`
-- `src/cadrumo/locales/_modelo_manager.py:669`
-- `src/cadrumo/locales/_modelo_manager.py:1017`
-- `src/cadrumo/locales/_modelo_manager.py:1085`
-- `src/cadrumo/locales/_modelo_manager.py:1093`
 - `src/cadrumo/domain/calculations/registry/tests/test_registry_locales_parity.py:18`
-- `src/cadrumo/application/transactions/_diagnostics.py:59`
-- `src/cadrumo/application/transactions/_diagnostics.py:79`
+
 - `src/cadrumo/core/i18n/tests/test_key_echo_resolution.py:1`
-- `src/cadrumo/application/wizard/_translations.py:27`
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/continuidad/1038-2024-2025-retired.toml:1`
+
 - `2026-05-27-schema-hardening-casilla-continuity-contract-adr`
 - `2026-08-04-modelo-localization-cascade-research`
 - Read-only corpus inventory using `ModeloLocaleManager`, `load_modelo_directory_without_locales`, and the current root/revision resolution precedence on 2026-08-04.

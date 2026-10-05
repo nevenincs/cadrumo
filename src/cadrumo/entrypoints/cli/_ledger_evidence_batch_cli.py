@@ -25,7 +25,7 @@ keeps its status -- the document was read and stored -- and is reported beside
 it: the row carries the reason, and the run warns once with the count.
 
 See Also:
-    :class:`~cadrumo.application.ledger.evidence_ingestion_operation.LedgerEvidenceBatchProjection`
+    :class:`~cadrumo.application.ledger.evidence_ingestion_contracts.LedgerEvidenceBatchProjection`
         The typed worker result this module presents.
 """
 
@@ -382,6 +382,15 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
             f"unreadable\t{source.source_name}\t{source.refusal_code}\t{_condition_of(source.refusal_verdict)}",
         )
         lines.extend(_refusal_lines(source.refusal_verdict))
+    _append_batch_pause_lines(run, lines)
+    lines.append(f"any_failed\t{run.any_failed}")
+    lines.append(f"any_deferred\t{run.any_deferred}")
+    lines.extend(_notice_line(notice) for notice in _run_notices(run))
+    return lines
+
+
+def _append_batch_pause_lines(run: BatchRunResult, lines: list[str]) -> None:
+    """Append the existing paused facts and precondition actions after unresolved rows."""
     pause = run.inference_pause
     if pause is not None:
         lines.extend(
@@ -392,7 +401,3 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
             f"paused.{line}"
             for line in precondition_action_lines(resolve_cli_precondition_action(pause.precondition_verdict))
         )
-    lines.append(f"any_failed\t{run.any_failed}")
-    lines.append(f"any_deferred\t{run.any_deferred}")
-    lines.extend(_notice_line(notice) for notice in _run_notices(run))
-    return lines

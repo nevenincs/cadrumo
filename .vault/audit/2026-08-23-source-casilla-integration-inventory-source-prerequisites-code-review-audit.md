@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:99ddf245b695f74bd3c3e0756b26baf104f298bb9d1356ad55b7edc74d7e9845'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 
 # `source-casilla-integration` audit: `inventory source prerequisites code review`

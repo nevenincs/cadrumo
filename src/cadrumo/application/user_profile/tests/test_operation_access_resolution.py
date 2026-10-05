@@ -13,12 +13,14 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operations import (
+    USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-    USER_PROFILE_OPERATION_DEFINITIONS,
     ProfileFieldMutationOperationRequest,
     ProfileLogoutOperationRequest,
-    build_user_profile_operation_registrations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

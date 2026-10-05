@@ -55,6 +55,7 @@ def auth_configure_result(
     state: WorkflowState,
     provider: str,
     certificate_path: Path | None,
+    changed: bool = True,
 ) -> AuthConfigureResult:
     """Build a redacted configuration result that exposes identity readiness."""
     from ..user_profile.projections import record_to_path_values
@@ -90,6 +91,7 @@ def auth_configure_result(
         incomplete_reason = alignment_detail
     return AuthConfigureResult(
         provider=provider,
+        changed=changed,
         file=str(certificate_path) if certificate_path is not None else "",
         complete=complete,
         incomplete_reason=incomplete_reason,
@@ -100,7 +102,7 @@ def auth_configure_result(
         precondition_verdict=(
             incomplete_auth_configuration_verdict(
                 provider=provider,
-                certificate_path=certificate_path,
+                certificate_file_provided=certificate_path is not None,
                 profile_tax_id_present=bool(profile_tax_id),
                 provider_identity_present=bool(provider_identity),
                 identity_alignment=alignment,
@@ -114,7 +116,7 @@ def auth_configure_result(
 def incomplete_auth_configuration_verdict(
     *,
     provider: str,
-    certificate_path: Path | None,
+    certificate_file_provided: bool,
     profile_tax_id_present: bool,
     provider_identity_present: bool,
     identity_alignment: str,
@@ -130,7 +132,7 @@ def incomplete_auth_configuration_verdict(
         condition_id = "auth.certificate.file_ready"
         evidence_id = "auth.configure.certificate.file_readiness"
         facts = {
-            "certificate_file_provided": certificate_path is not None,
+            "certificate_file_provided": certificate_file_provided,
             "certificate_file_resolves": False,
             "provider": provider,
         }

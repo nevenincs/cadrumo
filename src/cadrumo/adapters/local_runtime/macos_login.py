@@ -10,7 +10,7 @@ import sys
 from dataclasses import dataclass
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from ...application.user_profile.access_contracts import Availability, LoginEligibility, OsLockState, OsLoginContext
 from .macos_process import read_macos_process
 
 
@@ -20,9 +20,7 @@ class MacosPeerAuditToken:
 
     audit_user_id: int
     effective_user_id: int
-    effective_group_id: int
     real_user_id: int
-    real_group_id: int
     process_id: int
     audit_session_id: int
     process_version: int
@@ -37,7 +35,12 @@ def decode_macos_peer_audit_token(payload: bytes, *, expected_owner: str) -> Mac
     """
     if len(payload) != 32:
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-    value = MacosPeerAuditToken(*struct.unpack("=8I", payload))
+    # Decode the complete native ABI, then retain the six identity coordinates
+    # the admission policy consumes. Group words remain in the verified buffer.
+    audit_uid, effective_uid, _effective_gid, real_uid, _real_gid, pid, session_id, version = struct.unpack(
+        "=8I", payload
+    )
+    value = MacosPeerAuditToken(audit_uid, effective_uid, real_uid, pid, session_id, version)
     if (
         not expected_owner.isdecimal()
         or str(value.effective_user_id) != expected_owner
@@ -148,6 +151,9 @@ class MacosLoginBinding:
     def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
         """Refuse dependent access until trusted lock/logout evidence is available.
 
+        No lock observer exists, so lock state is always unknown: never
+        attended evidence and never positive lock evidence.
+
         Args:
             credential_facilities: Independent native custody readiness facts.
         """
@@ -163,7 +169,7 @@ class MacosLoginBinding:
             login_id=self.login_id,
             os_owner_id=self.os_owner_id,
             active=active,
-            locked=True,
+            lock_state=OsLockState.UNKNOWN,
             unattended=eligibility,
             credential_facilities=credential_facilities,
         )

@@ -20,7 +20,7 @@ from ....application.review.filter import LedgerReviewStatus
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import runtime_ledger_allocate as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -35,16 +35,48 @@ def _projection(
     profile_id: UUID = _PROFILE,
     transaction_id: str = _TRANSACTION_ID,
     business_pct: str = "0.5",
+    business_classification: str = "MIXED",
     bucket_event_ids: tuple[str, ...] = ("e" * 64,),
 ) -> LedgerAllocateOperationResult:
-    transaction = LedgerTransactionProjection.model_construct(
+    transaction = LedgerTransactionProjection(
         transaction_id=transaction_id,
+        date="2026-01-01",
+        booked_date="2026-01-01",
+        value_date=None,
+        amount="100",
+        currency="EUR",
+        direction="expense",
+        counterparty="Fixture supplier",
+        description="Allocated transaction",
         business_pct=business_pct,
+        business_classification=business_classification,
         category_id=None,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+        iva_category=None,
+        counterparty_country=None,
+        counterparty_identification_state=None,
+        irpf_category=None,
+        m210_income_classification=None,
         usage_ratio_id=None,
         prorrata_reference=None,
+        purchase_invoice_evidence_id=None,
+        invoice_id=None,
+        attachment_ids=(),
+        notes="",
+        lifecycle_state="active",
+        classified_by="operator:fixture",
+        classified_at=None,
+        classification_reason="Allocated by fixture",
+        classification_confidence=None,
+        source_jurisdiction=None,
+        value_in_eur=None,
+        fx_rate=None,
+        created_at="2026-01-01T00:00:00Z",
+        modified_at="2026-01-01T00:00:00Z",
     )
-    return LedgerAllocateOperationResult.model_construct(
+    return LedgerAllocateOperationResult(
         profile_id=profile_id,
         transaction=transaction,
         review_status=LedgerReviewStatus.PENDING,
@@ -125,7 +157,9 @@ def test_bridge_accepts_none_effect_for_a_confirmed_noop(monkeypatch: pytest.Mon
     assert len(submitted) == 1
 
 
-@pytest.mark.parametrize("invalid_case", ["profile", "transaction", "share", "effect", "terminal", "noop-effect"])
+@pytest.mark.parametrize(
+    "invalid_case", ["profile", "transaction", "share", "classification", "effect", "terminal", "noop-effect"]
+)
 def test_bridge_rejects_unmatched_profile_result_or_effect(
     monkeypatch: pytest.MonkeyPatch,
     invalid_case: str,
@@ -139,6 +173,8 @@ def test_bridge_rejects_unmatched_profile_result_or_effect(
         projection = _projection(transaction_id="b" * 64)
     elif invalid_case == "share":
         projection = _projection(business_pct="0.25")
+    elif invalid_case == "classification":
+        projection = _projection(business_classification="BUSINESS")
     elif invalid_case == "effect":
         effect = OperationEffect.NONE
     elif invalid_case == "terminal":

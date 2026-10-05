@@ -246,8 +246,9 @@ def _parse_command_line(line: str) -> CitedCommand | None:
     cited_options: list[str] = []
     has_positional = False
     # Track which root-global options consume a following value (so the value
-    # is not mistaken for the start of the verb path).
-    value_consuming_globals = {"--language", "--lang", "--format", "--profile"}
+    # is not mistaken for the start of the verb path). The set comes from the
+    # live root command, so a new value-taking global is never read as a verb.
+    value_consuming_globals = value_consuming_option_names(live_root_command())
     expect_value = False
     seen_verb = False
     for tok in tokens:

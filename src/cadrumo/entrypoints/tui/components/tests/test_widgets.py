@@ -45,7 +45,7 @@ async def test_requirement_badges_are_distinguishable_by_text_not_colour_alone()
         not_applicable = str(app.query_one("#badge-not-applicable", RequirementBadge).render())
         optional = str(app.query_one("#badge-optional", RequirementBadge).render())
 
-    assert missing.startswith("✖") and "NIF" in missing
+    assert missing.startswith("!") and "NIF" in missing
     assert not_applicable.startswith("—") and "Postcode" in not_applicable
     assert optional.startswith("○") and "Website" in optional
     glyphs = {missing[0], not_applicable[0], optional[0]}

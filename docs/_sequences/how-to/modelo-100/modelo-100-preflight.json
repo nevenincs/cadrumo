@@ -25,7 +25,7 @@
               "period": "0A",
               "year": "2025"
             },
-            "message": "No active ledger transactions were checked for this period.",
+            "message": "No active transactions in your records were checked for this period.",
             "severity": "warning"
           },
           {

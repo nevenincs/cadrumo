@@ -4,7 +4,7 @@
 @step Correct the description, capturing the new id the update rotates to.
 aeat --format json app ledger update {transaction_id} --description "Corrected description"
 @capture after_description result.transaction_id
-@step Record the IVA breakdown against the current id.
+@step Record the VAT breakdown against the current id.
 aeat --format json app ledger update {after_description} --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
 @capture after_iva result.transaction_id
 @step Add an operator note against the current id.

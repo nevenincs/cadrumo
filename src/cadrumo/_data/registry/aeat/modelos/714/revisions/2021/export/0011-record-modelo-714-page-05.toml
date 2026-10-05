@@ -1,0 +1,144 @@
+[[revisions.2021.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2021.export_layouts.records]]
+id = 'modelo-714-page-05'
+record_type = '714-05'
+order = 4
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3019'
+offset = 3019
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-porcentaje-titularidad-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3024'
+offset = 3024
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 4
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3037'
+offset = 3037
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-nie-entidad-emisora-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3057'
+offset = 3057
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-otro-pais-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3058'
+offset = 3058
+length = 62
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-descripcion-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-declared-bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-3120'
+offset = 3120
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-valor-4'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-11'
+offset = 3133
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-11'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-reserved-2'
+offset = 3146
+length = 143
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[[revisions.2021.export_layouts.records.fields]]
+id = 'modelo-714-page-05-end'
+offset = 3289
+length = 12
+kind = 'literal'
+literal = '</T71405000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-207-2022:art-4']
+source_refs = ['aeat-dr-714-2021']
+
+[revisions.2021.export_layouts.records.row_field_casilla_ids]

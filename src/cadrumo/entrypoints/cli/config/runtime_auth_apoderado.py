@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from typing import Never
+from uuid import UUID
 
 import typer
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
-from ....application.auth.apoderado_operation import (
+from ....application.auth.apoderado_contracts import (
     APODERADO_CHECK_OPERATION_DEFINITION_ID,
     APODERADO_CLEAR_OPERATION_DEFINITION_ID,
     APODERADO_CONFIGURE_OPERATION_DEFINITION_ID,
@@ -31,23 +32,10 @@ from ....domain.auth.apoderamientos.catalogue import (
     UnknownScopeError,
     load_default_catalogue,
 )
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import bound_profile_client
-from ..runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    """Refuse a worker result that does not correlate with its operation receipt."""
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from ..runtime_registered_operation import run_registered_operation
 
 
 def apoderado_catalogue(ctx: typer.Context) -> ApoderamientosCatalogue:
@@ -73,20 +61,14 @@ def read_apoderado_status(ctx: typer.Context) -> ApoderadoStatusSnapshot:
     )
     projection = completed.projection
     if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-        or projection.profile_id != client.profile_id
-        or str(projection.operation_id) != APODERADO_STATUS_OPERATION_DEFINITION_ID
-        or projection.outcome != "completed"
-        or projection.effect is not OperationEffect.NONE
-        or projection.refusal_code is not None
+        _apoderado_status_terminal_invalid(completed)
+        or _apoderado_status_header_invalid(projection, client.profile_id)
         or projection.status is None
         or projection.configuration is not None
         or projection.cleared is not None
-        or str(projection.status.bucket_id) != str(client.profile_id)
+        or (str(projection.status.bucket_id) != str(client.profile_id))
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection.status
 
 
@@ -127,41 +109,14 @@ def configure_apoderado(
         or str(projection.operation_id) != APODERADO_CONFIGURE_OPERATION_DEFINITION_ID
         or projection.effect is not completed.effect
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     if projection.outcome == "prewrite_refusal":
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.effect is not OperationEffect.NONE
-            or projection.effect is not OperationEffect.NONE
-            or projection.refusal_code != completed.refusal_code
-            or projection.status is not None
-            or projection.configuration is not None
-            or projection.cleared is not None
-        ):
-            _invalid(completed)
-        if projection.refusal_code == "REFUSED_APODERADO_INVALID_REPRESENTED_NIF":
-            raise ApoderadoRepresentedNifInvalidError(
-                translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
-            )
-        if projection.refusal_code == "REFUSED_APODERADO_UNKNOWN_SCOPE":
-            raise UnknownScopeError(translated_message="errors.refused.refused_apoderado_unknown_scope")
-        _invalid(completed)
+        _raise_apoderado_prewrite_refusal(completed, projection)
 
     configuration = projection.configuration
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.UPDATED
-        or completed.refusal_code is not None
-        or projection.outcome != "completed"
-        or configuration is None
-        or projection.status is not None
-        or projection.cleared is not None
-        or str(configuration.bucket_id) != str(client.profile_id)
-        or configuration.represented_nif != represented_nif
-        or configuration.notes != notes
-    ):
-        _invalid(completed)
-    return configuration
+    return _apoderado_configuration_result(
+        completed, projection, configuration, client.profile_id, represented_nif, notes
+    )
 
 
 def clear_apoderado(ctx: typer.Context) -> bool:
@@ -182,19 +137,13 @@ def clear_apoderado(ctx: typer.Context) -> bool:
     cleared = projection.cleared
     expected_effect = OperationEffect.UPDATED if cleared else OperationEffect.NONE
     if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not expected_effect
-        or completed.refusal_code is not None
-        or projection.profile_id != client.profile_id
-        or str(projection.operation_id) != APODERADO_CLEAR_OPERATION_DEFINITION_ID
-        or projection.outcome != "completed"
-        or projection.effect is not expected_effect
-        or projection.refusal_code is not None
+        _apoderado_clear_terminal_invalid(completed, expected_effect)
+        or _apoderado_clear_header_invalid(projection, client.profile_id, expected_effect)
         or cleared is None
         or projection.status is not None
         or projection.configuration is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return cleared
 
 
@@ -215,19 +164,13 @@ def check_apoderado(ctx: typer.Context) -> None:
     )
     projection = completed.projection
     if (
-        completed.terminal_condition is not OperationTerminalCondition.REFUSED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code != "REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE"
-        or projection.profile_id != client.profile_id
-        or str(projection.operation_id) != APODERADO_CHECK_OPERATION_DEFINITION_ID
-        or projection.outcome != "prewrite_refusal"
-        or projection.effect is not OperationEffect.NONE
-        or projection.refusal_code != completed.refusal_code
+        _apoderado_check_terminal_invalid(completed)
+        or _apoderado_check_header_invalid(projection, client.profile_id, completed)
         or projection.status is not None
         or projection.configuration is not None
         or projection.cleared is not None
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     raise ApoderadoLiveCheckUnavailableError
 
 
@@ -238,3 +181,128 @@ __all__ = [
     "configure_apoderado",
     "read_apoderado_status",
 ]
+
+
+def _apoderado_status_header_invalid(projection: ApoderadoOperationProjection, profile_id: UUID) -> bool:
+    """Correlate exact profile, operation kind, outcome, and projected receipt."""
+    return (
+        projection.profile_id != profile_id
+        or str(projection.operation_id) != APODERADO_STATUS_OPERATION_DEFINITION_ID
+        or projection.outcome != "completed"
+        or (projection.effect is not OperationEffect.NONE)
+        or (projection.refusal_code is not None)
+    )
+
+
+def _apoderado_status_terminal_invalid(completed: RegisteredOperationCompletion[ApoderadoOperationProjection]) -> bool:
+    """Require the exact terminal condition, refusal code, and effect."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+    )
+
+
+def _apoderado_clear_header_invalid(
+    projection: ApoderadoOperationProjection, profile_id: UUID, expected_effect: OperationEffect
+) -> bool:
+    """Correlate exact profile, operation kind, outcome, and projected receipt."""
+    return (
+        projection.profile_id != profile_id
+        or str(projection.operation_id) != APODERADO_CLEAR_OPERATION_DEFINITION_ID
+        or projection.outcome != "completed"
+        or (projection.effect is not expected_effect)
+        or (projection.refusal_code is not None)
+    )
+
+
+def _apoderado_clear_terminal_invalid(
+    completed: RegisteredOperationCompletion[ApoderadoOperationProjection], expected_effect: OperationEffect
+) -> bool:
+    """Require the exact terminal condition, refusal code, and effect."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not expected_effect
+        or completed.refusal_code is not None
+    )
+
+
+def _apoderado_check_header_invalid(
+    projection: ApoderadoOperationProjection,
+    profile_id: UUID,
+    completed: RegisteredOperationCompletion[ApoderadoOperationProjection],
+) -> bool:
+    """Correlate exact profile, operation kind, outcome, and projected receipt."""
+    return (
+        projection.profile_id != profile_id
+        or str(projection.operation_id) != APODERADO_CHECK_OPERATION_DEFINITION_ID
+        or projection.outcome != "prewrite_refusal"
+        or (projection.effect is not OperationEffect.NONE)
+        or (projection.refusal_code != completed.refusal_code)
+    )
+
+
+def _apoderado_check_terminal_invalid(completed: RegisteredOperationCompletion[ApoderadoOperationProjection]) -> bool:
+    """Require the exact terminal condition, refusal code, and effect."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code != "REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE"
+    )
+
+
+def _raise_apoderado_prewrite_refusal(
+    completed: RegisteredOperationCompletion[ApoderadoOperationProjection], projection: ApoderadoOperationProjection
+) -> Never:
+    """Translate only a correlated prewrite refusal without success payload."""
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.effect is not OperationEffect.NONE
+        or projection.effect is not OperationEffect.NONE
+        or projection.refusal_code != completed.refusal_code
+        or projection.status is not None
+        or projection.configuration is not None
+        or projection.cleared is not None
+    ):
+        raise invalid_completion_error(completed)
+    if projection.refusal_code == "REFUSED_APODERADO_INVALID_REPRESENTED_NIF":
+        raise ApoderadoRepresentedNifInvalidError(
+            translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
+        )
+    if projection.refusal_code == "REFUSED_APODERADO_UNKNOWN_SCOPE":
+        raise UnknownScopeError(translated_message="errors.refused.refused_apoderado_unknown_scope")
+    raise invalid_completion_error(completed)
+
+
+def _apoderado_configure_terminal_invalid(
+    completed: RegisteredOperationCompletion[ApoderadoOperationProjection],
+) -> bool:
+    """Require a successful updated configuration receipt without refusal."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.UPDATED
+        or completed.refusal_code is not None
+    )
+
+
+def _apoderado_configuration_result(
+    completed: RegisteredOperationCompletion[ApoderadoOperationProjection],
+    projection: ApoderadoOperationProjection,
+    configuration: ApoderadoConfigurationSnapshot | None,
+    profile_id: UUID,
+    represented_nif: str,
+    notes: str,
+) -> ApoderadoConfigurationSnapshot:
+    """Require the configured protected identity, metadata, and mutation receipt."""
+    if (
+        _apoderado_configure_terminal_invalid(completed)
+        or projection.outcome != "completed"
+        or configuration is None
+        or projection.status is not None
+        or (projection.cleared is not None)
+        or (str(configuration.bucket_id) != str(profile_id))
+        or (configuration.represented_nif != represented_nif)
+        or (configuration.notes != notes)
+    ):
+        raise invalid_completion_error(completed)
+    return configuration

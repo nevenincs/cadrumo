@@ -37,9 +37,10 @@ from ....tests.golden_comparison import (
 )
 from ...json_contract import OutputSchema, emit_json_success
 from ...time.clock import frozen_clock, now
-from ..capture import capture_envelopes, record_emitted_envelope
-from ..context import _mint_run_id
+from ..capture import record_emitted_envelope
 from ..errors import GoldenCaptureError, GoldenReplayMismatchError
+from .envelope_capture import capture_envelopes
+from .run_scope import _mint_run_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

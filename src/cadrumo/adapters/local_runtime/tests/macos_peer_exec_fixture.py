@@ -7,11 +7,17 @@ import socket
 import sys
 
 
+def _unix_channel() -> socket.socket:
+    if sys.platform != "win32":
+        return socket.socket(socket.AF_UNIX)
+    raise RuntimeError("requires native Unix socket")
+
+
 def main() -> int:
-    if len(sys.argv) not in (2, 3):
+    if sys.platform == "win32" or len(sys.argv) not in (2, 3):
         return 2
     if len(sys.argv) == 2:
-        with socket.socket(socket.AF_UNIX) as channel:
+        with _unix_channel() as channel:
             channel.settimeout(5)
             channel.connect(sys.argv[1])
             channel.sendall(b"ready")

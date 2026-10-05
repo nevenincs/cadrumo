@@ -41,6 +41,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
@@ -48,7 +49,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.access_policy import evaluate_operation_access
+from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -275,7 +276,7 @@ def test_live_api_key_still_cannot_use_rotation_human_scope() -> None:
                 login_id="login-a",
                 os_owner_id=binding.os_owner_id,
                 active=True,
-                locked=False,
+                lock_state=OsLockState.UNLOCKED,
                 unattended=LoginEligibility.ELIGIBLE,
                 credential_facilities=Availability.AVAILABLE,
             ),

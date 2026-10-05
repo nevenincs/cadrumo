@@ -22,6 +22,6 @@ def compose_auth_read_ports(profile_id: UUID) -> AuthReadPorts:
         certificate_secret_backend_factory=build_certificate_secret_backend,
         operator_probe_ports=build_operator_probe_ports(),
         operator_scope_ports=build_operator_scope_ports(),
-        read_ports=build_state_projection_read_ports(),
+        read_ports=build_state_projection_read_ports(operation=None),
         diagnostics_persistence=build_auth_diagnostic_persistence(),
     )

@@ -12,9 +12,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes, sha256_hex
-from ...core.hex import HEX_PATTERN_64
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -22,12 +21,16 @@ from ...core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
-    profile_operation_subject,
 )
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -36,26 +39,14 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_report_verification import (
@@ -71,7 +62,6 @@ from .calculation_report_verification import (
 from .calculation_summary_pdf_ports import CalculationSummaryPdfReader
 
 MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.report_verify"
-_Hex64 = Annotated[str, Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)]
 
 
 class ModeloCalculationReportVerificationRequest(BaseModel):
@@ -81,8 +71,8 @@ class ModeloCalculationReportVerificationRequest(BaseModel):
 
     profile_id: UUID
     source_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
-    source_sha256: _Hex64
-    trusted_public_key_hex: _Hex64 | None = None
+    source_sha256: Hex64Str
+    trusted_public_key_hex: Hex64Str | None = None
 
     @model_validator(mode="after")
     def _absolute_source(self) -> Self:
@@ -112,10 +102,10 @@ class ModeloCalculationReportVerificationResult(BaseModel):
         tuple[ModeloCalculationReportVerificationCheck, ...], Field(max_length=PROJECTION_DOCUMENT_MAX_BYTES)
     ]
     store_checked: bool
-    signing_key_fingerprint: _Hex64 | None = None
-    calculation_revision_id: _Hex64 | None = None
-    report_sha256: _Hex64 | None = None
-    statement_sha256: _Hex64 | None = None
+    signing_key_fingerprint: Hex64Str | None = None
+    calculation_revision_id: Hex64Str | None = None
+    report_sha256: Hex64Str | None = None
+    statement_sha256: Hex64Str | None = None
 
     @classmethod
     def from_verification(cls, verification: CalculationSummaryVerification) -> Self:
@@ -160,7 +150,7 @@ class ModeloCalculationReportVerificationProjection(BaseModel):
 
     result_version: Literal[1] = 1
     profile_id: UUID
-    source_sha256: _Hex64
+    source_sha256: Hex64Str
     verification: ModeloCalculationReportVerificationResult
 
 
@@ -204,15 +194,9 @@ class ModeloCalculationReportVerificationExecutor:
         """Verify unchanged source bytes through the canonical application service."""
         payload = request.payload
         profile_id = str(payload.profile_id)
-        subject = profile_operation_subject(profile_id)
-        if (
-            request.definition_id != MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID
-            or request.subject_ref != subject
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != subject
-            or require_active_bucket_id() != profile_id
-        ):
+        if request.definition_id != MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID)
 
         def verify() -> ModeloCalculationReportVerificationProjection:
@@ -259,17 +243,12 @@ def build_modelo_calculation_report_verify_definition(
     source_reader: Callable[[Path], bytes] = Path.read_bytes,
 ) -> OperationDefinition:
     """Declare a local-only verification with secure request and result custody."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,
         request_type=ModeloCalculationReportVerificationRequest,
         result_type=ModeloCalculationReportVerificationProjection,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloCalculationReportVerificationRequest,
-            executor_type=ModeloCalculationReportVerificationExecutor,
-            build=lambda: ModeloCalculationReportVerificationExecutor(factory, source_reader=source_reader),
-        ),
-        phase_codes=(MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
+        executor_type=ModeloCalculationReportVerificationExecutor,
+        build=lambda: ModeloCalculationReportVerificationExecutor(factory, source_reader=source_reader),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -283,7 +262,6 @@ def build_modelo_calculation_report_verify_definition(
             permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
@@ -294,79 +272,24 @@ def build_modelo_calculation_report_verify_registration(
     """Require whole-profile read authority without reading the requested file."""
 
     def resolve(request: OperationRequest[BaseModel], context: OperationAccessContext, /) -> ResolvedOperationAccess:
-        payload = request.payload
-        if request.definition_id != definition.definition_id or not isinstance(
-            payload, ModeloCalculationReportVerificationRequest
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-            str(payload.profile_id)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_access_request_profile_payload(
+            request,
+            definition_id=definition.definition_id,
+            payload_type=ModeloCalculationReportVerificationRequest,
+            access_profile_id=context.profile_id,
+        )
         if context.authority_operation is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = None
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosure = DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                category=DisclosureCategory.OPERATION_METADATA,
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosure = DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=schema.schema_id,
-                category=DisclosureCategory.TAX_VALUES,
-            )
-        return ResolvedOperationAccess(
-            request=OperationAccessRequest(
-                profile_id=context.profile_id,
-                definition_id=request.definition_id,
-                action=context.action,
-                frontend=context.frontend,
-                periods=frozenset(),
-                period_independent=True,
-                destination_id=context.destination_id,
-            ),
-            policy=OperationAccessPolicy(
-                definition_id=request.definition_id,
-                definition_contract_digest=context.contract.definition_contract_digest,
-                actions=frozenset(
-                    {
-                        AccessAction.SUBMIT,
-                        AccessAction.START,
-                        AccessAction.RESUME,
-                        AccessAction.OBSERVE,
-                        AccessAction.RESULT,
-                        AccessAction.CANCEL,
-                        AccessAction.DETACH,
-                    }
-                ),
-                disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-                periods=frozenset(),
-                allow_period_independent=True,
-                requires_all_periods=True,
-                backend=Availability.AVAILABLE,
-                published_authority=context.published_authority,
-                provider=Availability.NOT_REQUIRED,
-                transaction_authority_required=False,
-            ),
+        return bind_operation_access_profile(
+            context,
+            LIFECYCLE_WHOLE_PROFILE_REGISTERED_RESULT_TAX_VALUES_ACCESS,
+            profile_id=context.profile_id,
+            definition_id=request.definition_id,
+            periods=frozenset(),
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=ModeloCalculationReportVerificationRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=ModeloCalculationReportVerificationProjection,
-        ),
+        public_result_type=ModeloCalculationReportVerificationProjection,
         access_resolver=resolve,
     )

@@ -1,10 +1,10 @@
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
-@step Open the latest annual Modelo 390 summary backed by a filing-grade registry revision.
+@step Open the latest annual Modelo 390 summary backed by a published version of the official form.
 @result aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
 @expect result.name == "390-2025-0A"
 @expect result.revision_id == "2025"
 @expect exit_code == 0
-@step Calculate, verify, export, and file the annual summary.
+@step Calculate, check, export, and file the annual summary.
 @static aeat app modelo work calculate --modelo 390 --year 2025 --period 0A
 @blocked unconverted Refuses REFUSED_MODELO_CROSS_PERIOD_CLEAN_STATE, missing_303_periods 1T, 2T, 3T, 4T; the annual fold-in needs all four quarters filed and this sequence files none.
 @static aeat app modelo work verify --modelo 390 --year 2025 --period 0A

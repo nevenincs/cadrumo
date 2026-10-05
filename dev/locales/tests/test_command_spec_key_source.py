@@ -76,3 +76,30 @@ def test_every_key_the_live_registry_declares_is_translated() -> None:
             missing[code] = absent[:20]
 
     assert not missing, f"the live CLI declares keys these catalogues cannot answer: {missing}"
+
+
+def test_diagnostics_registered_keys_follow_the_live_command_specs() -> None:
+    """The diagnostics' shared option keys follow spec translation keys."""
+    from ..fstring_registry import get_registered_keys
+
+    declared = scan_command_spec_keys()
+    registered = get_registered_keys()
+
+    shared_since_help = "cli.diagnostics.run_records.since_help"
+    retired_since_help = {
+        "cli.diagnostics.run_health.since_help",
+        "cli.diagnostics.runs.since_help",
+    }
+    range_help = {
+        "cli.diagnostics.run_health.until_help",
+        "cli.diagnostics.run_health.provider_help",
+        "cli.diagnostics.runs.until_help",
+        "cli.diagnostics.runs.provider_help",
+    }
+
+    assert shared_since_help in declared
+    assert shared_since_help in registered
+    assert retired_since_help.isdisjoint(declared)
+    assert retired_since_help.isdisjoint(registered)
+    assert range_help <= declared
+    assert range_help <= registered

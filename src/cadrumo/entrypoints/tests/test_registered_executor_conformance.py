@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import csv
 import hashlib
-from collections.abc import Awaitable, Callable, Generator, Mapping
+from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta
@@ -31,12 +31,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ...adapters.persistence.operations.financial_operand_custody import (
-    OperationFinancialOperandCustodyFilesystemRepository,
-)
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.operations.typed_financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyFilesystemRepository,
+)
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -49,6 +49,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.notification_documents import notification_document_repository
+from ...adapters.persistence.profile.own_accounts import OwnAccountRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.tests.cross_period_seeding import (
     SEEDED_SOURCE_TAX_ID,
@@ -59,11 +60,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ...application.actividad_asset.operation_dtos import (
-    ActivityAssetRevisionSnapshot,
-    ScheduledAmortizationChargeSnapshot,
-)
-from ...application.actividad_asset.registered_operations import (
+from ...application.actividad_asset.activity_asset_projections import (
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
@@ -71,26 +68,42 @@ from ...application.actividad_asset.registered_operations import (
     ActivityAssetForecastProjection,
     ActivityAssetInspectProjection,
 )
+from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetRevisionSnapshot,
+    ScheduledAmortizationChargeSnapshot,
+)
 from ...application.aggregation.service import aggregate_per_modelo
+from ...application.auth.auth_read_contracts import (
+    AUTH_READ_OPERATION_DEFINITION_ID,
+    AuthReadProjection,
+    AuthReadRequest,
+)
 from ...application.auth.certificate_source_operations import (
     list_operator_certificate_sources,
     register_operator_certificate_source,
     set_operator_certificate_source_secret,
 )
 from ...application.auth.operation_definitions import build_auth_operation_definitions
-from ...application.auth.read_operation import (
-    AUTH_READ_OPERATION_DEFINITION_ID,
-    AuthReadProjection,
-    AuthReadRequest,
-)
-from ...application.bienes_inversion.registered_operation import (
+from ...application.bienes_inversion.registered_result_contracts import (
     BienesInversionDeclareProjection,
     BienesInversionListProjection,
     BienInversionRecordProjection,
 )
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.calculations.iva_compensation_history import seed_iva_compensation_period
-from ...application.inventory.registered_operation import (
+from ...application.filing.producer_snapshot_m360 import (
+    M360AmbitoEstablecimiento,
+    M360CausaPresentacion,
+    M360NivelCalidadDatos,
+    M360TitularEnCalidadDe,
+    Modelo360CuentaTitularFacts,
+    Modelo360EstablecimientoFacts,
+    Modelo360ProfileFacts,
+    Modelo360RepresentanteFacts,
+    Modelo360SolicitanteFacts,
+    Modelo360SolicitudFacts,
+)
+from ...application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
     InventoryLedgerProjection,
@@ -101,7 +114,9 @@ from ...application.inventory.registered_operation import (
 from ...application.inventory.tests.registered_operation_conformance_support import (
     prepare_inventory_operation_conformance_case,
 )
-from ...application.invoices.catalogue_add_operation import InvoiceAddResult
+from ...application.invoices.catalogue_add_contracts import (
+    InvoiceAddResult,
+)
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ...application.invoices.catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,
@@ -131,7 +146,6 @@ from ...application.ledger.actions_manual import (
     prepare_manual_transaction_update,
 )
 from ...application.ledger.actions_split_merge import split_transaction
-from ...application.ledger.add_operation import LedgerAddOperationResult, LedgerAddRequest
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
 from ...application.ledger.attachment_mutation_operation import (
     LedgerAttachmentOperationResult,
@@ -142,10 +156,12 @@ from ...application.ledger.bulk_classify_operation import (
     LedgerBulkClassifyRequest,
 )
 from ...application.ledger.check_operation import LedgerCheckProjection, LedgerCheckRequest
-from ...application.ledger.classify_operation import (
-    LedgerClassifyOperationResult,
+from ...application.ledger.classify_requests import (
     LedgerClassifyPatch,
     LedgerClassifyRequest,
+)
+from ...application.ledger.classify_result_contracts import (
+    LedgerClassifyOperationResult,
 )
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
@@ -166,8 +182,9 @@ from ...application.ledger.evidence_read_operation import (
 from ...application.ledger.history_operation import LedgerHistoryProjection, LedgerHistoryRequest
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.import_operation import LedgerImportRequest, LedgerImportResultProjection
-from ...application.ledger.invoice_evidence_operation import LedgerEvidenceConfirmProjection
-from ...application.ledger.lifecycle_mutation_operation import (
+from ...application.ledger.invoice_evidence_confirm_operation import LedgerEvidenceConfirmProjection
+from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult, LedgerAddRequest
+from ...application.ledger.lifecycle_contracts import (
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
 )
@@ -176,6 +193,7 @@ from ...application.ledger.llm_classification import reject_llm_suggestion
 from ...application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from ...application.ledger.merge_operation import LedgerMergeOperationResult, LedgerMergeRequest
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, SplitChildCommand
+from ...application.ledger.own_account_operation import LedgerOwnAccountRequest, LedgerOwnAccountResult
 from ...application.ledger.participation_operation import (
     LedgerParticipationProjection as LedgerParticipationLookupProjection,
 )
@@ -191,7 +209,7 @@ from ...application.ledger.preflight_operation import LedgerPreflightProjection,
 from ...application.ledger.remove_operation import LedgerRemoveOperationResult, LedgerRemoveRequest
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection, LedgerReviewRequest
-from ...application.ledger.rule_operation import LedgerRuleAddProjection
+from ...application.ledger.rule_contracts import LedgerRuleAddProjection
 from ...application.ledger.split_operation import (
     LedgerSplitOperationResult,
     LedgerSplitRequest,
@@ -201,7 +219,7 @@ from ...application.ledger.track_operation import LedgerTrackProjection, LedgerT
 from ...application.ledger.tracking_projection import (
     LedgerParticipationProjection as LedgerParticipationEntryProjection,
 )
-from ...application.ledger.update_operation import (
+from ...application.ledger.update_contracts import (
     LedgerUpdateOperationResult,
     LedgerUpdatePatch,
     LedgerUpdateRequest,
@@ -220,8 +238,9 @@ from ...application.live.notification_ports import NotificationsSnapshot, Notifi
 from ...application.live.notifications import NotificationsService
 from ...application.live.verify import VerifyService, VerifySurface
 from ...application.live.verify_capture_operation import VerifyLiveObservation, build_verify_capture_definition
-from ...application.local_reader_operation import LOCAL_READER_OPERATION_SUBJECT, LocalReaderProvisionAction
-from ...application.modelo.aggregate_operation import ModeloAggregateOperationRequest, ModeloAggregateProjection
+from ...application.local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT, LocalReaderProvisionAction
+from ...application.modelo.aggregate_projection import ModeloAggregateProjection
+from ...application.modelo.aggregate_request import ModeloAggregateOperationRequest
 from ...application.modelo.amendment_action_ports import AmendmentActionPorts, AmendmentActionPortsFactory
 from ...application.modelo.calculation_actions import calculate_modelo_revision
 from ...application.modelo.calculation_report_verification import (
@@ -240,9 +259,11 @@ from ...application.modelo.dependency_operation import (
     ModeloDependencyProjection,
     ModeloDependencyRequest,
 )
+from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.external_import_actions import import_external_filing_evidence
 from ...application.modelo.history_operation import ModeloWorkHistoryProjection, ModeloWorkHistoryRequest
-from ...application.modelo.invoice_withholding_capture_operation import (
+from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureRequest,
@@ -254,20 +275,18 @@ from ...application.modelo.iva_wallet_correction_operation import (
 )
 from ...application.modelo.iva_wallet_override_operation import ModeloIvaWalletOverrideProjection
 from ...application.modelo.iva_wallet_seed_operation import ModeloIvaWalletSeedProjection
-from ...application.modelo.local_observation_operation import ModeloLocalObservationCasillaValue
+from ...application.modelo.local_observation_contracts import ModeloLocalObservationCasillaValue
 from ...application.modelo.m303_attestation_operation import (
     ModeloWorkM303AttestationPublicResultV2,
     ModeloWorkM303AttestationRequest,
 )
-from ...application.modelo.mcp_query_operation import (
+from ...application.modelo.m360_solicitud_operation import Modelo360RepresentanteAccountInput
+from ...application.modelo.mcp_query_contracts import (
     ModeloBindingsResolveTypedProjection,
     ModeloReadinessSummaryProjection,
 )
-from ...application.modelo.operation_definitions import (
-    ModeloWorkCalculateRequest,
-    resolve_active_workflow_profile,
-)
-from ...application.modelo.query_read_operation import (
+from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsResolveProjection,
     ModeloReadinessProjection,
@@ -288,7 +307,7 @@ from ...application.modelo.taxation_comparison_operation import (
     MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
     ModeloTaxationComparisonRequest,
 )
-from ...application.modelo.verification_actions import verify_modelo_revision
+from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo.wizard_attempt_operation import (
     ModeloWorkWizardAttemptCalculated,
     ModeloWorkWizardAttemptProjection,
@@ -298,6 +317,7 @@ from ...application.modelo.wizard_context_operation import (
     ModeloWorkWizardContextProjection,
     ModeloWorkWizardContextRequest,
 )
+from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from ...application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
     ModeloWorkCreateProjection,
@@ -305,7 +325,7 @@ from ...application.modelo.work_create_operation import (
     ModeloWorkCreateRequest,
 )
 from ...application.modelo.work_inventory_operation import ModeloWorkListProjection, ModeloWorkListRequest
-from ...application.modelo.work_review_operation import ModeloWorkReviewProjection, ModeloWorkReviewRequest
+from ...application.modelo.work_review_contracts import ModeloWorkReviewProjection, ModeloWorkReviewRequest
 from ...application.operations.capabilities import OperationRequestStoragePolicy
 from ...application.operations.composition import (
     OperationComposedServices,
@@ -337,27 +357,23 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.observation import OperationObservationService
+from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.public_period import PublicPeriod
-from ...application.operations.registry import (
-    OperationDefinition,
-    OperationRegistry,
-)
+from ...application.operations.registry import OperationRegistry
 from ...application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...application.overview.pipeline_operation import OverviewPipelineProjection, OverviewPipelineRequest
 from ...application.overview.pipeline_projection import PipelineHealthSnapshot
-from ...application.overview.read_operation import (
-    OVERVIEW_READ_DEFINITION_IDS,
+from ...application.overview.read_payload import (
     OverviewAgendaRead,
     OverviewBacklogRead,
     OverviewCalendarRead,
     OverviewExplainRead,
     OverviewPrepareRead,
-    OverviewReadKind,
-    OverviewReadProjection,
-    OverviewReadRequest,
     OverviewStatusRead,
 )
-from ...application.prorrata_register.registered_operations import ProrrataListProjection, ProrrataMutationProjection
+from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS, OverviewReadKind, OverviewReadRequest
+from ...application.overview.read_result import OverviewReadProjection
+from ...application.prorrata_register.projection_contracts import ProrrataListProjection, ProrrataMutationProjection
 from ...application.review.filter import LedgerReviewStatus
 from ...application.user_profile.automation_operations import build_automation_operation_definitions
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
@@ -386,12 +402,12 @@ from ...application.user_profile.section_rows import add_profile_repeatable_sect
 from ...application.user_profile.view_operation import ProfileViewPageKind
 from ...application.workflow.abort import WorkflowAbortReason
 from ...application.workflow.persistence import WorkflowRunRepository, workflow_state_repository
-from ...application.workflow.resume_operation import (
-    WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
+from ...application.workflow.resume_contracts import (
     WorkflowResumeProjection,
     WorkflowResumeRequest,
     WorkflowResumeSuccess,
 )
+from ...application.workflow.resume_operation import WORKFLOW_RESUME_OPERATION_DEFINITION_ID
 from ...application.workflow.run_models import (
     WorkflowObligationFacts,
     WorkflowResult,
@@ -407,7 +423,7 @@ from ...application.workflow.run_read_operation import (
     WorkflowRunReadRequest,
 )
 from ...core.auth_provider import AuthProviderKind
-from ...core.config import load_settings, override_settings
+from ...core.config import load_settings
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.identity_check_verdict import IdentityCheckVerdict
@@ -451,6 +467,7 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSta
 from ...domain.notifications.sancion import SancionLiquidacion
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.own_accounts import OwnAccountHolding
 from ...domain.usage_ratios.model import UsageRatioProfile
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -481,6 +498,16 @@ from .activity_asset_operation_test_support import (
 )
 from .aggregate_operation_test_support import aggregate_conformance_command
 from .censal_review_test_support import review_censal_with_services
+from .conformance_families import CONFORMANCE_FAMILIES, conformance_family_for
+from .conformance_family_contract import (
+    ConformanceFamily,
+    ConformanceFamilyContext,
+    ConformanceOutcome,
+    ConformancePreparation,
+    RegisteredExecutorConformanceCase,
+    closed_model_runtime,
+)
+from .conformance_variants import CONFORMANCE_VARIANT_FAMILIES
 from .evidence_followup_operation_test_support import prepare_evidence_followup_conformance_case
 from .invoice_evidence_operation_test_support import (
     assert_invoice_evidence_confirmation_persisted,
@@ -533,20 +560,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _CREDENTIAL_INPUT = "s45-registered-executor-passphrase"
 _ROTATED_CREDENTIAL_INPUT = "s45-registered-executor-rotated-passphrase"
 _LEDGER_LIST_PRIVATE_FILTER_SENTINEL = "private-ledger-list-filter-sentinel-6d7c"
-
-
-@dataclass(frozen=True, slots=True)
-class _RegisteredExecutorConformanceCase:
-    definition_id: str
-    expected_terminal: OperationTerminalCondition
-    expected_effect: OperationEffect
-    expected_phase_codes: tuple[str, ...] | None = None
-    expected_refusal_ref: str | None = None
-
-
-def _closed_model_runtime() -> AbstractContextManager[object]:
-    """Point the local model runtime at a closed port so no live runtime is ever reached."""
-    return override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat")
+_OWN_ACCOUNT_SYNTHETIC_IBAN = "ES9121000418450200051332"
 
 
 def _registered_definition_ids() -> tuple[str, ...]:
@@ -564,11 +578,23 @@ def _registered_definition_ids() -> tuple[str, ...]:
     return tuple(sorted(definition.definition_id for definition in build_production_operation_registry().definitions))
 
 
-_EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
-    case.definition_id: case
-    for case in (
+def _expectations_owned_once(
+    cases: Iterable[RegisteredExecutorConformanceCase],
+) -> Mapping[str, RegisteredExecutorConformanceCase]:
+    """Key scenarios by definition id, refusing a second scenario for the same operation."""
+    expectations: dict[str, RegisteredExecutorConformanceCase] = {}
+    for case in cases:
+        if case.definition_id in expectations:
+            raise AssertionError(f"{case.definition_id} declares more than one conformance scenario")
+        expectations[case.definition_id] = case
+    return expectations
+
+
+_EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_owned_once(
+    (
+        *(case for family in CONFORMANCE_FAMILIES for case in family.cases),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 f"ledger.rule.{action}",
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE if action == "list" else OperationEffect.UPDATED,
@@ -577,7 +603,7 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             for action in ("add", "list", "apply")
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 definition_id, OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, phase_codes
             )
             for definition_id, phase_codes in (
@@ -588,13 +614,13 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             )
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 f"ledger.{action}", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, (f"ledger.{action}",)
             )
             for action in ("archive", "stash", "restore", "exclude")
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 definition_id,
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE,
@@ -617,7 +643,7 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             )
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 f"config.collab.recipient.{action}",
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE if action == "list" else OperationEffect.UPDATED,
@@ -626,7 +652,7 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             for action in ("add", "list", "remove")
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 definition.definition_id,
                 OperationTerminalCondition.REFUSED,
                 OperationEffect.NONE,
@@ -635,16 +661,16 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             )
             for definition in build_automation_operation_definitions()
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "auth.profile.login", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "auth.profile.passphrase-rotate", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "auth.provider.configure", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "auth.session.acquire",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
@@ -653,7 +679,7 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             expected_refusal_ref="REFUSED_AUTH_LOGIN_PRECONDITION",
         ),
         *(
-            _RegisteredExecutorConformanceCase(definition_id, OperationTerminalCondition.SUCCEEDED, effect)
+            RegisteredExecutorConformanceCase(definition_id, OperationTerminalCondition.SUCCEEDED, effect)
             for definition_id, effect in (
                 ("auth.certificate.source.register", OperationEffect.UPDATED),
                 ("auth.certificate.source.list", OperationEffect.NONE),
@@ -669,259 +695,284 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
                 ("ledger.ratios.unset", OperationEffect.UPDATED),
             )
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "auth.session.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "auth.session.reset", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             AUTH_READ_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("auth.local-read.execute",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.field-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.repeatable-row-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.repeatable-row-update", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.repeatable-row-remove", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.patch", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.plantilla-media", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.descendants", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.complete-setup",
             OperationTerminalCondition.REFUSED,
             OperationEffect.UNKNOWN,
             expected_refusal_ref="REFUSED_PROFILE_SCHEMA_VALIDATION",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "workbench.generation",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             (),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        # Each workbench read is a single-phase owner read that publishes its own
+        # definition id and settles NONE. Its live-human CLI/TUI requirement is an
+        # access-policy axis the runtime operation authority enforces; this driver
+        # composes the supervisor without that authority, so it never applies here.
+        *(
+            RegisteredExecutorConformanceCase(
+                definition_id,
+                OperationTerminalCondition.SUCCEEDED,
+                OperationEffect.NONE,
+                (definition_id,),
+            )
+            for definition_id in (
+                "modelo.work.form",
+                "modelo.work.casilla_help",
+                "modelo.edit.renew",
+                "modelo.edit.preflight",
+                "modelo.edit.apply_prerequisite",
+            )
+        ),
+        RegisteredExecutorConformanceCase(
             "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
-            # Discovery needs an authenticated session and the isolated root
-            # holds no certificate, so the pull fails before any remote read.
+        RegisteredExecutorConformanceCase(
+            # The composed provider preflight refuses before discovery: the
+            # isolated root holds no usable provider, so no remote read starts.
             "live.filed-history.pull",
-            OperationTerminalCondition.FAILED,
+            OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
+            ("filed-history.preflight",),
+            expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.expedientes.capture.bulk",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("expedientes-capture.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.expedientes.capture.single",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("expedientes-capture.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.filed-capture.bulk",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("filed-bulk.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.filed-capture.single",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("filed-capture.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.filed-capture.source",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("filed-source.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.filed-discover",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("filed-discover.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.filed-list",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("filed-list.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.iva-wallet.capture",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("iva-wallet.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.iva-wallet.evidence-capture",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("iva-evidence.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.iva-wallet.history-capture",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("iva-history.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.justificante.capture",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("justificante-capture.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.notifications.capture",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("notifications-capture.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.notifications.document.capture",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("notification-document-capture.preflight",),
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
-            "live.verify.nif-iva", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        RegisteredExecutorConformanceCase(
+            "live.verify.nif-iva",
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            (),
+            expected_refusal_ref="REFUSED_APPLICATION_LIVE_NIF_IVA_CERTIFICATE_REQUIRED",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.verify.tgvi", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.verify.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.verify.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.verify.latest", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.justificante.list",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("justificante-list.read", "justificante-list.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.justificante.show",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("justificante-show.read", "justificante-show.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.expedientes.list",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("expedientes-list.read", "expedientes-list.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.expedientes.show",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("expedientes-show.read", "expedientes-show.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.expedientes.latest",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("expedientes-latest.read", "expedientes-latest.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.notifications.list",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("notifications-list.read", "notifications-list.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.notifications.show",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("notifications-show.read", "notifications-show.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.notifications.latest",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("notifications-latest.read", "notifications-latest.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.notifications.document.view",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("notification-document-view.read", "notification-document-view.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "live.notifications.document.history",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("notification-document-history.read", "notification-document-history.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.reconcile.list",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("modelo.reconcile.list",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.filing_record.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.filing_record.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.verification_report.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.verification_report.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.observation.local", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.filing_record.import", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             # The isolated settings name no Drive root folder, so the production
             # transport refuses while planning, before any remote call.
             "export.google-sheets",
@@ -933,28 +984,28 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             ),
             expected_refusal_ref="REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.censo-review", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.censo-prepare", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.censo-file-import", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.censo-preview",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.reconcile.import",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             expected_refusal_ref="REFUSED_RECONCILIATION_EVIDENCE_INVALID",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.reconcile.pull",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
@@ -963,72 +1014,72 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
         ),
         # Verify against a closed runtime endpoint: the executor settles its
         # typed not-ready outcome and changes nothing on the host.
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "local-reader.provision", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.rename", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.metadata", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.create",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             ("modelo.work.create",),
             expected_refusal_ref=MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("modelo.work.list",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.history",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("modelo.work.history",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.filing_record", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.review",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("modelo.work.review",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.amendment_context", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             (WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             (WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             (WORKFLOW_RESUME_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             MODELO_DEPENDENCY_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             (MODELO_DEPENDENCY_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "overview.pipeline", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("overview.pipeline",)
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 definition_id,
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE,
@@ -1036,176 +1087,188 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             )
             for definition_id in OVERVIEW_READ_DEFINITION_IDS.values()
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.wizard_context",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("modelo.work.wizard_context",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.revision", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.revision_snapshot", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.revisions", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
             (MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,),
             expected_refusal_ref="REFUSED_TAXATION_COMPARISON",
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.review_package.build",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("modelo.review_package.build.preconditions",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.m303_attestation",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("modelo.work.m303_attestation.preconditions",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.counterparty",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.counterparty",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
+            "ledger.own_account",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("ledger.own_account",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "modelo.m360_solicitud",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("modelo.m360_solicitud",),
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.remove", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.remove",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.import", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.import",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.add", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.add",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.allocate", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.allocate",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.classify.single",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.classify.single",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             (LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.add",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.evidence.add",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.list",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("ledger.evidence.list",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.view",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("ledger.evidence.view",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.update",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.evidence.update",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.remove",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.evidence.remove",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.reader-readiness",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("ledger.evidence.reader-readiness",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.extract",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("ledger.evidence.extract",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.evidence.confirm",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.evidence.confirm",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.split.manual",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.split.manual",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.merge",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.merge",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.update", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.update",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.attach", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.attach",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.detach", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.detach",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.reset", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.reset",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.status", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.status",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.check", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.check",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.preflight", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.preflight",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.history", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.history",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.view",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.track", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.track",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.list",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.invoice.add", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.invoice.add",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.aggregate", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 f"ledger.bienes_inversion.{action}",
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE if action == "list" else OperationEffect.UPDATED,
@@ -1214,7 +1277,7 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             for action in ("list", "declare")
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 f"ledger.prorrata.{action}",
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE if action == "list" else OperationEffect.UPDATED,
@@ -1231,7 +1294,7 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             )
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 definition_id,
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.NONE if definition_id == "ledger.inventory.list" else OperationEffect.UPDATED,
@@ -1246,7 +1309,7 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             )
         ),
         *(
-            _RegisteredExecutorConformanceCase(
+            RegisteredExecutorConformanceCase(
                 f"ledger.actividad-asset.{action}",
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.UPDATED if action in {"create", "correct", "claim"} else OperationEffect.NONE,
@@ -1254,43 +1317,43 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             )
             for action in ("create", "inspect", "correct", "forecast", "claim", "filing-handoff")
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "user-profile.recovery.status",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("user-profile.recovery.status",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             INVOICE_LIST_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             (INVOICE_LIST_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             INVOICE_VIEW_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             (INVOICE_VIEW_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             INVOICE_REMOVE_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             (INVOICE_REMOVE_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             INVOICE_UPDATE_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             (INVOICE_UPDATE_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             IVA_WALLET_HISTORY_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             (IVA_WALLET_HISTORY_OPERATION_DEFINITION_ID,),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             MODELO_IVA_WALLET_CORRECTION_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
@@ -1299,43 +1362,43 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
                 "modelo.iva-wallet.correct.result",
             ),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.iva-wallet.balance",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("modelo.iva-wallet.balance.read",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.iva-wallet.seed",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("modelo.iva-wallet.seed.commit", "modelo.iva-wallet.seed.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.iva-wallet.override",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("modelo.iva-wallet.override.commit", "modelo.iva-wallet.override.result"),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.participation",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
             ("ledger.participation",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.participation.rebuild",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("ledger.participation.rebuild",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "ledger.review", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.review",)
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.discard", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             # Calculated from the unit's (empty) ledger aggregation: the M130
             # revision marks no casilla required, so one revision is persisted.
             "modelo.work.calculate",
@@ -1343,34 +1406,34 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             OperationEffect.UPDATED,
             ("modelo.work.calculate.ledger",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.wizard_attempt",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("modelo.work.wizard_attempt",),
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.verify", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.file", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.edit.apply", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
         ),
-        _RegisteredExecutorConformanceCase(
+        RegisteredExecutorConformanceCase(
             "modelo.work.amend", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
     )
-}
+)
 """The settlement each registered executor is expected to reach.
 
 Keyed by definition id, never ordered or counted. Coverage is asserted
@@ -1413,6 +1476,25 @@ class _ExecutionDriver:
     services: OperationComposedServices
 
     async def prepare(self, *, definition_id: str, subject_ref: str, payload: BaseModel, secret: bytes | None = None):
+        if isinstance(payload, ModeloEditOperatorInputV2):
+            prepared = prepare_modelo_edit_operand(
+                definition_id=definition_id,
+                profile_id=UUID(payload.submission.baseline.bucket_id),
+                subject_ref=subject_ref,
+                input_json=payload.model_dump_json(),
+            )
+            try:
+                submitted = await self.services.submission.submit(
+                    OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=prepared.request),
+                    actor_ref=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
+                )
+                assert prepared.operand is not None
+                await self.services.submission.supervisor.bind_typed_financial_operand(
+                    submitted.receipt.operation_id, prepared.operand
+                )
+                return submitted
+            finally:
+                prepared.release()
         submitted = await self.services.submission.submit(
             OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload),
             actor_ref=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
@@ -1435,12 +1517,13 @@ class _ExecutionDriver:
             secret=secret,
         )
         before_start = await self.observe(submitted.receipt.operation_id)
-        cancellation = await self.services.cancellation.request(
-            OperationCancellationRequestV1(
-                operation_id=submitted.receipt.operation_id, expected_revision=before_start.projection.revision
+        if not isinstance(payload, ModeloEditOperatorInputV2):
+            cancellation = await self.services.cancellation.request(
+                OperationCancellationRequestV1(
+                    operation_id=submitted.receipt.operation_id, expected_revision=before_start.projection.revision
+                )
             )
-        )
-        assert isinstance(cancellation, OperationCancellationRefusalV1)
+            assert isinstance(cancellation, OperationCancellationRefusalV1)
         await self.services.submission.start(submitted.receipt.operation_id)
         await self.services.submission.settled(submitted.receipt.operation_id)
         return submitted, await self.observe(submitted.receipt.operation_id)
@@ -1512,15 +1595,15 @@ class _ExecutionDriver:
         assert result.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
 
 
-def _resolve_result_projection(
+def _resolve_result_projection[ProjectionT: BaseModel](
     driver: _ExecutionDriver,
     registry: OperationRegistry,
     *,
     definition_id: str,
     operation_id: str,
     terminal_revision: int,
-    projection_type: type[BaseModel],
-) -> BaseModel:
+    projection_type: type[ProjectionT],
+) -> ProjectionT:
     """Resolve one typed public result through encrypted operand custody."""
     contract = registry.lookup_public_contract(definition_id)
     assert contract.result_schema is not None
@@ -1538,6 +1621,110 @@ def _resolve_result_projection(
     assert isinstance(result, OperationResultProjectionSuccessV1)
     assert isinstance(result.projection, projection_type)
     return result.projection
+
+
+@dataclass(frozen=True, slots=True)
+class _FamilyResultResolver:
+    """Bind one settled operation's public result resolution for a family's own checks."""
+
+    driver: _ExecutionDriver
+    registry: OperationRegistry
+    definition_id: str
+    operation_id: str
+    terminal_revision: int
+
+    def __call__[ProjectionT: BaseModel](self, projection_type: type[ProjectionT], /) -> ProjectionT:
+        projection = _resolve_result_projection(
+            self.driver,
+            self.registry,
+            definition_id=self.definition_id,
+            operation_id=self.operation_id,
+            terminal_revision=self.terminal_revision,
+            projection_type=projection_type,
+        )
+        assert isinstance(projection, projection_type)
+        return projection
+
+
+_MODEL_RUNTIME_CLOSED_DEFINITIONS = frozenset(
+    {
+        "local-reader.provision",
+        "ledger.evidence.reader-readiness",
+        "ledger.evidence.extract",
+        "ledger.evidence.confirm",
+    }
+)
+
+
+def _model_runtime_for(definition_id: str) -> AbstractContextManager[object]:
+    """Close the local model runtime for operations, and families, that would otherwise reach one."""
+    family = conformance_family_for(definition_id)
+    if definition_id in _MODEL_RUNTIME_CLOSED_DEFINITIONS or (family is not None and family.closes_model_runtime):
+        return closed_model_runtime()
+    return nullcontext()
+
+
+def _prepare_family_case(
+    definition: OperationDefinition,
+    *,
+    profile_id: UUID,
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    family: ConformanceFamily | None = None,
+) -> ConformancePreparation | None:
+    """Seed and build the request of an operation whose family owns its scenario."""
+    family = family or conformance_family_for(definition.definition_id)
+    if family is None:
+        return None
+    input_root = tmp_path / "family-inputs"
+    input_root.mkdir()
+    return family.prepare(
+        ConformanceFamilyContext(
+            definition=definition,
+            profile_id=profile_id,
+            profile_passphrase=_CREDENTIAL_INPUT,
+            input_root=input_root,
+            operation=operation,
+        )
+    )
+
+
+def _judge_family_outcome(
+    preparation: ConformancePreparation | None,
+    *,
+    driver: _ExecutionDriver,
+    registry: OperationRegistry,
+    profile_id: UUID,
+    operation_id: str,
+    observed: OperationObservationSuccessV1,
+) -> None:
+    """Compare a family's independently built result, then run its own outcome checks."""
+    if preparation is None:
+        return
+    outcome = ConformanceOutcome(
+        profile_id=profile_id,
+        operation_id=operation_id,
+        observed=observed,
+        resolve_result=_FamilyResultResolver(
+            driver=driver,
+            registry=registry,
+            definition_id=observed.projection.definition_id,
+            operation_id=operation_id,
+            terminal_revision=observed.projection.revision,
+        ),
+    )
+    expected = preparation.expected_result
+    if expected is not None:
+        actual = outcome.resolve_result(type(expected))
+        actual_fields = actual.model_dump(mode="json")
+        expected_fields = expected.model_dump(mode="json")
+        assert actual == expected, {
+            key: (actual_fields.get(key), expected_fields.get(key))
+            for key in actual_fields.keys() | expected_fields.keys()
+            if actual_fields.get(key) != expected_fields.get(key)
+        }
+    if preparation.verify is not None:
+        preparation.verify(outcome)
 
 
 def _observation() -> CensalObservation:
@@ -1650,7 +1837,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
         binding_values=modelo_operation_test_support.FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
         source_transaction_ids=(transaction_id,),
     )
-    report = verify_modelo_revision(
+    report = verify_modelo_revision_with_preconditions(
         calculation.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_verification_repository_bundle(unit.bucket_id, operation=operation),
@@ -1658,7 +1845,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
         workflow_profile=resolve_active_workflow_profile(operation),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         operation=operation,
-    )
+    ).report
     if report.completeness_status is not VerificationCompletenessStatus.COMPLETE:
         findings = "; ".join(finding.kind.value for finding in report.findings) or "no findings reported"
         raise AssertionError(f"track participation seed did not verify completely: {findings}")
@@ -1674,33 +1861,31 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
     return transaction_id
 
 
-def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, object]:
+def seeded_modelo_edit_submission(
+    profile_id: UUID, *, operation: PinnedAuthorityOperation
+) -> tuple[str, ModeloEditApplySubmissionV1]:
     """Build one canonical edit DTO over the revision this fixture just persisted."""
     from ...adapters.persistence.profile.modelos_calculation import (
         CalculationRevisionCatalogueRepository,
     )
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-    from ...application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
+    from ...application.modelo.edit_admission import admit_modelo_edit_baseline
+    from ...application.modelo.edit_contract import ModeloEditMutationFamily
     from ...application.modelo.edit_models import (
-        ModeloEditBaselineV1,
+        ModeloEditAdmittedV1,
         ModeloEditScalarAddressV1,
         ModeloEditScalarIntentKind,
-        ModeloEditSchemaIdentityV1,
         ModeloEditSubmissionV1,
-        ModeloEditWritableScalarSurfaceEntryV1,
         ModeloScalarEditIntentV1,
     )
-    from ...application.modelo.operation_definitions import ModeloEditApplySubmissionV1
-    from ...application.operations.registry import OperationSchemaIdentityV1
     from ...core.casilla_id import validated_casilla_id
-    from ...core.hashing import content_hash_hex
-    from ...domain.calculations.registry.schema_base import CasillaDataType
+    from ..operation_composition import build_production_operation_registry
 
     unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
     seeded_casilla_id = validated_casilla_id("06")
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        calculate_modelo_revision(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
@@ -1713,58 +1898,16 @@ def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthori
     current_unit = work_catalogue.get(unit.work_unit_id)
     if current_unit is None:
         raise AssertionError("the edit conformance fixture lost its seeded work unit")
-    casilla_id = next(iter(revision.input_values_by_casilla_id))
-    identity = OperationSchemaIdentityV1(
-        schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint="a" * 64
+    casilla_id = seeded_casilla_id
+    admission = admit_modelo_edit_baseline(
+        work_unit_id=unit.work_unit_id,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=calculation_catalogue,
+        operation=operation,
+        operation_contracts=build_production_operation_registry().public_contract_set,
     )
-    compatibility = ModeloEditCompatibilityTupleV1(
-        contract_set_digest="a" * 64,
-        operation_definition_id="modelo.calculate",
-        definition_contract_digest="a" * 64,
-        request_schema=identity,
-        result_schema=identity,
-        review_projection_contract_version=None,
-        review_schema=None,
-        workspace_refresh_target_schema=identity,
-        financial_operand_schema=identity,
-    )
-    permitted_surface = (
-        ModeloEditWritableScalarSurfaceEntryV1(
-            casilla_id=casilla_id,
-            data_type=CasillaDataType.MONEY,
-            allowed_intents=(
-                ModeloEditScalarIntentKind.SET_TYPED_VALUE,
-                ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
-            ),
-        ),
-    )
-    issued_at = datetime.now(UTC)
-    baseline = ModeloEditBaselineV1(
-        compatibility=compatibility,
-        bucket_id=current_unit.bucket_id,
-        modelo=current_unit.modelo,
-        filing_year=current_unit.filing_year,
-        period=current_unit.period,
-        work_unit_id=current_unit.work_unit_id,
-        work_catalogue_revision=content_hash_hex(work_catalogue.model_dump(mode="json")),
-        calculation_catalogue_revision=content_hash_hex(calculation_catalogue.model_dump(mode="json")),
-        current_calculation_revision_id=revision.calculation_revision_id,
-        law_selected_revision_id=current_unit.revision_id,
-        schema_identity=ModeloEditSchemaIdentityV1(
-            schema_id="modelo-edit-conformance",
-            schema_fingerprint=content_hash_hex(revision.registry_snapshot_ref.model_dump(mode="json")),
-            completeness_manifest_digest=content_hash_hex({"fixture": "calculated-revision"}),
-        ),
-        schema_version=1,
-        permitted_surface=permitted_surface,
-        permitted_surface_digest=content_hash_hex([entry.model_dump(mode="json") for entry in permitted_surface]),
-        mutation_family=ModeloEditMutationFamily.CALCULATE,
-        issued_at=issued_at,
-        expires_at=issued_at + timedelta(minutes=15),
-        baseline_id=content_hash_hex(
-            {"work_unit_id": current_unit.work_unit_id, "revision_id": revision.calculation_revision_id}
-        ),
-    )
+    assert isinstance(admission, ModeloEditAdmittedV1)
+    baseline = admission.baseline
     submission = ModeloEditSubmissionV1(
         baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,
@@ -1900,7 +2043,7 @@ def _seeded_expedientes_snapshot(profile_id: UUID):
                 period=Period.from_year_and_code(2025, "1T"),
                 expediente_id="12345678901234567890",
                 estado="ALTA",
-                tipo_solicitud="Presentación",
+                tipo_solicitud="PresentaciÃ³n",
                 observaciones="Conformance snapshot",
                 presented_at=captured_at,
                 justificante_link_text="Justificante",
@@ -2071,7 +2214,10 @@ def _payload(
         case "auth.provider.configure":
             values = {"provider": AuthProviderKind.CERTIFICATE}
         case "auth.session.acquire":
-            values = {}
+            # Named rather than defaulted: an omitted provider resolves from
+            # the host's deployment settings, which can select Cl@ve and turn
+            # this into an identity refusal against whatever DNI the host holds.
+            values = {"provider": AuthProviderKind.CERTIFICATE}
         case (
             "auth.certificate.source.register"
             | "auth.certificate.source.list"
@@ -2288,8 +2434,8 @@ def _payload(
             elif definition.definition_id == "live.verify.latest":
                 values.update(surface=VerifySurface.NIF_IVA, nif="12345678Z")
         case "live.filed-history.pull":
-            subject_ref = str(profile_id)
-            values = {"output_root": tmp_path / "filed-history", "dry_run": True}
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {"profile_id": profile_id, "output_root": tmp_path / "filed-history", "dry_run": True}
         case "live.iva-wallet.history":
             period = Period.from_year_and_code(2025, "1T")
             history_state = IvaCompensationPeriodState(
@@ -2483,6 +2629,40 @@ def _payload(
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = unit.work_unit_id
             values = {"profile_id": profile_id, "work_unit_id": unit.work_unit_id}
+        case "modelo.work.form":
+            unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+            subject_ref = unit.work_unit_id
+            values = {"profile_id": profile_id, "work_unit_id": unit.work_unit_id, "output_language": OutputLanguage.ES}
+        case "modelo.work.casilla_help":
+            unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+            subject_ref = unit.work_unit_id
+            values = {
+                "profile_id": profile_id,
+                "work_unit_id": unit.work_unit_id,
+                "casilla_id": "06",
+                "registry_revision_id": str(unit.revision_id),
+                "calculation_revision_id": None,
+                "output_language": OutputLanguage.ES,
+            }
+        case "modelo.edit.renew":
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
+            subject_ref = work_unit_id
+            values = {"profile_id": profile_id, "baseline": wire_submission.baseline}
+        case "modelo.edit.preflight":
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
+            subject_ref = work_unit_id
+            return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
+        case "modelo.edit.apply_prerequisite":
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
+            subject_ref = work_unit_id
+            values = {
+                "profile_id": profile_id,
+                "work_unit_id": work_unit_id,
+                "apply_operation_id": "e" * 64,
+                "baseline_id": wire_submission.baseline.baseline_id,
+                "calculation_revision_id": wire_submission.baseline.current_calculation_revision_id,
+                "registry_revision_id": wire_submission.baseline.law_selected_revision_id,
+            }
         case "modelo.work.filing_record":
             filing_record_id, _casilla_id = _seeded_modelo_filing_record(profile_id, operation=operation)
             subject_ref = profile_operation_subject(str(profile_id))
@@ -2734,6 +2914,44 @@ def _payload(
                 "asserted_by": "operator:registered-executor-conformance",
                 "note": "synthetic supervisor conformance assertion",
             }
+        case "ledger.own_account":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {
+                "profile_id": profile_id,
+                "action": "add",
+                "label": "synthetic conformance account",
+                "holding": OwnAccountHolding.TITULAR,
+                "iban": _OWN_ACCOUNT_SYNTHETIC_IBAN,
+            }
+        case "modelo.m360_solicitud":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {
+                "profile_id": profile_id,
+                "action": "declare",
+                "filing_year": 2025,
+                "facts": Modelo360ProfileFacts(
+                    solicitud=Modelo360SolicitudFacts(
+                        nivel_calidad_datos=M360NivelCalidadDatos.MAXIMA,
+                        pais_destino="FR",
+                        causa_presentacion=M360CausaPresentacion.INICIAL,
+                    ),
+                    solicitante=Modelo360SolicitanteFacts(
+                        email="solicitante@example.es",
+                        establecimiento=Modelo360EstablecimientoFacts(
+                            ambito=M360AmbitoEstablecimiento.TERRITORIO_COMUN
+                        ),
+                    ),
+                    representante=Modelo360RepresentanteFacts(tax_id="00000000T", full_name="ASESORES PRUEBA SL"),
+                    cuenta=Modelo360CuentaTitularFacts(
+                        titular_nombre="ASESORES PRUEBA SL",
+                        titular_en_calidad_de=M360TitularEnCalidadDe.REPRESENTANTE,
+                        divisa="EUR",
+                    ),
+                ),
+                "representante_account": Modelo360RepresentanteAccountInput(
+                    iban=_OWN_ACCOUNT_SYNTHETIC_IBAN, swift_bic="CAIXESBBXXX"
+                ),
+            }
         case "ledger.remove":
             ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
             created = create_manual_transaction(
@@ -2841,7 +3059,7 @@ def _payload(
             evidence_file = tmp_path / "conformance-purchase-invoice-add.pdf"
             evidence_file.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
             subject_ref = profile_operation_subject(str(profile_id))
-            values = {"profile_id": profile_id, "source_path": str(evidence_file)}
+            values = {"profile_id": profile_id, "source_path": str(evidence_file), "source_directory": str(tmp_path)}
         case "ledger.evidence.list" | "ledger.evidence.view" | "ledger.evidence.update" | "ledger.evidence.remove":
             evidence_file = tmp_path / "conformance-purchase-invoice.pdf"
             evidence_file.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
@@ -3321,9 +3539,9 @@ def _payload(
                 "actor": modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
             }
         case "modelo.edit.apply":
-            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
+            work_unit_id, wire_submission = seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
-            values = {"submission": wire_submission}
+            return subject_ref, ModeloEditOperatorInputV2(submission=wire_submission), None
         case "modelo.work.file":
             revision_id, report_id = modelo_operation_test_support.seeded_modelo_verification_report(
                 profile_id, operation=operation
@@ -3493,6 +3711,7 @@ def _runtime(
                 before_irreversible_section=before_irreversible_section,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=build_censal_fetch_port(),
+                provider_preflight=lambda _profile_id, _operation: None,
             ),
             verify_nif_iva_definition=verify_definition(VerifySurface.NIF_IVA),
             verify_tgvi_definition=verify_definition(VerifySurface.TGVI),
@@ -3516,8 +3735,8 @@ def _runtime(
                 lease_duration=timedelta(minutes=10),
                 execution_timeout=execution_timeout,
                 cleanup_timeout=timedelta(minutes=2),
-                financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
-                    root=root / "operations" / "financial_operand_custody",
+                typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
+                    root=root / "operations" / "typed_financial_operand_custody",
                 ),
             )
             try:
@@ -3639,6 +3858,17 @@ def test_every_registered_definition_has_a_conformance_scenario() -> None:
     assert not declared - registered, (
         f"conformance scenarios name operations the production registry does not compose: {sorted(declared - registered)}"
     )
+
+
+def test_a_second_scenario_for_one_operation_is_refused() -> None:
+    """A family module cannot silently replace a scenario the matrix or another family owns."""
+    owned = RegisteredExecutorConformanceCase(
+        "diagnostics.read", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+    )
+    rival = replace(owned, expected_effect=OperationEffect.UPDATED)
+
+    with pytest.raises(AssertionError, match=r"diagnostics\.read declares more than one conformance scenario"):
+        _expectations_owned_once((owned, rival))
 
 
 def _assert_ledger_track_result(
@@ -3823,34 +4053,29 @@ def _assert_calculation_report_verification_projection(
     assert check.reason is CalculationSummaryVerificationReason.PDF_UNREADABLE
 
 
-@pytest.mark.parametrize("definition_id", _registered_definition_ids())
-@pytest.mark.timeout(90)
-def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
-    tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
+def _run_registered_executor_conformance_case(
+    tmp_path: Path,
+    case: RegisteredExecutorConformanceCase,
+    *,
+    operation: PinnedAuthorityOperation,
+    family: ConformanceFamily | None = None,
 ) -> None:
-    """Actual execution, effects, settlement, review, cleanup, and truthful control refusal."""
-    case = _EXPECTATIONS.get(definition_id)
-    if case is None:
-        pytest.fail(
-            f"{definition_id} is composed into the production registry but declares no conformance "
-            "scenario, so nothing proves its executor settles, cleans up, or refuses truthfully"
-        )
-    assert case is not None
+    """Exercise the actual admitted operation, settlement, review and cleanup owners."""
+    definition_id = case.definition_id
     cleanup = _CloseWitness()
     with (
-        _closed_model_runtime()
-        if definition_id
-        in {
-            "local-reader.provision",
-            "ledger.evidence.reader-readiness",
-            "ledger.evidence.extract",
-            "ledger.evidence.confirm",
-        }
-        else nullcontext(),
+        (
+            closed_model_runtime()
+            if family is not None and family.closes_model_runtime
+            else _model_runtime_for(definition_id)
+        ),
         _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
+        family_preparation = _prepare_family_case(
+            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation, family=family
+        )
         projection_history_case = (
             prepare_modelo_projection_history_conformance_case(
                 case.definition_id, profile_id=profile_id, operation=operation
@@ -3919,7 +4144,13 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             in {"ledger.evidence.reader-readiness", "ledger.evidence.extract", "ledger.evidence.confirm"}
             else None
         )
-        if query_case is not None:
+        if family_preparation is not None:
+            subject_ref, payload, secret = (
+                family_preparation.subject_ref,
+                family_preparation.request,
+                family_preparation.secret,
+            )
+        elif query_case is not None:
             subject_ref, payload, secret = profile_operation_subject(str(profile_id)), query_case.request, None
         elif projection_history_case is not None:
             subject_ref, payload, secret = (
@@ -4058,6 +4289,14 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         assert observed.projection.terminal_condition is case.expected_terminal, case.definition_id
         assert observed.projection.effect is case.expected_effect, case.definition_id
         assert observed.projection.refusal_ref == case.expected_refusal_ref, case.definition_id
+        _judge_family_outcome(
+            family_preparation,
+            driver=driver,
+            registry=registry,
+            profile_id=profile_id,
+            operation_id=submitted.receipt.operation_id,
+            observed=observed,
+        )
         for expected_read in (
             projection_history_case.expected_projection if projection_history_case is not None else None,
             query_case.expected_projection if query_case is not None else None,
@@ -4279,6 +4518,7 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
                 source_kinds=canonical_aggregate.source_kinds,
                 result_row_count=canonical_aggregate.log_fields.result_row_count,
                 clave_breakdown=(),
+                absent_source_families=(),
                 withholding_window=None,
                 refusal_reason=None,
             )
@@ -4841,6 +5081,25 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             assert persisted.territorial_scope is not None
             assert persisted.territorial_scope.value == result.facts.territorial_scope
             assert persisted.asserted_by == payload.asserted_by
+        if case.definition_id == "ledger.own_account":
+            assert isinstance(payload, LedgerOwnAccountRequest)
+            result = _resolve_result_projection(
+                driver,
+                registry,
+                definition_id=case.definition_id,
+                operation_id=submitted.receipt.operation_id,
+                terminal_revision=observed.projection.revision,
+                projection_type=LedgerOwnAccountResult,
+            )
+            assert isinstance(result, LedgerOwnAccountResult)
+            assert result.profile_id == profile_id
+            assert result.action == "add"
+            assert result.changed is True
+            assert result.own_account_id == "acc-01"
+            assert [account.masked_iban for account in result.accounts] == ["ES \u00b7\u00b7\u00b7\u00b7 1332"]
+            assert _OWN_ACCOUNT_SYNTHETIC_IBAN[4:-4] not in result.model_dump_json()
+            persisted = OwnAccountRepository(bucket_id=str(profile_id)).load()
+            assert [account.iban for account in persisted.accounts] == [_OWN_ACCOUNT_SYNTHETIC_IBAN]
         if case.definition_id == "ledger.remove":
             assert isinstance(payload, LedgerRemoveRequest)
             removal = _resolve_result_projection(
@@ -5560,47 +5819,6 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             assert view.review_status is LedgerReviewStatus.PENDING
             assert view.latest_llm_rejection is not None
             assert view.latest_llm_rejection.operator_reason == "operator rejected the conformance suggestion"
-        if case.definition_id == "ledger.list":
-            assert isinstance(payload, LedgerListRequest)
-            selection = _resolve_result_projection(
-                driver,
-                registry,
-                definition_id=case.definition_id,
-                operation_id=submitted.receipt.operation_id,
-                terminal_revision=observed.projection.revision,
-                projection_type=LedgerListProjection,
-            )
-            assert isinstance(selection, LedgerListProjection)
-            assert selection.profile_id == profile_id
-            assert selection.total == 3
-            assert selection.truncated is True
-            assert selection.offset == payload.offset == 1
-            assert selection.limit == payload.limit == 2
-            assert selection.by_group is False
-            assert [row.transaction.description for row in selection.rows] == [
-                "ledger list page B",
-                "ledger list page C",
-            ]
-            assert all(row.group_label == _LEDGER_LIST_PRIVATE_FILTER_SENTINEL for row in selection.rows)
-            materialization = asyncio.run(
-                driver.services.observation.reader.read_observation(
-                    submitted.receipt.operation_id,
-                    0,
-                    limit=256,
-                )
-            )
-            assert materialization.snapshot.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
-            assert materialization.snapshot.credential_free_request_json is None
-            journal_file = (
-                tmp_path
-                / case.definition_id
-                / "cadrumo-storage"
-                / "operations"
-                / storage_location(StorageCategory.OPERATION_JOURNAL).relative_path()
-                / f"{submitted.receipt.operation_id}.json"
-            )
-            assert journal_file.is_file()
-            assert _LEDGER_LIST_PRIVATE_FILTER_SENTINEL.encode() not in journal_file.read_bytes()
         if definition_id == "ledger.track":
             _assert_ledger_track_result(
                 driver,
@@ -5649,6 +5867,38 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
                 registry=registry,
             )
         )
+
+
+@pytest.mark.parametrize("definition_id", _registered_definition_ids())
+@pytest.mark.timeout(90)
+def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
+    tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Every registered operation has exactly one primary composed-runtime witness."""
+    case = _EXPECTATIONS.get(definition_id)
+    assert case is not None, f"{definition_id} has no registered conformance scenario"
+    _run_registered_executor_conformance_case(tmp_path, case, operation=operation)
+
+
+@pytest.mark.parametrize(
+    ("family", "case"),
+    [(family, case) for family in CONFORMANCE_VARIANT_FAMILIES for case in family.cases],
+    ids=[
+        f"variant-{index}-{case.definition_id}"
+        for index, family in enumerate(CONFORMANCE_VARIANT_FAMILIES)
+        for case in family.cases
+    ],
+)
+@pytest.mark.timeout(90)
+def test_registered_executor_material_and_refusal_variants(
+    tmp_path: Path,
+    family: ConformanceFamily,
+    case: RegisteredExecutorConformanceCase,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Distinct local premises retain both source snapshots' material and negative oracles."""
+    _run_registered_executor_conformance_case(tmp_path, case, operation=operation, family=family)
 
 
 @pytest.mark.timeout(90)
@@ -6040,7 +6290,7 @@ def test_the_filing_authority_accepts_the_registered_operation_fixture(
                 approved_verification_report_id=report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ports=build_filing_action_ports(bucket_id=str(profile_id)),
+                ports=build_filing_action_ports(bucket_id=str(profile_id), operation=operation),
                 actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
                 workflow_profile=resolve_active_workflow_profile(operation),
                 operation=operation,

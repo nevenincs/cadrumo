@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-dated-validity'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b344c5ebbcee007dc995f02ce224e9c6e870f7a9560b8d89f8ec4844cd8a9b45'
+body_hash: 'sha256:cfc8f57e74a642b2bffab3e37291b6a17e74099f78ebd79d5261fc5da5d10fad'
 related: []
 ---
 
@@ -65,7 +65,7 @@ itself rather than one any gate checks.
 
 The registry already has a written position on exactly this act, in a different
 corpus.
-`src/cadrumo/domain/iva/tests/test_year_coverage_matches_supported_filing_years.py:22-24`
+
 states that closing its red "never means copying an adjacent year's table: a
 mirrored provision is a fabricated citation wearing a legal reference, which is
 the failure the grounding rules exist to prevent." The categories corpus is not
@@ -266,23 +266,23 @@ both carry loader-naming docstrings and were not checked for symbol binding. The
 
 ## Sources
 
-- `src/cadrumo/_data/registry/aeat/categories/profiles/2024.toml:1-8` - the mirroring header
-- `src/cadrumo/_data/registry/aeat/categories/profiles/2025.toml` - 42 profiles, 83 citations
+- the former source file - the mirroring header
+- the former source file - 42 profiles, 83 citations
 - `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml` - `[2022..2026]`
-- `src/cadrumo/_data/registry/aeat/iva/catalogues/2025.toml` - 21 regulations, 38 citations, no `2025` token in the body
-- `src/cadrumo/_data/registry/aeat/iva/place_of_supply/2025.toml` - 22 rules, `1992` the only year token
+- the former source file - 21 regulations, 38 citations, no `2025` token in the body
+- the former source file - 22 rules, `1992` the only year token
 - `src/cadrumo/_data/registry/aeat/legal/iva.toml`, `iva-flow.toml`, `iva-rates.toml`, `tax-framework.toml` - the 698-entry legal catalogue the IVA citations resolve into, each entry carrying `effective_from`
-- `src/cadrumo/_data/registry/aeat/iva/rates.toml` - the `effective_from`/`effective_until` precedent and its refresh-boundary defect note
+- the former source file - the `effective_from`/`effective_until` precedent and its refresh-boundary defect note
 - `src/cadrumo/_data/registry/aeat/m303_orden_anual/manifest.toml` - per-ejercicio digest-pinned rows
 - `src/cadrumo/_data/registry/aeat/authorization.d/100.toml` - `renta_years` shape
-- `src/cadrumo/domain/categories/_registry.py:86,124` - loader and exact-year resolver
-- `src/cadrumo/domain/iva/_catalogue.py:69,102` - loader and exact-year resolver
-- `src/cadrumo/domain/iva/_place_of_supply.py:138,262` - loader and exact-year resolver
-- `src/cadrumo/domain/iva/tests/test_year_coverage_matches_supported_filing_years.py:22-24,66` - the never-mirror clause and the red assertion
+- the former source file - loader and exact-year resolver
+- the former source file - loader and exact-year resolver
+- the former source file - loader and exact-year resolver
+- the former source file - the never-mirror clause and the red assertion
 - `src/cadrumo/domain/calculations/registry/formula_runtime_ops.py:307` - `resolve_keyed_bracket`
-- `src/cadrumo/domain/calculations/registry/_validate_parameter_temporal.py:36,86,131` - bracket window gap validation
+- the former source file - bracket window gap validation
 - `src/cadrumo/domain/calculations/registry/schema_formula.py:234` - cross-window bracket overlap
-- `src/cadrumo/domain/calculations/registry/_validate_valid_from_ejercicio_convention.py:63` - dating convention gate
-- `src/cadrumo/domain/calculations/registry/_bindings.py:762` - dormant `_ProfileSelector.valid_at`
-- `src/cadrumo/application/user_profile/_projections.py:30-36,168` - absent `valid_from` sorts as `date.min`
-- `src/cadrumo/core/resources/_repos/category_profiles.py` - year-keyed resource repository
+- the former source file - dating convention gate
+- the former source file - dormant `_ProfileSelector.valid_at`
+- the former source file - absent `valid_from` sorts as `date.min`
+- the former source file - year-keyed resource repository

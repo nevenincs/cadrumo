@@ -10,7 +10,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
@@ -36,7 +36,14 @@ from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from ..live.censo_ports import CensalFetchPort
 from ..live.session import LiveSessionWriteReceipt, SessionWriteReporter
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -46,15 +53,13 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
+    ALL_OPERATION_FRONTENDS,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -68,8 +73,6 @@ from .access_contracts import (
     Availability,
     DisclosureCategory,
     DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError
@@ -86,6 +89,7 @@ from .projections import record_to_effective_facts
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from .censal_preview_operation import CensalPreviewProviderPreflight
 
 CENSAL_OPERATION_DEFINITION_ID = "user-profile.censo-review"
 CENSAL_PHASE_PREFLIGHT = "censo.preflight"
@@ -165,7 +169,7 @@ CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[2]] = 2
 class CensalReviewedOperand(BaseModel):
     """Encrypted exact preimage approved or rejected by the operator."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[2] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
     observation: CensalObservation
@@ -203,7 +207,12 @@ class CensalReviewedOperand(BaseModel):
         return content_hash_hex(
             self.model_dump(
                 mode="json",
-                exclude={"proposed_effect_digest"},
+                exclude={
+                    "proposed_effect_digest": True,
+                    # Existing reviewed preimages predate consultation evidence.
+                    # Their digest must not acquire a new empty default field.
+                    "observation": set() if self.observation.consultations else {"consultations"},
+                },
                 exclude_defaults=False,
                 exclude_none=False,
                 exclude_unset=False,
@@ -333,76 +342,59 @@ def _project_censal_review(
     )
 
 
+_CENSAL_REVIEW_ACTIONS = frozenset({AccessAction.REVIEW, AccessAction.RESPOND})
+
+
 def resolve_censal_operation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve only exact-profile censal work, with separate provider readiness."""
+    _validated_censal_operation_access_request(request, context)
+    return bind_operation_access(
+        context,
+        profile_id=context.profile_id,
+        definition_id=request.definition_id,
+        actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS | _CENSAL_REVIEW_ACTIONS,
+        disclosures=_censal_operation_disclosures(context),
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
+    )
+
+
+def _validated_censal_operation_access_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> CensalOperationRequest:
     payload = request.payload
     if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     baseline = payload.baseline
     if request.subject_ref != str(baseline.profile_id) or context.profile_id != UUID(str(baseline.profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    disclosure = None
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action in {AccessAction.REVIEW, AccessAction.RESPOND}:
+    return payload
+
+
+def _censal_operation_disclosures(context: OperationAccessContext) -> frozenset[DisclosurePermission]:
+    if context.action in _CENSAL_REVIEW_ACTIONS:
         projection = context.contract.review_projection_schema
         if projection is None or context.contract.interaction_response_schema is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=projection.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
+        return frozenset(
+            (
+                DisclosurePermission(
+                    destination_id=context.destination_id,
+                    projection_id=projection.schema_id,
+                    category=DisclosureCategory.PROFILE_VALUES,
+                ),
+            )
         )
-    elif context.action is AccessAction.RESULT:
-        projection = context.contract.result_schema
-        if projection is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=projection.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.COMMIT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                    AccessAction.OBSERVE,
-                    AccessAction.REVIEW,
-                    AccessAction.RESPOND,
-                    AccessAction.RESULT,
-                }
-            ),
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
-            periods=frozenset(),
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=(Availability.NEEDS_USER if context.action is AccessAction.START else Availability.NOT_REQUIRED),
-            transaction_authority_required=False,
-        ),
+    return operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+        result_schema_id=None,
     )
 
 
@@ -477,11 +469,13 @@ class CensalOperationExecutor:
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
         censal_fetch_port: CensalFetchPort,
+        provider_preflight: CensalPreviewProviderPreflight,
         acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
         apply: Callable[[CensalReviewedOperand], None] | None = None,
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         """Initialize the executor with its acquisition, apply, and boundary hooks."""
+        self._provider_preflight = provider_preflight
         self._acquire = acquire
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._browser_session_factory = browser_session_factory
@@ -503,6 +497,7 @@ class CensalOperationExecutor:
             request,
             profile_decode_context=context.authority_operation.profile_decode_context(),
         )
+        self._provider_preflight(UUID(str(request.payload.baseline.profile_id)), context.authority_operation)
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
@@ -587,18 +582,7 @@ class CensalOperationExecutor:
         proposal_digest = checkpoint.reviewed_proposal_digest
         operand = await context.operands.resolve(proposal_digest, CensalReviewedOperand)
         if checkpoint.response_action == "reject":
-            await context.events.phase(CENSAL_PHASE_REJECT)
-            await context.events.effect(
-                OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE
-            )
-            await context.events.phase(CENSAL_PHASE_SETTLEMENT)
-            return await context.operands.put(
-                CensalOperationResult(
-                    outcome=CensalOperationOutcome.REJECTED,
-                    reviewed_proposal_digest=proposal_digest,
-                ),
-                written_at=now(),
-            )
+            return await self._settle_rejected_review(proposal_digest, operand, context)
         await context.events.phase(CENSAL_PHASE_APPLY)
         if await _acknowledge_if_cancelled(context):
             return None
@@ -607,6 +591,31 @@ class CensalOperationExecutor:
             profile_decode_context=context.authority_operation.profile_decode_context(),
         )
         await self._before_irreversible_section()
+        return await self._apply_consumed_review(proposal_digest, operand, context)
+
+    async def _settle_rejected_review(
+        self,
+        proposal_digest: str,
+        operand: CensalReviewedOperand,
+        context: OperationExecutorContext,
+    ) -> str:
+        await context.events.phase(CENSAL_PHASE_REJECT)
+        await context.events.effect(OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE)
+        await context.events.phase(CENSAL_PHASE_SETTLEMENT)
+        return await context.operands.put(
+            CensalOperationResult(
+                outcome=CensalOperationOutcome.REJECTED,
+                reviewed_proposal_digest=proposal_digest,
+            ),
+            written_at=now(),
+        )
+
+    async def _apply_consumed_review(
+        self,
+        proposal_digest: str,
+        operand: CensalReviewedOperand,
+        context: OperationExecutorContext,
+    ) -> str | None:
         entered_irreversible_section = False
         stale_conflict: ProfileRecordConflictError | None = None
         try:
@@ -712,6 +721,7 @@ def build_censal_operation_definition(
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
     censal_fetch_port: CensalFetchPort,
+    provider_preflight: CensalPreviewProviderPreflight,
     acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
     apply: Callable[[CensalReviewedOperand], None] | None = None,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
@@ -724,6 +734,7 @@ def build_censal_operation_definition(
             browser_session_factory=browser_session_factory,
             operator_scope_ports=operator_scope_ports,
             censal_fetch_port=censal_fetch_port,
+            provider_preflight=provider_preflight,
             acquire=acquire,
             apply=apply,
             before_irreversible_section=before_irreversible_section,
@@ -755,9 +766,7 @@ def build_censal_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        permitted_frontends=frozenset(
-            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-        ),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

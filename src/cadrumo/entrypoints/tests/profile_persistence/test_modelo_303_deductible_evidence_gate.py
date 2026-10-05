@@ -58,11 +58,8 @@ from ....application.modelo.export import (
 from ....application.modelo.export_ports import ModeloExportPorts
 from ....application.modelo.filing_action_ports import FilingActionPorts
 from ....application.modelo.filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
-from ....application.modelo.verification_actions import (
-    missing_evidence_findings,
-    verify_modelo_revision,
-    verify_modelo_revision_with_preconditions,
-)
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from ....application.modelo.verification_gate_findings import missing_evidence_findings
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -176,6 +173,7 @@ def _verification_ports(
 
 def _filing_ports(
     *,
+    operation: PinnedAuthorityOperation,
     wu_repo: WorkUnitCatalogueRepository,
     cr_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -184,7 +182,7 @@ def _filing_ports(
 ) -> FilingActionPorts:
     """Compose the complete filing bundle over the isolated repositories."""
     return replace(
-        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=filing_repo,
@@ -611,7 +609,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         assert reloaded.purchase_invoice_evidence_id == evidence.record.evidence_id
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="operator",
@@ -629,7 +627,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
                 clock=_VERIFIED_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -734,7 +732,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         assert reloaded.invoice_id == created.invoice.invoice_id
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="operator",
@@ -752,7 +750,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 clock=_VERIFIED_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
 
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -784,6 +782,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 actor="operator",
                 workflow_profile=workflow_profile(),
                 ports=_filing_ports(
+                    operation=operation,
                     wu_repo=wu_repo,
                     cr_repo=cr_repo,
                     filing_repo=filing_repo,
@@ -821,7 +820,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
 
         def _verify() -> VerificationReport:
             with bundled_indexed_authority().operation() as operation:
-                return verify_modelo_revision(
+                return verify_modelo_revision_with_preconditions(
                     revision.calculation_revision_id,
                     certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                     actor="operator",
@@ -839,7 +838,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
                     clock=_VERIFIED_AT,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     operation=operation,
-                )
+                ).report
 
         blocked = _verify()
         assert blocked.granted_verificado_completo is False
@@ -1030,6 +1029,7 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
             actor="operator",
             workflow_profile=workflow_profile(),
             ports=_filing_ports(
+                operation=operation,
                 wu_repo=wu_repo,
                 cr_repo=cr_repo,
                 filing_repo=filing_repo,

@@ -29,11 +29,8 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.record_design import extract_record_design
-from ..compiler.record_design_pdf_repairs import (
-    collapse_stuttered_row_prefix,
-    join_wrapped_row_descriptions,
-    reattach_stranded_casilla_tags,
-)
+from ..compiler.record_design_pdf_coordinate_repairs import collapse_stuttered_row_prefix
+from ..compiler.record_design_pdf_fragment_repairs import join_wrapped_row_descriptions, reattach_stranded_casilla_tags
 from ..compiler.record_design_pdf_rows import clean_pdf_line, pdf_page_name
 from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 

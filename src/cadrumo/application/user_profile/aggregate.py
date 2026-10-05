@@ -7,17 +7,15 @@ repository's presentation mapping, never a manifest or a key-selection hint.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, field_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest, PrefixedContentDigest
 from ...core.identity.profile import ProfileId
 from ...core.identity.profile_label import ProfileLabel
 from ...core.profile_publication import ProfilePublicationKindValue
-from ...core.time.utc import validate_utc_aware
+from ...core.time.utc import UtcInstant
 from ...domain.user_profile.values import ProfileSetupState
 
 
@@ -68,7 +66,7 @@ class CommittedProfileView(BaseModel):
 
     profile_id: ProfileId
     label: ProfileLabel
-    committed_at: datetime
+    committed_at: UtcInstant
     publication_kind: ProfilePublicationKindValue
     password_generation: int = Field(ge=1)
     custody_present: Literal[True] = True
@@ -77,12 +75,6 @@ class CommittedProfileView(BaseModel):
     label_self_digest: PrefixedContentDigest
     label_source_witness: PrefixedContentDigest
     fact_summary: ProfileFactSummary = Field(default_factory=LockedProfileFactSummary)
-
-    @field_validator("committed_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _validate_committed_at(cls, value: datetime) -> datetime:
-        return validate_utc_aware(value)
 
 
 __all__ = [

@@ -96,7 +96,7 @@ def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
             **kwargs,
         )

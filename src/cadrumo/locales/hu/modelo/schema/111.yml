@@ -4,12 +4,42 @@ modelo:
       construct:
         modelo-111-withholding-workflow:
           field:
-            title: '111-es nyomtatvány: adóelőlegek és levonások'
+            title: 'Modelo 111 nyomtatvány: adóelőlegek és levonások'
       field:
         official_name: Az IRPF adóelőleg-levonásai és -befizetései. Munkaviszonyból
           és gazdasági tevékenységből származó jövedelmek, nyeremények, valamint egyes
           vagyoni nyereségek és jövedelem-hozzárendelések.
         title: IRPF adóelőleg-levonások és -befizetések
+      form:
+        page:
+          dr-m11101:
+            heading: 1. oldal · Visszatartások és előlegek
+        row:
+          percep-dinerarias:
+            heading: Pénzbeli kifizetések
+          percep-en-especie:
+            heading: Természetbeni juttatások
+          premios-dinerarios:
+            heading: Pénzbeli nyeremények
+          premios-en-especie:
+            heading: Természetbeni nyeremények
+          rendimientos-dinerarios:
+            heading: Pénzbeli jövedelmek
+          rendimientos-en-especie:
+            heading: Természetbeni jövedelmek
+        section:
+          contraprest-cesion-dchos-imagen:
+            heading: Képmáshoz fűződő jogok átengedésének ellenértéke
+          ganancias-patrim-aprovecham-forestales:
+            heading: Erdőhasznosításból származó vagyonnyereség
+          premios:
+            heading: Nyeremények
+          rendim-actividades-economicas:
+            heading: Gazdasági tevékenységből származó jövedelmek
+          rendim-del-trabajo:
+            heading: Munkaviszonyból származó jövedelmek
+          total-liquidacion:
+            heading: Bevallás összesen
       revision:
         2019-y-siguientes:
           casilla:

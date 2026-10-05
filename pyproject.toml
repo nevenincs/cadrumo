@@ -641,10 +641,6 @@ ignore = [
   # the 47 N813 sites). The alias is the readable call form at every message
   # site; renaming it would churn the entire localized surface for no gain.
   "N813",
-  # AEAT record fields carry official mixed-case names (`importe_Q1`..`importe_Q4`
-  # are the quarterly-amount casillas). `aeat-naming` requires the official
-  # domain term over a lint-shaped respelling.
-  "N815",
   # Mutable class defaults on pydantic models are safe: pydantic deep-copies
   # field defaults per instance, so `list[str] = []` on a model attribute does
   # not exhibit the shared-state bug RUF012 warns about. Verified against the
@@ -747,6 +743,15 @@ convention = "google"
 # repository-owned paths is not an injection surface.
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
+# `just bootstrap` runs every bootstrap step through a fixed argv declared as
+# data in `dev/init/plan.py` and resolved through `shutil.which`. Nothing
+# reaches it from a user, an environment variable, or a file: the argv is
+# literal in the plan, and the resolution exists only so Windows `.cmd`
+# shims spawn without a shell. There is no injection surface to check for.
+"dev/init/process.py" = ["S603"]
+"dev/init/venv.py" = ["S603"]
+"dev/init/hooks.py" = ["S603"]
+"dev/init/probe.py" = ["S603"]
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
@@ -849,6 +854,8 @@ convention = "google"
 "dev/quality/types.py" = ["S603", "S607"]
 # The environment provisioning drivers: every argv is a literal vector built in
 # the module, never from user input, and none uses a shell.
+"dev/env/_install.py" = ["S603"]
+"dev/env/_venv.py" = ["S603", "S607"]
 "dev/env/_workstation.py" = ["S603", "S607"]
 "dev/test_runs/lanes.py" = ["S603", "S607"]
 "dev/release/preview.py" = ["S603", "S607"]
@@ -1359,7 +1366,21 @@ ignore_names = [
 # pywin32 ships these modules across its distribution roots; deptry's package
 # metadata cannot discover all of them. Keep the direct Windows ACL and COM
 # dependencies visible to the declaration check.
-"pywin32" = ["ntsecuritycon", "pythoncom", "pywintypes", "win32security"]
+"pywin32" = [
+  "ntsecuritycon",
+  "pythoncom",
+  "pywintypes",
+  "win32api",
+  "win32com",
+  "win32con",
+  "win32event",
+  "win32file",
+  "win32job",
+  "win32pipe",
+  "win32process",
+  "win32security",
+  "win32ts",
+]
 # The NVML binding's distribution name and its import name differ, so the
 # mapping is stated rather than guessed: deptry's fallback would be
 # `nvidia_ml_py`, making the accelerator probe's `import pynvml` read as an

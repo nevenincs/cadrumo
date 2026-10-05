@@ -40,61 +40,36 @@ def _selector(binding: BindingDefinition) -> dict[str, Any]:
 def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_summary() -> None:
     revision = _modelo_349_revision()
 
-    collectible_bindings: dict[str, BindingDefinition] = {
+    summary_bindings: dict[str, BindingDefinition] = {
         b.id: b
         for b in revision.bindings
-        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op != "rows"
+        if b.source == "m349_intracommunity_operation" and b.aggregation is not None and b.aggregation.op != "rows"
     }
-    payable_bindings: dict[str, BindingDefinition] = {
-        b.id: b
-        for b in revision.bindings
-        if b.source == "payable_invoice" and b.aggregation is not None and b.aggregation.op != "rows"
-    }
-    expected_collectible = {
+    assert set(summary_bindings) == {
         "iva-349-declarante-numero-operadores",
         "iva-349-declarante-importe-operaciones",
         "iva-349-declarante-numero-rectificaciones",
         "iva-349-declarante-importe-rectificaciones",
     }
-    expected_payable = {f"{binding_id}-adquisicion" for binding_id in expected_collectible}
-    assert set(collectible_bindings) == expected_collectible
-    assert set(payable_bindings) == expected_payable
 
     expected_claves = ("E", "M", "H", "A", "T", "S", "I", "R", "D", "C")
     for binding_id in (
         "iva-349-declarante-numero-operadores",
         "iva-349-declarante-importe-operaciones",
     ):
-        binding = collectible_bindings[binding_id]
-        selector = _selector(binding)
+        selector = _selector(summary_bindings[binding_id])
         assert selector["rectification_scope"] == "exclude_rectifications"
         assert cast("tuple[str, ...]", selector["claves"]) == expected_claves
     for binding_id in (
         "iva-349-declarante-numero-rectificaciones",
         "iva-349-declarante-importe-rectificaciones",
     ):
-        binding = collectible_bindings[binding_id]
-        selector = _selector(binding)
+        selector = _selector(summary_bindings[binding_id])
         assert selector["rectification_scope"] == "only_rectifications"
         assert cast("tuple[str, ...]", selector["claves"]) == expected_claves
-
-    expected_payable_claves = ("A", "I", "T")
-    for binding_id in (
-        "iva-349-declarante-numero-operadores-adquisicion",
-        "iva-349-declarante-importe-operaciones-adquisicion",
-    ):
-        binding = payable_bindings[binding_id]
-        selector = _selector(binding)
-        assert selector["rectification_scope"] == "exclude_rectifications"
-        assert cast("tuple[str, ...]", selector["claves"]) == expected_payable_claves
-    for binding_id in (
-        "iva-349-declarante-numero-rectificaciones-adquisicion",
-        "iva-349-declarante-importe-rectificaciones-adquisicion",
-    ):
-        binding = payable_bindings[binding_id]
-        selector = _selector(binding)
-        assert selector["rectification_scope"] == "only_rectifications"
-        assert cast("tuple[str, ...]", selector["claves"]) == expected_payable_claves
+    # Casilla 04 is the sum of the rectified bases (aeat-dr-349-2020-current type 1
+    # pos. 171-185 over type 2 pos. 153-165), not the rectification deltas.
+    assert _selector(summary_bindings["iva-349-declarante-importe-rectificaciones"])["fact"] == "base_sum"
 
 
 def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> None:
@@ -104,7 +79,7 @@ def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> Non
     registry_claves = {
         clave
         for binding in revision.bindings
-        if binding.source in {BindingSourceKind.COLLECTIBLE_INVOICE, BindingSourceKind.PAYABLE_INVOICE}
+        if binding.source is BindingSourceKind.M349_INTRACOMMUNITY_OPERATION
         for clave in cast("tuple[str, ...]", _selector(binding).get("claves", ()))
     }
 
@@ -114,13 +89,9 @@ def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> Non
 def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() -> None:
     modelo, catalogues = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
-    invoice_bindings = [
-        binding for binding in revision.bindings if binding.source in {"collectible_invoice", "payable_invoice"}
-    ]
+    invoice_bindings = [binding for binding in revision.bindings if binding.source == "m349_intracommunity_operation"]
 
-    assert len(invoice_bindings) == 34
-    assert sum(1 for binding in invoice_bindings if binding.source == "collectible_invoice") == 17
-    assert sum(1 for binding in invoice_bindings if binding.source == "payable_invoice") == 17
+    assert len(invoice_bindings) == 17
     assert set(catalogues.legal) >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS
 
     for binding in invoice_bindings:
@@ -177,17 +148,12 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
-    # Assert the source-specific scalar binding keys are all present.
-    expected_collectible_keys = {
+    assert set(resolved) == {
         "iva-349-declarante-numero-operadores",
         "iva-349-declarante-importe-operaciones",
         "iva-349-declarante-numero-rectificaciones",
         "iva-349-declarante-importe-rectificaciones",
     }
-    expected_payable_keys = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_keys}
-    assert expected_collectible_keys | expected_payable_keys == set(resolved.keys()), (
-        "resolver must populate the four public declarant bindings plus payable acquisition mirrors"
-    )
 
     # Operator count and total base are derived directly from the non-rectification
     # observations — the resolver must sum distinct operators and their base amounts.
@@ -199,16 +165,12 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     # Rectification count is the number of rectification observations.
     assert resolved["iva-349-declarante-numero-rectificaciones"] == Decimal("1")
 
-    # Rectification importe is the absolute delta between new and previous base,
-    # derived from the rectification observation supplied to the resolver.
-    assert rect_obs.rectified_base_previous is not None
-    expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
-    assert resolved["iva-349-declarante-importe-rectificaciones"] == expected_rect_delta
-    for binding_id in expected_payable_keys:
-        assert resolved[binding_id] == Decimal("0")
+    # Rectification importe is the sum of the rectified bases (instructions casilla 04:
+    # "base imponible rectificada"), not the delta against the previous base.
+    assert resolved["iva-349-declarante-importe-rectificaciones"] == rect_obs.base_amount
 
 
-def test_committed_modelo_349_invoice_binding_resolver_separates_payable_service_acquisitions() -> None:
+def test_committed_modelo_349_invoice_binding_resolver_counts_payable_service_acquisitions() -> None:
     revision = _modelo_349_revision()
 
     observations = (
@@ -225,13 +187,11 @@ def test_committed_modelo_349_invoice_binding_resolver_separates_payable_service
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
-    assert resolved["iva-349-declarante-numero-operadores"] == Decimal("0")
-    assert resolved["iva-349-declarante-importe-operaciones"] == Decimal("0")
-    assert resolved["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
-    assert resolved["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
+    assert resolved["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolved["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
 
 
-def test_committed_modelo_349_row_resolver_appends_payable_acquisitions_to_public_export_rows() -> None:
+def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record_sequence() -> None:
     revision = _modelo_349_revision()
 
     observations = (
@@ -271,26 +231,49 @@ def test_committed_modelo_349_row_resolver_appends_payable_acquisitions_to_publi
 
     assert rows[("iva-349-operador-row-clave", 1)] == "E"
     assert rows[("iva-349-operador-row-nif", 1)] == "111111111"
-    assert rows[("iva-349-operador-row-clave-adquisicion", 1)] == "A"
-    assert rows[("iva-349-operador-row-nif-adquisicion", 1)] == "222222222"
-    assert rows[("iva-349-operador-row-clave-adquisicion", 2)] == "I"
-    assert rows[("iva-349-operador-row-nif-adquisicion", 2)] == "12345678901"
     assert rows[("iva-349-operador-row-clave", 2)] == "A"
     assert rows[("iva-349-operador-row-nif", 2)] == "222222222"
     assert rows[("iva-349-operador-row-clave", 3)] == "I"
     assert rows[("iva-349-operador-row-nif", 3)] == "12345678901"
+    assert ("iva-349-operador-row-clave", 4) not in rows
+
+
+def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_record() -> None:
+    """Clave T bought and sold with one operator is one operador record (aeat-dr-349-2020-current type 2)."""
+    revision = _modelo_349_revision()
+    observations = tuple(
+        InvoiceObservation(
+            source_kind=source_kind,
+            invoice_id=invoice_id,
+            party_tax_id="FR12345678901",
+            country_code="FR",
+            transaction_date=date(2026, 3, day),
+            base_amount=base,
+            intracommunity_clave="T",
+            party_legal_name="TRIANGLE SARL",
+        )
+        for source_kind, invoice_id, day, base in (
+            (BindingSourceKind.COLLECTIBLE_INVOICE, "inv-fr-t-sale", 4, Decimal("400.00")),
+            (BindingSourceKind.PAYABLE_INVOICE, "inv-fr-t-acq", 5, Decimal("250.00")),
+        )
+    )
+
+    rows = resolve_invoice_binding_row_values(revision, observations)
+    values = resolve_invoice_binding_values(revision, observations)
+
+    assert rows[("iva-349-operador-row-clave", 1)] == "T"
+    assert rows[("iva-349-operador-row-base", 1)] == Decimal("650.00")
+    assert ("iva-349-operador-row-clave", 2) not in rows
+    assert values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert values["iva-349-declarante-importe-operaciones"] == Decimal("650.00")
 
 
 def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
     revision = _modelo_349_revision()
     construct = revision.constructs[0]
-    # The construct gathers every invoice-sourced binding plus the ledger guard
-    # that checks intra-community IVA volume against the declared operators.
-    assert set(construct.bindings) == {
-        b.id
-        for b in revision.bindings
-        if b.source in {"collectible_invoice", "payable_invoice", "ledger_iva_aggregation"}
-    }
+    # Every 349 binding reads the combined-direction intra-community population.
+    assert set(construct.bindings) == {b.id for b in revision.bindings}
+    assert {b.source for b in revision.bindings} == {"m349_intracommunity_operation"}
 
 
 def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bindings() -> None:
@@ -315,12 +298,7 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
     row_bindings: dict[str, BindingDefinition] = {
         b.id: b
         for b in revision.bindings
-        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op == "rows"
-    }
-    payable_row_bindings: dict[str, BindingDefinition] = {
-        b.id: b
-        for b in revision.bindings
-        if b.source == "payable_invoice" and b.aggregation is not None and b.aggregation.op == "rows"
+        if b.source == "m349_intracommunity_operation" and b.aggregation is not None and b.aggregation.op == "rows"
     }
     expected_operador_row_bindings = {
         "iva-349-operador-row-codigo-pais",
@@ -340,29 +318,15 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
         "iva-349-rectificacion-row-base-anterior",
     }
     assert set(row_bindings) == expected_operador_row_bindings | expected_rectificacion_row_bindings
-    assert set(payable_row_bindings) == {
-        f"{binding_id}-adquisicion"
-        for binding_id in expected_operador_row_bindings | expected_rectificacion_row_bindings
-    }
 
     for binding_id in expected_operador_row_bindings:
         row_selector = _selector(row_bindings[binding_id])
         assert row_selector["grouping"] == "operator_clave"
         assert row_selector["rectification_scope"] == "exclude_rectifications"
-        payable_binding = payable_row_bindings[f"{binding_id}-adquisicion"]
-        payable_selector = _selector(payable_binding)
-        assert payable_selector["grouping"] == "operator_clave"
-        assert payable_selector["rectification_scope"] == "exclude_rectifications"
-        assert cast("tuple[str, ...]", payable_selector["claves"]) == ("A", "I", "T")
     for binding_id in expected_rectificacion_row_bindings:
         row_selector = _selector(row_bindings[binding_id])
         assert row_selector["grouping"] == "operator_clave_period"
         assert row_selector["rectification_scope"] == "only_rectifications"
-        payable_binding = payable_row_bindings[f"{binding_id}-adquisicion"]
-        payable_selector = _selector(payable_binding)
-        assert payable_selector["grouping"] == "operator_clave_period"
-        assert payable_selector["rectification_scope"] == "only_rectifications"
-        assert cast("tuple[str, ...]", payable_selector["claves"]) == ("A", "I", "T")
 
 
 def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave() -> None:
@@ -537,7 +501,5 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
         == (binding_values["iva-349-declarante-importe-rectificaciones"])
     )
 
-    # Rectification delta must equal the absolute difference between new and previous base.
-    assert rect_obs.rectified_base_previous is not None
-    expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
-    assert casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA] == expected_rect_delta
+    # Casilla 04 carries the rectified base (200.00), not its 20.00 delta against the previous base.
+    assert casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA] == Decimal("200.00")

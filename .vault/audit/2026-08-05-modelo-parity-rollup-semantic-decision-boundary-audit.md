@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6db1656577931c8a4f74f82a831536f2e1b5425a3b839487db2af0f9f7a4fe1c'
+body_hash: 'sha256:90e7fe09067b35c86418b6b2595e087bda1c4dfe6cf04f0839b6ad925890a7ba'
 related:
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
 # `modelo-parity-rollup` audit: `Modelo parity rollup semantic decision boundary`
 
@@ -33,7 +32,7 @@ The 2025 `0613` row has no producer declaration or reverse wiring; the final-set
 
 SOL's second adjudication retains `0613` as manual and leaves S17 open. It rejects carrying forward the 2024 cotizaciones ceiling without authoritative 2025 evidence. Reopening requires a corrected 2025 Art. 81.2 contract for eligible months, turning-three treatment, beneficiary eligibility, subsidies, employer-exempt payments, effective expenditure, proration and rounding; versioned child/month/net-expenditure facts; one authoritative producer mechanism; exact profile selectors, bindings, formula target and reverse casilla reference; and structured official-oracle cases for the `166.67`, `500.00`, zero and turning-three outcomes.
 
-The Luna prerequisite oracle is now present at `src/cadrumo/domain/contribuyente/tests/test_guarderia_2025_facts.py`. It exercises the real 2025 family aggregation for full-period monthly spend (`1,800`), turning-three post-birthday-month spend (`1,600`), and a non-qualifying child (`0`). This is source capability evidence only; it does not promote 0613 or establish the final statutory cap.
+The Luna prerequisite oracle is now present at the retired test. It exercises the real 2025 family aggregation for full-period monthly spend (`1,800`), turning-three post-birthday-month spend (`1,600`), and a non-qualifying child (`0`). This is source capability evidence only; it does not promote 0613 or establish the final statutory cap.
 
 ### Modelo parity rollup semantic decision boundary | medium | 1481 remains manual in 2025
 
@@ -51,7 +50,7 @@ Keep S16, S17, and S18 open and retain the 2025 manual declarations. Do not add 
 
 ## Verification boundary
 
-- The generic all-registry formula-target reverse invariant remains enforced by `src/cadrumo/domain/calculations/registry/_validate_formulas.py` and its registry test suite.
+- The generic all-registry formula-target reverse invariant remains enforced by the retired module and its registry test suite.
 - The bounded M100 2025 semantic guard remains green for `0150`, `0613`, and `1481`.
 - The new Luna oracle test passes `3` focused cases; it is intentionally not a schema promotion test.
 - No production registry, fincas source, family profile, M131 relation, formula, binding, casilla, or aggregation change is authorized by this adjudication.

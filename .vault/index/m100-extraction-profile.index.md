@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#m100-extraction-profile'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a74d8131db07932dcba4b933e310d31f8b3a8becbdbbeb523bd24bddcd95c853'
+body_hash: 'sha256:cc4e7330592fef35936ab1fdb490741d43fc8167c0f97a38f5e9c32c5b7dc4e3'
 related:
-  - '[[2026-06-04-m100-extraction-profile-adr]]'
   - '[[2026-06-04-m100-extraction-profile-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#m100-extraction-profile`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-m100-extraction-profile-adr` - `m100-extraction-profile` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

@@ -36,29 +36,19 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
 
-from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, restatement_differences
+from ..analysis.delta_minimality import restatement_differences
+from ..compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_migration import (
-    BlockedCause,
-    EditionPlan,
-    MigrationOutcome,
-    MigrationPlan,
-    PredecessorBasis,
-    _choose_drops,
-    _Defaults,
-    _EditionSource,
-    _Placed,
-    _read_edition,
-    _validate_staged_modelo,
-    assess_migration_state,
-    main,
-    migrate_modelo,
-    persist_migration_report,
-    plan_migration,
-)
+from ..edition_delta_assessment import assess_migration_state
+from ..edition_delta_migration import MigrationOutcome, main, migrate_modelo, persist_migration_report
+from ..edition_delta_planning import plan_migration
+from ..edition_delta_row_delta import _choose_drops
+from ..edition_delta_source import _Defaults, _EditionSource, _Placed, _read_edition
+from ..edition_delta_source_publication import _validate_staged_modelo
+from ..edition_delta_types import BlockedCause, EditionPlan, MigrationPlan, PredecessorBasis
 from ..edition_export_scenarios import edition_export_scenarios
 from ..edition_round_trip import RoundTripFindingKind, copy_registry_tree, edition_round_trip_report
 
@@ -723,9 +713,9 @@ def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
     registry = _semantic_withdrawal_fixture(tmp_path / "registry")
     definition = _load(registry, "999")
 
-    from .. import edition_delta_migration as migration
+    from .. import edition_delta_planning_predecessor as predecessor_policy
 
-    original = migration._choose_predecessor
+    original = predecessor_policy.choose_predecessor
 
     def semantic_middle(
         position: int,
@@ -738,7 +728,7 @@ def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
             return "2023", PredecessorBasis.DECLARED, []
         return original(position, revisions, source, reconsider_technical_roots=reconsider_technical_roots)
 
-    monkeypatch.setattr(migration, "_choose_predecessor", semantic_middle)
+    monkeypatch.setattr(predecessor_policy, "choose_predecessor", semantic_middle)
 
     plan = plan_migration(registry / "modelos" / "999", definition)
 

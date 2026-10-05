@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:d773bb49ed2777f5fdba8e252217ec29be4464dcfc48bd0a4d35f2f0c4c57f3d'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `s41 singleton value policy`
 

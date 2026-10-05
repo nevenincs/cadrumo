@@ -67,6 +67,7 @@ from cadrumo.application.operations.models import (
     OperationTerminalReceipt,
 )
 from cadrumo.application.operations.observation import OperationObservationService
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import (
     OperationInteractionEvent,
@@ -90,8 +91,6 @@ from cadrumo.application.operations.projection_services import (
     UnavailableOperationSecureResponseAuthority,
 )
 from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,

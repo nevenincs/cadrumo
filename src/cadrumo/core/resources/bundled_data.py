@@ -9,8 +9,7 @@ honours the force-include mapping for both targets.
 
 Callers MUST go through :func:`packaged_data` rather than computing the location
 from ``__file__`` or a repo-root walk. Use :func:`bundled_path` when a
-process-lifetime :class:`~pathlib.Path` is required, and :func:`as_path` for a
-scoped materialised path. The data-root anchor is reserved for ``var/``
+process-lifetime :class:`~pathlib.Path` is required. The data-root anchor is reserved for ``var/``
 operator outputs in :mod:`cadrumo.core.config` and is not a valid resolution path
 for read-only bundled data.
 
@@ -38,8 +37,7 @@ rather than by which distribution happens to carry the file next to it.
 from __future__ import annotations
 
 import atexit
-from collections.abc import Generator
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 from functools import cache
 from importlib.resources import as_file, files  # nosemgrep
 from importlib.resources.abc import Traversable  # nosemgrep
@@ -76,7 +74,7 @@ def packaged_data(*parts: str) -> Traversable:
     Returns:
         A :class:`importlib.resources.abc.Traversable` that callers
         may read via ``read_text`` / ``read_bytes`` / ``open`` or
-        iterate via ``iterdir``. Use :func:`as_path` when a real
+        iterate via ``iterdir``. Use :func:`bundled_path` when a real
         on-disk :class:`pathlib.Path` is required.
     """
     node: Traversable = _PACKAGE_DATA
@@ -104,29 +102,6 @@ def bundled_path(*parts: str) -> Path:
         process. Callers MUST treat the path as read-only.
     """
     return _RESOURCE_STACK.enter_context(as_file(packaged_data(*parts)))
-
-
-@contextmanager
-def as_path(node: Traversable) -> Generator[Path]:
-    """Materialise ``node`` as a real on-disk path for the lifetime of the context.
-
-    ``importlib.resources.as_file`` extracts the resource to a
-    temporary location when the underlying loader does not already
-    expose a filesystem path. Under an editable install (hatchling
-    force-include against the source tree) the materialised path is
-    the in-tree location with no copy.
-
-    Args:
-        node: A Traversable returned by :func:`packaged_data` (or a
-            descendant obtained via ``joinpath``).
-
-    Yields:
-        A :class:`pathlib.Path` that is valid only inside the
-        ``with`` block. Callers MUST NOT retain the path beyond the
-        context manager's exit.
-    """
-    with as_file(node) as path:
-        yield path
 
 
 def _traversable_is_file(node: Traversable) -> bool:

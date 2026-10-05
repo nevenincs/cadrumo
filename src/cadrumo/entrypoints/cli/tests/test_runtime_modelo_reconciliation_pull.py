@@ -9,8 +9,8 @@ from uuid import UUID
 
 import pytest
 import typer
+from pydantic import ValidationError
 
-from ....application.live.justificante import JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
 from ....application.modelo.reconciliation import ModeloReconciliationReport
 from ....application.modelo.reconciliation_import_operation import ModeloReconciliationImportProjection
 from ....application.modelo.reconciliation_pull_operation import (
@@ -24,7 +24,7 @@ from ....application.modelo.reconciliation_records import (
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from .. import runtime_modelo_reconciliation_pull as bridge
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -33,7 +33,11 @@ _WORK_UNIT_ID = "1" * 64
 _SNAPSHOT_ID = "a" * 64
 
 
-def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("source", tuple(ModeloReconciliationEvidenceKind))
+def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(
+    monkeypatch: pytest.MonkeyPatch,
+    source: ModeloReconciliationEvidenceKind,
+) -> None:
     """An active-profile switch cannot retarget an already bound chain."""
     client = SimpleNamespace(profile_id=_PROFILE)
     unit = SimpleNamespace(
@@ -43,11 +47,15 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(mo
         filing_year=2024,
         period=Period.from_year_and_code(2024, "1T"),
     )
-    source_ref = f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{_SNAPSHOT_ID}"
+    source_ref = bridge.reconciliation_pull_source_ref(
+        source,
+        _SNAPSHOT_ID if source is ModeloReconciliationEvidenceKind.JUSTIFICANTE else None,
+        _SNAPSHOT_ID if source is ModeloReconciliationEvidenceKind.DECLARATION else None,
+    )
     report = ModeloReconciliationReport(
         work_unit_id=_WORK_UNIT_ID,
         bucket_id=str(_PROFILE),
-        source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+        source_kind=source,
         source_path=source_ref,
         verdict=ModeloReconciliationVerdict.MATCHES,
         reconciled_at=datetime(2026, 9, 29, tzinfo=UTC),
@@ -62,6 +70,20 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(mo
     def capture(_ctx: typer.Context, **scope: object) -> object:
         calls.append(("capture", scope))
         return SimpleNamespace(projection=SimpleNamespace(snapshot_id=_SNAPSHOT_ID))
+
+    def capture_declaration(_ctx: typer.Context, **scope: object) -> object:
+        assert scope["expected_profile_id"] == _PROFILE
+        assert scope["period"] == unit.period
+        assert scope["year"] == unit.filing_year
+        assert scope["limit"] == 1
+        calls.append(("capture", {"profile_id": _PROFILE, "modelo": "130", "year": 2024, "period": unit.period}))
+        return SimpleNamespace(
+            report=SimpleNamespace(
+                captured_count=1,
+                observation_paths=(f"db://secure_objects/observations/{_SNAPSHOT_ID}",),
+                casilla_count=19,
+            )
+        )
 
     def reconcile(submitted_client: object, request: ModeloReconciliationPullRequest, **options: object):
         assert submitted_client is client
@@ -83,6 +105,7 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(mo
     monkeypatch.setattr(bridge, "read_modelo_work_unit", read_unit)
     monkeypatch.setattr(bridge, "capture_justificante_for_cli", capture)
     monkeypatch.setattr(bridge, "run_registered_operation", reconcile)
+    monkeypatch.setattr(bridge, "read_filed_single_capture_for_cli", capture_declaration)
 
     actual = bridge.pull_modelo_reconciliation(
         cast(typer.Context, cast(object, None)),
@@ -93,6 +116,7 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(mo
         revision=None,
         bucket_id=str(_PROFILE),
         actor="operator",
+        source=source,
     )
 
     assert actual == report
@@ -118,8 +142,34 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(mo
             ModeloReconciliationPullRequest(
                 profile_id=_PROFILE,
                 work_unit_id=_WORK_UNIT_ID,
-                snapshot_id=_SNAPSHOT_ID,
+                snapshot_id=_SNAPSHOT_ID if source is ModeloReconciliationEvidenceKind.JUSTIFICANTE else None,
+                observation_id=_SNAPSHOT_ID if source is ModeloReconciliationEvidenceKind.DECLARATION else None,
+                source_kind=source,
                 actor="operator",
             ),
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    ("source", "snapshot_id", "observation_id"),
+    [
+        (ModeloReconciliationEvidenceKind.JUSTIFICANTE, None, None),
+        (ModeloReconciliationEvidenceKind.JUSTIFICANTE, None, _SNAPSHOT_ID),
+        (ModeloReconciliationEvidenceKind.DECLARATION, _SNAPSHOT_ID, None),
+        (ModeloReconciliationEvidenceKind.DECLARATION, _SNAPSHOT_ID, _SNAPSHOT_ID),
+    ],
+)
+def test_pull_refuses_a_handle_for_another_evidence_source(
+    source: ModeloReconciliationEvidenceKind,
+    snapshot_id: str | None,
+    observation_id: str | None,
+) -> None:
+    with pytest.raises(ValidationError, match="selected evidence handle"):
+        ModeloReconciliationPullRequest(
+            profile_id=_PROFILE,
+            work_unit_id=_WORK_UNIT_ID,
+            source_kind=source,
+            snapshot_id=snapshot_id,
+            observation_id=observation_id,
+        )

@@ -36,7 +36,7 @@ See Also:
         Emits work-unit create, rename, and discard events.
     :func:`cadrumo.application.modelo.calculate_input.calculate_modelo_work_revision`:
         Persists calculation revisions and ``MODELO_CALCULATION_CREATED`` events.
-    :func:`cadrumo.application.modelo.verification_actions.verify_modelo_revision`:
+    :func:`cadrumo.application.modelo.verification_actions.verify_modelo_revision_with_preconditions`:
         Persists verification reports and verification pass/refusal events.
     :func:`cadrumo.application.modelo.filing_actions.file_modelo_revision`:
         Persists local filing records and filing/supersession events.

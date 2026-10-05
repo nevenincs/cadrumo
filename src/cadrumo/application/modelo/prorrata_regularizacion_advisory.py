@@ -72,7 +72,11 @@ from ...domain.iva.prorrata_especial_parameters import (
 )
 from ...domain.prorrata_register.register import ProrrataRegisterError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..aggregation.iva_ledger import compute_annual_deducible_totals_by_regime
+from ..aggregation.iva_ledger import (
+    aggregate_iva_ledger_observations_from_repositories,
+    compute_annual_deducible_totals_by_regime,
+)
+from ..aggregation.prorrata_volume import project_prorrata_declared_volume_rollup
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.observations_repository import (
@@ -80,6 +84,8 @@ from ..calculations.observations_repository import (
     require_observation_envelope_coordinates_current,
 )
 from ..calculations.prorrata_regularizacion import (
+    ProrrataDeclaredVolumeLedgerRollup,
+    build_prorrata_declared_volume_advisory,
     build_prorrata_especial_mandatory_advisory,
     build_prorrata_missing_provisional_advisory,
     buildprorrata_regularizacion_advisory,
@@ -262,7 +268,7 @@ def _settlement_prorrata_diagnostics(
         modelo=modelo,
     )
     if current_inputs is None:
-        return especial_diagnostics
+        return (*missing_carry_diagnostics, *especial_diagnostics)
 
     porcentaje_id, operaciones_sin_derecho_deduccion, prorrata_definitiva_pct, cuotas_soportadas_deducibles = (
         current_inputs
@@ -361,6 +367,20 @@ def collect_prorrata_regularizacion_diagnostics(
         return ()
 
     with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as authority:
+        try:
+            rollup = _annual_volume_rollup(
+                revision,
+                casilla_values,
+                modelo=modelo,
+                filing_year=filing_year,
+                bucket_id=bucket_id,
+                transaction_repository=transaction_repository,
+                prorrata_register_repository=prorrata_register_repository,
+                bienes_inversion_repository=bienes_inversion_repository,
+                operation=authority,
+            )
+        except ProrrataRegisterError as exc:
+            return (_prorrata_storage_degraded_diagnostic(bucket_id, exc),)
         missing_carry_diagnostics = _missing_carry_diagnostics(
             revision,
             casilla_values,
@@ -369,24 +389,32 @@ def collect_prorrata_regularizacion_diagnostics(
             prorrata_register_repository=prorrata_register_repository,
             bucket_id=bucket_id,
             operation=authority,
+            ledger_rollup=rollup,
         )
         if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
             return missing_carry_diagnostics
 
+        volume_diagnostic = (
+            build_prorrata_declared_volume_advisory(rollup, ejercicio=filing_year) if rollup is not None else None
+        )
+        volume_diagnostics = () if volume_diagnostic is None else (volume_diagnostic,)
         # Settlement-only checks keep their own canonical order: the regularización
         # advisory (or pending carry) precedes the mandatory-especial diagnostic.
-        return _settlement_prorrata_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            filing_year=filing_year,
-            missing_carry_diagnostics=missing_carry_diagnostics,
-            observation_repository=observation_repository,
-            prorrata_register_repository=prorrata_register_repository,
-            transaction_repository=transaction_repository,
-            bienes_inversion_repository=bienes_inversion_repository,
-            bucket_id=bucket_id,
-            operation=authority,
+        return (
+            *volume_diagnostics,
+            *_settlement_prorrata_diagnostics(
+                revision,
+                casilla_values,
+                modelo=modelo,
+                filing_year=filing_year,
+                missing_carry_diagnostics=missing_carry_diagnostics,
+                observation_repository=observation_repository,
+                prorrata_register_repository=prorrata_register_repository,
+                transaction_repository=transaction_repository,
+                bienes_inversion_repository=bienes_inversion_repository,
+                bucket_id=bucket_id,
+                operation=authority,
+            ),
         )
 
 
@@ -490,12 +518,12 @@ def _especial_mandatory_diagnostics(
             reason="prorrata_especial_check_unavailable",
             source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
             message=(
-                f"La prorrata especial puede ser obligatoria para {filing_year} (LIVA art. 103.Dos.2.º: "
-                f"se aplica cuando las cuotas deducibles por prorrata general exceden {exceso} "
-                "de las que resultarían por la regla especial). La comprobación requiere clasificar "
-                "el uso de cada cuota soportada (art. 106): declare '--input-classification' en las "
-                "operaciones del ejercicio y, en su caso, ejecute 'app ledger prorrata elect-especial "
-                f"--ejercicio {filing_year}'. Quedan {totals.unclassified_deducible_count} operaciones sin clasificar."
+                f"La prorrata especial puede ser obligatoria en {filing_year} (LIVA art. 103.Dos.2.º: "
+                f"cuando la deducción por prorrata general excede {exceso} la de la regla especial). "
+                "Para comprobarlo, clasifica el uso de cada cuota soportada (art. 106): declara "
+                "'--input-classification' en las operaciones del ejercicio y, en su caso, ejecuta "
+                f"'app ledger prorrata elect-especial --ejercicio {filing_year}'. "
+                f"Quedan {totals.unclassified_deducible_count} operaciones sin clasificar."
             ),
             # Advisory-asserted, no casilla here either: the message states both
             # the art. 103.Dos.2.º mandatory-especial threshold AND the art. 106
@@ -514,6 +542,7 @@ def _missing_carry_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     bucket_id: str | None,
     operation: PinnedAuthorityOperation,
+    ledger_rollup: ProrrataDeclaredVolumeLedgerRollup | None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     if bucket_id is None:
         return ()
@@ -539,18 +568,14 @@ def _missing_carry_diagnostics(
             operation=operation,
         )
     except ProrrataRegisterError as exc:
-        return (
-            CalculationSourceDiagnostic(
-                reason="storage_degraded",
-                source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
-                message=(f"prorrata register could not be read (bucket {bucket_id!r}): {exc}"),
-            ),
-        )
+        return (_prorrata_storage_degraded_diagnostic(bucket_id, exc),)
 
+    declarations_present = declared_volume_total is not None and declared_volume_con_derecho is not None
     applicability = derive_prorrata_applicability(
         register_entries=register.entries_for_ejercicio(filing_year),
-        declared_volume_total=declared_volume_total,
-        declared_volume_con_derecho=declared_volume_con_derecho,
+        ledger_rollup=ledger_rollup,
+        declared_volume_total=declared_volume_total if declarations_present else None,
+        declared_volume_con_derecho=declared_volume_con_derecho if declarations_present else None,
     )
     diagnostic = build_prorrata_missing_provisional_advisory(
         applicability=applicability,
@@ -559,3 +584,55 @@ def _missing_carry_diagnostics(
         revision=revision,
     )
     return () if diagnostic is None else (diagnostic,)
+
+
+def _annual_volume_rollup(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    filing_year: int,
+    bucket_id: str | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
+    bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+) -> ProrrataDeclaredVolumeLedgerRollup | None:
+    if bucket_id is None:
+        return None
+    total_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _VOLUMEN_TOTAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    right_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    aggregation = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=bucket_id,
+        period=Period.from_year_and_code(filing_year, "0A"),
+        prorrata_register_repository=prorrata_register_repository,
+        transaction_repository=transaction_repository,
+        investment_asset_register=bienes_inversion_repository.load(),
+        investment_asset_profile_id=bucket_id,
+        operation=operation,
+    )
+    return project_prorrata_declared_volume_rollup(
+        aggregation,
+        declared_volume_total=casilla_values.get(total_id) if total_id is not None else None,
+        declared_volume_con_derecho=casilla_values.get(right_id) if right_id is not None else None,
+        operation=operation,
+    )
+
+
+def _prorrata_storage_degraded_diagnostic(
+    bucket_id: str | None, error: ProrrataRegisterError
+) -> CalculationSourceDiagnostic:
+    """Retain the existing observable refusal when the register cannot be read."""
+    return CalculationSourceDiagnostic(
+        reason="storage_degraded",
+        source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+        message=f"prorrata register could not be read (bucket {bucket_id!r}): {error}",
+    )

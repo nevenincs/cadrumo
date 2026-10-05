@@ -31,7 +31,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import (
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
+from ....domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
 
 
 def _profile_id_for_label(label: str) -> str:

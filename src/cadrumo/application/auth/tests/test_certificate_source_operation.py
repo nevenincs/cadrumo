@@ -14,8 +14,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.application.auth import certificate_source_operation as operation_module
-from cadrumo.application.auth.certificate_source_operation import (
+from cadrumo.application.auth import certificate_source_execution as execution_module
+from cadrumo.application.auth.certificate_source_contracts import (
     CERTIFICATE_SOURCE_CHECK_OPERATION_DEFINITION_ID,
     CERTIFICATE_SOURCE_LIST_OPERATION_DEFINITION_ID,
     CERTIFICATE_SOURCE_REGISTER_OPERATION_DEFINITION_ID,
@@ -25,14 +25,18 @@ from cadrumo.application.auth.certificate_source_operation import (
     CertificateSourceCheckRequest,
     CertificateSourceListProjection,
     CertificateSourceListRequest,
-    CertificateSourceOperationExecutor,
-    CertificateSourceOperationPorts,
     CertificateSourceRegisterProjection,
     CertificateSourceRegisterRequest,
     CertificateSourceRemoveProjection,
     CertificateSourceRemoveRequest,
     CertificateSourceSelectProjection,
     CertificateSourceSelectRequest,
+)
+from cadrumo.application.auth.certificate_source_execution import (
+    CertificateSourceOperationExecutor,
+    CertificateSourceOperationPorts,
+)
+from cadrumo.application.auth.certificate_source_operation import (
     build_certificate_source_check_definition,
     build_certificate_source_check_registration,
     build_certificate_source_list_definition,
@@ -58,6 +62,7 @@ from cadrumo.application.auth.operator_results import (
 from cadrumo.application.auth.tests._operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.application.operations import profile_guard
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.owner import OperationExecutorContext
@@ -80,6 +85,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("9aa00000-0000-4000-8000-000000000099")
 _NAME = "delegated"
 _PATH = Path("C:/certificates/delegated.p12")
+
+
+def _set_active_profile(monkeypatch: pytest.MonkeyPatch, resolver) -> None:
+    """Drive the canonical guard's active-pointer seam without bypassing the guard."""
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", resolver)
 
 
 def _ports() -> CertificateSourceOperationPorts:
@@ -394,8 +404,8 @@ def test_executor_calls_canonical_service_and_projects_correlated_result(
         calls.append(kwargs)
         return result
 
-    monkeypatch.setattr(operation_module, service_name, service)
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(execution_module, service_name, service)
+    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
     with private_authority_lease() as authority_operation:
         context = _Context(definition_id, authority_operation)
         context_ref.append(context)
@@ -459,8 +469,8 @@ async def _run_executor(
 def test_remove_noop_is_projected_as_no_effect(monkeypatch: pytest.MonkeyPatch) -> None:
     ports = _ports()
     missing = CertificateSourceMutationResult(name="missing", removed=False)
-    monkeypatch.setattr(operation_module, "remove_operator_certificate_source", lambda **_kwargs: missing)
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(execution_module, "remove_operator_certificate_source", lambda **_kwargs: missing)
+    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
     with private_authority_lease() as authority_operation:
         context = _Context(CERTIFICATE_SOURCE_REMOVE_OPERATION_DEFINITION_ID, authority_operation)
         result_ref = asyncio.run(
@@ -501,8 +511,8 @@ def test_read_cancellation_waits_for_blocking_service_and_result_publication(
             raise TimeoutError("test did not release the blocked certificate-source read")
         return report
 
-    monkeypatch.setattr(operation_module, "list_operator_certificate_sources", blocked_read)
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(execution_module, "list_operator_certificate_sources", blocked_read)
+    _set_active_profile(monkeypatch, lambda: str(_PROFILE))
     with private_authority_lease() as authority_operation:
         context = _Context(CERTIFICATE_SOURCE_LIST_OPERATION_DEFINITION_ID, authority_operation)
         executor = CertificateSourceOperationExecutor(
@@ -552,7 +562,7 @@ def test_executor_refuses_when_active_profile_differs(
     payload: BaseModel,
     definition_id: str,
 ) -> None:
-    monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(uuid4()))
+    _set_active_profile(monkeypatch, lambda: str(uuid4()))
     with private_authority_lease() as authority_operation:
         context = _Context(definition_id, authority_operation)
         with pytest.raises(ProfileAccessRefusedError) as refused:

@@ -46,17 +46,19 @@ from ..filing_chain_reconciliation import (
     FilingReconciliationOutcome,
     FilingReconciliationResult,
 )
-from ..filing_record_import_operation import (
+from ..filing_record_import_contracts import (
     MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
     ModeloFilingRecordImportOperationReport,
     ModeloFilingRecordImportProjection,
     ModeloFilingRecordImportReconciliationProjection,
     ModeloFilingRecordImportRequest,
+)
+from ..filing_record_import_operation import (
     _project_filing_record_import,
     build_modelo_filing_record_import_definition,
     build_modelo_filing_record_import_registration,
 )
-from ..filing_record_list_operation import ModeloFilingRecordListEntryProjection
+from ..filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -399,6 +401,7 @@ def test_executor_parses_source_before_commit_and_guards_source_and_receipt_writ
 
     monkeypatch.setattr(operation_module, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "parse_casilla_lexical_spreadsheet", parse)
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(operation_module, "external_filing_source_casillas", validate_source)
     monkeypatch.setattr(
         operation_module,

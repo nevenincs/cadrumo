@@ -563,6 +563,41 @@ def _catalogue_reset_report(
     )
 
 
+def _catalogue_reset_preview(
+    *,
+    bucket_id: str,
+    removed_ids: tuple[str, ...],
+    dry_run: bool,
+    actor: str,
+    reason: str,
+    purchase_evidence_ids: tuple[str, ...],
+    attachment_ids: tuple[str, ...],
+    blockers: tuple[LedgerRemovalBlocker, ...],
+    draft_advisories: tuple[LedgerRemovalBlocker, ...],
+    guard_ids: tuple[str, ...],
+) -> LedgerCatalogueResetReport | None:
+    """Resolve finalized-reference refusal and dry-run report before any writes."""
+    if blockers and not dry_run:
+        raise_finalized_modelo_blocked(
+            operation="ledger catalogue reset",
+            transaction_ids=guard_ids,
+            blockers=blockers,
+        )
+    if not dry_run:
+        return None
+    return _catalogue_reset_report(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=True,
+        actor=actor,
+        reason=reason,
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        blockers=blockers,
+        draft_advisories=draft_advisories,
+    )
+
+
 def reset_ledger_catalogue(
     *,
     bucket_id: str,
@@ -611,35 +646,20 @@ def reset_ledger_catalogue(
         invoice_repository=invoice_repository,
     )
     attachment_ids = _reset_attachment_ids(catalogue)
-    if blockers:
-        if not dry_run:
-            raise_finalized_modelo_blocked(
-                operation="ledger catalogue reset",
-                transaction_ids=guard_ids,
-                blockers=blockers,
-            )
-        return _catalogue_reset_report(
-            bucket_id=bucket_id,
-            removed_ids=removed_ids,
-            dry_run=dry_run,
-            actor=trimmed_actor,
-            reason=reason.strip(),
-            purchase_evidence_ids=purchase_evidence_ids,
-            attachment_ids=attachment_ids,
-            blockers=blockers,
-            draft_advisories=draft_advisories,
-        )
-    if dry_run:
-        return _catalogue_reset_report(
-            bucket_id=bucket_id,
-            removed_ids=removed_ids,
-            dry_run=True,
-            actor=trimmed_actor,
-            reason=reason.strip(),
-            purchase_evidence_ids=purchase_evidence_ids,
-            attachment_ids=attachment_ids,
-            draft_advisories=draft_advisories,
-        )
+    preview = _catalogue_reset_preview(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=dry_run,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        blockers=blockers,
+        draft_advisories=draft_advisories,
+        guard_ids=guard_ids,
+    )
+    if preview is not None:
+        return preview
     removal_events = _reset_removal_events(
         catalogue,
         invoice_catalogue,

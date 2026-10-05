@@ -1,4 +1,7 @@
-"""Concrete Sede binding for the application filed-data acquisition port."""
+"""Concrete Sede binding for the application filed-data acquisition port.
+
+Source acquisition is scoped by the requested :class:`ModeloRevision`.
+"""
 
 from __future__ import annotations
 
@@ -25,6 +28,7 @@ from .....application.live.session import SessionWriteReporter, active_verified_
 from .....application.runtime.contracts import RuntimeRefusalError
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....application.user_profile.automation_custody_port import AutomationCustodyError
+from .....core.errors.hierarchy import AuthError
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.schema import ModeloRevision
@@ -57,7 +61,9 @@ async def _call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]])
     """Invoke one Sede capability and translate its exception at this boundary."""
     try:
         return await callback()
-    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+    # An authentication failure is the operator's login, not this read; it keeps
+    # its own registered code so the operator sees, for example, an approval timeout.
+    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError, AuthError):
         raise
     except LiveApplicationError:
         raise
@@ -119,7 +125,7 @@ class _DeferredSedeObservations:
         """Publish source artefacts together after the caller enters its fence."""
         if self.consumed:
             raise ValueError("deferred source artefacts cannot be persisted twice")
-        expected = tuple(artefact for observation in self.observations for artefact in observation.artefacts)
+        expected = _deferred_source_artefacts(self.observations)
         if expected != tuple(artefact for _, artefact, _ in self.staged):
             raise ValueError("deferred source artefacts differ from captured observations")
         concrete_sink = _concrete_artefact_sink(sink)
@@ -260,7 +266,13 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                         register,
                         walk_timeout_ms=settings.cadrumo_live_filed_register_walk_timeout_ms,
                     )
-        except (LiveApplicationError, ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        except (
+            LiveApplicationError,
+            ProfileAccessRefusedError,
+            AutomationCustodyError,
+            RuntimeRefusalError,
+            AuthError,
+        ):
             raise
         except Exception as exc:
             raise _translate_adapter_error("filed_register_open", exc) from exc
@@ -295,7 +307,13 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                         playwright=playwright,
                     ),
                 )
-        except (LiveApplicationError, ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError):
+        except (
+            LiveApplicationError,
+            ProfileAccessRefusedError,
+            AutomationCustodyError,
+            RuntimeRefusalError,
+            AuthError,
+        ):
             raise
         except Exception as exc:
             raise _translate_adapter_error("filed_register_discovery", exc) from exc
@@ -368,7 +386,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         effect_guard: FiledEffectGuard | None = None,
         on_session_write: SessionWriteReporter | None = None,
     ) -> DeferredFiledObservations:
-        """Stage source artefacts during remote acquisition for a later commit fence."""
+        """Stage :class:`ModeloRevision` source artefacts for a later commit fence."""
         staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = []
 
         def stage(
@@ -394,3 +412,10 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
 
 
 __all__ = ["SedeFiledDataCapturePort", "capture_deferred_sede_observation"]
+
+
+def _deferred_source_artefacts(
+    observations: tuple[FiledDeclaracionObservation, ...],
+) -> tuple[FiledDeclaracionArtefact, ...]:
+    """Flatten source artefacts in captured observation order before the equality fence."""
+    return tuple(artefact for observation in observations for artefact in observation.artefacts)

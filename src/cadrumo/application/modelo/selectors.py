@@ -12,6 +12,7 @@ falling back to an unambiguous verified-complete revision.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Literal
 
@@ -89,10 +90,14 @@ class ModeloCalculationRevisionCandidate(BaseModel):
         )
 
 
-class ModeloCalculationRevisionSelection(BaseModel):
-    """Resolved calculation revision selection under a work unit."""
+@dataclass(frozen=True, slots=True)
+class ModeloCalculationRevisionSelection:
+    """Internal selection of a repository-validated revision under a work unit.
 
-    model_config = STRICT_FROZEN_CONFIG
+    The repository validates the revision against its complete aggregate. This
+    value holder retains that record without validating it again outside the
+    owning aggregate context; it is neither a transport nor a persisted schema.
+    """
 
     selector: ModeloCalculationRevisionSelector
     work_unit_id: WorkUnitId

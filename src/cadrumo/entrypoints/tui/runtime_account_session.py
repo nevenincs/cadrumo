@@ -6,15 +6,19 @@ import asyncio
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...application.overview.home import HomeAccountSession, HomeSessionPosture
 from ...application.runtime.contracts import RuntimeRefusalError
+from ...application.runtime.profile_access import status_admits_session
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from .account import AccountSessionExpiredError, AccountSessionReaderV1
 
 if TYPE_CHECKING:
     from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from ...application.operations.frontend_projection import OperationPublicProjectionV1
+    from .operations.runtime_controller import RuntimeOperationController
 
 
 def runtime_account_session_reader(
@@ -53,14 +57,10 @@ def read_runtime_account_session(
     if (
         client.profile_id != profile_id
         or client.session_id != session_id
-        or not status.connected
-        or not status.credential_authenticated
-        or not status.profile_bound
-        or status.profile_id != profile_id
-        or status.session_id != session_id
+        or not status_admits_session(
+            status, profile_id=profile_id, session_id=session_id, at=now(), requires_automation_grant=False
+        )
         or status.session_expires_at is None
-        or status.session_expires_at <= now()
-        or status.denial is not None
     ):
         raise AccountSessionExpiredError()
     return HomeAccountSession(
@@ -70,4 +70,28 @@ def read_runtime_account_session(
     )
 
 
-__all__ = ["read_runtime_account_session", "runtime_account_session_reader"]
+def session_expired_with_receipt(
+    controller: RuntimeOperationController | None,
+    projection: OperationPublicProjectionV1 | None,
+) -> AccountSessionExpiredError:
+    """Keep a submitted operation's receipt visible when its retained session expires.
+
+    Before submission there is no receipt. After it, the operation ID is kept
+    with the last observed terminal facts, and an unobserved effect is unknown.
+    """
+    if controller is None:
+        return AccountSessionExpiredError()
+    condition = projection.terminal_condition if projection is not None else None
+    effect = projection.effect if projection is not None else OperationEffect.UNKNOWN
+    refusal_code = projection.refusal_ref if projection is not None else None
+    return AccountSessionExpiredError(
+        context={
+            "operation_id": str(controller.operation_id),
+            "terminal_condition": condition.value if condition is not None else "unknown",
+            "effect": effect.value,
+            "refusal_code": refusal_code,
+        }
+    )
+
+
+__all__ = ["read_runtime_account_session", "runtime_account_session_reader", "session_expired_with_receipt"]

@@ -9,12 +9,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.persistence.operations.financial_operand_custody import (
-    OperationFinancialOperandCustodyFilesystemRepository,
-)
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.adapters.persistence.operations.typed_financial_operand_custody import (
+    OperationTypedFinancialOperandCustodyFilesystemRepository,
+)
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     NOW,
     PROFILE_INPUT,
@@ -34,7 +34,6 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentKind,
     EnrollmentStage,
 )
-from cadrumo.application.user_profile.automation_execution import ThreadedAutomationAdministration
 from cadrumo.application.user_profile.automation_operations import (
     AutomationOperationRequest,
     build_automation_operation_definitions,
@@ -43,6 +42,7 @@ from cadrumo.application.user_profile.automation_operations import (
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.automation_administration_test_support import ThreadedAutomationAdministration
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -104,7 +104,7 @@ def test_registered_enrollment_lifecycle_uses_real_supervisor_and_protected_oper
 ) -> None:
     with administration_subject(tmp_path) as subject:
         registry = build_production_operation_registry(
-            automation_administration_factory=lambda _context, _profile: ThreadedAutomationAdministration(
+            automation_administration_factory=lambda _identity, _profile: ThreadedAutomationAdministration(
                 subject.service
             )
         )
@@ -123,7 +123,7 @@ def test_registered_enrollment_lifecycle_uses_real_supervisor_and_protected_oper
             lease_duration=timedelta(minutes=10),
             execution_timeout=timedelta(minutes=5),
             cleanup_timeout=timedelta(seconds=20),
-            financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
+            typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
                 root=subject.store.root / "financial"
             ),
         )
@@ -249,7 +249,7 @@ def test_missing_runtime_owner_refuses_registered_operations_without_effect(
             lease_duration=timedelta(minutes=10),
             execution_timeout=timedelta(minutes=5),
             cleanup_timeout=timedelta(seconds=20),
-            financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(
+            typed_financial_operand_custody=OperationTypedFinancialOperandCustodyFilesystemRepository(
                 root=subject.store.root / "financial"
             ),
         )

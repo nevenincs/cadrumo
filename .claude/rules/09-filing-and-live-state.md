@@ -1,0 +1,16 @@
+---
+name: 09-filing-and-live-state
+trigger: always_on
+---
+
+# Filing and live state
+
+Filing and live-state services separate local filing work from authenticated remote observation. A registry-pinned draft takes typed casilla inputs, calculates and validates them, then approval hashes relevant draft/source state. Export renders a selected fixed-width or XML layout to a local artifact and verifies bytes; it does not submit to AEAT. M200 repeated rows remain operator supplied, M210/M296 require caller fact sourcing, and M202 explicitly refuses unsupported producer fields. [Draft](../../src/cadrumo/application/filing/draft_construction.py#L80) [Export](../../src/cadrumo/application/filing/export.py#L435) [M202 refusal](../../src/cadrumo/application/filing/producer_snapshot.py#L1151).
+
+Live read paths capture censo, Borrador 100 PDFs, declaration registers, filed history, IVA wallet/history, notifications, notification documents and identity-verification observations into profile-bound local custody. Bulk capture reports failed pairs separately from genuine empty results; its dry run reads remotely but avoids local evidence writes. Justificante bytes become confirmed filing-chain evidence only after digest, CSV, model/period, taxpayer and current-record checks. A cotejo attempt can remain unavailable, distinct from denial. Notification document custody stores encrypted bytes and requires either a parsed reading or explicit parse refusal. [Filed capture](../../src/cadrumo/application/live/filed_data_capture.py#L665) [Receipt gate](../../src/cadrumo/application/live/filed_observation_persistence.py#L486) [Document custody](../../src/cadrumo/application/live/notification_documents.py#L240).
+
+The strongest controls are exact-profile admission, guarded local writes, typed effect accounting, and gradual evidence promotion. Scoped concerns are stale approval refresh at the upper export caller, XML non-casilla values that ignore a documented header fallback, a discovery-to-bulk Cartesian expansion for ragged model/year pairs, and several result projectors that do not locally compare terminal receipts. The operation host may supply the missing receipt guarantee; this static pass did not verify it. [Approval refresh](../../src/cadrumo/application/filing/draft_review.py#L529) [Pair reduction](../../src/cadrumo/application/live/filed_data_capture.py#L2329) [Receipt projector](../../src/cadrumo/application/live/filed_bulk_capture_operation.py#L137).
+
+## Export invariants
+
+Derive record order, field positions, widths, encoding, repetitions and conditions from the selected official design through the hydrated registry layout. Preview and emitted bytes share the canonical builder and formula results. Distinguish missing, required blank, permitted blank and zero; padding cannot supply a required fact. Refuse overflow, truncation, illegal characters, invalid cardinalities and inconsistent totals. Validate official examples where available and semantic parse/serialize round trips. Generated fixtures and references are regenerated from their owners, not hand-edited.

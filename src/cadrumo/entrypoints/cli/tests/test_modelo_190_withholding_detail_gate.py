@@ -21,6 +21,7 @@ as an advisory.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from contextlib import AbstractContextManager
 from pathlib import Path
@@ -33,8 +34,10 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     upsert_test_profile_facts,
 )
-from ....application.invoices.catalogue_add_operation import INVOICE_ADD_OPERATION_DEFINITION_ID
-from ....application.ledger.add_operation import LEDGER_ADD_OPERATION_DEFINITION_ID
+from ....application.invoices.catalogue_add_contracts import (
+    INVOICE_ADD_OPERATION_DEFINITION_ID,
+)
+from ....application.ledger.ledger_add_contracts import LEDGER_ADD_OPERATION_DEFINITION_ID
 from ....application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
 from ....application.modelo.operation_definitions import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
@@ -51,6 +54,7 @@ from ....application.user_profile.access_contracts import (
     DisclosurePermission,
 )
 from ....application.user_profile.tests.profile_values import complete_profile_facts
+from ....core.i18n.render import lookup_translation
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -71,6 +75,7 @@ _ADVISER_NIF = "B12345674"
 _ADVISER_NAME = "Asesoria Profesional SL"
 _QUARTERLY_INVOICE_DATES = ("2022-03-20", "2022-06-20", "2022-09-20", "2022-12-20")
 _ALL_QUARTERS_ATTESTED = "2022:1T,2022:2T,2022:3T,2022:4T"
+_LEDGER_EVIDENCE_FINDING_KEY = "application.modelo.findings.withholding_detail_absent_against_ledger_evidence"
 
 
 def _scope(client_id: UUID) -> AccessScope:
@@ -236,7 +241,7 @@ def _calculate(session: NativeApiCliSession[None], work_unit_id: str) -> str:
     assert values["decl.percepciones-total"] == "0.00", calculated.output
     assert values["decl.retenciones-total"] == "0.00", calculated.output
     assert any(
-        "no per-perceptor-clave observations are persisted" in notice["message"]
+        "no per-perceptor-clave observations are persisted" in notice.get("context", {}).get("detail", "")
         for notice in unwrap_envelope_notices(calculated.output)
     ), calculated.output
     calculation_revision_id = payload["calculation_revision_id"]
@@ -394,10 +399,13 @@ def test_the_refusal_renders_in_every_supported_locale(
             rendered[language] = verified.output
 
         assert len(set(rendered.values())) == 4
-        assert "modelo aggregate surface before verifying" in rendered["en"]
-        assert "Regístrelas mediante la superficie de agregación" in rendered["es"]
-        assert "Registreu-les mitjançant la superfície d'agregació" in rendered["ca"]
-        assert "Ellenőrzés előtt rögzítse őket" in rendered["hu"]
+        for language, output in rendered.items():
+            template = lookup_translation(_LEDGER_EVIDENCE_FINDING_KEY, locale=language)
+            assert template is not None, language
+            # The prose after the last fact is static, so the remedy reaches the operator verbatim.
+            remedy = re.split(r"%\{[a-z_]+\}", template)[-1].strip()
+            assert remedy, language
+            assert remedy in output, (language, remedy)
 
 
 def test_a_partially_attested_year_is_still_refused(

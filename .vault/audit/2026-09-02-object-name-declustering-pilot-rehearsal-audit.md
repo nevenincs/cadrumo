@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:adb274dfeeb35b6aa70a29bceafbbf6de2f1ad29a5d57a7b0ed2d81a5cc7da2a'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+body_hash: 'sha256:cb046fc295121f19cbe84b392a48e71dfd5f7bd431dac8d68a135962d9b4501f'
+related: []
 ---
 
 # `object-name-declustering` audit: `pilot rehearsal`
@@ -22,7 +21,7 @@ The no-argument `just fix-object-names` contract was exercised against the revie
 
 The component ID was `sha256:571f12c12b655bd3325dd205c28ea87ddcfafd5037b93b834e29a34269d971c8`. It contained one operation, one existing definition path, zero direct importers, zero boundary crossings, zero dynamic references, and zero generated artifacts. The manifest digest was `sha256:4efbcba8a1608eb10a1e1b3780b03ac7c54ff9201ac83a45440f55b450cf362e`.
 
-The exact changed-path set was `dev/registry/generate_result_disposition_fragments.py` and `dev/registry/result_disposition_fragment_generator.py`, with changed-path digest `sha256:19283d0247685ae1819616e8975ccdfa31625afa57611521636b894db2d244f1`. The source byte `sha256:4eed2284f884c35c18242e230e88f45b350f792bccba10ac888741657414c6ad` moved unchanged to the target in the disposable tree. The live source remained present, the live target remained absent, and the receipt reported `source_tree_unchanged: true`.
+The source byte `sha256:4eed2284f884c35c18242e230e88f45b350f792bccba10ac888741657414c6ad` moved unchanged to the target in the disposable tree. The live source remained present, the live target remained absent, and the receipt reported `source_tree_unchanged: true`.
 
 The enforced object-name count moved from 788 to 787 in the disposable tree. Finding `sha256:185e22d79ce6fa25f26b4d2086037944c305aa0b206078537c8fb89484b0f026` was resolved there; no finding IDs or signatures were introduced. The finding remains in the live tree because this step did not authorize or execute replay.
 
@@ -40,7 +39,7 @@ Explicit apply used receipt `sha256:87b27c11bccb24e8da701ab61fec5df5936d6ab9606e
 
 ### live-finding | low | reviewed finding is absent from the current audit inventory
 
-The live `just audit-object-names --json` run scanned 62,585 declarations and reported 2,330 findings: 793 enforced and 1,537 advisory. Its expected exit code was 1 because the wider backlog remains. The selected finding `sha256:185e22d79ce6fa25f26b4d2086037944c305aa0b206078537c8fb89484b0f026` was absent. The canonical declaration `module:dev.registry.result_disposition_fragment_generator#binding=1` occurred once at `dev/registry/result_disposition_fragment_generator.py` with the rehearsed source hash `sha256:4eed2284f884c35c18242e230e88f45b350f792bccba10ac888741657414c6ad`; the retired source path and production references were absent.
+The live `just audit-object-names --json` run scanned 62,585 declarations and reported 2,330 findings: 793 enforced and 1,537 advisory. Its expected exit code was 1 because the wider backlog remains. The selected finding `sha256:185e22d79ce6fa25f26b4d2086037944c305aa0b206078537c8fb89484b0f026` was absent.
 
 ### live-application-recommendation
 

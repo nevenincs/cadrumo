@@ -29,7 +29,7 @@ from .access_contracts import (
     ProfileAccessState,
     SessionKind,
 )
-from .access_policy import evaluate_session_authority
+from .session_authority_policy import evaluate_session_authority
 
 
 class AccessAdministrationAction(StrEnum):
@@ -165,15 +165,35 @@ def evaluate_access_administration(
     if requirement is AdministrationRequirement.LOCAL_RUNTIME_OWNER:
         return AccessDenied(code=AccessDenialCode.ADMINISTRATION_DENIED)
     if requirement is AdministrationRequirement.FRESH_PASSWORD:
-        if not _proof_matches(request, password_proof, profile, context):
-            return AccessDenied(code=AccessDenialCode.FRESH_PASSWORD_REQUIRED)
-        # A restricted frontend must perform the separate password journey. This
-        # result identifies that proof request, never upgrades its API session.
-        if password_proof is None:
-            return AccessDenied(code=AccessDenialCode.FRESH_PASSWORD_REQUIRED)
-        if profile.globally_locked and request.action is not AccessAdministrationAction.RESUME_PROFILE:
-            return AccessDenied(code=AccessDenialCode.PROFILE_LOCKED)
-        return AdministrationAllowed(request_id=request.request_id, expires_at=password_proof.expires_at)
+        return _evaluate_fresh_password_administration(request, password_proof, profile, context)
+    return _evaluate_session_administration(request, session, ancestors, grant, key, profile, context, requirement)
+
+
+def _evaluate_fresh_password_administration(
+    request: AccessAdministrationRequest,
+    proof: FreshPasswordAuthorization | None,
+    profile: ProfileAccessState,
+    context: AccessEvaluationContext,
+) -> AdministrationDecision:
+    if not _proof_matches(request, proof, profile, context) or proof is None:
+        return AccessDenied(code=AccessDenialCode.FRESH_PASSWORD_REQUIRED)
+    # A restricted frontend must perform the separate password journey. This
+    # result identifies that proof request, never upgrades its API session.
+    if profile.globally_locked and request.action is not AccessAdministrationAction.RESUME_PROFILE:
+        return AccessDenied(code=AccessDenialCode.PROFILE_LOCKED)
+    return AdministrationAllowed(request_id=request.request_id, expires_at=proof.expires_at)
+
+
+def _evaluate_session_administration(
+    request: AccessAdministrationRequest,
+    session: AccessSession | None,
+    ancestors: tuple[AccessSession, ...],
+    grant: AutomationGrant | None,
+    key: ApiKeyRecord | None,
+    profile: ProfileAccessState,
+    context: AccessEvaluationContext,
+    requirement: AdministrationRequirement,
+) -> AdministrationDecision:
     decision = evaluate_session_authority(
         session=session,
         ancestors=ancestors,
@@ -202,20 +222,42 @@ def _proof_matches(
     if proof is None or proof.consumed or context.clock_rollback_detected or not context.private_work_available:
         return False
     return (
-        proof.request == request
-        and any(
-            login.login_id == proof.originating_login_id
-            and login.os_owner_id == profile.binding.os_owner_id
-            and login.active
-            and not login.locked
-            for login in context.login_contexts
-        )
-        and proof.binding == profile.binding
+        _proof_matches_reviewed_origin(request, proof, profile, context)
+        and _proof_matches_current_authority(proof, profile, context)
+        and _proof_is_within_lifetime(proof, context)
+    )
+
+
+def _proof_matches_reviewed_origin(
+    request: AccessAdministrationRequest,
+    proof: FreshPasswordAuthorization,
+    profile: ProfileAccessState,
+    context: AccessEvaluationContext,
+) -> bool:
+    return proof.request == request and any(
+        login.login_id == proof.originating_login_id
+        and login.os_owner_id == profile.binding.os_owner_id
+        and login.active
+        and login.unlocked
+        for login in context.login_contexts
+    )
+
+
+def _proof_matches_current_authority(
+    proof: FreshPasswordAuthorization, profile: ProfileAccessState, context: AccessEvaluationContext
+) -> bool:
+    return (
+        proof.binding == profile.binding
         and proof.profile_lock_generation == profile.lock_generation
         and proof.runtime_boot_id == context.runtime_boot_id
         and proof.connection_id == context.connection_id
         and proof.client_id == context.authenticated_client_id
-        and proof.verified_at <= context.now < proof.expires_at
+    )
+
+
+def _proof_is_within_lifetime(proof: FreshPasswordAuthorization, context: AccessEvaluationContext) -> bool:
+    return (
+        proof.verified_at <= context.now < proof.expires_at
         and 0
         <= context.monotonic_now - proof.verified_monotonic
         < (proof.expires_at - proof.verified_at).total_seconds()

@@ -14,17 +14,13 @@ from ...application.modelo.filing_selection_operation import (
     ModeloWorkFilingRecordProjection,
     ModeloWorkFilingRecordRequest,
 )
-from ...application.modelo.operation_definitions import (
-    MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
-    ModeloWorkAmendRequest,
-)
+from ...application.modelo.operation_definitions import MODELO_WORK_AMEND_OPERATION_DEFINITION_ID
+from ...application.modelo.work_amend_contracts import ModeloWorkAmendRequest
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from ...core.operations import OperationEffect, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
+from .runtime_registered_operation import run_registered_operation
 
 
 def read_modelo_work_filing_record(
@@ -52,12 +48,7 @@ def read_modelo_work_filing_record(
         or result.unit.bucket_id != str(client.profile_id)
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -87,12 +78,7 @@ def read_modelo_work_amendment_context(
         or result.calculation.bucket_id != str(client.profile_id)
         or completed.effect is not OperationEffect.NONE
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -124,12 +110,7 @@ def run_modelo_work_amendment(
         or result.m303_rectificativa_motive is not request.m303_rectificativa_motive
         or completed.effect is not OperationEffect.UPDATED
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=OperationTerminalCondition.SUCCEEDED,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return completed
 
 

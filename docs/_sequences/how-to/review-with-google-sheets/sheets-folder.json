@@ -13,44 +13,31 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.google.status",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "account_email": null,
-          "client_id": null,
-          "client_registered": false,
           "granted_scopes": [],
           "issued_at": null,
-          "last_refresh_at": null,
           "operation": "config.google.status",
           "profile": "<profile-id>",
-          "reauth_required": null,
           "session_present": false
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
       "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "google",
-        "folder",
-        "set",
-        "docs-folder-123"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tconfig.google.folder.set\nprofile\t<profile-id>\nroot_folder_id\tdocs-folder-123\n"
     },
     {
       "argv": [
@@ -66,15 +53,23 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.google.folder.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
-          "configured": true,
+          "configured": false,
           "operation": "config.google.folder.view",
           "profile": "<profile-id>",
-          "root_folder_id": "docs-folder-123"
+          "root_folder_id": null
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

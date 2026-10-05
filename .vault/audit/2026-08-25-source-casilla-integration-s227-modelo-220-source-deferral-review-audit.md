@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:099270176a975d2ce7b9d6c3a1bc4cc970b28722e19f93bb5c159732f988ea43'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+related: []
 ---
 # `source-casilla-integration` audit: `S227 Modelo 220 source deferral review`
 

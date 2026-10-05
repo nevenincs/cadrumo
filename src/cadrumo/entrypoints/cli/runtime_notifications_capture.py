@@ -12,14 +12,12 @@ from ...application.live.notifications_capture_operation import (
     NotificationsCapturePublicResultV1,
     NotificationsCaptureRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_deadlines import provider_login_settlement_seconds
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +41,7 @@ def read_notifications_capture_for_cli(ctx: typer.Context, *, profile_id: UUID) 
         request_version=1,
         result_version=1,
         timeout=120,
+        settlement_timeout=provider_login_settlement_seconds(after_login=120),
     )
     try:
         projection = completed.projection
@@ -57,13 +56,7 @@ def read_notifications_capture_for_cli(ctx: typer.Context, *, profile_id: UUID) 
         ):
             raise ValueError("notification capture result disagrees with its settled receipt")
     except Exception:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return NotificationsCaptureRead(completion=completed, projection=projection)
 
 

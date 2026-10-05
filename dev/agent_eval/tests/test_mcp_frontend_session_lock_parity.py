@@ -29,22 +29,23 @@ from pydantic import JsonValue
 from textual.widgets import Button, Input, Static
 
 from cadrumo.adapters.local_runtime import runtime_credentials
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner, owner_id
+from cadrumo.adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     AdministrationSubject,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.auth.read_operation import (
+from cadrumo.application.auth.auth_read_contracts import (
     AUTH_READ_OPERATION_DEFINITION_ID,
     AUTH_READ_RESULT_SCHEMA_ID,
     AuthReadProjection,
@@ -68,6 +69,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessStatus,
 )
@@ -93,7 +95,8 @@ from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnec
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.runtime_access_management import RuntimeAccessManagementScreen
 from cadrumo.entrypoints.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 __all__ = ["authority_operation"]
@@ -117,7 +120,7 @@ class _LoginObservation:
             login_id=self.login_id,
             os_owner_id=owner_id(),
             active=self.active,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE if self.active else LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -223,7 +226,7 @@ def _runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[_Parit
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
         # Only the installed client-store composition is substituted; admission remains real.

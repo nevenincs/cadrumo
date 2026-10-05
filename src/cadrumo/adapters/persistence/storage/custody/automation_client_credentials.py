@@ -22,10 +22,11 @@ from .....application.user_profile.automation_custody_port import (
     AutomationSecretStore,
     NativeSecretBackend,
 )
+from .....core.base64_codec import b64_decode_canonical
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .automation_crypto import CustodyAutomationKeyIssuer, canonical_record, parse_record
-from .automation_store import CLIENT_NAMESPACE
+from .automation_native_identity import CLIENT_NAMESPACE
 
 # Bound the private envelope to the current native credential-blob budget
 # before asking any composed native backend to write it.
@@ -123,10 +124,8 @@ class NativeClientCredentialStore:
     @staticmethod
     def _credential(envelope: _ClientCredentialEnvelope) -> SecretBytes:
         try:
-            raw = base64.b64decode(envelope.secret_b64, validate=True)
-            if base64.b64encode(raw).decode("ascii") != envelope.secret_b64:
-                raise ValueError
-        except (ValueError, UnicodeError):
+            raw = b64_decode_canonical(envelope.secret_b64)
+        except ValueError:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
         credential = SecretBytes(raw)
         if CustodyAutomationKeyIssuer.verifier(credential)[0] != envelope.key_id:
@@ -263,27 +262,8 @@ class NativeClientCredentialStore:
         try:
             self._secrets.replace(CLIENT_NAMESPACE, str(credential_reference), SecretBytes(encoded))
         except Exception as error:
-            # A native write error can occur after publication. Read only the
-            # same reference; no enumeration, blind replay or secret output.
-            try:
-                observed = self._native_read(credential_reference)
-            except AutomationCustodyError:
-                raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
-            if observed is not None and secrets.compare_digest(observed, encoded):
-                return metadata
-            if observed is not None:
-                self._verified(
-                    observed,
-                    reference=credential_reference,
-                    grant_id=grant_id,
-                    key_id=key_id,
-                    review_digest=review_digest,
-                    mismatch=AutomationCustodyCode.CONFLICT,
-                )
-                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT) from None
-            if isinstance(error, AutomationCustodyError):
-                raise error from None
-            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+            return self._reconcile_failed_replace(error, encoded, metadata)
+
         observed = self._native_read(credential_reference)
         if observed is None or not secrets.compare_digest(observed, encoded):
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
@@ -318,6 +298,35 @@ class NativeClientCredentialStore:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
         if self._native_read(credential_reference) is not None:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+
+    def _reconcile_failed_replace(
+        self,
+        error: Exception,
+        encoded: bytes,
+        metadata: ClientCredentialMetadata,
+    ) -> ClientCredentialMetadata:
+        """Inspect only the original reference after an uncertain native write; never replay it."""
+        # A native write error can occur after publication. Read only the
+        # same reference; no enumeration, blind replay or secret output.
+        try:
+            observed = self._native_read(metadata.credential_reference)
+        except AutomationCustodyError:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
+        if observed is not None and secrets.compare_digest(observed, encoded):
+            return metadata
+        if observed is not None:
+            self._verified(
+                observed,
+                reference=metadata.credential_reference,
+                grant_id=metadata.grant_id,
+                key_id=metadata.key_id,
+                review_digest=metadata.review_digest,
+                mismatch=AutomationCustodyCode.CONFLICT,
+            )
+            raise AutomationCustodyError(AutomationCustodyCode.CONFLICT) from None
+        if isinstance(error, AutomationCustodyError):
+            raise error from None
+        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
 
 
 class ClientCredentialHandle:

@@ -2,14 +2,30 @@
 
 from __future__ import annotations
 
+import asyncio
+from dataclasses import replace
 from datetime import datetime
-from uuid import UUID
+from types import SimpleNamespace
+from typing import cast
+from uuid import UUID, uuid4
 
 import pytest
+from pydantic import BaseModel
 
+from ....core.operations import profile_operation_subject
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.models import OperationIdentity, OperationRequest
+from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, OperationAccessRequest
+from ...user_profile.access_errors import ProfileAccessRefusedError
+from .. import diagnostic_report_operation as diagnostic_report_module
 from ..diagnostic_report_operation import (
     AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE,
+    AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
+    AuthDiagnosticReportExecutor,
     AuthDiagnosticReportPorts,
     AuthDiagnosticReportRequest,
     build_auth_diagnostic_report_definition,
@@ -23,6 +39,26 @@ from ..diagnostics import (
 from ..diagnostics_ports import AuthDiagnosticPersistenceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PROFILE = UUID("3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a")
+_OTHER = UUID("4b4b4b4b-4b4b-4b4b-8b4b-4b4b4b4b4b4b")
+
+
+class _UnusedDiagnosticFactory:
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def __call__(self, *, bucket_id: str) -> AuthDiagnosticReportPorts:
+        self.calls.append(bucket_id)
+        raise AssertionError(f"unexpected execution for {bucket_id}")
+
+
+class _PhaseRecorder:
+    def __init__(self) -> None:
+        self.phases: list[str] = []
+
+    async def phase(self, phase_code: str) -> None:
+        self.phases.append(phase_code)
 
 
 class _DiagnosticPort:
@@ -64,18 +100,160 @@ def test_report_prepare_is_prewrite_and_commit_preserves_canonical_phone_state()
 
 def test_report_public_definition_is_a_real_human_mutation() -> None:
     """The public schema compiles with typed absence and a closed phone state."""
-
-    def unused_factory(*, bucket_id: str) -> AuthDiagnosticReportPorts:
-        raise AssertionError(f"unexpected execution for {bucket_id}")
-
-    definition = build_auth_diagnostic_report_definition(unused_factory)
+    factory = _UnusedDiagnosticFactory()
+    definition = build_auth_diagnostic_report_definition(factory)
     registration = build_auth_diagnostic_report_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     assert AUTH_DIAGNOSTIC_NOT_FOUND_REFUSAL_CODE in registry.definitions[0].refusal_detail_codes
     assert OperationFrontendProjection.MCP not in registry.definitions[0].permitted_frontends
     request = AuthDiagnosticReportRequest(
-        profile_id=UUID("3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a"),
+        profile_id=_PROFILE,
         diagnostic_id="d-1",
         phone_state=AuthDiagnosticPhoneState.APP_DID_NOT_PROMPT,
     )
     assert request.phone_state.value == "app_did_not_prompt"
+    assert factory.calls == []
+
+
+_PIN = cast(PinnedAuthorityOperation, object())
+_PERIOD = Period.from_year_and_code(2026, "1T")
+
+
+def _report_registry() -> OperationRegistry:
+    definition = build_auth_diagnostic_report_definition(_UnusedDiagnosticFactory())
+    return OperationRegistry(
+        definitions=(definition,), public_registrations=(build_auth_diagnostic_report_registration(definition),)
+    )
+
+
+def _report_request() -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=AuthDiagnosticReportRequest(
+            profile_id=_PROFILE, diagnostic_id="d-1", phone_state=AuthDiagnosticPhoneState.APP_DID_NOT_PROMPT
+        ),
+    )
+
+
+def _submitted(
+    *,
+    profile_id: UUID = _PROFILE,
+    definition_id: str = AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
+    action: AccessAction = AccessAction.SUBMIT,
+    periods: frozenset[Period] = frozenset(),
+) -> OperationAccessRequest:
+    return OperationAccessRequest(
+        profile_id=profile_id,
+        definition_id=definition_id,
+        action=action,
+        frontend=OperationFrontendProjection.CLI,
+        periods=periods,
+        period_independent=not periods,
+        destination_id=uuid4(),
+    )
+
+
+def _report_context(
+    registry: OperationRegistry, action: AccessAction, *, frontend: OperationFrontendProjection
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=action,
+        frontend=frontend,
+        contract=registry.lookup_public_contract(AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID),
+        published_authority=Availability.AVAILABLE,
+        admitted_request=_submitted(),
+    )
+
+
+@pytest.mark.parametrize("action", [AccessAction.OBSERVE, AccessAction.RESULT, AccessAction.COMMIT])
+def test_report_replay_from_a_fresh_session_binds_the_admission_not_its_origin(action: AccessAction) -> None:
+    """A later session has a new destination and frontend; profile, definition, action and scope still bind."""
+    registry = _report_registry()
+    request = _report_request()
+    fresh = _report_context(registry, action, frontend=OperationFrontendProjection.TUI)
+    assert fresh.admitted_request is not None and fresh.admitted_request.destination_id != fresh.destination_id
+
+    resolved = resolve_operation_access(registry=registry, request=request, context=fresh)
+
+    assert resolved.request.destination_id == fresh.destination_id
+    assert resolved.request.frontend is OperationFrontendProjection.TUI
+    assert (action is AccessAction.COMMIT) is not bool(resolved.policy.disclosures)
+    assert all(item.destination_id == fresh.destination_id for item in resolved.policy.disclosures)
+    for foreign in (
+        _submitted(profile_id=_OTHER),
+        _submitted(definition_id="auth.diagnostics.other"),
+        _submitted(action=AccessAction.START),
+        _submitted(periods=frozenset({_PERIOD})),
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_operation_access(
+                registry=registry,
+                request=request,
+                context=replace(fresh, admitted_request=foreign, authority_operation=_PIN),
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START])
+def test_report_entry_actions_need_held_authority_even_with_a_matching_admission(action: AccessAction) -> None:
+    registry = _report_registry()
+    request = _report_request()
+    context = _report_context(registry, action, frontend=OperationFrontendProjection.CLI)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(registry=registry, request=request, context=context)
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    held = replace(context, authority_operation=_PIN)
+    assert resolve_operation_access(registry=registry, request=request, context=held).request.action is action
+
+
+@pytest.mark.parametrize("mismatch", ["request_subject", "context_definition", "context_subject"])
+def test_report_executor_refuses_identity_mismatch_before_profile_access_or_work(
+    monkeypatch: pytest.MonkeyPatch, mismatch: str
+) -> None:
+    """The real executor refuses all three identity mismatches before protected work."""
+    expected_subject = profile_operation_subject(str(_PROFILE))
+    other_subject = profile_operation_subject(str(_OTHER))
+    request_subject = other_subject if mismatch == "request_subject" else expected_subject
+    context_definition = (
+        "auth.diagnostics.other" if mismatch == "context_definition" else AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID
+    )
+    context_subject = other_subject if mismatch == "context_subject" else request_subject
+    request = OperationRequest[AuthDiagnosticReportRequest](
+        definition_id=AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
+        subject_ref=request_subject,
+        payload=AuthDiagnosticReportRequest(
+            profile_id=_PROFILE,
+            diagnostic_id="d-1",
+            phone_state=AuthDiagnosticPhoneState.APP_DID_NOT_PROMPT,
+        ),
+    )
+    events = _PhaseRecorder()
+    context = SimpleNamespace(
+        identity=OperationIdentity(
+            operation_id="b" * 64,
+            definition_id=context_definition,
+            subject_ref=context_subject,
+        ),
+        events=events,
+    )
+    active_profile_lookups: list[None] = []
+    factory = _UnusedDiagnosticFactory()
+
+    def active_profile_must_not_be_read() -> str:
+        active_profile_lookups.append(None)
+        raise AssertionError("identity refusal must precede the active-profile lookup")
+
+    monkeypatch.setattr(diagnostic_report_module, "require_active_bucket_id", active_profile_must_not_be_read)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        asyncio.run(AuthDiagnosticReportExecutor(factory).execute(request, cast(OperationExecutorContext, context)))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert active_profile_lookups == []
+    assert events.phases == []
+    assert factory.calls == []

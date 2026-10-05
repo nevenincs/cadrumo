@@ -14,13 +14,13 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
-from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject, changed
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
@@ -35,6 +35,7 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.view_operation import (
@@ -45,6 +46,8 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+
+from .....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 
 pytestmark = [
     pytest.mark.integration,
@@ -65,7 +68,7 @@ class _NativeLogin:
             login_id=self.login_id,
             os_owner_id=self.owner,
             active=True,
-            locked=False,
+            lock_state=OsLockState.UNLOCKED,
             unattended=LoginEligibility.ELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -158,7 +161,10 @@ def test_native_tui_controller_keeps_start_and_review_authority_with_original_se
             capture_login=lambda _channel: _NativeLogin(owner_id()),
             secret_store=lambda: enrollment.native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         clients: list[RuntimeFrontendClient] = []
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)

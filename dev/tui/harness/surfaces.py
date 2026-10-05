@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
 from textual.app import App
@@ -73,7 +74,8 @@ def _login() -> App[Any]:
     from cadrumo.application.user_profile.login_interaction import preselected_profile_login_id, profile_login_choices
     from cadrumo.core.async_cleanup import close_async_resources
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginScreen
+    from cadrumo.entrypoints.tui.secret.runtime_login import RuntimeLoginScreen
+    from cadrumo.entrypoints.tui.secret.runtime_login_contracts import RuntimeLoginHandoff
 
     async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
         return await open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
@@ -188,10 +190,117 @@ def _workbench_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _declarations_surfaces() -> tuple[Surface, ...]:
+    """Clearly synthetic safe portfolio facts rendered by the production screens."""
+    from .declarations_fixtures import build_external_details, build_grouped, build_picker_modelo, build_picker_period
+
+    return (
+        Surface(
+            "declarations-portfolio",
+            "Synthetic grouped filing portfolio",
+            build_grouped,
+            interfaces=("cadrumo.entrypoints.tui.declarations.grouped.GroupedDeclarationsScreen",),
+        ),
+        Surface(
+            "declarations-new-modelo",
+            "Registry choices in the new-declaration picker",
+            build_picker_modelo,
+            interfaces=("cadrumo.entrypoints.tui.declarations.picker.NewDeclarationPicker",),
+        ),
+        Surface(
+            "declarations-new-period",
+            "Worded supported periods in the new-declaration picker",
+            build_picker_period,
+            interfaces=("cadrumo.entrypoints.tui.declarations.picker.NewDeclarationPicker",),
+        ),
+        Surface(
+            "declarations-external-details",
+            "Synthetic independent AEAT filing observation",
+            build_external_details,
+            interfaces=("cadrumo.entrypoints.tui.declarations.external_details.ExternalFilingDetailsScreen",),
+        ),
+    )
+
+
+def _profile_surfaces() -> tuple[Surface, ...]:
+    """Reach the setup stages and editors on fresh, encrypted synthetic profiles."""
+    from .profile_fixtures import (
+        ProfileFixtureState,
+        build_profile_fixture,
+        profile_fixture_interfaces,
+        profile_fixture_storage,
+    )
+
+    return tuple(
+        Surface(
+            f"profile-{state.value}",
+            f"Profile setup or editing: {state.value}",
+            partial(build_profile_fixture, state),
+            interfaces=profile_fixture_interfaces(state),
+            provision=profile_fixture_storage,
+        )
+        for state in ProfileFixtureState
+    )
+
+
+def _ledger_own_account_surfaces() -> tuple[Surface, ...]:
+    """Every state of the own bank account setup screen over a synthetic register."""
+    from .ledger_fixtures import OwnAccountFixtureState, build_own_account_fixture, own_account_fixture_interfaces
+
+    return tuple(
+        Surface(
+            f"ledger-own-accounts-{state.value}",
+            f"Own bank account setup: {state.value}",
+            partial(build_own_account_fixture, state),
+            interfaces=own_account_fixture_interfaces(state),
+        )
+        for state in OwnAccountFixtureState
+    )
+
+
+def _ledger_import_account_surfaces() -> tuple[Surface, ...]:
+    """The import screen's own-account binding over a synthetic register."""
+    from .ledger_fixtures import ImportAccountFixtureState, build_import_account_fixture
+
+    return tuple(
+        Surface(
+            f"ledger-import-account-{state.value}",
+            f"Statement import bound to an own account: {state.value}",
+            partial(build_import_account_fixture, state),
+            interfaces=("cadrumo.entrypoints.tui.ledger.import_flow.LedgerImportScreen",),
+        )
+        for state in ImportAccountFixtureState
+    )
+
+
+def _modelo_export_surfaces() -> tuple[Surface, ...]:
+    """The export dialog's own-account choice and the result that names it."""
+    from .modelo_export_fixtures import (
+        ModeloExportFixtureState,
+        build_modelo_export_fixture,
+        modelo_export_fixture_interfaces,
+    )
+
+    return tuple(
+        Surface(
+            f"modelo-export-{state.value}",
+            f"Modelo export with an own-account choice: {state.value}",
+            partial(build_modelo_export_fixture, state),
+            interfaces=modelo_export_fixture_interfaces(state),
+        )
+        for state in ModeloExportFixtureState
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
         *_workbench_surfaces(),
+        *_declarations_surfaces(),
+        *_profile_surfaces(),
+        *_ledger_own_account_surfaces(),
+        *_ledger_import_account_surfaces(),
+        *_modelo_export_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

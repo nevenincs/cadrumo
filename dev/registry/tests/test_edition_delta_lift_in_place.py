@@ -35,16 +35,14 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
-from ..edition_delta_migration import (
-    PredecessorBasis,
-    _chain_materialisation,
+from ..edition_delta_chain_materialisation import chain_materialisation as _chain_materialisation
+from ..edition_delta_equivalence import _member_difference, _prove_chain
+from ..edition_delta_planning import _plan, plan_migration
+from ..edition_delta_source import _read_edition
+from ..edition_delta_types import PredecessorBasis
+from ..edition_delta_writer import (
     _edition_changes,
-    _member_difference,
-    _plan,
-    _prove_chain,
-    _read_edition,
     _write_edition,
-    plan_migration,
 )
 from ..edition_round_trip import RoundTripReport
 

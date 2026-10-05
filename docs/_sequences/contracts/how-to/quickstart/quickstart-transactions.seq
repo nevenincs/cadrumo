@@ -1,12 +1,12 @@
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
 @step Add the income row directly with its tax fields.
 aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key qs-venta
-@step Register the supplier's invoice for the expense, and take its evidence id from the output.
+@step Register the supplier's invoice for the expense, and take its supporting document reference from the output.
 aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 21 --iva-amount 105 --idempotency-key qs-factura
 @capture evidence_id result.evidence_id
 @step Add the deductible expense row with its expense category and the invoice linked.
 aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --purchase-invoice-evidence-id {evidence_id} --idempotency-key qs-compra
-@step List the ledger to confirm both rows.
+@step List the records to confirm both rows.
 @result aeat --format json app ledger list
 @expect result.total == 2
 @expect exit_code == 0

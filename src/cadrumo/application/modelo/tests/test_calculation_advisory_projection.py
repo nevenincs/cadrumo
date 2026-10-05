@@ -26,6 +26,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -125,8 +126,10 @@ def test_malformed_diagnostic_is_refused_before_rendering() -> None:
 
 def test_overdue_preview_roundtrip_preserves_unassessed_rate_facts() -> None:
     posture = ModeloWorkDeadlinePosture(
-        closes_on=date(2025, 1, 31),
-        days_overdue=31,
+        closes_on=date(2025, 2, 3),
+        nominal_closes_on=date(2025, 2, 1),
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        days_overdue=28,
         conditional_recargo_preview=ModeloWorkConditionalRecargoPreview(
             band_id="recargo-band",
             surcharge_pct=Decimal("5.00"),
@@ -139,25 +142,35 @@ def test_overdue_preview_roundtrip_preserves_unassessed_rate_facts() -> None:
     restored = ModeloWorkDeadlinePostureSnapshot.model_validate_json(snapshot.model_dump_json())
 
     assert restored.to_posture() == posture
+    assert restored.nominal_closes_on == date(2025, 2, 1)
+    assert restored.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
     assert restored.conditional_recargo_preview is not None
     assert restored.conditional_recargo_preview.surcharge_pct == "5.00"
 
 
 def test_preview_cannot_be_attached_to_in_time_posture() -> None:
-    snapshot = ModeloWorkDeadlinePostureSnapshot.from_posture(
-        ModeloWorkDeadlinePosture(closes_on=date(2025, 12, 31), days_overdue=1)
+    overdue = ModeloWorkDeadlinePostureSnapshot.from_posture(
+        ModeloWorkDeadlinePosture(
+            closes_on=date(2025, 12, 31),
+            nominal_closes_on=date(2025, 12, 31),
+            holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+            days_overdue=1,
+            conditional_recargo_preview=ModeloWorkConditionalRecargoPreview(
+                band_id="recargo-band",
+                surcharge_pct=Decimal("5"),
+                interest_applies=False,
+                legal_ref="ley-58-2003:art-27",
+                rate_reference_on=date(2026, 1, 1),
+            ),
+        )
     )
-    value = snapshot.model_dump(mode="json")
+    # Python-mode dump keeps real dates, so strict validation reaches the posture rule.
+    value = overdue.model_dump()
+    assert isinstance(value["closes_on"], date)
+    assert ModeloWorkDeadlinePostureSnapshot.model_validate(value) == overdue
     value["days_remaining"], value["days_overdue"] = 1, None
-    value["conditional_recargo_preview"] = {
-        "band_id": "recargo-band",
-        "surcharge_pct": "5",
-        "interest_applies": False,
-        "legal_ref": "ley-58-2003:art-27",
-        "rate_reference_on": "2025-03-03",
-        "assessment_status": "unassessed",
-    }
-    with pytest.raises(ValidationError):
+
+    with pytest.raises(ValidationError, match="recargo preview requires an overdue deadline"):
         ModeloWorkDeadlinePostureSnapshot.model_validate(value)
 
 

@@ -7,11 +7,9 @@ from typing import Final
 from cadrumo.application.operator_surface.command_ports import CommandWriteRoute
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .command_spec import (
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -19,6 +17,7 @@ from .command_spec import (
     ValueContract,
     translation_key,
 )
+from .command_spec import ExecutionPolicySpec, InvocationSpec
 
 _METADATA_GROUP_INVOCATION: Final[InvocationSpec] = InvocationSpec(
     no_args_is_help=True,
@@ -41,6 +40,15 @@ _ENCRYPTED_LOCAL_READ_POLICY: Final[ExecutionPolicySpec] = ExecutionPolicySpec(
     capabilities=frozenset(["encrypted-facts"]),
     side_effects=frozenset(["none"]),
     performance="local-io",
+    write_route=CommandWriteRoute.NONE,
+    destructive=False,
+    handoff=False,
+    live_write=False,
+)
+_NETWORK_READ_POLICY: Final[ExecutionPolicySpec] = ExecutionPolicySpec(
+    capabilities=frozenset(["aeat", "encrypted-facts", "network"]),
+    side_effects=frozenset(["network"]),
+    performance="external-io",
     write_route=CommandWriteRoute.NONE,
     destructive=False,
     handoff=False,
@@ -199,6 +207,7 @@ __all__ = [
     "_LEAF_INVOCATION",
     "_METADATA_GROUP_INVOCATION",
     "_METADATA_POLICY",
+    "_NETWORK_READ_POLICY",
     "_OPTIONAL_MODELOS_OPTION",
     "_OPTIONAL_TAXPAYER_NIF_OPTION",
     "_OPTIONAL_YEAR_FROM_OPTION",

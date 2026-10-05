@@ -31,8 +31,6 @@ bindings = [
     "modelo-130-resultados-negativos-anteriores",
     "modelo-130-pagos-fraccionados-anteriores",
     "modelo-130-actividad-economica-ingresos-cumulative",
-    "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
-    "modelo-130-actividad-economica-rendimiento-neto-cumulative",
     "modelo-130-actividad-economica-gastos-cumulative",
 ]
 dependency_classifications = ["modelo-130-dep-130", "modelo-130-dep-100"]

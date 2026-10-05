@@ -288,7 +288,7 @@ def test_supervisor_admits_exact_mcp_profile_and_projects_guarded_iva_history_ca
             preflight_calls.append((profile_id_arg, pinned_authority))
             trace.append("provider_preflight")
 
-        def composition_factory(output_root: Path) -> FiledHistoryComposition:
+        def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
             composition_calls.append(output_root)
             trace.append("composition")
             return cast(FiledHistoryComposition, composition)

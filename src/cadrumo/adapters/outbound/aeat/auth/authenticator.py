@@ -22,7 +22,7 @@ Design notes:
   is ~20 minutes (the extra 2 minutes is safety margin).
 * ``authenticate()`` uses the configured browser-session factory. The
   authenticator owns and deterministically closes every session it creates.
-* ``reauthenticate()`` is single-shot. Callers cap retries at ONE
+* Callers can close the provider and authenticate again. They cap retries at ONE
   per downstream call-site; a second consecutive failure raises
   :class:`AeatSessionExpiredError` upwards rather than loop.
 """
@@ -203,8 +203,7 @@ class AeatAuthenticator:
     * Playwright browser-context construction with the cert wired
       through (via an injectable browser session factory).
     * Login-assertion verification.
-    * Session lifecycle: ``authenticate``, ``reauthenticate``,
-      ``close``.
+    * Session lifecycle: ``authenticate`` and ``close``.
 
     Use as an async context manager::
 
@@ -331,9 +330,7 @@ class AeatAuthenticator:
         async with self._lifecycle.work(), self._lock:
             if self.active_session is not None:
                 raise AeatLoginAssertionError(
-                    "AeatAuthenticator already has an active session; "
-                    "call close() or reauthenticate() before "
-                    "authenticating again",
+                    "AeatAuthenticator already has an active session; call close() before authenticating again",
                     translated_message="adapters.auth.authenticator.errors.already_active",
                 )
             if self._browser_session is not None or self._context is not None:
@@ -426,45 +423,6 @@ class AeatAuthenticator:
         )
         return session
 
-    async def reauthenticate(self, session: AeatSession) -> AeatSession:
-        """Drop the current context and re-run :meth:`authenticate`.
-
-        **Single-shot.** The method itself does not retry; callers
-        cap retries at one per downstream call-site. A second
-        consecutive failure — whether the cert load fails, the
-        protected-resource probe fails — MUST raise
-        :class:`AeatSessionExpiredError` upwards rather than loop.
-
-        **Not atomic across the teardown + authenticate boundary.**
-        If another task calls :meth:`authenticate` between this
-        method's ``close()`` completing and its ``authenticate()``
-        starting, the second call wins the "already has active
-        session" guard check and this call raises
-        :class:`AeatLoginAssertionError`. External serialisation is
-        required if concurrent ``reauthenticate`` / ``authenticate``
-        is a real scenario for the caller.
-
-        Args:
-            session: The session to replace. Passed for traceability
-                (logging, audit) and to document that the caller
-                acknowledges it is discarded.
-
-        Returns:
-            A fresh :class:`AeatSession` with a new
-            ``authenticated_at`` + ``idle_deadline``.
-        """
-        log.info(
-            "AeatAuthenticator: reauthenticate old_authenticated_at=%s",
-            session.authenticated_at.isoformat(),
-        )
-        # Delegate teardown to close() (itself lock-protected and
-        # idempotent) so there is no risk of holding the lock across
-        # the authenticate() call. close() also nulls _browser_session
-        # and drains in-flight pages, so the subsequent authenticate()
-        # starts from a fully clean slate.
-        await self.close()
-        return await self.authenticate()
-
     async def verify(self, session: AeatSession) -> AeatLoginAssertion:
         """Navigate the authenticated context to the canonical protected resource.
 
@@ -479,8 +437,7 @@ class AeatAuthenticator:
         Returns:
             A frozen :class:`AeatLoginAssertion`. Negative results
             (``is_valid=False``) are returned as records, not raised
-            — callers may invoke :meth:`reauthenticate` once and
-            re-verify.
+            — callers may close, authenticate once and re-verify.
 
         Raises:
             AeatSessionExpiredError: When the session's idle
@@ -501,7 +458,7 @@ class AeatAuthenticator:
             )
 
         # Snapshot-and-register the context under the lock so that
-        # close() / reauthenticate() cannot null it out mid-navigation.
+        # close() cannot null it out mid-navigation.
         # The lifecycle barrier prevents registration while any close caller
         # is queued or tearing down owned browser resources.
         async with self._lifecycle.work(), self._lock:
@@ -662,7 +619,7 @@ class AeatAuthenticator:
 
         After every registered close caller returns, the authenticator is
         re-usable (the browser session and context are nulled).
-        ``reauthenticate()`` depends on this re-use path.
+        A later :meth:`authenticate` call uses this re-use path.
         """
         context_closed = False
         browser_session_closed = False

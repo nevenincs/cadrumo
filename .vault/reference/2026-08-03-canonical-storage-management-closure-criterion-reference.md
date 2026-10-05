@@ -3,13 +3,15 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-05'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:47c70efa7235efcd761358c6cf445e7b1bc70655915936afbcf43c111fbe71d1'
+body_hash: 'sha256:9d443b10a0c5689fc4afcf9ceec32505ce6f0f4b49b188cc909b70788c121128'
 related: []
 ---
 
 # `canonical-storage-management` reference: `canonical storage management closure criterion`
+
+## Summary
 
 Defines what "complete" means for the `canonical-storage-management` campaign, so
 the honesty review has a checkable standard rather than a strength-of-momentum
@@ -147,22 +149,22 @@ three of the four families **already closed by the grammar mechanism**:
   `SUBMISSIONS_AMENDMENT_RESULTS`, `SUBMISSIONS_AMENDMENTS`, and
   `ATTACHMENTS_MANIFESTS`. Plain membership, not `StoragePathDefinition` —
   correct, since none of these segments is data-derived.
-- **Family 4 — filename templates** (5 patterns, `S107`, **closed**):
-  `llm_usage_record`, `llm_run_telemetry_record`, `auth_acquisition_lock`,
+- **Family 4 — filename templates** (4 patterns, `S107`, **closed**):
+  `llm_usage_record`, `auth_acquisition_lock`,
   `validation_verdict_cache_entry`, and `llm_cache_entry` are all declared as
   `StoragePathDefinition` grammars, confirmed at pinned HEAD `b6287cd8f5`. The
   open question this family originally posed — does the model need a new
   field, or does an ADR ruling need to state instance-keyed files are
   governed by their directory alone — was answered by the same evidence that
   closed `S86`–`S88`: the grammar mechanism already handles a parameterised
-  filename with no model change and no ruling, and the five grammars are now
+  filename with no model change and no ruling, and the four grammars are now
   declared, not merely confirmed declarable.
 
 **Reclaim-reachability, corrected on the fuller set.** An earlier pass found
 no nested-ungoverned site reachable by `reclaim`. On the full 34-site set that
 is wrong: 11 sit under a reclaimable parent (`runs`, `llm-cache`,
-`llm-run-telemetry`, `llm-usage`, `logs`). In every one, deletion is the
-intended behaviour — regenerable traces, caches, and telemetry — so the
+`llm-usage`, `logs`). In every one, deletion is the
+intended behaviour — regenerable traces and caches — so the
 conclusion (no undeclared nesting sits where deletion would be wrong)
 survives, but on the merits of what happens to be declared today, asserted by
 nothing. `S106` tracks the containment-proof gap this depends on.
@@ -468,7 +470,6 @@ clean face.
   `core/tests/test_storage_fingerprint_participation_gate.py`,
   `core/tests/test_storage_default_parity.py`,
   `core/tests/test_config_state_root.py`, `core/tests/test_config_override.py`,
-  `tests/test_storage_scope.py`, `tests/test_config.py` (all under
   `src/cadrumo/`). These are the oracles and gates for the taxonomy; their
   literals are the independent check, and re-pointing any of them at the
   accessor would make the taxonomy assert against itself while the suite

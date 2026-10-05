@@ -20,7 +20,7 @@ from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ObligationStatus
 from ...domain.modelos.codes import ModeloCode
 from ..operator_actions.models import DeclaredNextAction
@@ -34,6 +34,7 @@ from ..overview.calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
+from ..overview.coverage import ObligationCoverageReport
 from ..overview.evidence import CalendarEvidenceProjection
 from ..overview.home import HomeAvailability, HomeZoneState
 from .work_plazo import ModeloWorkConditionalRecargoPreview, conditional_recargo_preview_from_recovery
@@ -117,7 +118,9 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     adjusted_closes_on: date
     shift_reason: str
     holiday_coverage: DeadlineHolidayCoverage
-    holiday_territory: CalendarCCAA | None = None
+    # Text of the already-projected calendar territory: a frontend restores this
+    # projection without a pinned authority, so it cannot re-project the token.
+    holiday_territory: str | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
@@ -127,6 +130,9 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     aeat_submission_state: OverviewAeatSubmissionState | None
     justificante_verified: bool | None
     evidence_conflicted: bool
+    aeat_submitted_at: datetime | None = None
+    aeat_reference_id: str | None = Field(default=None, exclude=True, repr=False)
+    aeat_needs_check: bool = False
     source: OverviewCalendarEntrySource
     conditional_recargo_preview: ModeloWorkConditionalRecargoPreview | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True, repr=False)
@@ -142,29 +148,8 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
             raise ValueError("calendar original close cannot follow its adjusted close")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.adjusted_closes_on:
             raise ValueError("calendar payment cutoff cannot follow its adjusted close")
-        expected_user_state = {
-            ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
-            ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
-            ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
-            ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
-            ObligationStatus.FILED: OverviewPeriodState.FILED,
-            ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
-        }[self.legal_status]
-        if self.user_state is not expected_user_state:
-            raise ValueError("calendar legal status and user state disagree")
-        expected_days_overdue = max(0, (self.evaluated_on - self.adjusted_closes_on).days)
-        if self.legal_status is ObligationStatus.OVERDUE:
-            if self.days_overdue != expected_days_overdue or expected_days_overdue == 0:
-                raise ValueError("calendar overdue age must measure the effective close")
-        elif self.days_overdue is not None:
-            raise ValueError("calendar overdue age is only valid for an overdue obligation")
-        if self.aeat_submission_state is None:
-            if self.justificante_verified is not None:
-                raise ValueError("unknown AEAT evidence cannot carry justificante certainty")
-        elif (self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED) != (
-            self.justificante_verified is True
-        ):
-            raise ValueError("AEAT justificante state and verification flag disagree")
+        _validate_calendar_obligation_axes(self)
+        _validate_calendar_aeat_certainty(self)
         return self
 
     @model_validator(mode="after")
@@ -200,6 +185,35 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
         return (str(self.modelo), self.filing_year, self.period.registry_token)
 
 
+def _validate_calendar_obligation_axes(entry: DeclarationsCalendarEntryRefV1) -> None:
+    expected_user_state = {
+        ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
+        ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
+        ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
+        ObligationStatus.FILED: OverviewPeriodState.FILED,
+        ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+    }[entry.legal_status]
+    if entry.user_state is not expected_user_state:
+        raise ValueError("calendar legal status and user state disagree")
+    expected_days_overdue = max(0, (entry.evaluated_on - entry.adjusted_closes_on).days)
+    if entry.legal_status is ObligationStatus.OVERDUE:
+        if entry.days_overdue != expected_days_overdue or expected_days_overdue == 0:
+            raise ValueError("calendar overdue age must measure the effective close")
+    elif entry.days_overdue is not None:
+        raise ValueError("calendar overdue age is only valid for an overdue obligation")
+
+
+def _validate_calendar_aeat_certainty(entry: DeclarationsCalendarEntryRefV1) -> None:
+    if entry.aeat_submission_state is None:
+        if entry.justificante_verified is not None:
+            raise ValueError("unknown AEAT evidence cannot carry justificante certainty")
+    elif (entry.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED) != (
+        entry.justificante_verified is True
+    ):
+        raise ValueError("AEAT justificante state and verification flag disagree")
+
+
 class DeclarationsCalendarProjectionV1(BaseModel):
     """Immutable safe full calendar suitable for a frontend."""
 
@@ -211,6 +225,7 @@ class DeclarationsCalendarProjectionV1(BaseModel):
     query_range: OverviewCalendarRange
     sources: tuple[DeclarationsCalendarSourceStateV1, ...]
     entries: tuple[DeclarationsCalendarEntryRefV1, ...]
+    coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -241,6 +256,7 @@ def project_declarations_calendar(
         query_range=calendar.range,
         sources=sources,
         entries=tuple(rows),
+        coverage=calendar.coverage,
     )
 
 
@@ -354,7 +370,7 @@ def _project_calendar_row(
         adjusted_closes_on=entry.adjusted_closes_on,
         shift_reason=entry.shift_reason,
         holiday_coverage=entry.holiday_coverage,
-        holiday_territory=entry.holiday_territory,
+        holiday_territory=None if entry.holiday_territory is None else str(entry.holiday_territory),
         payment_cutoff_on=entry.payment_cutoff_on,
         evaluated_on=entry.evaluated_on,
         days_overdue=entry.days_overdue,
@@ -364,6 +380,9 @@ def _project_calendar_row(
         aeat_submission_state=aeat_submission_state,
         justificante_verified=justificante_verified,
         evidence_conflicted=bool(authority.aeat_evidence_conflict_reference_ids),
+        aeat_submitted_at=authority.aeat_submitted_at,
+        aeat_reference_id=authority.aeat_reference_id,
+        aeat_needs_check=bool(authority.aeat_evidence_concerns),
         conditional_recargo_preview=conditional_recargo_preview_from_recovery(
             entry.recovery,
             rate_reference_on=entry.evaluated_on,

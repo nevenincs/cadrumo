@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-requirement-grounding'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6e49709a792aec95e7738478d9b0bb82a4d8e3711fb03cb261c1f009ff50917b'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
-  - "[[2026-08-08-profile-requirement-grounding-plan]]"
 ---
 
 # `profile-requirement-grounding` audit: `code review of the requirement-row enrichment across the three consumer surfaces`

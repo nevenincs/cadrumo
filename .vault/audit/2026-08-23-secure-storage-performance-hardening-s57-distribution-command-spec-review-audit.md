@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:6ed2c1473f04a5c44835dd3a3e7d6e9b57583d2069a58189953bb4b225ac6001'
 related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
   - "[[2026-08-23-secure-storage-performance-hardening-command-spec-authority-adr]]"
 ---
 

@@ -6,19 +6,24 @@ read capability. It projects those records into the calculation mesh as
 :class:`~application.aggregation.source_mesh.CalculationSourceResolution` values for
 :attr:`~core.aggregation.BindingSourceKind.COLLECTIBLE_INVOICE`,
 :attr:`~core.aggregation.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
-:attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
+:attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION` and
+:attr:`~core.aggregation.BindingSourceKind.M349_INTRACOMMUNITY_OPERATION`.
 
 The :class:`~domain.invoices.models.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
 be represented as registry
-:class:`~domain.calculations.registry.invoice_bindings.InvoiceObservation` facts, with Modelo 349
-summary bindings, detail rows, transaction ids, and source provenance emitted
-through one resolver envelope.
+:class:`~domain.calculations.registry.invoice_bindings.InvoiceObservation` facts, with summary
+bindings, the repeated-record row bindings (the Modelo 347 declarado records),
+Modelo 349 detail rows, transaction ids, and source provenance emitted through
+one resolver envelope.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar
@@ -30,8 +35,7 @@ from ...core.aggregation import (
     ThirdPartyDeclarationRole,
 )
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.hashing import sha256_hex
-from ...core.identity.bucket import BucketId
+from ...core.hashing import prefixed_digest
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -39,21 +43,32 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
-    is_m347_declarante_summary_invoice_binding,
+    m347_declarable_set,
     m347_operation_clave,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ...domain.calculations.registry.iva_category_catalogue import require_iva_category, resolve_iva_category_catalogue
+from ...domain.calculations.registry.iva_category_catalogue import (
+    IvaCategoryExclusion,
+    require_iva_category,
+    resolve_iva_category_catalogue,
+)
+from ...domain.calculations.registry.m347_operation_scope import resolve_m347_estimacion_objetiva_scope
+from ...domain.calculations.registry.m347_threshold import M347DeclarableSet, M347ThresholdBucket
 from ...domain.calculations.registry.third_party_declaration_roles import (
     resolve_third_party_declaration_role_catalogue,
 )
 from ...domain.calculations.registry.travel_agency_mediation import (
     is_travel_agency_air_passenger_transport,
 )
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.invoices.business_premises import SITUACIONES_CON_REFERENCIA_CATASTRAL
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
+from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
+from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
 from ..aggregation.source_mesh import (
@@ -62,22 +77,23 @@ from ..aggregation.source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..aggregation.source_resolution_operations import source_context_operation, storage_degradation_resolution
 from .source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
     BindingSourceKind.PAYABLE_INVOICE,
     BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+    BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+)
+_COMBINED_DIRECTION_SOURCES: frozenset[BindingSourceKind] = frozenset(
+    {
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+    },
 )
 _ObservedInvoice = tuple[Invoice, InvoiceObservation]
 _IncoherentInvoice = tuple[Invoice, InvoiceDecomposition]
-_M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
-    "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
-    "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",
-    "iva-349-declarante-numero-rectificaciones-adquisicion": "iva-349-declarante-numero-rectificaciones",
-    "iva-349-declarante-importe-rectificaciones-adquisicion": "iva-349-declarante-importe-rectificaciones",
-}
 _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
     "iva-349-operador-row-codigo-pais": "codigo_pais",
     "iva-349-operador-row-nif": "nif_comunitario",
@@ -187,6 +203,7 @@ def _observe_invoice_sources(
     source_invoices: Sequence[Invoice],
     *,
     context: CalculationSourceContext,
+    m347_filer: _M347Filer,
 ) -> tuple[tuple[_ObservedInvoice, ...], tuple[_IncoherentInvoice, ...], tuple[Invoice, ...]]:
     observed_items: list[_ObservedInvoice] = []
     incoherent: list[_IncoherentInvoice] = []
@@ -194,7 +211,7 @@ def _observe_invoice_sources(
     for invoice in source_invoices:
         if _is_unconverted_foreign_invoice(invoice):
             withheld_for_conversion.append(invoice)
-        observation = _invoice_observation(invoice, context=context)
+        observation = _invoice_observation(invoice, context=context, m347_filer=m347_filer)
         if observation is None:
             continue
         verdict = _m349_incoherent_verdict(invoice, context=context)
@@ -215,13 +232,15 @@ def _invoice_resolution_from_observations(
     withheld_for_conversion: tuple[Invoice, ...],
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
+    m347_filer: _M347Filer,
 ) -> CalculationSourceResolution:
     observations = tuple(observation for _, observation in observed_items)
     binding_values = resolve_invoice_binding_values(
         context.revision,
         observations,
-        effective_date=date(context.filing_year, 12, 31),
+        effective_date=_filing_period_date(context),
     )
+    row_values = _invoice_row_values(context=context, observations=observations)
     declared_invoices = tuple(invoice for invoice, _ in observed_items)
     diagnostics = _m349_incoherence_diagnostics(incoherent, resolver_id=resolver_id)
     diagnostics += _unconverted_foreign_diagnostics(
@@ -235,12 +254,32 @@ def _invoice_resolution_from_observations(
             bucket_invoices=catalogue_invoices,
             resolver_id=resolver_id,
         )
-    diagnostics += _m347_role_fact_advisories(source_invoices, context=context, resolver_id=resolver_id)
+    diagnostics += _m347_role_fact_advisories(
+        source_invoices,
+        context=context,
+        resolver_id=resolver_id,
+        declaration_roles=m347_filer.declaration_roles,
+    )
+    diagnostics += _m347_declaration_advisories(
+        observed_items,
+        source_invoices,
+        context=context,
+        resolver_id=resolver_id,
+    )
+    diagnostics += _m347_exclusion_reading_advisories(observed_items, context=context, resolver_id=resolver_id)
+    diagnostics += _m347_received_invoice_dating_advisories(
+        observed_items,
+        catalogue_invoices,
+        context=context,
+        resolver_id=resolver_id,
+        m347_filer=m347_filer,
+    )
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
-        binding_values=_m349_declarante_summary_union(context=context, binding_values=binding_values),
-        detail_rows=_m349_operador_rows_from_observations(context=context, observations=observations),
+        binding_values=binding_values,
+        row_binding_values=_row_values_not_carried_by_detail_rows(row_values),
+        detail_rows=_m349_operador_rows_from_values(row_values),
         source_transaction_ids=tuple(
             sorted(
                 {transaction_id for invoice, _ in observed_items for transaction_id in invoice.linked_transaction_ids},
@@ -257,8 +296,9 @@ class InvoiceCatalogueSourceResolver:
     The resolver owns both invoice source kinds in the calculation mesh. It
     filters records by :class:`CalculationSourceContext`, turns declarable
     intracommunity entries into :class:`InvoiceObservation` facts, and returns a
-    :class:`CalculationSourceResolution` carrying binding values, Modelo 349
-    detail rows, linked transaction ids, and stable source provenance.
+    :class:`CalculationSourceResolution` carrying binding values, row binding
+    values, Modelo 349 detail rows, linked transaction ids, and stable source
+    provenance.
     """
 
     resolver_id: ClassVar[str] = "invoice_catalogue"
@@ -285,8 +325,9 @@ class InvoiceCatalogueSourceResolver:
                 active invoice sources and the invoices in scope.
 
         Returns:
-            The resolution carrying binding values, Modelo 349 detail rows,
-            linked transaction ids, diagnostics, and source provenance. Sources
+            The resolution carrying binding values, row binding values, Modelo
+            349 detail rows, linked transaction ids, diagnostics, and source
+            provenance. Sources
             the active revision does not declare resolve to an empty result, and
             a degraded catalogue read resolves to a storage-degradation result
             rather than a zero total.
@@ -310,9 +351,11 @@ class InvoiceCatalogueSourceResolver:
             context=context,
             active_sources=active_sources,
         )
+        m347_filer = _m347_filer(context)
         observed_items, incoherent, withheld_for_conversion = _observe_invoice_sources(
             source_invoices,
             context=context,
+            m347_filer=m347_filer,
         )
         return _invoice_resolution_from_observations(
             context=context,
@@ -323,6 +366,7 @@ class InvoiceCatalogueSourceResolver:
             withheld_for_conversion=withheld_for_conversion,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+            m347_filer=m347_filer,
         )
 
 
@@ -577,6 +621,7 @@ def _m347_role_fact_advisories(
     *,
     context: CalculationSourceContext,
     resolver_id: str,
+    declaration_roles: frozenset[ThirdPartyDeclarationRole],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on a Modelo 347 clave D/E fact left UNDECLARED, rather than silently deciding it.
 
@@ -590,7 +635,6 @@ def _m347_role_fact_advisories(
     """
     if context.modelo != Modelo("347").value:
         return ()
-    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
     if not declaration_roles:
         return ()
     role_catalogue = resolve_third_party_declaration_role_catalogue()
@@ -631,11 +675,690 @@ def _m347_role_fact_advisories(
     return tuple(diagnostics)
 
 
+#: The provision every Modelo 347 declaration-floor reading is a claim about.
+_M347_THRESHOLD_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-33",)
+#: Art. 33.2.g, "Las importaciones y exportaciones de mercancías": the letter an
+#: unsettled category exclusion is a claim about.
+_M347_GOODS_EXCLUSION_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-33.2.g",)
+#: Art. 33.2.i (operations already in a coincident periodic declaration), the
+#: payer's annual withholding summary it points at (RIRPF art. 108.2), and art.
+#: 34.1.d, which has the landlord of business premises relate the lease all the same.
+#: Art. 34.4: the annual total is declared "neto de las devoluciones, descuentos y
+#: bonificaciones concedidos y de las operaciones que queden sin efecto en el mismo
+#: año natural", read with art. 33's floor whenever that net is nil or negative.
+_M347_NET_TOTAL_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-33", "rd-1065-2007:art-34.4")
+_M347_WITHHELD_ISSUED_LEGAL_REFS: tuple[str, ...] = (
+    "rd-1065-2007:art-33.2.i",
+    "rd-1065-2007:art-34.1.d",
+    "rd-439-2007:art-108",
+)
+
+
+def _m347_observed_items(observed_items: Sequence[_ObservedInvoice]) -> tuple[_ObservedInvoice, ...]:
+    return tuple(
+        (invoice, observation) for invoice, observation in observed_items if observation.operation_clave is not None
+    )
+
+
+def _m347_threshold_bucket_numbers(
+    bucket: M347ThresholdBucket,
+    m347_items: Sequence[_ObservedInvoice],
+) -> list[str]:
+    return sorted(
+        invoice.invoice_number for invoice, observation in m347_items if observation.operation_clave in bucket.claves
+    )
+
+
+def _m347_threshold_bucket_advisory(
+    bucket: M347ThresholdBucket,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic | None:
+    if not bucket.reading_unsettled:
+        return None
+    numbers = _m347_threshold_bucket_numbers(bucket, m347_items)
+    if not numbers:
+        return None
+    rule = "whatever their amount" if bucket.floor is None else f"against a {bucket.floor} EUR floor"
+    return CalculationSourceDiagnostic(
+        reason="unsettled_legal_reading",
+        source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+        resolver_id=resolver_id,
+        source_ref=f"m347-threshold-bucket:{bucket.token}",
+        message=(
+            f"Modelo 347 clave {', '.join(sorted(bucket.claves))} operations ({', '.join(numbers)}) are "
+            f"judged in their own declaration bucket {bucket.token!r} {rule} for ejercicio "
+            f"{context.filing_year}. The registry marks that reading of RD 1065/2007 art. 33 as "
+            "unsettled, so the declarado records follow it and AEAT may read the provision differently."
+        ),
+        remedy=(
+            "Check these operations against current AEAT guidance for this ejercicio before filing; "
+            "the declarado records shown follow the registry's reading."
+        ),
+        asserted_legal_refs=_M347_THRESHOLD_LEGAL_REFS,
+    )
+
+
+def _m347_unsettled_bucket_advisories(
+    declarable: M347DeclarableSet,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for bucket in declarable.buckets.buckets:
+        advisory = _m347_threshold_bucket_advisory(
+            bucket,
+            m347_items,
+            context=context,
+            resolver_id=resolver_id,
+        )
+        if advisory is not None:
+            diagnostics.append(advisory)
+    return tuple(diagnostics)
+
+
+def _m347_nonpositive_total_advisory(
+    declarable: M347DeclarableSet,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic | None:
+    nonpositive = sorted(
+        invoice.invoice_number
+        for invoice, observation in m347_items
+        if observation.operation_clave is not None
+        and declarable.admits_unconditional_nonpositive(observation.party_tax_id, observation.operation_clave)
+    )
+    if not nonpositive:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="unsettled_legal_reading",
+        source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+        resolver_id=resolver_id,
+        source_ref="m347-threshold-bucket:nonpositive-total",
+        message=(
+            f"Modelo 347 operations ({', '.join(nonpositive)}) net to zero or less for their "
+            "counterparty in a bucket related whatever its amount, so they are declared at that total "
+            f"for ejercicio {context.filing_year}. Whether a nil or negative annual total belongs on "
+            "the declaration is not settled."
+        ),
+        remedy=(
+            "Check the rectifications and returns behind these totals; keep the record only if the "
+            "operations still have to be related for this ejercicio."
+        ),
+        asserted_legal_refs=_M347_NET_TOTAL_LEGAL_REFS,
+    )
+
+
+def _m347_floored_nonpositive_total_advisory(
+    declarable: M347DeclarableSet,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic | None:
+    """Name the counterparties a floored bucket leaves out because their net total is nil or negative.
+
+    Art. 33.1 relates a party whose operations "hayan superado" the floor, and
+    a total netted to nothing or below by its rectifications (art. 34.4) never
+    exceeds it, so no record is emitted. The record design nonetheless carries
+    an "N" sign for a negative annual amount and no text in the corpus says
+    whether such a party must still be related, so the omission is disclosed.
+    """
+    left_out = sorted(
+        invoice.invoice_number
+        for invoice, observation in m347_items
+        if observation.operation_clave is not None
+        and declarable.leaves_out_floored_nonpositive(observation.party_tax_id, observation.operation_clave)
+    )
+    if not left_out:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="unsettled_legal_reading",
+        source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+        resolver_id=resolver_id,
+        source_ref="m347-threshold-bucket:nonpositive-total-left-out",
+        message=(
+            f"Modelo 347 operations ({', '.join(left_out)}) net to zero or less for their counterparty once "
+            "the rectifications are netted (RD 1065/2007 art. 34.4), so no record is declared for ejercicio "
+            f"{context.filing_year}: art. 33.1 relates a party only above its floor. Whether a negative annual "
+            "total must still be related, as the record's N sign allows, is not settled."
+        ),
+        remedy=(
+            "Check whether these counterparties must still appear with a negative annual amount before filing; "
+            "the declaration shown leaves them out."
+        ),
+        asserted_legal_refs=_M347_NET_TOTAL_LEGAL_REFS,
+    )
+
+
+def _m347_rectificativa_netting_advisory(
+    m347_items: Sequence[_ObservedInvoice],
+    source_invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic | None:
+    """Name the rectificativas netted as reductions, and those whose rectified invoice is not in this ejercicio.
+
+    The invoice stores a correction as a non-negative amount and its class, not
+    the direction of the correction, so every rectificativa nets as a reduction
+    of the amount it states. A rectificativa that raises the price, or replaces
+    the original in full, would net the wrong way, and one rectifying an
+    invoice not related in this ejercicio reduces this year's total although
+    art. 34.4 speaks of operations "en el mismo año natural".
+    """
+    rectificativas = [invoice for invoice, _observation in m347_items if _is_rectificativa(invoice)]
+    if not rectificativas:
+        return None
+    related = {(invoice.kind, invoice.counterparty_tax_id, invoice.invoice_number) for invoice in source_invoices}
+    outside = sorted(
+        invoice.invoice_number
+        for invoice in rectificativas
+        if (invoice.kind, invoice.counterparty_tax_id, invoice.rectifies_invoice_number) not in related
+    )
+    message = (
+        f"Modelo 347 nets the rectificativas {', '.join(sorted(item.invoice_number for item in rectificativas))} "
+        "as reductions of their counterparty's total for ejercicio "
+        f"{context.filing_year} (RD 1065/2007 art. 34.4). Each records its amount but not whether it lowers "
+        "the price, so one that raises it or replaces the original in full nets the wrong way."
+    )
+    if outside:
+        message += (
+            f" {', '.join(outside)} rectify an invoice not related in this ejercicio, and art. 34.4 nets "
+            "operations of the same año natural."
+        )
+    return CalculationSourceDiagnostic(
+        reason="unsettled_legal_reading",
+        source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+        resolver_id=resolver_id,
+        source_ref="m347-rectificativa:netted-as-reduction",
+        message=message,
+        remedy=(
+            "Check each listed rectificativa: one that raises the price, replaces the original in full or "
+            "corrects an earlier ejercicio needs its counterparty's declarado amount corrected before filing."
+        ),
+        asserted_legal_refs=("rd-1065-2007:art-34.4",),
+    )
+
+
+def _m347_declaration_advisories(
+    observed_items: Sequence[_ObservedInvoice],
+    source_invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Disclose the Modelo 347 declaration-floor readings the registry leaves unsettled, and the record gaps.
+
+    The declarable set is the one the row family and the declarante summary
+    use (:func:`~cadrumo.domain.calculations.registry.invoice_bindings.m347_declarable_set`),
+    read at the same filing-period date, so what is disclosed is exactly what
+    was declared. Each case is one advisory per calculation rather than one
+    per invoice:
+
+    - a threshold bucket the registry flags ``reading_unsettled`` holds
+      operations: the clave D bucket kept apart from the ordinary
+      adquisiciones (art. 33.3 neither joins nor separates them), or clave E
+      related whatever its amount while the record design still in use states
+      a floor;
+    - a bucket with no floor admits a counterparty whose net total is zero or
+      negative, which the bucket declares but whose place on the declaration
+      no rule settles;
+    - a bucket with a floor leaves out a counterparty whose rectifications net
+      its total to zero or below, which the floor does not relate although the
+      record's sign field could carry it;
+    - rectificativas are netted as reductions of the amount they state, a
+      direction the invoice record does not carry.
+
+    The operations follow the registry's reading; the advisory says which ones
+    rest on it. The record fields the declared operations need but the invoice
+    records cannot fill are disclosed by :func:`_m347_record_field_advisories`
+    over the same declarable set, and the inmueble record fields the leases
+    leave open by :func:`_m347_inmueble_record_advisories`.
+    """
+    if context.modelo != Modelo("347").value:
+        return ()
+    m347_items = _m347_observed_items(observed_items)
+    if not m347_items:
+        return ()
+    declarable = m347_declarable_set(
+        tuple(observation for _, observation in m347_items),
+        effective_date=_filing_period_date(context),
+    )
+    diagnostics = list(
+        _m347_unsettled_bucket_advisories(
+            declarable,
+            m347_items,
+            context=context,
+            resolver_id=resolver_id,
+        ),
+    )
+    nonpositive_advisory = _m347_nonpositive_total_advisory(
+        declarable,
+        m347_items,
+        context=context,
+        resolver_id=resolver_id,
+    )
+    if nonpositive_advisory is not None:
+        diagnostics.append(nonpositive_advisory)
+    left_out_advisory = _m347_floored_nonpositive_total_advisory(
+        declarable,
+        m347_items,
+        context=context,
+        resolver_id=resolver_id,
+    )
+    if left_out_advisory is not None:
+        diagnostics.append(left_out_advisory)
+    netting_advisory = _m347_rectificativa_netting_advisory(
+        m347_items,
+        source_invoices,
+        context=context,
+        resolver_id=resolver_id,
+    )
+    if netting_advisory is not None:
+        diagnostics.append(netting_advisory)
+    diagnostics.extend(
+        _m347_record_field_advisories(
+            declarable,
+            m347_items,
+            context=context,
+            resolver_id=resolver_id,
+        ),
+    )
+    diagnostics.extend(_m347_inmueble_record_advisories(m347_items, context=context, resolver_id=resolver_id))
+    return tuple(diagnostics)
+
+
+def _m347_declared_items(
+    declarable: M347DeclarableSet,
+    m347_items: Sequence[_ObservedInvoice],
+) -> tuple[_ObservedInvoice, ...]:
+    return tuple(
+        (invoice, observation)
+        for invoice, observation in m347_items
+        if observation.operation_clave is not None
+        and declarable.admits(observation.party_tax_id, observation.operation_clave)
+    )
+
+
+def _m347_record_field_advisories(
+    declarable: M347DeclarableSet,
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name the declarado record fields the declared operations need but the invoices cannot fill.
+
+    Three gaps, each one advisory per calculation and only for operations that
+    are actually declared:
+
+    - a criterio de caja record must also carry the amount devengado in the
+      year under LIVA art. 163 terdecies (2025 design pos. 284-299), which
+      turns on the collection and payment dates the invoice does not record;
+    - a Spanish declarado's CÓDIGO PROVINCIA (pos. 77-78) is that of its
+      domicilio fiscal, which the invoice holds only inside free-text addresses;
+    - the amounts above 6.000 EUR received in cash from a declarado (art.
+      34.1.h, pos. 101-115) need a cash-collection fact no invoice carries.
+    """
+    declared = _m347_declared_items(declarable, m347_items)
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    cash_accounting = sorted(
+        invoice.invoice_number for invoice, observation in declared if observation.cash_accounting_operation
+    )
+    if cash_accounting:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="missing_transaction_evidence",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-record:criterio-caja-devengo",
+                message=(
+                    f"Modelo 347 relates the criterio de caja operations on invoices {', '.join(cash_accounting)} "
+                    f"in their own records for ejercicio {context.filing_year}, marked and without quarterly "
+                    "amounts. Each record must also carry the amount devengado in the year under LIVA art. 163 "
+                    "terdecies, which depends on collection and payment dates the invoices do not record, so "
+                    "that amount is left without content."
+                ),
+                remedy=(
+                    "Enter the art. 163 terdecies amount of each criterio de caja record on the AEAT form "
+                    "before filing; Cadrumo cannot derive it from the invoices."
+                ),
+                asserted_legal_refs=("rd-1065-2007:art-34.1.j", "ley-37-1992:art-163-terdecies"),
+            ),
+        )
+    without_provincia = sorted(
+        {
+            observation.party_tax_id
+            for _invoice, observation in declared
+            if observation.country_code == SPAIN_COUNTRY_CODE
+        },
+    )
+    if without_provincia:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-record:provincia-not-recorded",
+                message=(
+                    f"Modelo 347 declares the Spanish counterparties {', '.join(without_provincia)} for ejercicio "
+                    f"{context.filing_year}, but each record's provincia code is that of the counterparty's "
+                    "domicilio fiscal, which the invoices hold only as free-text addresses, so it is left "
+                    "without content."
+                ),
+                remedy="Complete the provincia code of each listed counterparty on the AEAT form before filing.",
+            ),
+        )
+    if any(invoice.kind is InvoiceKind.ISSUED for invoice, _observation in declared):
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-record:metalico-not-recorded",
+                message=(
+                    f"Modelo 347 declares sales for ejercicio {context.filing_year}, and the amounts above "
+                    "6.000 EUR received in cash from a declarado belong on its record (RD 1065/2007 art. 34.1.h). "
+                    "The invoices do not record how they were collected, so no cash amount is declared."
+                ),
+                remedy=(
+                    "If you received more than 6.000 EUR in cash from any declarado this year, enter that amount "
+                    "on its record on the AEAT form before filing."
+                ),
+                asserted_legal_refs=("rd-1065-2007:art-34.1.h",),
+            ),
+        )
+    return tuple(diagnostics)
+
+
+_M347_INMUEBLE_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-34.1.d",)
+
+
+def _m347_inmueble_record_advisories(
+    m347_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name the inmueble record fields the recorded business-premises leases leave open.
+
+    RD 1065/2007 art. 34.1.d has the landlord consign, for each lease, "las
+    referencias catastrales y los datos necesarios para la localización de los
+    inmuebles arrendados", and the inmueble record is related whatever its
+    amount, so every lease invoice reaches one. One advisory per gap:
+
+    - a lease that records no SITUACIÓN DEL INMUEBLE (pos. 115), which the
+      record needs to say where the premises is;
+    - a lease whose situación is 1 or 2 but records no REFERENCIA CATASTRAL
+      (pos. 116): code 3 is the one for "cualquiera de las situaciones
+      anteriores pero sin referencia catastral";
+    - the DIRECCIÓN DEL INMUEBLE (pos. 141-333), whose INE-coded street, number
+      and municipality fields no invoice records, so it is left without content
+      on every inmueble record.
+    """
+    leases = [invoice for invoice, _observation in m347_items if invoice.business_premises_lease is not None]
+    if not leases:
+        return ()
+    without_situacion = sorted(
+        invoice.invoice_number
+        for invoice in leases
+        if invoice.business_premises_lease is not None and invoice.business_premises_lease.situacion_inmueble is None
+    )
+    without_referencia = sorted(
+        invoice.invoice_number
+        for invoice in leases
+        if (
+            invoice.business_premises_lease is not None
+            and invoice.business_premises_lease.situacion_inmueble in SITUACIONES_CON_REFERENCIA_CATASTRAL
+            and invoice.business_premises_lease.referencia_catastral is None
+        )
+    )
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    if without_situacion:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-inmueble:situacion-not-recorded",
+                message=(
+                    f"Modelo 347 relates the business-premises leases on invoices {', '.join(without_situacion)} "
+                    f"in inmueble records for ejercicio {context.filing_year}, but they record no situación del "
+                    "inmueble, which RD 1065/2007 art. 34.1.d needs to locate each leased premises."
+                ),
+                remedy="Record the situación del inmueble (1 to 4) on each listed invoice, then recalculate.",
+                asserted_legal_refs=_M347_INMUEBLE_LEGAL_REFS,
+            ),
+        )
+    if without_referencia:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-inmueble:referencia-catastral-not-recorded",
+                message=(
+                    f"Modelo 347 relates the business-premises leases on invoices {', '.join(without_referencia)} "
+                    f"for ejercicio {context.filing_year} with a situación that carries a referencia catastral, "
+                    "but they record none, and RD 1065/2007 art. 34.1.d has the landlord consign it."
+                ),
+                remedy=(
+                    "Record the referencia catastral of each listed premises, or situación 3 if it has none, "
+                    "then recalculate."
+                ),
+                asserted_legal_refs=_M347_INMUEBLE_LEGAL_REFS,
+            ),
+        )
+    diagnostics.append(
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+            resolver_id=resolver_id,
+            source_ref="m347-inmueble:direccion-not-recorded",
+            message=(
+                f"Modelo 347 relates business-premises leases in inmueble records for ejercicio "
+                f"{context.filing_year} ({', '.join(sorted(invoice.invoice_number for invoice in leases))}). Each "
+                "record's dirección del inmueble needs the INE-coded street, number and municipality, which the "
+                "invoices do not record, so it is left without content."
+            ),
+            remedy="Complete the dirección of each inmueble record on the AEAT form before filing.",
+            asserted_legal_refs=_M347_INMUEBLE_LEGAL_REFS,
+        ),
+    )
+    return tuple(diagnostics)
+
+
+def _m347_unsettled_exclusion_invoice_numbers(declared: Sequence[Invoice], *, effective_date: date) -> list[str]:
+    return sorted(
+        invoice.invoice_number
+        for invoice in declared
+        if _m347_category_exclusion(invoice, effective_date=effective_date) is IvaCategoryExclusion.UNSETTLED
+    )
+
+
+def _m347_withheld_issued_invoice_numbers(declared: Sequence[Invoice]) -> list[str]:
+    """The issued invoices with a withholding whose place on the declaration no text settles.
+
+    A business-premises lease is not among them: art. 34.1.d has the landlord
+    relate it, withheld or not, and the invoice records that it is one.
+    """
+    return sorted(
+        invoice.invoice_number
+        for invoice in declared
+        if invoice.kind is InvoiceKind.ISSUED
+        and _carries_withholding(invoice)
+        and invoice.business_premises_lease is None
+    )
+
+
+def _m347_exclusion_reading_advisories(
+    observed_items: Sequence[_ObservedInvoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Disclose the declared Modelo 347 operations whose art. 33.2 exclusion is arguable.
+
+    The counterpart of the exclusions :func:`_m347_invoice_observation`
+    applies: what the text settles is excluded there; what it leaves open is
+    declared and named here, one advisory per case rather than one per
+    invoice. The two open cases are an IVA category the catalogue marks
+    ``unsettled`` for Modelo 347 (an operation assimilated to an export, goods
+    or services by its facts), and an ISSUED invoice on which the customer
+    practised a withholding, which the customer reports but whose exclusion
+    from the withheld party's own declaration no text in the corpus states.
+    A landlord of business premises is the exception the text does settle:
+    art. 34.1.d has it relate the lease, withheld or not, so an invoice that
+    records the lease is declared without an advisory.
+    """
+    if context.modelo != Modelo("347").value:
+        return ()
+    declared = tuple(invoice for invoice, observation in observed_items if observation.operation_clave is not None)
+    unsettled = _m347_unsettled_exclusion_invoice_numbers(declared, effective_date=_filing_period_date(context))
+    withheld = _m347_withheld_issued_invoice_numbers(declared)
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    if unsettled:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unsettled_legal_reading",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-exclusion:iva-category",
+                message=(
+                    f"Modelo 347 declares the operations on invoices {', '.join(unsettled)}, whose IVA category "
+                    "the registry marks as an unsettled exclusion under RD 1065/2007 art. 33.2: letter g "
+                    "excludes the imports and exports of goods, and the category does not say whether these "
+                    f"operations are goods, so they are declared for ejercicio {context.filing_year}."
+                ),
+                remedy=(
+                    "Check whether these operations are imports or exports of goods; if they are, record the "
+                    "export or import category on the invoice so Modelo 347 leaves them out."
+                ),
+                asserted_legal_refs=_M347_GOODS_EXCLUSION_LEGAL_REFS,
+            ),
+        )
+    if withheld:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unsettled_legal_reading",
+                source_kind=BindingSourceKind.M347_THIRD_PARTY_OPERATION.value,
+                resolver_id=resolver_id,
+                source_ref="m347-exclusion:withheld-issued-invoice",
+                message=(
+                    f"Modelo 347 declares the issued invoices {', '.join(withheld)}, on which the customer "
+                    "practised a withholding, for ejercicio "
+                    f"{context.filing_year}. RD 1065/2007 art. 33.2.i excludes what the customer reports in "
+                    "its withholding summary (RIRPF art. 108.2), but no text settles whether that reaches "
+                    "your side. None of them records a business-premises lease, which art. 34.1.d would "
+                    "have you relate all the same."
+                ),
+                remedy=(
+                    "Mark any of these invoices that documents the lease of a local de negocio as such; for "
+                    "the rest, check current AEAT guidance before filing. The declarado records shown include "
+                    "them all."
+                ),
+                asserted_legal_refs=_M347_WITHHELD_ISSUED_LEGAL_REFS,
+            ),
+        )
+    return tuple(diagnostics)
+
+
+#: RD 1065/2007 art. 35.1 dates a Modelo 347 operation by the registry entry of its invoice, and RIVA
+#: art. 69.3 sets when a received invoice is entered.
+_M347_RECEIVED_DATING_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-35", "rd-1624-1992:art-69")
+#: The last monthly period of an ejercicio, the shortest IVA liquidation period.
+_LAST_MONTH_CODE = "12"
+
+
+def _m347_received_invoice_dating_advisories(
+    observed_items: Sequence[_ObservedInvoice],
+    catalogue_invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+    m347_filer: _M347Filer,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name the received invoices whose ejercicio the issue date may not decide.
+
+    RD 1065/2007 art. 35.1: "las operaciones se entenderán producidas en el
+    período en el que, de acuerdo con lo previsto en el artículo 69 del
+    Reglamento del Impuesto sobre el Valor Añadido, se debe realizar la
+    anotación registral de la factura o documento contable que sirva de
+    justificante de las mismas". RIVA art. 69.3 enters a received invoice "por
+    el orden en que se reciban, y dentro del período de liquidación en que
+    proceda efectuar su deducción", so its ejercicio follows its reception and
+    deduction, which the invoice does not record: it carries only the issue
+    date the resolver dates it by. Which ejercicio such an invoice belongs to
+    therefore cannot be decided here.
+
+    The case is disclosed where it can change the ejercicio: a received
+    invoice issued in the last month of the year, the shortest liquidation
+    period, may be received and entered only in the next year. That covers the
+    invoices of this ejercicio's last month, declared here, and those of the
+    previous ejercicio's last month that this declaration would otherwise
+    relate, which it leaves out.
+    """
+    if context.modelo != Modelo("347").value:
+        return ()
+    last_month = Period.from_year_and_code(context.filing_year, _LAST_MONTH_CODE)
+    previous_last_month = Period.from_year_and_code(context.filing_year - 1, _LAST_MONTH_CODE)
+    declared = sorted(
+        invoice.invoice_number
+        for invoice, observation in observed_items
+        if observation.operation_clave is not None
+        and invoice.kind is InvoiceKind.RECEIVED
+        and last_month.contains(invoice.issued_at)
+    )
+    left_out = sorted(
+        invoice.invoice_number
+        for invoice in catalogue_invoices
+        if invoice.kind is InvoiceKind.RECEIVED
+        and (invoice.bucket_id is None or invoice.bucket_id == context.bucket_id)
+        and previous_last_month.contains(invoice.issued_at)
+        and _invoice_observation(invoice, context=context, m347_filer=m347_filer) is not None
+    )
+    if not declared and not left_out:
+        return ()
+    parts: list[str] = []
+    if declared:
+        parts.append(f"declares the received invoices {', '.join(declared)} issued in December")
+    if left_out:
+        parts.append(
+            f"leaves out the received invoices {', '.join(left_out)} issued in December {context.filing_year - 1}"
+        )
+    return (
+        CalculationSourceDiagnostic(
+            reason="unsettled_legal_reading",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            resolver_id=resolver_id,
+            source_ref="m347-dating:received-invoice-registry-entry",
+            message=(
+                f"Modelo 347 for ejercicio {context.filing_year} {' and '.join(parts)}, dating each by its issue "
+                "date. RD 1065/2007 art. 35.1 dates an operation by the entry of its invoice in the libro registro, "
+                "made when it is received (RIVA art. 69.3), and the invoices do not record when they were received."
+            ),
+            remedy=(
+                "Check when each listed invoice was received and entered in your libro registro de facturas "
+                "recibidas; one entered in another year belongs to that year's Modelo 347."
+            ),
+            asserted_legal_refs=_M347_RECEIVED_DATING_LEGAL_REFS,
+        ),
+    )
+
+
 def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
     declared_sources = frozenset(
         binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES
     )
-    if any(is_m347_declarante_summary_invoice_binding(binding) for binding in context.revision.bindings):
+    if declared_sources & _COMBINED_DIRECTION_SOURCES:
+        # A combined-direction binding reads both invoice directions, so both feed it.
         return frozenset(_OWNED_SOURCES)
     return declared_sources
 
@@ -667,6 +1390,16 @@ def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> 
 
 def _date_in_period(value: date, *, period: Period) -> bool:
     return period.contains(value)
+
+
+def _filing_period_date(context: CalculationSourceContext) -> date:
+    """The one date every dated registry read of this resolver is made as of: the period's last day.
+
+    The threshold buckets, the category exclusion keys, the art. 32.b scope and
+    the filer's profile facts all read the same coordinate, so a fact that
+    changes inside the year cannot reach one consumer and miss another.
+    """
+    return context.period.end_date
 
 
 def _invoice_source_kind(invoice: Invoice) -> str:
@@ -701,7 +1434,12 @@ def _is_unconverted_foreign_invoice(invoice: Invoice) -> bool:
     return invoice.currency != DEFAULT_CURRENCY and invoice.grand_total_eur is None
 
 
-def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
+def _invoice_observation(
+    invoice: Invoice,
+    *,
+    context: CalculationSourceContext,
+    m347_filer: _M347Filer,
+) -> InvoiceObservation | None:
     if _is_unconverted_foreign_invoice(invoice):
         return None
     if invoice.counterparty_tax_id is None:
@@ -710,7 +1448,11 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         # it has nothing these informativas can declare rather than a defect.
         return None
     if context.modelo == Modelo("347").value:
-        return _m347_invoice_observation(invoice, context=context)
+        return _m347_invoice_observation(
+            invoice,
+            m347_filer=m347_filer,
+            effective_date=_filing_period_date(context),
+        )
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
@@ -734,55 +1476,155 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
     )
 
 
-def _m347_filer_declaration_roles(bucket_id: BucketId) -> frozenset[ThirdPartyDeclarationRole]:
-    """Load the filer's :class:`ThirdPartyDeclarationRole` memberships for *bucket_id*.
+@dataclass(frozen=True, slots=True)
+class _M347Filer:
+    """The filer facts Modelo 347 classification reads, resolved once per calculation context.
 
-    Mirrors the established bucket-scoped profile-fact loading pattern (see
-    e.g. ``m111_no_retenciones_periods_for_bucket``): a missing or unset
-    profile fails closed to an empty role set rather than raising, because
-    the overwhelming majority of filers legitimately carry none. An empty
-    set means claves C, D and E simply do not classify for this filer --
-    never that A, B, F or G are affected, since those read no profile fact.
+    ``declared_invoice_kinds`` is ``None`` when RD 1065/2007 art. 32.b does
+    not scope the filer, so every invoice direction is related; otherwise it
+    is the set the ``m347-estimacion-objetiva-operation-scope`` fact keeps for
+    the filer's IRPF estimation and IVA regimes. ``annual_computation_basis``
+    is true for the filers RD 1065/2007 art. 33.1 has report "sobre una base de
+    cómputo anual": those under the régimen especial del criterio de caja and
+    the propiedad horizontal entities.
     """
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    declaration_roles: frozenset[ThirdPartyDeclarationRole] = frozenset()
+    declared_invoice_kinds: frozenset[InvoiceKind] | None = None
+    annual_computation_basis: bool = False
+
+    def relates(self, kind: InvoiceKind) -> bool:
+        """Whether an invoice of this direction is related for this filer."""
+        return self.declared_invoice_kinds is None or kind in self.declared_invoice_kinds
+
+
+_UNSCOPED_M347_FILER = _M347Filer()
+
+
+def _m347_filer(context: CalculationSourceContext) -> _M347Filer:
+    """Read the filer's Modelo 347 roles and art. 32.b scope once for ``context``.
+
+    The profile is the one the calculation pinned (``context.profile``), read
+    through the context's own authority lease, and projected as of the last day
+    of the filing period, so a role or regime recorded for a later window does
+    not reach back into an earlier ejercicio. Only a context built outside a
+    calculation command loads the profile itself, once, through the same
+    :func:`~cadrumo.application.modelo.profile_readiness_gate.load_modelo_work_profile`
+    every modelo calculation uses (the invocation's pinned record first, then
+    the store). A missing profile
+    fails closed to no roles and no scoping, because the overwhelming majority
+    of filers legitimately carry no role and an unscoped filer relates every
+    operation: claves C, D and E simply do not classify, and nothing is left
+    out that art. 32.b has not been shown to exclude.
+    """
+    if context.modelo != Modelo("347").value:
+        return _UNSCOPED_M347_FILER
+    from ..modelo.profile_readiness_gate import load_modelo_work_profile
     from ..user_profile.projections import projection_for_taxpayer
 
-    with bundled_indexed_authority().operation() as operation:
-        try:
-            profile_decode_context = operation.profile_decode_context()
-            repository = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=profile_decode_context,
+    as_of = _filing_period_date(context)
+    with source_context_operation(context) as operation:
+        profile = context.profile or load_modelo_work_profile(
+            bucket_id=context.bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        if profile is None:
+            return _UNSCOPED_M347_FILER
+        taxpayer = projection_for_taxpayer(
+            profile.record,
+            schema=profile.profile_decode_context.schema,
+            as_of=as_of,
+        )
+        annual_computation_basis = _m347_files_on_an_annual_basis(taxpayer)
+        if taxpayer.irpf_estimation_regime is None:
+            # Art. 32.b concerns activities taxed by an IRPF estimation method;
+            # a filer that declares none is outside it and relates every invoice.
+            return _M347Filer(
+                declaration_roles=taxpayer.declaration_roles,
+                annual_computation_basis=annual_computation_basis,
             )
-            record = repository.load(bucket_id)
-        except ProfileNotFoundError:
-            return frozenset[ThirdPartyDeclarationRole]()
-        return projection_for_taxpayer(record, schema=profile_decode_context.schema).declaration_roles
+        scope = resolve_m347_estimacion_objetiva_scope(effective_date=as_of, authority=operation)
+    return _M347Filer(
+        declaration_roles=taxpayer.declaration_roles,
+        declared_invoice_kinds=scope.invoice_kinds_for(
+            irpf_estimation_regime=taxpayer.irpf_estimation_regime,
+            iva_regime=taxpayer.iva_regime,
+        ),
+        annual_computation_basis=annual_computation_basis,
+    )
 
 
-def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
+def _m347_files_on_an_annual_basis(taxpayer: TaxpayerProfile) -> bool:
+    """Whether RD 1065/2007 art. 33.1 has this filer report every operation on an annual basis.
+
+    "Como excepción a lo dispuesto en el segundo párrafo de este apartado, los
+    sujetos pasivos que realicen operaciones a las que sea de aplicación el
+    régimen especial del criterio de caja ... y, las entidades a las que sea de
+    aplicación la Ley 49/1960, de 21 de junio sobre la propiedad horizontal,
+    suministrarán toda la información que vengan obligados a relacionar en su
+    declaración anual, sobre una base de cómputo anual."
+    """
+    propiedad_horizontal = resolve_third_party_declaration_role_catalogue().require("propiedad_horizontal_entity")
+    criterio_de_caja = taxpayer.iva is not None and taxpayer.iva.cash_accounting_regime_enrolled
+    return criterio_de_caja or propiedad_horizontal in taxpayer.declaration_roles
+
+
+def _m347_category_exclusion(invoice: Invoice, *, effective_date: date) -> IvaCategoryExclusion | None:
+    """How Modelo 347 treats this invoice's IVA category, per the catalogue's dated exclusion keys."""
+    if invoice.iva_category is None:
+        return None
+    return resolve_iva_category_catalogue(effective_date=effective_date).exclusion(Modelo("347"), invoice.iva_category)
+
+
+def _carries_withholding(invoice: Invoice) -> bool:
+    """Whether the invoice records an IRPF withholding actually practised on it."""
+    return invoice.retention_amount is not None and invoice.retention_amount > 0
+
+
+def _m347_invoice_observation(
+    invoice: Invoice,
+    *,
+    m347_filer: _M347Filer,
+    effective_date: date,
+) -> InvoiceObservation | None:
     """Build the M347 observation for one invoice, or ``None`` if excluded.
 
-    Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
-    a CLOSED exclusion list, and a counterparty's non-residency is not one of
+    This is the single point where RD 1065/2007 art. 33.2 excludes an
+    operation. Declares a counterparty regardless of residency: art. 33.2 is a
+    CLOSED exclusion list, and a counterparty's non-residency is not one of
     its nine enumerated items. The diseño de registro's own `pais-codigo`
     field (a "XX" alphabetic slot for a non-established non-resident
     declarado) is direct evidence AEAT expects some M347 counterparties to be
-    non-resident.
+    non-resident. What the list excludes, it excludes by the operation:
 
-    The one residency-shaped exclusion the article DOES state is art.
-    33.2.i): an operation already reported through a coincident periodic
-    informativa. For an invoice, that informativa is Modelo 349's
-    intracommunity recapitulativa, so an operation `_intracommunity_clave`
-    classifies as intracommunity is excluded here and routes to M349 instead
-    -- the same classification M349's own branch of this resolver uses, never
-    a bare country comparison.
+    - art. 33.2.i), an operation already reported through a coincident
+      periodic informativa: for an invoice, Modelo 349's intracommunity
+      recapitulativa, so an operation `_intracommunity_clave` classifies as
+      intracommunity routes to M349 instead -- the same classification M349's
+      own branch of this resolver uses, never a bare country comparison;
+    - art. 33.2.g), "Las importaciones y exportaciones de mercancías", read
+      off the IVA category catalogue's Modelo 347 exclusion keys so that the
+      goods exports and imports drop out while services with a non-resident
+      stay declared; a category the catalogue marks unsettled stays declared
+      and is disclosed by :func:`_m347_exclusion_reading_advisories`;
+    - art. 33.2.i) again for a RECEIVED invoice carrying a withholding: the
+      payer declares it in the "declaración anual de las retenciones e
+      ingresos a cuenta efectuados" of RIRPF art. 108.2, a periodic
+      information duty of coincident content. The withheld party's own side
+      has no such declaration of its own, so an ISSUED invoice with a
+      withholding stays declared and is disclosed instead.
+
+    Letters c, e, f and h turn on facts the invoice does not carry (a
+    gratuitous title, stamps or postage, the social entity's exempt sector,
+    a shipment to or from Canarias, Ceuta or Melilla), so nothing here
+    decides them. Art. 32.b scopes the operations of an estimación objetiva
+    filer under a special IVA regime to the invoices it issues (plus, under
+    the régimen simplificado, the received invoices of its libro registro);
+    ``m347_filer`` carries that scope, read once for the calculation.
 
     Clave C additionally needs the filer's own
-    :class:`ThirdPartyDeclarationRole` membership, loaded here via
-    ``context.bucket_id``. When the invoice IS a clave-C collection
+    :class:`ThirdPartyDeclarationRole` membership, carried by ``m347_filer``.
+    When the invoice IS a clave-C collection
     (``collected_on_behalf_of_tax_id`` set AND the filer carries the
     registry-selected collector role), the declared counterparty is the
     BENEFICIARY whose fees were collected (RD 1065/2007 art. 34.g), not
@@ -791,6 +1633,12 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
     """
     if _intracommunity_clave(invoice) is not None:
         return None
+    if _m347_category_exclusion(invoice, effective_date=effective_date) is IvaCategoryExclusion.EXCLUDED:
+        return None
+    if invoice.kind is InvoiceKind.RECEIVED and _carries_withholding(invoice):
+        return None
+    if not m347_filer.relates(invoice.kind):
+        return None
     if invoice.counterparty_tax_id is None:
         # Same reason as the general builder above: M347 declares a third party
         # by their tax id, and a factura simplificada legitimately carries none
@@ -798,8 +1646,7 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
         # constructor with None and raised there instead of being skipped.
         return None
     source_kind = BindingSourceKind(_invoice_source_kind(invoice))
-    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
-    clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=declaration_roles)
+    clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=m347_filer.declaration_roles)
     is_third_party_collection = clave == "C"
     party_tax_id = invoice.collected_on_behalf_of_tax_id if is_third_party_collection else invoice.counterparty_tax_id
     party_legal_name = invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name
@@ -807,18 +1654,85 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
         raise RegistryValidationError(
             f"invoice {invoice.invoice_id!r} resolves modelo 347 clave {clave!r} with no declaring party tax id",
         )
+    cash_accounting_operation = _m347_cash_accounting_operation(invoice, effective_date=effective_date)
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
         source_kind=source_kind,
         party_tax_id=party_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
-        base_amount=_eur(invoice.base_total_eur, invoice),
-        invoice_total_amount=_eur(invoice.grand_total_eur, invoice),
+        base_amount=_m347_netted_amount(invoice, _eur(invoice.base_total_eur, invoice)),
+        invoice_total_amount=_m347_netted_amount(invoice, _eur(invoice.grand_total_eur, invoice)),
         intracommunity_clave=None,
         operation_clave=clave,
         party_legal_name=party_legal_name,
+        cash_accounting_operation=cash_accounting_operation,
+        reverse_charge_recipient=_m347_reverse_charge_recipient(invoice),
+        annual_computation_basis=m347_filer.annual_computation_basis or cash_accounting_operation,
+        arrendamiento_local_negocio=invoice.business_premises_lease is not None,
+        situacion_inmueble=(
+            None
+            if invoice.business_premises_lease is None or invoice.business_premises_lease.situacion_inmueble is None
+            else invoice.business_premises_lease.situacion_inmueble.value
+        ),
+        referencia_catastral=(
+            None if invoice.business_premises_lease is None else invoice.business_premises_lease.referencia_catastral
+        ),
     )
+
+
+def _m347_cash_accounting_operation(invoice: Invoice, *, effective_date: date) -> bool:
+    """Whether the invoice documents an operation under the régimen especial del criterio de caja.
+
+    RD 1619/2012 art. 6.1.p has every invoice of such an operation carry the
+    mention "régimen especial del criterio de caja", and the invoice records the
+    mentions it printed as typed tokens. The mention speaks for both sides: the
+    issuer applying the regime and the destinatario of its operation, and the
+    347 design marks the record for either ("Tanto para sujetos pasivos acogidos
+    al régimen especial como para destinatarios de las operaciones incluidas en
+    el mismo").
+    """
+    mention = resolve_invoice_legal_mention("CASH_ACCOUNTING_REGIME", effective_date)
+    return mention in invoice.legal_mentions
+
+
+def _m347_reverse_charge_recipient(invoice: Invoice) -> bool:
+    """Whether the declarant received the operation as the sujeto pasivo destinatario (LIVA art. 84.Uno.2º).
+
+    Read through the same flow classification the Modelo 303 invoice bindings
+    use to find a recipient self-assessment, so the two modelos cannot
+    disagree about which received invoices are reverse-charged. Only the
+    destinatario marks it: the 347 design reads "(Sólo el destinatario de la
+    operación)".
+    """
+    if invoice.kind is not InvoiceKind.RECEIVED or invoice.iva_category is None:
+        return False
+    return is_inversion_sujeto_pasivo_flow(
+        derive_flow_for_classification(category=invoice.iva_category, invoice_direction=invoice.kind),
+    )
+
+
+def _is_rectificativa(invoice: Invoice) -> bool:
+    """Whether the invoice is a factura rectificativa, by the registry's invoice-class token."""
+    return invoice.invoice_class == invoice_class_rectificativa()
+
+
+def _m347_netted_amount(invoice: Invoice, amount: Decimal) -> Decimal:
+    """Give a rectificativa's amount the sign that nets it against the operations it corrects.
+
+    RD 1065/2007 art. 34.4: "el importe total de las operaciones se declarará
+    neto de las devoluciones, descuentos y bonificaciones concedidos y de las
+    operaciones que queden sin efecto en el mismo año natural". The invoice
+    stores every total as a non-negative magnitude with the correction carried
+    by its class, so the corrective direction enters here, on the observation
+    total, and the one row builder and the one declarable-set summation net it
+    like any other amount: a counterparty's annual and quarterly amounts can
+    fall below zero and render with the record's "N" sign. Which direction a
+    given rectificativa corrects is not on the record, so every rectificativa
+    nets as a reduction and :func:`_m347_rectificativa_netting_advisory` names
+    them.
+    """
+    return -amount if _is_rectificativa(invoice) else amount
 
 
 def _m347_role_operation_clave(
@@ -968,21 +1882,6 @@ def _m349_clave_for_operation_type(
     return operation_type.value
 
 
-def _m349_declarante_summary_union(
-    *,
-    context: CalculationSourceContext,
-    binding_values: dict[str, Decimal],
-) -> dict[str, Decimal]:
-    if context.modelo != Modelo("349").value:
-        return binding_values
-    merged = dict(binding_values)
-    for payable_binding, public_binding in _M349_PAYABLE_SUMMARY_BINDING_MIRRORS.items():
-        if payable_binding not in binding_values:
-            continue
-        merged[public_binding] = merged.get(public_binding, Decimal("0")) + binding_values[payable_binding]
-    return merged
-
-
 def _m349_operador_row_indexes(row_values: Mapping[tuple[BindingId, int], Decimal | str]) -> list[int]:
     return sorted(
         {row_index for binding_id, row_index in row_values if binding_id in _M349_OPERADOR_ROW_BINDINGS},
@@ -1035,18 +1934,36 @@ def _m349_operador_row_from_values(
         raise RegistryValidationError(str(exc)) from exc
 
 
-def _m349_operador_rows_from_observations(
+def _invoice_row_values(
     *,
     context: CalculationSourceContext,
     observations: tuple[InvoiceObservation, ...],
-) -> tuple[Modelo349OperadorRow, ...]:
-    if context.modelo != Modelo("349").value or not observations:
-        return ()
-    row_values = resolve_invoice_binding_row_values(
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Build the revision's invoice row families once, through the canonical row builder."""
+    if not observations:
+        return {}
+    return resolve_invoice_binding_row_values(
         context.revision,
         observations,
-        effective_date=date(context.filing_year, 12, 31),
+        effective_date=_filing_period_date(context),
     )
+
+
+def _row_values_not_carried_by_detail_rows(
+    row_values: Mapping[tuple[BindingId, int], Decimal | str],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Keep the row values that reach the revision as row bindings rather than typed detail rows.
+
+    Modelo 349 operador rows travel as :class:`Modelo349OperadorRow` detail rows,
+    where they union with operator-entered rows and replay into the same
+    bindings; emitting them here as well would persist one row on two channels.
+    """
+    return {key: value for key, value in row_values.items() if key[0] not in _M349_OPERADOR_ROW_BINDINGS}
+
+
+def _m349_operador_rows_from_values(
+    row_values: Mapping[tuple[BindingId, int], Decimal | str],
+) -> tuple[Modelo349OperadorRow, ...]:
     return tuple(
         _m349_operador_row_from_values(
             _m349_operador_row_values(row_values, row_index=row_index),
@@ -1068,7 +1985,7 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
         source_ref=f"{source_kind}:{observation.invoice_id}",
         parent_source_ref=None,
         terminal_origin=TerminalOriginClass.INVOICE_CATALOGUE,
-        fingerprint=f"sha256:{sha256_hex(payload.encode('utf-8'))}",
+        fingerprint=prefixed_digest(payload.encode("utf-8")),
     )
 
 

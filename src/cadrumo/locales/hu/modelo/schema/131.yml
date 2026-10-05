@@ -1,6 +1,151 @@
 modelo:
   schema:
     '131':
+      binding:
+        x-dlnm8pbcdsmj2cph5pi6ip1ed5h62rg:
+          label: 'Beszedési megbízás: IBAN'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bb5e1kmesj1cpig:
+          label: 'Tevékenység 1: IAE-tétel (epígrafe)'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbgdtp66pbeehgmkp8:
+          label: 'Tevékenység 1: alkalmazandó százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Tevékenység 1: nettó jövedelem'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj2bbiclpnar3kc5i6u:
+          label: 'Tevékenység 1: a százalék alkalmazásának eredménye'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bb5e1kmesj1cpig:
+          label: 'Tevékenység 2: IAE-tétel (epígrafe)'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbgdtp66pbeehgmkp8:
+          label: 'Tevékenység 2: alkalmazandó százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Tevékenység 2: nettó jövedelem'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj4bbiclpnar3kc5i6u:
+          label: 'Tevékenység 2: a százalék alkalmazásának eredménye'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bb5e1kmesj1cpig:
+          label: 'Tevékenység 3: IAE-tétel (epígrafe)'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbgdtp66pbeehgmkp8:
+          label: 'Tevékenység 3: alkalmazandó százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Tevékenység 3: nettó jövedelem'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj6bbiclpnar3kc5i6u:
+          label: 'Tevékenység 3: a százalék alkalmazásának eredménye'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bb5e1kmesj1cpig:
+          label: 'Tevékenység 4: IAE-tétel (epígrafe)'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbgdtp66pbeehgmkp8:
+          label: 'Tevékenység 4: alkalmazandó százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbicln68qbdd5imst3f5ln6at3f:
+          label: 'Tevékenység 4: nettó jövedelem'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmj8bbiclpnar3kc5i6u:
+          label: 'Tevékenység 4: a százalék alkalmazásának eredménye'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabb5e1kmesj1cpig:
+          label: 'Tevékenység 5: IAE-tétel (epígrafe)'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbgdtp66pbeehgmkp8:
+          label: 'Tevékenység 5: alkalmazandó százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbicln68qbdd5imst3f5ln6at3f:
+          label: 'Tevékenység 5: nettó jövedelem'
+        x-dlnm8pbcdsmj2cph5po62pr564n62orkd5r6ip31cgmjabbiclpnar3kc5i6u:
+          label: 'Tevékenység 5: a százalék alkalmazásának eredménye'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bb7cln6asj1dhin6bbgdtp66pbeehgmkp8:
+          help: Ha a részletfizetés (pago fraccionado) kiszámításához a szabályozásban
+            előírtnál magasabb százalékot kíván alkalmazni, itt adja meg a kívánt
+            százalékot.
+          label: 'Mezőgazdasági bevétel a negyedévben: alkalmazandó magasabb százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62:
+          help: Az IRPF-törvény 68.4. cikke szerinti levonásra jogosító jövedelem.
+          label: 'Ceuta vagy Melilla jövedelme: rendes gazdaságok'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdcdinat315lmmar39dhm62bbcc4mn0obcdlgg:
+          help: Az IRPF-törvény 68.4. cikke szerinti levonásra jogosító jövedelem.
+          label: 'Ceuta, Melilla vagy La Palma jövedelme: rendes gazdaságok'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbfe9i6irj1e9km2spdctimspbic5m6aso:
+          label: 'Mezőgazdasági bevétel a negyedévben: rendes gazdaságok'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor31:
+          help: Kiemelt gazdaságok a fiatal gazdálkodók 25 %-os kedvezményével (az
+            IRPF-törvény hatodik kiegészítő rendelkezése).
+          label: 'Ceuta vagy Melilla jövedelme: kiemelt gazdaságok'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          help: Kiemelt gazdaságok a fiatal gazdálkodók 25 %-os kedvezményével (az
+            IRPF-törvény hatodik kiegészítő rendelkezése).
+          label: 'Ceuta, Melilla vagy La Palma jövedelme: kiemelt gazdaságok'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbge9kmusj9ehgn4qb1ecmmepbeclp62r35ec:
+          help: Kiemelt gazdaságok a fiatal gazdálkodók 25 %-os kedvezményével (az
+            IRPF-törvény hatodik kiegészítő rendelkezése).
+          label: 'Mezőgazdasági bevétel a negyedévben: kiemelt gazdaságok'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9dd5n6esj5ednn6bbkclp74qbkdtp6iobcclpiqs3fe9hmarjkc5l6a:
+          help: Ha a részletfizetés (pago fraccionado) kiszámításához a szabályozásban
+            előírtnál magasabb százalékot kíván alkalmazni, itt adja meg a kívánt
+            százalékot. Az IRPF-törvény 68.4. cikke szerinti levonással érintett jövedelemre
+            vonatkozik (Ceuta, Melilla, 2024-ben és 2025-ben La Palma).
+          label: 'Területi levonásos jövedelem: alkalmazandó magasabb százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bb2c5pma:
+          help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
+            felvett hitel törlesztésére fordított összegek után. Ha a tevékenység
+            az adóévben kezdődött, azt a negyedévet kell figyelembe venni, amelyben
+            megkezdődött.
+          label: 'Lakáslevonás (mezőgazdaság): az első negyedév bevétele'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbcd5mmit35:
+          help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
+            felvett hitel törlesztésére fordított összegek után.
+          label: 'Lakáslevonás (mezőgazdaság): az évre tervezett aktív napok'
+        x-dlnm8pbcdsmj2cph5po62pr564n62pric5p6io9depkncqb5dpi62bbgdtp66pbeehgmkp8:
+          help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
+            felvett hitel törlesztésére fordított összegek után. Ha a tevékenység
+            az adóévben kezdődött, azt a negyedévet kell figyelembe venni, amelyben
+            megkezdődött.
+          label: 'Lakáslevonás (mezőgazdaság): aktív napok az első negyedévben'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
+          label: Kiegészítő bevallás
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
+          help: 'Csak abban a kivételes esetben, ha a negyedévben a Modelo 130 (részletfizetés)
+            nyomtatványt is be kell nyújtania: adja meg az ott e levonásként szereplő
+            összeget.'
+          label: 'A 110.3.c cikk szerinti levonás: a Modelo 130-ban szereplő összeg'
+        x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dehp62rbf:
+          help: 'Ha az előző adóév gazdasági tevékenységből származó nettó jövedelme
+            nem haladta meg a 12 000 eurót, válassza ki a sávot: legfeljebb 9000,
+            9000,01 és 10 000, 10 000,01 és 11 000, illetve 11 000,01 és 12 000 euró
+            között.'
+          label: 'A 110.3.c cikk szerinti levonás: az előző adóév jövedelmi sávja'
+        x-dlnm8pbcdsmj2cph5po62pr564n68qbjcdgn0ob3d5i62p1d6cpg:
+          label: Legalább 33 %-os fokú fogyatékossággal élő adózó
+        x-dlnm8pbcdsmj2cph5po62pr564n6ktbjehkmcqb3c5n78p9dc5n78pbid5nn4:
+          label: 'Kiegészítő bevallás: a korábbi bevallás igazolásának száma'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor31:
+          label: 'Alapadat nélkül: levonás Ceuta vagy Melilla jövedelme után'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmm6pblehgiqrb5dhkmor315lm62bbgc5m6qo8:
+          label: 'Alapadat nélkül: levonás Ceuta, Melilla vagy La Palma jövedelme
+            után'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmn0rricdimst31d9ig:
+          help: Ha a részletfizetés (pago fraccionado) kiszámításához a szabályozásban
+            előírtnál magasabb százalékot kíván alkalmazni, itt adja meg a kívánt
+            százalékot.
+          label: 'Alapadat nélkül: alkalmazandó magasabb százalék'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lh62sr5:
+          help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
+            felvett hitel törlesztésére fordított összegek után. Ha a tevékenység
+            az adóévben kezdődött, azt a negyedévet kell figyelembe venni, amelyben
+            megkezdődött.
+          label: 'Alapadat nélkül: lakáslevonás, az első negyedév bevétele'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lm6irb9ehig:
+          help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
+            felvett hitel törlesztésére fordított összegek után.
+          label: 'Alapadat nélkül: lakáslevonás, az évre tervezett aktív napok'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncqbmd5imsp315lo6usj3cln78oback:
+          help: Levonás az elsődleges lakóingatlan megszerzésére vagy felújítására
+            felvett hitel törlesztésére fordított összegek után. Ha a tevékenység
+            az adóévben kezdődött, azt a negyedévet kell figyelembe venni, amelyben
+            megkezdődött.
+          label: 'Alapadat nélkül: lakáslevonás, aktív napok az első negyedévben'
+        x-dlnm8pbcdsmj2cph5po62pr564n76qbe5li62t3fecmm4objckmncrrcelmmarg:
+          label: 'Alapadat nélkül: az értékesítés vagy bevétel volumene a negyedévben'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6ap3lcdhmirre5lgn0r39cdgm8o8:
+          help: A Modelo 131 12. rovatában alkalmazott levonás összege az adóév korábbi
+            negyedéveiben.
+          label: 'Lakáslevonás: a korábbi negyedévekben alkalmazott összeg'
+        x-dlnm8pbcdsmj2cph5po62pr564n7cqbmd5imsp315li6asj5cdk6ubb4cli7aor3d5nms:
+          help: Jelölje X-szel, ha jogosult a lakáscélú hitelből finanszírozott, elsődleges
+            lakóingatlan megszerzésére vagy felújítására fordított összegek utáni
+            levonásra. Nincs jogosultság, ha a megszerzés vagy felújítás 2013. január
+            1-jén vagy azt követően történt, és ezt megelőzően nem történt rá kifizetés.
+          label: 'Lakáslevonás: a levonás alkalmazására való jogosultság'
       casilla:
         continuidad:
           irpf-pf-modulos-1-unidades:
@@ -73,6 +218,11 @@ modelo:
             label: Korábbi önadózásokból befizetendő eredmény
           retenciones-ingresos-a-cuenta:
             label: Forrásadó és részletfizetés
+      construct:
+        modelo-131-objective-estimation-instalment:
+          field:
+            title: 'Modelo 131 nyomtatvány: negyedéves előlegfizetés az objektív becslés
+              rendszerében'
       field:
         official_name: Modelo 131. IRPF. Objektív megállapítás alá tartozó vállalkozók
           és szakemberek. Részletfizetés.
@@ -129,8 +279,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
-                  rendszerében (2019-2023 közötti adóévek)'
+                title: 'Modelo 131 nyomtatvány: negyedéves előlegfizetés az objektív
+                  becslés rendszerében (2019-2023 közötti adóévek)'
           field:
             label: 2019-2023. adóévek
         '2024':
@@ -184,8 +334,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
-                  rendszerében (2024. adóév)'
+                title: 'Modelo 131 nyomtatvány: negyedéves előlegfizetés az objektív
+                  becslés rendszerében (2024. adóév)'
           field:
             label: Adóév 2024
         '2025':
@@ -241,8 +391,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
-                  rendszerében (2025. adóév)'
+                title: 'Modelo 131 nyomtatvány: negyedéves előlegfizetés az objektív
+                  becslés rendszerében (2025. adóév)'
           field:
             label: Adóév 2025
         '2026':
@@ -296,7 +446,10 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
-                  rendszerében (2026. adóév)'
+                title: 'Modelo 131 nyomtatvány: negyedéves előlegfizetés az objektív
+                  becslés rendszerében (2026. adóév)'
           field:
             label: Adóév 2026
+        2026-late:
+          field:
+            label: Adóév 2026 (3T/4T változat)

@@ -168,6 +168,37 @@ def partition_cross_period_requirements_by_activity_start(
     return _RequirementPartition(tuple(in_scope), tuple(suppressed))
 
 
+def _revision_dependency_inventory_items(
+    operation: PinnedAuthorityOperation, *, modelo_id: str, revision_id: str, filing_year: int, periods: Iterable[str]
+) -> tuple[CrossPeriodDependencyInventoryItem, ...]:
+    """Resolve filing-period snapshots in their declared order and retain dependencies."""
+    items: list[CrossPeriodDependencyInventoryItem] = []
+    for period in periods:
+        # A symbolic or administrative selector covers filings without
+        # naming one, so it has no single filing snapshot to inspect.
+        if not is_filing_period_token(str(period)):
+            continue
+        snapshot = operation.snapshot(
+            modelo_id,
+            filing_year=filing_year,
+            period=str(period),
+            revision_id=revision_id,
+        )
+        dependencies = cross_period_dependency_requirements(snapshot)
+        if not dependencies:
+            continue
+        items.append(
+            CrossPeriodDependencyInventoryItem(
+                target_modelo=str(snapshot.modelo.id),
+                target_revision_id=str(snapshot.revision.id),
+                target_filing_year=snapshot.filing_year,
+                target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+                dependencies=dependencies,
+            ),
+        )
+    return tuple(items)
+
+
 def cross_period_dependency_inventory(
     operation: PinnedAuthorityOperation,
     *,
@@ -200,29 +231,15 @@ def cross_period_dependency_inventory(
             revision_payload = operation.revision(modelo_id, str(revision.id))
             if revision_payload.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
-            for period in revision.period_selector.periods_for_year(filing_year):
-                # A symbolic or administrative selector covers filings without
-                # naming one, so it has no single filing snapshot to inspect.
-                if not is_filing_period_token(str(period)):
-                    continue
-                snapshot = operation.snapshot(
-                    modelo_id,
-                    filing_year=filing_year,
-                    period=str(period),
+            items.extend(
+                _revision_dependency_inventory_items(
+                    operation,
+                    modelo_id=modelo_id,
                     revision_id=str(revision.id),
+                    filing_year=filing_year,
+                    periods=revision.period_selector.periods_for_year(filing_year),
                 )
-                dependencies = cross_period_dependency_requirements(snapshot)
-                if not dependencies:
-                    continue
-                items.append(
-                    CrossPeriodDependencyInventoryItem(
-                        target_modelo=str(snapshot.modelo.id),
-                        target_revision_id=str(snapshot.revision.id),
-                        target_filing_year=snapshot.filing_year,
-                        target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-                        dependencies=dependencies,
-                    ),
-                )
+            )
     return CrossPeriodDependencyInventory(
         filing_year=filing_year,
         items=tuple(
@@ -429,9 +446,9 @@ def _load_clean_state_repositories(
     """Load all persistence inputs once for a clean-state evaluation."""
     return _CleanStateRepositories(
         filing_catalogue=filing_repository.load(),
-        calculation_catalogue=calculation_repository.load(),
+        calculation_catalogue=calculation_repository.load(operation=operation),
         verification_catalogue=require_verification_report_coordinates_current(
-            verification_repository.load(),
+            verification_repository.load(operation=operation),
             operation=operation,
         ),
         justificante_repository=justificante_repository,

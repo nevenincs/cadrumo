@@ -13,11 +13,14 @@ from ...application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
 )
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
-from ...application.aggregation.retenciones import RetencionObservation
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
 from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
-from ...application.modelo.aggregate_operation import ModeloAggregateProjection
-from ...application.modelo.invoice_withholding_capture_operation import ModeloInvoiceWithholdingCaptureProjection
+from ...application.modelo.aggregate_projection import (
+    ModeloAggregateGenerationAudit,
+    ModeloAggregateProjection,
+    ModeloAggregateWindow,
+)
+from ...application.modelo.invoice_withholding_capture_contracts import ModeloInvoiceWithholdingCaptureProjection
 from ...core.aggregation import RetencionClave
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -36,7 +39,9 @@ from .modelo_aux_payloads import WithholdingClaveBreakdownPayload
 from .runtime_modelo_aggregate import run_modelo_aggregate
 from .runtime_modelo_invoice_withholding import aggregate_modelo_with_received_invoice_retencion
 
-_INVOICE_EVIDENCE_MODELOS = frozenset({"111", "115"})
+# Modelo 123 is absent on purpose: its capital withholding is evidenced by the
+# paying ledger transaction, and invoice evidence for it is refused outright.
+_INVOICE_EVIDENCE_MODELOS = frozenset({Modelo("111").value, Modelo("115").value})
 _PERIODIC_WINDOW_MODELOS = frozenset(modelo.value for modelo in PERIODIC_WITHHOLDING_MODELOS)
 _LEDGER_PAYMENT_WITHHOLDING_MODELOS = frozenset({"111", "123"})
 
@@ -101,11 +106,7 @@ def _aggregate_operation_result(projection: ModeloAggregateProjection) -> Modelo
     ):
         raise ValueError("registered modelo aggregate omitted its summary fields")
     window = projection.withholding_window
-    if projection.modelo in _PERIODIC_WINDOW_MODELOS:
-        if window is None:
-            raise ValueError("registered modelo aggregate omitted its withholding-window readback")
-    elif window is not None:
-        raise ValueError("registered modelo aggregate returned an unexpected withholding window")
+    _require_aggregate_window(projection, window)
     audit = None if window is None else window.generation_audit
     return ModeloAggregateResult(
         modelo=ModeloCode(projection.modelo),
@@ -123,27 +124,39 @@ def _aggregate_operation_result(projection: ModeloAggregateProjection) -> Modelo
             )
             for row in projection.clave_breakdown
         ],
-        withholding_window=(
-            None
-            if window is None
-            else WithholdingWindowReadbackPayload(
-                baseline=WithholdingWindowBaselinePayload(
-                    scope_token=window.baseline.scope_token,
-                    generation_id=window.baseline.generation_id,
-                ),
-                generation=window.generation,
-                generation_audit=(
-                    None
-                    if audit is None
-                    else WithholdingGenerationAuditPayload(
-                        parent_generation_id=audit.parent_generation_id,
-                        mode=audit.mode,
-                        supersedes_generation_id=audit.supersedes_generation_id,
-                    )
-                ),
-            )
-        ),
+        withholding_window=_aggregate_window_payload(window, audit),
     )
+
+
+def _calculation_rows_absent_notices(projection: ModeloAggregateProjection) -> list[Notice]:
+    """Warn once for each source the calculation reads that holds no stored row.
+
+    An empty summary then reads as missing data rather than as a proven zero;
+    a stored row whose amounts are zero is counted and raises no warning.
+    """
+    period = projection.period.to_period()
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="modelo.aggregate.calculation_rows_absent",
+            message=tr(
+                "cli.app.modelo.aggregate.calculation_rows_absent",
+                modelo=projection.modelo,
+                filing_year=period.filing_year,
+                period=period.registry_token,
+                source_family=source_family.value,
+            ),
+            context={
+                "modelo": projection.modelo,
+                "filing_year": str(period.filing_year),
+                "period": period.registry_token,
+                "revision": projection.calculation_revision_id or "",
+                "source_family": source_family.value,
+                "reason": "stored_rows_absent",
+            },
+        )
+        for source_family in projection.absent_source_families or ()
+    ]
 
 
 def _refuse_misplaced_ledger_payment_withholding(
@@ -151,10 +164,8 @@ def _refuse_misplaced_ledger_payment_withholding(
     *,
     ledger_payment_withholding: list[str] | None,
     received_invoice_retencion: list[str] | None,
-    retencion_observation: list[str] | None,
     counterpart_observation: list[str] | None,
     foreign_asset_observation: list[str] | None,
-    withholding_observation: list[str] | None,
 ) -> None:
     """Refuse a ledger-payment capture outside its supported, exclusive input route.
 
@@ -169,10 +180,8 @@ def _refuse_misplaced_ledger_payment_withholding(
     if any(
         (
             received_invoice_retencion,
-            retencion_observation,
             counterpart_observation,
             foreign_asset_observation,
-            withholding_observation,
         )
     ):
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_exclusive"))
@@ -236,10 +245,8 @@ def aggregate_modelo(
     modelo: str,
     year: int,
     period: str,
-    retencion_observation: list[str] | None = None,
     counterpart_observation: list[str] | None = None,
     foreign_asset_observation: list[str] | None = None,
-    withholding_observation: list[str] | None = None,
     received_invoice_retencion: list[str] | None = None,
     ledger_payment_withholding: list[str] | None = None,
 ) -> None:
@@ -248,20 +255,11 @@ def aggregate_modelo(
         modelo,
         ledger_payment_withholding=ledger_payment_withholding,
         received_invoice_retencion=received_invoice_retencion,
-        retencion_observation=retencion_observation,
         counterpart_observation=counterpart_observation,
         foreign_asset_observation=foreign_asset_observation,
-        withholding_observation=withholding_observation,
     )
-    if modelo == Modelo("123").value and (retencion_observation or received_invoice_retencion):
+    if modelo == Modelo("123").value and received_invoice_retencion:
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
-    if modelo == Modelo("190").value and withholding_observation:
-        raise typer.BadParameter(
-            "--withholding-observation is not accepted for Modelo 190; "
-            "capture annual detail with invoice evidence on Modelo 111"
-        )
-    if withholding_observation:
-        raise typer.BadParameter(f"--withholding-observation is not accepted for Modelo {modelo}")
 
     command = PerModeloAggregationCommand(
         modelo=modelo,
@@ -269,13 +267,6 @@ def aggregate_modelo(
             _invoice_capture_period(year, period)
             if received_invoice_retencion and not ledger_payment_withholding
             else resolve_year_period(year, period, modelo=modelo)
-        ),
-        retencion_observations=(
-            ()
-            if modelo in _PERIODIC_WINDOW_MODELOS
-            else _parse_typed_cli_observations(
-                retencion_observation, model=RetencionObservation, flag="--retencion-observation"
-            )
         ),
         counterpart_observations=_parse_typed_cli_observations(
             counterpart_observation, model=CounterpartObservation, flag="--counterpart-observation"
@@ -289,7 +280,7 @@ def aggregate_modelo(
         model=LedgerPaymentWithholdingEvidenceRequest,
         flag="--ledger-payment-withholding",
     )
-    aggregate_projection: ModeloAggregateProjection | None = None
+    notices: list[Notice] = []
     if received_invoice_retencion:
         invoice_withholding_requests = _parse_typed_cli_observations(
             received_invoice_retencion,
@@ -307,12 +298,6 @@ def aggregate_modelo(
             )
         if invoice_evidence is None:
             raise typer.BadParameter("one invoice withholding allocation is required per command")
-        if retencion_observation:
-            raise typer.BadParameter(
-                f"--retencion-observation is not accepted for Modelo {modelo}; use invoice evidence"
-            )
-        if not invoice_withholding_requests:
-            raise typer.BadParameter("one invoice withholding allocation is required per command")
         if len(invoice_withholding_requests) > 1:
             raise typer.BadParameter(
                 "one invoice withholding allocation is accepted per command; submit each allocation explicitly"
@@ -324,39 +309,44 @@ def aggregate_modelo(
         )
         aggregate_result = _invoice_capture_aggregate_result(capture.projection)
     else:
-        if modelo in _PERIODIC_WINDOW_MODELOS and retencion_observation:
-            raise typer.BadParameter(
-                f"--retencion-observation is not accepted for Modelo {modelo}; use invoice evidence"
-            )
         aggregate_projection = run_modelo_aggregate(
             ctx,
             command=command,
             ledger_payment=ledger_payment_requests[0] if ledger_payment_requests else None,
         )
         aggregate_result = _aggregate_operation_result(aggregate_projection)
-    notices: list[Notice] = []
-    if aggregate_projection is not None:
-        notices.extend(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="modelo.aggregate.calculation_rows_absent",
-                message=tr(
-                    "cli.app.modelo.aggregate.calculation_rows_absent",
-                    modelo=modelo,
-                    filing_year=year,
-                    period=period,
-                    source_family=family.value,
-                ),
-                context={
-                    "modelo": modelo,
-                    "filing_year": str(year),
-                    "period": command.period.registry_token,
-                    "revision": aggregate_projection.calculation_revision_id or "",
-                    "source_family": family.value,
-                    "reason": "stored_rows_absent",
-                },
-            )
-            for family in aggregate_projection.absent_source_families
-        )
+        notices = _calculation_rows_absent_notices(aggregate_projection)
     lines = _aggregate_output_lines(aggregate_result, notices=notices)
     emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)
+
+
+def _require_aggregate_window(projection: ModeloAggregateProjection, window: ModeloAggregateWindow | None) -> None:
+    """Require a window exactly for the established periodic withholding models."""
+    if projection.modelo in _PERIODIC_WINDOW_MODELOS:
+        if window is None:
+            raise ValueError("registered modelo aggregate omitted its withholding-window readback")
+    elif window is not None:
+        raise ValueError("registered modelo aggregate returned an unexpected withholding window")
+
+
+def _aggregate_window_payload(
+    window: ModeloAggregateWindow | None, audit: ModeloAggregateGenerationAudit | None
+) -> WithholdingWindowReadbackPayload | None:
+    """Project the existing baseline and optional generation audit fields."""
+    return (
+        None
+        if window is None
+        else WithholdingWindowReadbackPayload(
+            baseline=WithholdingWindowBaselinePayload(
+                scope_token=window.baseline.scope_token, generation_id=window.baseline.generation_id
+            ),
+            generation=window.generation,
+            generation_audit=None
+            if audit is None
+            else WithholdingGenerationAuditPayload(
+                parent_generation_id=audit.parent_generation_id,
+                mode=audit.mode,
+                supersedes_generation_id=audit.supersedes_generation_id,
+            ),
+        )
+    )

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8d216081a763aa3705a8ff6b38d60e0fda064a81f5ec33a98c2567d0246eec28'
+body_hash: 'sha256:5fe7e2a688d7b92a00ec5707169a3e532ca93902d263eb7836060aa1d3d8510e'
 related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-load-closure-census-audit]]"
 ---
@@ -21,9 +20,9 @@ regulatory data living outside the sanctioned channels. Closes the second of the
 two enumeration denominators the coverage decision left open; the import-closure
 axis is closed by the load-closure census beside this record.
 
-The instrument is `dev/quality/regulatory_drift_census.py`, reconciled against
-the reviewed ledger `dev/quality/regulatory_drift_dispositions.toml` and gated by
-`src/cadrumo/tests/test_regulatory_drift_census.py`. It quantifies over the
+The instrument is the retired module, reconciled against
+the reviewed ledger the retired data file and gated by
+The retired test. It quantifies over the
 SOURCE, never over a list of known offenders, because a census that iterates a
 known-offender list cannot see an offender nobody listed and being unlisted is
 exactly the question.
@@ -61,7 +60,7 @@ census executes the live row.
 
 `_MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR` is declared twice: at
 `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py:70` and again at
-`src/cadrumo/application/modelo/_profile_binding.py:897`. Two modules hold the
+The retired module. Two modules hold the
 same regulatory year independently, so a change to one leaves the other stating
 the old year and nothing detects the disagreement.
 
@@ -77,7 +76,6 @@ The plan's Description carries "28 `ModeloApplicabilityRule` literals across 27
 modelos". The census derives **27** constructions across 27 modelos. The
 difference is a grep artefact: a search for the constructor also matches the
 `class ModeloApplicabilityRule(BaseModel):` definition line at
-`src/cadrumo/domain/calculations/registry/_applicability.py:210`.
 
 Nothing about the migration changes, but the figure is quoted in a deletion
 inventory that a later reader will reconcile against. A count derived by
@@ -87,7 +85,7 @@ result.
 
 ### drift-census | high | the export-tree generator encodes the interpretation of official AEAT design prose as a Python grammar
 
-`dev/registry/_export_tree.py` carries five regular expressions that read Spanish
+The retired module carried five regular expressions that read Spanish
 AEAT design prose and derive filing wire facts from it: field width and decimal
 places from a "N enteros y M decimales" clause at `:70` and `:75`, a fixed wire
 value from a `Constante` clause at `:79` and `:118`, and a trailing `Nota N`
@@ -104,7 +102,7 @@ deferral in the meantime.
 
 The first build of this census missed
 `EXPECTED_DIFFICULT_JUSTIFICATION_PCT` at
-`src/cadrumo/domain/calculations/registry/_m303_orden_constants.py:18`, one of the
+The retired module, one of the
 four values the plan names in that module. Two independent exclusions coincided:
 the value-shape detector skipped `Decimal("1")` because `1` is a scale literal,
 and the name-driven detector skipped it because the assigned value is a call
@@ -134,7 +132,7 @@ The census finds filing-year integers in **219 file-and-symbol positions** under
 `src/cadrumo`. The bulk are the 2000-to-2099 and 2000-to-2100 bounds repeated on
 pydantic fields, CLI options and repository filters; the remainder are concrete
 transitional years individual surfaces pin, such as the censo foundation year at
-`src/cadrumo/domain/calculations/registry/_censo_modelos.py:90`, the M100 letter
+The retired module, the M100 letter
 casilla first year at `_export_parse.py:43`, and the registry minimum filing year
 at `_validate_previous_filing_year_coverage.py:64`.
 
@@ -163,13 +161,13 @@ excusing it.
 ### drift-census | medium | per-modelo regulatory tables live in core, keyed by modelo, with their legal grounding in comments
 
 Three core modules hold modelo-keyed tables the registry could hold instead.
-`src/cadrumo/core/_amendment_kind_regime.py:146` declares the date from which
+The retired module declared the date from which
 each modelo's autoliquidacion rectificativa mechanism applies, and each entry
 carries its own orden or manual citation in a comment beside it -- the citations
 are the tell that these are dates the law fixes.
-`src/cadrumo/core/_result_disposition.py` declares which result dispositions each
+The retired module declared which result dispositions each
 modelo admits, which is a property of that modelo's official design.
-`src/cadrumo/core/_modelo.py:265` and `:279` carry Spanish operator-facing prose
+The retired module and `:279` carry Spanish operator-facing prose
 explaining, per modelo, why the application does not model an obligation, fusing
 a scope decision that is registry data with an explanation that is a locale
 string.
@@ -179,7 +177,7 @@ beside it are not the identifier.
 
 ### drift-census | medium | the foreign-asset thresholds module is half migrated, and the half that remains is the regulatory half
 
-`src/cadrumo/application/_foreign_asset_thresholds.py:21` and `:25` map each
+The retired module and `:25` map each
 modelo to a registry parameter id, so the threshold amounts themselves are
 already registry-resident and only the routing is in Python. `:29` declares which
 obligation groups each modelo covers, and that scope is registry-resident
@@ -192,10 +190,10 @@ is obliged to declare.
 
 ### drift-census | medium | reduction coefficients and transitional windows sit as Decimal and int literals in the domain
 
-`src/cadrumo/domain/fincas/_tier_resolver.py` carries the reduction coefficients
+The retired module carried the reduction coefficients
 0.05, 0.50, 0.60, 0.70 and 0.90 as `Decimal` literals at the resolver, beside a
 default ejercicio amendment year and a rehabilitation lookback window.
-`src/cadrumo/domain/modelos/_dt12_reduccion.py:30-34` carries five constants
+The retired module carried five constants
 encoding the DT12 transitional window. `src/cadrumo/application/modelo/_art109_activity_income.py`
 carries the article 109 coefficient 0.70, and `_dt12_advisory.py` the 20000
 threshold.
@@ -213,7 +211,7 @@ that row can be proven by property rather than by tally.
 
 ### drift-census | low | the detector finds itself, and that is recorded rather than special-cased
 
-`dev/quality/regulatory_drift_census.py` names the filing-year span it searches
+The retired module names the filing-year span it searches
 for, so it appears in its own census. The finding is allowlisted with that
 reason rather than excluded by a rule in the scanner, because a scanner that
 quietly skips itself is one edit away from quietly skipping something else.

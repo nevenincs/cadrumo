@@ -124,6 +124,6 @@ def test_retired_family_scan_bites_on_a_non_python_dev_surface(tmp_path: Path) -
     retired_token = "official_" + "status"
     planted.write_text(f"filter:\n  {retired_token}: retired\n", encoding="utf-8")
 
-    assert _retired_family_occurrences(tmp_path / "scaffold") == {
-        (planted.as_posix(), retired_token),
-    }
+    repository_root = Path(__file__).parents[4]
+    reported = planted.relative_to(repository_root) if planted.is_relative_to(repository_root) else planted
+    assert _retired_family_occurrences(tmp_path / "scaffold") == {(reported.as_posix(), retired_token)}

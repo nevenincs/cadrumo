@@ -21,7 +21,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -35,31 +36,41 @@ from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support imp
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from cadrumo.application.aggregation.ledger_filing_snapshot import row_fingerprint
+from cadrumo.application.aggregation.ledger_membership import LedgerSourceMembership, query_ledger_membership
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
+    create_manual_transaction,
     update_manual_transaction_fields,
 )
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
-from cadrumo.application.ledger.models import ManualLedgerTransactionPatch
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from cadrumo.application.modelo.profile_readiness_gate import load_modelo_work_profile
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
+from cadrumo.application.modelo.work_form_models import ModeloWorkForm
+from cadrumo.application.modelo.work_form_service import load_modelo_work_form
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
+    ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
 )
-from cadrumo.domain.transactions.enums import BusinessClassification
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
+from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from cadrumo.entrypoints.adapter_composition import (
     build_ledger_evidence_ports,
+    build_ledger_membership_ports,
     build_verification_repository_bundle,
 )
-from cadrumo.entrypoints.tests.profile_persistence._verify_ledger_drift_gate_support import (
+from cadrumo.entrypoints.tests.profile_persistence.ledger_drift_support import (
     BUCKET_ID,
     TAX_ID,
     calculate_irene_revision,
@@ -113,12 +124,19 @@ def _verification_ports(repos: _Repos, *, operation: PinnedAuthorityOperation) -
         verification=vr_repo,
         bucket_event=event_repo,
         transaction=tx_repo,
+        ledger_membership_ports=build_ledger_membership_ports(bucket_id=BUCKET_ID, transaction_repository=tx_repo),
     )
+
+
+def _transaction(tx_repo: TransactionCatalogueRepositoryProtocol, transaction_id: str) -> Transaction | None:
+    """Read one stored ledger row under the published authority its registry vocabulary validates against."""
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        return tx_repo.load().get(transaction_id)
 
 
 def _row(tx_repo: TransactionCatalogueRepository, transaction_id: str) -> Transaction:
     """Return one live ledger row, refusing the optional the catalogue returns."""
-    row = tx_repo.load().get(transaction_id)
+    row = _transaction(tx_repo, transaction_id)
     assert row is not None
     return row
 
@@ -159,7 +177,7 @@ def test_attaching_evidence_does_not_move_the_row_fingerprint(tmp_path: Path) ->
                 occurred_at=_AT,
             )
 
-        attached = tx_repo.load().get(purchase.transaction_id)
+        attached = _transaction(tx_repo, purchase.transaction_id)
         assert attached is not None
         # The attach really happened; the fingerprint is unmoved anyway.
         assert attached.purchase_invoice_evidence_id == evidence.record.evidence_id
@@ -192,24 +210,48 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
                 occurred_at=_AT,
             )
 
-        reclassified = tx_repo.load().get(purchase.transaction_id)
+        reclassified = _transaction(tx_repo, purchase.transaction_id)
         assert reclassified is not None
         assert row_fingerprint(reclassified) != before
 
 
-def _verify(revision_id: str, repos: _Repos) -> VerificationReport:
+def _form(repos: _Repos) -> ModeloWorkForm:
+    """The declaration's editor form, read from the same storage the check wrote to."""
+    work_units, calculations, _filings, reports, _events, _transactions = repos
+    (unit,) = work_units.load().values()
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(
+        return load_modelo_work_form(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_units,
+            calculation_repository=calculations,
+            verification_repository=reports,
+            admission=None,
+            language=OutputLanguage.EN,
+        ).form
+
+
+def _verify(
+    revision_id: str,
+    repos: _Repos,
+    *,
+    verification_ports: VerificationRepositoryBundle | None = None,
+) -> VerificationReport:
+    with bundled_indexed_authority().operation() as operation:
+        return verify_modelo_revision_with_preconditions(
             revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator",
             workflow_profile=workflow_profile(),
             settings=ready_clave_settings(TAX_ID),
-            verification_repositories=_verification_ports(repos, operation=operation),
+            verification_repositories=verification_ports or _verification_ports(repos, operation=operation),
             clock=_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
 
 def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path) -> None:
@@ -256,11 +298,9 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         ]
         assert blocking, "a reclassified-away deduction must not leave the stale draft grantable"
         # The refusal resolves the operator's position instead of restating it.
-        drift = next(
-            finding
-            for finding in blocking
-            if finding.message_locale_key == "application.modelo.findings.ledger_snapshot_drift"
-        )
+        drift = next(finding for finding in blocking if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION)
+        # Only entries changed, so the sentence names only them.
+        assert drift.message_locale_key == "application.modelo.findings.ledger_snapshot_drift_changed"
         assert dict(drift.message_facts) == {
             "anchored": True,
             "changed_count": 1,
@@ -268,6 +308,8 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
             "modelo": "303",
             "period": "1T",
             "removed_count": 0,
+            "added_count": 0,
+            "membership_available": True,
         }
         assert "next_action" not in drift.model_dump(mode="json")
         assert "ley-37-1992:art-164" in drift.legal_refs
@@ -277,6 +319,8 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         assert settled is not None
         assert settled.state is CalculationRevisionState.BORRADOR
         assert settled.ledger_filing_evidence is None
+        # The editor form reads the same check: the calculation is out of date until calculated again.
+        assert _form(repos).calculation_out_of_date is True
 
 
 def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
@@ -311,6 +355,7 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
 
         assert granted.granted_verificado_completo is True
         assert granted.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert _form(repos).calculation_out_of_date is False
 
 
 def test_a_ledger_derived_draft_carries_the_anchor_the_gate_compares(tmp_path: Path) -> None:
@@ -374,3 +419,213 @@ def test_the_drift_anchor_does_not_move_any_revision_id() -> None:
         filing_instance_evidence=None,
         source_provenance=(),
     )
+
+
+def _add_transaction(
+    objects: SecureObjectRepository,
+    repos: _Repos,
+    *,
+    booked_date: date = date(2026, 3, 25),
+    business: BusinessClassification = BusinessClassification.BUSINESS,
+    direction: TransactionDirection = TransactionDirection.INCOMING,
+    currency: str = "EUR",
+) -> Transaction:
+    """Add through the real ledger action after the persisted calculation."""
+    with _ledger_ports(objects, repos[-1], repos[-2]) as ports:
+        return create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=BUCKET_ID,
+                booked_date=booked_date,
+                amount=Decimal("363.00"),
+                currency=currency,
+                direction=direction,
+                description="New transaction after calculation",
+                counterparty="New customer or supplier",
+                business_classification=business,
+                taxable_base=Decimal("300.00"),
+                iva_rate=Decimal("0.21"),
+                iva_amount=Decimal("63.00"),
+                actor="operator",
+            ),
+            ports=ports,
+            occurred_at=_AT,
+        ).transaction
+
+
+@pytest.mark.parametrize("empty", [False, True])
+@pytest.mark.parametrize("held_back", [False, True])
+def test_added_declarable_sale_or_held_back_purchase_refuses_saved_calculation(
+    tmp_path: Path,
+    empty: bool,
+    held_back: bool,
+) -> None:
+    """New admitted and unclassified-deduction rows cannot disappear into old values."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
+        with bundled_indexed_authority().operation() as operation:
+            result = calculate_irene_revision(
+                profile.repository,
+                operation=operation,
+                empty=empty,
+            )
+        revision = result[0]
+        repos: _Repos = result[3:]
+        original = revision.model_dump(mode="json")
+        added = _add_transaction(
+            profile.repository,
+            repos,
+            direction=TransactionDirection.OUTGOING if held_back else TransactionDirection.INCOMING,
+        )
+        report = _verify(revision.calculation_revision_id, repos)
+        drift = next(
+            finding for finding in report.findings if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
+        )
+        assert report.granted_verificado_completo is False
+        assert drift.message_locale_key == "application.modelo.findings.ledger_snapshot_drift_added"
+        assert drift.message_facts["added_count"] == 1
+        assert drift.message_facts["changed_count"] == drift.message_facts["removed_count"] == 0
+        assert drift.message_facts["anchored"] is (not empty)
+        assert added.transaction_id not in revision.source_transaction_ids
+        saved = repos[1].load().get(revision.calculation_revision_id)
+        assert saved is not None
+        assert saved.model_dump(mode="json") == original
+        assert _form(repos).calculation_out_of_date is True
+
+
+@pytest.mark.parametrize(
+    ("booked_date", "business", "currency"),
+    [
+        (date(2026, 4, 25), BusinessClassification.BUSINESS, "EUR"),
+        (date(2026, 3, 25), BusinessClassification.PERSONAL, "EUR"),
+        (date(2026, 3, 25), BusinessClassification.PERSONAL, "USD"),
+        (date(2026, 3, 25), BusinessClassification.REVIEWED_EXCLUDED, "EUR"),
+    ],
+)
+def test_added_rows_outside_selected_admission_do_not_stale_the_calculation(
+    tmp_path: Path,
+    booked_date: date,
+    business: BusinessClassification,
+    currency: str,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
+        with bundled_indexed_authority().operation() as operation:
+            result = calculate_irene_revision(
+                profile.repository,
+                operation=operation,
+            )
+        revision = result[0]
+        repos: _Repos = result[3:]
+        _add_transaction(profile.repository, repos, booked_date=booked_date, business=business, currency=currency)
+        report = _verify(revision.calculation_revision_id, repos)
+        assert not any(finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for finding in report.findings)
+
+
+def test_recorded_held_back_transaction_is_not_reported_as_a_new_row(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
+        with bundled_indexed_authority().operation() as operation:
+            result = calculate_irene_revision(
+                profile.repository,
+                operation=operation,
+                held_back_purchase=True,
+            )
+        revision = result[0]
+        repos: _Repos = result[3:]
+        purchase = result[2]
+        assert purchase.transaction_id not in revision.source_transaction_ids
+        assert any(issue.source_ref == f"transaction:{purchase.transaction_id}" for issue in revision.source_issues)
+        report = _verify(revision.calculation_revision_id, repos)
+        assert not any(finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for finding in report.findings)
+        assert report.granted_verificado_completo is False
+
+
+def test_unavailable_membership_refuses_even_an_empty_draft(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
+        with bundled_indexed_authority().operation() as operation:
+            result = calculate_irene_revision(
+                profile.repository,
+                operation=operation,
+                empty=True,
+            )
+            repos: _Repos = result[3:]
+            ports = _verification_ports(repos, operation=operation)
+        revision = result[0]
+        wrong_bucket = TransactionCatalogueRepository(
+            bucket_id="11111111-1111-4111-8111-111111111111",
+            objects=profile.repository,
+        )
+        ports = replace(
+            ports,
+            ledger_membership_ports=replace(
+                ports.ledger_membership_ports,
+                transaction_repository=wrong_bucket,
+            ),
+        )
+        report = _verify(revision.calculation_revision_id, repos, verification_ports=ports)
+        drift = next(
+            finding for finding in report.findings if finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION
+        )
+        assert report.granted_verificado_completo is False
+        assert drift.message_facts["membership_available"] is False
+
+
+def test_non_ledger_binding_revision_does_not_borrow_bucket_transactions(tmp_path: Path) -> None:
+    """Actual published non-ledger bindings never request unrelated source replay."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as runtime:
+        with bundled_indexed_authority().operation() as operation:
+            result = calculate_irene_revision(
+                runtime.repository,
+                operation=operation,
+                empty=True,
+            )
+            revision = result[0]
+            repos: _Repos = result[3:]
+            (unit,) = repos[0].load().values()
+            _add_transaction(runtime.repository, repos)
+            profile = load_modelo_work_profile(
+                bucket_id=BUCKET_ID,
+                profile_decode_context=operation.profile_decode_context(),
+            )
+            assert profile is not None
+            non_ledger_revision = operation.snapshot("111", filing_year=2026, period="1T").revision
+            membership = query_ledger_membership(
+                target=revision,
+                work_unit=unit,
+                revision=non_ledger_revision,
+                profile=profile,
+                ports=build_ledger_membership_ports(bucket_id=BUCKET_ID, transaction_repository=repos[-1]),
+                operation=operation,
+            )
+        assert membership == LedgerSourceMembership()
+
+
+def test_an_added_sale_in_a_different_encrypted_bucket_does_not_stale_the_draft(tmp_path: Path) -> None:
+    with isolated_two_bucket_runtime(tmp_path=tmp_path, primary_bucket_id=BUCKET_ID) as runtime:
+        with bundled_indexed_authority().operation() as operation:
+            result = calculate_irene_revision(runtime.primary.repository, operation=operation)
+        revision = result[0]
+        repos: _Repos = result[3:]
+        with (
+            runtime.switch_to_secondary(),
+            ledger_ports_for_test(
+                bucket_id=runtime.secondary.bucket_id,
+                objects=runtime.secondary.repository,
+            ) as ports,
+        ):
+            added = create_manual_transaction(
+                ManualLedgerTransactionCommand(
+                    bucket_id=runtime.secondary.bucket_id,
+                    booked_date=date(2026, 3, 25),
+                    amount=Decimal("363.00"),
+                    direction=TransactionDirection.INCOMING,
+                    description="Other taxpayer's sale",
+                    business_classification=BusinessClassification.BUSINESS,
+                    taxable_base=Decimal("300.00"),
+                    iva_rate=Decimal("0.21"),
+                    iva_amount=Decimal("63.00"),
+                ),
+                ports=ports,
+                occurred_at=_AT,
+            ).transaction
+            assert _transaction(ports.transaction_repository, added.transaction_id) is not None
+        assert _transaction(repos[-1], added.transaction_id) is None
+        report = _verify(revision.calculation_revision_id, repos)
+        assert not any(finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for finding in report.findings)

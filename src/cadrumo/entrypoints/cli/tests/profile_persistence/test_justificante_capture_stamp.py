@@ -118,9 +118,9 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
 
 
 def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -> None:
-    """A repeated live capture for the same CSV is idempotent and registers metadata."""
+    """An incomparable repeated receipt preserves prior evidence and registers metadata."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(
+    existing = _seed_unverified_filing(
         work_unit_id=work_unit_id,
         modelo="130",
         filing_year=2026,
@@ -139,8 +139,18 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
         period="1T",
     )
 
-    stamped = register_capture_as_filing_evidence(snapshot=snapshot, ports=_registration_ports())
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_unconfirmed",
+    ) as exc_info:
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=_registration_ports())
 
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["outcome"] == "unverifiable"
+    assert exc_info.value.context["notices"] == "receipt_totals_not_reconciled"
+    stamped = _current_filing()
+    assert stamped == existing
+    assert stamped is not None
     assert stamped.external_evidence is not None
     assert stamped.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert stamped.external_evidence.reference_id == "ABCD1234EFGH5678"

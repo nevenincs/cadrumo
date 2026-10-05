@@ -25,13 +25,10 @@ from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 from dev.test_runs.logging import collect_only_listing
 
-from ..lane_reachability import (
-    _JUST_CALL,
-    Lane,
-    declared_lanes,
-    expression_selects,
-    marker_sets_in,
-)
+from ..lane_contracts import Lane
+from ..lane_marker_inventory import expression_selects, marker_sets_in
+from ..lane_reachability import declared_lanes
+from ..lane_recipe_commands import _JUST_CALL
 from ..workflow_run_text import executed_lines, executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -18,7 +18,6 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from ..windows import WindowsRuntimeEndpoint
 from ..windows_process import WindowsProcessScope
 from .process_support import fixture_arguments, fixture_environment, native_python
-from .profile_worker_support import NativeRuntimeFixtureOwner
 
 _MODULE = "cadrumo.adapters.local_runtime.tests.windows_inheritance_fixture"
 
@@ -105,6 +104,12 @@ def _probe(path: Path, sentinel: int) -> None:
     )
 
 
+def _detached_creation_flags() -> int:
+    if sys.platform == "win32":
+        return subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+    raise RuntimeError("requires native Windows")
+
+
 def _wait_for_record(path: Path) -> WindowsTreeMember:
     deadline = time.monotonic() + 12
     while not path.exists():
@@ -115,6 +120,8 @@ def _wait_for_record(path: Path) -> WindowsTreeMember:
 
 
 async def _tree(directory: Path, role: str, *, exit_root: bool) -> None:
+    if sys.platform != "win32":
+        raise RuntimeError("Windows inheritance fixtures require Windows")
     import win32api
     import win32job
 
@@ -138,7 +145,7 @@ async def _tree(directory: Path, role: str, *, exit_root: bool) -> None:
                 stderr=subprocess.DEVNULL,
                 env=fixture_environment(),
                 close_fds=True,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
+                creationflags=_detached_creation_flags(),
             )
             await asyncio.to_thread(_wait_for_record, directory / "leaf.json")
             if exit_root and role == "root":
@@ -196,6 +203,8 @@ def _snapshot(
 
 def _owner(directory: Path, *, exit_root: bool) -> None:
     import win32api
+
+    from .profile_worker_support import NativeRuntimeFixtureOwner
 
     endpoint = WindowsRuntimeEndpoint(storage_root=directory)
     cleanup = NativeRuntimeFixtureOwner(endpoint, Event(), timeout=10)

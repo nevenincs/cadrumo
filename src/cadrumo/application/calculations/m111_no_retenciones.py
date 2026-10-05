@@ -8,49 +8,26 @@ sources; every other dependency keeps its full evidence requirement.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from typing import Final
 
 from ...core.modelo import Modelo
-from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
+from .attested_period_tokens import parse_attested_period_keys
 
 M111_NO_RETENCIONES_PROFILE_PATH: Final = "withholding.modelo_111_no_retenciones_periods"
 """Profile fact carrying comma-separated ``YYYY:PERIOD`` no-obligation Modelo 111 periods."""
-
-_TOKEN_RE: Final = re.compile(r"^(?P<year>\d{4}):(?P<period>[A-Z0-9]+)$")
-
-
-def parse_m111_no_retenciones_periods(raw: str | None) -> frozenset[tuple[int, str]]:
-    """Parse profile ``YYYY:PERIOD`` tokens into validated period keys.
-
-    Invalid tokens are ignored fail-closed: they never suppress a dependency, so
-    verification still asks for the missing filing or evidence instead of
-    treating an unclear declaration as no-obligation evidence.
-    """
-    if raw is None:
-        return frozenset[tuple[int, str]]()
-    periods: set[tuple[int, str]] = set()
-    for token in re.split(r"[,;\s]+", raw.strip().upper()):
-        match = _TOKEN_RE.fullmatch(token) if token else None
-        if match is None:
-            continue
-        try:
-            period = Period.from_year_and_code(int(match.group("year")), match.group("period"))
-        except (PeriodError, ValueError):
-            continue
-        periods.add((period.filing_year, period.registry_token))
-    return frozenset(periods)
 
 
 def m111_no_retenciones_periods_from_profile_values(values: Mapping[str, str] | None) -> frozenset[tuple[int, str]]:
     """Return attested Modelo 111 no-retenciones periods from a profile projection."""
     if values is None:
         return frozenset[tuple[int, str]]()
-    return parse_m111_no_retenciones_periods(values.get(M111_NO_RETENCIONES_PROFILE_PATH))
+    # Invalid tokens are ignored fail-closed: they never suppress a dependency, so
+    # verification still asks for the missing filing or evidence.
+    return parse_attested_period_keys(values.get(M111_NO_RETENCIONES_PROFILE_PATH))
 
 
 def m111_no_retenciones_periods_for_bucket(
@@ -103,5 +80,4 @@ __all__ = [
     "is_m111_no_retenciones_period",
     "m111_no_retenciones_periods_for_bucket",
     "m111_no_retenciones_periods_from_profile_values",
-    "parse_m111_no_retenciones_periods",
 ]

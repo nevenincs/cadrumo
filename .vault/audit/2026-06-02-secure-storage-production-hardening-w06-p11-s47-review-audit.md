@@ -1,8 +1,8 @@
 ---
 tags: ['#audit', '#secure-storage-production-hardening']
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:332a6dd65382e7bcd05a328480cfc4504d8c1928068a9e584d6fbc78cc2b487f'
+modified: '2026-10-03'
+body_hash: 'sha256:c32f8ee145094e9f5bcc53a8080459300f72cc9300862bc5c9f7a469cdae9887'
 related: []
 ---
 
@@ -10,7 +10,7 @@ related: []
 
 ## S47-001 | MEDIUM | Mirror adverse test helper duplicated manifest assembly logic
 
-Initial review found that `src/aeat/adapters/outbound/storage/test_mirror_adverse_conditions.py` assembled remote mirror manifests directly, including latest-revision watermark selection. That overlapped with production `build_remote_mirror_namespace_manifest` behavior and conflicted with the project rule against tests duplicating business logic.
+Initial review found that the retired test assembled remote mirror manifests directly, including latest-revision watermark selection. That overlapped with production `build_remote_mirror_namespace_manifest` behavior and conflicted with the project rule against tests duplicating business logic.
 
 Resolved. The mirror adverse tests now build manifests through `build_remote_mirror_namespace_manifest` using real `SecureObjectRawRow` fixtures, then mutate only the adverse provider/manifest state under test.
 

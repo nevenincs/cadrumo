@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:14a9abcacf690e969f3001f1a5ba414c480f24e195fa03c2c35e44a4b292e2db'
+body_hash: 'sha256:e04ccbcd30ace36a151420aff592904c116c09d1b5d20a62a375863a3a8edcd8'
 related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
   - "[[2026-09-02-object-name-declustering-adr]]"
   - "[[2026-09-07-object-name-declustering-receipt-inventory-freshness-conflict-audit]]"
 ---
@@ -16,13 +15,7 @@ related:
 
 ## Scope
 
-Reviewed the W04.P10.S28 implementation against the accepted object-name declustering ADR,
-the current plan, and the S23, S24, and receipt-freshness audits. The review covered the
-fresh inventory boundary, stale caller-inventory refusal, unrelated Python declaration
-churn, authored manifest binding, component and graph identity, exact byte preconditions,
-postconditions, transaction safety, and detector-teeth coverage in `dev/quality/object_name_replay.py`
-and `dev/quality/tests/test_object_name_replay.py`, with the full rehearsal contract in
-`dev/quality/object_name_rehearsal.py` as supporting context.
+Reviewed the W04.P10.S28 implementation against the accepted object-name declustering ADR, the current plan, and the S23, S24, and receipt-freshness audits.
 
 Focused validation passed: 66 replay tests, Ruff lint, Ruff format, ty, byte compilation,
 and diff whitespace checks.

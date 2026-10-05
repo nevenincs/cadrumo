@@ -11,9 +11,11 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.login_session import (
@@ -86,7 +88,10 @@ def test_password_candidate_publishes_once_without_promoting_custody(
     registered: tuple[Path, UUID], keyring: _Keyring
 ) -> None:
     root, profile_id = registered
+    binding = committed_sign_in(root, profile_id).binding
+    captured = committed_sign_in(root, profile_id).establish().current
     other_id = uuid4()
+    publish_test_profile_capsule(other_id, label="Other receipt profile", root=root)
     other = receipt.mint_profile_session(
         storage_root=root,
         profile_id=other_id,
@@ -96,6 +101,9 @@ def test_password_candidate_publishes_once_without_promoting_custody(
         now=datetime.now(UTC),
         idle_minutes=15,
         absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=committed_sign_in(root, other_id),
+        generation=committed_sign_in(root, other_id).establish().current,
     )
     other_path = receipt.profile_session_path(storage_root=root, profile_id=other_id)
     other_bytes = other_path.read_bytes()
@@ -116,11 +124,14 @@ def test_password_candidate_publishes_once_without_promoting_custody(
             profile_decode_context=authority.profile_decode_context(),
         ) as candidate:
             assert not candidate.outcome.session_persisted
-            assert candidate.persist_acceleration_receipt()
+            assert candidate.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
             persisted_bytes = target_path.read_bytes()
+            fence = committed_sign_in(root, profile_id).observe().current
+            assert fence is not None
+            assert f'"sign_in_lineage":"{fence.lineage}"'.encode() in persisted_bytes
             entries = dict(keyring.entries)
             writes = keyring.writes
-            assert candidate.persist_acceleration_receipt()
+            assert candidate.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
             assert target_path.read_bytes() == persisted_bytes
             assert keyring.entries == entries and keyring.writes == writes
             assert current_active_bucket_session() is active
@@ -132,6 +143,8 @@ def test_password_candidate_publishes_once_without_promoting_custody(
                 bucket_id=profile_id,
                 receipt_key=proof,
                 profile_decode_context=authority.profile_decode_context(),
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in_binding=binding,
             ) as resumed,
         ):
             assert resumed.outcome.session_persisted
@@ -139,7 +152,7 @@ def test_password_candidate_publishes_once_without_promoting_custody(
             assert resumed.outcome.authenticated_at == original.authenticated_at
             assert resumed.outcome.idle_deadline == original.idle_deadline
             assert resumed.outcome.absolute_deadline == original.absolute_deadline
-            assert resumed.persist_acceleration_receipt()
+            assert resumed.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
             assert target_path.read_bytes() == persisted_bytes
             assert keyring.writes == writes
             assert current_active_bucket_session() is active
@@ -152,6 +165,8 @@ def test_unavailable_keyring_does_not_invalidate_password_candidate(
     registered: tuple[Path, UUID], keyring: _Keyring
 ) -> None:
     root, profile_id = registered
+    binding = committed_sign_in(root, profile_id).binding
+    captured = committed_sign_in(root, profile_id).establish().current
     keyring.unavailable = True
     with (
         bundled_indexed_authority().operation() as authority,
@@ -163,7 +178,7 @@ def test_unavailable_keyring_does_not_invalidate_password_candidate(
             profile_decode_context=authority.profile_decode_context(),
         ) as candidate,
     ):
-        assert not candidate.persist_acceleration_receipt()
+        assert not candidate.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
         assert not candidate.session.sealed
         assert candidate.session.dek
         assert not receipt.profile_session_path(storage_root=root, profile_id=profile_id).exists()
@@ -171,6 +186,8 @@ def test_unavailable_keyring_does_not_invalidate_password_candidate(
 
 def test_closed_and_expired_candidates_cannot_publish(registered: tuple[Path, UUID], keyring: _Keyring) -> None:
     root, profile_id = registered
+    binding = committed_sign_in(root, profile_id).binding
+    captured = committed_sign_in(root, profile_id).establish().current
     with (
         bundled_indexed_authority().operation() as authority,
         bind_profile_custody_port(build_profile_custody_port()),
@@ -183,7 +200,7 @@ def test_closed_and_expired_candidates_cannot_publish(registered: tuple[Path, UU
         ) as closed:
             pass
         with pytest.raises(ProfileReceiptRefusedError):
-            closed.persist_acceleration_receipt()
+            closed.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
         with authenticate_profile_candidate(
             bucket_id=profile_id,
             passphrase_callback=lambda: _PROFILE_CREDENTIAL,
@@ -191,7 +208,7 @@ def test_closed_and_expired_candidates_cannot_publish(registered: tuple[Path, UU
             now=datetime.now(UTC) - timedelta(minutes=30),
         ) as expired:
             with pytest.raises(ProfileReceiptRefusedError) as caught:
-                expired.persist_acceleration_receipt()
+                expired.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
             assert caught.value.reason is ProfileSessionRefusalReason.EXPIRED_IDLE
     assert not receipt.profile_session_path(storage_root=root, profile_id=profile_id).exists()
     assert keyring.writes == 0
@@ -201,6 +218,8 @@ def test_changed_committed_custody_refuses_before_receipt_mint(
     registered: tuple[Path, UUID], keyring: _Keyring
 ) -> None:
     root, profile_id = registered
+    binding = committed_sign_in(root, profile_id).binding
+    captured = committed_sign_in(root, profile_id).establish().current
     with (
         bundled_indexed_authority().operation() as authority,
         bind_profile_custody_port(build_profile_custody_port()),
@@ -221,7 +240,34 @@ def test_changed_committed_custody_refuses_before_receipt_mint(
         )
         assert rotated.password_generation == before.password_generation + 1
         with pytest.raises(ProfileReceiptRefusedError) as caught:
-            candidate.persist_acceleration_receipt()
+            candidate.persist_acceleration_receipt(login_id=RECEIPT_LOGIN_ID, binding=binding, sign_in=captured)
         assert caught.value.reason is ProfileSessionRefusalReason.CUSTODY_CHANGED
     assert not receipt.profile_session_path(storage_root=root, profile_id=profile_id).exists()
     assert keyring.writes == 0
+
+
+def test_generation_advanced_after_publication_leaves_no_receipt(
+    registered: tuple[Path, UUID], keyring: _Keyring
+) -> None:
+    root, profile_id = registered
+    sign_in = committed_sign_in(root, profile_id)
+    captured = sign_in.establish().current
+    advanced = sign_in.advance().current
+    with (
+        bundled_indexed_authority().operation() as authority,
+        bind_profile_custody_port(build_profile_custody_port()),
+        bind_profile_login_session_port(build_profile_login_session_port()),
+        authenticate_profile_candidate(
+            bucket_id=profile_id,
+            passphrase_callback=lambda: _PROFILE_CREDENTIAL,
+            profile_decode_context=authority.profile_decode_context(),
+        ) as candidate,
+    ):
+        assert candidate.mints_receipt
+        assert not candidate.persist_acceleration_receipt(
+            login_id=RECEIPT_LOGIN_ID, binding=sign_in.binding, sign_in=captured
+        )
+        assert not candidate.session.sealed
+    assert not receipt.profile_session_path(storage_root=root, profile_id=profile_id).exists()
+    assert keyring.writes == 0 and keyring.entries == {}
+    assert sign_in.observe().current == advanced

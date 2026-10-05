@@ -1,18 +1,4 @@
-"""A binding-derived page is suppressed only when it carries nothing at all.
-
-Modelo 131's 2026 page 1 files casilla fields and binding-derived fields into one
-fixed record. Deriving the binding coordinates requires the record to declare
-``binding_record``, and the emptiness test for such a record once consulted the
-binding channel alone.
-
-That is wrong for any page mixing the two channels. A declarant with casilla data
-but no binding value would have the page dropped -- and for a ``required`` record
-the drop does not even degrade to a silent omission: the export refuses outright.
-
-These tests pin the three states apart against the real bundled registry record,
-not a synthetic stand-in, so a future edit to the record or to the derivation is
-measured by them too.
-"""
+"""A fixed page mixing casillas and bindings is suppressed only when both are empty."""
 
 from __future__ import annotations
 
@@ -20,33 +6,54 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
-
-from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
-from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.schema_base import CasillaDataType
+from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ..record_renderer import record_render_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_MODELO = "131"
-_REVISION = "2026"
-_RECORD_ID = "modelo-131-page-01"
-
 
 @pytest.fixture(scope="module")
 def mixed_page() -> ExportRecordDefinition:
-    """The real, binding-resolved Modelo 131 page 1 record."""
-    revision = published_revision(_MODELO, _REVISION)
-    record = next(
-        candidate
-        for layout in derive_export_layouts_from_bindings(revision)
-        for candidate in layout.records
-        if candidate.id == _RECORD_ID
+    """A resolved mixed page; current generated M131 pages no longer use bindings."""
+    return ExportRecordDefinition(
+        id="mixed-page",
+        record_type="1",
+        order=0,
+        binding_record="mixed-page",
+        encoding="iso-8859-1",
+        line_ending="none",
+        fields=(
+            ExportFieldDefinition(
+                id="amount",
+                kind="casilla",
+                casilla_id="01",
+                offset=1,
+                length=17,
+                data_type=CasillaDataType.MONEY,
+                padding="left_zero",
+                justification="right",
+                required=False,
+                signed=False,
+                legal_refs=("orden-hac-773-2019:art-4",),
+                source_refs=("aeat-dr-131-2026",),
+            ),
+            ExportFieldDefinition(
+                id="binding",
+                kind="binding",
+                binding="mixed-binding",
+                offset=18,
+                length=1,
+                data_type=CasillaDataType.TEXT,
+                padding="right_space",
+                justification="left",
+                required=False,
+                signed=False,
+                legal_refs=("orden-hac-773-2019:art-4",),
+                source_refs=("aeat-dr-131-2026",),
+            ),
+        ),
     )
-    # Guard the premise: without these the test would pass vacuously.
-    assert record.binding_record is not None
-    assert record.repeat is None
-    return record
 
 
 def _a_casilla_id(record: ExportRecordDefinition) -> str:

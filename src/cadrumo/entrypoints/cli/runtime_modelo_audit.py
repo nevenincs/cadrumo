@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal, Never
+from typing import Literal
 from uuid import UUID
 
 import typer
@@ -14,29 +14,18 @@ from ...application.evidence.service import EvidenceBundleVerificationReport
 from ...application.modelo.audit_operation import (
     MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_AUDIT_READ_OPERATION_DEFINITION_ID,
+    ModeloAuditBundleSnapshot,
+    ModeloAuditCheckReportSnapshot,
     ModeloAuditExportProjection,
     ModeloAuditExportRequest,
     ModeloAuditReadProjection,
     ModeloAuditReadRequest,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import bound_profile_client, require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from .runtime_registered_operation import run_registered_operation
 
 
 def _submit[ProjectionT: BaseModel](
@@ -82,20 +71,11 @@ def _read_modelo_audit(
     report = projection.report
     selector = request.bundle_id.strip()
     if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-        or projection.profile_id != client.profile_id
-        or projection.kind != request.kind
-        or (request.kind == "view" and (bundle is None or report is not None))
-        or (request.kind == "check" and (report is None or bundle is not None))
-        or (
-            bundle is not None
-            and (bundle.bucket_id != str(client.profile_id) or not bundle.bundle_id.startswith(selector))
-        )
-        or (report is not None and not report.bundle_id.startswith(selector))
+        _audit_read_receipt_invalid(completed, projection, client.profile_id, request)
+        or _audit_read_shape_invalid(request, bundle, report)
+        or _audit_read_identity_invalid(bundle, report, client.profile_id, selector)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed, projection
 
 
@@ -103,7 +83,7 @@ def read_modelo_audit_view(ctx: typer.Context, *, bundle_id: str) -> EvidenceBun
     """Return a full canonical manifest from the exact-profile worker."""
     completed, projection = _read_modelo_audit(ctx, kind="view", bundle_id=bundle_id)
     if projection.bundle is None:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection.bundle.to_bundle()
 
 
@@ -111,7 +91,7 @@ def check_modelo_audit(ctx: typer.Context, *, bundle_id: str) -> EvidenceBundleV
     """Return the complete canonical verification report from the worker."""
     completed, projection = _read_modelo_audit(ctx, kind="check", bundle_id=bundle_id)
     if projection.report is None:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection.report.to_report()
 
 
@@ -146,8 +126,47 @@ def export_modelo_audit(
         or not projection.bundle_id.startswith(request.bundle_id.strip())
         or projection.output != str(request.output)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
 __all__ = ["check_modelo_audit", "export_modelo_audit", "read_modelo_audit_view"]
+
+
+def _audit_read_receipt_invalid(
+    completed: RegisteredOperationCompletion[ModeloAuditReadProjection],
+    projection: ModeloAuditReadProjection,
+    profile_id: UUID,
+    request: ModeloAuditReadRequest,
+) -> bool:
+    """Require the successful read receipt and exact requested profile and kind."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+        or (projection.profile_id != profile_id)
+        or (projection.kind != request.kind)
+    )
+
+
+def _audit_read_shape_invalid(
+    request: ModeloAuditReadRequest,
+    bundle: ModeloAuditBundleSnapshot | None,
+    report: ModeloAuditCheckReportSnapshot | None,
+) -> bool:
+    """Require only the canonical result variant selected by the read kind."""
+    return (request.kind == "view" and (bundle is None or report is not None)) or (
+        request.kind == "check" and (report is None or bundle is not None)
+    )
+
+
+def _audit_read_identity_invalid(
+    bundle: ModeloAuditBundleSnapshot | None,
+    report: ModeloAuditCheckReportSnapshot | None,
+    profile_id: UUID,
+    selector: str,
+) -> bool:
+    """Correlate result identity with the profile and canonical bundle selector."""
+    return (
+        bundle is not None and (bundle.bucket_id != str(profile_id) or not bundle.bundle_id.startswith(selector))
+    ) or (report is not None and (not report.bundle_id.startswith(selector)))

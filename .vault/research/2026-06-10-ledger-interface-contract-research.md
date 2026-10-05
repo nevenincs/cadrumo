@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-interface-contract'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:cc11a75b62ef6b8862d154e66dad0f21ecd2f1cdbf91ec0698d3a5bd3ce41afd'
+modified: '2026-10-03'
+body_hash: 'sha256:5a6ef028983dfb2de3b9e08dfc4a4551fe874da234439bfeb95595e587e2b020'
 related: []
 ---
 
@@ -28,11 +28,11 @@ All file/line citations below were read against `HEAD` at authoring time.
 ### A. The outer envelope is already uniform; the divergence lives in `result`
 
 Every successful ledger `--json` response is rendered through one shared
-wrapper. `_emit_envelope` (`src/aeat/entrypoints/cli/_common.py:71`) is imported
+wrapper. `_emit_envelope`  is imported
 by `_ledger.py` (line 61) and used at every emit site across the five verb
 modules (`_ledger.py`, `_ledger_lifecycle_cli.py`, `_ledger_read_cli.py`,
 `_ledger_review_cli.py`, `_ledger_import_cli.py`). It produces a
-`SchemaEnvelope` (`src/aeat/core/json_contract.py:76`) with the stable outer
+`SchemaEnvelope`  with the stable outer
 keys `{schema_version, command, result, warnings}`: `schema_version` defaults to
 `"1"`, `command` is the stable command-path string (e.g. `"ledger.add"`),
 `result` is the strict-validated per-verb payload, and `warnings` is a free-form
@@ -42,9 +42,8 @@ uniform outer surface is recorded in the ADRs `2026-06-01-envelope-conformance-g
 and `2026-06-02-emit-envelope-schema-burndown`.
 
 The consequence: the envelope is **not** where the inconsistency lives. The
-divergence is entirely in the `result` payload shapes declared in
-`src/aeat/entrypoints/cli/_ledger_payloads.py`. Every payload subclasses the
-strict `OutputSchema` base (`src/aeat/core/json_contract.py:53`), which is
+divergence is entirely in the `result` payload shapes declared . Every payload subclasses the
+strict `OutputSchema` base , which is
 `extra="forbid"`, `frozen=True`, `strict=True` — so a payload that omits a field
 or types it loosely is a real wire-contract decision, not an accident the
 caller can paper over.
@@ -116,7 +115,7 @@ a typed object that was deliberately flattened to a dict at the boundary.
 ### D. The canonical id resolver is sound but wrapped by two duplicate CLI shims
 
 The authoritative resolver is `resolve_transaction_id`
-(`src/aeat/application/ledger/_id_resolution.py:69`): it takes a lowercase-hex
+: it takes a lowercase-hex
 prefix or full id, refuses empty / non-hex / over-length input, and resolves to
 the single 64-char content-addressed id, raising `TransactionIdPrefixError` on
 zero-match or ambiguity (the error lists collision candidates). A read-side
@@ -141,7 +140,7 @@ transaction" input has three different CLI shapes across the surface.
 
 ### E. There is no sort capability on the list surface
 
-`project_ledger_list` (`src/aeat/entrypoints/cli/_ledger_list.py:41`) is the
+`project_ledger_list`  is the
 single projection/paging function for `ledger list`. It applies the C6 filter
 spec, an optional `--group` equality filter, and an optional `--by-group` sort.
 The `--by-group` sort (`:67`) keys on `(group_label or "￿",
@@ -154,13 +153,13 @@ extends for filtering, so sort params and filter params must compose there.
 
 ### F. `Transaction` carries no `created_at` / `modified_at`
 
-The `Transaction` model (`src/aeat/domain/transactions/_models.py:690`) has no
+The `Transaction` model  has no
 `created_at` or `modified_at` field (a `grep` for both returns nothing in that
 module). The temporal facts that do exist are: `classified_at` (`:806`,
 nullable, set when a classification decision is made), `created_event_id`
 (`:798`, a bucket-event reference, not a timestamp), the `edit_lineage` chain
 (`:800`), and — only for imported rows — `raw.provenance.ingested_at`
-(`src/aeat/domain/transactions/_raw_transaction.py:67`, the ingest-run
+(the former source file, the ingest-run
 timestamp). A manually-added row (`ledger add`) therefore has no creation
 timestamp at all. This is the load-bearing gap for honest temporal sorting: a
 `--sort-by created_at` cannot be honest until the field exists on every row, not
@@ -170,7 +169,7 @@ just imported ones.
 
 The ledger persistence boundary is the per-profile encrypted bucket. All ledger
 data rides the bucket-scoped `SecureObjectRepository`:
-`TransactionCatalogueRepository` (`src/aeat/domain/transactions/_repository.py:92`)
+`TransactionCatalogueRepository`
 is bound to one `bucket_id` and stores/loads the catalogue under the encrypted
 object key `transaction-catalogue:{bucket_id}` (`:42`, `:102`–`:105`). The list
 read path (`list_manual_transactions` → `TransactionCatalogueRepository.load`,
@@ -186,7 +185,7 @@ save→load→equality roundtrip per the roundtrip-discipline rule.
 
 ### H. Roster is pinned
 
-`src/aeat/entrypoints/cli/tests/test_ledger_verb_spine.py` pins the 26-verb
+the former source file pins the 26-verb
 roster, so any contract change that adds/removes/renames a verb is caught by an
 existing gate. The JSON-contract registry (`register_schema`) similarly pins
 each payload class to its command path.

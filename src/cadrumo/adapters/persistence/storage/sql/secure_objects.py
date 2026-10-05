@@ -229,7 +229,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         if definition is None:
             return
         if object_key is not None:
-            # ``save_with_raw_key`` passes ``None``: it addresses a row by a
+            # raw-key fixtures passes ``None``: it addresses a row by a
             # pre-computed HMAC digest whose natural key was already lost, so
             # there is no key left to check against the declared grammar.
             self._enforce_registered_object_key(definition, object_key)
@@ -404,7 +404,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Used by the archive restore pipeline when the natural key was
         not present in the source bundle. Same
         master-key constraint as
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`.
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`.
         """
         self._check_session_freshness(namespace)
         if len(hashed_object_key) != 32:
@@ -490,7 +490,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     written_at_value = written_at_raw
                 # Re-attach UTC, matching the record and metadata read paths.
                 # The raw surface exists to be fed back through
-                # ``save_with_raw_key`` when restoring an archive bundle, and
+                # raw-key fixtures when restoring an archive bundle, and
                 # that write boundary admits only UTC-aware instants -- a
                 # naive value here would make a bundle unrestorable.
                 written_at_value = coerce_utc_aware(written_at_value)
@@ -669,44 +669,6 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             raise SecureObjectUnreadableError(namespace, item.row_id)
         yield from records
 
-    def load_many(
-        self,
-        namespace: str,
-        object_keys: Iterable[str],
-        *,
-        expected_class: SensitivityClass,
-        max_supported_version: int,
-    ) -> Iterator[SecureObjectRecord]:
-        """Yield requested secure-object rows or fail closed on unreadable rows.
-
-        This is the targeted equivalent of :meth:`list_records`: it performs a
-        single ``WHERE namespace = ? AND object_key IN (...)`` read for the
-        requested natural keys, decrypts matching rows, and raises
-        :class:`SecureObjectUnreadableError` before yielding a partial readable
-        subset if any matching row is unreadable. Missing keys are omitted,
-        mirroring repeated :meth:`load` calls that return ``None`` for absent
-        rows. ``expected_class`` is the :class:`SensitivityClass` every
-        returned row must be classified under; a mismatch fails closed.
-        """
-        records: list[SecureObjectRecord] = []
-        for item in self.iter_many_with_failures(
-            namespace,
-            object_keys,
-            expected_class=expected_class,
-            max_supported_version=max_supported_version,
-        ):
-            if isinstance(item, SecureObjectRecord):
-                records.append(item)
-                continue
-            _log.debug(
-                "secure_objects: refusing targeted batch load for namespace=%s because row id=%s is unreadable (%s)",
-                namespace,
-                item.row_id,
-                item.reason,
-            )
-            raise SecureObjectUnreadableError(namespace, item.row_id)
-        yield from records
-
     def load_many_current(
         self,
         namespace: str,
@@ -785,41 +747,6 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 yield item
                 continue
             raise SecureObjectUnreadableError(namespace, item.row_id)
-
-    def migrate_many_atomically(
-        self,
-        namespace: str,
-        object_keys: Iterable[str],
-        *,
-        expected_class: SensitivityClass,
-        current_version: int,
-        validate_upgraded_payloads: Callable[[Mapping[str, bytes]], None],
-        write_provenance: str,
-    ) -> Mapping[str, SecureObjectRecord]:
-        """Validate every upgraded payload, then persist all replacements atomically.
-
-        Older rows are decrypted and chain-upgraded through the normal read
-        policy.  The caller receives the complete natural-keyed payload set in
-        ``validate_upgraded_payloads`` before any replacement is written.  Only
-        after that callback succeeds are all older rows replaced in one
-        compare-and-swap batch, so a malformed sibling or concurrent write
-        leaves every original row intact.
-
-        Core types:
-        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
-        """
-        targets = tuple(
-            SecureObjectMigrationTarget(namespace, key, expected_class, current_version)
-            for key in dict.fromkeys(object_keys)
-        )
-        records = self.migrate_targets_atomically(
-            targets,
-            validate_upgraded_payloads=lambda payloads: validate_upgraded_payloads(
-                {key: payload for (_namespace, key), payload in payloads.items()}
-            ),
-            write_provenance=write_provenance,
-        )
-        return {key: record for (_namespace, key), record in records.items()}
 
     def migrate_targets_atomically(
         self,
@@ -954,62 +881,6 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 for target in targets
             )
         )
-
-    def iter_many_with_failures(
-        self,
-        namespace: str,
-        object_keys: Iterable[str],
-        *,
-        expected_class: SensitivityClass,
-        max_supported_version: int,
-    ) -> Iterator[SecureObjectBatchLoadItem]:
-        """Yield readable/unreadable outcomes for requested natural object keys.
-
-        Rows are selected by raw HMAC digests derived from ``object_keys`` and
-        returned in stored digest order. Missing keys produce no item, matching
-        :meth:`load` returning ``None``. Present rows use the same
-        classification, schema-version, AEAD, and revision-lineage checks as
-        namespace scans. ``expected_class`` is the :class:`SensitivityClass`
-        every yielded row must be classified under; a mismatch fails closed.
-        """
-        self._check_session_freshness(namespace)
-        namespace_definition = self._enforce_registered_read_policy(
-            namespace=namespace,
-            expected_class=expected_class,
-        )
-        object_key_digests = tuple(dict.fromkeys(secure_object_key_digest(object_key) for object_key in object_keys))
-        if not object_key_digests:
-            return
-        with session_scope(self._engine) as session:
-            stmt = (
-                text(
-                    "SELECT id, object_key, classification, schema_version, "
-                    "written_at, payload, revision_id, previous_revision_id, "
-                    "payload_hash, ciphertext_hash, previous_payload_hash "
-                    "FROM secure_objects WHERE namespace = :namespace "
-                    "AND object_key IN :object_keys "
-                    "ORDER BY object_key",
-                )
-                .bindparams(
-                    bindparam("namespace", value=namespace),
-                    bindparam("object_keys", value=object_key_digests, expanding=True),
-                )
-                .columns(
-                    id=SecureObjectRow.__table__.c.id.type,
-                    object_key=SecureObjectRow.__table__.c.object_key.type,
-                    classification=SecureObjectRow.__table__.c.classification.type,
-                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
-                    written_at=SecureObjectRow.__table__.c.written_at.type,
-                )
-            )
-            for raw in session.execute(stmt):
-                yield self._list_item_from_raw_row(
-                    raw,
-                    namespace=namespace,
-                    expected_class=expected_class,
-                    max_supported_version=max_supported_version,
-                    namespace_definition=namespace_definition,
-                )
 
     def iter_records_with_failures(
         self,

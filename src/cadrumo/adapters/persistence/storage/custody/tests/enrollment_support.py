@@ -14,10 +14,10 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import (
@@ -27,13 +27,14 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     Availability,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
     SessionKind,
     SessionState,
 )
-from cadrumo.application.user_profile.automation_administration import AutomationAdministrationService
+from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,
@@ -183,7 +184,7 @@ def administration_subject(
                     login_id="test-login",
                     os_owner_id=binding.os_owner_id,
                     active=True,
-                    locked=False,
+                    lock_state=OsLockState.UNLOCKED,
                     unattended=LoginEligibility.ELIGIBLE,
                     credential_facilities=Availability.AVAILABLE,
                 ),

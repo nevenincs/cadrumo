@@ -1,0 +1,69 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 12301"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR 12301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m123-2019-field-10-filing-year"
+decision_statement = "The four-character Ejercicio slot carries the filing year as four unsigned digits."
+justification = "The official design labels this Num field Identificación. Ejercicio at ordinal 10; the typed page field identifies it as filing_year, so the reviewed representation preserves all four year digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 12301"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR 12301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR 12301"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 12301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m123-2019-field-12-perceptor-count"
+decision_statement = "The fifteen-position Número perceptores [01] slot is an unsigned whole-number count."
+justification = "The official design names the quantity Número perceptores [01] and assigns fifteen Num positions; a recipient count has no fractional component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR 12301"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR 12301"
+
+[design_identity]
+modelo = "123"
+design_epoch = "2019"
+source_ref = "aeat-dr-123-2019-2023-v13"
+source_sha256 = "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd"

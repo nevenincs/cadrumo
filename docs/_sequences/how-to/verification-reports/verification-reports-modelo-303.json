@@ -201,7 +201,7 @@
           "short_work_unit_id": "af6b2264dd9d",
           "state": "borrador",
           "status": "created",
-          "status_message": "New work unit created.",
+          "status_message": "New declaration created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
           "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
         },
@@ -946,7 +946,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
             },
-            "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+            "message": "Modelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -961,7 +961,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late"
             },
-            "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           }
         ],
@@ -977,7 +977,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+              "message": "Modelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -994,7 +994,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-modelo-303-procedure",
@@ -1062,7 +1062,7 @@
                   "legal_refs": [
                     "rd-1065-2007:art-9"
                   ],
-                  "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+                  "message": "Modelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.",
                   "severity": "warning",
                   "source_refs": [
                     "aeat-dr-303-2026",
@@ -1079,7 +1079,7 @@
                     "ley-37-1992:art-97",
                     "rd-1619-2012:art-2"
                   ],
-                  "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+                  "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
                   "severity": "warning",
                   "source_refs": [
                     "aeat-modelo-303-procedure",
@@ -1142,7 +1142,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+              "message": "Modelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -1159,7 +1159,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-modelo-303-procedure",

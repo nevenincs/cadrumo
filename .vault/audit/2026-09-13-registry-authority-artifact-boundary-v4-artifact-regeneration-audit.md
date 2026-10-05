@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-13'
-modified: '2026-09-13'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:93305a5cf6f061cd6cebd21ad9e6d2df56bd447efcfffde3af437c33ad7181b7'
-related:
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+body_hash: 'sha256:1cab941d46ac7b82dcd70d7aea554176db3ab9c9953215d24e0366bcc576dc9c'
+related: []
 ---
 # `registry-authority-artifact-boundary` audit: `v4 artifact regeneration and compactness`
 
 ## Scope
 
-Reviewed only the W04.P08.S16 addition to `dev/registry/tests/test_authority_artifact_round_trip.py` and the regenerated `src/cadrumo/_data/registry/authority/authority.json`, against the accepted immutable-runtime-publication ADR, its research, the approved plan, and the S12 compact-v4 execution record. The review assessed whether the gate performs a genuinely fresh publication, compares the complete typed authority rather than selected fields, imposes a meaningful independent byte ceiling, and leaves a valid/current tracked artifact despite concurrent authoring history.
+The review assessed whether the gate performs a genuinely fresh publication, compares the complete typed authority rather than selected fields, imposes a meaningful independent byte ceiling, and leaves a valid/current tracked artifact despite concurrent authoring history.
 
 The test invokes the canonical publication workflow into a disposable path from the live bundled registry and source root, then reads both that fresh artifact and the separately tracked artifact through the strict v4 decoder. Full `AuthorityArtifact` equality covers every dataclass field: all modelos and revisions, all catalogue projections including facts and typed runtime catalogues, published evidence, and the candidate identity digest. The preceding focused assertions retain useful diagnostics but do not narrow the final equality oracle.
 

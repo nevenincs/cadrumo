@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Callable, Generator
-from contextlib import contextmanager
-from dataclasses import dataclass
+from collections.abc import Callable
 from threading import RLock
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes, ValidationError
 
-from ...adapters.local_runtime.framing import read_document, read_secret, write_document, write_secret
+from ...adapters.local_runtime.runtime_frame_io import read_document, read_secret, write_document, write_secret
 from ...application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.enrollment_access import (
     RuntimeEnrollmentClientReply,
@@ -32,18 +31,21 @@ from ...application.runtime.enrollment_recipient import (
     EnrollmentPresent,
     EnrollmentRefused,
     EnrollmentStored,
+    EnrollmentWork,
     EnrollmentWorkAction,
     EnrollmentWorkResult,
     VolatileEnrollmentRecipient,
 )
 from ...application.runtime.profile_access import RuntimeAccessRefusal, RuntimeSecretReady
 from ...application.runtime.transport import RuntimeConnectionContext
-from ...application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM, AccessSession, Availability
+from ...application.user_profile.access_contracts import (
+    ACCESS_LEASE_MAXIMUM,
+)
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
-from ...application.user_profile.automation_administration import AutomationAdministrationService, enrollment_receipt
+from ...application.user_profile.automation_administration import enrollment_receipt
+from ...application.user_profile.automation_administration_service import AutomationAdministrationService
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import (
-    AdministrationFacts,
     AutomationReceiptProjection,
     EnrollmentKind,
     EnrollmentProposal,
@@ -52,109 +54,10 @@ from ...application.user_profile.automation_enrollment import (
 )
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
 from ...core.time.clock import now
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .enrollment_offer import RuntimeEnrollmentOffer, RuntimeEnrollmentRequestOwner
 
-
-@dataclass(slots=True)
-class RuntimeEnrollmentOffer:
-    """A single native connection owns its request until expiry or disconnect."""
-
-    prepared: RuntimeEnrollmentPrepared
-    connection: ProfileConnection
-    host: RuntimeProfileHost
-    deadline: float
-    admitting: Callable[[], bool]
-    lock_generation: int
-    source_session: AccessSession | None = None
-    recipient: VolatileEnrollmentRecipient | None = None
-    closed: bool = False
-
-    def requester(self) -> EnrollmentRequester:
-        """Return only server-minted coordinates."""
-        return EnrollmentRequester(
-            runtime_boot_id=self.prepared.runtime_boot_id,
-            connection_id=self.prepared.connection_id,
-            client_id=self.prepared.client_id,
-            destination_id=self.prepared.destination_id,
-        )
-
-    def require_live(self) -> None:
-        """Reobserve originating login, current root generation and offer lifetime."""
-        observation = self.connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
-        if (
-            self.closed
-            or not self.admitting()
-            or now() >= self.prepared.expires_at
-            or time.monotonic() >= self.deadline
-            or self.host.store.binding != self.prepared.profile_binding
-            or not observation.active
-            or observation.locked
-            or observation.os_owner_id != self.connection.context.peer.os_owner_id
-        ):
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        source = self.source_session
-        if source is None:
-            if self.connection.session_id is not None or self.connection.method != "enrollment":
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        else:
-            if self.connection.session_id != source.session_id or self.connection.method != "api_key":
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-            current = self.host.authority.automation_request_session(
-                connection_id=self.prepared.connection_id, session_id=source.session_id
-            )
-            if (
-                current.grant_id != source.grant_id
-                or current.key_id != source.key_id
-                or current.client_id != self.prepared.client_id
-            ):
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        # These canonical reads also validate the current on-disk custody
-        # generation. An old host object cannot attest a restored/replaced root.
-        lock = self.host.profile_lock_state()
-        if lock.generation != self.lock_generation or lock.globally_locked:
-            raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
-        if not self.host.store.enrollment_state().automation_enabled:
-            raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
-
-    def close(self) -> None:
-        """Wake blocked delivery before host drain waits for its callback threads."""
-        self.closed = True
-        if self.recipient is not None:
-            self.recipient.close()
-
-
-@dataclass(frozen=True)
-class RuntimeEnrollmentRequestOwner:
-    """Inactive requests use verified connection facts without a human lease."""
-
-    offer: RuntimeEnrollmentOffer
-
-    @contextmanager
-    def administration_guard(self) -> Generator[None]:
-        """Share the existing profile publication and lifecycle fence."""
-        with self.offer.host.guard:
-            self.offer.require_live()
-            yield
-
-    def facts(self) -> AdministrationFacts:
-        """Confer no session or private-operation authority."""
-        self.offer.require_live()
-        facts = self.offer.host.facts(self.offer.prepared.connection_id)
-        return AdministrationFacts(
-            profile=facts.profile,
-            context=facts.context,
-            originating_login_id=self.offer.connection.login.login_id,
-            session=None,
-        )
-
-    def requester(self) -> EnrollmentRequester:
-        """Bind every repeated publication to the same native client."""
-        self.offer.require_live()
-        return self.offer.requester()
-
-    def recipient(self, requester: EnrollmentRequester) -> ProtectedEnrollmentRecipient:
-        """This owner only creates inactive requests."""
-        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+if TYPE_CHECKING:
+    from .profile_host import ProfileConnection, RuntimeProfileHost
 
 
 class RuntimeEnrollmentConnections:
@@ -337,43 +240,53 @@ class RuntimeEnrollmentConnections:
             if work is None:
                 offer.require_live()
                 return idle
+            self._deliver_enrollment_work(offer, channel, request, work)
+            result = self._read_enrollment_result(channel, work)
             with offer.host.guard:
                 offer.require_live()
-                write_document(
-                    channel,
-                    RuntimeEnrollmentDelivery(
-                        request_id=request.request_id,
-                        runtime_boot_id=offer.prepared.runtime_boot_id,
-                        connection_id=offer.prepared.connection_id,
-                        command_id=work.command_id,
-                        action="store" if work.action is EnrollmentWorkAction.STORE else "possession",
-                        credential=work.credential_binding,
-                    ),
-                    deadline=time.monotonic() + 5,
-                )
-                if work.action is EnrollmentWorkAction.STORE:
-                    if work.candidate is None:
-                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                    write_secret(channel, bytearray(work.candidate.get_secret_value()), deadline=time.monotonic() + 5)
-            reply = read_document(channel, RuntimeEnrollmentClientReply, deadline=time.monotonic() + 10)
-            if reply.command_id != work.command_id:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            result: EnrollmentWorkResult
-            if reply.outcome == "refused" and reply.code is not None:
-                result = EnrollmentRefused(reply.code)
-            elif reply.outcome == "stored" and work.action is EnrollmentWorkAction.STORE:
-                result = EnrollmentStored()
-            elif reply.outcome == "missing" and work.action is EnrollmentWorkAction.POSSESSION:
-                result = EnrollmentMissing()
-            elif reply.outcome == "present" and work.action is EnrollmentWorkAction.POSSESSION:
-                with read_secret(channel, deadline=time.monotonic() + 5) as secret:
-                    result = EnrollmentPresent(SecretBytes(bytes(secret)))
-            else:
-                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-            with offer.host.guard:
-                offer.require_live()
-                work.complete(reply.command_id, result)
+                work.complete(work.command_id, result)
         return idle
+
+    def _deliver_enrollment_work(
+        self,
+        offer: RuntimeEnrollmentOffer,
+        channel: RuntimeByteChannel,
+        request: RuntimeEnrollmentPoll,
+        work: EnrollmentWork,
+    ) -> None:
+        with offer.host.guard:
+            offer.require_live()
+            write_document(
+                channel,
+                RuntimeEnrollmentDelivery(
+                    request_id=request.request_id,
+                    runtime_boot_id=offer.prepared.runtime_boot_id,
+                    connection_id=offer.prepared.connection_id,
+                    command_id=work.command_id,
+                    action="store" if work.action is EnrollmentWorkAction.STORE else "possession",
+                    credential=work.credential_binding,
+                ),
+                deadline=time.monotonic() + 5,
+            )
+            if work.action is EnrollmentWorkAction.STORE:
+                if work.candidate is None:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                write_secret(channel, bytearray(work.candidate.get_secret_value()), deadline=time.monotonic() + 5)
+
+    def _read_enrollment_result(self, channel: RuntimeByteChannel, work: EnrollmentWork) -> EnrollmentWorkResult:
+        reply = read_document(channel, RuntimeEnrollmentClientReply, deadline=time.monotonic() + 10)
+        if reply.command_id != work.command_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if reply.outcome == "refused" and reply.code is not None:
+            return EnrollmentRefused(reply.code)
+        if reply.outcome == "stored" and work.action is EnrollmentWorkAction.STORE:
+            return EnrollmentStored()
+        if reply.outcome == "missing" and work.action is EnrollmentWorkAction.POSSESSION:
+            return EnrollmentMissing()
+        if reply.outcome == "present" and work.action is EnrollmentWorkAction.POSSESSION:
+            with read_secret(channel, deadline=time.monotonic() + 5) as secret:
+                return EnrollmentPresent(SecretBytes(bytes(secret)))
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
     def handle(
         self, context: RuntimeConnectionContext, channel: RuntimeByteChannel, request: RuntimeEnrollmentRequest
@@ -420,14 +333,18 @@ class RuntimeEnrollmentConnections:
             except (AutomationCustodyError, ProfileAccessRefusedError):
                 self.disconnect(offer.prepared.connection_id)
 
-    def retire_profile(self, profile_id: UUID) -> None:
+    def retire_profile(self, profile_id: UUID, *, host: RuntimeProfileHost | None = None) -> None:
         """An old host must not keep publishing after its guarded owner is replaced."""
         with self._guard:
-            identities = tuple(
-                identity for identity, offer in self._offers.items() if offer.connection.profile_id == profile_id
+            offers = tuple(
+                offer
+                for offer in self._offers.values()
+                if offer.connection.profile_id == profile_id and (host is None or offer.host is host)
             )
-        for identity in identities:
-            self.disconnect(identity)
+            for offer in offers:
+                self._offers.pop(offer.prepared.connection_id)
+        for offer in offers:
+            offer.close()
 
     def close(self) -> None:
         """Wake every producer before runtime shutdown attempts to settle it."""

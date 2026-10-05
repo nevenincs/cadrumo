@@ -44,6 +44,10 @@ class OperationSupervisorLeaseMixin:
     _durable_change_events: dict[OperationId, asyncio.Event]
     _durable_revisions: dict[OperationId, int]
 
+    async def reconcile(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Recover one operation through its durable owner evidence (the reconciliation mixin owns it)."""
+        raise NotImplementedError
+
     def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease:
         return OperationOwnerLease(
             operation_id=identity.operation_id,
@@ -155,12 +159,16 @@ class OperationSupervisorLeaseMixin:
                 if executor_task in done or not pending:
                     break
                 await self._require_owned_lease(identity, self._clock())
-            return await executor_task
-        finally:
+        except BaseException:
             if not executor_task.done():
                 executor_task.cancel()
             with suppress(asyncio.CancelledError):
                 await executor_task
+            raise
+        # Join a finished executor exactly once: asyncio drops a task's stored
+        # traceback on retrieval, so a second await would re-raise its failure
+        # without the frame that raised it.
+        return await executor_task
 
     async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None:
         """Release one exact current lease and refuse any ownership loss."""
@@ -196,7 +204,16 @@ class OperationSupervisorLeaseMixin:
         holder = (
             acquired.current if acquired.disposition is OperationLeaseDisposition.CONFLICT else acquired.predecessor
         )
-        if holder is None or not await self._holder_is_settled(holder):
+        if holder is None:
+            raise OperationSubjectBusyError()
+        # A started holder whose owner stopped renewing (its runtime died mid-run) is recovered
+        # through the canonical reconciliation. An unstarted one keeps the subject: its
+        # continuation may still be authorised, and a refused frontend start settles itself.
+        if not await self._holder_is_settled(holder) and (
+            acquired.disposition is not OperationLeaseDisposition.EXPIRED
+            or (await self._journal.load(holder.operation_id)).lifecycle is OperationLifecycle.CREATED
+            or (await self.reconcile(holder.operation_id)).lifecycle is not OperationLifecycle.TERMINAL
+        ):
             raise OperationSubjectBusyError()
         # Crash recovery, not the settlement path: settlement clears the lease
         # in the same critical section that writes the terminal record, so a

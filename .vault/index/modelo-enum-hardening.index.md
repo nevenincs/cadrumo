@@ -4,13 +4,12 @@ tags:
   - '#index'
   - '#modelo-enum-hardening'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a1e5f3482eb9d3750317236cb5ea67a2f8023dc141ba6aa171c294230e80bc6'
+body_hash: 'sha256:1eac57854b69eaf9be3ba240069cbee3185a8756d5e0a13a19e62efe5e34ed16'
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
   - '[[2026-06-10-modelo-enum-hardening-audit]]'
-  - '[[2026-06-10-modelo-enum-hardening-plan]]'
   - '[[2026-06-10-modelo-enum-hardening-research]]'
 ---
 
@@ -27,10 +26,6 @@ Auto-generated index of all documents tagged with `#modelo-enum-hardening`.
 ### audit
 
 - `2026-06-10-modelo-enum-hardening-audit` - `modelo-enum-hardening` audit: `Verify pass: code review, broad-test triage, and incident record`
-
-### plan
-
-- `2026-06-10-modelo-enum-hardening-plan` - `modelo-enum-hardening` `Modelo enum hardening and centralisation follow-ups` plan
 
 ### research
 

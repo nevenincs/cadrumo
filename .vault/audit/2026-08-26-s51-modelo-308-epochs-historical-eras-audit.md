@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#s51-modelo-308-epochs'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:3ca74e210a989605f838bbd1bc6e3dc9047cb73332947adc3f8e68fec2219697'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+related: []
 ---
 
 # `s51-modelo-308-epochs` audit: `Modelo 308 historical epochs`

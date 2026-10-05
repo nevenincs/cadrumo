@@ -28,14 +28,19 @@ CADRUMO_DARK_THEME_NAME: Final[str] = "cadrumo-dark"
 
 CADRUMO_LIGHT: Final[Theme] = Theme(
     name=CADRUMO_LIGHT_THEME_NAME,
-    # Warm paper and near-black ink, verbatim from the frontend :root.
+    # Warm paper and near-black ink, verbatim from the frontend :root. The
+    # brand hue is slate blue rather than the docs' terracotta: a terracotta
+    # primary sat within a few degrees of the error red, so every heading and
+    # bar drawn in it read as an error and a real blocker could not stand out.
+    # Primary and accent stay clear of error, warning and success in hue and
+    # read at AA contrast as text and as a fill.
     background="#faf8f4",
     surface="#f1eee7",
     panel="#e9e3da",
     foreground="#1c1a17",
-    primary="#c4553b",
+    primary="#2b5f8a",
     secondary="#6b655c",
-    accent="#a8452f",
+    accent="#35587a",
     # Sage and amber darkened from the brand's dark-terminal values.
     success="#3f6f5b",
     warning="#845d1d",
@@ -43,51 +48,53 @@ CADRUMO_LIGHT: Final[Theme] = Theme(
     dark=False,
     variables={
         "block-cursor-text-style": "none",
-        "footer-key-foreground": "#c4553b",
-        "input-selection-background": "#c4553b 25%",
+        "footer-key-foreground": "#2b5f8a",
+        "input-selection-background": "#2b5f8a 25%",
         # Declared, not inherited. Anything left undeclared is derived by
         # Textual from its own defaults, which is how a near-black element
         # appeared on the light page.
-        "input-cursor-background": "#c4553b",
+        "input-cursor-background": "#2b5f8a",
         "input-cursor-foreground": "#faf8f4",
         "scrollbar": "#d8cec0",
         "scrollbar-hover": "#c9bcaa",
-        "scrollbar-active": "#c4553b",
+        "scrollbar-active": "#2b5f8a",
         "scrollbar-background": "#f1eee7",
         "scrollbar-corner-color": "#f1eee7",
-        "border": "#c4553b",
+        "border": "#2b5f8a",
         "border-blurred": "#d8cec0",
     },
 )
 
 CADRUMO_DARK: Final[Theme] = Theme(
     name=CADRUMO_DARK_THEME_NAME,
-    # A warm near-black rather than pure black, so the rust and sage keep hue.
+    # A warm near-black rather than pure black, so the blue and sage keep hue.
+    # Text on a primary fill takes this background, never white, which would
+    # fall under 3:1 on the light blue.
     background="#1a1815",
     surface="#232019",
     panel="#2e2a22",
     foreground="#ece7dd",
-    primary="#d9694e",
+    primary="#7fb3e0",
     secondary="#a89e90",
-    accent="#e07d5f",
+    accent="#9ab8d8",
     success="#7fb096",
     warning="#d9a441",
     error="#f26c52",
     dark=True,
     variables={
         "block-cursor-text-style": "none",
-        "footer-key-foreground": "#e07d5f",
-        "input-selection-background": "#d9694e 30%",
+        "footer-key-foreground": "#9ab8d8",
+        "input-selection-background": "#7fb3e0 30%",
         # Same declaration set as the light appearance; the two differ in
         # colour only, never in which variables exist.
-        "input-cursor-background": "#d9694e",
+        "input-cursor-background": "#7fb3e0",
         "input-cursor-foreground": "#1a1815",
         "scrollbar": "#3d382e",
         "scrollbar-hover": "#4d4739",
-        "scrollbar-active": "#d9694e",
+        "scrollbar-active": "#7fb3e0",
         "scrollbar-background": "#232019",
         "scrollbar-corner-color": "#232019",
-        "border": "#d9694e",
+        "border": "#7fb3e0",
         "border-blurred": "#3d382e",
     },
 )
@@ -117,6 +124,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         "cadrumo-band-height": "1",
         "cadrumo-modal-width": "80%",
         "cadrumo-modal-height": "80%",
+        "cadrumo-modal-max-height": "80vh",
         "cadrumo-log-max-height": "12",
         # -- Spacing scale, in terminal cells -------------------------------
         # Cells, not rem: the unit here is a character, so the useful scale is
@@ -198,12 +206,27 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # heading above them takes the same indent and the group shares one
         # left edge.
         "cadrumo-cell-padding": "1",
+        # The term column of a label-beside-answer list, such as the box
+        # editor's "What it asks", "Where it comes from" and "Can you change
+        # it?" blocks: one width for every term, so the answers share a left
+        # edge. Wide enough for the longest such term in any shipped language
+        # (19 cells today) with a gap before its answer.
+        "cadrumo-term-width": "22",
         # -- Chrome ---------------------------------------------------------
         "cadrumo-scrollbar": "1",
         # The field-help panel docked under a page: tall enough for a short
         # what/why/where explanation, short enough to leave an 80x24 page its
         # content. Longer help scrolls within it.
         "cadrumo-help-max-height": "6",
+        # The same panel opened on request, for a casilla whose formula,
+        # official wording and legal basis do not fit the docked height: most
+        # of a 24-row terminal, still leaving the stepper and one list row.
+        "cadrumo-help-expanded-max-height": "18",
+        # The box panel docked in place of that band, which grows upward over
+        # the list: a little over half the terminal, so on the shortest
+        # terminal it docks in (30 rows) the box being changed and its
+        # neighbours still show above it. Longer answers scroll within it.
+        "cadrumo-editor-dock-max-height": "55%",
     },
 )
 """The canonical presentation tokens every Cadrumo surface is built from.

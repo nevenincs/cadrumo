@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
-from ...core.hashing import canonical_json_bytes, content_hash_hex
+from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
 from ...core.identity.profile import ProfileId as _ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -228,12 +228,6 @@ def new_profile_id() -> str:
     return str(uuid4())
 
 
-def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:
-    """Create a deterministic-shape but unique snapshot id."""
-    instant = created_at or _utc_now()
-    return f"{profile_id}:{instant.strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}"
-
-
 class UserProfileFact(BaseModel):
     """One effective-dated user-profile fact."""
 
@@ -396,7 +390,7 @@ class UserProfileSnapshot(BaseModel):
         """Re-derive ``canonical_hash`` from the facts and reject drift.
 
         Without this validator the snapshot's canonical_hash field is
-        only computed by :meth:`from_profile` at construction time; a
+        only supplied at construction time; a
         persisted snapshot whose facts are mutated post-save (or whose
         canonical_hash drifts post-save) would load silently with a
         stale digest. Re-deriving on every construction (including
@@ -418,35 +412,6 @@ class UserProfileSnapshot(BaseModel):
             )
         return self
 
-    @classmethod
-    def from_profile(
-        cls,
-        profile: UserProfileRecord,
-        *,
-        context: ProfileCreateContext,
-        snapshot_id: str | None = None,
-        created_at: datetime | None = None,
-    ) -> UserProfileSnapshot:
-        """Create an immutable snapshot from a live profile record.
-
-        Args:
-            profile: The :class:`UserProfileRecord` to snapshot.
-            context: The pinned schema context for this creation operation.
-            snapshot_id: Optional explicit snapshot identifier; when ``None``
-                a deterministic id is derived from the profile state.
-            created_at: Optional UTC timestamp stamped on the snapshot;
-                defaults to the core UTC clock when ``None``.
-
-        Returns:
-            An immutable :class:`UserProfileSnapshot` for the given profile.
-        """
-        return create_user_profile_snapshot(
-            profile,
-            context=context,
-            snapshot_id=snapshot_id,
-            created_at=created_at,
-        )
-
 
 def _derive_canonical_hash(
     *,
@@ -457,12 +422,8 @@ def _derive_canonical_hash(
 ) -> str:
     """Compute the canonical-hash digest for a snapshot.
 
-    Used both at :meth:`UserProfileSnapshot.from_profile` (to stamp
-    the snapshot at creation) and inside the post-construction
-    model_validator (to verify the persisted hash matches the
-    persisted facts on load). Sharing the derivation across both
-    sides anchors the content-addressing invariant — there is only
-    one place where the canonical payload shape is defined.
+    The post-construction validator verifies the persisted hash against the
+    persisted facts on load. This function defines their canonical payload.
 
     The serialisation itself is :func:`~cadrumo.core.hashing.content_hash_hex`,
     the project's one content-addressing primitive. A module-local
@@ -557,64 +518,6 @@ def decode_user_profile_record(
     return record
 
 
-def create_user_profile_snapshot(
-    profile: UserProfileRecord,
-    *,
-    context: ProfileCreateContext,
-    snapshot_id: str | None = None,
-    created_at: datetime | None = None,
-) -> UserProfileSnapshot:
-    """Create an immutable encrypted-persistence snapshot under one schema.
-
-    Core types:
-    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
-    """
-    checked = _context_for_schema(context)
-    create_context_type, _ = _authority_context_types()
-    if not isinstance(checked, create_context_type):
-        raise TypeError("creating a profile snapshot requires ProfileCreateContext")
-    if profile.setup_state is not ProfileSetupState.COMPLETE:
-        raise UserProfileValidationError("cannot snapshot an incomplete profile record")
-    validate_profile_schema_identity(
-        profile.schema_id,
-        profile.schema_version,
-        schema=checked.schema,
-        surface="user profile record",
-    )
-    typed_facts = _typed_profile_facts(tuple(profile.facts), schema=checked.schema)
-    instant = created_at or _utc_now()
-    facts = tuple(
-        sorted(
-            typed_facts,
-            key=lambda fact: (
-                fact.path,
-                fact.valid_from or date.min,
-                fact.valid_to or date.max,
-                canonical_json_bytes(fact.model_dump(mode="json")),
-            ),
-        ),
-    )
-    digest = _derive_canonical_hash(
-        schema_id=checked.schema.id,
-        schema_version=checked.schema.version,
-        profile_id=profile.profile_id,
-        facts=facts,
-    )
-    snapshot = UserProfileSnapshot.model_validate(
-        {
-            "snapshot_id": snapshot_id or new_profile_snapshot_id(profile.profile_id, created_at=instant),
-            "profile_id": profile.profile_id,
-            "schema_id": checked.schema.id,
-            "schema_version": checked.schema.version,
-            "created_at": instant,
-            "facts": facts,
-            "canonical_hash": digest,
-        },
-        context=checked,
-    )
-    return snapshot
-
-
 __all__ = [
     "PayloadSchemaVersion",
     "ProfileContext",
@@ -624,11 +527,9 @@ __all__ = [
     "UserProfileRecord",
     "UserProfileSnapshot",
     "create_user_profile_record",
-    "create_user_profile_snapshot",
     "declared_provenance_sources",
     "decode_user_profile_record",
     "new_profile_id",
-    "new_profile_snapshot_id",
     "restore_profile_fact_value",
     "section_field_key",
     "validate_profile_fact",

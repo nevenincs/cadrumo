@@ -1,15 +1,12 @@
 # Plan your filing calendar
 
-This page covers the filing calendar: how to see what may be due, what is
-overdue, and what to prepare next for the
-[active profile](profile-setup.md#what-the-active-profile-means), and which
-`--year` and `--period` tokens address each filing window. A modelo is a
-Spanish tax form.
+This page covers the filing calendar: how to see what may be due, what is overdue, and what to prepare next for the [active profile](profile-setup.md#what-the-active-profile-means), and which `--year` and `--period` values address each filing window. A modelo is a Spanish tax form.
 
 These commands are local unless a command is under `aeat app live`. Local
-calendar commands read the [active profile](profile-setup.md#what-the-active-profile-means)
-and local registry data. They do not file, submit, or contact the Agencia
-Estatal de Administración Tributaria (AEAT).
+calendar commands read the [active
+profile](profile-setup.md#what-the-active-profile-means) and local tax-rule
+data. They do not file, submit, or contact the Agencia Estatal de Administración
+Tributaria (AEAT).
 
 ## Before you start
 
@@ -26,9 +23,9 @@ warning line.
 Declare those facts first with [Set up your taxpayer profile](profile-setup.md).
 
 Calendar results depend on profile facts: taxpayer type, activity start date,
-IVA regime, IRPF/Renta facts, withholding obligations, and other enrollment
-details. You maintain those facts manually in the profile - see
-[Maintain Modelo 036 census facts in your profile](censo-update.md).
+VAT regime, IRPF/Renta facts, withholding obligations, and other enrollment
+details. You maintain those facts manually in the profile; see [Maintain Modelo
+036 census facts in your profile](censo-update.md).
 
 If a profile is still incomplete, a command may stop and name the missing facts.
 Fix the profile first. To see partial results before the profile is complete,
@@ -40,16 +37,7 @@ messages in Spanish unless you [choose another language](profile-setup.md#choose
 
 ## What are my filing obligations?
 
-Start with the agenda. It ranks obligations around a reference date, showing
-what is due today, what is coming up in the next two weeks, and what is already
-overdue. Pass `--allow-incomplete` on a profile whose census facts are not yet
-fully filled in, change the reference date with `--date`, and widen the upcoming
-window with `--horizon` (the default is 14 days). The example profile is an
-autónomo whose income comes from an economic activity. On 1 April the next
-deadline is the first-quarter Modelo 130, closing on 20 April. From 15 April,
-the Modelo 130 and Modelo 303 for that quarter both fall inside the two-week
-window. Profile facts that are still unset appear as warnings that name the
-modelos they affect:
+Start with the agenda. It ranks obligations around a reference date, showing what is due today, what is coming up in the next two weeks, and what is already overdue. Pass `--allow-incomplete` on a profile whose census facts are not yet fully filled in, change the reference date with `--date`, and widen the upcoming window with `--horizon` (the default is 14 days). The example profile is an autónomo whose income comes from an economic activity. On 1 April the next deadline is the first-quarter Modelo 130, due on 20 April. From 15 April, the Modelo 130 and Modelo 303 for that quarter both fall inside the two-week window. Profile facts that are still unset appear as warnings that name the modelos they affect:
 
 ```{cli-sequence} filing-calendar-agenda
 :verify: Confirm the agenda ranks obligations around each reference date.
@@ -61,12 +49,7 @@ To understand why one modelo appears or does not appear, use:
 :verify: Confirm the explain report resolves for the modelo and year.
 ```
 
-`explain` reports whether that modelo applies, the registry reason, and the
-profile facts used for the decision. For the example profile Modelo 130
-applies, and the rationale names the economic activity under estimación
-directa. On a profile that has not declared its entity type or income
-categories, the verdict is `incomplete` and the rationale names the missing
-facts. The rationale text stays in Spanish.
+`explain` reports whether that modelo applies, the reason from the tax rules, and the profile facts used for the decision. For the example profile Modelo 130 applies, and the rationale names the economic activity under estimación directa. On a profile that has not declared its entity type or income categories, the verdict is `incomplete` and the rationale names the missing facts. The rationale text stays in Spanish.
 
 ## What messages have I received?
 
@@ -76,25 +59,23 @@ Habilitada única) notification snapshots, use the live notification workflow:
 ```{cli-sequence} filing-calendar-live-notifications
 ```
 
-If you have not captured notifications yet, use
-[Read AEAT notifications](check-aeat-notifications.md). Live notification
-capture requires AEAT authentication and is read-only.
+If you have not pulled notifications yet, use [Check AEAT
+notifications](check-aeat-notifications.md). Reading notifications live requires
+AEAT authentication and is read-only.
 
 ## What missed modelos did I forget to file?
 
-Use backlog for past-due obligations that are not locally marked as presented.
-The default window starts 365 days before today and ends today; narrow it with
-`--from` and `--to` when you are checking a specific period. The example profile
-declares an economic activity that started in 2025:
+Use backlog for past-due obligations that you have not recorded as filed. The default window starts 365 days before today and ends today; narrow it with `--from` and `--to` when you are checking a specific period. The example profile declares an economic activity that started in 2025:
 
 ```{cli-sequence} filing-calendar-backlog
 :verify: Confirm the backlog resolves for the default and narrowed windows.
 ```
 
 Backlog is a local planning tool. It does not prove what AEAT has or has not
-received. It depends on the [active profile](profile-setup.md#what-the-active-profile-means),
-local filing markers, and local registry rules. For the local filing lifecycle,
-see [The filing workflow](filing-spine.md).
+received. It depends on the [active
+profile](profile-setup.md#what-the-active-profile-means), the filings you
+recorded as filed, and local tax rules. For the local filing lifecycle, see [The
+filing workflow](filing-spine.md).
 
 ## What upcoming modelos will I have to file?
 
@@ -109,15 +90,15 @@ check regional or local holidays, so confirm a deadline that falls near one.
 
 The calendar is stricter than `agenda` and `backlog`: it also refuses while a
 profile check is unresolved, such as `censo.enrolment_unverified`. That check
-reports that your census-backed enrollment facts are operator-declared, not
-AEAT-verified; AEAT publishes no read-only census view the tool could confirm
-them against. Review the profile facts (see
-[Maintain Modelo 036 census facts in your profile](censo-update.md)) and add
-`--allow-incomplete` to print a provisional calendar. Provisional entries are
-marked `censo_enrolment=unverified`. Add `--all-profiles` to include every
-registered profile instead of only the
-[active profile](profile-setup.md#what-the-active-profile-means), or
-`--show-suppressed` to inspect obligations Cadrumo normally filters out:
+reports that your census-backed enrollment facts are declared by you, not
+confirmed by AEAT; AEAT publishes no read-only census view the tool could
+confirm them against. Review the profile facts (see [Maintain Modelo 036 census
+facts in your profile](censo-update.md)) and add `--allow-incomplete` to print a
+provisional calendar. Provisional entries are marked
+`censo_enrolment=unverified`. Add `--all-profiles` to include every registered
+profile instead of only the [active
+profile](profile-setup.md#what-the-active-profile-means), or `--show-suppressed`
+to inspect obligations Cadrumo normally filters out:
 
 ```{cli-sequence} filing-calendar-calendar
 :verify: Confirm the provisional calendar prints across its variants.
@@ -127,16 +108,16 @@ Suppressed entries include obligations that do not apply given your profile
 facts, or that are incomplete. Each entry shows why it was suppressed.
 
 (period-tokens-and-dates)=
-## Period tokens and dates
+## Period codes and dates
 
-Calendar commands use real inclusive dates in `YYYY-MM-DD` format. Modelo work
-commands instead separate the filing year from the registry period:
+Calendar commands use real inclusive dates in `YYYY-MM-DD` format, as shown
+above. Modelo work commands instead separate the filing year from the period:
 
 ```{cli-sequence} filing-calendar-work-status
-:verify: Confirm the work unit status reads back for the visible target.
+:verify: Confirm the declaration status reads back for the visible target.
 ```
 
-The period tokens are:
+The period codes are:
 
 - `1T`: first quarter, January 1 through March 31
 - `2T`: second quarter, April 1 through June 30
@@ -145,28 +126,17 @@ The period tokens are:
 - `0A`: annual period, January 1 through December 31
 - `01` through `12`: monthly periods
 
-Which tokens a modelo accepts is modelo-specific, not universal. A quarterly
-modelo such as 130 accepts only `1T` through `4T`; an annual modelo such as 390
-accepts only `0A`; Modelo 303 accepts `1T` through `4T` and `01` through `12`,
-but not `0A`. A token the modelo does not accept is refused (for example, 303
-with `0A` is refused and lists the valid tokens). To see the tokens one modelo
-accepts, run `aeat app modelo describe 303` and read its `Periods` line.
+Which period codes a modelo accepts is modelo-specific, not universal. A quarterly modelo such as 130 accepts only `1T` through `4T`; an annual modelo such as 390 accepts only `0A`; Modelo 303 accepts `1T` through `4T` and `01` through `12`, but not `0A`. A period code the modelo does not accept is refused (for example, 303 with `0A` is refused and lists the valid codes). To see the period codes one modelo accepts, run `aeat app modelo describe 303` and read its `Periods` line.
 
-Every command takes the year separately with `--year` and the period as one of
-these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026` are not
-accepted; pass `--year 2026 --period 1T` instead.
+Every command takes the year separately with `--year` and the period as one of these AEAT period codes. Calendar shapes such as `2026Q1` or bare `2026` are not accepted; pass `--year 2026 --period 1T` instead.
 
-The `ledger list` and `ledger review` commands filter by period through
-`--filter` clauses. The period token and the year travel as two separate
-clauses, using the same AEAT tokens:
+The `ledger list` and `ledger review` commands filter by period through `--filter` clauses. The period code and the year travel as two separate clauses, using the same AEAT period codes:
 
 ```{cli-sequence} filing-calendar-ledger-filter
-:verify: Confirm the ledger filter accepts the split period and year clauses.
+:verify: Confirm the records filter accepts the split period and year clauses.
 ```
 
-Pass the bare token to `period=` and the year to `year=`. The two clauses go
-together: `--filter period=1T` without `--filter year=2026` is refused.
-Combined forms such as `period=2026-1T` or `period=2026Q1` are not accepted.
+Pass the bare period code to `period=` and the year to `year=`. The two clauses go together: `--filter period=1T` without `--filter year=2026` is refused. Combined forms such as `period=2026-1T` or `period=2026Q1` are not accepted.
 
 For local planning, year-end is December 31 of the filing year. Annual period
 `0A` covers the full calendar year. The fourth quarter `4T` also ends on
@@ -185,16 +155,16 @@ List the modelo catalogue, then describe one modelo before creating filing work:
 Then follow the filing workflow for the target modelo, year, and period:
 
 - [Quickstart: prepare a modelo filing](quickstart.md)
-- [Prepare a Modelo 303 IVA filing](modelo-303.md)
-- [Prepare the annual Modelo 390 IVA summary](modelo-390.md)
+- [Prepare a Modelo 303 VAT filing](modelo-303.md)
+- [Prepare the annual Modelo 390 VAT summary](modelo-390.md)
 - [The filing workflow](filing-spine.md)
 
 ## If results look wrong
 
-If a command reports missing profile facts, update the profile with
-[Set up your taxpayer profile](profile-setup.md). If census facts may be stale
-or missing, re-check them against your Modelo 036 copy with
-[Maintain Modelo 036 census facts in your profile](censo-update.md).
+If a command reports missing profile facts, update the profile with [Set up your
+taxpayer profile](profile-setup.md). If census facts may be out of date or
+missing, re-check them against your Modelo 036 copy with [Maintain Modelo 036
+census facts in your profile](censo-update.md).
 
 If a command reports an invalid date, inactive profile, or readiness problem,
 use [Diagnose and repair your local setup](troubleshooting.md).

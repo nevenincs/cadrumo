@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-evidence-window-axes'
 date: '2026-08-19'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b975c0a1e097d134aaf7394345f3e1251c840b7e1be4e9804f5c07b57628d649'
+body_hash: 'sha256:bbdbe13dd609ed707a16e755bdec7e5cf9b4ed5551cfef14d32b2e695652605d'
 related:
   - "[[2026-08-19-registry-evidence-window-axes-research]]"
 ---
@@ -72,11 +72,10 @@ rewritten to encode reach.
 ## Implementation
 
 The deadline-window axis has landed in commit `ed96dc17d8`:
-`_deadline_window_source_spans` and `_source_applies_across` in
-`src/cadrumo/domain/calculations/registry/_snapshot.py`, with the exclusivity
+`_deadline_window_source_spans` and `_source_applies_across` , with the exclusivity
 guard computed from `collect_snapshot_ref_ids(..., include_deadline_windows=False)`.
 Three regressions in
-`src/cadrumo/domain/calculations/registry/tests/test_source_applicability_window.py`
+
 cover it, each asserting its preconditions so none can pass vacuously.
 
 The retroactive-reach axis HAS SINCE LANDED, and this paragraph is amended in

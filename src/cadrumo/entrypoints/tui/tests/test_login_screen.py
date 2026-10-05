@@ -16,7 +16,8 @@ from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusal
 from ....application.user_profile.login_interaction import ProfileLoginChoice
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..secret.runtime_login import RuntimeLoginMethod, RuntimeLoginScreen
+from ..secret.runtime_login import RuntimeLoginScreen
+from ..secret.runtime_login_contracts import RuntimeLoginMethod
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

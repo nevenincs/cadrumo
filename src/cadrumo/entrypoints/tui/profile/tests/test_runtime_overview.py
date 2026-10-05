@@ -8,7 +8,7 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.local_runtime.frontend_client import ProfileViewCollection
+from cadrumo.adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.overview import build_profile_overview
@@ -20,8 +20,8 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewOperationProjection,
     ProfileViewOperationRequest,
     ProfileViewPageKind,
-    read_profile_view_page,
 )
+from cadrumo.application.user_profile.view_reader import read_profile_view_page
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority

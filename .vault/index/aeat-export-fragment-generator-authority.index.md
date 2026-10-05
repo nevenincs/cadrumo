@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-16'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b45acbcf019c81040e8a9092ee3301cdaa87e66f2ac487ddbe6be86362131a1b'
+body_hash: 'sha256:f842f14ec32cda954a0da3d132e7594f12efb3986bc856fe7e0ef90a824c7a0d'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-ledger]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s01-source-catalogue-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s02-record-design-ir-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s03-parser-authority-proof-audit]]'
@@ -214,14 +212,6 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-09-07-aeat-export-fragment-generator-authority-s82-semantic-map-review-audit` - `aeat-export-fragment-generator-authority` audit: `S82 Modelo 390 2025 semantic map review`
 - `2026-09-07-aeat-export-fragment-generator-authority-s84-implementation-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `S84 implementation reconciliation`
 - `2026-09-14-aeat-export-fragment-generator-authority-signed-composite-audit` - `aeat-export-fragment-generator-authority` audit: `Reviewed signed-composite generator extension`
-
-### exec
-
-- `2026-08-10-aeat-export-fragment-generator-authority-ledger` - `aeat-export-fragment-generator-authority` ledger
-
-### plan
-
-- `2026-08-10-aeat-export-fragment-generator-authority-plan` - `aeat-export-fragment-generator-authority` plan
 
 ### reference
 

@@ -6,18 +6,22 @@ import asyncio
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.live.tests.unopened_live_ports import (
     unopened_browser_session_factory,
     unopened_censal_fetch,
 )
+from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.user_profile.access_contracts import AccessAction, Availability
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import CensalProfileBaseline
 from cadrumo.application.user_profile.censal_preview_operation import (
@@ -27,6 +31,7 @@ from cadrumo.application.user_profile.censal_preview_operation import (
     build_censal_preview_operation_definition,
     build_censal_preview_operation_registration,
 )
+from cadrumo.application.user_profile.censal_readback import read_latest_censal_observation
 from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_effective_facts
@@ -38,9 +43,11 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from . import test_registered_executor_conformance as conformance
+from .test_censal_operation_operand import _operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -93,7 +100,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
     acquisition_task_names: list[str] = []
     acquisition_scopes: list[bool] = []
     pinned_operations: list[PinnedAuthorityOperation] = []
-    observation = conformance._observation()
+    observation = _operand().observation
 
     def browser_resources_factory() -> _PreviewBrowserResources:
         resource = _PreviewBrowserResources()
@@ -187,6 +194,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
             )
             assert isinstance(preview, CensalPreviewOperationResult)
             assert preview.profile_id == profile_id
+            assert preview.observation == observation
             assert preview.applied is False
             assert preview.source_url == observation.source_url
             assert tuple(item.path for item in preview.adopted) == (
@@ -197,6 +205,28 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
             assert all(item.source == CENSO_SOURCE_TAG for item in preview.adopted)
             assert not preview.unchanged
             assert not preview.divergences
+
+            # Fresh adapter instances must recover the complete capture from
+            # the settled journal and encrypted result, without another pull.
+            for _ in range(2):
+                stored = asyncio.run(
+                    read_latest_censal_observation(
+                        profile_id,
+                        journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                        operands=operation_secure_reference_repository(),
+                    )
+                )
+                assert stored == observation
+            assert (
+                asyncio.run(
+                    read_latest_censal_observation(
+                        uuid4(),
+                        journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                        operands=operation_secure_reference_repository(),
+                    )
+                )
+                is None
+            )
 
             record_after = repository.load(profile_id)
             history_after = ProfileRecordStore(session=repository.session).history()
@@ -218,3 +248,46 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
         assert resources[0].factory_task_name is not None
         assert resources[0].factory_task_name.startswith("operation-executor-")
         assert resources[0].close_task_name == "operation-settlement"
+
+
+def test_censal_preview_start_leaves_provider_readiness_to_the_worker_preflight() -> None:
+    """A runtime START is admitted; the composed worker preflight owns provider readiness.
+
+    A policy demanding the provider at START is refused ``provider_required``
+    by the runtime before the worker could run the readiness probe.
+    """
+    profile_id = uuid4()
+    definition = build_censal_preview_operation_definition(
+        certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        browser_session_factory=unopened_browser_session_factory,
+        operator_scope_ports=build_operator_scope_ports(),
+        censal_fetch_port=unopened_censal_fetch,
+        browser_resources_factory=_PreviewBrowserResources,
+        provider_preflight=lambda _profile_id, _operation: None,
+    )
+    registry = OperationRegistry(
+        definitions=(definition,), public_registrations=(build_censal_preview_operation_registration(definition),)
+    )
+    request = OperationRequest(
+        definition_id=CENSAL_PREVIEW_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        payload=CensalPreviewOperationRequest(
+            baseline=CensalProfileBaseline(profile_id=str(profile_id), record_revision=1, content_digest="a" * 64)
+        ),
+    )
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=request,
+        context=OperationAccessContext(
+            profile_id=profile_id,
+            destination_id=uuid4(),
+            action=AccessAction.START,
+            frontend=OperationFrontendProjection.CLI,
+            contract=registry.lookup_public_contract(CENSAL_PREVIEW_OPERATION_DEFINITION_ID),
+            published_authority=Availability.AVAILABLE,
+        ),
+    )
+
+    assert resolved.request.action is AccessAction.START
+    assert resolved.policy.provider is Availability.NOT_REQUIRED

@@ -4,15 +4,12 @@ tags:
   - '#index'
   - '#codebase-monolith-decomposition'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe01fb10d98d3729a4447623a6c126de21472d92e80abf4a41b3eb15a0e51112'
+body_hash: 'sha256:91da78bf8511fe1fd592eb8667eb434e96603a8892159d5303264abd3e2eab4b'
 related:
-  - '[[2026-06-05-codebase-monolith-decomposition-W05-P13-summary]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-code-review-audit]]'
-  - '[[2026-06-05-codebase-monolith-decomposition-ledger]]'
-  - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
   - '[[2026-06-05-codebase-monolith-decomposition-research]]'
 ---
 
@@ -29,15 +26,6 @@ Auto-generated index of all documents tagged with `#codebase-monolith-decomposit
 ### audit
 
 - `2026-06-05-codebase-monolith-decomposition-code-review-audit` - `codebase-monolith-decomposition` Code Review
-
-### exec
-
-- `2026-06-05-codebase-monolith-decomposition-W05-P13-summary` - `codebase-monolith-decomposition` `W05.P13` summary
-- `2026-06-05-codebase-monolith-decomposition-ledger` - `codebase-monolith-decomposition` ledger
-
-### plan
-
-- `2026-06-05-codebase-monolith-decomposition-plan` - `codebase-monolith-decomposition` `codebase-wide monolith and cognitive complexity decomposition` plan
 
 ### research
 

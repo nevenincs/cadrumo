@@ -5,23 +5,38 @@ from __future__ import annotations
 import shutil
 from collections.abc import Mapping
 from dataclasses import replace
+from functools import partial
 from pathlib import Path
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
-from cadrumo.domain.calculations.registry.facts.schema import EntitySetFactPayload
+from cadrumo.domain.calculations.registry.facts.payloads import EntitySetFactPayload
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormPlacementDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from dev._paths import REPO_ROOT
 from dev.packaging import authority_staging
-from dev.registry.edition_delta_migration import MigrationAssessment, assess_migration_state
+from dev.registry.compiler.loader import load_modelo_directory
+from dev.registry.edition_delta_assessment import MigrationAssessment, assess_migration_state
 from dev.registry.tests.test_restated_family_merge import _build_modelo
 
-from .. import registry_collapse_verification as verification
+from .. import registry_collapse_assessment as _collapse_assessment
+from .. import registry_collapse_assessment_normalization as _collapse_assessment_normalization
+from .. import registry_collapse_authority_queries as _collapse_authority_queries
+from .. import registry_collapse_candidate as _collapse_candidate
+from .. import registry_collapse_comparison as _collapse_comparison
+from .. import registry_collapse_converter as _collapse_converter
+from .. import registry_collapse_fingerprints as _collapse_fingerprints
+from .. import registry_collapse_models as _collapse_models
+from .. import registry_collapse_requests as _collapse_requests
+from .. import registry_collapse_roots as _collapse_roots
+from .. import registry_collapse_run as _collapse_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -43,7 +58,7 @@ def test_finding_transition_detects_replacement_when_counts_are_equal(tmp_path: 
     replacement = {**original, "member": "new-defect-at-same-count"}
     changed = replace(assessment, unresolved_duplication=(replacement, *assessment.unresolved_duplication[1:]))
 
-    transition = verification.finding_transition(assessment, changed)
+    transition = _collapse_assessment.finding_transition(assessment, changed)
 
     assert len(transition["removed"]) == 1
     assert len(transition["added"]) == 1
@@ -51,30 +66,30 @@ def test_finding_transition_detects_replacement_when_counts_are_equal(tmp_path: 
 
 
 def test_assessor_scope_reconciliation_detects_a_skipped_family(monkeypatch: pytest.MonkeyPatch) -> None:
-    retained = tuple(spec for spec in verification.CANONICAL_FAMILY_SPECS if spec.section != "formulas")
-    monkeypatch.setattr(verification, "CANONICAL_FAMILY_SPECS", retained)
+    retained = tuple(spec for spec in _collapse_assessment.CANONICAL_FAMILY_SPECS if spec.section != "formulas")
+    monkeypatch.setattr(_collapse_assessment, "CANONICAL_FAMILY_SPECS", retained)
 
-    assert verification.assessor_scope_gaps() == (
+    assert _collapse_assessment.assessor_scope_gaps() == (
         {"revision": "*", "family": "formulas", "reason": "assessor_family_not_enrolled"},
     )
 
 
 def test_assessor_scope_reconciliation_detects_a_skipped_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
-    retained = tuple(spec for spec in verification.CANONICAL_FAMILY_SPECS if not spec.singleton)
-    monkeypatch.setattr(verification, "CANONICAL_FAMILY_SPECS", retained)
+    retained = tuple(spec for spec in _collapse_assessment.CANONICAL_FAMILY_SPECS if not spec.singleton)
+    monkeypatch.setattr(_collapse_assessment, "CANONICAL_FAMILY_SPECS", retained)
 
-    assert verification.assessor_scope_gaps() == (
+    assert _collapse_assessment.assessor_scope_gaps() == (
         {"revision": "*", "family": "completeness_manifest", "reason": "assessor_family_not_enrolled"},
     )
 
 
 def test_assessment_coverage_detects_a_skipped_scalar_bucket(tmp_path: Path) -> None:
     source = _build_modelo(tmp_path)
-    modelo = verification.load_modelo_directory(source)
+    modelo = load_modelo_directory(source)
     assessment = assess_migration_state(source)
     rows = tuple(row for row in assessment.by_revision_family if row.get("family") != "$scalars")
 
-    gaps = verification.assessment_coverage_gaps(
+    gaps = _collapse_assessment.assessment_coverage_gaps(
         replace(assessment, by_revision_family=rows),
         modelo,
         stage="source",
@@ -97,19 +112,19 @@ def test_explicit_root_is_classified_instead_of_becoming_a_minimality_blind_spot
         newline="\n",
     )
 
-    roots = verification.root_eligibility(modelo)
+    roots = _collapse_roots.root_eligibility(modelo)
 
     successor = [item for item in roots if item["revision"] == "2025" and item["family"] == "formulas"]
     assert successor == [
         {
             "revision": "2025",
             "family": "formulas",
-            "status": verification.RootEligibility.CANDIDATE,
+            "status": _collapse_models.RootEligibility.CANDIDATE,
             "candidate": "2024",
             "explicit_root": True,
         }
     ]
-    overlap = verification.root_overlap_diagnostics(modelo, roots)
+    overlap = _collapse_roots.root_overlap_diagnostics(modelo, roots)
     assert any(
         item["revision"] == "2025"
         and item["family"] == "formulas"
@@ -133,10 +148,10 @@ def test_parallel_applicability_branch_is_not_reported_as_a_storage_candidate(tm
         newline="\n",
     )
 
-    roots = verification.root_eligibility(modelo)
+    roots = _collapse_roots.root_eligibility(modelo)
 
     successor = [item for item in roots if item["revision"] == "2025" and item["family"] == "formulas"]
-    assert successor[0]["status"] == verification.RootEligibility.INCOMPATIBLE
+    assert successor[0]["status"] == _collapse_models.RootEligibility.INCOMPATIBLE
 
 
 def test_grounded_lower_grade_root_is_not_reported_as_a_storage_candidate(tmp_path: Path) -> None:
@@ -153,11 +168,11 @@ def test_grounded_lower_grade_root_is_not_reported_as_a_storage_candidate(tmp_pa
 
     successor = [
         item
-        for item in verification.root_eligibility(modelo)
+        for item in _collapse_roots.root_eligibility(modelo)
         if item["revision"] == "2025" and item["family"] == "casillas"
     ]
 
-    assert successor[0]["status"] == verification.RootEligibility.INCOMPATIBLE
+    assert successor[0]["status"] == _collapse_models.RootEligibility.INCOMPATIBLE
 
 
 def test_nonminimal_unchanged_candidate_is_reported_as_a_converter_defect(tmp_path: Path) -> None:
@@ -167,7 +182,7 @@ def test_nonminimal_unchanged_candidate_is_reported_as_a_converter_defect(tmp_pa
     def dishonest_noop(_source: Path, _candidate: Path) -> dict[str, object]:
         return {"complete": True}
 
-    result = verification._verify_one(
+    result = _collapse_candidate._verify_one(
         "999",
         source,
         candidate,
@@ -177,29 +192,29 @@ def test_nonminimal_unchanged_candidate_is_reported_as_a_converter_defect(tmp_pa
         converter=dishonest_noop,
     )
 
-    assert result["outcome"] == verification.ModeloOutcome.PARTIAL
+    assert result["outcome"] == _collapse_models.ModeloOutcome.PARTIAL
     assert result["converter_defect"] == "converter_claimed_completion_without_changing_nonminimal_input"
-    assert result["source_apply_readiness"] == verification.CheckStatus.FAILED
+    assert result["source_apply_readiness"] == _collapse_models.CheckStatus.FAILED
 
 
 def test_canonical_converter_carries_cross_model_dependency_closure_into_idempotence(tmp_path: Path) -> None:
-    source = verification.REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "390"
+    source = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "390"
     candidate = tmp_path / "candidates" / "390" / "registry" / "aeat" / "modelos" / "390"
     candidate.parent.mkdir(parents=True)
     shutil.copytree(source, candidate)
 
-    verification.canonical_converter(source, candidate)
-    first = verification.fingerprint_digest(verification.fingerprint_tree(candidate))
+    _collapse_converter.canonical_converter(source, candidate)
+    first = _collapse_fingerprints.fingerprint_digest(_collapse_fingerprints.fingerprint_tree(candidate))
     assert (candidate.parent / "303").is_dir()
 
-    verification.canonical_converter(candidate, candidate)
+    _collapse_converter.canonical_converter(candidate, candidate)
 
-    assert verification.fingerprint_digest(verification.fingerprint_tree(candidate)) == first
+    assert _collapse_fingerprints.fingerprint_digest(_collapse_fingerprints.fingerprint_tree(candidate)) == first
 
 
 def test_typed_comparison_preserves_absence_false_zero_empty_and_order(tmp_path: Path) -> None:
     source = _build_modelo(tmp_path / "source")
-    before = verification.load_modelo_directory(source)
+    before = load_modelo_directory(source)
     candidate = tmp_path / "candidate"
     shutil.copytree(source, candidate)
     formula = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
@@ -208,11 +223,11 @@ def test_typed_comparison_preserves_absence_false_zero_empty_and_order(tmp_path:
         encoding="utf-8",
         newline="\n",
     )
-    after = verification.load_modelo_directory(candidate)
+    after = load_modelo_directory(candidate)
 
-    result = verification.compare_modelos(before, after)
+    result = _collapse_comparison.compare_modelos(before, after)
 
-    assert result.status is verification.CheckStatus.FAILED
+    assert result.status is _collapse_models.CheckStatus.FAILED
     assert result.differences[0]["reason"] == "value_changed"
 
 
@@ -223,16 +238,18 @@ def test_typed_comparison_reads_an_entity_set_as_a_set() -> None:
     backward = EntitySetFactPayload(entities=frozenset(reversed(members)))
     changed = EntitySetFactPayload(entities=frozenset((*members[:2], "subvencion_explotacion")))
 
-    projected = verification._typed_projection(forward)
+    projected = _collapse_comparison._typed_projection(forward)
 
     assert isinstance(projected, Mapping)
     assert projected["entities"] == sorted(members)
-    assert verification._first_difference(projected, verification._typed_projection(backward)) is None
-    assert verification._first_difference(projected, verification._typed_projection(changed)) is not None
+    assert _collapse_comparison._first_difference(projected, _collapse_comparison._typed_projection(backward)) is None
+    assert (
+        _collapse_comparison._first_difference(projected, _collapse_comparison._typed_projection(changed)) is not None
+    )
 
 
 def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_provenance(tmp_path: Path) -> None:
-    loaded = verification.load_modelo_directory(_build_modelo(tmp_path))
+    loaded = load_modelo_directory(_build_modelo(tmp_path))
     revision = loaded.revisions["2025"]
     casillas = tuple(
         casilla.model_copy(update={"continuidad_origin": CasillaLineageOrigin.SEEDED, "continuidad_evidence": None})
@@ -255,13 +272,13 @@ def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_proven
     inline = loaded.model_copy(update={"revisions": {**loaded.revisions, "2025": inline_revision}})
     sidecar = loaded.model_copy(update={"revisions": {**loaded.revisions, "2025": sidecar_revision}})
 
-    assert verification.compare_modelos(inline, sidecar).status is verification.CheckStatus.PASSED
+    assert _collapse_comparison.compare_modelos(inline, sidecar).status is _collapse_models.CheckStatus.PASSED
 
     altered = attestation.model_copy(update={"source_refs": ("other-source",)})
     altered_revision = inline_revision.model_copy(update={"lineage_attestations": (altered,)})
     altered_modelo = loaded.model_copy(update={"revisions": {**loaded.revisions, "2025": altered_revision}})
-    result = verification.compare_modelos(inline, altered_modelo)
-    assert result.status is verification.CheckStatus.FAILED
+    result = _collapse_comparison.compare_modelos(inline, altered_modelo)
+    assert result.status is _collapse_models.CheckStatus.FAILED
     assert result.differences[0]["reason"] == "lineage_attestation_provenance_differs_from_hydrated_casilla"
 
 
@@ -294,7 +311,7 @@ def test_successor_default_drift_makes_matching_predecessor_source_override_genu
         ),
     )
     monkeypatch.setattr(
-        verification,
+        _collapse_assessment_normalization,
         "load_modelo_declarations",
         lambda _path: {
             "revisions": {
@@ -308,7 +325,7 @@ def test_successor_default_drift_makes_matching_predecessor_source_override_genu
         },
     )
 
-    normalized = verification.normalized_assessment(tmp_path, assessment)
+    normalized = _collapse_assessment_normalization.normalized_assessment(tmp_path, assessment)
 
     assert normalized.minimal
     assert normalized.genuine_overrides == 1
@@ -342,7 +359,7 @@ def test_override_equal_to_successor_default_remains_redundant(tmp_path: Path, m
         by_revision_family=(),
     )
     monkeypatch.setattr(
-        verification,
+        _collapse_assessment_normalization,
         "load_modelo_declarations",
         lambda _path: {
             "revisions": {
@@ -354,7 +371,7 @@ def test_override_equal_to_successor_default_remains_redundant(tmp_path: Path, m
         },
     )
 
-    assert verification.normalized_assessment(tmp_path, assessment) is assessment
+    assert _collapse_assessment_normalization.normalized_assessment(tmp_path, assessment) is assessment
 
 
 def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_override(
@@ -392,7 +409,7 @@ def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_overr
         ),
     )
     monkeypatch.setattr(
-        verification,
+        _collapse_assessment_normalization,
         "load_modelo_declarations",
         lambda _path: {
             "revisions": {
@@ -405,7 +422,7 @@ def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_overr
         },
     )
 
-    normalized = verification.normalized_assessment(tmp_path, assessment)
+    normalized = _collapse_assessment_normalization.normalized_assessment(tmp_path, assessment)
 
     assert normalized.minimal
     assert normalized.redundant_overrides == 0
@@ -417,7 +434,7 @@ def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_overr
 
 @pytest.mark.parametrize("required_field", ["number", "section"])
 def test_new_storage_row_still_requires_schema_fields(tmp_path: Path, required_field: str) -> None:
-    modelo = verification.load_modelo_directory(_build_modelo(tmp_path))
+    modelo = load_modelo_directory(_build_modelo(tmp_path))
     payload = modelo.revisions["2025"].casillas[0].model_dump(mode="python")
     payload.pop(required_field)
 
@@ -427,20 +444,20 @@ def test_new_storage_row_still_requires_schema_fields(tmp_path: Path, required_f
 
 def test_tree_fingerprint_detects_changed_input(tmp_path: Path) -> None:
     source = _build_modelo(tmp_path)
-    before = verification.fingerprint_tree(source)
+    before = _collapse_fingerprints.fingerprint_tree(source)
     manifest = source / "manifest.toml"
     manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8", newline="\n")
 
-    after = verification.fingerprint_tree(source)
+    after = _collapse_fingerprints.fingerprint_tree(source)
 
     assert before != after
-    assert verification.fingerprint_digest(before) != verification.fingerprint_digest(after)
+    assert _collapse_fingerprints.fingerprint_digest(before) != _collapse_fingerprints.fingerprint_digest(after)
 
 
 def test_request_matrix_includes_authored_and_global_boundary_coordinates(tmp_path: Path) -> None:
-    modelo = verification.load_modelo_directory(_build_modelo(tmp_path))
+    modelo = load_modelo_directory(_build_modelo(tmp_path))
 
-    matrix = verification.request_matrix(modelo, floor=2023, ceiling=2026)
+    matrix = _collapse_requests.request_matrix(modelo, floor=2023, ceiling=2026)
 
     cases = {item.case for item in matrix}
     assert {"exact", "valid_from", "valid_to", "support_floor", "support_ceiling"} <= cases
@@ -457,7 +474,7 @@ def test_assessment_fixture_contains_complete_member_and_nested_override_finding
 def test_published_authority_root_defaults_to_the_working_tree_publication(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(authority_staging.AUTHORITY_ROOT_ENV, raising=False)
 
-    resolved = verification.published_authority_root()
+    resolved = _collapse_fingerprints.published_authority_root()
 
     assert resolved == (REPO_ROOT / authority_staging.AUTHORING_AUTHORITY_DIRECTORY).resolve()
     assert resolved != (REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "authority").resolve()
@@ -470,17 +487,17 @@ def test_published_authority_root_honours_the_environment_and_an_explicit_root(
     explicit = tmp_path / "explicit-authority"
     monkeypatch.setenv(authority_staging.AUTHORITY_ROOT_ENV, str(configured))
 
-    assert verification.published_authority_root() == configured.resolve()
-    assert verification.published_authority_root(explicit) == explicit.resolve()
+    assert _collapse_fingerprints.published_authority_root() == configured.resolve()
+    assert _collapse_fingerprints.published_authority_root(explicit) == explicit.resolve()
 
 
 def test_optional_tree_fingerprint_detects_a_publication_appearing(tmp_path: Path) -> None:
     authority = tmp_path / "authority"
-    before = verification.fingerprint_optional_tree(authority)
+    before = _collapse_fingerprints.fingerprint_optional_tree(authority)
     authority.mkdir()
     (authority / "authority.current.json").write_text("{}\n", encoding="utf-8", newline="\n")
 
-    after = verification.fingerprint_optional_tree(authority)
+    after = _collapse_fingerprints.fingerprint_optional_tree(authority)
 
     assert before == ()
     assert before != after
@@ -493,7 +510,7 @@ def test_scoped_verification_refuses_an_unknown_modelo(tmp_path: Path) -> None:
     source_root.mkdir()
 
     with pytest.raises(ValueError, match="unknown modelo identities requested: 000"):
-        verification.run_registry_verification(
+        _collapse_run.run_registry_verification(
             registry_root=registry_root,
             source_root=source_root,
             work_dir=tmp_path / "work",
@@ -506,14 +523,14 @@ def test_first_difference_ignores_mapping_key_order_only() -> None:
     before = {"family_dispositions": {"projection_endpoints": {"cause": "a"}, "extraction_profiles": {"cause": "b"}}}
     after = {"family_dispositions": {"extraction_profiles": {"cause": "b"}, "projection_endpoints": {"cause": "a"}}}
 
-    assert verification._first_difference(before, after) is None
+    assert _collapse_comparison._first_difference(before, after) is None
 
 
 def test_first_difference_detects_a_changed_mapping_key_set() -> None:
     before = {"family_dispositions": {"projection_endpoints": {}, "extraction_profiles": {}}}
     after = {"family_dispositions": {"projection_endpoints": {}}}
 
-    difference = verification._first_difference(before, after)
+    difference = _collapse_comparison._first_difference(before, after)
 
     assert difference is not None
     assert difference["location"] == "$.family_dispositions"
@@ -524,7 +541,7 @@ def test_first_difference_detects_a_value_change_under_reordered_keys() -> None:
     before = {"family_dispositions": {"projection_endpoints": {"cause": "a"}, "extraction_profiles": {"cause": "b"}}}
     after = {"family_dispositions": {"extraction_profiles": {"cause": "c"}, "projection_endpoints": {"cause": "a"}}}
 
-    difference = verification._first_difference(before, after)
+    difference = _collapse_comparison._first_difference(before, after)
 
     assert difference is not None
     assert difference["location"] == "$.family_dispositions.extraction_profiles.cause"
@@ -535,18 +552,17 @@ def test_first_difference_still_detects_a_reordered_sequence() -> None:
     before = {"formulas": [{"id": "a"}, {"id": "b"}]}
     after = {"formulas": [{"id": "b"}, {"id": "a"}]}
 
-    difference = verification._first_difference(before, after)
+    difference = _collapse_comparison._first_difference(before, after)
 
     assert difference is not None
     assert difference["location"] == "$.formulas[0].id"
 
 
-def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revision_carries() -> None:
-    """Selection loads the base revision, so the verifier must compose its layouts before comparing.
+def test_indexed_temporal_selection_composes_separately_stored_layouts() -> None:
+    """Selection loads a base revision, so the verifier composes separate layouts before comparing.
 
-    The source side's selected revision carries its export layouts; comparing
-    it with the layout-free base revision reported every layout-bearing
-    coordinate as a changed revision.
+    Comparing the source's complete selected revision with the indexed base
+    revision alone reports layout-bearing coordinates as changed revisions.
     """
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -561,7 +577,7 @@ def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revis
         )
         modelo_id, revision_id = bearing
         base = operation.revision(modelo_id, revision_id)
-        coordinate = verification.RequestCoordinate(
+        coordinate = _collapse_models.RequestCoordinate(
             filing_year=base.valid_from.year,
             period=str(base.period_selector.declared_periods[0]),
             on=None,
@@ -569,13 +585,216 @@ def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revis
             case="layout-bearing",
         )
 
-        result = verification._indexed_selection_result(operation, modelo_id, coordinate)
+        result = _collapse_authority_queries._indexed_selection_result(operation, modelo_id, coordinate)
 
         assert result["outcome"] == "selected", result
-        assert result["value"] == verification._typed_projection(
-            operation.revision_with_export_layouts(modelo_id, revision_id)
+        assert result["value"] == _collapse_comparison._typed_projection(
+            _collapse_authority_queries._indexed_complete_revision(operation, modelo_id, revision_id)
         )
-        assert result["value"] != verification._typed_projection(base)
+        assert result["value"] != _collapse_comparison._typed_projection(base)
+
+
+def test_indexed_revision_and_snapshot_parity_include_form_layout_components(tmp_path: Path) -> None:
+    """Separate SQLite form layouts survive comparison, and missing or changed layouts fail it."""
+    from cadrumo.core.authority_grade import RegistryAuthorityGrade
+    from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
+    from dev.registry.pipeline.authority_publication import install_validated_authority_database
+
+    from .test_authority_database import _artifact
+
+    source_artifact = _artifact()
+    source_modelo = source_artifact.modelos[0]
+    source_revision = next(iter(source_modelo.revisions.values()))
+    layout = FormLayoutDefinition(
+        id="fixture-layout",
+        revision_id=source_revision.id,
+        seed_source="authored",
+        generator_version=1,
+        source_state_digest="a" * 64,
+        placements=(
+            FormPlacementDefinition(
+                casilla_id=source_revision.casillas[0].id,
+                kind="unplaced",
+                unplaced_reason="pending_review",
+            ),
+        ),
+    )
+    source_revision = source_revision.model_copy(update={"form_layouts": (layout,)})
+    source_modelo = source_modelo.model_copy(update={"revisions": {source_revision.id: source_revision}})
+    source_artifact = replace(source_artifact, modelos=(source_modelo,))
+    source_authority = ValidatedRegistryAuthority.from_validated_components(
+        modelos=source_artifact.modelos,
+        catalogues=source_artifact.catalogues,
+        identity_digest=source_artifact.identity_digest,
+        evidence=source_artifact.evidence,
+        profile_schema=source_artifact.profile_schema,
+    )
+    coordinate = _collapse_models.RequestCoordinate(
+        filing_year=2024,
+        period="0A",
+        on=None,
+        revision_id=str(source_revision.id),
+        case="layout-bearing",
+    )
+    source_snapshot = partial(source_authority.snapshot, grade=RegistryAuthorityGrade.CALCULATION)
+    expected_snapshot = _collapse_authority_queries._snapshot_result(source_snapshot, "130", coordinate)
+    assert expected_snapshot["outcome"] == "admitted", expected_snapshot
+    expected_form_layouts = _collapse_comparison._typed_projection(source_revision.form_layouts)
+
+    def snapshot_forms(value: object) -> tuple[object, object]:
+        assert isinstance(value, Mapping)
+        modelo = value["modelo"]
+        revision = value["revision"]
+        assert isinstance(modelo, Mapping)
+        assert isinstance(revision, Mapping)
+        revisions = modelo["revisions"]
+        assert isinstance(revisions, Mapping)
+        selected = revisions[str(source_revision.id)]
+        assert isinstance(selected, Mapping)
+        return revision["form_layouts"], selected["form_layouts"]
+
+    expected_snapshot_forms = snapshot_forms(expected_snapshot["value"])
+
+    variants = (
+        ("present", (layout,), True),
+        ("missing", (), False),
+        ("changed", (layout.model_copy(update={"id": "changed-layout"}),), False),
+    )
+    for name, form_layouts, should_match in variants:
+        variant_revision = source_revision.model_copy(update={"form_layouts": form_layouts})
+        variant_modelo = source_modelo.model_copy(update={"revisions": {variant_revision.id: variant_revision}})
+        artifact = replace(source_artifact, modelos=(variant_modelo,))
+        destination = tmp_path / name
+        install_validated_authority_database(artifact, destination=destination, require_current=lambda: None)
+        indexed = IndexedRegistryAuthority(destination / "authority.current.json")
+        try:
+            with indexed.operation() as operation:
+                selection = _collapse_authority_queries._indexed_selection_result(operation, "130", coordinate)
+                indexed_snapshot = partial(operation.snapshot, grade=RegistryAuthorityGrade.CALCULATION)
+                snapshot = _collapse_authority_queries._snapshot_result(
+                    indexed_snapshot,
+                    "130",
+                    coordinate,
+                    indexed_form_layout=operation.form_layout,
+                )
+                assert selection["outcome"] == "selected", selection
+                assert snapshot["outcome"] == "admitted", snapshot
+                selection_value = selection["value"]
+                snapshot_value = snapshot["value"]
+                assert isinstance(selection_value, Mapping)
+                assert isinstance(snapshot_value, Mapping)
+                actual_snapshot_forms = snapshot_forms(snapshot_value)
+                revision_difference = _collapse_comparison._first_difference(
+                    expected_form_layouts,
+                    selection_value.get("form_layouts"),
+                    "$.selection.value.form_layouts",
+                )
+                snapshot_difference = _collapse_comparison._first_difference(
+                    expected_snapshot_forms,
+                    actual_snapshot_forms,
+                    "$.snapshot.value.form_layouts",
+                )
+                assert (revision_difference is None) is should_match, revision_difference
+                assert (snapshot_difference is None) is should_match, snapshot_difference
+                if not should_match:
+                    assert "form_layouts" in str(revision_difference)
+                    assert "form_layouts" in str(snapshot_difference)
+        finally:
+            indexed.close()
+
+
+def test_real_modelo_131_snapshot_parity_preserves_raw_and_effective_export_layouts(
+    registry_authority: ValidatedRegistryAuthority,
+    tmp_path: Path,
+) -> None:
+    """Form composition preserves declared exports beside binding-derived snapshot exports."""
+    from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+    from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
+    from dev.registry.compiler.identity import resolve_registry_identity
+    from dev.registry.compiler.loader_fingerprints import collect_registry_tree_fingerprints
+    from dev.registry.pipeline.authority_publication import install_validated_authority_database
+
+    registry_root = bundled_path("registry", "aeat")
+    identity = resolve_registry_identity(registry_root, collect_fingerprints=collect_registry_tree_fingerprints)
+    artifact = AuthorityArtifact(
+        modelos=registry_authority.modelos,
+        catalogues=registry_authority.catalogues,
+        identity_digest=identity.digest,
+        evidence=registry_authority.evidence,
+        profile_schema=registry_authority.profile_schema(),
+    )
+    indexed_root = tmp_path / "indexed"
+    install_validated_authority_database(artifact, destination=indexed_root, require_current=lambda: None)
+    indexed_authority = IndexedRegistryAuthority(indexed_root / "authority.current.json")
+
+    coordinate = _collapse_models.RequestCoordinate(
+        filing_year=2022,
+        period="1T",
+        on=None,
+        revision_id="2019-2023",
+        case="source-index-form-layout",
+    )
+    source = _collapse_authority_queries._snapshot_result(registry_authority.snapshot, "131", coordinate)
+    assert source["outcome"] == "admitted", source
+    source_value = source["value"]
+    assert isinstance(source_value, Mapping)
+
+    try:
+        with indexed_authority.operation() as operation:
+            indexed = _collapse_authority_queries._snapshot_result(
+                operation.snapshot,
+                "131",
+                coordinate,
+                indexed_form_layout=operation.form_layout,
+            )
+    finally:
+        indexed_authority.close()
+    assert indexed["outcome"] == "admitted", indexed
+    indexed_value = indexed["value"]
+    assert isinstance(indexed_value, Mapping)
+
+    def layout_field_counts(value: Mapping[str, object]) -> tuple[tuple[int, ...], ...]:
+        layouts = value["export_layouts"]
+        assert isinstance(layouts, list)
+        counts: list[tuple[int, ...]] = []
+        for layout in layouts:
+            assert isinstance(layout, Mapping)
+            records = layout["records"]
+            assert isinstance(records, list)
+            record_counts: list[int] = []
+            for record in records:
+                assert isinstance(record, Mapping)
+                fields = record["fields"]
+                assert isinstance(fields, list)
+                record_counts.append(len(fields))
+            counts.append(tuple(record_counts))
+        return tuple(counts)
+
+    def selected_projection(value: Mapping[str, object]) -> tuple[Mapping[str, object], Mapping[str, object]]:
+        modelo = value["modelo"]
+        revision = value["revision"]
+        assert isinstance(modelo, Mapping)
+        assert isinstance(revision, Mapping)
+        revisions = modelo["revisions"]
+        assert isinstance(revisions, Mapping)
+        selected = revisions["2019-2023"]
+        assert isinstance(selected, Mapping)
+        return cast(Mapping[str, object], selected), cast(Mapping[str, object], revision)
+
+    source_model_revision, source_effective_revision = selected_projection(source_value)
+    indexed_model_revision, indexed_effective_revision = selected_projection(indexed_value)
+    source_declared_counts = layout_field_counts(source_model_revision)
+    source_effective_counts = layout_field_counts(source_effective_revision)
+    indexed_declared_counts = layout_field_counts(indexed_model_revision)
+    indexed_effective_counts = layout_field_counts(indexed_effective_revision)
+
+    assert source_declared_counts != source_effective_counts
+    assert indexed_declared_counts == source_declared_counts
+    assert indexed_effective_counts == source_effective_counts
+    assert source_effective_revision["form_layouts"]
+    assert source_model_revision["form_layouts"] == source_effective_revision["form_layouts"]
+    assert indexed_model_revision["form_layouts"] == source_model_revision["form_layouts"]
+    assert _collapse_comparison._first_difference(source_value, indexed_value) is None
 
 
 def test_snapshot_comparison_ignores_unselected_editions_but_not_the_selected_one() -> None:
@@ -602,22 +821,22 @@ def test_snapshot_comparison_ignores_unselected_editions_but_not_the_selected_on
         }
     )
     changed = snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"parameters": ()})})
-    coordinate = verification.RequestCoordinate(
+    coordinate = _collapse_models.RequestCoordinate(
         filing_year=support.floor, period="0A", on=None, revision_id=None, case="floor"
     )
 
     def result(value: object) -> object:
-        return verification._snapshot_result(lambda *_args, **_kwargs: value, "100", coordinate)
+        return _collapse_authority_queries._snapshot_result(lambda *_args, **_kwargs: value, "100", coordinate)
 
-    assert verification._first_difference(result(snapshot), result(widened), "$") is None
-    assert verification._first_difference(result(snapshot), result(changed), "$") is not None
+    assert _collapse_comparison._first_difference(result(snapshot), result(widened), "$") is None
+    assert _collapse_comparison._first_difference(result(snapshot), result(changed), "$") is not None
 
 
 def _unresolved_rows(modelo_dir: Path) -> list[Mapping[str, object]]:
     return [
         row
-        for row in verification.root_eligibility(modelo_dir)
-        if row["status"] is verification.RootEligibility.UNRESOLVED
+        for row in _collapse_roots.root_eligibility(modelo_dir)
+        if row["status"] is _collapse_models.RootEligibility.UNRESOLVED
     ]
 
 

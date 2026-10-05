@@ -124,6 +124,43 @@ def verify(excerpt: Excerpt) -> tuple[bool, str]:
     return matches_claim, detail
 
 
+def _claim_counts(excerpts: tuple[Excerpt, ...]) -> dict[str, int]:
+    return {state: sum(1 for excerpt in excerpts if excerpt.state == state) for state in CLAIM_STATES}
+
+
+def _verified_mismatches(excerpts: tuple[Excerpt, ...], should_verify: bool) -> list[tuple[str, str]]:
+    if not should_verify:
+        return []
+    mismatched: list[tuple[str, str]] = []
+    for excerpt in excerpts:
+        if excerpt.state != "verifiable":
+            continue
+        ok, detail = verify(excerpt)
+        if not ok:
+            mismatched.append((excerpt.name, detail))
+    return mismatched
+
+
+def _print_json_report(counts: dict[str, int], mismatched: list[tuple[str, str]]) -> None:
+    print(json.dumps({"counts": counts, "mismatched": mismatched}, indent=2))
+
+
+def _print_text_report(
+    excerpts: tuple[Excerpt, ...],
+    counts: dict[str, int],
+    mismatched: list[tuple[str, str]],
+    should_verify: bool,
+) -> None:
+    print("# corpus_vigencia_claims schema=1")
+    print(f"excerpts total={len(excerpts)} " + " ".join(f"{key}={value}" for key, value in counts.items()))
+    uncheckable = counts["unanchored"] + counts["undated"]
+    print(f"uncheckable={uncheckable} of {len(excerpts)}")
+    if should_verify:
+        print(f"verified mismatched={len(mismatched)}")
+        for name, detail in mismatched:
+            print(f"  {name}: {detail}")
+
+
 def main(argv: list[str] | None = None) -> int:
     """Classify bundled vigencia claims and optionally verify them against BOE."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -132,29 +169,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     excerpts = tuple(survey())
-    counts = {state: sum(1 for e in excerpts if e.state == state) for state in CLAIM_STATES}
-
-    mismatched: list[tuple[str, str]] = []
-    if args.verify:
-        for excerpt in excerpts:
-            if excerpt.state != "verifiable":
-                continue
-            ok, detail = verify(excerpt)
-            if not ok:
-                mismatched.append((excerpt.name, detail))
+    counts = _claim_counts(excerpts)
+    mismatched = _verified_mismatches(excerpts, args.verify)
 
     if args.json:
-        print(json.dumps({"counts": counts, "mismatched": mismatched}, indent=2))
+        _print_json_report(counts, mismatched)
         return 0
 
-    print("# corpus_vigencia_claims schema=1")
-    print(f"excerpts total={len(excerpts)} " + " ".join(f"{k}={v}" for k, v in counts.items()))
-    uncheckable = counts["unanchored"] + counts["undated"]
-    print(f"uncheckable={uncheckable} of {len(excerpts)}")
-    if args.verify:
-        print(f"verified mismatched={len(mismatched)}")
-        for name, detail in mismatched:
-            print(f"  {name}: {detail}")
+    _print_text_report(excerpts, counts, mismatched, args.verify)
     return 0
 
 

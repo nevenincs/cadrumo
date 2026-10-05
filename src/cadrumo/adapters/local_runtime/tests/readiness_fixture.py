@@ -16,8 +16,9 @@ from cadrumo.application.runtime.contracts import (
     RuntimeServerHello,
 )
 
-from ..framing import accept_runtime_handshake, read_document, write_document
-from ..posix import PosixRuntimeEndpoint
+from ..framing import accept_runtime_handshake
+from ..posix_endpoint import PosixRuntimeEndpoint
+from ..runtime_frame_io import read_document, write_document
 from ..windows import WindowsRuntimeEndpoint
 
 

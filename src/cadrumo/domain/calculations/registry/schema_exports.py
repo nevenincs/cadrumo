@@ -25,21 +25,19 @@ from ....core.filing_projection_ref import (
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.identity.digest import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
+from . import export_field_validation as _export_field_validation
 from .errors import RegistryValidationError
-from .export_semantics import (
-    ExportComputedKey,
-    ExportDraftAttribute,
-    ExportSemanticPayloadAxis,
-    export_semantic_payload_axis,
-)
-from .export_value_policy import ExportValuePolicy, ExportValuePolicyValue, export_value_policy_wire_length
+from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
+from .export_record_components import validate_export_record_components
+from .export_semantics import ExportComputedKey, ExportDraftAttribute
+from .export_value_policy import ExportValuePolicy, ExportValuePolicyValue
 from .fixed_width_codec import (
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
     ExportSignPositionValue,
-    validate_fixed_width_shape,
 )
+from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
 from .schema_base import CasillaDataType, LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 
@@ -160,11 +158,16 @@ class FilingEnvelopePrefixRole(StrEnum):
     RECORD_TYPE = "record_type"
     AUX_OPENING_TAG = "aux_opening_tag"
     PRE_PROGRAM_FILLER = "pre_program_filler"
+    LANGUAGE = "language"
+    BETWEEN_LANGUAGE_PROGRAM_FILLER = "between_language_program_filler"
     PROGRAM_IDENTIFIER = "program_identifier"
     BETWEEN_IDENTITIES_FILLER = "between_identities_filler"
     DEVELOPER_TAX_ID = "developer_tax_id"
     POST_DEVELOPER_FILLER = "post_developer_filler"
     AUX_CLOSING_TAG = "aux_closing_tag"
+    PRE_DECLARANT_FILLER = "pre_declarant_filler"
+    DECLARANT_TAX_ID = "declarant_tax_id"
+    POST_DECLARANT_FILLER = "post_declarant_filler"
 
 
 #: The six roles a :attr:`FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG` fuses.
@@ -249,6 +252,17 @@ class FilingEnvelopePrefixFieldDeclaration(RegistryModel):
 
     role: FilingEnvelopePrefixRoleValue
     length: int = Field(gt=0)
+    casilla_id: CasillaId | None = Field(default=None, exclude_if=lambda value: value is None)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_language_endpoint(self) -> FilingEnvelopePrefixFieldDeclaration:
+        if self.role is FilingEnvelopePrefixRole.LANGUAGE:
+            if self.casilla_id != "decl.idioma" or self.length != 1:
+                raise RegistryValidationError("language envelope role requires exact decl.idioma one-byte casilla")
+        elif self.casilla_id is not None:
+            raise RegistryValidationError("only the language envelope role may carry a casilla endpoint")
+        return self
 
 
 class FilingEnvelopeDefinition(RegistryModel):
@@ -276,9 +290,14 @@ class FilingEnvelopeDefinition(RegistryModel):
     prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=1)
     prefix_extent: int = Field(gt=0)
     body_record_ids: tuple[RecordId, ...] = Field(min_length=1)
-    product_identity_requirement: Literal["aeat-product-software-identity-v1"]
+    # TOML has no null value: the nine-role declarant envelope omits this key.
+    # The validator below still requires the AUX identity for every AUX grammar.
+    product_identity_requirement: Literal["aeat-product-software-identity-v1"] | None = None
     closer_derivation: FilingEnvelopeCloserDerivationValue
     total_derivation: FilingEnvelopeTotalDerivationValue
+    # Only an exact source-reviewed trailing record marker may set this.
+    # Absence serialises to the existing envelope grammar without an extra key.
+    record_terminator: Literal["crlf"] | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -293,6 +312,7 @@ class FilingEnvelopeDefinition(RegistryModel):
                 f"filing envelope {self.record_identity!r} prefix roles must appear in canonical source order",
             )
         _require_one_opening_tag_spelling(self.record_identity, roles)
+        self._require_prefix_identity(roles)
         declared_extent = sum(field.length for field in self.prefix_fields)
         if declared_extent != self.prefix_extent:
             raise RegistryValidationError(
@@ -304,6 +324,33 @@ class FilingEnvelopeDefinition(RegistryModel):
                 f"filing envelope {self.record_identity!r} body record declarations must be unique and ordered",
             )
         return self
+
+    def _require_prefix_identity(self, roles: tuple[FilingEnvelopePrefixRole, ...]) -> None:
+        """Require the complete declared identity grammar for this envelope family."""
+        declarant_roles = (
+            FilingEnvelopePrefixRole.PRE_DECLARANT_FILLER,
+            FilingEnvelopePrefixRole.DECLARANT_TAX_ID,
+            FilingEnvelopePrefixRole.POST_DECLARANT_FILLER,
+        )
+        if any(role in roles for role in declarant_roles):
+            if (
+                roles
+                != (
+                    FilingEnvelopePrefixRole.OPENING_TAG,
+                    FilingEnvelopePrefixRole.MODELO,
+                    FilingEnvelopePrefixRole.DISCRIMINANT,
+                    FilingEnvelopePrefixRole.FILING_YEAR,
+                    FilingEnvelopePrefixRole.PERIOD,
+                    FilingEnvelopePrefixRole.RECORD_TYPE,
+                    *declarant_roles,
+                )
+                or self.product_identity_requirement is not None
+            ):
+                raise RegistryValidationError(
+                    "declarant envelope requires exactly the source-ordered nine-role prefix and no software identity"
+                )
+        elif self.product_identity_requirement != "aeat-product-software-identity-v1":
+            raise RegistryValidationError("AUX envelope requires product/software identity authority")
 
     @property
     def opening_tag_extent(self) -> int:
@@ -334,7 +381,7 @@ class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
     """Static total-less page-zero header declaration carried by a generated layout.
 
     The fixed 328-byte header that opens a design whose records are fixed
-    (Modelo 232's ``DR23200``; Modelo 390's page zero). It shares the filing
+    (Modelo 390's page zero). It shares the filing
     envelope's prefix grammar -- the same thirteen roles in canonical order and
     the same emitted literals -- and declares no body, closer or total: the
     layout's records are the payload.
@@ -403,48 +450,6 @@ def _require_one_opening_tag_spelling(
         )
 
 
-#: lookup rather than repeated per policy. A policy absent from this table has
-#: no reviewed wire shape and is refused.
-_VALUE_POLICY_SHAPES: Mapping[ExportValuePolicy, tuple[str, str, str, bool, str | None]] = {
-    ExportValuePolicy.SELECTED_1_UNSELECTED_0: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.UNSIGNED_INTEGER: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.ENUMERATED_DIGITS: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.FOUR_DIGIT_YEAR: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.TWO_DIGIT_MONTH: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.TWO_DIGIT_DAY: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.IMPLIED_DECIMAL: ("decimal", "left_zero", "right", True, None),
-    # Both halves of a split quantity occupy an integer slot: each writes a
-    # zero-padded, right-justified digit run of its own width, and the decimal
-    # point is implied by the BOUNDARY between them rather than declared on
-    # either. Declaring the fractional half "decimal" would ask it for a scale
-    # it does not have -- its digits ARE the scale.
-    ExportValuePolicy.INTEGER_PART: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.FRACTIONAL_DIGITS: ("integer", "left_zero", "right", False, None),
-    ExportValuePolicy.YYYYMMDD: ("date", "none", "none", False, "aaaammdd"),
-    ExportValuePolicy.DDMMYYYY: ("date", "none", "none", False, "ddmmaaaa"),
-    ExportValuePolicy.DIGIT_STRING: ("text", "none", "none", False, None),
-    ExportValuePolicy.IDENTIFIER_DIGITS: ("text", "none", "none", False, None),
-    # Blank-filled and left-justified, like every other alphanumeric slot. The
-    # digit-identity policies above take "none"/"none" because an identifier
-    # must fill its slot exactly; prose does not, and zero-filling it would
-    # corrupt the value rather than pad it.
-    ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: ("text", "right_space", "left", False, None),
-}
-
-_VALUE_POLICY_UNRENDERABLE_KINDS = {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM}
-
-
-def _is_canonical_digit_run(value: str, length: int) -> bool:
-    """Accept only a zero-canonical ASCII digit run that fits the wire slot.
-
-    ``str(int(value))`` rejects a leading-zero spelling: the slot pads on the
-    wire, so ``"01"`` and ``"1"`` would otherwise both address the same
-    enumerated member under two spellings.
-    """
-    return bool(value) and value.isascii() and value.isdigit() and str(int(value)) == value and len(value) <= length
-
-
 class ProjectionEndpointDeclaration(RegistryModel):
     """Revision-owned admission and evidence for one typed filing endpoint.
 
@@ -498,6 +503,13 @@ class ExportFieldDefinition(RegistryModel):
     casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
+    literal_fact: ExportLiteralFact | None = None
+    """The governed mapping-fact entry a ``literal`` field's value is resolved from.
+
+    Authored in place of ``literal``; the registry build materialises the value
+    into ``literal`` and keeps this reference as its provenance. See
+    :mod:`.export_literal_fact`.
+    """
     producer_key: FilingProducerKey | None = None
     projection_ref: FilingProjectionRef | None = None
     draft_attribute: ExportDraftAttribute | None = None
@@ -518,6 +530,18 @@ class ExportFieldDefinition(RegistryModel):
     entity. A layout cannot know the filer, so the condition is carried here
     and evaluated at export against the filing's own taxpayer.
     """
+    required_with: CasillaId | None = None
+    """The casilla whose presence makes this field required, for a slot block that may be empty.
+
+    A page can repeat an occurrence block whose campos the design marks
+    obligatorio for each occurrence it carries -- DR360 página 2 holds operation
+    1 and operation 2 -- while a filing with fewer occurrences leaves the later
+    block empty. Every field of such a block names the block's anchor casilla
+    (its número de operación): with the anchor present the field keeps its
+    design requirement, and with the anchor absent the field must be absent
+    too and renders its blank fill, so a block is either an occurrence or blank
+    and padding never stands in for a missing obligatorio campo.
+    """
     design_type: Literal["N", "Num"] | None = None
     """The numeric type the official record design prints for this slot.
 
@@ -529,6 +553,8 @@ class ExportFieldDefinition(RegistryModel):
     """
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
+    minimum_year: int | None = Field(default=None, ge=1000, le=9999)
+    """An official lower bound on a four-digit filing-year value."""
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -540,6 +566,32 @@ class ExportFieldDefinition(RegistryModel):
         if self.projection_ref is None:
             return None
         return filing_projection_ref_casilla_id(self.projection_ref)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _materialise_literal_fact(self) -> ExportFieldDefinition:
+        """Resolve an authored ``literal_fact`` into the literal it names.
+
+        Inside a registry validation the governed facts are in scope, so the
+        value is read from them and an inline ``literal`` disagreeing with it is
+        refused. Outside one -- re-reading a compiled authority -- the literal
+        was materialised when that authority was built and is taken as stored.
+        """
+        if self.literal_fact is None:
+            return self
+        authority = governed_facts_in_scope()
+        if authority is None:
+            return self
+        reference = self.literal_fact
+        resolved = resolve_export_literal_fact(reference, authority=authority)
+        declared = self.literal
+        if declared is not None and declared != resolved:
+            raise RegistryValidationError(
+                f"export field {self.id!r} declares literal {declared!r} but its literal_fact "
+                f"{reference.fact_id!r}.{reference.key!r} resolves to {resolved!r}",
+            )
+        object.__setattr__(self, "literal", resolved)
+        return self
 
     @field_validator("allowed_values")
     @classmethod
@@ -570,273 +622,26 @@ class ExportFieldDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_field_kind(self) -> ExportFieldDefinition:
-        _validate_field_semantic_payload(self)
-        _validate_field_render_shape(self)
-        _validate_required_for(self)
-        _validate_design_type(self)
+        _export_field_validation.validate_export_field_kind(self)
+        if self.minimum_year is not None and self.value_policy is not ExportValuePolicy.FOUR_DIGIT_YEAR:
+            raise RegistryValidationError("minimum_year requires the four-digit-year value policy")
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:
         """Project the declared shape onto the axes a value policy constrains."""
-        return _export_field_wire_shape(self)
+        return _export_field_validation.export_field_wire_shape(self)
 
     def validate_allowed_values(self) -> None:
         """Constrain an exact reviewed semantic integer domain."""
-        if failure := _allowed_values_failure(self):
-            raise RegistryValidationError(failure)
+        _export_field_validation.validate_export_allowed_values(self)
 
     def validate_value_policy(self) -> None:
         """Require each explicit policy to match its complete fixed-width shape."""
-        if self.value_policy is None:
-            return
-        if self.kind in _VALUE_POLICY_UNRENDERABLE_KINDS:
-            raise RegistryValidationError(
-                f"export field {self.id!r} cannot declare value_policy on kind {self.kind!r}",
-            )
-        if self.signed or _VALUE_POLICY_SHAPES.get(self.value_policy) != self.wire_shape():
-            raise RegistryValidationError(
-                f"export field {self.id!r} value_policy {self.value_policy.value!r} conflicts with its field shape",
-            )
-        expected_length = export_value_policy_wire_length(self.value_policy)
-        if expected_length is not None and self.length != expected_length:
-            raise RegistryValidationError(
-                f"export field {self.id!r} value_policy {self.value_policy!r} requires length {expected_length}",
-            )
-        if self.value_policy is ExportValuePolicy.ENUMERATED_DIGITS and self.allowed_values is None:
-            raise RegistryValidationError(
-                f"export field {self.id!r} value_policy {self.value_policy.value!r} requires allowed_values",
-            )
+        _export_field_validation.validate_export_value_policy(self)
 
     def validate_decimals(self) -> None:
-        """Require an explicit scale on every decimal field.
-
-        AEAT fixed-width slots carry decimals implicitly: the diseño de registro
-        declares them as "N enteros y M decimales" filling the whole slot, with
-        no separator byte.  The scale is not derivable from the length -- Modelo
-        200 pairs length 9 with 2 decimals and length 7 with 4 -- so it has to be
-        declared per field, and a field that omits it cannot be rendered.
-        """
-        if self.kind == CasillaFieldKind.FILLER:
-            return
-        if self.data_type == "decimal":
-            if self.decimals is None:
-                raise RegistryValidationError(f"decimal export field {self.id!r} must declare decimals")
-            if self.length is not None and self.decimals >= self.length:
-                raise RegistryValidationError(
-                    f"decimal export field {self.id!r} declares {self.decimals} decimals "
-                    f"which leaves no integer digits in its {self.length}-byte slot",
-                )
-        elif self.decimals is not None:
-            raise RegistryValidationError(
-                f"export field {self.id!r} declares decimals but its data_type is {self.data_type!r}",
-            )
-
-
-def _field_semantic_payloads(field: ExportFieldDefinition) -> dict[ExportSemanticPayloadAxis, object | None]:
-    return {
-        ExportSemanticPayloadAxis.CASILLA_ID: field.casilla_id,
-        ExportSemanticPayloadAxis.BINDING: field.binding,
-        ExportSemanticPayloadAxis.LITERAL: field.literal,
-        ExportSemanticPayloadAxis.PRODUCER_KEY: field.producer_key,
-        ExportSemanticPayloadAxis.PROJECTION_REF: field.projection_ref,
-        ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: field.draft_attribute,
-        ExportSemanticPayloadAxis.COMPUTED_KEY: field.computed_key,
-    }
-
-
-_SIGN_BEARING_DATA_TYPES: Final[frozenset[str]] = frozenset({"money", "decimal", "integer"})
-
-
-def _validate_design_type(field: ExportFieldDefinition) -> None:
-    """Refuse a sign that contradicts the type the official design prints.
-
-    Only a number carries a sign: a constant slot the design types
-    numerically (the modelo-number slot is typed N and holds text) declares
-    no design type.
-    """
-    if field.design_type is None:
-        return
-    if str(field.data_type) not in _SIGN_BEARING_DATA_TYPES:
-        raise RegistryValidationError(
-            f"export field {field.id!r} declares design_type but carries {field.data_type!r}, which has no sign",
-        )
-    if field.design_type == "N" and not field.signed:
-        raise RegistryValidationError(
-            f"export field {field.id!r} is typed N (numerico con signo) by its design but declares unsigned",
-        )
-    if field.design_type == "Num" and field.signed:
-        raise RegistryValidationError(
-            f"export field {field.id!r} is typed Num (numerico sin signo) by its design but declares signed",
-        )
-
-
-def _validate_required_for(field: ExportFieldDefinition) -> None:
-    """Admit a legal-form requirement only where the export can evaluate it.
-
-    Only a producer-supplied header field is evaluated against the taxpayer at
-    render time; declaring the condition anywhere else would store a
-    requirement nothing enforces. An unconditionally required field needs no
-    condition, so declaring both is refused as contradictory.
-    """
-    if field.required_for is None:
-        return
-    if field.kind != CasillaFieldKind.HEADER:
-        raise RegistryValidationError(
-            f"export field {field.id!r} can declare required_for only on a header field, not {field.kind.value!r}",
-        )
-    if field.required:
-        raise RegistryValidationError(
-            f"export field {field.id!r} is required unconditionally and cannot also declare required_for",
-        )
-
-
-def _validate_field_semantic_payload(field: ExportFieldDefinition) -> None:
-    payloads = _field_semantic_payloads(field)
-    required = export_semantic_payload_axis(field.kind)
-    declared = tuple(axis for axis, value in payloads.items() if value is not None)
-    if failure := _semantic_payload_failure(field, required=required, declared=declared):
-        raise RegistryValidationError(failure)
-    if field.kind == CasillaFieldKind.FILLER and field.length is None:
-        raise RegistryValidationError(f"export field {field.id!r} filler must declare length")
-
-
-def _semantic_payload_failure(
-    field: ExportFieldDefinition,
-    *,
-    required: ExportSemanticPayloadAxis | None,
-    declared: tuple[ExportSemanticPayloadAxis, ...],
-) -> str | None:
-    if required is None:
-        if declared:
-            return (
-                f"export field {field.id!r} kind {field.kind.value!r} must not declare semantic payloads: "
-                f"{', '.join(axis.value for axis in declared)}"
-            )
-        return None
-    if declared != (required,):
-        declared_description = ", ".join(axis.value for axis in declared) if declared else "none"
-        return (
-            f"export field {field.id!r} kind {field.kind.value!r} must declare only {required.value}; "
-            f"declared {declared_description}"
-        )
-    return None
-
-
-def _validate_field_render_shape(field: ExportFieldDefinition) -> None:
-    field.validate_decimals()
-    validate_fixed_width_shape(field)
-    field.validate_value_policy()
-    field.validate_allowed_values()
-
-
-def _export_field_wire_shape(field: ExportFieldDefinition) -> tuple[str, str, str, bool, str | None]:
-    """Project one field's declared shape onto policy-constrained wire axes."""
-    return (
-        field.data_type,
-        field.padding,
-        field.justification,
-        field.decimals is not None,
-        field.date_format,
-    )
-
-
-#: The unsigned scaled-amount slot: ``decimal`` data, left-zero padded and
-#: right justified, carrying a declared decimal count and no date format. It is
-#: the SECOND shape a closed value domain may be declared on, beside the
-#: enumerated-digit integer above, and it carries no value policy of its own --
-#: the scale in ``decimals`` already fixes how a member reaches the wire.
-#:
-#: A domain is admissible here because the codec settles a member against the
-#: SEMANTIC value it is handed, before the scale is applied: the member is
-#: therefore spelled in whole units, and the bytes it produces are that unit
-#: value multiplied by ten to the power of ``decimals``, left-zero padded into
-#: the slot. Spelling a member as a wire digit run instead would mean cents on
-#: this shape and units on the enumerated one, and the same table would then
-#: hold two incompatible readings of the same string.
-_SCALED_AMOUNT_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
-    "decimal",
-    "left_zero",
-    "right",
-    True,
-    None,
-)
-
-
-#: The signed money slot, the THIRD shape a closed value domain may take. A
-#: design can type an amount signed and still mandate its value: modelo 390's
-#: "Nota 2: estas casillas deben estar rellenas a 0" slots are typed N. Refusing
-#: a domain on a signed field forced a choice between the sign the type column
-#: states and the zero the note mandates. Members are whole units, as on the
-#: scaled shape, and money spends two implied decimals of the width.
-_SIGNED_MONEY_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
-    "money",
-    "left_zero",
-    "right",
-    False,
-    None,
-)
-_MONEY_IMPLIED_DECIMALS: Final[int] = 2
-
-
-def _allowed_values_declaration_failure(
-    field: ExportFieldDefinition,
-    allowed_values: tuple[str, ...],
-) -> str | None:
-    if field.value_policy is not None and field.value_policy is not ExportValuePolicy.ENUMERATED_DIGITS:
-        return (
-            f"export field {field.id!r} allowed_values requires value_policy "
-            f"{ExportValuePolicy.ENUMERATED_DIGITS.value!r} or no value policy at all"
-        )
-    if not allowed_values or len(set(allowed_values)) != len(allowed_values):
-        return f"export field {field.id!r} allowed_values must be non-empty and unique"
-    if _allowed_values_shape_is_invalid(field):
-        return (
-            f"export field {field.id!r} allowed_values requires an unsigned right-justified "
-            "left-zero-padded fixed-width integer, the same shape scaled by a declared decimal count, "
-            "or a signed left-zero-padded money amount"
-        )
-    return None
-
-
-def _allowed_values_member_failure(
-    field: ExportFieldDefinition,
-    allowed_values: tuple[str, ...],
-) -> str | None:
-    length = field.length
-    if length is None:
-        return f"export field {field.id!r} allowed_values requires a declared length"
-    # A member is spelled in whole units, so on a scaled slot its digits share
-    # the width with the ``decimals`` the scale spends. Charging the member the
-    # full slot width would admit a domain whose own canonical wire form
-    # overflows the field it constrains.
-    scale = _MONEY_IMPLIED_DECIMALS if field.data_type == "money" else (field.decimals or 0)
-    unit_digit_budget = length - scale
-    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, unit_digit_budget))
-    if invalid:
-        return f"export field {field.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}"
-    return None
-
-
-def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
-    """Return the first contradiction in a closed export value domain."""
-    allowed_values = field.allowed_values
-    if allowed_values is None:
-        return None
-    if failure := _allowed_values_declaration_failure(field, allowed_values):
-        return failure
-    return _allowed_values_member_failure(field, allowed_values)
-
-
-def _allowed_values_shape_is_invalid(field: ExportFieldDefinition) -> bool:
-    """Return whether a field cannot render a closed value domain canonically."""
-    if field.kind in _VALUE_POLICY_UNRENDERABLE_KINDS or field.length is None:
-        return True
-    shape = _export_field_wire_shape(field)
-    if field.signed:
-        return field.value_policy is not None or shape != _SIGNED_MONEY_DOMAIN_SHAPE
-    if field.value_policy is ExportValuePolicy.ENUMERATED_DIGITS:
-        return shape != _VALUE_POLICY_SHAPES[ExportValuePolicy.ENUMERATED_DIGITS]
-    return shape != _SCALED_AMOUNT_DOMAIN_SHAPE
+        """Require an explicit scale on every decimal field."""
+        _export_field_validation.validate_export_field_decimals(self)
 
 
 class RecordDiscriminator(RegistryModel):
@@ -898,6 +703,7 @@ class ExportRecordDefinition(RegistryModel):
     def _repeat_matches_field_family(self) -> ExportRecordDefinition:
         if failure := self.repeat_field_family_failure():
             raise RegistryValidationError(failure)
+        validate_export_record_components(self)
         return self
 
 
@@ -1053,7 +859,7 @@ class ExportLayoutDefinition(RegistryModel):
     """Total-less 328-byte page-zero header emitted before this layout's records.
 
     Absent for every layout whose design declares no such header. Present where
-    the design prints one (Modelo 232's ``DR23200``; Modelo 390's page zero):
+    the design prints one (Modelo 390's page zero):
     the records remain the payload and the header is emitted as their prefix.
     A layout declaring both this and a filing envelope is refused, since no
     design composes a variable body behind a total-less page-zero header.

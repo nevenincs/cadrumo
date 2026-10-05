@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:eed59d1e71a44cab19ad660d57c0f0ae10164d9f009c0f8edecf87392443400b'
+modified: '2026-10-03'
+body_hash: 'sha256:e10ec2708ab3a4675a4f88e890b8c0ddcbd1f41f2c19ebd1fe9fe6458bb99006'
 related: []
 ---
 
@@ -27,8 +27,8 @@ catalogues were updated under the requested bucket.
 
 ## S217-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/invoices/_reconciliation.py src/aeat/application/invoices/test_reconciliation.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/invoices/test_reconciliation.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for S217.

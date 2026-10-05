@@ -3,15 +3,18 @@ tags:
   - '#audit'
   - '#shared-tree-coordination'
 date: '2026-08-08'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:497daa949a6372c2efd89feaaf5a4d8ee7d0c4f868b1e810a29a8835b6897881'
+body_hash: 'sha256:5154637069a6bb222ab061abb9e7c7074de30a94910c6473c3951d9e606fb738'
 related: []
 ---
-
 # `shared-tree-coordination` audit: bare whole-index sweeps and tree-wide fix verbs
 
+## Scope
+
 Two mechanisms observed repeatedly in one session, each producing a published state no author intended. Recorded because both are invisible in the artefacts they damage: the commit history reads as ordinary work, and the damaged attribution is only recoverable from an execution record.
+
+## Findings
 
 ### Bare whole-index commits publish other agents' mid-edit state
 
@@ -109,3 +112,7 @@ That is not a rationalisation. `FormulaExpression` declares `args: tuple[Formula
 **What follows.** The prohibition on untyped boundary mappings has a real exception where a strict recursive model meets a JSON transport, and this is it. The available remedies are each worse than the documented status quo: a parallel list-shaped projection of `FormulaExpression` would be a second definition of one concept, and relaxing strictness on `OutputSchema` would weaken the contract for every payload in the tree to type one field. The `dict[str, object]` is the deliberate escape hatch, and it is already documented at the site.
 
 The transferable part is procedural. A rule-shaped violation that has a rationale written beside it is not thereby cleared — prose asserting a property the code lacks is a known failure mode, and the rationale deserves testing rather than deference. But it deserves *testing*, not dismissal: the check here cost four lines and inverted the conclusion. Running it is cheaper than either believing the docstring or overriding it, and a nomination inherited from an earlier pass carries no more authority than the docstring it contradicts. Both are claims; only one of them was measured.
+
+## Recommendations
+
+For shared files, use explicit pathspecs and inspect added diff lines before committing; for repair verbs, review the preview’s file list; when a lock blocks publication, verify and queue small isolated changes without touching the lock.

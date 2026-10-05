@@ -198,6 +198,7 @@ async def test_add_commits_registry_and_audit_then_releases_complete_row(monkeyp
     recorder = _Recorder()
     key = _public_key()
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def emit(record: RecipientFingerprintRecord, *, bucket_id: str, repository: object) -> None:
         assert recorder.inside_commit
@@ -241,6 +242,7 @@ async def test_duplicate_and_missing_refusals_settle_none_without_a_write(monkey
     registry = _Registry((existing,))
     ports, _audit_calls = _factories(registry)
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     add_events = _Recorder()
     add_request = _request(
@@ -281,6 +283,7 @@ async def test_audit_failure_keeps_the_known_registry_commit_as_partial(monkeypa
     ports, _audit_calls = _factories(registry)
     recorder = _Recorder()
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
     def fail_audit(*_args: object, **_kwargs: object) -> None:
         assert recorder.inside_commit
@@ -323,6 +326,7 @@ async def test_list_is_complete_sorted_and_discloses_the_full_registered_record(
     ports, _audit_calls = _factories(registry)
     recorder = _Recorder()
     monkeypatch.setattr(operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     request = _request(
         operation.REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID,
         operation.ReviewPackageRecipientListRequest(profile_id=_PROFILE),

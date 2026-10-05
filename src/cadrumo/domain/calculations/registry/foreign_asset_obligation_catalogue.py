@@ -5,15 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ....core.aggregation import ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "foreign-asset obligation taxonomy"
@@ -89,47 +91,10 @@ class ForeignAssetObligationCatalogue:
         return frozenset(definition.token for definition in self.groups if definition.establishing_legal_ref in cited)
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("foreign-asset obligation taxonomy entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate foreign-asset obligation taxonomy key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("foreign-asset obligation taxonomy must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError(
-        "foreign-asset obligation catalogue requires an explicit authority operation or scope"
-    )
-
-
-def _selected_mapping_entries(
-    *,
-    effective_date: date,
-    authority: ValidatedRegistryAuthority | None,
-) -> Mapping[str, str]:
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_mapping_entries(effective_date)
-    return _resolve_entries(effective_date=effective_date, authority=selected)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def _catalogue(entries: Mapping[str, str]) -> ForeignAssetObligationCatalogue:
@@ -176,11 +141,6 @@ def _catalogue(entries: Mapping[str, str]) -> ForeignAssetObligationCatalogue:
     return catalogue
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_catalogue(effective_date: date) -> ForeignAssetObligationCatalogue:
-    return _catalogue(_bundled_mapping_entries(effective_date))
-
-
 def resolve_foreign_asset_obligation_catalogue(
     *,
     effective_date: date | None = None,
@@ -191,10 +151,7 @@ def resolve_foreign_asset_obligation_catalogue(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
-    coordinate = effective_date or today_madrid()
-    if authority is None and governed_facts_in_scope() is None:
-        return _bundled_catalogue(coordinate)
-    return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))
+    return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 __all__ = [

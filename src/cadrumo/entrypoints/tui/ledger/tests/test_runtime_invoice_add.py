@@ -12,12 +12,15 @@ from pydantic import BaseModel
 from textual.widgets import Button, Input, Static
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from cadrumo.application.invoices.catalogue_add_operation import (
+from cadrumo.application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
+    InvoiceAddBusinessPremisesLease,
     InvoiceAddLine,
     InvoiceAddRequest,
     InvoiceAddResult,
+)
+from cadrumo.application.invoices.catalogue_add_operation import (
     build_invoice_add_definition,
     build_invoice_add_registration,
 )
@@ -57,7 +60,7 @@ from cadrumo.entrypoints.tui.ledger.models import (
     LedgerInvoiceEntryV1,
     LedgerInvoiceLineEntryV1,
 )
-from cadrumo.entrypoints.tui.ledger.runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1
+from cadrumo.entrypoints.tui.ledger.runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
 from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_context,
     ledger_projection,
@@ -65,6 +68,8 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+
+from .....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 
 pytestmark = pytest.mark.hex_entrypoint
 
@@ -285,7 +290,7 @@ def _install_runtime(
     refused: bool = False,
     expire_after_result: bool = False,
 ) -> tuple[list[dict[str, object]], _Controller, list[tuple[UUID, UUID]]]:
-    from cadrumo.entrypoints.tui.ledger import runtime_invoice_add as bridge
+    from cadrumo.entrypoints.tui.operations import runtime_profile_session as bridge
 
     status_checks: list[tuple[UUID, UUID]] = []
 
@@ -525,3 +530,25 @@ async def test_invoice_entry_clears_private_form_when_the_add_door_reports_expir
         assert all(not field.value for field in screen.query(Input))
         assert str(screen.query_one("#ledger-invoice-summary", Static).render()).strip() == ""
         assert "PRIVATE-007" not in str(screen.query_one("#ledger-flow-status", Static).render())
+
+
+@pytest.mark.unit
+def test_the_tui_request_carries_the_business_premises_lease_facts() -> None:
+    """The TUI submits the lease facts on the same add request the CLI builds."""
+    entry = _entry().model_copy(
+        update={
+            "kind": InvoiceKind.ISSUED,
+            "arrendamiento_local_negocio": True,
+            "situacion_inmueble": "1",
+            "referencia_catastral": "9872023VH5797S0001WX",
+        },
+    )
+
+    request = _request_from_entry(_PROFILE_ID, entry)
+
+    assert request.business_premises_lease == InvoiceAddBusinessPremisesLease.from_domain(
+        BusinessPremisesLease(
+            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            referencia_catastral="9872023VH5797S0001WX",
+        )
+    )

@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#tui-interface'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:ca557d3a404411f8418372cba436834748e083ad2a6fdc3e36590ff4fb277e4a'
-related:
-  - "[[2026-08-11-tui-interface-plan]]"
+related: []
 ---
 
 # `tui-interface` reference: `settings override composition probes`

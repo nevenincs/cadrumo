@@ -29,6 +29,7 @@ from .....domain.calculations.registry.withholding_bindings import WithholdingOb
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..retencion_observations import RetencionObservationRepositoryAdapter
+from .percepcion_observation_authoring import replace_percepcion_observations
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -66,7 +67,8 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
         source_period = Period.from_year_and_code(2024, "2T")
         repository = PercepcionObservationRepositoryAdapter(objects=profile.repository)
         ports = PercepcionObservationPorts(repository=repository)
-        repository.replace_observations(
+        replace_percepcion_observations(
+            repository,
             modelo="111",
             filing_year=2024,
             period=source_period,

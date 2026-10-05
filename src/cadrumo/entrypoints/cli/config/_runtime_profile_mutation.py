@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....adapters.local_runtime.profile_mutations import (
     ProfileMutationCompletion,
     ProfileMutationRequest,
@@ -13,22 +13,17 @@ from ....adapters.local_runtime.profile_mutations import (
     run_profile_mutation,
 )
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ....application.runtime.deadline_budget import remaining_budget
 from ....application.user_profile.view_operation import ProfileViewPageKind
 from ....domain.user_profile.values import ProfileSetupState
 from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ....adapters.local_runtime.frontend_client import ProfileViewCollection, RuntimeFrontendClient
+    from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from ....adapters.local_runtime.frontend_client_contracts import ProfileViewCollection
 
 
 _MUTATION_TIMEOUT_SECONDS = 120.0
-
-
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
 
 
 def mutation_deadline() -> float:
@@ -41,7 +36,7 @@ def read_mutation_baseline(
 ) -> ProfileViewCollection:
     """Capture a complete current-format view with its canonical CAS pair."""
     try:
-        return client.read_profile_view((page_kind,), timeout=_remaining(deadline))
+        return client.read_profile_view((page_kind,), timeout=remaining_budget(deadline))
     except RuntimeFrontendRefusedError as error:
         raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason}) from error
 
@@ -55,7 +50,7 @@ def execute_profile_mutation(
 ) -> tuple[ProfileMutationCompletion, ProfileViewCollection]:
     """Require an exact post-settlement revision before disclosing its digest."""
     try:
-        completed = run_profile_mutation(client, request, timeout=_remaining(deadline))
+        completed = run_profile_mutation(client, request, timeout=remaining_budget(deadline))
     except ProfileMutationRunError as error:
         context = {
             "reason": error.reason,
@@ -67,7 +62,7 @@ def execute_profile_mutation(
         raise CliRefusedBoundaryError(error.reason, context=context) from error
 
     try:
-        current = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=_remaining(deadline))
+        current = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=remaining_budget(deadline))
         if current.record_revision != completed.projection.record_revision or (
             expected_setup_state is not None and current.setup_state is not expected_setup_state
         ):

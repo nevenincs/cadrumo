@@ -9,23 +9,21 @@ from uuid import UUID
 
 import typer
 
-from ...application.live.filed_data_capture import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from ...application.live.filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
 from ...application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FiledHistoryOperationRequest,
     FiledHistoryPublicResultV1,
     settled_filed_history_effect,
 )
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.json_contract import Notice
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_deadlines import provider_login_settlement_seconds
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,33 +48,7 @@ def _notice_from_projection(notice: object) -> Notice:
 
 def _presentation_report(projection: FiledHistoryPublicResultV1) -> FiledHistoryOnboardingRun:
     """Restore the canonical report helpers from the safe public projection."""
-    coordinates: set[tuple[str, int]] = set()
-    for pair in projection.pairs:
-        coordinate = (pair.modelo, pair.ejercicio)
-        if coordinate in coordinates:
-            raise ValueError("filed-history result contains duplicate pair coordinates")
-        coordinates.add(coordinate)
-        FiledHistoryPairOutcome(
-            modelo=pair.modelo,
-            ejercicio=pair.ejercicio,
-            signals=pair.signals,
-            walk_attempted=pair.walk_attempted,
-            walk_completed=pair.walk_completed,
-            row_count=pair.row_count,
-            reached_count=pair.reached_count,
-            captured_count=pair.captured_count,
-            refused=pair.refused,
-            failure_type=pair.failure_type,
-            failure_message=pair.failure_message,
-        ).require_consistent()
-    # The bulk acquisition can walk rectangular extras outside discovery; the
-    # global counts must retain those actual effects rather than equal this join.
-    if (
-        projection.captured_count > projection.reached_count
-        or sum(pair.captured_count for pair in projection.pairs) > projection.captured_count
-        or sum(pair.reached_count for pair in projection.pairs) > projection.reached_count
-    ):
-        raise ValueError("filed-history global counts contradict its pair outcomes")
+    _require_filed_history_pairs(projection)
     report = FiledHistoryOnboardingRun(
         pairs=tuple(
             FiledHistoryPairOutcome(
@@ -140,6 +112,7 @@ def read_filed_history_for_cli(
         request_version=1,
         result_version=1,
         timeout=120,
+        settlement_timeout=provider_login_settlement_seconds(after_login=120),
     )
     try:
         report = _presentation_report(completed.projection)
@@ -155,11 +128,36 @@ def read_filed_history_for_cli(
         ):
             raise ValueError("filed-history result disagrees with its settled receipt")
     except Exception:
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-            refusal_code=completed.refusal_code,
-        ) from None
+        raise invalid_completion_error(completed) from None
     return FiledHistoryRead(completion=completed, report=report)
+
+
+def _require_filed_history_pairs(projection: FiledHistoryPublicResultV1) -> None:
+    """Validate unique pair coordinates and outcomes before reconciling global capture counts."""
+    coordinates: set[tuple[str, int]] = set()
+    for pair in projection.pairs:
+        coordinate = (pair.modelo, pair.ejercicio)
+        if coordinate in coordinates:
+            raise ValueError("filed-history result contains duplicate pair coordinates")
+        coordinates.add(coordinate)
+        FiledHistoryPairOutcome(
+            modelo=pair.modelo,
+            ejercicio=pair.ejercicio,
+            signals=pair.signals,
+            walk_attempted=pair.walk_attempted,
+            walk_completed=pair.walk_completed,
+            row_count=pair.row_count,
+            reached_count=pair.reached_count,
+            captured_count=pair.captured_count,
+            refused=pair.refused,
+            failure_type=pair.failure_type,
+            failure_message=pair.failure_message,
+        ).require_consistent()
+    # The bulk acquisition can walk rectangular extras outside discovery; the
+    # global counts must retain those actual effects rather than equal this join.
+    if (
+        projection.captured_count > projection.reached_count
+        or sum(pair.captured_count for pair in projection.pairs) > projection.captured_count
+        or sum(pair.reached_count for pair in projection.pairs) > projection.reached_count
+    ):
+        raise ValueError("filed-history global counts contradict its pair outcomes")

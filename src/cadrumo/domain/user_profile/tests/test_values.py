@@ -12,13 +12,8 @@ from ....core.hashing import content_hash_hex
 from ...calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..errors import UserProfileValidationError
-from ..values import (
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-    UserProfileSnapshot,
-    create_user_profile_record,
-)
+from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord, create_user_profile_record
+from .snapshot_factory import create_user_profile_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -154,13 +149,13 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
         updated_at=created_at,
     )
 
-    first = UserProfileSnapshot.from_profile(
+    first = create_user_profile_snapshot(
         profile,
         context=_CREATE_CONTEXT,
         snapshot_id="snapshot-1",
         created_at=created_at,
     )
-    second = UserProfileSnapshot.from_profile(
+    second = create_user_profile_snapshot(
         profile.model_copy(update={"facts": tuple(reversed(profile.facts))}),
         context=_CREATE_CONTEXT,
         snapshot_id="snapshot-2",
@@ -171,7 +166,7 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     assert [fact.path for fact in first.facts] == ["identity.tax_id", "usage_ratios.business_ratio"]
 
     with pytest.raises(UserProfileValidationError, match="cannot snapshot an incomplete profile record"):
-        UserProfileSnapshot.from_profile(
+        create_user_profile_snapshot(
             profile.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}),
             context=_CREATE_CONTEXT,
             snapshot_id="snapshot-3",
@@ -193,13 +188,13 @@ def test_snapshot_hash_is_canonical_for_duplicate_same_window_facts() -> None:
         updated_at=created_at,
     )
 
-    first = UserProfileSnapshot.from_profile(
+    first = create_user_profile_snapshot(
         profile,
         context=_CREATE_CONTEXT,
         snapshot_id="snapshot-1",
         created_at=created_at,
     )
-    second = UserProfileSnapshot.from_profile(
+    second = create_user_profile_snapshot(
         profile.model_copy(update={"facts": tuple(reversed(facts))}),
         context=_CREATE_CONTEXT,
         snapshot_id="snapshot-2",

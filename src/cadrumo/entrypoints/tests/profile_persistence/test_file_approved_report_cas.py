@@ -182,7 +182,7 @@ def _file(repos: Repos, work_unit, draft, report_id: str, *, race: str | None = 
             operation=operation,
         )
         gate = workflow_gate(revision=draft, work_unit=work_unit, clock=clock, operation=operation)
-        ports = build_filing_action_ports(bucket_id=work_unit.bucket_id)
+        ports = build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation)
         objects = secure_object_repository_for_bucket(work_unit.bucket_id)
         if race == "report":
             ports = replace(

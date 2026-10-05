@@ -12,7 +12,7 @@ import typer
 
 from ....application.ledger.models import ManualLedgerTransactionPatch
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
-from ....application.ledger.update_operation import (
+from ....application.ledger.update_contracts import (
     LEDGER_UPDATE_OPERATION_DEFINITION_ID,
     LedgerUpdateOperationResult,
     LedgerUpdateRequest,
@@ -22,7 +22,7 @@ from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.transactions.enums import TransactionDirection
 from .. import runtime_ledger_update as bridge
 from ..errors import CliRefusedBoundaryError
-from ..runtime_registered_operation import RegisteredOperationCompletion
+from ..registered_operation_contracts import RegisteredOperationCompletion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

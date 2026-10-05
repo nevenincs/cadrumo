@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:cbd963e48c5cefa1917f02cf8b194384da1c7a6ef72046ef8cf9fc74903f47a7'
+modified: '2026-10-03'
+body_hash: 'sha256:420df6e7a5349bb188680b2ccdf4507e1be0a15176050e78e53a22b089d540a8'
 related: []
 ---
 
@@ -24,8 +24,8 @@ Unsupported rounding codes and missing scalar-parameter cases previously interpo
 
 ## S256-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/storage/calc_sheets/_engine.py src/aeat/application/storage/calc_sheets/test_engine_hardening.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/storage/calc_sheets/test_engine_hardening.py src/aeat/test_calc_sheets_error_hierarchy.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-154` as `remote-mirror` with calc-sheets engine text and error surfaces centralized.

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-fragment-headroom-post-splits'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:338b13c5cc4e111a080d9d3bcee10ab8ba97ccd34741d75769bbe2031084fd6a'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:e06c9f79702a93da4c95f937158e97a4a242d8f5119b4e9095d7408a9a8606df'
+related: []
 ---
 
 # `registry-fragment-headroom-post-splits` audit: `Post-split registry fragment headroom audit`
@@ -24,10 +23,10 @@ fragments, row widths, threshold counts, and the next pressure substrate.
 - **PASS:** The residual pressure split campaign removed every TOML file above
   1,500 lines. The prior P01 audit had nine files at or above 1,500 lines.
 - **PASS:** Only one TOML file remains at or above 1,200 lines:
-  `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/constructs.part-002.toml`
+  the retired data file
   at 1,465 lines.
 - **WATCH:** The next largest file is M123
-  `src/aeat/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml`
+  the retired data file
   at 1,118 lines. P04.S27 already audited this and found no immediate split
   need.
 - **WATCH:** M303 is now below 900 lines. Its largest files are the two
@@ -50,14 +49,14 @@ fragments, row widths, threshold counts, and the next pressure substrate.
 
 | Lines | Path |
 | ---: | --- |
-| 1465 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/constructs.part-002.toml` |
-| 1118 | `src/aeat/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml` |
-| 900 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/constructs.part-001.toml` |
-| 899 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/constructs.part-001b.toml` |
-| 898 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/export/0003-export-layout.part-001.toml` |
-| 898 | `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/export/0003-export-layout.part-001.toml` |
-| 885 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0010-modelo-200-page-007.toml` |
-| 872 | `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0075-modelo-200-page-053.toml` |
+| 1465 | the retired data file |
+| 1118 | the retired data file |
+| 900 | the retired data file |
+| 899 | the retired data file |
+| 898 | the retired data file |
+| 898 | the retired data file |
+| 885 | the retired data file |
+| 872 | the retired data file |
 
 ## Threshold counts
 

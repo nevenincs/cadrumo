@@ -16,16 +16,15 @@ import pytest
 
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.storage.custody.automation_delivery import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
@@ -74,11 +73,12 @@ from cadrumo.application.user_profile.access_contracts import (
     DisclosureCategory,
     DisclosurePermission,
     LoginEligibility,
+    OsLockState,
     OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.operations import (
+from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationProjection,
 )
@@ -91,6 +91,7 @@ from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
 
@@ -108,14 +109,14 @@ class LoginObservation:
     owner: str
     login_id: str = "synthetic-native-login"
     active: bool = True
-    locked: bool = False
+    lock_state: OsLockState = OsLockState.UNLOCKED
 
     def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
         return OsLoginContext(
             login_id=self.login_id,
             os_owner_id=self.owner,
             active=self.active,
-            locked=self.locked,
+            lock_state=self.lock_state,
             unattended=LoginEligibility.ELIGIBLE if self.active else LoginEligibility.INELIGIBLE,
             credential_facilities=credential_facilities,
         )
@@ -173,7 +174,10 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
             capture_login=lambda _channel: native_login,
             secret_store=lambda: enrollment.native,
         )
-        server = RuntimeTransportServer(endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot)
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
         clients: list[VerifiedRuntimeConnection] = []
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
@@ -269,7 +273,7 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
                 assert isinstance(still_human, RuntimeProfileStatus) and still_human.status.denial is None
                 independent = login(other, profile, "password", PROFILE_INPUT.encode())
                 assert isinstance(independent, RuntimeProfileStatus) and independent.status.denial is None
-                native_login.locked = True
+                native_login.lock_state = OsLockState.LOCKED
                 retired = human.session(
                     RuntimeSessionRequest(
                         action="session_status", request_id=uuid4(), profile_id=profile, session_id=human_id
@@ -350,7 +354,7 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
         )
         barrier = ProjectionWriteBarrier()
         projected_revision = None
-        server = RuntimeTransportServer(
+        server = RetainedRuntimeTransportServer(
             PausedProjectionListener(endpoint, barrier),
             product_version="test",
             stop=stop,
@@ -659,3 +663,66 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                 assert persisted.record_revision == projected_revision
         finally:
             close_active_bucket_session()
+
+
+def test_fresh_native_host_reconciles_exact_surviving_denial_before_api_admission(tmp_path: Path) -> None:
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsRuntimeEndpoint(storage_root=root)
+    installation = runtime_installation(
+        storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+    )
+    with administration_subject(
+        tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
+    ) as enrollment:
+        request_id = uuid4()
+        enrollment.service.request(request_id, enrollment.proposal)
+        enrollment.approve(request_id)
+        request = enrollment.store.enrollment_state().requests[0]
+        secret = enrollment.owner.delivery.endpoint.possession(request)
+        assert secret is not None
+        before_revision = enrollment.store.enrollment_state().revision
+        profile = enrollment.store.binding.profile_id
+        change = AutomationDenial(request_id=uuid4(), binding=enrollment.store.binding, kind=AutomationDenialKind.ALL)
+        enrollment.native.unavailable = True
+        assert enrollment.store.deny(change).cleanup_pending
+        enrollment.native.unavailable = False
+        close_active_bucket_session()
+        stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
+        profiles = RuntimeProfileConnections(
+            storage_root=root,
+            storage_identity=endpoint.storage_identity,
+            runtime_boot_id=boot,
+            stop=stop,
+            capture_login=lambda _channel: native_login,
+            secret_store=lambda: enrollment.native,
+        )
+        profiles.prepare_registry()
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
+        clients: list[VerifiedRuntimeConnection] = []
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            running = pool.submit(server.serve)
+            try:
+                assert server.ready.wait(3)
+                api = connect(endpoint)
+                clients.append(api)
+                denied = login(api, profile, "api_key", secret.get_secret_value())
+                assert isinstance(denied, RuntimeAccessRefusal)
+                host = profiles._profiles[profile]
+                # The actual host recovery retained the original request and
+                # advanced protected state instead of merely clearing a marker.
+                state = host.store.enrollment_state()
+                assert state.revision > before_revision
+                completed = host.store.deny(change)
+                assert completed.request_id == change.request_id
+                assert completed.revision == state.revision
+                assert completed.access_denied and not completed.cleanup_pending
+                assert host.store.reconcile_denial() is None
+            finally:
+                for client in clients:
+                    client.close()
+                stop.set()
+                running.result(timeout=12)
+                endpoint.close()

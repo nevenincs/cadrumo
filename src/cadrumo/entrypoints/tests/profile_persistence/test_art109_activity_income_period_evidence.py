@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
@@ -284,7 +284,7 @@ def _verify_art109_findings(
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -295,7 +295,7 @@ def _verify_art109_findings(
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     return [
         finding
         for finding in report.findings

@@ -19,12 +19,12 @@ from cadrumo.application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
+from cadrumo.application.auth.operator_result_projections import incomplete_auth_configuration_verdict
 from cadrumo.application.auth.operator_results import AuthConfigureResult
 from cadrumo.application.auth.protocols import BrowserSessionPort
 from cadrumo.application.auth.provider_configure_operation_access import (
     AUTH_CONFIGURE_RESULT_SCHEMA_ID,
-    AuthConfigureOperationProjection,
-    AuthConfigureResultSnapshot,
+    AuthConfigurePublicResultV2,
     project_auth_configure_result,
 )
 from cadrumo.application.auth.tests._operator_probe_fakes import fake_operator_probe_ports
@@ -38,7 +38,6 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from cadrumo.application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -49,7 +48,6 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from cadrumo.core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -199,40 +197,56 @@ def test_configure_result_projector_binds_exact_subject_effect_and_exposes_only_
 
     projected = project_auth_configure_result(result, _receipt())
 
-    assert isinstance(projected, AuthConfigureOperationProjection)
+    assert isinstance(projected, AuthConfigurePublicResultV2)
     assert projected.profile_id == _PROFILE
-    assert projected.result.to_result() == result
+    assert projected.provider is AuthProviderKind.CERTIFICATE
+    assert projected.changed is True
+    assert projected.certificate_file_provided is True
     encoded = projected.model_dump_json().casefold()
+    # The certificate's location never crosses the boundary, only that one was given.
+    assert "aeat-certificate" not in encoded
+    assert "synthetic" not in encoded
     assert "password" not in encoded
     assert "cookie" not in encoded
     assert "token" not in encoded
     assert "private_key" not in encoded
-    assert set(AuthConfigureOperationProjection.model_fields) == {"profile_id", "result"}
-    assert set(AuthConfigureResultSnapshot.model_fields) == {
+    assert set(AuthConfigurePublicResultV2.model_fields) == {
+        "result_version",
+        "profile_id",
         "provider",
-        "file",
+        "changed",
+        "certificate_file_provided",
         "complete",
-        "incomplete_reason",
         "profile_tax_id_present",
         "provider_identity_present",
         "identity_alignment",
-        "identity_alignment_detail",
-        "precondition_verdict",
     }
 
     other_projected = project_auth_configure_result(result, _receipt(profile_id=_OTHER_PROFILE))
-    assert isinstance(other_projected, AuthConfigureOperationProjection)
+    assert isinstance(other_projected, AuthConfigurePublicResultV2)
     assert other_projected.profile_id == _OTHER_PROFILE
 
     mismatches = (
         _receipt(definition_id="auth.session.acquire"),
         _receipt(condition=OperationTerminalCondition.FAILED),
-        _receipt(effect=OperationEffect.NONE),
         _receipt(subject_ref="not-a-profile-subject"),
     )
     for receipt in mismatches:
         with pytest.raises(ValueError, match="invalid provider configuration"):
             project_auth_configure_result(result, receipt)
+    with pytest.raises(ValueError, match="effect does not match"):
+        project_auth_configure_result(result, _receipt(effect=OperationEffect.NONE))
+
+
+def test_unchanged_configuration_projects_only_with_no_effect() -> None:
+    unchanged = AuthConfigureResult(provider="clave_permanente", changed=False, identity_alignment="not_applicable")
+
+    projected = project_auth_configure_result(unchanged, _receipt(effect=OperationEffect.NONE))
+
+    assert isinstance(projected, AuthConfigurePublicResultV2)
+    assert projected.changed is False
+    with pytest.raises(ValueError, match="effect does not match"):
+        project_auth_configure_result(unchanged, _receipt(effect=OperationEffect.UPDATED))
 
 
 class _SecretBearingConfigureResult(AuthConfigureResult):
@@ -250,30 +264,33 @@ def test_configure_result_projector_refuses_secret_bearing_subclasses() -> None:
 
 
 def test_configure_result_projection_preserves_precondition_evidence_through_wire_schema() -> None:
-    verdict = PreconditionVerdict(
-        failed_condition_id="auth.clave_movil.identity_aligned",
-        evidence=(
-            ConditionEvidence(
-                condition_id="auth.clave_movil.identity_aligned",
-                evidence_id="auth.configure.clave_movil.identity_alignment",
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                values={"identity_alignment": "clave_identity_missing", "profile_tax_id_present": True},
-            ),
-        ),
-        conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-    )
     result = AuthConfigureResult(
         provider="clave_movil",
         complete=False,
+        profile_tax_id_present=True,
         identity_alignment="clave_identity_missing",
-        precondition_verdict=verdict,
+        precondition_verdict=incomplete_auth_configuration_verdict(
+            provider="clave_movil",
+            certificate_file_provided=False,
+            profile_tax_id_present=True,
+            provider_identity_present=False,
+            identity_alignment="clave_identity_missing",
+        ),
     )
 
     projected = project_auth_configure_result(result, _receipt())
-    restored = AuthConfigureOperationProjection.model_validate_json(projected.model_dump_json(), strict=True)
+    restored = AuthConfigurePublicResultV2.model_validate_json(projected.model_dump_json(), strict=True)
 
-    assert restored.result.to_result() == result
+    assert restored == projected
+    verdict = restored.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
+    assert verdict.evidence[0].values == {
+        "identity_alignment": "clave_identity_missing",
+        "profile_tax_id_present": True,
+        "provider": "clave_movil",
+        "provider_identity_present": False,
+    }
 
 
 @pytest.mark.asyncio

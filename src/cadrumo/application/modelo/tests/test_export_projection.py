@@ -7,13 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.observations_repository import PriorDomiciliationElectionProjection
 from ....application.operations.models import OperationIdentity, OperationTerminalReceipt
-from ....application.operations.registry import (
-    OperationDefinition,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ....application.operations.operation_definition import OperationDefinition
+from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
@@ -35,11 +34,11 @@ from ..export_projection import (
 )
 from ..operation_definitions import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    ModeloExportSettledResult,
     build_modelo_export_definition,
     build_modelo_export_registration,
 )
 from ..review_package_signing_ports import ReviewPackageSigningKeypairCapability
+from ..work_export_contracts import ModeloExportSettledResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -167,7 +166,9 @@ def test_fichero_boe_receipt_preserves_neutral_optional_provenance() -> None:
     assert restored.software_identity_grade is None
 
 
-def _unused_ports_factory(*, bucket_id: str, m303_rectificativa_taxpayer_tax_id: SubjectTaxId) -> ModeloExportPorts:
+def _unused_ports_factory(
+    *, bucket_id: str, m303_rectificativa_taxpayer_tax_id: SubjectTaxId, operation: PinnedAuthorityOperation
+) -> ModeloExportPorts:
     del bucket_id, m303_rectificativa_taxpayer_tax_id
     raise AssertionError("registration must not construct export ports")
 

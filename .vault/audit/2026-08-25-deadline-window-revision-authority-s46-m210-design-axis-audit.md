@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5654d4c18c51ca6a13d4bc2c4ca8121e7c9ab552c4e02563c2e6503f144b9016'
+body_hash: 'sha256:f9eeddaf226882ba7b0770888d96407aee9315999c49fba9b3687877ad713f37'
 related: []
 ---
 
@@ -13,10 +13,7 @@ related: []
 
 ## Scope
 
-Formal bounded review of W02.P05.S46 against the accepted M210 plazo-keying,
-registry temporal-coverage, and deadline-window revision-authority decisions. The
-review covered only the S46 changes in `src/cadrumo/_data/registry/aeat/legal/irnr.toml`
-and `src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`.
+Formal bounded review of W02.P05.S46 against the accepted M210 plazo-keying, registry temporal-coverage, and deadline-window revision-authority decisions.
 
 The review checked source fidelity for the M210 2022 design's devengo scope,
 preservation of the four-year refund close, the generalized design-axis classifier,

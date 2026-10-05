@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ced7747e7fb60ccd459d0fa44535dadfe0fcf9a5caff5941780e1aa5022f692'
+body_hash: 'sha256:6d92007867c321fe0bf76659a5dbbb4f7ff61647afe545c7babb6281e5ccda07'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]"
 ---
@@ -20,7 +20,7 @@ Audit the source-to-authority boundary and runtime loading contract before plann
 
 ### profile-schema-enrollment | high | Compilation reads a schema that publication does not identify or ship
 
-The profile facts schema is an ambient compiler dependency and a separate runtime TOML input. It is absent from both publication receipt roots and the authority payload. The obsolete fingerprint path does not point at its real sibling location. A custom candidate can therefore validate against the checkout's profile schema, and a schema edit can leave authority identity unchanged. Evidence: `dev/registry/compiler/validator.py:422`, `dev/registry/compiler/authority.py:110`, `dev/registry/compiler/loader_fingerprints.py:232`, `dev/registry/pipeline/authority_publication.py:367`, `src/cadrumo/domain/user_profile/loader.py:39`. This confirms the missing enrollment for profile-fact declarations; the blanket claim that governed tax facts are absent is incorrect.
+The profile facts schema is an ambient compiler dependency and a separate runtime TOML input. It is absent from both publication receipt roots and the authority payload. The obsolete fingerprint path does not point at its real sibling location. A custom candidate can therefore validate against the checkout's profile schema, and a schema edit can leave authority identity unchanged. This confirms the missing enrollment for profile-fact declarations; the blanket claim that governed tax facts are absent is incorrect.
 
 ### eager-public-contract | high | The public authority shape requires wholesale typed reconstruction
 
@@ -32,7 +32,7 @@ Typed model validation already reads facts from an explicitly scoped candidate t
 
 ### admission-timing | high | Lazy loading cannot claim unchanged eager semantic refusal timing
 
-Current tests reject even digest-consistent malformed unused typed payloads at open. Selective hydration defers those semantic checks until access. Whole-file digest verification can preserve immediate raw-byte corruption detection, but it cannot authenticate a rewritten artifact whose unsigned digests were all recomputed. Evidence: `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py:264`. The ADR must explicitly distinguish full publication validation, admission integrity and component-use validation; silently deleting negative tests would weaken the contract without a decision.
+Current tests reject even digest-consistent malformed unused typed payloads at open. Selective hydration defers those semantic checks until access. Whole-file digest verification can preserve immediate raw-byte corruption detection, but it cannot authenticate a rewritten artifact whose unsigned digests were all recomputed. The ADR must explicitly distinguish full publication validation, admission integrity and component-use validation; silently deleting negative tests would weaken the contract without a decision.
 
 ### generation-lifetime | high | SQLite introduces long-lived handles that fixed-path replacement does not address
 
@@ -44,11 +44,11 @@ Direct model/catalogue/fact traversal occurs in filing, calculation, profile gro
 
 ### package-proof | medium | Existing archive tests permit the separate profile schema and pin JSON paths
 
-Packaging excludes the AEAT authoring tree but not the sibling profile schema. Format-specific includes and installed tests require coordinated migration. Evidence: `pyproject.toml:269`, line 305, `src/cadrumo/tests/test_wheel_content_boundary.py:309`, `dev/packaging/tests/test_installed_oracles.py:450`. Proof must cover profile operations as well as model/fact queries with authoring resources absent.
+Packaging excludes the AEAT authoring tree but not the sibling profile schema. Format-specific includes and installed tests require coordinated migration. Proof must cover profile operations as well as model/fact queries with authoring resources absent.
 
 ### performance-acceptance | medium | The current benchmark supplies observations without cutover criteria
 
-The benchmark measures eager hydration and warm access but does not expose component reads, cache memory or enforce comparative cutover targets. Evidence: `dev/registry/benchmark_authority.py:14`. The next plan needs paired generation-equivalent workloads, post-import authority costs, separate total startup, incremental memory and explicit enumeration behavior. Previous measurements remain historical evidence, not measurements of SQLite.
+The benchmark measures eager hydration and warm access but does not expose component reads, cache memory or enforce comparative cutover targets. The next plan needs paired generation-equivalent workloads, post-import authority costs, separate total startup, incremental memory and explicit enumeration behavior. Previous measurements remain historical evidence, not measurements of SQLite.
 
 ### filing-default-context | high | Default export and verification select a schema without the draft coordinate
 
@@ -60,7 +60,7 @@ The ownership validator misses `rogue/nested/0001-omitted.toml`; an isolated cal
 
 ### profile-envelope | medium | Unknown root tables are silently ignored
 
-A temporary real profile-schema copy with an unknown top-level table passed the loader. Evidence: `src/cadrumo/domain/user_profile/loader.py:86`. The development parser must validate the entire envelope before projecting the typed schema; publication must additionally validate declared profile legal references at the existing legal-catalogue boundary.
+A temporary real profile-schema copy with an unknown top-level table passed the loader. The development parser must validate the entire envelope before projecting the typed schema; publication must additionally validate declared profile legal references at the existing legal-catalogue boundary.
 
 ### provider-enrollment-contract | medium | Dependency declarations are not executable receipts
 

@@ -19,20 +19,6 @@ flows:
     select_unknown: 'Choose one of the accepted values: %{choices}.'
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
-  login:
-    cancel_button: Cancel
-    intro: Choose the profile to open and type the password that protects it. Nothing
-      is unlocked until the password is accepted.
-    password_hint: The password you chose when this profile was created. It cannot
-      be reset.
-    password_label: Password
-    profile_label: Profile
-    refusal:
-      password_required: Type the password for this profile.
-      unlock_failed: The profile could not be opened.
-    section: Profile and password
-    title: Log in to your profile
-    unlock_button: Log in
   manager:
     action:
       auth_clave_movil_route_app_request: Request in app
@@ -87,27 +73,19 @@ flows:
     namespace_detail: detail {number}
     onboarding:
       continue: Continue
-      done: Setup is complete. Continue to the workbench, or keep adding optional
-        detail below.
       finish: Finish setup
       heading: Set up your profile
-      intro: Only the answers needed to prepare your declarations are asked here.
-        Press Continue and answer each question; everything else is optional and can
-        wait.
       progress: '{answered} of {total} required answers'
       question: Question {number} of {total} · {section}
-      ready: All required answers are in. Finish setup to start preparing your declarations.
       required_only: Required only
       search_empty: No setting matches “{query}”.
       search_placeholder: Search settings
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} required
+      section_pending: '! {title} - required still missing: {missing}'
       sources_summary: Fill the profile from AEAT records or your own documents instead
         of typing it.
       sources_title: Import data (optional)
-      step: 'Step {step} of {steps}: {section}'
-      step_finish: 'Step {step} of {steps}: finish setup'
-      to_workbench: Continue to the workbench
+      to_workbench: Continue to Home
     plantilla_media:
       average_workforce: Average workforce
       list_failed: The declared years could not be read. Try again.
@@ -128,6 +106,53 @@ flows:
       remove: Remove row
       remove_confirm: Remove row %{row} from section %{section}?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Secure profile created
+
+        ✓ Required details saved
+
+        ✓ Setup confirmed'
+      answer_required: Complete required
+      edit_intro: Open a section, then select a field to edit it. * Required · Other
+        fields are optional. Each change is saved immediately.
+      get_data_copy: Optional. Import available records, or skip this step and enter
+        the required details yourself. You do not need AEAT access to finish setup.
+      get_data_title: Get data
+      nav_get_data: Import
+      nav_overview: Start
+      nav_ready: Ready
+      nav_required: Required
+      nav_review: Review
+      overview_checklist: '✓ Secure profile created
+
+        ○ Import data, or skip it
+
+        ○ Complete required details
+
+        ○ Review and finish'
+      overview_copy: Your secure profile is created. We will ask only for the details
+        setup needs, then let you review them before finishing. You can leave and
+        return; each answer is saved as you go.
+      overview_title: Overview
+      previous: Previous
+      ready_copy: Well done! Your profile setup is complete and your answers are saved.
+        Continue to Home to start preparing a declaration. You can edit your profile
+        at any time.
+      ready_title: Ready
+      required_complete: Required details complete
+      required_copy: '{missing} required answers left. Continue guides you through
+        them. Fields marked * are required; optional details can wait.'
+      required_title: Required
+      review_copy: Check the details you saved. Expand a section to edit it. Optional
+        fields can stay blank. Finish setup confirms this profile is ready to use;
+        each declaration has its own checks.
+      review_missing: '{missing} required answers still need attention. Continue takes
+        you to them.'
+      review_saved: ✓ All required answers saved. Optional details do not block completion.
+      review_title: Review
+      skip_import: Skip import
+      start: Start setup
+      step: Step {step} of {steps} · {remaining} remaining
     title: 'Profile: {profile}'
   modelo_review:
     filter:
@@ -136,9 +161,8 @@ flows:
           atribucion_member: Income-attribution member
           bienes_inversion_regularizacion: Investment-goods adjustment
           borrador: AEAT draft
-          collectible_invoice: Customer invoice
+          collectible_invoice: Sales invoices
           design_constant: Design constant
-          donativo_donor: Donation donor
           foreign_asset: Foreign asset
           gasto193_contributor: Expenses per contribuyente (modelo 193)
           inventory: Inventory
@@ -146,24 +170,22 @@ flows:
           iva_wallet_decision: VAT wallet decision
           ledger_impatriado_income_aggregation: Inbound-expatriate income totals
           ledger_irnr_income_aggregation: Non-resident income totals
-          ledger_iva_aggregation: VAT ledger totals
-          ledger_oss_aggregation: OSS ledger totals
-          ledger_renta_gastos_estimacion_directa_aggregation: Direct-estimation expense
-            ledger totals
-          ledger_renta_gastos_pago_fraccionado_aggregation: Instalment-payment expense
-            totals
-          ledger_renta_income_aggregation: Income ledger totals
-          ledger_transaction: Ledger transaction
+          ledger_iva_aggregation: VAT records
+          ledger_oss_aggregation: OSS sales records
+          ledger_renta_gastos_estimacion_directa_aggregation: Expense records (direct
+            estimation)
+          ledger_renta_gastos_pago_fraccionado_aggregation: Expense records
+          ledger_renta_income_aggregation: Income records
+          ledger_transaction: Record
           m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
           m347_third_party_operation: Third-party operation
+          m349_intracommunity_operation: Intra-community operation
           manual_input: Manual input
           payable_invoice: Supplier invoice
           previous_filing: Previous filing
           profile: Profile
           prorrata_regularizacion: Pro-rata adjustment
           purchase_invoice_evidence: Purchase-invoice evidence
-          refund_operation: Refund operation
-          related_party_operation: Related-party operation
           relation_prefill: Related filing
           retenciones_aggregation: Withholding totals
           withholding: Withholding record
@@ -178,6 +200,7 @@ flows:
           cross_period_dependency_unclean: Prior-period dependency not clean
           missing_required_casilla: Missing required casilla
           reconciliation_mismatch: Reconciliation mismatch
+          stale_calculation: Calculation out of date
         finding_severity:
           blocking: Blocking
           warning: Warning
@@ -213,116 +236,10 @@ flows:
           alternate_binding: Alternate binding
           formula_binding: Formula binding
           primary_binding: Primary binding
-  modelo_select:
-    column:
-      filing_year: Filing year
-      modelo: Modelo
-      name: Name
-      period: Period
-      state: State
-  modelo_workspace_filing:
-    column:
-      capability: Capability
-      disposition: Disposition
-    handoff: Filing happens outside this application. Build, verify and export here,
-      then file with the AEAT yourself.
-    state_not_carried: This page does not show filing status or filing history.
-    title: Filing - modelo {modelo}
-    why:
-      draft_structural: Cadrumo cannot tell in advance whether a filing draft will
-        build; it is checked when you build one.
-    why_line: '{capability}: {why}'
-  modelo_workspace_inputs:
-    column:
-      address: Address
-      input_kind: Declared input kind
-      label: Label
-      value: Value
-    empty: This revision declares no materialized values.
-    input_kind_unmeasured: not measured
-    page_bounded: Showing {shown} of a larger set; the remaining rows are not reachable
-      from this reading.
-    section:
-      unsectioned: Unsectioned
-    title: Inputs - modelo {modelo}
-    values_unmeasured: This page shows the form's layout only; it does not show calculated
-      values yet.
   modelo_workspace_overview:
-    actions_none: No suggested next step can be addressed from this workspace yet.
-    actions_suggested: 'Suggested next steps: {actions}'
     column:
-      capability: Capability
-      disposition: Disposition
       field: Field
       value: Value
-    label:
-      filing_year: Filing year
-      law_selected: Law-selected revision
-      modelo: Modelo
-      period: Period
-      requested_assertion: Requested revision assertion
-      review_status: Review status
-      stored_assertion: Stored revision assertion
-      work_state: Work state
-      work_unit: Work unit
-    section:
-      address: Address
-      capabilities: Capabilities
-      revision: Revision coordinates
-    title: Overview - modelo {modelo}
-    value:
-      no_work_unit: no work unit yet
-  modelo_workspace_provenance:
-    column:
-      resolver: Resolver
-      source_ref: Source reference
-      subject: Subject
-    empty: This calculation recorded no contributing sources.
-    not_applicable: This page does not show where the values came from yet.
-    page_bounded: Showing {shown} of a larger set. One source can contribute many
-      rows, so the row count does not indicate completeness.
-    title: Provenance - modelo {modelo}
-    value:
-      unattributed: unattributed
-  modelo_workspace_results:
-    column:
-      casilla: Casilla
-      formula: Formula
-      value: Value
-    empty: This calculation produced no computed casillas.
-    not_applicable: 'This page cannot show calculated results yet: it cannot tell
-      calculated boxes apart from the ones you fill in.'
-    page_bounded: Showing {shown} of a larger set; the remaining rows are not reachable
-      from this reading.
-    title: Results - modelo {modelo}
-  modelo_workspace_verification:
-    axis:
-      binding_ready: Bindings ready
-      ledger_ready: Ledger ready
-      profile_ready: Profile ready
-      ready: Ready (producer verdict)
-      registry_ready: Registry ready
-    capability_line: 'Verification: {disposition}'
-    column:
-      axis: Axis
-      casilla: Casilla
-      kind: Kind
-      message: What was found
-      severity: Severity
-      value: Value
-    evidence_carried: 'Supporting references and next step: {entries}'
-    evidence_none: This verification capability cites no registry reference and names
-      no addressable next step.
-    findings_none: The work review recorded no findings.
-    findings_unmeasured: This page does not show verification findings yet.
-    readiness_unmeasured: This page does not show whether the declaration is ready
-      yet.
-    section:
-      findings: Findings
-      readiness: Readiness axes
-    title: Verification - modelo {modelo}
-    value:
-      unmeasured: not measured
   passphrase:
     cancel_button: Cancel
     change_button: Change password
@@ -350,13 +267,14 @@ flows:
   registration:
     confirm_label: Repeat the password
     create_button: Create profile
-    intro: 'Choose a name for this profile and a password to protect it. That is all
-      that is needed: your profile exists as soon as you continue, and you fill in
-      the rest whenever you like.'
+    intro: Choose a name and password to create your secure profile. You can complete
+      its details afterward.
+    password_help: Password protection and recovery
     password_hint: At least {minimum_length} characters. A few ordinary words strung
       together are easier to remember and harder to guess than one short complicated
       word.
     password_label: Password
+    progress: 1 · Create your secure profile    2 · Set up your details
     recovery:
       cancel_button: Cancel
       confirm_button: I have written it down
@@ -374,6 +292,8 @@ flows:
       profile_already_exists: A profile named '%{profile}' already exists. Choose
         a different name, or leave this screen and sign in to that profile instead.
       username_required: Enter a name for this profile.
+    requirements: Name and both password fields are required. You can change the language
+      later.
     section: Name and password
     strength:
       fair: Reasonable.

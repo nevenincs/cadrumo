@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import math
-import time
-from datetime import UTC, datetime
 from typing import Never
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import deadline_after
 from ...application.runtime.enrollment_access import (
     EnrollmentCredentialBinding,
     RuntimeEnrollmentDelivery,
@@ -34,6 +32,7 @@ from ...application.user_profile.automation_enrollment import (
     EnrollmentProposal,
     EnrollmentStage,
 )
+from ...core.time.clock import now
 from ..persistence.storage.custody.automation_client_credentials import (
     ClientCredentialMetadata,
     NativeClientCredentialStore,
@@ -85,14 +84,8 @@ class NativeEnrollmentClient:
         return self._receipt
 
     def _live(self) -> None:
-        if datetime.now(UTC) >= self.prepared.expires_at:
+        if now() >= self.prepared.expires_at:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-
-    @staticmethod
-    def _deadline(timeout: float) -> float:
-        if not math.isfinite(timeout) or timeout <= 0:
-            raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-        return time.monotonic() + timeout
 
     def _checked[ReplyT: RuntimeEnrollmentRecorded | RuntimeEnrollmentIdle | RuntimeEnrollmentDelivery](
         self,
@@ -112,32 +105,12 @@ class NativeEnrollmentClient:
 
     def _pin_receipt(self, receipt: AutomationReceiptProjection) -> AutomationReceiptProjection:
         prepared = self.prepared
-        if (
-            receipt.profile_id != prepared.profile_binding.profile_id
-            or receipt.request_id != prepared.enrollment_request_id
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-        if (receipt.key_id is None) != (receipt.credential_reference is None):
-            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        _require_prepared_receipt(receipt, prepared)
         earlier = self._receipt
-        if earlier is not None and (
-            receipt.review_digest != earlier.review_digest
-            or receipt.grant_id != earlier.grant_id
-            or (
-                earlier.key_id is not None
-                and (receipt.key_id != earlier.key_id or receipt.credential_reference != earlier.credential_reference)
-            )
-        ):
+        if earlier is not None and _receipt_changed(receipt, earlier):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         offer = self._offer
-        if offer is not None and (
-            receipt.review_digest != offer.review_digest
-            or receipt.grant_id != offer.grant_id
-            or (
-                receipt.key_id is not None
-                and (receipt.key_id != offer.key_id or receipt.credential_reference != offer.credential_reference)
-            )
-        ):
+        if offer is not None and _receipt_differs_from_offer(receipt, offer):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         if (
             earlier is not None
@@ -152,9 +125,7 @@ class NativeEnrollmentClient:
         prepared, receipt = self.prepared, self._receipt
         if (
             receipt is None
-            or offer.profile_binding != prepared.profile_binding
-            or offer.client_id != prepared.client_id
-            or offer.destination_id != prepared.destination_id
+            or _offer_differs_from_prepared(offer, prepared)
             or offer.review_digest != receipt.review_digest
             or offer.grant_id != receipt.grant_id
             or (
@@ -201,7 +172,7 @@ class NativeEnrollmentClient:
         )
         secret = bytearray(proposal.model_dump_json().encode("utf-8"))
         try:
-            reply = self._connection.enrollment_submit(request, secret, deadline=self._deadline(timeout))
+            reply = self._connection.enrollment_submit(request, secret, deadline=deadline_after(timeout))
         finally:
             secret[:] = bytes(len(secret))
         return self._pin_receipt(self._checked(reply, request_id=request.request_id).receipt)
@@ -215,7 +186,7 @@ class NativeEnrollmentClient:
             enrollment_request_id=self.prepared.enrollment_request_id,
         )
         reply = self._checked(
-            self._connection.enrollment_inspect(request, deadline=self._deadline(timeout)),
+            self._connection.enrollment_inspect(request, deadline=deadline_after(timeout)),
             request_id=request.request_id,
         )
         if isinstance(reply, RuntimeEnrollmentIdle):
@@ -237,7 +208,7 @@ class NativeEnrollmentClient:
                 request,
                 store=self._store_candidate,
                 possession=self._possession,
-                deadline=self._deadline(timeout),
+                deadline=deadline_after(timeout),
             ),
             request_id=request.request_id,
         )
@@ -246,21 +217,6 @@ class NativeEnrollmentClient:
         if self._offer != reply.credential:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return reply
-
-    def accept_approval_receipt(self, receipt: AutomationReceiptProjection) -> None:
-        """Pin the human's completion after this offer's source lease was retired.
-
-        This receipt conveys no authority and cannot write a credential. A key
-        completion must match the delivery identity already seen by this exact
-        client. A fresh runtime login still verifies the key and current grant.
-        """
-        if (
-            self._receipt is None
-            or receipt.stage is not EnrollmentStage.COMPLETE
-            or (receipt.key_id is not None and self._offer is None)
-        ):
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        self._pin_receipt(receipt)
 
     def accept_reconciled_terminal(self, receipt: AutomationReceiptProjection) -> None:
         """Pin a terminal receipt obtained by fresh exact-client runtime reconciliation.
@@ -288,18 +244,6 @@ class NativeEnrollmentClient:
         ):
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         return metadata
-
-    def read_delivered_credential(self) -> SecretBytes:
-        """Borrow one exact delivered key; fresh runtime admission alone proves use."""
-        offer = self._offer
-        if offer is None:
-            raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-        return self._store.read(
-            credential_reference=offer.credential_reference,
-            grant_id=offer.grant_id,
-            key_id=offer.key_id,
-            review_digest=offer.review_digest,
-        )
 
     def verified_terminal(self) -> ClientCredentialMetadata | None:
         """Verify terminal delivery against current native custody without exporting a key."""
@@ -335,3 +279,47 @@ class NativeEnrollmentClient:
             key_id=receipt.key_id,
             review_digest=receipt.review_digest,
         )
+
+
+def _receipt_changed(receipt: AutomationReceiptProjection, earlier: AutomationReceiptProjection) -> bool:
+    """Preserve the review and any previously pinned key identity."""
+    return (
+        receipt.review_digest != earlier.review_digest
+        or receipt.grant_id != earlier.grant_id
+        or (
+            earlier.key_id is not None
+            and (receipt.key_id != earlier.key_id or receipt.credential_reference != earlier.credential_reference)
+        )
+    )
+
+
+def _receipt_differs_from_offer(receipt: AutomationReceiptProjection, offer: EnrollmentCredentialBinding) -> bool:
+    """Require delivered credential identity to match the same reviewed enrollment."""
+    return (
+        receipt.review_digest != offer.review_digest
+        or receipt.grant_id != offer.grant_id
+        or (
+            receipt.key_id is not None
+            and (receipt.key_id != offer.key_id or receipt.credential_reference != offer.credential_reference)
+        )
+    )
+
+
+def _offer_differs_from_prepared(offer: EnrollmentCredentialBinding, prepared: RuntimeEnrollmentPrepared) -> bool:
+    """Require the exact prepared profile, client and destination before pinning a delivery."""
+    return (
+        offer.profile_binding != prepared.profile_binding
+        or offer.client_id != prepared.client_id
+        or offer.destination_id != prepared.destination_id
+    )
+
+
+def _require_prepared_receipt(receipt: AutomationReceiptProjection, prepared: RuntimeEnrollmentPrepared) -> None:
+    """Require the original prepared enrollment and paired credential coordinates."""
+    if (
+        receipt.profile_id != prepared.profile_binding.profile_id
+        or receipt.request_id != prepared.enrollment_request_id
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if (receipt.key_id is None) != (receipt.credential_reference is None):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

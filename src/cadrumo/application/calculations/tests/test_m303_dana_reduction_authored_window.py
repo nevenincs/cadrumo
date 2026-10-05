@@ -14,8 +14,10 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.calculations.registry.schema_base import DateAxis
 from ....domain.calculations.registry.schema_references import TemporalProjectionDirection
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot

@@ -31,7 +31,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import resolve_fx_conversion_stamp
+from ....domain.currency.tests.fx_lookup import eur_rate_lookup
 from ....domain.iva.classification import InvoiceKind
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_creation_ports import CatalogueInvoiceRateProviderPort
@@ -53,7 +55,10 @@ class _StaticRateProvider:
     def rate_source_id(self) -> str:
         return _TEST_RATE_SOURCE
 
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         if currency == "USD" and rate_date == _QUOTE_DATE:
             return _TEST_USD_RATE
         return None
@@ -96,6 +101,7 @@ def test_a_rated_conversion_reaches_the_record_with_its_full_provenance() -> Non
         "a stored euro figure that cannot name its rate authority cannot be audited"
     )
     assert invoice.base_total_eur == (_BASE * _TEST_USD_RATE).quantize(Decimal("0.01"))
+    assert invoice.fx_rate_observation_date == _QUOTE_DATE, "the stamp must name the publication it read"
 
 
 def test_an_unresolvable_rate_leaves_the_record_unconverted_rather_than_guessed() -> None:
@@ -175,3 +181,33 @@ def test_a_half_written_stamp_is_refused_at_construction(missing: str) -> None:
     # validator's exception, so the type crossing the boundary is pydantic's.
     with pytest.raises(ValidationError, match="set together"):
         type(invoice).model_validate(payload)
+
+
+def test_an_observation_date_without_a_stamp_is_refused() -> None:
+    invoice = _invoice(currency="USD", provider=_rated_provider())
+    payload = invoice.model_dump()
+    payload.update(fx_rate=None, fx_rate_date=None, fx_rate_source=None)
+
+    with pytest.raises(ValidationError, match="belongs to an fx conversion stamp"):
+        type(invoice).model_validate(payload)
+
+
+def test_an_observation_after_the_rate_date_is_refused() -> None:
+    invoice = _invoice(currency="USD", provider=_rated_provider())
+    payload = invoice.model_dump()
+    payload["fx_rate_observation_date"] = date(2025, 3, 15)
+
+    with pytest.raises(ValidationError, match="cannot postdate"):
+        type(invoice).model_validate(payload)
+
+
+def test_a_stamp_recorded_before_observation_dates_were_kept_still_loads() -> None:
+    """The earlier stored shape has no observation date; it reads as unrecorded, not as invalid."""
+    invoice = _invoice(currency="USD", provider=_rated_provider())
+    payload = invoice.model_dump()
+    del payload["fx_rate_observation_date"]
+
+    restored = type(invoice).model_validate(payload)
+
+    assert restored.fx_rate == _TEST_USD_RATE
+    assert restored.fx_rate_observation_date is None

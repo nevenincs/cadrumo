@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:03941324326779b2a64f0aed8e8b3921ccfa1cf19a62594d3e1575ec07f55446'
+body_hash: 'sha256:b26eaad6f68cb3401d5dd011c81984127794f4f0981ac43c082a076c3ec62def'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
@@ -595,14 +595,11 @@ The invoice-removal and persisted IVA-history genuine supervisor cases pass, and
 
 The final generator/API-reference and import-boundary checks pass against an unchanged source fingerprint. All 15 architecture contracts are kept, all 3,101 governed modules load, and no hard import findings or architectural debt remain in this cohort. This closes the pending integration gate above; exact run evidence is in the ledger. Invoice removal, persisted IVA history and MCP requester changes retain their separately stated scoped acceptance limits. P03.S08/S09, native grant-change acceptance and the full platform matrix remain open; this is not a Phase or feature completion claim.
 
-
 Invoice-update integration review: the canonical lifecycle service already owns atomic catalogue/audit persistence and preserves invoice identity and links. Runtime enrollment reuses that writer under COMMIT; it must not create a second mutation implementation. Public operation schemas require identical validation/serialization shapes, so native Decimal fields require the existing PublicDecimal representation. Full JSON serialization must retain explicit patch selection rather than infer it from defaults after deserialization. Focused update verification remains pending; no S08/S09 acceptance advancement is recorded.
-
 
 ### Invoice correction public contract | low | Governed token schema mismatch corrected
 
 The initial registered-operation collection rejected nested custom IVA-category core-schema hooks before executing tests. Invoice class uses the same governed-token pattern. Both public DTO fields now use nonempty strings, while conversion back to the canonical lifecycle patch retains the existing application/domain validation owner. PublicDecimal continues to preserve financial precision. This is a corrected implementation finding, not passing behavioral evidence; the focused retry and generated/import cohort remain pending.
-
 
 ### Invoice update and unused TUI storage teardown | low | Focused integration PASS
 
@@ -610,12 +607,9 @@ The exact-profile registered update uses canonical atomic invoice/audit persiste
 
 Focused evidence: five patch/census cases, one real-supervisor update case, five native invoice CLI cases and three TUI real-writer cases passed. Native synthetic-profile update proves protected API-reference admission, COMMIT plus RESULT, unchanged record identity and siblings, omitted-note retention and persisted audit event. This uses the memory credential-store test port and does not demonstrate native OS-store enrollment or full platform acceptance. The initial public governed-token schema rejection was corrected before passing runs. Two baseline basedpyright diagnostics in untouched LedgerEvidenceDoor empty-set inference are queued for annotation-only cleanup after the import-gate source freeze. No high or critical finding in this bounded update/teardown review; S08, S09 and S18 remain open.
 
-
 The frozen generated/import cohort passed with 15/15 contracts kept and 3,102/3,102 modules loaded, zero hard findings and matching source fingerprints; generated API documentation is conformant. The subsequent LedgerEvidenceDoor change only annotates the existing optional tuple of string sets, preserving the same expression and behavior. Its scoped static recheck is recorded separately in the execution ledger; the import fingerprint belongs to the preceding frozen cohort. No import-topology or generated API changes follow that cohort.
 
-
 Final TUI typing cleanup is complete: an optional tuple annotation plus explicit `frozenset[str]()` constructors resolves both checkers without changing runtime values or imports. All five scoped static checks pass; Pyrefly reports zero errors and one hidden warning. All delegated work is finished. The operator requested closure and a fresh Sol-high execution session; the subsequent filed-history investigation changed no source and supplies no implementation acceptance. Plan completion remains 7/20 with S08 next.
-
 
 ## Recommendations
 
@@ -681,14 +675,12 @@ Five calendar failures were traced to a synthetic profile identity differing fro
 
 The auth teardown registration defect above is corrected: public schemas reuse the canonical result models without a redundant projector, while exact-profile result validation precedes effect publication. Current registry construction succeeds. The authenticated MCP SDK journey passes against a real Windows profile worker and synthetic encrypted custody, including discovery/schema, execute, observation, result, disconnect and a newly admitted session using the protected reference. Its native-secret port is the existing in-memory test port, so this evidence does not establish OS credential-store acceptance. The Windows managed-stop and auth/calendar checks, frozen generated/import gate, remaining private-entrypoint census and platform matrix remain open; no Phase close is asserted.
 
-
 ### integration-checkpoint-verification | medium | Pending runtime implementation checks remain visible
 
 Review for the operator-requested commit and merge of main on 2026-09-30 covers the pending runtime operation migrations and their interaction with MCP discovery and frontend routing. This is a partial checkpoint; P03.S08 and later acceptance remain open. Ruff passes after six mechanical import fixes; generated API stubs match the source, git diff whitespace validation passes, and the feature vault check exits 0 with two markdown warnings. Repository type analysis exits 1 with 233 diagnostics (209 ty, five pyrefly, 19 basedpyright), already present before the main merge. Global formatting also finds committed baseline drift outside this checkpoint; pending-change files have been formatted.
 
 The catalogue/conformance/MCP run 20260930T143957.516890Z-pytest-13576-4ec8a098 was interrupted after catalogue failures: eight declared prorrata operations are not registered, six frontend claims have no discovered surface, prorrata CLI references are unclaimed, and the full-screen ownership census fails. Completed conformance cases do not establish a passing cohort. The replacement adapter receives its own bounded test run. Verdict: PENDING for implementation acceptance; this Git checkpoint does not close a Step, assert platform readiness, or grant live filing authority.
 The bounded replacement-adapter suite passed all 15 tests: uv run --no-sync pytest -q -n0 -m "(unit or integration) and not external_tool and not os_keychain and not resident_service" --tb=short --show-capture=no src/cadrumo_harness/mcp/tests, exit 0, run 20260930T144302.475211Z-pytest-89968-f2f23063. This proves the selected adapter contracts only.
-
 
 ### main-merge-checkpoint | medium | Conflict reconciliation verified with implementation limits retained
 
@@ -700,11 +692,9 @@ The existing isolated native runtime fixture then verified real CLI filing-file 
 
 Focused Ruff lint/format and ty win32 checks pass on reconciled CLI and application paths; generated API stubs conform, and the feature vault check exits 0 with two markdown warnings. The repository-wide vault check exits 1 with 27 errors and 523 warnings; all 17 error-bearing documents match one of the parent revisions, rather than a new merged edit. Two trailing-blank-line findings in incoming modelo 303 TOML files are likewise inherited from main. The earlier repository type and catalogue failures remain visible; additional concurrent prorrata edits changed the global lint subject and are not this merge's verification evidence. Verdict: PASS for conflict reconciliation and the isolated export-runtime integration, PENDING for overall MCP implementation acceptance.
 
-
 ### ledger-option-branch-admission | high | Exposed classify and split branches retain ambient private storage
 
 Review 2026-10-01: REVISION REQUIRED for P03.S08. Current checked status relied on a callback-policy routing census that does not prove every exposed option branch reaches the immutable runtime worker. Current `_ledger.py:522` dispatches LLM/evidence/autosplit/saturate before the manual runtime bridge; `_ledger_llm_cli.py:645` opens current workflow and transaction repositories, and its operator IVA path does likewise at line983. `ledger_lifecycle_cli.py:481` dispatches exposed LLM split to a local implementation that opens ambient repositories at line716. Existing runtime bridges cover manual classification and split only. This leaves cold installed operation and exact-profile admission convergence unproven and retains the displaced private path contrary to both accepted MCP feature decisions. Complete these option branches through existing registered application operations and canonical review/result/commit authority, preserving the existing algorithms and CLI semantics; delete their superseded local storage composition. Reopen S08 through the owning plan verb. Source review only; no tests run. Read bookends match three hashes: {"src/cadrumo/entrypoints/cli/_ledger.py": "a427105188b293a509e4af704dc8c07462c4415f0c23d451b3b05931f5a45d13", "src/cadrumo/entrypoints/cli/_ledger_llm_cli.py": "9bea4bc1aa4c28bcc02d9df2d998b37d2f8470f67603b7e3cb944575951cc215", "src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py": "44bd57d4ef3340193cac73fa730225535ec364954506aa73c68ca58ef84301ac"}. Prior installed SDK/native worker evidence remains valid within its recorded scopes. S07 is unaffected; platform and full parity acceptance remain separately open.
-
 
 ### registered-cli-cleanup-ownership | high | Mapped operation failure loses its actual transport cleanup owner
 

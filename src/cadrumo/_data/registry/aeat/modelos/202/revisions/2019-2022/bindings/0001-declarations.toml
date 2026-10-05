@@ -14,6 +14,10 @@ required_text = ["pagos fraccionados"]
 [[revisions.2019-2022.bindings]]
 id = "modelo-202-incn-prior-12-months"
 provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
+# LIS art. 40.3 makes the base-imponible modality mandatory once the INCN of the
+# prior twelve months reaches EUR 6M, so the fact selects the modality rather
+# than filling a casilla; the binding keeps it a required operator input.
+applicability = { kind = "non_calculation", reason = "profile_input", consumed_by = "Modelo 202 pago-fraccionado modality selection (LIS art. 40.2/40.3) and its required-input gate" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-40"]

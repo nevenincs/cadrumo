@@ -11,50 +11,43 @@ import typer
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...application.actividad_asset.operation_dtos import (
-    ActivityAssetRevisionSnapshot,
-    ScheduledAmortizationChargeSnapshot,
-)
-from ...application.actividad_asset.registered_operations import (
+from ...application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
-    ActivityAssetClaimProjection,
     ActivityAssetClaimRequest,
-    ActivityAssetCorrectProjection,
     ActivityAssetCorrectRequest,
-    ActivityAssetCreateProjection,
     ActivityAssetCreateRequest,
-    ActivityAssetFilingHandoffProjection,
     ActivityAssetFilingHandoffRequest,
-    ActivityAssetForecastProjection,
     ActivityAssetForecastRequest,
-    ActivityAssetInspectProjection,
     ActivityAssetInspectRequest,
 )
+from ...application.actividad_asset.activity_asset_projections import (
+    ActivityAssetClaimProjection,
+    ActivityAssetCorrectProjection,
+    ActivityAssetCreateProjection,
+    ActivityAssetFilingHandoffProjection,
+    ActivityAssetForecastProjection,
+    ActivityAssetInspectProjection,
+)
+from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetRevisionSnapshot,
+    ScheduledAmortizationChargeSnapshot,
+)
 from ...application.operations.public_scalar import PublicDecimal
-from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.renta.actividad_asset.claims import AmortizationClaim
-from ...domain.renta.actividad_asset.errors import (
-    ActividadAssetClaimConflictError,
-    ActividadAssetIncompleteError,
-    ActividadAssetUnsupportedError,
-    ActividadAssetValidationError,
-)
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from .common import active_bucket_id_or_refuse
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 type _ActivityAssetProjection = (
     ActivityAssetCreateProjection
@@ -69,16 +62,6 @@ type _ActivityAssetProjection = (
 def _client(ctx: typer.Context) -> RuntimeFrontendClient:
     """Bind every request to the invocation's exact selected profile."""
     return require_profile_client(ctx, expected_profile_id=UUID(active_bucket_id_or_refuse()))
-
-
-def _invalid(completed: RegisteredOperationCompletion[Any]) -> NoReturn:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _submit[ResultT: _ActivityAssetProjection](
@@ -100,7 +83,7 @@ def _submit[ResultT: _ActivityAssetProjection](
         allow_refusal_detail=True,
     )
     if completed.projection.profile_id != client.profile_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return completed
 
 
@@ -122,7 +105,7 @@ def _validate_terminal(
             ActivityAssetFilingHandoffProjection,
         ),
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     refused = projection.outcome == "refused"
     refusal = projection.refusal
     expected_condition = OperationTerminalCondition.REFUSED if refused else OperationTerminalCondition.SUCCEEDED
@@ -133,7 +116,7 @@ def _validate_terminal(
         or completed.refusal_code != (refusal.code if refusal is not None else None)
         or refused != (refusal is not None)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return refused
 
 
@@ -141,27 +124,14 @@ def _raise_refusal(completed: RegisteredOperationCompletion[Any]) -> NoReturn:
     """Rebuild the existing registered domain refusal at the CLI boundary."""
     refusal = completed.projection.refusal
     if refusal is None:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     context: dict[str, object] = {
         "operation_id": str(completed.operation_id),
         "terminal_condition": completed.terminal_condition.value,
         "effect": completed.effect.value,
         "refusal_code": refusal.code,
     }
-    if refusal.code == "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE":
-        raise ActividadAssetIncompleteError(
-            context=context,
-            precondition_verdict=(
-                refusal.precondition_verdict.to_verdict() if refusal.precondition_verdict is not None else None
-            ),
-        )
-    if refusal.code == "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED":
-        raise ActividadAssetUnsupportedError(context=context)
-    if refusal.code == "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT":
-        raise ActividadAssetClaimConflictError(context=context)
-    if refusal.code == "REFUSED_ACTIVIDAD_ASSET_VALIDATION":
-        raise ActividadAssetValidationError(context=context)
-    _invalid(completed)
+    raise refusal.to_domain_error(context=context)
 
 
 def _finish[ResultT: BaseModel](
@@ -195,7 +165,7 @@ def create_activity_asset(
     if result.history is None or not any(
         item.to_domain().revision_id == revision.revision_id for item in result.history.revisions
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -211,7 +181,7 @@ def inspect_activity_asset(ctx: typer.Context, *, asset_id: str) -> ActivityAsse
     )
     result = _finish(completed, success_effect=OperationEffect.NONE)
     if result.asset_id != asset_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -236,7 +206,7 @@ def correct_activity_asset(
     if result.history is None or not any(
         item.to_domain().revision_id == revision.revision_id for item in result.history.revisions
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -275,7 +245,7 @@ def forecast_activity_asset(
         or forecast.covered_from != covered_from
         or forecast.covered_until != covered_until
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -307,14 +277,14 @@ def claim_activity_asset(
     result = _finish(completed, success_effect=success_effect)
     claim_result = result.claim_result
     if claim_result is None:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     history = claim_result.history.to_domain()
     revision = next(
         (item for item in history.revisions if item.revision_id == claim_result.claim.asset_revision_id),
         None,
     )
     if revision is None:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     expected_claim = AmortizationClaim.from_schedule(
         forecast,
         asset_kind=revision.asset_kind,
@@ -322,7 +292,7 @@ def claim_activity_asset(
         supersedes_claim_id=supersedes_claim_id,
     )
     if claim_result.claim.to_domain() != expected_claim or result.claim_id != expected_claim.claim_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return result
 
 
@@ -347,7 +317,7 @@ def filing_handoff_activity_asset(
     )
     result = _finish(completed, success_effect=OperationEffect.NONE)
     if (result.tax_year, result.m130_period) != (tax_year, m130_period) or result.filing_handoff is None:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     Period.from_year_and_code(tax_year, m130_period)
     return result
 

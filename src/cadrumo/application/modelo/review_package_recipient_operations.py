@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.hashing import canonical_json_bytes
 from ...core.hex import HEX_PATTERN_64
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -29,7 +29,13 @@ from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ..bucket_event_repository import BucketEventHistoryRepositoryFactory
 from ..operations.access_port import OperationAccessResolver
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+)
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -38,16 +44,14 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
     OperationResultProjector,
-    OperationSchemaBindingV1,
 )
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -55,9 +59,6 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
     Availability,
     DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .review_package_collab_audit import (
@@ -123,7 +124,8 @@ class ReviewPackageRecipientProjection(BaseModel):
 
     @field_validator("added_at")
     @classmethod
-    def _timestamp_is_utc(cls, value: datetime) -> datetime:
+    @pydantic_validation_boundary
+    def _added_at_is_utc(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 
     @classmethod
@@ -237,12 +239,10 @@ class ReviewPackageRecipientAddExecutor:
     ) -> str:
         """Persist a recipient and audit event, then release its complete row."""
         payload = request.payload
-        bucket_id = _require_worker_identity(
-            request,
-            context,
-            definition_id=REVIEW_PACKAGE_RECIPIENT_ADD_OPERATION_DEFINITION_ID,
-            profile_id=payload.profile_id,
-        )
+        bucket_id = str(payload.profile_id)
+        if request.definition_id != REVIEW_PACKAGE_RECIPIENT_ADD_OPERATION_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(REVIEW_PACKAGE_RECIPIENT_ADD_OPERATION_DEFINITION_ID)
         await context.events.effect(OperationEffect.NONE)
         # The request schema has already fixed this at exactly 32 bytes; the
@@ -317,12 +317,10 @@ class ReviewPackageRecipientListExecutor:
     ) -> str:
         """Capture every canonical recipient row without changing either store."""
         payload = request.payload
-        bucket_id = _require_worker_identity(
-            request,
-            context,
-            definition_id=REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID,
-            profile_id=payload.profile_id,
-        )
+        bucket_id = str(payload.profile_id)
+        if request.definition_id != REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID)
         await context.events.effect(OperationEffect.NONE)
 
@@ -366,12 +364,10 @@ class ReviewPackageRecipientRemoveExecutor:
     ) -> str:
         """Remove a recipient and audit event, then report the actual remainder."""
         payload = request.payload
-        bucket_id = _require_worker_identity(
-            request,
-            context,
-            definition_id=REVIEW_PACKAGE_RECIPIENT_REMOVE_OPERATION_DEFINITION_ID,
-            profile_id=payload.profile_id,
-        )
+        bucket_id = str(payload.profile_id)
+        if request.definition_id != REVIEW_PACKAGE_RECIPIENT_REMOVE_OPERATION_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(REVIEW_PACKAGE_RECIPIENT_REMOVE_OPERATION_DEFINITION_ID)
         await context.events.effect(OperationEffect.NONE)
         registry_ports = self._ports.registry_factory(bucket_id=bucket_id)
@@ -421,26 +417,6 @@ class ReviewPackageRecipientRemoveExecutor:
         )
 
 
-def _require_worker_identity[PayloadT: BaseModel](
-    request: OperationRequest[PayloadT],
-    context: OperationExecutorContext,
-    *,
-    definition_id: str,
-    profile_id: UUID,
-) -> str:
-    bucket_id = str(profile_id)
-    subject = profile_operation_subject(bucket_id)
-    if (
-        request.definition_id != definition_id
-        or request.subject_ref != subject
-        or context.identity.definition_id != definition_id
-        or context.identity.subject_ref != subject
-        or require_active_bucket_id() != bucket_id
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return bucket_id
-
-
 def _check_projection_size(projection: BaseModel) -> None:
     if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -454,19 +430,17 @@ def _require_success_receipt(
     profile_id: UUID,
     effect: OperationEffect,
 ) -> None:
-    if (
-        receipt.identity.definition_id != definition_id
-        or receipt.identity.subject_ref != profile_operation_subject(str(profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
-        or getattr(result, "profile_id", None) != profile_id
-    ):
-        raise ValueError("recipient projection differs from its terminal receipt")
+    contradiction = "recipient projection differs from its terminal receipt"
+    require_terminal_receipt_match(
+        receipt,
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=effect,
+        message=contradiction,
+    )
+    if getattr(result, "profile_id", None) != profile_id:
+        raise ValueError(contradiction)
 
 
 def project_review_package_recipient_add_result(
@@ -544,17 +518,12 @@ def _definition(
         if mutation
         else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     )
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
         result_type=result_type,
-        executor_factory=OperationExecutorFactory(
-            request_type=request_type,
-            executor_type=executor_type,
-            build=build,
-        ),
-        phase_codes=(definition_id,),
-        interaction_kinds=frozenset(),
+        executor_type=executor_type,
+        build=build,
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -568,7 +537,6 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -625,21 +593,19 @@ def _resolve_access(
     /,
     *,
     definition_id: str,
-    request_type: type[BaseModel],
+    request_type: type[ReviewPackageRecipientAddRequest]
+    | type[ReviewPackageRecipientListRequest]
+    | type[ReviewPackageRecipientRemoveRequest],
     mutation: bool,
 ) -> ResolvedOperationAccess:
-    payload = request.payload
-    if (
-        request.definition_id != definition_id
-        or type(payload) is not request_type
-        or context.contract.definition_id != definition_id
-    ):
+    if context.contract.definition_id != definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = getattr(payload, "profile_id", None)
-    if not isinstance(profile_id, UUID) or profile_id != context.profile_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if request.subject_ref != profile_operation_subject(str(profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    profile_id = require_access_request_profile_payload(
+        request,
+        definition_id=definition_id,
+        payload_type=request_type,
+        access_profile_id=context.profile_id,
+    ).profile_id
     actions = {
         AccessAction.SUBMIT,
         AccessAction.START,
@@ -651,55 +617,23 @@ def _resolve_access(
     }
     if mutation:
         actions.add(AccessAction.COMMIT)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=schema.schema_id,
-                    category=DisclosureCategory.PROFILE_VALUES,
-                ),
-            )
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=profile_id,
-            definition_id=definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(actions),
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            requires_all_periods=False,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+        result_schema_id=None,
+    )
+    return bind_operation_access(
+        context,
+        profile_id=profile_id,
+        definition_id=definition_id,
+        actions=frozenset(actions),
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
     )
 
 
@@ -745,23 +679,13 @@ def resolve_review_package_recipient_remove_access(
 def _registration(
     *,
     definition: OperationDefinition,
-    request_type: type[BaseModel],
     result_type: type[BaseModel],
     projector: OperationResultProjector,
     resolver: OperationAccessResolver,
 ) -> OperationPublicDefinitionRegistrationV1:
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=result_type,
-        ),
+        public_result_type=result_type,
         result_projector=projector,
         access_resolver=resolver,
     )
@@ -773,7 +697,6 @@ def build_review_package_recipient_add_registration(
     """Bind public schemas, projector, and access resolver for add."""
     return _registration(
         definition=definition,
-        request_type=ReviewPackageRecipientAddRequest,
         result_type=ReviewPackageRecipientAddProjection,
         projector=project_review_package_recipient_add_result,
         resolver=resolve_review_package_recipient_add_access,
@@ -786,7 +709,6 @@ def build_review_package_recipient_list_registration(
     """Bind public schemas, projector, and access resolver for list."""
     return _registration(
         definition=definition,
-        request_type=ReviewPackageRecipientListRequest,
         result_type=ReviewPackageRecipientListProjection,
         projector=project_review_package_recipient_list_result,
         resolver=resolve_review_package_recipient_list_access,
@@ -799,7 +721,6 @@ def build_review_package_recipient_remove_registration(
     """Bind public schemas, projector, and access resolver for remove."""
     return _registration(
         definition=definition,
-        request_type=ReviewPackageRecipientRemoveRequest,
         result_type=ReviewPackageRecipientRemoveProjection,
         projector=project_review_package_recipient_remove_result,
         resolver=resolve_review_package_recipient_remove_access,

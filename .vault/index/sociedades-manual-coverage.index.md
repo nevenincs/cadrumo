@@ -4,16 +4,13 @@ tags:
   - '#index'
   - '#sociedades-manual-coverage'
 date: '2026-09-10'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fd6248eed094b7a0ffaddd01f609c85a53f165fd3329532086a9423bf824f40d'
+body_hash: 'sha256:66dc1498e3f038acba0b9be18ff8dc591ce19d552425918ac211fe5282aaa025'
 related:
-  - '[[2026-09-10-sociedades-manual-coverage-audit]]'
   - '[[2026-09-10-sociedades-manual-coverage-coverage-contract-adr]]'
-  - '[[2026-09-10-sociedades-manual-coverage-ledger]]'
   - '[[2026-09-10-sociedades-manual-coverage-p01-contract-audit]]'
   - '[[2026-09-10-sociedades-manual-coverage-p02-p03-data-docs-audit]]'
-  - '[[2026-09-10-sociedades-manual-coverage-plan]]'
   - '[[2026-09-10-sociedades-manual-coverage-temporal-coverage-research]]'
 ---
 
@@ -29,17 +26,8 @@ Auto-generated index of all documents tagged with `#sociedades-manual-coverage`.
 
 ### audit
 
-- `2026-09-10-sociedades-manual-coverage-audit` - `sociedades-manual-coverage` audit: `Completed bounded steps review`
 - `2026-09-10-sociedades-manual-coverage-p01-contract-audit` - `sociedades-manual-coverage` audit: `p01 contract`
 - `2026-09-10-sociedades-manual-coverage-p02-p03-data-docs-audit` - `sociedades-manual-coverage` audit: `p02 p03 data docs`
-
-### exec
-
-- `2026-09-10-sociedades-manual-coverage-ledger` - `sociedades-manual-coverage` ledger
-
-### plan
-
-- `2026-09-10-sociedades-manual-coverage-plan` - `sociedades-manual-coverage` plan
 
 ### research
 

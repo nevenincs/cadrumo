@@ -8,7 +8,6 @@ from ...domain.filing.errors import FilingExportValidationError
 _MODELO_PRODUCER_NAMESPACE_OWNERS = {
     "amendment_evidence": "modelo_specific_amendment",
     "contact_person": "modelo_specific_contact",
-    "entidad_desarrolladora": "product_software_identity",
     "irnr": "modelo_210",
     "m111": "modelo_111",
     "m200": "modelo_200",

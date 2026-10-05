@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:dc3608be3b704d0db71c98260e960e38c031e6f85065630ce945fb1e5c0f3bb7'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:6c7204d870a8515ff5a24921854f82de273bc812f4150cff41accb98062419e0'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `modelo 038 design extraction`
 
 Modelo 038 has an official current fixed-position design and an active fichero
@@ -90,10 +90,7 @@ Reconsider fileability only after all of these are true:
 - BOE-A-2002-1041, Orden HAC/66/2002, arts. 1, 2 and 6: https://www.boe.es/buscar/doc.php?id=BOE-A-2002-1041
 - BOE-A-2024-13049, Orden HAC/646/2024, art. 1 and final provision: https://www.boe.es/buscar/doc.php?id=BOE-A-2024-13049
 - `src/cadrumo/_data/registry/aeat/legal/modelo-038.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2002-y-siguientes/revision.toml`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_038/manifest.json`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf.extracted.json`
-- `src/cadrumo/domain/calculations/registry/tests/test_cited_design_field_bounds_are_self_consistent.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
 - `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md` (`W02.P05.S43`)
 - `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md` (`W04.P07.S96`)

@@ -11,7 +11,7 @@ predicate machinery, screening for observations no binding selects.
 
 :func:`resolve_ledger_family_binding_values` and
 :func:`unsupported_ledger_family_observations` factor that shape out once.
-Each family module supplies its own selector parser, a ``build_matcher``
+Each family module supplies its own selector model, a ``build_matcher``
 that closes over the selector's per-axis membership sets — precomputed once
 per binding (or once per binding-selector in the fail-closed screen), never
 rebuilt once per observation — a fact-dispatch ``aggregate``, and, for the
@@ -31,29 +31,40 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, Protocol
+
+from pydantic import BaseModel
 
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId
+from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
 from .ids import BindingId
 
 if TYPE_CHECKING:
-    from .schema import BindingDefinition, ModeloRevision
+    from .schema import ModeloRevision
 
 __all__ = [
+    "CasillaTargeted",
+    "DeductibleAmountObservation",
+    "IncomeAmountObservation",
     "UnroutedLedgerQuantity",
+    "cash_received_total",
+    "casilla_target_matcher",
+    "deductible_amount_aggregate",
+    "ingresos_integros_total",
     "resolve_ledger_family_binding_values",
     "unrouted_ledger_family_quantities",
     "unsupported_ledger_family_observations",
 ]
 
 
-def resolve_ledger_family_binding_values[ObservationT, SelectorT](
+def resolve_ledger_family_binding_values[ObservationT, SelectorT: BaseModel](
     revision: ModeloRevision,
     observations: Iterable[ObservationT],
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[BindingDefinition], SelectorT],
+    provider_model: type[SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     aggregate: Callable[[Sequence[ObservationT], SelectorT], Decimal],
 ) -> dict[BindingId, Decimal]:
@@ -72,8 +83,8 @@ def resolve_ledger_family_binding_values[ObservationT, SelectorT](
         observations: The family's typed ledger observations to aggregate.
         source_kind: The :class:`BindingSourceKind` this family's bindings
             declare.
-        parse_selector: The family's selector parser, raising
-            :class:`RegistryValidationError` on a malformed selector.
+        provider_model: The family's selector model; a binding whose provider
+            member is another model raises :class:`RegistryValidationError`.
         build_matcher: Builds a per-observation match predicate from a
             parsed selector, closing over any membership sets once.
         aggregate: Folds the matched observations for one binding, per the
@@ -88,19 +99,19 @@ def resolve_ledger_family_binding_values[ObservationT, SelectorT](
     for binding in revision.bindings:
         if binding.source != source_kind:
             continue
-        selector = parse_selector(binding)
+        selector = provider_member(binding, provider_model)
         matcher = build_matcher(selector)
         matched = tuple(observation for observation in available if matcher(observation))
         resolved[binding.id] = aggregate(matched, selector)
     return resolved
 
 
-def unsupported_ledger_family_observations[ObservationT, SelectorT](
+def unsupported_ledger_family_observations[ObservationT, SelectorT: BaseModel](
     revision: ModeloRevision,
     observations: Iterable[ObservationT],
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[BindingDefinition], SelectorT],
+    provider_model: type[SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     is_declarable: Callable[[ObservationT], bool],
     extra_exclusion: Callable[[ObservationT], bool] | None = None,
@@ -119,7 +130,7 @@ def unsupported_ledger_family_observations[ObservationT, SelectorT](
         observations: The family's typed ledger observations to screen.
         source_kind: The :class:`BindingSourceKind` this family's bindings
             declare.
-        parse_selector: The family's selector parser.
+        provider_model: The family's selector model.
         build_matcher: Builds a per-observation match predicate from a
             parsed selector; matchers are built once per binding before
             screening observations, never rebuilt per (observation, binding)
@@ -138,7 +149,9 @@ def unsupported_ledger_family_observations[ObservationT, SelectorT](
         Tuple of observations selected by no binding, in input order.
     """
     matchers = tuple(
-        build_matcher(parse_selector(binding)) for binding in revision.bindings if binding.source == source_kind
+        build_matcher(provider_member(binding, provider_model))
+        for binding in revision.bindings
+        if binding.source == source_kind
     )
     unsupported: list[ObservationT] = []
     for observation in observations:
@@ -163,12 +176,12 @@ class UnroutedLedgerQuantity[ObservationT](NamedTuple):
     observations: tuple[ObservationT, ...]
 
 
-def unrouted_ledger_family_quantities[ObservationT, SelectorT](
+def unrouted_ledger_family_quantities[ObservationT, SelectorT: BaseModel](
     revision: ModeloRevision,
     observations: Iterable[ObservationT],
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[BindingDefinition], SelectorT],
+    provider_model: type[SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     read_fact: Callable[[SelectorT], str],
     independent_facts: frozenset[str],
@@ -209,7 +222,7 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
             are drawn, and which rows each drawing binding reaches.
         observations: The family's typed ledger observations to screen.
         source_kind: The :class:`BindingSourceKind` this family's bindings declare.
-        parse_selector: The family's selector parser.
+        provider_model: The family's selector model.
         build_matcher: Builds a per-observation match predicate from a parsed
             selector — the same collaborator the other two shapes take, so
             "does this binding reach this row" has one definition across all
@@ -237,7 +250,7 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
     matchers_by_fact = _matchers_by_fact(
         revision,
         source_kind=source_kind,
-        parse_selector=parse_selector,
+        provider_model=provider_model,
         build_matcher=build_matcher,
         read_fact=read_fact,
     )
@@ -255,11 +268,11 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
     return tuple(unrouted)
 
 
-def _matchers_by_fact[ObservationT, SelectorT](
+def _matchers_by_fact[ObservationT, SelectorT: BaseModel](
     revision: ModeloRevision,
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[BindingDefinition], SelectorT],
+    provider_model: type[SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     read_fact: Callable[[SelectorT], str],
 ) -> dict[str, list[Callable[[ObservationT], bool]]]:
@@ -268,7 +281,7 @@ def _matchers_by_fact[ObservationT, SelectorT](
     for binding in revision.bindings:
         if binding.source != source_kind:
             continue
-        selector = parse_selector(binding)
+        selector = provider_member(binding, provider_model)
         matchers_by_fact.setdefault(read_fact(selector), []).append(build_matcher(selector))
     return matchers_by_fact
 
@@ -295,3 +308,67 @@ def _unrouted_quantity_for_fact[ObservationT](
         total=sum((read(row) for row in carrying), Decimal("0")),
         observations=carrying,
     )
+
+
+class CasillaTargeted(Protocol):
+    """A selector or observation routed to one declaration casilla."""
+
+    @property
+    def target_casilla_id(self) -> CasillaId:
+        """Return the casilla this selector or observation is routed to."""
+        ...
+
+
+def casilla_target_matcher(selector: CasillaTargeted) -> Callable[[CasillaTargeted], bool]:
+    """Build the match predicate of a family whose selector names only its target casilla."""
+    target_casilla_id = selector.target_casilla_id
+
+    def matcher(observation: CasillaTargeted) -> bool:
+        return observation.target_casilla_id == target_casilla_id
+
+    return matcher
+
+
+class IncomeAmountObservation(Protocol):
+    """An income row carrying the cash it received and, when declared, its taxable base."""
+
+    @property
+    def gross_amount(self) -> Decimal:
+        """Return the observation's gross or cash-received amount."""
+        ...
+
+    @property
+    def taxable_base_amount(self) -> Decimal | None:
+        """Return the declared IVA-exclusive taxable base, when available."""
+        ...
+
+
+def ingresos_integros_total(matched: Sequence[IncomeAmountObservation]) -> Decimal:
+    """Sum each row's declared taxable base, or its gross amount when no base is declared."""
+    return sum(
+        (
+            observation.taxable_base_amount if observation.taxable_base_amount is not None else observation.gross_amount
+            for observation in matched
+        ),
+        Decimal("0"),
+    )
+
+
+def cash_received_total(matched: Sequence[IncomeAmountObservation]) -> Decimal:
+    """Sum the raw bank-credited magnitude, ignoring any declared taxable base."""
+    return sum((observation.gross_amount for observation in matched), Decimal("0"))
+
+
+class DeductibleAmountObservation(Protocol):
+    """A gasto row carrying the amount it makes deductible."""
+
+    @property
+    def deductible_amount(self) -> Decimal:
+        """Return the deductible amount carried by the observation."""
+        ...
+
+
+def deductible_amount_aggregate(matched: Sequence[DeductibleAmountObservation], selector: object) -> Decimal:
+    """Aggregate a single-fact ``deductible_amount_sum`` gastos family; the selector selects nothing further."""
+    del selector
+    return sum((observation.deductible_amount for observation in matched), Decimal("0"))

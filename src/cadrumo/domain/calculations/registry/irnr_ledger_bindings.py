@@ -13,23 +13,31 @@ false-fire guard.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.country_code import CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
-from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
-from .errors import RegistryValidationError
+from ._ledger_binding_resolution import (
+    casilla_target_matcher,
+    resolve_ledger_family_binding_values,
+    unsupported_ledger_family_observations,
+)
+from .binding_selector_utils import provider_member
 from .ids import BindingId
+from .ledger_binding_validation import (
+    ledger_binding_build_diagnostics,
+    ledger_binding_selector,
+    require_ledger_aggregation_op,
+    require_ledger_target_casilla,
+)
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
@@ -94,7 +102,7 @@ def ledger_irnr_income_source_jurisdictions(
         frozenset(selector.source_jurisdictions)
         for binding in revision.bindings
         if binding.source == BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION
-        and (selector := _irnr_ledger_income_selector(binding)).target_casilla_id == target_casilla_id
+        and (selector := provider_member(binding, LedgerIrnrIncomeProvider)).target_casilla_id == target_casilla_id
     }
     if len(scopes) != 1:
         return None
@@ -106,39 +114,27 @@ _IRNR_GROSS_INCOME_CASILLAS: frozenset[CasillaId] = frozenset(
 )
 
 
-def _irnr_ledger_income_selector(binding: BindingDefinition) -> LedgerIrnrIncomeProvider:
-    try:
-        return provider_member(binding, LedgerIrnrIncomeProvider)
-    except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_irnr_income_aggregation selector: {exc}",
-        ) from exc
-
-
 def validate_ledger_irnr_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
     """Validate a ``ledger_irnr_income_aggregation`` binding definition."""
-    if binding.source != BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION:
-        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_irnr_income_aggregation source")
-    selector = _irnr_ledger_income_selector(binding)
-    if selector.target_casilla_id not in _IRNR_GROSS_INCOME_CASILLAS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} target_casilla_id {selector.target_casilla_id!r} "
-            f"is outside the supported Modelo 210 gross-income casillas {sorted(_IRNR_GROSS_INCOME_CASILLAS)!r}",
-        )
-    if binding_aggregation_op(binding) is not BindingAggregationOp.SUM:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_irnr_income_aggregation supports only aggregation op 'sum'",
-        )
+    selector = ledger_binding_selector(
+        binding,
+        BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
+        LedgerIrnrIncomeProvider,
+    )
+    require_ledger_target_casilla(
+        binding,
+        selector.target_casilla_id,
+        _IRNR_GROSS_INCOME_CASILLAS,
+        scope="supported Modelo 210 gross-income casillas",
+    )
+    require_ledger_aggregation_op(binding)
 
 
 def validate_ledger_irnr_income_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_irnr_income_aggregation`` binding at registry-build time."""
-    failures = selector_against_model(binding, LedgerIrnrIncomeProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(
+    return ledger_binding_build_diagnostics(
         binding,
-        "ledger_irnr_income_aggregation",
+        LedgerIrnrIncomeProvider,
         validate_ledger_irnr_income_aggregation_binding_definition,
     )
 
@@ -155,17 +151,6 @@ class IrnrIncomeObservationProtocol(Protocol):
     def gross_income_amount(self) -> Decimal:
         """Return the observed gross income amount."""
         ...
-
-
-def _irnr_income_build_matcher(
-    selector: LedgerIrnrIncomeProvider,
-) -> Callable[[IrnrIncomeObservationProtocol], bool]:
-    target_casilla_id = selector.target_casilla_id
-
-    def matcher(observation: IrnrIncomeObservationProtocol) -> bool:
-        return observation.target_casilla_id == target_casilla_id
-
-    return matcher
 
 
 def _irnr_income_aggregate(
@@ -200,8 +185,8 @@ def resolve_ledger_irnr_income_aggregation_binding_values(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
-        parse_selector=_irnr_ledger_income_selector,
-        build_matcher=_irnr_income_build_matcher,
+        provider_model=LedgerIrnrIncomeProvider,
+        build_matcher=casilla_target_matcher,
         aggregate=_irnr_income_aggregate,
     )
 
@@ -216,7 +201,7 @@ def unsupported_ledger_irnr_income_observations(
     see that function for the shared fail-closed contract (why an unmatched
     observation is a modelling gap, not a legitimate zero). This family's
     own contribution is narrow: the ``target_casilla_id`` match predicate
-    (reused from the resolver's ``_irnr_income_build_matcher``) and a
+    (the shared casilla-keyed matcher the resolver also uses) and a
     zero-``gross_income_amount`` false-fire guard. No ``extra_exclusion``.
 
     Args:
@@ -233,7 +218,7 @@ def unsupported_ledger_irnr_income_observations(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
-        parse_selector=_irnr_ledger_income_selector,
-        build_matcher=_irnr_income_build_matcher,
+        provider_model=LedgerIrnrIncomeProvider,
+        build_matcher=casilla_target_matcher,
         is_declarable=lambda observation: observation.gross_income_amount != Decimal("0"),
     )

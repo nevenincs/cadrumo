@@ -13,9 +13,11 @@ from ...application.bienes_inversion.declare_command import (
     build_bien_inversion_record,
 )
 from ...application.bienes_inversion.ports import BienesInversionIvaRegisterRepositoryFactory
-from ...application.bienes_inversion.registered_operation import (
+from ...application.bienes_inversion.registered_contracts import (
     BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
     BIENES_INVERSION_LIST_OPERATION_DEFINITION_ID,
+)
+from ...application.bienes_inversion.registered_requests import (
     BienesInversionDeclareRequest,
     BienesInversionListRequest,
 )

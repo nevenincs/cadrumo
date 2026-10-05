@@ -14,7 +14,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 @pytest.mark.parametrize(
-    "code", ["REFUSED_EVIDENCE_BUNDLE_NOT_FOUND", "FAIL_PROFILE_EXPORT", "ERROR_CALCULATIONS_REGISTRY_VALIDATION"]
+    "code",
+    [
+        "REFUSED_EVIDENCE_BUNDLE_NOT_FOUND",
+        "FAIL_PROFILE_EXPORT",
+        "ERROR_CALCULATIONS_REGISTRY_VALIDATION",
+        "REFUSED_OPERATION_FINANCIAL_OPERAND",
+    ],
 )
 def test_recorded_failure_keeps_its_declared_code_category_and_retryability(code: str) -> None:
     registered = get_registered_error_code_by_code(code)

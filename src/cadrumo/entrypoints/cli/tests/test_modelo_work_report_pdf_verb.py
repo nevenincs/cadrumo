@@ -53,7 +53,7 @@ from ....application.modelo.operation_definitions import (
     resolve_active_workflow_profile,
 )
 from ....application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
@@ -238,7 +238,7 @@ def _seed_current_sealed_revision_in_profile(
         actor="operator",
         filing_instance_evidence=filing_instance_evidence,
     )
-    report = verify_modelo_revision(
+    report = verify_modelo_revision_with_preconditions(
         str(calculation.revision.calculation_revision_id),
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_verification_repository_bundle(bucket_id, operation=operation),
@@ -246,7 +246,7 @@ def _seed_current_sealed_revision_in_profile(
         workflow_profile=resolve_active_workflow_profile(operation),
         operator_scope_ports=build_operator_scope_ports(),
         operation=operation,
-    )
+    ).report
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE, (
         report.completeness_status,
         tuple((finding.kind.value, finding.severity.value, dict(finding.message_facts)) for finding in report.findings),

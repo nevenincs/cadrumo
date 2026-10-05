@@ -22,15 +22,15 @@ from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.operations.refusal_evidence import OperationRefusalEvidence
-from ...application.prorrata_register.registered_operations import (
+from ...application.prorrata_register.executor import ProrrataOperationExecutor
+from ...application.prorrata_register.operation_requests import (
     PRORRATA_SEED_OPERATION_DEFINITION_ID,
     PRORRATA_SETTLE_SECTOR_OPERATION_DEFINITION_ID,
-    ProrrataMutationProjection,
-    ProrrataOperationExecutionResult,
-    ProrrataOperationExecutor,
     ProrrataSettleSectorRequest,
-    project_prorrata_mutation_result,
 )
+from ...application.prorrata_register.projection_contracts import ProrrataMutationProjection
+from ...application.prorrata_register.result_contracts import ProrrataOperationExecutionResult
+from ...application.prorrata_register.result_projections import project_prorrata_mutation_result
 from ...application.prorrata_register.service import ProrrataRegisterService
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -110,9 +110,9 @@ def _run_executor(
     monkeypatch: pytest.MonkeyPatch,
     operation_number: int,
 ) -> tuple[str | OperationRefusalEvidence, ProrrataOperationExecutionResult, _Events, OperationIdentity]:
-    import cadrumo.application.prorrata_register.registered_operations as registered_operations
+    import cadrumo.application.prorrata_register.executor as executor_module
 
-    monkeypatch.setattr(registered_operations, "require_active_bucket_id", lambda: str(_PROFILE_ID))
+    monkeypatch.setattr(executor_module, "require_active_bucket_id", lambda: str(_PROFILE_ID))
     subject_ref = profile_operation_subject(str(_PROFILE_ID))
     identity = OperationIdentity(
         operation_id=f"{operation_number:064x}",

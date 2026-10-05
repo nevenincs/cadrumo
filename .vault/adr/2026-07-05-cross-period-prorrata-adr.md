@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#cross-period-prorrata'
 date: '2026-07-05'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_hash: 'sha256:4c7cb0e03b01defecf60e0e79b592967cd509079f100fab4308952e9dd4b7c0b'
 related:
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-research]]"
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
-  - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
   - "[[2026-07-05-silent-zero-base-aggregation-audit]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
   - '[[2026-07-06-cross-period-prorrata-research]]'

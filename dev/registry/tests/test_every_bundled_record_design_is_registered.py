@@ -65,7 +65,7 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.corpus.sync_aeat_record_design_corpus import UNATTESTED_CORPUS_FILES
+from dev.corpus.record_design_inventory import UNATTESTED_CORPUS_FILES
 
 from .catalogue_verification_support import authored_catalogues
 

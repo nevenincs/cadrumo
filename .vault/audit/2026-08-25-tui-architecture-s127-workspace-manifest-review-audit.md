@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e13190fb36db1688bf4e7830dc7b2fb55c61ae7459b75b9fb84194d0153f62d7'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:49993cf4e8e9c42539813a094ee490425a7a4c437af2494fb7ab16393d2429de'
+related: []
 ---
+
 # `tui-architecture` audit: `S127 workspace manifest review`
 
 ## Scope
@@ -19,7 +19,7 @@ Independent final-state review of S127 after commits `db8c0e0909`, `3797210a1a`,
 
 ### focused-ruff-gate | medium | The final S127 test module fails the required Ruff gate
 
-`uv run --no-sync ruff check src/cadrumo/application/modelo/_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py` reports I001: the new `_Node` import is out of RuffÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢s required ordering in `test_workspace_manifest.py`. The current tree therefore does not satisfy the requested focused quality gate. This is a mechanical correction in the test only, but it must be repaired and the focused gate rerun before S127 can be approved.
+The current tree therefore does not satisfy the requested focused quality gate. This is a mechanical correction in the test only, but it must be repaired and the focused gate rerun before S127 can be approved.
 
 ### focused-ruff-gate-resolution | low | The S127 focused quality gate is restored
 

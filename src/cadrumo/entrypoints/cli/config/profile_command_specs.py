@@ -12,31 +12,30 @@ from cadrumo.application.operator_surface.command_ports import (
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_spec import (
-    FLAG_VALUE,
-    PATH_VALUE,
-    TEXT_VALUE,
-    WHOLE_NUMBER_VALUE,
-    ArgumentSpec,
-    CommandSpec,
-    DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
-    LazyBinding,
-    LiteralValue,
+from .._command_secret_contracts import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
-    OptionSpec,
+    RecoveryHandoffSpec,
+)
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import (
+    FLAG_VALUE,
+    PATH_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
+    DeferredTarget,
+    LazyBinding,
+    LiteralValue,
     ParameterConstraint,
     ParameterDefault,
-    RecoveryHandoffSpec,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from ..command_spec import translation_key as _key
+from ..command_shared_contracts import translation_key as _key
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
     BOOTSTRAP_WRITE,
@@ -751,6 +750,18 @@ PROFILE_COMMAND_SPECS = (
                 flag=True,
             ),
         ),
+    ),
+    _leaf(
+        "config_profile_censo_show",
+        "config_profile_censo",
+        "show",
+        "cli.config.profile.censo.show_help",
+        "_censo_transport",
+        "censo_show",
+        f"{_CONFIG}._censo_payloads",
+        "CensoStoredResult",
+        ENCRYPTED_READ,
+        (),
     ),
     _leaf(
         "config_profile_complete_setup",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from functools import cache
 from uuid import UUID
@@ -11,48 +12,31 @@ from pydantic import BaseModel
 from ..core.async_cleanup import await_cancellation_complete
 from ..core.external_constants import OutputLanguage
 from ..core.hashing import canonical_json_bytes
-from ..core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    profile_operation_subject,
-)
+from ..core.operations import OperationEffect, profile_operation_subject
 from ..core.time.clock import now
-from .operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from .operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from .operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
 )
-from .operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID, OperationResultProjectionSuccessV1
-from .operations.models import CredentialFreeOperationRequest, OperationRequest
+from .operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from .operations.frontend_requests import OperationResultProjectionSuccessV1
+from .operations.models import CredentialFreeOperationRequest, OperationIdentity, OperationRequest
+from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext
 from .operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
 )
 from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
-from .user_profile.access_contracts import (
-    AccessAction,
-    AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
-)
+from .user_profile.access_contracts import AccessDenialCode, Availability, DisclosureCategory
 from .user_profile.access_errors import ProfileAccessRefusedError
-from .workbench_generation import WorkbenchGenerationV1
+from .workbench_generation_contracts import WorkbenchGenerationV1
 from .workbench_generation_projection import WorkbenchGenerationOperationProjection, project_workbench_generation
 
 WORKBENCH_GENERATION_OPERATION_DEFINITION_ID = "workbench.generation"
@@ -66,8 +50,10 @@ class WorkbenchGenerationOperationRequest(CredentialFreeOperationRequest):
     output_language: OutputLanguage
 
 
+#: The outer reader receives only the invocation identity, never the executor's
+#: supervisor-owned capabilities.
 type WorkbenchGenerationReader = Callable[
-    [OperationExecutorContext, WorkbenchGenerationOperationRequest], Awaitable[WorkbenchGenerationV1]
+    [OperationIdentity, WorkbenchGenerationOperationRequest], Awaitable[WorkbenchGenerationV1]
 ]
 
 
@@ -96,11 +82,19 @@ class WorkbenchGenerationExecutor:
         await context.events.phase(_PHASE)
 
         async def capture() -> str:
-            generation = await reader(context, request.payload)
+            generation = await reader(context.identity, request.payload)
             if type(generation) is not WorkbenchGenerationV1:
                 raise TypeError("workbench reader returned an invalid generation")
-            projection = project_workbench_generation(request.payload.profile_id, generation)
-            _require_pageable_result(projection)
+
+            def project() -> WorkbenchGenerationOperationProjection:
+                projection = project_workbench_generation(request.payload.profile_id, generation)
+                _require_pageable_result(projection)
+                return projection
+
+            # Mirroring and validating the full workspace can be CPU-heavy.
+            # Keep the worker loop available to observations and lease renewal
+            # while the cancellation-owned capture retains this thread's work.
+            projection = await asyncio.to_thread(project)
             result_ref = await context.operands.put(projection, written_at=now())
             await context.events.effect(OperationEffect.NONE)
             return result_ref
@@ -143,19 +137,7 @@ def build_workbench_generation_operation_definition(
         ),
         phase_codes=(_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
+        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
@@ -167,18 +149,9 @@ def build_workbench_generation_operation_registration(
     """Expose the exact request and bound generation through canonical schemas."""
     if definition.definition_id != WORKBENCH_GENERATION_OPERATION_DEFINITION_ID:
         raise ValueError("wrong workbench generation definition")
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request",
-            schema_version=1,
-            model_type=WorkbenchGenerationOperationRequest,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result",
-            schema_version=1,
-            model_type=WorkbenchGenerationOperationProjection,
-        ),
+        public_result_type=WorkbenchGenerationOperationProjection,
         access_resolver=resolve_workbench_generation_access,
     )
 
@@ -196,58 +169,21 @@ def resolve_workbench_generation_access(
         or request.subject_ref != profile_operation_subject(str(payload.profile_id))
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosures = frozenset(
-            (
-                DisclosurePermission(
-                    destination_id=context.destination_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-            )
-        )
-    elif context.action is AccessAction.RESULT and context.contract.result_schema is not None:
-        disclosures = frozenset(
-            DisclosurePermission(
-                destination_id=context.destination_id,
-                projection_id=context.contract.result_schema.schema_id,
-                category=category,
-            )
-            for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=payload.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.COMMIT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                }
-            ),
-            disclosures=disclosures,
-            periods=frozenset(),
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-            requires_human=True,
-        ),
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+        result_schema_id=None,
+    )
+    return bind_operation_access(
+        context,
+        profile_id=payload.profile_id,
+        definition_id=request.definition_id,
+        actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=disclosures,
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=True,
+        provider=Availability.NOT_REQUIRED,
     )

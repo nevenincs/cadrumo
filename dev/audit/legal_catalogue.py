@@ -24,9 +24,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from pydantic import ValidationError
+
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.toml import parse_toml
+from cadrumo.core.toml import freeze_toml, parse_toml
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from dev._paths import UTF_8
+from dev.registry.compiler.loader_materialisation import validate_catalogue_section
+from dev.registry.compiler.runtime_catalogues import published_recargo_bands
 
 #: Sourced from ``dev._paths`` so the dev harness has one owner for it. The
 #: directory walk is imported from its canonical defining module above.
@@ -44,7 +50,7 @@ def load_legal_entries(root: Path) -> dict[str, dict[str, object]]:
 
     Returns:
         Entry id mapped to its authored table, accumulated in filename order so
-        a later file's entry of the same id wins deterministically.
+        duplicate entry ids refuse instead of silently replacing evidence.
 
     Raises:
         SystemExit: The catalogue directory is absent.
@@ -55,8 +61,39 @@ def load_legal_entries(root: Path) -> dict[str, dict[str, object]]:
     entries: dict[str, dict[str, object]] = {}
     for path in scan_directory(legal_dir, pattern="*.toml"):
         data = parse_toml(path.read_text(encoding=_UTF_8))
-        for entry_id, body in data.get("legal", {}).items():
+        unknown = set(data) - RegistryCatalogues.model_fields.keys() - {"band"}
+        if unknown or not data:
+            raise SystemExit(f"{path}: unrecognized or empty catalogue declarations: {sorted(unknown)}")
+        if "band" in data:
+            published_recargo_bands(data)
+        metadata = {key: value for key, value in data.items() if key not in {"legal", "band"}}
+        if "sources" in metadata:
+            raw_sources = metadata["sources"]
+            if not isinstance(raw_sources, dict) or not raw_sources:
+                raise SystemExit(f"{path}: source declarations must be a non-empty table")
+            metadata["sources"] = validate_catalogue_section(
+                path,
+                raw=freeze_toml(raw_sources),
+                kind="source reference",
+                model=SourceReference,
+            )
+        try:
+            RegistryCatalogues.model_validate(freeze_toml({"sources": {}, **metadata, "legal": {}}))
+        except ValidationError as exc:
+            raise SystemExit(f"{path}: invalid non-legal catalogue declarations: {exc}") from exc
+        if "legal" not in data:
+            continue
+        legal = data["legal"]
+        if not isinstance(legal, dict) or not legal:
+            raise SystemExit(f"{path}: legal declarations must be a non-empty table")
+        for entry_id, body in legal.items():
+            if not isinstance(body, dict) or not body:
+                raise SystemExit(f"{path}: legal entry {entry_id!r} must be a non-empty table")
+            if entry_id in entries:
+                raise SystemExit(f"{path}: duplicate legal entry {entry_id!r}")
             entries[entry_id] = body
+    if not entries:
+        raise SystemExit(f"legal catalogue contains no legal entries: {legal_dir}")
     return entries
 
 

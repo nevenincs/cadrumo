@@ -509,227 +509,227 @@ source_refs = ["aeat-dr-232-2018"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-nif" }
-fields = { binding = "modelo-232.page_01.vinculada-1-nif" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-fjo" }
-fields = { binding = "modelo-232.page_01.vinculada-1-fjo" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-razon-social" }
-fields = { binding = "modelo-232.page_01.vinculada-1-razon-social" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-tipo-vinculacion" }
-fields = { binding = "modelo-232.page_01.vinculada-1-tipo-vinculacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-provincia-pais" }
-fields = { binding = "modelo-232.page_01.vinculada-1-provincia-pais" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-tipo-operacion" }
-fields = { binding = "modelo-232.page_01.vinculada-1-tipo-operacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-ingreso-pago" }
-fields = { binding = "modelo-232.page_01.vinculada-1-ingreso-pago" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-metodo-valoracion" }
-fields = { binding = "modelo-232.page_01.vinculada-1-metodo-valoracion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-1-importe" }
-fields = { binding = "modelo-232.page_01.vinculada-1-importe" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-nif" }
-fields = { binding = "modelo-232.page_01.vinculada-2-nif" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-fjo" }
-fields = { binding = "modelo-232.page_01.vinculada-2-fjo" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-razon-social" }
-fields = { binding = "modelo-232.page_01.vinculada-2-razon-social" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-tipo-vinculacion" }
-fields = { binding = "modelo-232.page_01.vinculada-2-tipo-vinculacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-provincia-pais" }
-fields = { binding = "modelo-232.page_01.vinculada-2-provincia-pais" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-tipo-operacion" }
-fields = { binding = "modelo-232.page_01.vinculada-2-tipo-operacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-ingreso-pago" }
-fields = { binding = "modelo-232.page_01.vinculada-2-ingreso-pago" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-metodo-valoracion" }
-fields = { binding = "modelo-232.page_01.vinculada-2-metodo-valoracion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-2-importe" }
-fields = { binding = "modelo-232.page_01.vinculada-2-importe" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-nif" }
-fields = { binding = "modelo-232.page_01.vinculada-3-nif" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-fjo" }
-fields = { binding = "modelo-232.page_01.vinculada-3-fjo" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-razon-social" }
-fields = { binding = "modelo-232.page_01.vinculada-3-razon-social" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-tipo-vinculacion" }
-fields = { binding = "modelo-232.page_01.vinculada-3-tipo-vinculacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-provincia-pais" }
-fields = { binding = "modelo-232.page_01.vinculada-3-provincia-pais" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-tipo-operacion" }
-fields = { binding = "modelo-232.page_01.vinculada-3-tipo-operacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-ingreso-pago" }
-fields = { binding = "modelo-232.page_01.vinculada-3-ingreso-pago" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-metodo-valoracion" }
-fields = { binding = "modelo-232.page_01.vinculada-3-metodo-valoracion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-3-importe" }
-fields = { binding = "modelo-232.page_01.vinculada-3-importe" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-nif" }
-fields = { binding = "modelo-232.page_01.vinculada-4-nif" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-fjo" }
-fields = { binding = "modelo-232.page_01.vinculada-4-fjo" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-razon-social" }
-fields = { binding = "modelo-232.page_01.vinculada-4-razon-social" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-tipo-vinculacion" }
-fields = { binding = "modelo-232.page_01.vinculada-4-tipo-vinculacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-provincia-pais" }
-fields = { binding = "modelo-232.page_01.vinculada-4-provincia-pais" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-tipo-operacion" }
-fields = { binding = "modelo-232.page_01.vinculada-4-tipo-operacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-ingreso-pago" }
-fields = { binding = "modelo-232.page_01.vinculada-4-ingreso-pago" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-metodo-valoracion" }
-fields = { binding = "modelo-232.page_01.vinculada-4-metodo-valoracion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-4-importe" }
-fields = { binding = "modelo-232.page_01.vinculada-4-importe" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-nif" }
-fields = { binding = "modelo-232.page_01.vinculada-5-nif" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-fjo" }
-fields = { binding = "modelo-232.page_01.vinculada-5-fjo" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-razon-social" }
-fields = { binding = "modelo-232.page_01.vinculada-5-razon-social" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-tipo-vinculacion" }
-fields = { binding = "modelo-232.page_01.vinculada-5-tipo-vinculacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-provincia-pais" }
-fields = { binding = "modelo-232.page_01.vinculada-5-provincia-pais" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-tipo-operacion" }
-fields = { binding = "modelo-232.page_01.vinculada-5-tipo-operacion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-ingreso-pago" }
-fields = { binding = "modelo-232.page_01.vinculada-5-ingreso-pago" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-metodo-valoracion" }
-fields = { binding = "modelo-232.page_01.vinculada-5-metodo-valoracion" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".casilla_overrides]]
 selector = { revision = "2016-2017", id = "vinculada-5-importe" }
-fields = { binding = "modelo-232.page_01.vinculada-5-importe" }
+fields = {}
 removed_fields = ["additional_source_refs"]
 
 [[revisions."2018-y-siguientes".family_overrides]]
@@ -742,7 +742,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2018-y-siguientes".family_overrides]]
 family = "constructs"
 selector = {revision = "2016-2017", id = "modelo-232-informative"}
-sequence_additions = {bindings = ["modelo-232-related-party-row-nif", "modelo-232-related-party-row-name", "modelo-232-related-party-row-country", "modelo-232-related-party-row-operation-kind", "modelo-232-related-party-row-tpr-method", "modelo-232-related-party-row-amount"], deadline_windows = ["modelo-232-2018-0a", "modelo-232-2019-0a", "modelo-232-2020-0a", "modelo-232-2021-0a", "modelo-232-2022-0a", "modelo-232-2023-0a", "modelo-232-2024-0a", "modelo-232-2025-0a", "modelo-232-2026-0a"], source_refs = ["aeat-dr-232-2018"]}
+sequence_additions = {deadline_windows = ["modelo-232-2018-0a", "modelo-232-2019-0a", "modelo-232-2020-0a", "modelo-232-2021-0a", "modelo-232-2022-0a", "modelo-232-2023-0a", "modelo-232-2024-0a", "modelo-232-2025-0a", "modelo-232-2026-0a"], source_refs = ["aeat-dr-232-2018"]}
 sequence_removals = {deadline_windows = [0, 1]}
 sequence_order = {source_refs = [0, 3, 1, 2]}
 

@@ -19,6 +19,7 @@ from ..rules import (
     _redact_cli_string_uncached,
     default_rules_for,
     default_rules_for_class,
+    is_sensitive_redaction_key,
     normalise_redaction_key,
     redact,
     redact_for_cli_output,
@@ -146,3 +147,44 @@ def test_a_reused_key_fold_equals_a_fresh_one(key: object) -> None:
 
     assert normalise_redaction_key(key) == expected
     assert normalise_redaction_key(key) == expected
+
+
+@pytest.mark.parametrize(
+    ("key", "expected"),
+    (
+        ("taxId", "tax_id"),
+        ("certificatePassword", "certificate_password"),
+        ("CERTIFICATE-Data", "certificate_data"),
+        ("NIF", "nif"),
+        ("NIFValue", "nif_value"),
+        ("NIEValue", "nie_value"),
+        ("profileNIFValue", "profile_nif_value"),
+    ),
+)
+def test_the_canonical_key_fold_splits_camel_case(key: str, expected: str) -> None:
+    assert normalise_redaction_key(key) == expected
+
+
+@pytest.mark.parametrize(
+    "key",
+    (
+        "AUTHORIZATION",
+        "profile.taxId",
+        "certificatePassword",
+        "transportCredentialsBlob",
+        "pkcs12Archive",
+        "api-token",
+        "NIF",
+        "NIFValue",
+        "NIEValue",
+        "profileNIFValue",
+        "nie",
+    ),
+)
+def test_canonical_sensitive_key_terms_cover_composite_spellings(key: str) -> None:
+    assert is_sensitive_redaction_key(key)
+
+
+@pytest.mark.parametrize("key", ("manifest", "reason", "diagnostic_label"))
+def test_canonical_sensitive_key_terms_preserve_non_sensitive_names(key: str) -> None:
+    assert not is_sensitive_redaction_key(key)

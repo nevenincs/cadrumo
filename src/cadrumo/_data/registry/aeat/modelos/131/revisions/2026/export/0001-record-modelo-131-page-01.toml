@@ -1,0 +1,1373 @@
+[[revisions.2026.export_layouts]]
+id = 'modelo-131-fichero-boe'
+
+[[revisions.2026.export_layouts.records]]
+id = 'modelo-131-page-01'
+record_type = 'page_1'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '131'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-number'
+offset = 6
+length = 5
+kind = 'literal'
+literal = '01000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-end'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-complementaria-indicator'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-declaration-type'
+offset = 13
+length = 1
+kind = 'header'
+producer_key = 'filing.result_disposition'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-tax-id'
+offset = 14
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-declarante-apellidos'
+offset = 23
+length = 60
+kind = 'header'
+producer_key = 'taxpayer.surnames'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-declarante-nombre'
+offset = 83
+length = 20
+kind = 'header'
+producer_key = 'taxpayer.given_name'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-devengo-ejercicio'
+offset = 103
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = true
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-devengo-periodo'
+offset = 107
+length = 2
+kind = 'draft'
+draft_attribute = 'period_code'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.discapacidad-33'
+offset = 109
+length = 1
+kind = 'binding'
+binding = 'modelo-131.page1.discapacidad-33'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-1-epigrafe'
+offset = 110
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-1-epigrafe'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-1-rendimiento-neto'
+offset = 114
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-1-rendimiento-neto'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-1-porcentaje'
+offset = 131
+length = 5
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-1-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-1-resultado'
+offset = 136
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-1-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-2-epigrafe'
+offset = 153
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-2-epigrafe'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-2-rendimiento-neto'
+offset = 157
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-2-rendimiento-neto'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-2-porcentaje'
+offset = 174
+length = 5
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-2-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-2-resultado'
+offset = 179
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-2-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-3-epigrafe'
+offset = 196
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-3-epigrafe'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-3-rendimiento-neto'
+offset = 200
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-3-rendimiento-neto'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-3-porcentaje'
+offset = 217
+length = 5
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-3-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-3-resultado'
+offset = 222
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-3-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-4-epigrafe'
+offset = 239
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-4-epigrafe'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-4-rendimiento-neto'
+offset = 243
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-4-rendimiento-neto'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-4-porcentaje'
+offset = 260
+length = 5
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-4-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-4-resultado'
+offset = 265
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-4-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-5-epigrafe'
+offset = 282
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-5-epigrafe'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-5-rendimiento-neto'
+offset = 286
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-5-rendimiento-neto'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-5-porcentaje'
+offset = 303
+length = 5
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-5-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.actividad-5-resultado'
+offset = 308
+length = 17
+kind = 'binding'
+binding = 'modelo-131.page1.actividad-5-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-01'
+offset = 325
+length = 17
+kind = 'casilla'
+casilla_id = '01'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-02'
+offset = 342
+length = 17
+kind = 'casilla'
+casilla_id = '02'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-ceuta-melilla'
+offset = 359
+length = 1
+kind = 'binding'
+binding = 'modelo-131.page1.sin-datos-base-ceuta-melilla'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+]
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-volumen'
+offset = 360
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.sin-datos-base-volumen'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-porcentaje'
+offset = 370
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.sin-datos-base-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-vivienda-base'
+offset = 374
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.sin-datos-base-vivienda-base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-vivienda-porcentaje'
+offset = 384
+length = 3
+kind = 'binding'
+binding = 'modelo-131.page1.sin-datos-base-vivienda-porcentaje'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-vivienda-limite'
+offset = 387
+length = 3
+kind = 'binding'
+binding = 'modelo-131.page1.sin-datos-base-vivienda-limite'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-03'
+offset = 390
+length = 17
+kind = 'casilla'
+casilla_id = '03'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-04'
+offset = 407
+length = 17
+kind = 'casilla'
+casilla_id = '04'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-ordinarias-generales'
+offset = 424
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-ingresos-ordinarias-generales'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-prioritarias-generales'
+offset = 434
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-ingresos-prioritarias-generales'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-generales-porcentaje'
+offset = 444
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-ingresos-generales-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla'
+offset = 448
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla'
+offset = 458
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-territoriales-porcentaje'
+offset = 468
+length = 4
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-ingresos-territoriales-porcentaje'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-vivienda-base'
+offset = 472
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-vivienda-base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-vivienda-porcentaje'
+offset = 482
+length = 3
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-vivienda-porcentaje'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.agraria-vivienda-limite'
+offset = 485
+length = 3
+kind = 'binding'
+binding = 'modelo-131.page1.agraria-vivienda-limite'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-05'
+offset = 488
+length = 17
+kind = 'casilla'
+casilla_id = '05'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-06'
+offset = 505
+length = 17
+kind = 'casilla'
+casilla_id = '06'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-07'
+offset = 522
+length = 17
+kind = 'casilla'
+casilla_id = '07'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-08'
+offset = 539
+length = 17
+kind = 'casilla'
+casilla_id = '08'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.deduccion-art-110-tramo'
+offset = 556
+length = 1
+kind = 'binding'
+binding = 'modelo-131.page1.deduccion-art-110-tramo'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.deduccion-art-110-cuantia'
+offset = 557
+length = 5
+kind = 'binding'
+binding = 'modelo-131.page1.deduccion-art-110-cuantia'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-09'
+offset = 562
+length = 17
+kind = 'casilla'
+casilla_id = '09'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-10'
+offset = 579
+length = 17
+kind = 'casilla'
+casilla_id = '10'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-11'
+offset = 596
+length = 17
+kind = 'casilla'
+casilla_id = '11'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.vivienda-derecho-deduccion'
+offset = 613
+length = 1
+kind = 'binding'
+binding = 'modelo-131.page1.vivienda-derecho-deduccion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.vivienda-deduccion-aplicada'
+offset = 614
+length = 10
+kind = 'binding'
+binding = 'modelo-131.page1.vivienda-deduccion-aplicada'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-12'
+offset = 624
+length = 17
+kind = 'casilla'
+casilla_id = '12'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-13'
+offset = 641
+length = 17
+kind = 'casilla'
+casilla_id = '13'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-14'
+offset = 658
+length = 17
+kind = 'casilla'
+casilla_id = '14'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-casilla-15'
+offset = 675
+length = 17
+kind = 'casilla'
+casilla_id = '15'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.declaracion-complementaria'
+offset = 692
+length = 1
+kind = 'binding'
+binding = 'modelo-131.page1.declaracion-complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01.modelo-131.page1.justificante-anterior'
+offset = 693
+length = 13
+kind = 'binding'
+binding = 'modelo-131.page1.justificante-anterior'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'orden-eha-672-2007:art-3',
+    'orden-hac-1425-2025:art-4',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01-reservado-706'
+offset = 706
+length = 101
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-01-reservado-807'
+offset = 807
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[[revisions.2026.export_layouts.records.fields]]
+id = 'modelo-131-page-close'
+offset = 820
+length = 12
+kind = 'literal'
+literal = '</T13101000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2026']
+
+[revisions.2026.export_layouts.records.row_field_casilla_ids]

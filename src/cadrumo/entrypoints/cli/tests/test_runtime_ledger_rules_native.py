@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from ....adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.ledger.action_ports import LedgerActionPorts
-from ....application.ledger.rule_operation import LedgerRuleRowProjection
+from ....application.ledger.rule_contracts import LedgerRuleRowProjection
 from ....application.user_profile.login_session import login_profile, resolve_login_target
 from ....core.config import override_settings
 from ....core.decimal.formatting import format_decimal

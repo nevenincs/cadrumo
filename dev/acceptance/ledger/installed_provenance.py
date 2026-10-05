@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import hashlib
 import json
 import re
 import secrets
@@ -26,6 +25,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal
 
+from cadrumo.core.hashing import sha256_file
 from dev.acceptance.income_tax.installed_tui_child import (
     SETUP_WALK_SURFACE,
     InstalledTuiChildError,
@@ -48,16 +48,15 @@ from dev.acceptance.installed_cli import (
 )
 from dev.packaging.installed_wheel_binding import environment_interpreter
 
-from .installed_tui_journey import (
-    LedgerInstalledTuiError,
+from .installed_tui_cli_transport import _result, _text
+from .installed_tui_contracts import LedgerInstalledTuiError
+from .installed_tui_controls import (
     _activate_button,
     _open_invoice_detail,
     _open_ledger_destination,
     _open_transaction_detail,
-    _require_empty_directory,
-    _result,
-    _text,
 )
+from .installed_tui_storage import _require_empty_directory
 from .provenance_fixtures import ProvenanceCase, provenance_cases
 
 _SCHEMA = "ledger-01-installed-provenance-v2"
@@ -73,6 +72,23 @@ type ChildMode = Literal["import", "inspect"]
 _ADMISSION_SURFACE_SECONDS = 300.0
 _DETAIL_IDENTITY_SECONDS = 60.0
 _PROVENANCE_TOKEN = re.compile(r"[\w.-]+\.(?:csv|txt|tsv|xlsx|xlsm|xls|ofx|qfx|pdf):\d+")
+
+
+def _import_cli_provenance_cases(
+    cli: InstalledCli, cases: Sequence[ProvenanceCase], paths: dict[str, Path]
+) -> tuple[dict[str, list[str]], list[ProvenanceCase]]:
+    """Import cli provenance cases."""
+    try:
+        cli.create_profile(year=_YEAR)
+    except InstalledCliError as error:
+        raise LedgerInstalledTuiError("installed CLI profile creation failed") from error
+    cli_cases = [case for case in cases if case.import_frontend == "cli"]
+    tui_cases = [case for case in cases if case.import_frontend == "tui"]
+    for case in cli_cases:
+        _import_through_cli(cli, case, paths[case.case_id])
+    # Before any TUI login the CLI authenticates with the stdin secret.
+    cli_surfaces = _cli_readback(cli, cli_cases)
+    return cli_surfaces, tui_cases
 
 
 def assert_json_provenance(payload: Mapping[str, Any], *, filename: str, row: int, stage: str) -> None:
@@ -426,6 +442,26 @@ def _run_child(*, workspace_root: Path, mode: ChildMode, manifest: Path, passphr
     }
 
 
+def _provenance_child_identity_matches(document: object, mode: ChildMode) -> bool:
+    """Admit only the exact proven installed child mode."""
+    return bool(
+        isinstance(document, dict)
+        and document.get("schema_version") == _SCHEMA
+        and document.get("status") == "proven"
+        and document.get("mode") == mode
+        and document.get("product_origin") == "site-packages"
+    )
+
+
+def _provenance_child_product_matches(document: dict[str, Any]) -> bool:
+    """Require both the product digest and its observed installed path."""
+    return (
+        isinstance(document.get("product_init_sha256"), str)
+        and len(document["product_init_sha256"]) == 64
+        and isinstance(document.get("product_init_path"), str)
+    )
+
+
 def _parse_child_receipt(path: Path, *, mode: ChildMode, expected: Sequence[str]) -> dict[str, Any]:
     """Read one child's value-free receipt and require installed origin plus every expected observation."""
     try:
@@ -433,14 +469,8 @@ def _parse_child_receipt(path: Path, *, mode: ChildMode, expected: Sequence[str]
     except (OSError, json.JSONDecodeError) as error:
         raise LedgerInstalledTuiError(f"installed TUI provenance {mode} child receipt is unreadable") from error
     if (
-        not isinstance(document, dict)
-        or document.get("schema_version") != _SCHEMA
-        or document.get("status") != "proven"
-        or document.get("mode") != mode
-        or document.get("product_origin") != "site-packages"
-        or not isinstance(document.get("product_init_sha256"), str)
-        or len(document["product_init_sha256"]) != 64
-        or not isinstance(document.get("product_init_path"), str)
+        not _provenance_child_identity_matches(document, mode)
+        or not _provenance_child_product_matches(document)
         or list(document.get("observations") or ()) != list(expected)
     ):
         raise LedgerInstalledTuiError(f"installed TUI provenance {mode} child did not prove every case")
@@ -500,7 +530,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
     python_executable = environment_interpreter(args.python)
     if cli_executable.parent != python_executable.parent:
         raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
-    wheel_sha256 = hashlib.sha256(args.wheel.read_bytes()).hexdigest()
+    wheel_sha256 = sha256_file(args.wheel)
     authority_root = args.authority_root.resolve(strict=True)
     root = _require_empty_directory(args.output_root, label="Ledger provenance output root")
     store = _require_empty_directory(root / "secure-store", label="Ledger provenance secure store")
@@ -515,16 +545,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
     host_free_memory_gb = _host_free_memory_gb()
     passphrase = secrets.token_urlsafe(32)
     cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
-    try:
-        cli.create_profile(year=_YEAR)
-    except InstalledCliError as error:
-        raise LedgerInstalledTuiError("installed CLI profile creation failed") from error
-    cli_cases = [case for case in cases if case.import_frontend == "cli"]
-    tui_cases = [case for case in cases if case.import_frontend == "tui"]
-    for case in cli_cases:
-        _import_through_cli(cli, case, paths[case.case_id])
-    # Before any TUI login the CLI authenticates with the stdin secret.
-    cli_surfaces = _cli_readback(cli, cli_cases)
+    cli_surfaces, tui_cases = _import_cli_provenance_cases(cli, cases, paths)
 
     imported = _run_tui_child(
         args,

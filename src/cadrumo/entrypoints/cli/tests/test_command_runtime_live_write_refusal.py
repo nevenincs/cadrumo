@@ -23,17 +23,9 @@ from cadrumo.application.operator_surface.command_ports import CommandNodeKind, 
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.errors.error_codes import get_error_exit_code, get_registered_error_code, resolve_error_message
 from .._command_runtime import build_command_app
-from ..command_spec import (
-    CommandSpec,
-    CommandSpecGraph,
-    DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
-    LazyBinding,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-)
+from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import DeferredTarget, LazyBinding, ResultSchemaSpec, SchemaState, TranslationKey
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

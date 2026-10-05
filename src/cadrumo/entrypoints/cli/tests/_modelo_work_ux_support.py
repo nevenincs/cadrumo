@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
@@ -20,12 +21,14 @@ from ....application.aggregation.withholding_recognition import (
 from ....application.wizard import catalogue as _wizard_catalogue
 from ....application.wizard import persistence as _wizard_persistence
 from ....core.aggregation import RetencionClave
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ....domain.modelos.work_unit import WorkUnit
 from ....tests.cli_envelope import unwrap_schema_envelope
-from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+from .modelo_profile_seed import invoke_seeded_profile_cli
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _M111_PROFESSIONAL_NIF = "B12345674"
@@ -39,7 +42,7 @@ _PROFILE_ID = "6f1d2c3a-4b5e-4f60-8a71-9c2d3e4f5a6b"
 
 
 def _invoke(args: list[str]):
-    return invoke_cached_cli(args)
+    return invoke_seeded_profile_cli(args)
 
 
 def operator_profile_facts(*, activity_start_date: str | None = None) -> dict[str, str]:
@@ -317,3 +320,12 @@ def _capture_m115_invoice_withholding() -> None:
         ],
     )  # fmt: skip
     assert captured.exit_code == 0, captured.output
+
+
+def load_work_unit_by_id(work_unit_id: str) -> WorkUnit:
+    """Load one stored work unit of the active profile by its exact id."""
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None, "an active profile is required to load a work unit"
+    unit = WorkUnitCatalogueRepository(bucket_id=bucket_id).load().get(work_unit_id)
+    assert unit is not None, work_unit_id
+    return unit

@@ -6,7 +6,7 @@ from uuid import UUID
 
 import typer
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.user_profile.view_operation import ProfileViewPageKind, ProfileViewStatusItem
 from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
@@ -14,6 +14,7 @@ from ....application.workflow.profile_health import ProfileHealthStatus, assess_
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....core.json_contract import ResolvedPreconditionAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
 from ..config_payloads import ConfigStatusResult
@@ -76,14 +77,7 @@ def _emit_runtime_status(ctx: typer.Context, status: ProfileViewStatusItem, *, p
         else None
     )
     if health.status is ProfileHealthStatus.INCOMPLETE or not status.baseline_ready:
-        incomplete = health.status is ProfileHealthStatus.INCOMPLETE
-        result, lines = blocked_readiness_status(
-            active_profile=status.display_name,
-            profile_id=str(profile_id) if incomplete else None,
-            values=values,
-            precondition_action=action if incomplete else None,
-            missing_required=health.missing_required if incomplete else (),
-        )
+        result, lines = _blocked_runtime_status(status, profile_id, values, action)
     elif not status.projection_valid:
         result = ConfigStatusResult(
             active_profile=status.display_name,
@@ -134,3 +128,19 @@ def config_status(ctx: typer.Context, output_language: OutputLanguage | None = N
     if len(items) != 1 or not isinstance(items[0], ProfileViewStatusItem):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     _emit_runtime_status(ctx, items[0], profile_id=profile_id)
+
+
+def _blocked_runtime_status(
+    status: ProfileViewStatusItem, profile_id: UUID, values: dict[str, str], action: ResolvedPreconditionAction | None
+) -> tuple[ConfigStatusResult, tuple[str, ...]]:
+    """Render incomplete and baseline-blocked status without re-evaluating profile facts."""
+    health = status.health
+    incomplete = health.status is ProfileHealthStatus.INCOMPLETE
+    result, lines = blocked_readiness_status(
+        active_profile=status.display_name,
+        profile_id=str(profile_id) if incomplete else None,
+        values=values,
+        precondition_action=action if incomplete else None,
+        missing_required=health.missing_required if incomplete else (),
+    )
+    return result, lines

@@ -10,40 +10,22 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.hashing import canonical_json_bytes
+from ...core.hex import Hex64Str
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..export.tabular import ExportSerializationFormat
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from ..operations.models import OperationRequest, OperationTerminalReceipt
+from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES
+from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
+from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
-from ..operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -56,7 +38,6 @@ from .commit_fence import (
     run_with_ledger_commit_fence,
 )
 from .export_link_operation_ports import (
-    require_export_link_profile,
     resolve_export_link_access,
     settle_export_link_failure,
 )
@@ -122,13 +103,13 @@ class LedgerExportProjection(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     bucket_id: str
-    export_id: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+    export_id: Hex64Str
     export_format: ExportSerializationFormat
     media_type: str
     filename_extension: str
     row_count: Annotated[int, Field(ge=0)]
     byte_size: Annotated[int, Field(ge=0)]
-    sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+    sha256: ContentDigest
     fieldnames: tuple[str, ...]
     rows: tuple[LedgerExportRowProjection, ...]
     bucket_event_ids: Annotated[tuple[str, ...], Field(min_length=1, max_length=1)]
@@ -161,14 +142,12 @@ class LedgerExportExecutor:
 
     async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> str:
         """Publish the human export and settle each concrete write outcome."""
-        payload = request.payload
-        if (
-            request.definition_id != LEDGER_EXPORT_OPERATION_DEFINITION_ID
-            or type(payload) is not LedgerExportRequest
-            or not isinstance(payload, LedgerExportRequest)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        require_export_link_profile(request, context, payload.profile_id)
+        payload = require_access_request_payload(
+            request,
+            definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
+            payload_type=LedgerExportRequest,
+        )
+        require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
         tracker = LedgerCommitAttemptTracker()
         artifact_confirmed = False
@@ -232,15 +211,13 @@ def project_ledger_export_result(result: BaseModel, receipt: OperationTerminalRe
         raise ValueError("invalid ledger export result")
     projection = result.projection
     if (
-        receipt.identity.definition_id != LEDGER_EXPORT_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        not terminal_receipt_matches(
+            receipt,
+            definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(projection.profile_id)),
+            condition=OperationTerminalCondition.SUCCEEDED,
+            effect=OperationEffect.UPDATED,
+        )
         or len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
     ):
         raise ValueError("ledger export report contradicts its terminal receipt")
@@ -267,47 +244,22 @@ def resolve_ledger_export_access(
 
 def build_ledger_export_definition(factory: LedgerActionPortsFactory) -> OperationDefinition:
     """Declare the existing human export, including partial and uncertain writes."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=LEDGER_EXPORT_OPERATION_DEFINITION_ID,
         request_type=LedgerExportRequest,
         result_type=LedgerExportExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=LedgerExportRequest,
-            executor_type=LedgerExportExecutor,
-            build=lambda: LedgerExportExecutor(factory),
-        ),
-        phase_codes=(LEDGER_EXPORT_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.REQUEST_BOUND,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset(
-                {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}
-            ),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=LedgerExportExecutor,
+        build=lambda: LedgerExportExecutor(factory),
+        capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_PARTIAL_UPDATE_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
 def build_ledger_export_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the strict human projection and current destination/category policy."""
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=LedgerExportRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=LedgerExportProjection
-        ),
-        access_resolver=resolve_ledger_export_access,
+        public_result_type=LedgerExportProjection,
         result_projector=project_ledger_export_result,
+        access_resolver=resolve_ledger_export_access,
     )

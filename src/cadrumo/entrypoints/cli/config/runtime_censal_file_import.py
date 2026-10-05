@@ -14,8 +14,9 @@ from ....application.user_profile.censal_file_import_operation import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.user_profile.values import UserProfileFact
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import bound_profile_client
-from ..runtime_registered_operation import run_registered_operation, submitted_operation_error
+from ..runtime_registered_operation import run_registered_operation
 
 
 def _operation_facts(facts: tuple[UserProfileFact, ...]) -> tuple[CensalFileImportFact, ...]:
@@ -66,12 +67,7 @@ def import_censal_file_facts(
         or projection.applied is not True
         or projection.fact_paths != tuple(fact.path for fact in facts)
     ):
-        raise submitted_operation_error(
-            completed.operation_id,
-            RuntimeRefusalCode.INVALID_FRAME.value,
-            terminal_condition=completed.terminal_condition,
-            effect=completed.effect,
-        )
+        raise invalid_completion_error(completed)
     return projection
 
 

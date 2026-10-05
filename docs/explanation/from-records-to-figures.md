@@ -1,14 +1,15 @@
 # How your records become tax figures
 
 This page covers where the numbers on your tax form come from: how a plain
-bank movement turns into a figure for each numbered box on an official form,
+bank transaction turns into a figure for each numbered box on an official form,
 and why the tool is built to let you explain every figure later. It walks
 through the idea, not the buttons - the how-to guides linked from each
 section carry the commands.
 
-The forms in question are modelos that you file with the {term}`AEAT`. Each modelo is made of {term}`casillas <casilla>`. Your job, with the tool's help, is to put the right figure in each box and to keep the evidence behind it.
+The forms in question are modelos that you send to the {term}`AEAT`. Each modelo is made of numbered {term}`boxes <casilla>`. Your job, with the tool's help, is to put the right figure in each box and to keep the supporting documents behind it.
 
-## A bank movement means nothing on its own
+(a-bank-movement-means-nothing-on-its-own)=
+## A bank transaction means nothing on its own
 
 A line on a bank statement is just a date and an amount. The money moved, but the statement doesn't know whether it was a customer paying you, a supplier you paid, your weekly groceries, or a transfer between your own accounts.
 
@@ -45,7 +46,7 @@ A calculation is always for one form, one year, and one period. The period decid
 
 A period is a quarter, a single month, or a whole year. The tool turns it into a start and end date, then keeps only the records whose date falls inside that window. A first-quarter filing sees January through March; a March filing sees only March. Some forms count cumulatively: a Modelo 130 instalment reads the year to date, so its second-quarter filing sees January through June.
 
-Choosing the right form for your activity is its own decision - see [Find out which modelos apply to you](../how-to/choose-modelo.md). For how quarters, months, and annual periods map to dates, see [Period tokens and dates](../how-to/filing-calendar.md#period-tokens-and-dates).
+Choosing the right form for your activity is its own decision - see [Find out which modelos apply to you](../how-to/choose-modelo.md). For how quarters, months, and annual periods map to dates, see {ref}`Period codes and dates <period-tokens-and-dates>`.
 
 ## From records to numbered boxes
 
@@ -63,7 +64,7 @@ This is the point of the whole design. Spanish tax filing expects you to justify
 
 ## Where this sits in the journey
 
-This page is part of understanding the AEAT pipeline - how your data flows from bank statement to filed form.
+This page is part of understanding the AEAT pipeline - how your data flows from bank statement to the form you file.
 
 - Start at the [how-it-works overview](index.md).
-- Continue to the next stage: [Editing and verifying a calculation](editing-and-verifying.md).
+- Continue to the next stage: [Editing and checking a calculation](editing-and-verifying.md).

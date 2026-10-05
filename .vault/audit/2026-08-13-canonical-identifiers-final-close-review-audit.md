@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-identifiers'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:ebd84ed535f3886ed6b3573af574bd38ea7bcdec261fb1204b2da1b25f120f4a'
-related:
-  - "[[2026-08-07-canonical-identifiers-plan]]"
+related: []
 ---
 # `canonical-identifiers` final close review
 

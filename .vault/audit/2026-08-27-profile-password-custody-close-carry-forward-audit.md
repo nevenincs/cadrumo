@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3e0fa0e8f50d27376f304ae228d89a320163142a979fccb493ba37702bc869c'
-related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
+body_hash: 'sha256:0eefabe5fafcdbc931cdee8cb54746e79ddbfb9491636002d4359fbff8ec9ea6'
+related: []
 ---
 
 # `profile-password-custody` audit: `campaign close carry-forward`
@@ -36,7 +35,7 @@ inside it.
 ### close-carry-forward | high | The residual suite is red from work landed after this campaign, and the red set moves between runs
 
 A real sequential run of the named gates was executed. The no-skip gate refuses two
-platform-conditional skips in `src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py`
+platform-conditional skips in the retired test
 (a POSIX-fork guard and a directory-symlink guard) and three in
 `dev/tui/tests/test_tui_visual_inventory.py`; both files were last touched on
 2026-08-26 and 2026-08-27 by the registry-capture and TUI-raster tracks, after this

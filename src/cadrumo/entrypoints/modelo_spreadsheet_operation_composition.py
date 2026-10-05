@@ -1,4 +1,7 @@
-"""Bind canonical spreadsheet algorithms to one immutable profile worker."""
+"""Bind canonical spreadsheet algorithms to one immutable profile worker.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
@@ -7,28 +10,32 @@ from uuid import UUID
 
 from ..adapters.outbound.storage.errors import OutboundStorageConflictError
 from ..application.calculations.relation_prefill import resolve_relations_from_local_store
+from ..application.modelo.modelo_spreadsheet_observations import (
+    project_modelo_spreadsheet_observation,
+)
 from ..application.modelo.modelo_spreadsheet_operation_contracts import (
     ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetOperationPorts,
     ModeloSpreadsheetPullRequest,
     ModeloSpreadsheetVerifyRequest,
+    SpreadsheetMutationHandoff,
+    SpreadsheetProviderAdmission,
+    SpreadsheetSnapshotMismatchRefusal,
+    SpreadsheetVerifyAcknowledgement,
+)
+from ..application.modelo.modelo_spreadsheet_operation_projections import (
     SpreadsheetAssembledGrouping,
     SpreadsheetBindingEdit,
     SpreadsheetCalculateFacts,
     SpreadsheetComputedCasilla,
-    SpreadsheetMutationHandoff,
     SpreadsheetOperatorEdit,
-    SpreadsheetProviderAdmission,
     SpreadsheetPullFacts,
     SpreadsheetPullMetadata,
     SpreadsheetRelationEdit,
     SpreadsheetRowSet,
     SpreadsheetRowSetCell,
-    SpreadsheetSnapshotMismatchRefusal,
-    SpreadsheetVerifyAcknowledgement,
     SpreadsheetVerifyDivergence,
     SpreadsheetVerifyFacts,
-    project_modelo_spreadsheet_observation,
 )
 from ..application.storage.calc_sheets.engine import (
     CALC_SHEETS_ENGINE_VERSION,
@@ -46,7 +53,6 @@ from ..application.storage.calc_sheets.row_set_assembly import assemble_row_sets
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
-from ..core.config import load_settings
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..domain.calculations.registry.schema import RegistrySnapshot
@@ -54,29 +60,20 @@ from ..domain.calculations.registry.schema import RegistrySnapshot
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
-    from ..adapters.outbound.google.calc_sheets_pull_records import PullResult
+    from ..adapters.outbound.google.calc_sheets_pull_records import (
+        BindingEdit,
+        OperatorEdit,
+        PullResult,
+        RelationEdit,
+        RowSetEdit,
+    )
 
 
 def _pull_facts(result: PullResult, snapshot: RegistrySnapshot, *, assemble_observations: bool) -> SpreadsheetPullFacts:
     """Copy current populated output facts; all ingress algorithms stay canonical."""
-    operators = tuple(edit for edit in result.operator_edits if edit.value is not None)
-    bindings = tuple(edit for edit in result.binding_edits if edit.value is not None)
-    relations = tuple(edit for edit in result.relation_edits if edit.value is not None)
+    operators, bindings, relations = _populated_spreadsheet_scalar_edits(result)
     row_sets = tuple(row for row in result.row_set_edits if row.cells)
-    assembled = assemble_row_sets_for_snapshot(row_sets, snapshot) if assemble_observations else ()
-    groupings = (
-        tuple(
-            SpreadsheetAssembledGrouping(
-                grouping=row.grouping,
-                source_kind=source_kind,
-                observation_count=len(observations),
-                observations=tuple(project_modelo_spreadsheet_observation(observation) for observation in observations),
-            )
-            for row, (source_kind, observations) in zip(row_sets, assembled, strict=True)
-        )
-        if assemble_observations
-        else ()
-    )
+    groupings = _spreadsheet_assembled_groupings(row_sets, snapshot, assemble_observations)
     return SpreadsheetPullFacts(
         spreadsheet_id=result.spreadsheet_id,
         metadata_match=result.metadata_match.value,
@@ -91,37 +88,10 @@ def _pull_facts(result: PullResult, snapshot: RegistrySnapshot, *, assemble_obse
             for edit in operators
         ),
         binding_edits=tuple(SpreadsheetBindingEdit(binding=edit.binding, value=str(edit.value)) for edit in bindings),
-        relation_edits=tuple(
-            SpreadsheetRelationEdit(
-                relation=edit.relation,
-                value=str(edit.value),
-                provenance=edit.provenance,
-                source_modelo=edit.source_modelo,
-                source_filing_year=edit.source_filing_year,
-                source_periods=edit.source_periods,
-                source_casilla_ids=edit.source_casilla_ids,
-                legal_refs=edit.legal_refs,
-                source_refs=edit.source_refs,
-                resolved_at=edit.resolved_at.isoformat() if edit.resolved_at is not None else None,
-            )
-            for edit in relations
-        ),
+        relation_edits=_spreadsheet_relation_edits_facts(relations),
         row_set_edits_populated=len(row_sets),
         row_set_cells_populated=sum(len(row.cells) for row in row_sets),
-        row_set_edits=tuple(
-            SpreadsheetRowSet(
-                grouping=row.grouping,
-                cells=tuple(
-                    SpreadsheetRowSetCell(
-                        binding=cell.binding,
-                        row_index=cell.row_index,
-                        value=str(cell.value) if cell.value is not None else None,
-                    )
-                    for cell in row.cells
-                ),
-            )
-            for row in row_sets
-        ),
+        row_set_edits=_spreadsheet_row_set_edits_facts(row_sets),
         assembled_groupings=groupings,
         assembled_observation_count=sum(row.observation_count for row in groupings),
     )
@@ -182,15 +152,24 @@ def build_modelo_spreadsheet_operation_ports(
         return operation.snapshot(request.modelo, filing_year=period.filing_year, period=period.registry_token)
 
     def credentials_and_root(admit_provider: SpreadsheetProviderAdmission) -> tuple[Credentials, str]:
-        from ..adapters.outbound.storage.factory import build_google_credentials, resolve_required_drive_root_folder_id
+        from ..adapters.outbound.storage.factory import (
+            build_google_credentials,
+            require_application_drive_root,
+            resolve_required_drive_root_folder_id,
+        )
 
         require_profile()
         # The canonical local root precondition retains its original refusal
         # before any credential/provider discovery or remote dispatch.
-        root = resolve_required_drive_root_folder_id(profile=str(profile_id), settings=load_settings())
+        root = resolve_required_drive_root_folder_id(profile=str(profile_id))
         admit_provider()
         require_profile()
         credentials = build_google_credentials(profile=str(profile_id))
+        require_profile()
+        # A stored root is used only after Drive shows it as a folder this
+        # application created.
+        admit_provider()
+        require_application_drive_root(credentials, root_folder_id=root)
         require_profile()
         return credentials, root
 
@@ -360,3 +339,71 @@ def build_modelo_spreadsheet_operation_ports(
 
 
 __all__ = ["build_modelo_spreadsheet_operation_ports"]
+
+
+def _populated_spreadsheet_scalar_edits(
+    result: PullResult,
+) -> tuple[tuple[OperatorEdit, ...], tuple[BindingEdit, ...], tuple[RelationEdit, ...]]:
+    """Filter populated operator, binding, and relation edits in workbook order."""
+    operators = tuple(edit for edit in result.operator_edits if edit.value is not None)
+    bindings = tuple(edit for edit in result.binding_edits if edit.value is not None)
+    relations = tuple(edit for edit in result.relation_edits if edit.value is not None)
+    return operators, bindings, relations
+
+
+def _spreadsheet_assembled_groupings(
+    row_sets: tuple[RowSetEdit, ...], snapshot: RegistrySnapshot, assemble_observations: bool
+) -> tuple[SpreadsheetAssembledGrouping, ...]:
+    """Assemble row sets only when requested and retain their strict positional alignment."""
+    assembled = assemble_row_sets_for_snapshot(row_sets, snapshot) if assemble_observations else ()
+    groupings = (
+        tuple(
+            SpreadsheetAssembledGrouping(
+                grouping=row.grouping,
+                source_kind=source_kind,
+                observation_count=len(observations),
+                observations=tuple(project_modelo_spreadsheet_observation(observation) for observation in observations),
+            )
+            for row, (source_kind, observations) in zip(row_sets, assembled, strict=True)
+        )
+        if assemble_observations
+        else ()
+    )
+    return groupings
+
+
+def _spreadsheet_relation_edits_facts(relations: tuple[RelationEdit, ...]) -> tuple[SpreadsheetRelationEdit, ...]:
+    """Copy every populated relation_edits value and its existing provenance fields."""
+    return tuple(
+        SpreadsheetRelationEdit(
+            relation=edit.relation,
+            value=str(edit.value),
+            provenance=edit.provenance,
+            source_modelo=edit.source_modelo,
+            source_filing_year=edit.source_filing_year,
+            source_periods=edit.source_periods,
+            source_casilla_ids=edit.source_casilla_ids,
+            legal_refs=edit.legal_refs,
+            source_refs=edit.source_refs,
+            resolved_at=edit.resolved_at.isoformat() if edit.resolved_at is not None else None,
+        )
+        for edit in relations
+    )
+
+
+def _spreadsheet_row_set_edits_facts(row_sets: tuple[RowSetEdit, ...]) -> tuple[SpreadsheetRowSet, ...]:
+    """Copy every populated row_set_edits value and its existing provenance fields."""
+    return tuple(
+        SpreadsheetRowSet(
+            grouping=row.grouping,
+            cells=tuple(
+                SpreadsheetRowSetCell(
+                    binding=cell.binding,
+                    row_index=cell.row_index,
+                    value=str(cell.value) if cell.value is not None else None,
+                )
+                for cell in row.cells
+            ),
+        )
+        for row in row_sets
+    )

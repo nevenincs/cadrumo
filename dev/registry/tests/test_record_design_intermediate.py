@@ -480,12 +480,12 @@ def test_intermediate_preserves_each_modelo_220_composite_relative_closing(
 
 
 @pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _MODELO_390_DESIGNS)
-def test_intermediate_classifies_each_modelo_390_page_zero_as_a_total_less_auxiliary_header(
+def test_intermediate_classifies_each_modelo_390_page_zero_as_a_variable_envelope(
     source_ref: str,
     filing_year: int,
     design_epoch: str,
 ) -> None:
-    """Real M390 page zero is retained once as its 13-anchor non-fixed composition header."""
+    """Real M390 page zero includes a variable body, closer and stated Variable total."""
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
     parsed = extract_record_design(
@@ -507,12 +507,13 @@ def test_intermediate_classifies_each_modelo_390_page_zero_as_a_total_less_auxil
 
     page_zero = next(sheet for sheet in parsed if sheet.name == "Pág. 0")
     assert page_zero.total_positions is None
-    assert len(intermediate.auxiliary_envelope_headers) == 1
-    (header,) = intermediate.auxiliary_envelope_headers
-    assert header.sheet == header.record_identity == page_zero.name
-    assert header.emitted_extent == 328
-    assert len(header.fields) == len(page_zero.fields) == 13
-    assert tuple(field.parser_field.offset for field in header.fields) == (
+    assert not intermediate.auxiliary_envelope_headers
+    assert len(intermediate.variable_envelopes) == 1
+    (envelope,) = intermediate.variable_envelopes
+    assert envelope.sheet == envelope.record_identity == page_zero.name
+    assert envelope.prefix_extent == 328
+    assert len(envelope.prefix_fields) == len(page_zero.fields) == 13
+    assert tuple(field.offset for field in envelope.prefix_fields) == (
         1,
         3,
         6,
@@ -527,8 +528,13 @@ def test_intermediate_classifies_each_modelo_390_page_zero_as_a_total_less_auxil
         110,
         323,
     )
-    assert tuple(field.parser_field.length for field in header.fields) == (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)
-    assert tuple(field.parser_field.content for field in header.fields)[-1] == '"</AUX>"'
+    assert tuple(field.length for field in envelope.prefix_fields) == (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)
+    assert envelope.prefix_fields[-1].content == '"</AUX>"'
+    assert envelope.body_offset == 329
+    assert isinstance(envelope.closing, RecordDesignIntermediateRelativeSuffixMarker)
+    assert envelope.closing.offset == "***"
+    assert envelope.closing.length == 18
+    assert envelope.total_length == "Variable"
     assert all(sheet.record_identity != page_zero.name for sheet in intermediate.sheets)
 
 

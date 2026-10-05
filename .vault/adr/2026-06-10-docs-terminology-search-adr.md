@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#docs-terminology-search'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:e6ae34d0b9a80ea4283698be17f8933572a46051e2519d1598cef1a3d4fe77c4'
+modified: '2026-10-03'
+body_hash: 'sha256:bc5325a2e7987d1124986bbea62ab2413db607fecb50ab0c43654d2de740c9dd'
 related:
   - "[[2026-06-10-docs-terminology-search-research]]"
 ---
@@ -271,7 +271,7 @@ directive output at the `builder-inited` seam, uncommitted like
 hover tooltips via sphinx-hoverxref (one term per entry — the shared-entry
 tooltip bug). The existing nitpicky `-n -W` gate then enforces, for free:
 every `:term:` reference resolves (missing enrolment breaks the build) and
-no term is declared twice. Hand-written `docs/glossary.md` and the inline
+no term is declared twice. Hand-written the former source file and the inline
 "plain words you'll meet" sections are deleted in the same change
 (no-legacy rule — no parallel hand-written copy survives). A new
 docs-marked conformance test — the terminology sibling of the

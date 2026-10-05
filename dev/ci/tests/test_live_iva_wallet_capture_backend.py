@@ -28,7 +28,7 @@ from cadrumo.application.live.iva_remote_state_ports import IvaRemoteStatePort
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
@@ -54,11 +54,12 @@ _SESSION_BUCKET_ID = "38383838-3838-4383-8383-383838383838"
 _OTHER_SESSION_BUCKET_ID = "39393939-3939-4393-8393-393939393939"
 
 
-def _remote_state_port(output_root: Path) -> IvaRemoteStatePort:
+def _remote_state_port(output_root: Path, *, operation: PinnedAuthorityOperation) -> IvaRemoteStatePort:
     """Compose the history reader against the active test bucket."""
     return compose_live_state(
         output_root=output_root,
         bucket_id=_SESSION_BUCKET_ID,
+        operation=operation,
     ).iva_remote_state_port
 
 
@@ -196,7 +197,9 @@ def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persis
         assert IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T")) is None
 
 
-def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_path: Path) -> None:
+def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with _secure_backend(tmp_path):
         history_repo = IvaCompensationHistoryRepository()
         history_repo.save_period(
@@ -270,7 +273,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
         )
 
         report = list_iva_compensation_history(
-            ports=_remote_state_port(tmp_path / "wallet-evidence"),
+            ports=_remote_state_port(tmp_path / "wallet-evidence", operation=operation),
             as_of_year=2026,
         )
 
@@ -297,7 +300,9 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
     assert _TAXPAYER_REF not in report.model_dump_json()
 
 
-def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Path) -> None:
+def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with (
         bundled_indexed_authority().operation() as pinned,
         validating_governed_facts(pinned),
@@ -396,7 +401,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             Period.from_year_and_code(2026, "1T"),
         )
         report = list_iva_compensation_history(
-            ports=_remote_state_port(tmp_path / "remote-iva-evidence"),
+            ports=_remote_state_port(tmp_path / "remote-iva-evidence", operation=operation),
             as_of_year=2026,
         )
 

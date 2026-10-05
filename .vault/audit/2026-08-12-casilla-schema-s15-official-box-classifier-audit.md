@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:b32f3e36a1615a9365d1cdf09162792da91b2477c3c2534533aa5a5182d46ad0'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"
 ---
 # `casilla-schema` audit: `S15 Official Box Classifier Audit`

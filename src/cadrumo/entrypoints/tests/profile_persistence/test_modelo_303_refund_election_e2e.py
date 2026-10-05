@@ -69,7 +69,7 @@ from ....application.modelo.action_errors import ModeloRefundElectionNotEligible
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.filing_actions import file_modelo_revision
 from ....application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.auth_provider import AuthProviderKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -159,13 +159,13 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(
+        return verify_modelo_revision_with_preconditions(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
             operation=operation,
             **kwargs,
-        )
+        ).report
 
 
 def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
@@ -175,7 +175,7 @@ def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             operation=operation,
             **kwargs,
         ).record
@@ -410,7 +410,9 @@ def _file_period(
     assert work_unit is not None
     granting = tuple(
         report
-        for report in build_filing_action_ports(bucket_id=_BUCKET_ID).verification_repository.load().reports.values()
+        for report in build_filing_action_ports(bucket_id=_BUCKET_ID, operation=published_authority_operation())
+        .verification_repository.load()
+        .reports.values()
         if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo
     )
     assert len(granting) == 1
@@ -436,7 +438,7 @@ def _file_period(
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
-    return resolve_modelo_result_disposition(
+    disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile(
@@ -446,6 +448,8 @@ def _file_period(
         period=work_unit.period,
         refund_election=refund_election,
     )
+    assert disposition is not None
+    return disposition
 
 
 def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None:

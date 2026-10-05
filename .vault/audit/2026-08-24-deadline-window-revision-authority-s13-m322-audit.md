@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:ab76d1d6391ab9c47fbb3c19a18b3b8f632391bd8534cf9e418fa50801e49b32'
-related:
-  - '[[2026-08-24-deadline-window-revision-authority-plan]]'
+related: []
 ---
 # `deadline-window-revision-authority` audit: `S13 M322 official-calendar closure`
 

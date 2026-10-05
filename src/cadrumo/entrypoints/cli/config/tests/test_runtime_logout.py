@@ -10,6 +10,7 @@ from pydantic import TypeAdapter
 
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -82,6 +83,9 @@ def test_logout_clears_only_captured_default_and_preserves_other_access(tmp_path
                 now=active.opened_at,
                 idle_minutes=15,
                 absolute_minutes=240,
+                login_id=RECEIPT_LOGIN_ID,
+                sign_in=committed_sign_in(root, other_id),
+                generation=committed_sign_in(root, other_id).establish().current,
             )
             other_path = receipt.profile_session_path(storage_root=root, profile_id=other_id)
             original_receipt = other_path.read_bytes()

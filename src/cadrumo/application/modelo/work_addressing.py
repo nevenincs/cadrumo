@@ -56,8 +56,7 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
-from .calculation_action_ports import CalculationActionPorts
-from .calculation_actions import get_calculation_revision
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .preconditions import (
     build_modelo_precondition_failure_for_scenario,
     build_modelo_work_file_unverified_revision_failure,
@@ -473,160 +472,6 @@ def resolve_modelo_work_unit_for_operator_target(
     )
 
 
-def resolve_modelo_revision_for_operator_target(
-    *,
-    calculation_revision_id: CalculationRevisionId | None,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: Period | None,
-    registry_revision_id: RevisionId | None,
-    bucket_id: str | None = None,
-    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
-    default_for: ModeloCalculationRevisionDefault | None = None,
-    catalogue: WorkUnitCatalogue,
-    resolved_bucket_id: str,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    """Resolve one :class:`CalculationRevision` from exact or visible operator input.
-
-    An explicit calculation-revision id can stand alone as the exact escape hatch.
-    Otherwise the work target is resolved first and the selector/default policy is
-    applied under that work unit.
-    """
-    address = _revision_target_address(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        registry_revision_id=registry_revision_id,
-        bucket_id=bucket_id,
-    )
-    return _resolve_revision_with_precondition_translation(
-        address=address,
-        calculation_revision_id=calculation_revision_id,
-        selector=selector,
-        default_for=default_for,
-        catalogue=catalogue,
-        resolved_bucket_id=resolved_bucket_id,
-        ports=ports,
-    )
-
-
-def _revision_target_address(
-    *,
-    calculation_revision_id: CalculationRevisionId | None,
-    work_unit_id: str | None,
-    modelo: str | None,
-    year: int | None,
-    period: Period | None,
-    registry_revision_id: RevisionId | None,
-    bucket_id: str | None,
-) -> ModeloWorkAddress:
-    if (
-        calculation_revision_id is not None
-        and work_unit_id is None
-        and modelo is None
-        and year is None
-        and period is None
-        and registry_revision_id is None
-        and bucket_id is None
-    ):
-        return ModeloWorkAddress()
-    return modelo_work_address_from_operator_target(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        registry_revision_id=registry_revision_id,
-        bucket_id=bucket_id,
-    )
-
-
-def _resolve_revision_with_precondition_translation(
-    *,
-    address: ModeloWorkAddress,
-    calculation_revision_id: CalculationRevisionId | None,
-    selector: ModeloCalculationRevisionSelector,
-    default_for: ModeloCalculationRevisionDefault | None,
-    catalogue: WorkUnitCatalogue,
-    resolved_bucket_id: str,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    try:
-        return _resolve_revision_for_default(
-            address=address,
-            calculation_revision_id=calculation_revision_id,
-            selector=selector,
-            default_for=default_for,
-            catalogue=catalogue,
-            resolved_bucket_id=resolved_bucket_id,
-            ports=ports,
-        )
-    except CalculationRevisionNotFoundError as error:
-        recovery_error = _calculation_revision_work_unit_target_error(
-            error=error,
-            calculation_revision_id=calculation_revision_id,
-            address=address,
-            default_for=default_for,
-            catalogue=catalogue,
-            resolved_bucket_id=resolved_bucket_id,
-        )
-        if recovery_error is error:
-            raise
-        raise recovery_error from error
-    except ModeloWorkAddressNotFoundError as error:
-        precondition_error = _natural_target_absent_precondition_error(
-            error=error,
-            address=address,
-            default_for=default_for,
-        )
-        if precondition_error is error:
-            raise
-        raise precondition_error from error
-    except ModeloWorkUnitNotFoundError as error:
-        precondition_error = _exact_work_unit_absent_precondition_error(
-            error=error,
-            address=address,
-            default_for=default_for,
-        )
-        if precondition_error is error:
-            raise
-        raise precondition_error from error
-
-
-def _resolve_revision_for_default(
-    *,
-    address: ModeloWorkAddress,
-    calculation_revision_id: CalculationRevisionId | None,
-    selector: ModeloCalculationRevisionSelector,
-    default_for: ModeloCalculationRevisionDefault | None,
-    catalogue: WorkUnitCatalogue,
-    resolved_bucket_id: str,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    resolver = (
-        {
-            "verify": resolve_verifiable_modelo_calculation_revision_address,
-            "file": resolve_fileable_modelo_calculation_revision_address,
-            "export": resolve_exportable_modelo_calculation_revision_address,
-        }.get(default_for)
-        if default_for is not None
-        else None
-    )
-    if resolver is None:
-        resolver = resolve_modelo_calculation_revision_address
-    return resolver(
-        address=address,
-        calculation_revision_id=calculation_revision_id,
-        selector=selector,
-        catalogue=catalogue,
-        resolved_bucket_id=resolved_bucket_id,
-        ports=ports,
-    )
-
-
 def _calculation_revision_work_unit_target_error(
     *,
     error: CalculationRevisionNotFoundError,
@@ -908,12 +753,26 @@ def assert_work_target_revision(
         if axis not in diverging or candidate is None:
             continue
         asserted = candidate.strip()
+        context: dict[str, object] = {
+            "axis": axis,
+            "requested_revision": asserted,
+            "law_revision": law_revision_id,
+        }
+        if isinstance(projection, RegistryRevisionInspection):
+            context["modelo"] = projection.modelo_id
+        else:
+            context.update(
+                modelo=projection.modelo.id,
+                year=projection.filing_year,
+                period=projection.period,
+            )
         raise ModeloWorkRegistryYearMismatchError(
             f"{axis} registry revision {asserted!r} is not the law-determined revision "
             f"for this filing target. The law-determined revision is {law_revision_id!r}. "
             f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
             f"you cannot override it. Re-create the work unit without --revision to use "
             f"the correct revision, or omit --revision to accept the law-determined default.",
+            context=context,
         )
     return law_revision_id
 
@@ -1133,6 +992,28 @@ def capture_modelo_work_resolution(
     )
 
 
+def read_modelo_work_current_coordinate(
+    request: ModeloWorkSelectorRequest,
+    *,
+    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
+) -> ModeloWorkCurrentCoordinate:
+    """Read the coordinate a later pass compares a work capture against.
+
+    The same pointer and catalogue limbs :func:`capture_modelo_work_resolution`
+    observes, in the same owner domain, so a catalogue write since the capture
+    yields a different generation.
+    """
+    bucket_id, _catalogue, observation, implicit = _work_capture_observation(
+        request,
+        catalogue_repository=catalogue_repository,
+    )
+    domain = _work_capture_comparison_domain(bucket_id=bucket_id, implicit=implicit)
+    return ModeloWorkCurrentCoordinate(
+        comparison_domain=domain,
+        generation=_work_capture_generation_for(domain, observation),
+    )
+
+
 def ensure_modelo_work_unit_for_active_target(
     *,
     bucket_id: str,
@@ -1265,7 +1146,7 @@ def resolve_modelo_work_address_unit(
     return _selected_work_unit(resolution)
 
 
-def resolve_modelo_calculation_revision_address(
+def _resolve_modelo_calculation_revision_address(
     *,
     address: ModeloWorkAddress,
     calculation_revision_id: CalculationRevisionId | None = None,
@@ -1273,9 +1154,10 @@ def resolve_modelo_calculation_revision_address(
     default_for: ModeloCalculationRevisionDefault | None = None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    """Resolve a :class:`CalculationRevision` by exact id or under a modelo work address.
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+) -> tuple[CalculationRevision, ModeloCalculationRevisionSelector]:
+    """Resolve a revision and its owning selector by exact id or typed work address.
 
     ``default_for`` applies the command-specific selector default after the work
     unit is resolved. A bare exact calculation-revision id bypasses work-address
@@ -1286,40 +1168,78 @@ def resolve_modelo_calculation_revision_address(
     identity initially has no calculation revision, calculation creates the
     current revision, and the unchanged original invocation must then address it.
     """
-    if calculation_revision_id is not None and address == ModeloWorkAddress():
-        revision = _resolve_exact_calculation_revision_or_current_work_unit_revision(
+    try:
+        if calculation_revision_id is not None and address == ModeloWorkAddress():
+            revision = _resolve_exact_calculation_revision_or_current_work_unit_revision(
+                calculation_revision_id=calculation_revision_id,
+                default_for=default_for,
+                catalogue=catalogue,
+                resolved_bucket_id=resolved_bucket_id,
+                calculation_repository=calculation_repository,
+                operation=operation,
+            )
+            return (
+                _require_revision_parent_admitted_for_operation(
+                    revision,
+                    default_for=default_for,
+                    catalogue=catalogue,
+                    resolved_bucket_id=resolved_bucket_id,
+                ),
+                ModeloCalculationRevisionSelector.EXPLICIT,
+            )
+
+        work_unit = resolve_modelo_work_address_unit(
+            address,
+            catalogue=catalogue,
+            bucket_id=resolved_bucket_id,
+        )
+        selection = resolve_modelo_calculation_revision_pick(
+            work_unit,
+            selector=selector,
             calculation_revision_id=calculation_revision_id,
             default_for=default_for,
-            catalogue=catalogue,
-            resolved_bucket_id=resolved_bucket_id,
-            ports=ports,
+            calculation_repository=calculation_repository,
+            operation=operation,
         )
-        return _require_revision_parent_admitted_for_operation(
-            revision,
+        return (
+            _require_revision_parent_admitted_for_operation(
+                selection.revision,
+                default_for=default_for,
+                catalogue=catalogue,
+                resolved_bucket_id=resolved_bucket_id,
+            ),
+            selection.selector,
+        )
+    except CalculationRevisionNotFoundError as error:
+        recovery_error = _calculation_revision_work_unit_target_error(
+            error=error,
+            calculation_revision_id=calculation_revision_id,
+            address=address,
             default_for=default_for,
             catalogue=catalogue,
             resolved_bucket_id=resolved_bucket_id,
         )
-
-    work_unit = resolve_modelo_work_address_unit(
-        address,
-        catalogue=catalogue,
-        bucket_id=resolved_bucket_id,
-    )
-    revision = resolve_modelo_calculation_revision_pick(
-        work_unit,
-        selector=selector,
-        calculation_revision_id=calculation_revision_id,
-        default_for=default_for,
-        calculation_repository=ports.calculation_repository,
-        operation=ports.operation,
-    ).revision
-    return _require_revision_parent_admitted_for_operation(
-        revision,
-        default_for=default_for,
-        catalogue=catalogue,
-        resolved_bucket_id=resolved_bucket_id,
-    )
+        if recovery_error is error:
+            raise
+        raise recovery_error from error
+    except ModeloWorkAddressNotFoundError as error:
+        precondition_error = _natural_target_absent_precondition_error(
+            error=error,
+            address=address,
+            default_for=default_for,
+        )
+        if precondition_error is error:
+            raise
+        raise precondition_error from error
+    except ModeloWorkUnitNotFoundError as error:
+        precondition_error = _exact_work_unit_absent_precondition_error(
+            error=error,
+            address=address,
+            default_for=default_for,
+        )
+        if precondition_error is error:
+            raise
+        raise precondition_error from error
 
 
 def _resolve_exact_calculation_revision_or_current_work_unit_revision(
@@ -1328,7 +1248,8 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
     default_for: ModeloCalculationRevisionDefault | None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
-    ports: CalculationActionPorts,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     """Resolve an exact revision, or a current revision reached through its work unit.
 
@@ -1340,11 +1261,15 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
     deliberately unresolved so the existing terminal profile is projected by the
     caller's typed error path.
     """
-    try:
-        return get_calculation_revision(calculation_revision_id, ports=ports)
-    except CalculationRevisionNotFoundError as revision_error:
+    revisions = calculation_repository.load(operation=operation)
+    revision = revisions.get(calculation_revision_id)
+    if revision is None:
+        missing = CalculationRevisionNotFoundError(
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": calculation_revision_id},
+        )
         if default_for not in {"verify", "file"}:
-            raise
+            raise missing
         try:
             work_unit = resolve_modelo_work_unit_for_operator_target(
                 work_unit_id=calculation_revision_id,
@@ -1352,10 +1277,24 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
                 resolved_bucket_id=resolved_bucket_id,
             )
         except ModeloWorkUnitNotFoundError:
-            raise revision_error from None
+            raise missing from None
         if work_unit.state is not WorkUnitState.BORRADOR or work_unit.current_calculation_revision_id is None:
-            raise revision_error from None
-        return get_calculation_revision(work_unit.current_calculation_revision_id, ports=ports)
+            raise missing from None
+        revision = revisions.get(work_unit.current_calculation_revision_id)
+        if revision is None:
+            raise missing from None
+    require_calculation_revision_coordinates_current(revision, operation=operation)
+    work_unit = catalogue.get(revision.work_unit_id)
+    if (
+        work_unit is None
+        or work_unit.bucket_id != resolved_bucket_id
+        or (calculation_repository.bucket_id is not None and work_unit.bucket_id != calculation_repository.bucket_id)
+    ):
+        raise CalculationRevisionNotFoundError(
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": revision.calculation_revision_id},
+        )
+    return revision
 
 
 def _require_revision_parent_admitted_for_operation(
@@ -1397,20 +1336,38 @@ def resolve_modelo_revision_pick(
     """Resolve and project a revision selection as :class:`ModeloResolvedRevisionProjection`."""
     if pick is None:
         pick = ModeloRevisionPick()
-    work_unit = resolve_modelo_work_address_unit(
-        work_address_for_modelo_target(target),
-        catalogue=catalogue,
-        bucket_id=resolved_bucket_id,
-    )
-    selection = resolve_modelo_calculation_revision_pick(
-        work_unit,
-        selector=pick.selector,
+    revision, selected = _resolve_modelo_calculation_revision_address(
+        address=work_address_for_modelo_target(target),
         calculation_revision_id=pick.calculation_revision_id,
+        selector=pick.selector,
         default_for=pick.default_for,
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
         calculation_repository=calculation_repository,
         operation=operation,
     )
-    return ModeloResolvedRevisionProjection.from_revision(selection.revision, selector=selection.selector)
+    if pick.default_for == "file" and revision.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
+        work_unit = resolve_modelo_work_unit_for_operator_target(
+            work_unit_id=revision.work_unit_id,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
+        )
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": revision.calculation_revision_id, "state": revision.state.value},
+            precondition_failure=build_modelo_work_file_unverified_revision_failure(
+                calculation_revision_id=revision.calculation_revision_id,
+                state=revision.state.value,
+                work_unit=work_unit,
+            ),
+        )
+    if pick.default_for == "export":
+        revision = _require_revision_state(
+            revision,
+            allowed=tuple(sorted(CURRENT_SEALED_REVISION_STATES, key=lambda state: state.value)),
+            purpose="export",
+        )
+    return ModeloResolvedRevisionProjection.from_revision(revision, selector=selected)
 
 
 def _require_revision_state(
@@ -1426,102 +1383,6 @@ def _require_revision_state(
             f"{revision.state.value!r}; {purpose} requires {allowed_values}",
         )
     return revision
-
-
-def resolve_verifiable_modelo_calculation_revision_address(
-    *,
-    address: ModeloWorkAddress,
-    calculation_revision_id: CalculationRevisionId | None = None,
-    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
-    catalogue: WorkUnitCatalogue,
-    resolved_bucket_id: str,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    """Resolve the :class:`CalculationRevision` that ``work verify`` addresses.
-
-    Returns the resolved revision in ANY lifecycle state; no draft gate is
-    applied here. Verification-state policy is owned by
-    :func:`~cadrumo.application.modelo.verification_actions.verify_modelo_revision` under
-    ``aeat-cli-contract``: a revision already out of
-    ``BORRADOR`` that carries a granting :class:`VerificationReport` collapses to
-    that existing report as an idempotent no-op, and the hard refusal is reserved
-    for the inconsistent non-draft/no-granting-report state. Gating ``BORRADOR``
-    here would refuse the idempotent retry before the collapse could fire.
-    """
-    return resolve_modelo_calculation_revision_address(
-        address=address,
-        calculation_revision_id=calculation_revision_id,
-        selector=selector,
-        default_for="verify",
-        catalogue=catalogue,
-        resolved_bucket_id=resolved_bucket_id,
-        ports=ports,
-    )
-
-
-def resolve_fileable_modelo_calculation_revision_address(
-    *,
-    address: ModeloWorkAddress,
-    calculation_revision_id: CalculationRevisionId | None = None,
-    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
-    catalogue: WorkUnitCatalogue,
-    resolved_bucket_id: str,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    """Resolve the verified-complete :class:`CalculationRevision` that ``work file`` may consume."""
-    revision = resolve_modelo_calculation_revision_address(
-        address=address,
-        calculation_revision_id=calculation_revision_id,
-        selector=selector,
-        default_for="file",
-        catalogue=catalogue,
-        resolved_bucket_id=resolved_bucket_id,
-        ports=ports,
-    )
-    if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
-        return revision
-    work_unit = resolve_modelo_work_unit_for_operator_target(
-        work_unit_id=revision.work_unit_id,
-        catalogue=catalogue,
-        resolved_bucket_id=resolved_bucket_id,
-    )
-    raise CalculationRevisionStateError(
-        translated_message="errors.error.error_modelo_calculation_revision_state",
-        context={"calculation_revision_id": revision.calculation_revision_id, "state": revision.state.value},
-        precondition_failure=build_modelo_work_file_unverified_revision_failure(
-            calculation_revision_id=revision.calculation_revision_id,
-            state=revision.state.value,
-            work_unit=work_unit,
-        ),
-    )
-
-
-def resolve_exportable_modelo_calculation_revision_address(
-    *,
-    address: ModeloWorkAddress,
-    calculation_revision_id: CalculationRevisionId | None = None,
-    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
-    catalogue: WorkUnitCatalogue,
-    resolved_bucket_id: str,
-    ports: CalculationActionPorts,
-) -> CalculationRevision:
-    """Resolve the filed or verified-complete :class:`CalculationRevision` that ``modelo export`` may consume."""
-    revision = resolve_modelo_calculation_revision_address(
-        address=address,
-        calculation_revision_id=calculation_revision_id,
-        selector=selector,
-        default_for="export",
-        catalogue=catalogue,
-        resolved_bucket_id=resolved_bucket_id,
-        ports=ports,
-    )
-    return _require_revision_state(
-        revision,
-        # Sorted, not `tuple(frozenset)`: `allowed` is joined into the operator-facing
-        # refusal, and a frozenset's iteration order would vary the message run to run.
-        allowed=tuple(sorted(CURRENT_SEALED_REVISION_STATES, key=lambda state: state.value)),
-        purpose="export",
-    )
 
 
 __all__ = [
@@ -1556,16 +1417,12 @@ __all__ = [
     "law_selected_revision_for_work_target",
     "modelo_work_address_from_operator_target",
     "project_modelo_work_unit",
-    "resolve_exportable_modelo_calculation_revision_address",
-    "resolve_fileable_modelo_calculation_revision_address",
-    "resolve_modelo_calculation_revision_address",
-    "resolve_modelo_revision_for_operator_target",
+    "read_modelo_work_current_coordinate",
     "resolve_modelo_revision_pick",
     "resolve_modelo_work_address",
     "resolve_modelo_work_address_unit",
     "resolve_modelo_work_target",
     "resolve_modelo_work_unit_for_operator_target",
     "resolve_optional_modelo_work_address",
-    "resolve_verifiable_modelo_calculation_revision_address",
     "work_address_for_modelo_target",
 ]

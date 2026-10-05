@@ -16,7 +16,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Ledger Review",
     "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
+    "censo.activity_start_date": "2025-01-02",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",

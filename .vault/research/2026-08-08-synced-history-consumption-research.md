@@ -3,16 +3,15 @@ tags:
   - '#research'
   - '#synced-history-consumption'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a86b8e61d3135556b6c897a5c62242c066b1ed76da1a6534eed85b93c4e075e'
-related:
-  - "[[2026-08-07-history-onboarding-plan]]"
+body_hash: 'sha256:d2c8ac20e06d23fc950aefaa15f4d86dc61dfbde2950cca2afa22f1e20819264'
+related: []
 ---
 
 # `synced-history-consumption` research: who consumes pulled AEAT filing history
 
-## Question
+### Question
 
 A brand-new profile pulls its AEAT-stored filing history. Which of those pulled facts actually reach the calculation engine, and which are persisted and then never read? Specifically: when a work unit is derived from a pull rather than authored locally, how do its ledger-derived and previous-filing-derived values get filled, given that a freshly-onboarded profile has an EMPTY transaction ledger and no local app filings?
 
@@ -38,10 +37,17 @@ The lesson worth keeping: a constant named for a provenance, used as a field def
 
 An empty ledger produces a legally valid zero, and the failure mode this lane was opened to examine has no error, no refusal and no blank. That remains true and remains the reason nothing in this lane may use a blank or a refusal as its signal. What changed is the scope: the silent-zero risk is real for ledger-derived casillas on a pulled work unit, and it is NOT the general picture for previous-filing carries.
 
-## What this does not establish
+### What this does not establish
 
 The scope of the harm is NOT measured. Naming the one wired channel does not establish how many binding sources, relations and cross-period carries would have had a pulled value available to them. That census is the first thing the plan must do, and it must be derived from the loaded snapshot rather than from a directory listing, because a binding's `source` field determines whether an absent value is a ledger silent-zero, a profile fact, or a legitimately deferred kind.
 
 Whether any pulled value SHOULD feed a calculation input is a separate and unresolved question. A pulled filing is evidence of what was declared; it is not automatically an authorised input to a new computation, and the non-official-evidence rules already distinguish local app filings from AEAT filing evidence for exactly that reason. The decision record has to rule on which pulled facts are inputs, which are reconciliation targets only, and which must stay display-only.
 
 The direction of error is also unexamined. The existing apparatus watches under-declaration; a synced history that silently fails to reach the engine can produce either direction, and an over-payment produces valid output, no refusal and no signal to the taxpayer.
+
+## Sources
+
+- `src/cadrumo/application/live/filed_observation_persistence.py` — persistence of AEAT-filed calculation observations.
+- `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py` — previous-filing binding resolution.
+- `src/cadrumo/application/modelo/verification_cross_period.py` — cross-period observation consumption and provenance reporting.
+- `.vault/plan/2026-08-07-history-onboarding-plan.md` — the census row and its measured correction.

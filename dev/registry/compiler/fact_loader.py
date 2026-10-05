@@ -16,7 +16,8 @@ from pydantic import ValidationError
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.facts.schema import FactOwnership, GovernedFact
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from cadrumo.domain.calculations.registry.facts.variants import FactOwnership
 
 __all__ = ["is_governed_fact_filename", "load_governed_fact_file", "load_governed_facts"]
 

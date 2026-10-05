@@ -22,6 +22,7 @@ from ....core.time.utc import validate_utc_aware
 from ..capabilities import OperationRequestStoragePolicy
 from ..event_replay import OperationEventCursor
 from ..events import OperationEventCode
+from ..financial_operand_contract import OperationTransientFinancialOperandRequirementV1
 from ..interactions import OperationConsumedInteraction, OperationPendingInteraction
 from ..models import (
     OperationId,
@@ -67,14 +68,16 @@ class OperationPersistedSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[8] = 8
+    schema_version: Literal[9] = 9
     identity: OperationIdentity
     definition_contract_digest: ContentDigest
     request_storage: OperationRequestStoragePolicy
     request_reference: ContentDigest
     admission_provenance_reference: ContentDigest | None = None
     credential_free_request_json: str | None = None
+    manual_edit_values_purged: Literal[True] | None = None
     secret_requirement: OperationSecretRequirement | None = None
+    financial_requirement: OperationTransientFinancialOperandRequirementV1 | None = None
     executor_entered_at: datetime | None = None
     revision: OperationRevision
     lifecycle: OperationLifecycle
@@ -110,6 +113,14 @@ class OperationPersistedSnapshot(BaseModel):
         _validate_deadline_and_cancellation_state(self)
         _validate_request_storage(self)
         _validate_secret_state(self)
+        requirement = self.financial_requirement
+        if requirement is not None:
+            if requirement.identity != self.identity or requirement.invocation_revision > self.revision:
+                raise ValueError("financial requirement must bind this invocation identity and an admitted revision")
+            if self.secret_requirement is not None or self.manual_edit_values_purged is not None:
+                raise ValueError("financial requirement cannot coexist with secret or purged legacy custody")
+            if self.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
+                raise ValueError("typed financial custody requires an amount-free credential-free request")
         _validate_terminal_state(self)
         _validate_checkpoint_state(self)
         _validate_events(self)
@@ -511,7 +522,11 @@ class OperationSecureReferenceStore(Protocol):
         reference: ContentDigest,
         operand_type: type[OperandT],
     ) -> OperandT:
-        """Resolve one typed confidential operand by its content reference."""
+        """Resolve the operand at ``reference`` as an instance of exactly ``operand_type``.
+
+        Stored content that does not validate as ``operand_type`` is refused;
+        content written from a subclass is never returned as that subclass.
+        """
         del operand_type
         raise NotImplementedError
 

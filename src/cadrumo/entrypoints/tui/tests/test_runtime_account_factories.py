@@ -144,7 +144,7 @@ async def test_rebound_lease_or_frontend_cannot_close_or_borrow_access() -> None
     factories = _factories(client)
     client._frontend = OperationFrontendProjection.CLI
     with pytest.raises(RuntimeRefusalError) as refusal:
-        await cast(AccountDirectSessionActionV1, factories.change_user()).complete()
+        await factories.change_user().complete()
     assert refusal.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
     assert client.lock_calls == 0
     access = factories.access

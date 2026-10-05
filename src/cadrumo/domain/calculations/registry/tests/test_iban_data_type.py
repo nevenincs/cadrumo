@@ -11,7 +11,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import IbanString, _validate_iban_string
+from ..schema_scalars import IbanString, _validate_iban_string, validate_registry_text_scalar
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -98,3 +98,26 @@ class TestCasillaDefinitionDataType:
         )
         assert round_tripped.data_type == "iban"
         assert round_tripped == casilla
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "forbidden_values", "reason"),
+    (
+        ("not-an-iban", ("not-an-iban", "NOTANIBAN"), "ISO 13616 shape"),
+        (
+            " es00-synthetic-123456 ",
+            (" es00-synthetic-123456 ", "es00-synthetic-123456", "ES00SYNTHETIC123456"),
+            "mod-97 check",
+        ),
+    ),
+)
+def test_iban_text_scalar_refusals_do_not_echo_input(
+    raw_value: str,
+    forbidden_values: tuple[str, ...],
+    reason: str,
+) -> None:
+    with pytest.raises(RegistryValidationError) as refused:
+        validate_registry_text_scalar("iban", raw_value)
+
+    assert reason in str(refused.value)
+    assert all(candidate not in str(refused.value) for candidate in forbidden_values)

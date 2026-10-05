@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:9a835c811d2f8ae005c602554c1938a320b65ea2fdf6b02825455b42c5e04c36'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-06-26-binding-fold-in-carry-unification-adr]]"

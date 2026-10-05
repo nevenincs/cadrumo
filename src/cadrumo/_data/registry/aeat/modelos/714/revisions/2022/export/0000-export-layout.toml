@@ -1,0 +1,70 @@
+[[revisions.2022.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+format = 'fixed_width'
+source_refs = ['aeat-dr-714-2022']
+legal_refs = ['orden-hfp-310-2023:art-4']
+dictionary_path_overrides = []
+
+[revisions.2022.export_layouts.filing_envelope]
+schema_version = 1
+source_ref = 'aeat-dr-714-2022'
+source_sha256 = 'b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925'
+record_identity = '714-00 Patrimonio'
+prefix_extent = 328
+product_identity_requirement = 'aeat-product-software-identity-v1'
+closer_derivation = 'relative-closer-v1'
+total_derivation = 'emitted-byte-total-v1'
+body_record_ids = [
+    'modelo-714-page-01',
+    'modelo-714-page-02',
+    'modelo-714-page-03',
+    'modelo-714-page-04',
+    'modelo-714-page-05',
+    'modelo-714-page-06',
+    'modelo-714-page-07',
+    'modelo-714-page-08',
+    'modelo-714-page-09',
+    'modelo-714-page-10',
+    'modelo-714-page-ingreso-devolucion',
+]
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'composed_opening_tag'
+length = 17
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'aux_opening_tag'
+length = 5
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'pre_program_filler'
+length = 30
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'language'
+length = 1
+casilla_id = 'decl.idioma'
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'between_language_program_filler'
+length = 39
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'program_identifier'
+length = 4
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'between_identities_filler'
+length = 4
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'developer_tax_id'
+length = 9
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'post_developer_filler'
+length = 213
+
+[[revisions.2022.export_layouts.filing_envelope.prefix_fields]]
+role = 'aux_closing_tag'
+length = 6

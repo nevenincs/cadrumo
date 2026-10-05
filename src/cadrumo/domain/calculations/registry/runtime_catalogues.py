@@ -5,15 +5,22 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from itertools import pairwise
 from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
-from ....core.text_fold import fold_printed_phrase
 from .errors import RegistryValidationError
+from .runtime_catalogue_validation import (
+    require_catalogue_record_keys,
+    require_complete_recargo_bands,
+    require_place_of_supply_grounding,
+    require_postal_territory_keys,
+    require_tax_catalogue_keys,
+    require_unique_country_alpha3,
+    require_unique_country_names,
+)
 from .schema_base import RegistryModel
 
 
@@ -78,18 +85,7 @@ class PublishedIvaPlaceOfSupplyRule(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _grounding_matches_disposition(self) -> Self:
-        if len(self.legal_references) != len(set(self.legal_references)):
-            raise RegistryValidationError(f"place-of-supply rule {self.rule_id!r} repeats legal references")
-        if self.legal_basis_exempt:
-            if self.legal_references or self.establishing_reference or self.supply_nature is not None:
-                raise RegistryValidationError("exempt place-of-supply rule must carry no legal disposition")
-            if self.valid_from is not None or self.valid_to is not None:
-                raise RegistryValidationError("exempt place-of-supply rule must carry no validity window")
-        else:
-            if self.valid_from is None or self.valid_to is None or self.valid_to < self.valid_from:
-                raise RegistryValidationError("grounded place-of-supply rule requires an ordered closed window")
-            if not self.legal_references or self.establishing_reference not in self.legal_references:
-                raise RegistryValidationError("place-of-supply establishing reference must be among its legal refs")
+        require_place_of_supply_grounding(self)
         return self
 
 
@@ -201,42 +197,10 @@ class RuntimeRegistryCatalogues(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _keys_match_records(self) -> Self:
-        collections = (
-            (self.countries, "code"),
-            (self.territory_carve_outs, "code"),
-            (self.recargo_bands, "id"),
-            (self.apoderamientos_scopes, "code"),
-        )
-        for records, identity_name in collections:
-            for key, record in records.items():
-                if key != getattr(record, identity_name):
-                    raise RegistryValidationError(f"runtime catalogue key {key!r} does not match record identity")
-        for prefix, record in self.spanish_postal_territories.items():
-            if prefix not in record.postal_prefixes:
-                raise RegistryValidationError(f"postal-territory key {prefix!r} is not declared by its record")
-        if any(key != record.category for key, record in self.iva_regulations.items()):
-            raise RegistryValidationError("IVA regulation key does not match its category")
-        if any(key != record.rule_id for key, record in self.iva_place_of_supply.items()):
-            raise RegistryValidationError("place-of-supply key does not match its rule id")
-        alpha3 = tuple(record.alpha3 for record in self.countries.values())
-        if len(alpha3) != len(set(alpha3)):
-            raise RegistryValidationError("country vocabulary repeats an alpha-3 code")
-        names: dict[str, str] = {}
-        for code, record in self.countries.items():
-            for name in record.names:
-                folded = fold_printed_phrase(name)
-                if not folded:
-                    raise RegistryValidationError(f"country {code!r} carries a blank printed name")
-                previous = names.setdefault(folded, code)
-                if previous != code:
-                    raise RegistryValidationError(f"printed country name {name!r} belongs to multiple countries")
-        ordered_bands = sorted(self.recargo_bands.values(), key=lambda band: band.min_completed_months)
-        if ordered_bands:
-            if ordered_bands[0].min_completed_months != 0 or ordered_bands[-1].max_completed_months is not None:
-                raise RegistryValidationError("recargo bands must cover from zero through one open-ended tail")
-            for previous, current in pairwise(ordered_bands):
-                if previous.max_completed_months is None:
-                    raise RegistryValidationError("only the final recargo band may be open-ended")
-                if current.min_completed_months != previous.max_completed_months + 1:
-                    raise RegistryValidationError("recargo bands must be contiguous and non-overlapping")
+        require_catalogue_record_keys(self)
+        require_postal_territory_keys(self)
+        require_tax_catalogue_keys(self)
+        require_unique_country_alpha3(self)
+        require_unique_country_names(self)
+        require_complete_recargo_bands(self)
         return self

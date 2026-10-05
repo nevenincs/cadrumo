@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from ...application.operator_surface.command_ports import CommandNodeKind
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
@@ -7,7 +9,6 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_2,
     _POLICY_4,
     _POLICY_5,
-    _POLICY_8,
     _POLICY_10,
 )
 from ._app_ledger_command_spec_support import (
@@ -25,11 +26,10 @@ from ._app_ledger_command_spec_support import (
     _repeatable_text_option,
     _required_text_argument,
 )
-from .command_spec import (
-    CommandSpec,
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -37,6 +37,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec
 
 LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -71,62 +72,6 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget("._ledger_payloads", "LedgerDetachResult", __package__),
             identity="ledger.detach",
-        ),
-    ),
-    CommandSpec(
-        "app_ledger_evidence_pull",
-        "app_ledger_evidence",
-        "pull",
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.app.ledger.evidence.pull_help"),
-        short_help_key=None,
-        invocation=_LEAF_INVOCATION,
-        parameters=(
-            _EVIDENCE_TRANSACTION_ID_ARGUMENT,
-            OptionSpec(
-                name="source",
-                declarations=("--source",),
-                value=ValueContract(DeferredTarget("...domain.attachments.enums", "DocumentLinkSource", __package__)),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.evidence.pull_source_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="reference",
-                declarations=("--reference",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.evidence.pull_reference_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-                transport_locus=TransportLocus.REMOTE_HANDLE,
-                transport_shape=TransportShape.NOT_APPLICABLE,
-                transport_role=TransportRole.NOT_APPLICABLE,
-            ),
-            _blank_default_text_option("note", ("--note",), "cli.app.ledger.evidence.pull_note_help"),
-            _EVIDENCE_ACTOR_OPTION,
-        ),
-        policy=_POLICY_8,
-        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_evidence_pull", __package__)),
-        result_schema=ResultSchemaSpec(
-            SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerAttachResult", __package__),
-            identity="ledger.evidence.pull",
         ),
     ),
     CommandSpec(
@@ -317,8 +262,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_role=TransportRole.AUXILIARY,
             ),
             _boolean_flag_option("verbose", ("--verbose",), "cli.ledger.import.verbose_help"),
-            _OPTIONAL_PERIOD_OPTION,
-            _OPTIONAL_YEAR_OPTION,
+            replace(_OPTIONAL_PERIOD_OPTION, help_key=TranslationKey("cli.ledger.import.period_help")),
+            replace(_OPTIONAL_YEAR_OPTION, help_key=TranslationKey("cli.ledger.import.year_help")),
+            _optional_text_option("account", ("--account",), "cli.ledger.import.account_help"),
         ),
         policy=_POLICY_2,
         handler=LazyBinding.available(DeferredTarget("._ledger_import_cli", "ledger_import", __package__)),

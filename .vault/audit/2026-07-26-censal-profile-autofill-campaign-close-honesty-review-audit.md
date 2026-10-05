@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#censal-profile-autofill'
 date: '2026-07-26'
-modified: '2026-07-26'
-body_hash: 'sha256:7faa5fe31eec4e68a133bcf097cad6ae860456147a6b3b84d4ac3b0742f47ca7'
+modified: '2026-10-03'
+body_hash: 'sha256:87b5c2e2f8d54940f165155522232f99eb046cbe9144f9e6bae22fad724d2bf8'
 related:
-  - "[[2026-07-25-censal-profile-autofill-plan]]"
   - "[[2026-07-25-censal-profile-autofill-adr]]"
   - "[[2026-07-25-censal-profile-autofill-tooling-honesty-audit]]"
 ---
@@ -43,7 +42,7 @@ owner, and one is being closed by another agent as this is written.
 Measured at `01decbae15`, closed at `299e1e988e`. The guide's "what the pull cannot
 fill" section opened by stating that the pull fills the operator's fiscal ID, fiscal
 address, postcode, and cadastral reference. `CENSAL_ADOPTABLE_PATHS` in
-`src/cadrumo/application/user_profile/_censo_sync.py` is three paths -
+The retired module was three paths -
 `contact.fiscal_address`, `contact.postcode`,
 `contact.fiscal_address_cadastral_reference` - and the fiscal identity is deliberately
 absent from it. The projection emits the identity only so the ownership guard has an
@@ -75,7 +74,7 @@ own safety is a separate question with a separate owner.
 ### populated-expectation-nothing-compares | high | The identity guard's expectation set is proven complete; the comparison consuming it has no test
 
 Measured at `cbbe671fbf` and open there. `_assert_session_identity_matches_expected`
-in `src/cadrumo/application/auth/_sessions.py` is called from four sites - lines 370,
+in the retired module was called from four sites - lines 370,
 449, 475 and 505 - and no test in the tree references it at that commit.
 
 What exists is `test_every_provider_carries_an_expectation_for_the_session_check`,
@@ -323,10 +322,10 @@ and a field-set reconciliation rather than indexing alone - the diseño row is
 is (description, cnae, iae_epigraph), so two diseño fields have no profile home and one
 profile field has no diseño counterpart.
 
-Template: `src/cadrumo/application/aggregation/_atribucion_member.py:31` is a complete worked indexed reader
+Template: the retired module was a complete worked indexed reader
 - it enumerates indexed paths, groups by row, checks required fields per row and stamps
 per-row provenance. It has no writer, which is the same gap one section over. Do not
-copy `src/cadrumo/application/user_profile/_cotejo_apply.py:83`: it is the only indexed writer that ships and it is
+copy the retired module: it is the only indexed writer that ships and it is
 not a repeatable section, but an object-typed field carrying row structure through an
 ad-hoc path convention with sub-fields undeclared in the schema. It works and it is the
 wrong shape to generalise.

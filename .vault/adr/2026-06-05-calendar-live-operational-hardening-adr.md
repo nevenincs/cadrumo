@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#calendar-live-operational-hardening'
 date: '2026-06-05'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:f4398d56986fb47c1bdfb23c3c263ac84aaf05afd92b1c90833ce47dad9bc85a'
 related:
   - '[[2026-06-04-calendar-live-filing-integration-research]]'
   - '[[2026-06-04-calendar-live-filing-integration-reference]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
-  - '[[2026-06-04-calendar-live-filing-integration-plan]]'
   - '[[2026-06-04-calendar-live-filing-integration-live-verification-audit]]'
 ---
 

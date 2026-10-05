@@ -20,6 +20,7 @@ from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, B
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
@@ -33,27 +34,27 @@ from cadrumo.domain.calculations.registry.bindings import (
 )
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.iva_cash_accounting_vocabulary import (
+    require_iva_cash_accounting_treatment,
+)
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import (
     require_iva_deduction_evidence_authority,
     require_iva_deduction_fact_kind,
 )
 from cadrumo.domain.calculations.registry.iva_flow_catalogue import require_iva_flow_direction
+from cadrumo.domain.calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
 from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
-    require_iva_cash_accounting_treatment,
-    require_iva_exemption_article,
-)
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from cadrumo.domain.calculations.registry.relations import (
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.tests.relation_fixture import (
     relation_prefill_values_as_binding_values,
     resolve_relation_values_from_observations,
 )
-from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.iva.deduction_facts import (
     IvaDeductionClassificationProvenance,
     required_deduction_evidence_authority,
@@ -141,13 +142,16 @@ def _with_aggregation(binding: BindingDefinition, op: BindingAggregationOp) -> B
     return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
-def _filing_result_disposition(result: RegistryCalculationResult) -> ResultDisposition:
+def _filing_result_disposition(
+    result: RegistryCalculationResult, *, filing_year: int, period: str
+) -> ResultDisposition:
     """Use the production result-disposition resolver at this test filing boundary."""
     casilla_ids = result_disposition_casilla_ids("303")
     assert casilla_ids is not None
     disposition = derive_result_disposition(
         "303",
         {casilla_id: Decimal(result.values[casilla_id]) for casilla_id in casilla_ids},
+        period=Period.from_year_and_code(filing_year, period),
     )
     assert disposition is not None
     return disposition
@@ -381,7 +385,7 @@ def _calculate_390_from_observations_and_303_filings(
                         .revision.id
                     ),
                     result_disposition=ResultDispositionProjection(
-                        disposition=_filing_result_disposition(result),
+                        disposition=_filing_result_disposition(result, filing_year=filing_year, period=period),
                         provenance_kind="app_filing",
                         provenance_locator=f"test-local-filing:{filing_year}:{period}",
                     ),

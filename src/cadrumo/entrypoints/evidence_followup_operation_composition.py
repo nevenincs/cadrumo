@@ -5,7 +5,9 @@ from __future__ import annotations
 from ..adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 from ..application.ledger.consent_withdrawal import ConsentedDispatch
-from ..application.ledger.evidence_followup_operation import LedgerEvidenceFollowupOperationPorts
+from ..application.ledger.evidence_followup_contracts import (
+    LedgerEvidenceFollowupOperationPorts,
+)
 from ..application.ledger.extraction_draft_store import ExtractionDraftRepositoryProtocol
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError

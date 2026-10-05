@@ -2,7 +2,7 @@
 
 Native credential custody and stdio are real. Enrollment delivery and OS-login
 observations use the synthetic controls of the shared encrypted-profile fixture.
-No provider requests or telemetry transmissions are performed.
+No provider requests or data transmissions are performed.
 """
 
 from __future__ import annotations
@@ -18,11 +18,13 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from cadrumo.adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from cadrumo.adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
 from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.application.diagnostics_operation import (
     DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
+)
+from cadrumo.application.diagnostics_read_contracts import (
     DiagnosticsReadKind,
     DiagnosticsReadProjection,
     DiagnosticsReadRequest,
@@ -64,6 +66,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.entrypoints.cli.tests.native_api_cli_support import native_api_cli_session
 from cadrumo.entrypoints.diagnostics_operation_composition import build_diagnostics_read_ports
+from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 from .test_installed_authenticated_stdio import (
     _installed_mcp_executable,
@@ -109,7 +112,7 @@ def _scope(destination: UUID) -> AccessScope:
 
 
 def _prepare(profile_id: UUID, _root: Path, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     for run_id, day, provider, duration, succeeded in (
         ("first", 1, _PROVIDER, 1200, True),
         ("last", 2, _PROVIDER, 45000, False),
@@ -134,23 +137,23 @@ def _prepare(profile_id: UUID, _root: Path, *, operation: PinnedAuthorityOperati
             since=_SINCE,
             until=_UNTIL,
             provider=_PROVIDER,
-            run_telemetry_port=ports.run_telemetry_port,
+            run_record_port=ports.run_record_port,
             auth_probe_port=ports.auth_probe_port,
         ).model_dump(mode="json"),
         "runs": [
             row.model_dump(mode="json")
             for row in list_recent_runs(
-                since=_SINCE, until=_UNTIL, provider=_PROVIDER, limit=1, run_telemetry_port=ports.run_telemetry_port
+                since=_SINCE, until=_UNTIL, provider=_PROVIDER, limit=1, run_record_port=ports.run_record_port
             )
         ],
         "latency": build_latency_report(
-            since=_SINCE, until=_UNTIL, provider=_PROVIDER, run_telemetry_port=ports.run_telemetry_port
+            since=_SINCE, until=_UNTIL, provider=_PROVIDER, run_record_port=ports.run_record_port
         ).model_dump(mode="json"),
         "errors": build_error_breakdown(
-            since=_SINCE, until=_UNTIL, provider=_PROVIDER, run_telemetry_port=ports.run_telemetry_port
+            since=_SINCE, until=_UNTIL, provider=_PROVIDER, run_record_port=ports.run_record_port
         ).model_dump(mode="json"),
         "llm_usage": build_llm_usage_report(
-            since=_SINCE, until=_UNTIL, provider=_PROVIDER, run_telemetry_port=ports.run_telemetry_port
+            since=_SINCE, until=_UNTIL, provider=_PROVIDER, run_record_port=ports.run_record_port
         ).model_dump(mode="json"),
     }
 
@@ -176,6 +179,7 @@ def _canonical_report(projection: DiagnosticsReadProjection) -> object:
 
 @pytest.mark.anyio
 async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(tmp_path: Path) -> None:
+    require_os_credential_store()
     backend = _native_backend_for_current_platform()
     native = native_automation_secret_store(backend)
     assert native.backend is backend

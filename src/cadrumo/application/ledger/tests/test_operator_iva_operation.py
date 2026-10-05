@@ -24,8 +24,12 @@ from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_contracts import AccessAction, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from .. import classify_operation as subject
+from .. import operator_iva_contracts as operator_contracts
+from .. import operator_iva_operation as subject
 from ..action_ports import LedgerActionPortsFactory
+from ..classify_result_contracts import (
+    LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
+)
 from ..llm_classification_ports import OperatorIvaDerivationResult
 from ..models import ManualLedgerTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
@@ -104,7 +108,7 @@ class _ExecutorPort:
         self.context = SimpleNamespace(
             identity=OperationIdentity(
                 operation_id="a" * 64,
-                definition_id=subject.LEDGER_OPERATOR_IVA_DEFINITION_ID,
+                definition_id=operator_contracts.LEDGER_OPERATOR_IVA_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(_PROFILE)),
             ),
             authority_operation=authority,
@@ -112,10 +116,10 @@ class _ExecutorPort:
             events=self.events,
             operands=self.operands,
         )
-        self.request = OperationRequest[subject.LedgerOperatorIvaRequest](
-            definition_id=subject.LEDGER_OPERATOR_IVA_DEFINITION_ID,
+        self.request = OperationRequest[operator_contracts.LedgerOperatorIvaRequest](
+            definition_id=operator_contracts.LEDGER_OPERATOR_IVA_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
-            payload=subject.LedgerOperatorIvaRequest(
+            payload=operator_contracts.LedgerOperatorIvaRequest(
                 profile_id=_PROFILE,
                 transaction_id=self.current.transaction_id[:12].upper(),
                 iva_category=_CATEGORY,
@@ -142,7 +146,9 @@ class _ExecutorPort:
                 ),
             )
 
-        monkeypatch.setattr(subject, "require_active_bucket_id", lambda: str(_PROFILE))
+        monkeypatch.setattr(
+            "cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE)
+        )
         monkeypatch.setattr(subject, "derive_operator_iva_substrate", derive)
         self.executor = subject.LedgerOperatorIvaExecutor(cast(LedgerActionPortsFactory, lambda **_kwargs: self.ports))
 
@@ -160,17 +166,17 @@ def _registration():
 
 def test_registration_keeps_private_execution_and_strict_public_exact_profile_contract() -> None:
     definition, registration = _registration()
-    assert definition.result_type is subject.LedgerOperatorIvaExecutionResult
+    assert definition.result_type is operator_contracts.LedgerOperatorIvaExecutionResult
     assert {binding.model_type for binding in registration.schema_bindings} == {
-        subject.LedgerOperatorIvaRequest,
-        subject.LedgerOperatorIvaResult,
+        operator_contracts.LedgerOperatorIvaRequest,
+        operator_contracts.LedgerOperatorIvaResult,
     }
-    payload = subject.LedgerOperatorIvaRequest(
+    payload = operator_contracts.LedgerOperatorIvaRequest(
         profile_id=_PROFILE, transaction_id="ABCDEF123456", iva_category=_CATEGORY
     )
     assert payload.transaction_id == "abcdef123456"
     with pytest.raises(ValidationError):
-        subject.LedgerOperatorIvaRequest.model_validate({**payload.model_dump(), "master_key": "unexpected"})
+        operator_contracts.LedgerOperatorIvaRequest.model_validate({**payload.model_dump(), "master_key": "unexpected"})
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     context = OperationAccessContext(
         profile_id=_PROFILE,
@@ -237,7 +243,7 @@ async def test_executor_lends_original_baseline_to_existing_deriver_inside_commi
     assert port.writes[0]["actor"] == "operator"
     assert port.events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
     assert not port.in_commit
-    assert isinstance(port.operands.value, subject.LedgerOperatorIvaExecutionResult)
+    assert isinstance(port.operands.value, operator_contracts.LedgerOperatorIvaExecutionResult)
     assert port.operands.value.request == port.request.payload
     assert port.operands.value.result.transaction_id == port.current.transaction_id
 
@@ -256,11 +262,11 @@ async def test_validation_refusal_keeps_none_effect_and_typed_bounded_detail(
         port.writer_failure = TransactionValidationError("pre-write validation refused")
     evidence = await port.execute()
     assert isinstance(evidence, OperationRefusalEvidence)
-    assert evidence.refusal_code == subject.LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE
+    assert evidence.refusal_code == LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE
     assert evidence.detail_ref == "d" * 64
     assert port.events.effects == ([] if where == "prepare" else [OperationEffect.UNKNOWN, OperationEffect.NONE])
     assert len(port.writes) == (0 if where == "prepare" else 1)
-    assert isinstance(port.operands.value, subject.LedgerOperatorIvaExecutionResult)
+    assert isinstance(port.operands.value, operator_contracts.LedgerOperatorIvaExecutionResult)
     assert port.operands.value.result.outcome == "validation_error"
     assert port.operands.value.result.classification is None
     assert port.operands.value.result.validation_messages
@@ -299,7 +305,7 @@ async def test_post_write_failure_retains_updated_effect(
         def project(*_args: object) -> BaseModel:
             raise failure
 
-        monkeypatch.setattr(subject, "_operation_result", project)
+        monkeypatch.setattr(subject, "classification_result_from_action", project)
     with pytest.raises(OSError) as raised:
         await port.execute()
     assert raised.value is failure
@@ -311,10 +317,10 @@ async def test_post_write_failure_retains_updated_effect(
 def test_refusal_projection_correlates_normalized_request_profile_category_and_receipt() -> None:
     definition, registration = _registration()
     assert registration.result_projector is not None
-    request = subject.LedgerOperatorIvaRequest(
+    request = operator_contracts.LedgerOperatorIvaRequest(
         profile_id=_PROFILE, transaction_id="ABCDEF123456", iva_category=_CATEGORY
     )
-    result = subject.LedgerOperatorIvaResult(
+    result = operator_contracts.LedgerOperatorIvaResult(
         profile_id=_PROFILE,
         outcome="validation_error",
         transaction_id="abcdef123456" + "b" * 52,
@@ -322,7 +328,7 @@ def test_refusal_projection_correlates_normalized_request_profile_category_and_r
         derivable=False,
         validation_messages=("Category unavailable for this row",),
     )
-    execution = subject.LedgerOperatorIvaExecutionResult(request=request, result=result)
+    execution = operator_contracts.LedgerOperatorIvaExecutionResult(request=request, result=result)
     receipt = OperationTerminalReceipt(
         identity=OperationIdentity(
             operation_id="a" * 64,
@@ -333,7 +339,7 @@ def test_refusal_projection_correlates_normalized_request_profile_category_and_r
         condition=OperationTerminalCondition.REFUSED,
         effect=OperationEffect.NONE,
         settled_at=datetime(2026, 4, 15, tzinfo=UTC),
-        refusal_ref=subject.LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
+        refusal_ref=LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
         refusal_detail_ref="e" * 64,
     )
     assert registration.result_projector(execution, receipt) == result

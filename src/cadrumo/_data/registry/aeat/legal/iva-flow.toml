@@ -669,6 +669,35 @@ required_text = [
     "antes de que finalice el plazo legal para realizar la referida liquidación y pago",
 ]
 
+[legal."rd-1624-1992:art-62"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992.html#a62"
+document_id = "BOE-A-1992-28925"
+article = "62"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a62"
+published_at = 1992-12-31
+effective_from = 2017-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-03
+reviewed_by = "agent-review"
+notes = """RIVA art 62: libros registros del IVA. El apartado 6 obliga a llevar los libros \
+registro a traves de la Sede electronica de la AEAT, mediante el suministro electronico de \
+los registros de facturacion (SII), a quienes tengan un periodo de liquidacion mensual \
+conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los \
+terminos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para \
+excluir de la declaracion anual de operaciones con terceras personas (Modelo 347) tanto a los \
+obligados como a los acogidos voluntariamente. Apartado 6 anadido con efectos desde el \
+1 de enero de 2017 por el RD 596/2016 (BOE-A-2016-11575); texto verificado contra el \
+consolidado bundled corpus/normatives/html/rd-1624-1992.html."""
+required_text = [
+    "Libros registros del Impuesto sobre el Valor Añadido",
+    "deberán llevarse a través de la Sede electrónica de la Agencia Estatal de Administración Tributaria, mediante el suministro electrónico de los registros de facturación",
+    "que tengan un periodo de liquidación que coincida con el mes natural de acuerdo con lo dispuesto en el artículo 71.3 del presente Reglamento",
+    "podrán optar por llevar los libros registro a que se refieren los artículos 40, apartado 1; 47, apartado 2; 61, apartado 2 y el apartado 1 de este artículo, a través de la Sede electrónica",
+]
+
 [legal."rd-1624-1992:art-68-bis"]
 evidence_tier = "legal_authority"
 authority = "boe"

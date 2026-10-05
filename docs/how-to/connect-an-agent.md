@@ -7,8 +7,7 @@ the human active profile does not retarget it.
 
 Before authorizing an agent or managing its access, set up the intended profile
 using [Set up a profile](profile-setup.md) and establish a human password-authorized
-session for it. Checking installation and public runtime status does not require
-profile authentication.
+session for it. Checking installation does not require profile authentication.
 
 ## Check the installation
 
@@ -16,14 +15,11 @@ profile authentication.
 cadrumo-mcp --help
 ```
 
-```{cli-sequence} connect-an-agent-runtime-status
-:verify: Confirm the listener is ready without profile authentication.
-```
-
-If `cadrumo-mcp` is unavailable, install Cadrumo first - see
+If `cadrumo-mcp` is unavailable, install Cadrumo first; see
 [Get Cadrumo](../download.md). The command and the `aeat` CLI ship in the same
-Cadrumo distribution. The adapter locates or starts the local runtime when it
-connects.
+Cadrumo distribution. The adapter connects to an already running local runtime.
+An unavailable or untrusted endpoint returns a connection refusal; connecting
+does not install or start a service.
 
 ## Register one profile-bound server
 
@@ -60,6 +56,13 @@ Use `status` to inspect the refusal; private operations remain unavailable.
 Restore access to the protected store or obtain an approved replacement reference,
 then call `authenticate` explicitly. Public `authority` queries remain available.
 
+Before authentication, `corpus_search` searches the bundled BOE/AEAT corpus
+and approved tax terminology. Supply `query` and optionally `limit` (1–50).
+An exact citation ID returns its published verbatim text; other queries return
+ranked offline evidence and terminology matches. The response identifies the
+publication generation used for citation lookup. This public search reads no
+profile data.
+
 ## Authorize the connection
 
 On a first connection, ask the agent to use `status`, then
@@ -69,7 +72,9 @@ TUI. The agent uses `authorization_poll` to receive the protected reference and
 `authenticate` to start an independently tracked session. A password or stored
 credential alone is not an authenticated agent session.
 
-After admission, `search` lists permitted operations, `describe` shows a
+After admission, `search` ranks permitted operations by the query, using their
+current contracts and request vocabulary; omit the query to list them.
+`describe` shows a
 registered operation's input contract, `execute` submits it, and `observe`
 tracks its result. The separate `authority` tool reads published tax authority
 data. Operation grants, session locks, profile suspension, provider checks and
@@ -154,22 +159,3 @@ without reactivating grants.
 ```
 
 Confirm the returned grant IDs, then let agents reconnect and authenticate afresh.
-
-## Manage the shared local runtime
-
-```{cli-sequence} connect-an-agent-runtime-management
-:verify: Check manager and owner-stop availability; an unavailable stop capability refuses the request.
-```
-
-Check native manager and owner-stop availability before changing runtime state.
-An unavailable owner-stop capability refuses the stop request, as shown above.
-Enabling or disabling login startup requires a supported per-user native manager.
-
-`status` does not start the runtime. `enable` configures login startup without
-starting it immediately; `disable` does not stop a running owner. Review the
-shared impact before using `stop`. Runtime startup does not authenticate a
-profile, and restarting requires agents to establish fresh sessions.
-
-These controls depend on the platform's available native manager and credential
-facilities. Read actual refusal codes and manager availability; an unavailable or
-locked protected store does not permit unattended access or a plaintext fallback.

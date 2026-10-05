@@ -1,6 +1,10 @@
 modelo:
   schema:
     '100':
+      binding:
+        renta-modelo-100-estimacion-directa-es-normal:
+          help: 'Sí: modalitat normal (N). No: modalitat simplificada (S).'
+          label: Apliques la modalitat normal d'estimació directa?
       casilla:
         continuidad:
           irpf-acciones-transmision-contribuyente-titular:
@@ -3661,6 +3665,30 @@ modelo:
         official_name: Modelo 100. Declaració de l'Impost sobre la Renda de les Persones
           Físiques.
         title: IRPF declaració anual
+      form:
+        section:
+          bienes-inmuebles-a-disposicion-de-sus-tit-88aad7:
+            heading: Béns immobles a disposició dels seus titulars, arrendats o cedits
+              a tercers, o afectes a activitats econòmiques
+          ganancias-patrimoniales-por-cambio-de-res-0c81c7:
+            heading: Guanys patrimonials per canvi de residència fora del territori
+              espanyol (article 95 bis de la Llei de l'impost)
+          ganancias-y-perdidas-patrimoniales-deriva-0655e2:
+            heading: Guanys i pèrdues patrimonials derivats de la transmissió o permuta
+              de monedes virtuals
+          ganancias-y-perdidas-patrimoniales-deriva-73c62b:
+            heading: Guanys i pèrdues patrimonials derivats de la transmissió de drets
+              de subscripció
+          ganancias-y-perdidas-por-la-transmision-d-3735fe:
+            heading: Guanys i pèrdues per la transmissió de societats i fons d'inversió
+              i de SOCIMI
+          ganancias-y-perdidas-por-la-transmision-d-5aa38b:
+            heading: Guanys i pèrdues per la transmissió de participacions de fons
+              cotitzats (ETF) i d'accions de SICAV índex cotitzades
+          rendimientos-de-trabajo:
+            heading: Rendiments de treball
+          transmision-de-acciones-negociadas:
+            heading: Transmissió d'accions negociades
       revision:
         '2020':
           casilla:

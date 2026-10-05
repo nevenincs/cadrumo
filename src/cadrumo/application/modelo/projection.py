@@ -35,6 +35,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -500,7 +501,7 @@ def _parse_projection_binding_overrides(
     if not binding_overrides:
         return extra_bindings, extra_enum_bindings
 
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     known_binding_ids = set(bindings_by_id)
     enum_channel_ids = enum_consumed_binding_ids(revision)
     date_channel_ids = revision_date_binding_ids(revision)
@@ -537,7 +538,6 @@ def _verb_baseline_projection_bindings(
         binding("renta-modelo-100-estimacion-directa-es-normal"): Decimal("1"),
         binding("renta-profile-declaration-type"): Decimal("1"),
         binding("renta-profile-family-minor-children-in-unit"): Decimal("0"),
-        binding("renta-profile-guarderia-gastos-reales"): Decimal("0"),
         binding("renta-profile-cotizaciones-ss-madre"): Decimal("0"),
         binding("renta-profile-marriage-month-start"): Decimal("0"),
         binding("renta-profile-marriage-month-end"): Decimal("0"),
@@ -584,6 +584,25 @@ def _profile_projection_bindings(
         dict(profile_result.enum_binding_values),
         dict(profile_result.boolean_binding_values),
     )
+
+
+def _apply_zero_maritime_projection_default(
+    declared_binding_ids: set[BindingId],
+    merged_bindings: dict[BindingId, Decimal],
+    merged_boolean_bindings: dict[BindingId, bool],
+) -> None:
+    """Supply the path only when both statutory maritime income channels are zero."""
+    maritime_path = _binding_id("renta-maritime-path-rebeca", surface="project modelo 100 maritime path")
+    maritime_gross = _binding_id("renta-maritime-gross-navigation-income", surface="project modelo 100 maritime gross")
+    maritime_salary = _binding_id("renta-maritime-annual-salary", surface="project modelo 100 maritime salary")
+    if (
+        maritime_path in declared_binding_ids
+        and maritime_path not in merged_boolean_bindings
+        and merged_bindings.get(maritime_gross) == Decimal("0")
+        and merged_bindings.get(maritime_salary) == Decimal("0")
+    ):
+        # Either statutory path yields zero when there is no maritime income.
+        merged_boolean_bindings[maritime_path] = False
 
 
 def project_modelo_100_from_m130(
@@ -653,17 +672,7 @@ def project_modelo_100_from_m130(
     merged_enum_bindings = {**verb_baseline_enum_bindings, **profile_enum_bindings, **extra_enum_bindings}
     merged_date_bindings = dict(profile_date_bindings)
     merged_boolean_bindings = {**verb_baseline_boolean_bindings, **profile_boolean_bindings}
-    maritime_path = _binding_id("renta-maritime-path-rebeca", surface="project modelo 100 maritime path")
-    maritime_gross = _binding_id("renta-maritime-gross-navigation-income", surface="project modelo 100 maritime gross")
-    maritime_salary = _binding_id("renta-maritime-annual-salary", surface="project modelo 100 maritime salary")
-    if (
-        maritime_path in declared_binding_ids
-        and maritime_path not in merged_boolean_bindings
-        and merged_bindings.get(maritime_gross) == Decimal("0")
-        and merged_bindings.get(maritime_salary) == Decimal("0")
-    ):
-        # Either statutory path yields zero when there is no maritime income.
-        merged_boolean_bindings[maritime_path] = False
+    _apply_zero_maritime_projection_default(declared_binding_ids, merged_bindings, merged_boolean_bindings)
 
     try:
         engine_result = calculate_registry_snapshot(

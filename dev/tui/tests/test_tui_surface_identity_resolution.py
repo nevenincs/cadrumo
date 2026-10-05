@@ -10,8 +10,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _live_registry() -> tuple[tuple[str, ...], dict[str, tuple[str, ...]]]:
-    """Read surface names and painted interfaces from the running harness."""
-    surfaces = tuple(surface.name for surface in _harness.surfaces())
+    """Read surface names -- scenario pages included -- and painted interfaces from the running harness."""
+    surfaces = _harness.reviewable_surface_names(_harness.surfaces(), _harness.scenarios())
     return surfaces, _harness.coverage()
 
 

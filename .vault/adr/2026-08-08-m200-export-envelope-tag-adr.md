@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#m200-export-envelope-tag'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce2820f6a118ab1139827e9fec30de8d462c5633c9bfb85c221ee091e325f7c7'
+body_hash: 'sha256:96fba63ddc476fcf794ecf497e5c56a74fc15c9ea3ba5b86a8119c94275570ca'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-reference]]"
 ---
@@ -187,7 +187,7 @@ omission, not a cosmetic width mismatch.
 ## Implementation
 
 Restructure
-`src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml`,
+
 record `modelo-200-page-000`: replace the single offset-1/length-17 draft
 field with six fields — literal `<T` (offset 1, len 2), literal `200` (offset
 3, len 3), literal `0` (offset 6, len 1, discriminante), draft `filing_year`
@@ -207,7 +207,7 @@ record `modelo-200-envelope-footer`, `record_type = "envelope_footer"`, `order
 `0030-record-envelope-footer.toml`.
 
 Flip `_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS` in
-`src/cadrumo/domain/calculations/registry/_validate_exports.py`:
+
 `"filing_year": 4` and `"period_code": 2`, rewriting both comments to state
 what is now established rather than what is abstained, and removing the
 `filing_year` comment's forward reference to "this ADR" once it lands.

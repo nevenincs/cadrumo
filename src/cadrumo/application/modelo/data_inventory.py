@@ -37,7 +37,7 @@ from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n.render import output_language
 from ...core.period import Period
-from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -62,6 +62,7 @@ _LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.FOREIGN_ASSET,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
         BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PRORRATA_REGULARIZACION,
         BindingSourceKind.RETENCIONES_AGGREGATION,
@@ -244,7 +245,7 @@ def data_inventory_checklist(
     # The export layouts say which manual casillas are filled once per detail
     # row, so the revision is read with them.
     revision = operation.revision_with_export_layouts(modelo, str(selected.id))
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     buckets = _collect_inventory_buckets(revision, bindings_by_id)
 
     unresolved_profile_bindings: tuple[BindingId, ...] = ()

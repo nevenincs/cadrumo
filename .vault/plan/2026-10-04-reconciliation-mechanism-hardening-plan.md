@@ -1,0 +1,52 @@
+---
+tags:
+  - '#plan'
+  - '#reconciliation-mechanism-hardening'
+date: '2026-10-04'
+tier: L1
+related:
+  - '[[2026-06-10-live-justificante-reconcile-adr]]'
+  - '[[2026-07-01-reconcile-value-comparison-adr]]'
+  - '[[2026-07-25-reconcile-evidence-relocation-adr]]'
+  - '[[2026-09-07-tuimodelo-reconcile-verify-adr]]'
+  - '[[2026-09-17-filing-chain-reconciliation-adr]]'
+  - '[[2026-07-01-verification-reconcile-when-present-adr]]'
+  - '[[2026-06-19-iva-compensation-override-cli-adr]]'
+  - '[[2026-06-21-m303-carry-reconciliation-adr]]'
+  - '[[2026-10-04-live-reconciliation-repair-audit]]'
+modified: '2026-10-04'
+body_schema: body-v2
+body_hash: 'sha256:96a5325a5c4ab2048f465a748a44cc81ac1aebbfcba2cfedf8cd2c1bc555bdb1'
+---
+
+# Reconciliation mechanism hardening
+
+## Description
+
+Approved 2026-10-04
+
+The user explicitly directed iterating through justificante, declaration, working calculation, filing chain, cross-model and IVA compensation mechanisms with the same root-cause repair and verification rigor as the completed live reconciliation repair. Reuse that live acceptance and captured encrypted evidence. Existing decisions govern identity and amount comparison with disclosed gaps, encrypted immutable history, exact profile and period custody, official versus pending-local filing authority, registry-owned comparison scopes and tolerances, and wallet authority with audited overrides. This is corrective execution within those contracts, not a new ledger or new tax-policy authority. Any uncovered costly semantic choice is grounded and recorded before dependent implementation. Preserve all unrelated registry, export and quality edits.
+
+## Steps
+
+- [x] `S05` - Harden justificante and declaration comparisons with explicit saved-revision provenance and truthful coverage through both frontends; `src/cadrumo/application/modelo reconciliation records operations and entrypoints reconciliation CLI tests`.
+- [x] `S01` - Isolate working-calculation divergence checks to official evidence under the pinned authority and verify absence and drift semantics; `src/cadrumo/application/modelo/pulled_filing_reconcile.py verification_model_findings.py and focused encrypted persistence tests`.
+- [x] `S02` - Verify and repair filing-chain confirmation contradiction replay and evidence-enrichment transitions; `src/cadrumo/application/modelo/filing_chain_reconciliation.py live persistence integration and chain tests`.
+- [x] `S03` - Verify and repair registry-owned cross-model comparison selection coverage and visible findings; `src/cadrumo/application/modelo/_m303_m349_reconcile.py verification integration and cross-model tests`.
+- [x] `S04` - Verify and repair IVA compensation authority refresh override scope and carry decisions; `src/cadrumo/application/calculations/iva_wallet_reconciliation.py domain/iva_compensation and persistence/CLI tests`.
+- [x] `S06` - Verify integrated CLI and TUI mechanisms with retained real evidence and complete independent review; `src/cadrumo/entrypoints CLI TUI projections tests and var/reconciliation-check-20261004 redacted acceptance evidence`.
+- [x] `S07` - Pull the live IVA wallet and compensation ledger from authenticated AEAT and verify the actual balance with its source provenance and CLI TUI coverage; `Live IVA wallet and Modelo 303 history capture paths plus retained profile acceptance evidence and necessary root-cause repairs`.
+- [x] `S08` - Repair the known native MCP contract refusal failure and run the complete native workbench regression; `Native workbench regression timeout and restricted-session widget ID collision while preserving concurrent styling edits`.
+- [ ] `S09` - Trace and repair intermittent native human admission timeout with measured stage evidence and regression coverage; `Native worker admission stage diagnostics and measured operation-schema snapshot overhead with mutation-guard regressions`.
+
+## Parallelization
+
+Lead owns S02 filing-chain work, S06 integrated CLI/TUI acceptance, shared checks, vault edits and all commits. receipt_fix owns S05 explicit justificante/declaration comparison and revision provenance, then S04 IVA compensation. mirror_fix owns S01 working-calculation official-evidence isolation, then S03 cross-model consistency. review_repairs independently audits wallet/cross-mechanism risks and reviews integrated changes without source writes. Workers have disjoint ownership, preserve others edits and route shared contract changes to the lead before editing. Reuse existing live test profile and fixed authority; no concurrent live browser tasks.
+
+S07 correction ownership: lead owns live capture, optional-field coverage, installed TUI help-read serialization, runtime acceptance and commits. receipt_fix owns focused help-read concurrency/cancellation regression tests and stale positive IVA filing fixture clocks. mirror_fix owns stale declaration-fixture assertions. review_repairs performs read-only integrated review. No concurrent live browser tasks or overlapping source writes.
+
+For the measured S07 startup paging bottleneck, lead owns the bounded projection page-size change and live runtime restart/acceptance. receipt_fix owns projection-page client fixtures and transport-envelope frame-size regression tests; review_repairs reviews page bounds and authority preservation. Workers do not change runtime host or authorization policy.
+
+## Verification
+
+For each mechanism establish compared operands, exact revision/period/profile provenance, applicability and comparison coverage, tolerance, missing/stale/conflicting evidence behavior, persistence/event atomicity, repeat behavior and operator-visible outcome. Exercise matches, drift, missing evidence, wrong scope, stale data and pending-local versus official evidence with real application and encrypted adapter paths; run actual CLI and TUI integration where supported. Use the retained real 2024 Q1 filing for read-only acceptance and synthetic encrypted fixtures for scenarios requiring alternate tax facts or filing transitions. No AEAT submission or payment. Preserve local-versus-remote authority, current-versus-historical status and incomplete-versus-match distinctions. Scoped style, format, type and import checks accompany each commit; reuse applicable prior results and explicitly disclose unrelated global gate failures. Independent review closes each mechanism and final integration.

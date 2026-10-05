@@ -323,42 +323,6 @@ source_refs = ["aeat-dr-347-2025"]
 
 [[revisions."2025-y-siguientes".lineage_attestations]]
 family = "casillas"
-continuidad_id = "total-personas-entidades"
-from_revision = "2011-2024"
-to_revision = "2025-y-siguientes"
-origin = "seeded"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
-
-[[revisions."2025-y-siguientes".lineage_attestations]]
-family = "casillas"
-continuidad_id = "importe-total-anual-operaciones"
-from_revision = "2011-2024"
-to_revision = "2025-y-siguientes"
-origin = "seeded"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
-
-[[revisions."2025-y-siguientes".lineage_attestations]]
-family = "casillas"
-continuidad_id = "total-inmuebles"
-from_revision = "2011-2024"
-to_revision = "2025-y-siguientes"
-origin = "seeded"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
-
-[[revisions."2025-y-siguientes".lineage_attestations]]
-family = "casillas"
-continuidad_id = "importe-total-arrendamiento-locales"
-from_revision = "2011-2024"
-to_revision = "2025-y-siguientes"
-origin = "seeded"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
-
-[[revisions."2025-y-siguientes".lineage_attestations]]
-family = "casillas"
 continuidad_id = "persona-con-quien-relacionarse"
 from_revision = "2011-2024"
 to_revision = "2025-y-siguientes"
@@ -378,15 +342,6 @@ source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".lineage_attestations]]
 family = "casillas"
 continuidad_id = "declarante-representante-legal-nif"
-from_revision = "2011-2024"
-to_revision = "2025-y-siguientes"
-origin = "seeded"
-legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
-
-[[revisions."2025-y-siguientes".lineage_attestations]]
-family = "casillas"
-continuidad_id = "tipo-soporte"
 from_revision = "2011-2024"
 to_revision = "2025-y-siguientes"
 origin = "seeded"
@@ -537,26 +492,6 @@ fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-1
 removed_fields = []
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2011-2024", id = "decl.total-personas-entidades" }
-fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
-removed_fields = []
-
-[[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2011-2024", id = "decl.importe-total-anual" }
-fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
-removed_fields = []
-
-[[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2011-2024", id = "decl.total-inmuebles" }
-fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
-removed_fields = []
-
-[[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2011-2024", id = "decl.importe-total-arrendamiento-locales" }
-fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
-removed_fields = []
-
-[[revisions."2025-y-siguientes".casilla_overrides]]
 selector = { revision = "2011-2024", id = "decl.persona-relacion" }
 fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
 removed_fields = []
@@ -568,11 +503,6 @@ removed_fields = []
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
 selector = { revision = "2011-2024", id = "decl.representante-legal-nif" }
-fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
-removed_fields = []
-
-[[revisions."2025-y-siguientes".casilla_overrides]]
-selector = { revision = "2011-2024", id = "decl.tipo-soporte" }
 fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
 removed_fields = []
 
@@ -623,7 +553,7 @@ family = "constructs"
 selector = {revision = "2011-2024", id = "modelo-347-informative"}
 sequence_additions = {casilla_ids = ["contraparte.criterio-caja", "contraparte.inversion-sujeto-pasivo", "contraparte.bienes-vinculados", "contraparte.importe-criterio-caja", "contraparte.numero-convocatoria-bdns"], deadline_windows = ["modelo-347-2025-0a", "modelo-347-2026-0a"], export_layouts = ["generated-modelo-347-2025-y-siguientes-fichero"], legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]}
 sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6], export_layouts = [0], workbook_parity_refs = [1]}
-sequence_order = {casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 40, 41, 42, 43, 44, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], legal_refs = [0, 1, 5, 2, 3, 4], source_refs = [4, 0, 1, 2, 3, 5]}
+sequence_order = {casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 35, 36, 37, 38, 39, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34], legal_refs = [0, 1, 5, 2, 3, 4], source_refs = [4, 0, 1, 2, 3, 5]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "application_links"
@@ -712,13 +642,13 @@ sequence_order = {legal_refs = [0, 3, 1, 2], source_refs = [1, 0]}
 family = "bindings"
 selector = {revision = "2011-2024", id = "modelo-347-declarante-importe-total-anual-operaciones"}
 sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
-sequence_order = {legal_refs = [0, 3, 1, 2], source_refs = [3, 0, 1, 2]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [3, 0, 1, 2]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2011-2024", id = "modelo-347-declarante-numero-personas-entidades"}
 sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
-sequence_order = {legal_refs = [0, 3, 1, 2], source_refs = [3, 0, 1, 2]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [3, 0, 1, 2]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "workbook_parity_refs"

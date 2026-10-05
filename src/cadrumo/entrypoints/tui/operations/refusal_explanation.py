@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from ....core.errors.error_codes import declared_error_codes_by_qualname
+from ....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
+from ....core.errors.error_codes import declared_error_codes_by_qualname, resolve_error_message
+from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.i18n.render import tr
 
 
@@ -21,4 +23,18 @@ def public_refusal_explanation(code: str | None) -> str | None:
     return None
 
 
-__all__ = ["public_refusal_explanation"]
+def operation_error_explanation(detail: OperationErrorDetailV1 | None) -> str | None:
+    """Return the stopped executor's own localized message from its recorded public detail.
+
+    Only a registered error has a message of its own; a record fault is an
+    internal defect whose words are the generic failure the modal already shows.
+    """
+    if detail is None or detail.kind is not OperationErrorDetailKind.REGISTERED_ERROR or detail.error_code is None:
+        return None
+    error = RecordedRegisteredError(
+        detail.error_code, context=detail.context_mapping(), translated_message=detail.message_key
+    )
+    return resolve_error_message(error)
+
+
+__all__ = ["operation_error_explanation", "public_refusal_explanation"]

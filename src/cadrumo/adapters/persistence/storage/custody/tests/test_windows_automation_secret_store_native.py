@@ -20,12 +20,12 @@ from uuid import uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
-from cadrumo.adapters.persistence.storage.custody.automation_store import (
+from cadrumo.adapters.persistence.storage.custody.automation_native_identity import (
     CLIENT_NAMESPACE,
     CONTROL_NAMESPACE,
     WRAP_NAMESPACE,
 )
+from cadrumo.adapters.persistence.storage.custody.automation_secret_store import native_automation_secret_store
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import TrackedWindowsItemCleanup
 from cadrumo.application.user_profile.automation_custody_port import NativeSecretBackend
 from cadrumo.core.async_cleanup import close_async_resources

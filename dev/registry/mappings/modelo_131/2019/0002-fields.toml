@@ -1,0 +1,744 @@
+schema_version = 1
+fragment_id = "fields"
+modelo = "131"
+design_epoch = "2019"
+source_ref = "aeat-dr-131-2019-2023-v101"
+source_sha256 = "2b36ae9d4712a94d3b0a798d813c9f560b29fdd2a00062b7d7b4ba9f72f970f3"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-open"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+literal = "<T"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-modelo"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+literal = "131"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-number"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+literal = "01000"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-end"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+literal = ">"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-complementaria-indicator"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-declaration-type"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+producer_key = "filing.result_disposition"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-tax-id"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+producer_key = "taxpayer.tax_id"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-declarante-apellidos"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+producer_key = "taxpayer.surnames"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-declarante-nombre"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+producer_key = "taxpayer.given_name"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-filing-year"
+kind = "draft"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+draft_attribute = "filing_year"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-period-code"
+kind = "draft"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+draft_attribute = "period_code"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-1-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-1-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-1-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-1-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-1-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-1-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-1-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-1-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-2-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-2-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-2-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-2-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-2-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-2-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-2-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-2-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-3-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-3-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-3-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-3-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-3-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-3-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-3-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-3-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-4-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-4-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-4-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-4-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-4-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-4-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-4-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-4-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-5-epigrafe"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-5-epigrafe"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-5-rendimiento-neto"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-5-rendimiento-neto"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-5-porcentaje"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-5-porcentaje"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.actividad-5-resultado"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.actividad-5-resultado"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-01"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "01"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-02"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "02"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-03"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "03"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-04"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "04"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-05"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "05"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-06"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "06"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-07"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "07"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-08"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "08"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-09"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "09"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-10"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "10"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-11"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "11"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-12"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "12"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-13"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "13"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-14"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "14"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-casilla-15"
+kind = "casilla"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+casilla_id = "15"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-domiciliacion-iban"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+producer_key = "selected_account.iban"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-declaracion-complementaria"
+kind = "header"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+producer_key = "amendment_evidence.is_complementaria"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01.modelo-131.page1.justificante-anterior"
+kind = "binding"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+binding = "modelo-131.page1.justificante-anterior"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01-reservado-627"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01-reservado-628"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-01-reservado-727"
+kind = "filler"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "modelo-131-2019-2023-page-close"
+kind = "literal"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+literal = "</T13101000>"
+
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "Pág. 1"

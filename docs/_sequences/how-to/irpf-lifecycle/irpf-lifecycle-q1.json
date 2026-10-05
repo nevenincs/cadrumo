@@ -173,7 +173,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nshort_work_unit_id\t3d88172f4204\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nshort_work_unit_id\t3d88172f4204\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew declaration created.\n"
     },
     {
       "argv": [
@@ -435,7 +435,7 @@
               "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+            "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -450,7 +450,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "An output transaction has no supporting evidence (binding 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
           }
         ],
@@ -466,7 +466,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+              "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -482,7 +482,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -544,7 +544,7 @@
               "modelo": "130",
               "period": "1T"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
           }
         ],

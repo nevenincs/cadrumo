@@ -29,11 +29,16 @@ is refused with guidance (eviction applies only to the canonical port we own).
 The first serve performs an initial build so the review is never a stale
 snapshot; subsequent edits rebuild incrementally.
 
+After each English build, the regular docs build driver refreshes the translated
+sites under their language prefixes. These builds use private source copies so
+localized generated references cannot overwrite the watched English sources.
+The browser refresh waits for those roots, keeping the language dropdown usable.
+
 Every rebuild is a whole-site build, so the generated references (the CLI
 reference, glossary, casilla and legal pages, and under full scope the API
 stubs) regenerate at ``builder-inited`` (see ``docs/conf.py``). Surfaces that
 the build itself rewrites are excluded from the watch set so a rebuild cannot
-trigger itself, and ``docs/_build`` is the output tree. Editing a docstring
+trigger itself, and the configured docs build root holds compiled output. Editing a docstring
 under ``src/cadrumo/`` rebuilds the affected autodoc page, and adding or
 removing a module regenerates its stub on the next rebuild.
 
@@ -51,6 +56,7 @@ import http.client
 import ipaddress
 import json
 import os
+import shlex
 import socket
 import subprocess
 import sys
@@ -65,8 +71,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import PRODUCT_PACKAGE
+from dev.product_environment import ambient_product_settings_removed
 
+from .build_paths import docs_build_root, docs_html_root
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 _UTF_8: Final[str] = UTF_8
@@ -196,7 +206,7 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool, 
         The full command vector, runnable with the current interpreter.
     """
     docs_root = repo_root / "docs"
-    out_dir = docs_root / "_build" / "html"
+    out_dir = docs_html_root(repo_root)
     command = [
         sys.executable,
         "-m",
@@ -209,14 +219,17 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool, 
         "auto",
         # No --no-initial: the first serve builds the current tree before the
         # browser opens, so a review can never start on a stale snapshot of
-        # docs/_build/html left by an earlier session.
+        # canonical HTML output left by an earlier session.
     ]
     if scope != "user":
         # Full scope watches the autodoc source so a docstring edit rebuilds its
         # API page; user scope loads no autodoc, so watching src/cadrumo would
         # only trigger rebuilds that render nothing new.
-        command.extend(["--watch", str(repo_root / "src" / "cadrumo")])
+        command.extend(["--watch", str(repo_root / PRODUCT_PACKAGE)])
     command.extend(["--host", host, "--port", str(port)])
+    # The header links to sibling language roots. Rebuild those before the
+    # live server refreshes, including on the initial build.
+    command.extend(["--post-build", shlex.join([sys.executable, "-m", "dev.docs.serve_languages"])])
     if open_browser:
         command.append("--open-browser")
     for pattern in _ignore_patterns():
@@ -540,14 +553,19 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
     the former-product refusal inside ``conf.py``'s settings construction and
     kills every rebuild.
     """
-    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    environment = ambient_product_settings_removed()
+    build_root = docs_build_root(repo_root)
     environment.update(
         {
             "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
+            "CADRUMO_DOCS_BUILD_ROOT": str(build_root),
             SEQUENCE_CHECK_SKIP_ENV: "1",
             "CADRUMO_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_DOCS_LANGUAGE": "en",
             "CADRUMO_DOCS_SCOPE": scope,
-            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-"),
+            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(
+                prefix="cadrumo-docs-serve-", dir=prepare_temporary_directory()
+            ),
         }
     )
     return environment
@@ -744,24 +762,31 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    if resolution.action is ServeAction.RESPAWN:
-        stale = read_state(state_path)
-        if stale is not None:
-            print(
-                f"Existing docs server on port {port} is unresponsive; respawning (terminating pid {stale.pid}).",
-                flush=True,
-            )
-            _terminate(stale.pid)
-            clear_state(state_path, only_pid=stale.pid)
-        if not _wait_for_free(args.host, port, timeout=_PORT_RELEASE_TIMEOUT_SECONDS):
-            print(
-                f"Port {port} did not free after terminating the stale server; choose a different --port.",
-                file=sys.stderr,
-                flush=True,
-            )
-            return 1
+    if resolution.action is ServeAction.RESPAWN and not _release_stale_server(state_path, args.host, port):
+        return 1
 
     return _launch(repo_root, host=args.host, port=port, open_browser=args.open_browser, scope=args.scope)
+
+
+def _release_stale_server(state_path: Path, host: str, port: int) -> bool:
+    """Terminate the stale server and wait for its claimed port to be released."""
+    stale = read_state(state_path)
+    if stale is not None:
+        print(
+            f"Existing docs server on port {port} is unresponsive; respawning (terminating pid {stale.pid}).",
+            flush=True,
+        )
+        _terminate(stale.pid)
+        clear_state(state_path, only_pid=stale.pid)
+    if not _wait_for_free(host, port, timeout=_PORT_RELEASE_TIMEOUT_SECONDS):
+        print(
+            f"Port {port} did not free after terminating the stale server; choose a different --port.",
+            file=sys.stderr,
+            flush=True,
+        )
+        return False
+
+    return True
 
 
 if __name__ == "__main__":

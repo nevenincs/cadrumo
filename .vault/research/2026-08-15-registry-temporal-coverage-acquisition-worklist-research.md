@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-temporal-coverage'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b8b9f080e3c91e3a85ff6dc503d56fcd784c310e1e8dca20e2ceb854ca0b4619'
+body_hash: 'sha256:fac3491eaeb055ef615fcd3778e83b7f06a498a9e78b7718beb0e3fecc186413'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -93,7 +93,7 @@ This is not a footnote to the count above; it is its own finding, and it is the 
 
 ### Extension: the same acquisition shape applies to legal citations, not only designs — 10 revisions across 8 modelos
 
-Authorized follow-on to the vein this worklist otherwise covers (the coverage-instrument research and its governing ADR): a revision whose corpus-proven relayout (`_boundaries_for`) is not backed by ANY second orden citation is not thereby proven unrevised — it is a legal-catalogue acquisition gap of the identical shape as a missing design file, with a different fetch target. `test_every_modelo_revision_span_is_corpus_proven` (`src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`) now reports this as its own DISTINCT failure reason, `NO LEGAL EVIDENCE OF REVISION RECORDED`, appended alongside — never in place of — the design-evidence failure it accompanies, and it is coded so it can never become a pass condition: only a positively-cited amending or superseding orden clears it, never the absence of one.
+Authorized follow-on to the vein this worklist otherwise covers (the coverage-instrument research and its governing ADR): a revision whose corpus-proven relayout (`_boundaries_for`) is not backed by ANY second orden citation is not thereby proven unrevised — it is a legal-catalogue acquisition gap of the identical shape as a missing design file, with a different fetch target. `test_every_modelo_revision_span_is_corpus_proven`  now reports this as its own DISTINCT failure reason, `NO LEGAL EVIDENCE OF REVISION RECORDED`, appended alongside — never in place of — the design-evidence failure it accompanies, and it is coded so it can never become a pass condition: only a positively-cited amending or superseding orden clears it, never the absence of one.
 
 Measured directly against the live gate (`_distinct_orden_documents`, counting distinct BOE orden documents — by the token before the first `:` — cited anywhere across a modelo's own revision history): **10 revisions across 8 modelos** carry a corpus-proven relayout while citing only their founding orden, tree-wide, exhaustively swept rather than sampled:
 
@@ -118,8 +118,8 @@ Distinct from the 17-modelo design-acquisition list above: a modelo can appear o
 
 - `[[2026-08-14-registry-temporal-coverage-research]]` — the coverage-instrument research this worklist extends; defines the corpus-comparison mechanism, the neighbour-comparison branch, and the `_current_filing_year` convention this document reuses.
 - `[[2026-08-14-registry-temporal-coverage-adr]]` — the governing decision record for the coverage gate this worklist supports.
-- `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py` — `_designs_for`, `_design_sources`, `_design_coverage_years`, `_designs_in_publication_order`, `_declared_span_is_single_year`, `_neighbour_divergence`, `_boundaries_for`, `_current_filing_year` — the functions this worklist's measurements were run through directly.
+- the former source file — `_designs_for`, `_design_sources`, `_design_coverage_years`, `_designs_in_publication_order`, `_declared_span_is_single_year`, `_neighbour_divergence`, `_boundaries_for`, `_current_filing_year` — the functions this worklist's measurements were run through directly.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/` — the bundled design corpus whose directory listing and file-level parse results were checked per modelo; the per-modelo `manifest.json` sidecars recording `source_url`/`retrieved_at`/`sha256`/`bytes` for every bundled artefact.
-- `src/cadrumo/domain/calculations/registry/_loader.py` — `load_registry_tree`, used to read each modelo's declared `period_selector` fields.
-- `src/cadrumo/domain/calculations/registry/_schema_references.py` — `SourceReference`, the schema behind a `record_design`/`form_spec` source declaration.
-- `src/cadrumo/domain/calculations/registry/_corpus_catalogue.py` — `resolve_record_design_binary`, `verify_source_catalogue`, the byte-integrity and epoch-matching consumer of a declared `record_design` source.
+- the former source file — `load_registry_tree`, used to read each modelo's declared `period_selector` fields.
+- the former source file — `SourceReference`, the schema behind a `record_design`/`form_spec` source declaration.
+- the former source file — `resolve_record_design_binary`, `verify_source_catalogue`, the byte-integrity and epoch-matching consumer of a declared `record_design` source.

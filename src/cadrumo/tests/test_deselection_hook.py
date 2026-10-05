@@ -168,6 +168,21 @@ def test_a_fully_deselected_xdist_run_still_reports_nothing_ran() -> None:
     output = _probe_output(_PROBE_ALL_INTEGRATION, "-m", "unit", "-n", "2")
 
     assert "NOTHING RAN" in output
+    assert "cannot be distinguished" in output
+    assert "selection is not the cause" not in output
+    assert "Changing -m will not help" not in output
+
+
+def test_an_empty_serial_collection_has_a_collection_diagnosis() -> None:
+    output = _probe_output("VALUE = 1\n")
+    assert "COLLECTED 0" in output
+    assert "selection is not the cause" in output
+
+
+def test_an_empty_worker_collection_keeps_its_uncertainty_visible() -> None:
+    output = _probe_output("VALUE = 1\n", "-n", "2")
+    assert "cannot be distinguished" in output
+    assert "selection is not the cause" not in output
 
 
 def test_a_partially_deselected_run_names_both_counts() -> None:

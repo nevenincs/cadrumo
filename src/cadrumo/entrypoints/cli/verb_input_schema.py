@@ -44,7 +44,7 @@ def is_exposable_command(command_key: str) -> bool:
 
 def is_exposable_command_spec(spec: CommandSpec) -> bool:
     """Return whether one command declaration is exposed as an operator verb."""
-    from .command_spec import BindingState
+    from .command_shared_contracts import BindingState
 
     return (
         spec.parent_key not in {None, "root"}
@@ -56,7 +56,7 @@ def is_exposable_command_spec(spec: CommandSpec) -> bool:
 
 def project_recovery_handoff_contract(spec: CommandSpec) -> RecoveryHandoffContract | None:
     """Project one command's validated recovery protocol into discovery metadata."""
-    from .command_spec import OptionSpec
+    from .command_parameter_contracts import OptionSpec
 
     recovery = spec.recovery_handoff
     if recovery is None:

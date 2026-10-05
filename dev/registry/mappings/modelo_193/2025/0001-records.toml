@@ -1,0 +1,46 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "193"
+design_epoch = "2025"
+source_ref = "aeat-dr-193-2025"
+source_sha256 = "25ab19076ecc1116c660f8d4b0c47523e6cd271d89869895699c91843f562489"
+entries = []
+variable_envelopes = []
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-193-declarante"
+record_type = "declarante"
+required = true
+row_field_casilla_ids = []
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+export_record_id = "modelo-193-perceptor"
+record_type = "perceptor"
+required = false
+repeat = "binding_rows"
+binding_record = "perceptor"
+row_field_casilla_ids = [["accrual_year", "perc.ejercicio-devengo"], ["base_retenciones", "perc.base"], ["clave", "perc.clave"], ["clave_codigo", "perc.clave-codigo"], ["clave_mercado", "perc.clave-mercado"], ["codigo_cuenta", "perc.codigo-cuenta"], ["codigo_emisor", "perc.codigo-emisor"], ["compensaciones", "perc.compensaciones"], ["fecha_devengo", "perc.fecha-devengo"], ["fecha_inicio_prestamo", "perc.fecha-inicio-prestamo"], ["fecha_vencimiento_prestamo", "perc.fecha-vencimiento-prestamo"], ["foral_retention_araba", "perc.retenciones-forales-araba"], ["foral_retention_bizkaia", "perc.retenciones-forales-bizkaia"], ["foral_retention_estatal", "perc.retenciones-forales-estatal"], ["foral_retention_gipuzkoa", "perc.retenciones-forales-gipuzkoa"], ["foral_retention_navarra", "perc.retenciones-forales-navarra"], ["garantias", "perc.garantias"], ["isin_code", "perc.isin"], ["naturaleza", "perc.naturaleza"], ["naturaleza_declarante", "perc.naturaleza-declarante"], ["nif_pagador_anterior", "perc.nif-pagador-anterior"], ["numero_orden", "perc.numero-orden"], ["pago", "perc.pago"], ["penalizaciones", "perc.penalizaciones"], ["pendiente_flag", "perc.pendiente"], ["perceptor_legal_name", "perc.nombre"], ["perceptor_mediador_flag", "perc.mediador"], ["perceptor_tax_id", "perc.nif"], ["percibido_dinerario", "perc.percepciones"], ["porcentaje_retencion", "perc.porcentaje"], ["province_code", "perc.provincia"], ["reducciones", "perc.reducciones"], ["representative_tax_id", "perc.nif-representante"], ["retencion_practicada", "perc.retenciones"], ["territorial_deduction_clave", "perc.ceuta-melilla"], ["tipo_codigo", "perc.tipo-codigo"], ["tipo_percepcion", "perc.tipo-percepcion"]]
+
+[records.discriminator]
+offset = 208
+length = 293
+requires = "non_blank"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+record_identity = "Tipo 2 - Registro De Perceptor  Relación De Gastos"
+export_record_id = "modelo-193-gastos"
+record_type = "gastos"
+required = false
+repeat = "binding_rows"
+binding_record = "gastos"
+row_field_casilla_ids = [["contributor_legal_name", "gasto.nombre"], ["contributor_tax_id", "gasto.nif"], ["importe_gastos", "gasto.importe"], ["representative_tax_id", "gasto.nif-representante"]]
+
+[records.discriminator]
+offset = 208
+length = 293
+requires = "blank"

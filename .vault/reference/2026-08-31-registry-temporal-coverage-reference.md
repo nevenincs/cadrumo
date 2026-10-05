@@ -3,13 +3,17 @@ tags:
   - '#reference'
   - '#registry-temporal-coverage'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f2114c55bbbdf33625b547e6dbf3a5ce43d6301aa2ae25665b7e1ab91e3542d3'
+body_hash: 'sha256:e1a74b641a999c5a362187c404dcd56b285872bdad562d945c06e32c5882e0fb'
 related:
   - "[[2026-08-31-registry-temporal-coverage-modelo-165-2023-layout-composite-research]]"
 ---
 # `registry-temporal-coverage` reference: `Modelo 165 composite-layout implementation boundary`
+
+## Summary
+
+This reference describes the implementation boundary and validation requirements for the derived Modelo 165 layout covering tax years 2023–2025.
 
 ## Purpose
 

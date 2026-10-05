@@ -21,7 +21,7 @@ from ....core.money.rounding import round_to_cents as _quantize
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
-from ._anexo_d_records import InventoryAnexoDResult
+from ._anexo_d_records import InventoryAnexoDResult, resolve_inventory_authoritative_closing
 from .closing_authority_records import (
     InventoryClosingAuthorityRecord,
     InventoryClosingConflictDiagnostic,
@@ -32,17 +32,14 @@ from .closing_authority_records import (
 # concrete model modules are imported directly.  Import it first: its bootstrap
 # publishes the closing-authority and Anexo D models before their concrete
 # modules are requested below.
+from .closing_foundations import InventoryClosingAuthority, InventoryLedgerError, InventoryValidationError
 from .records import (
-    InventoryClosingAuthority,
     InventoryLedger,
-    InventoryLedgerError,
-    InventoryValidationError,
     InventoryValuationResult,
     MovementKind,
     MovementRecord,
     StockLayer,
     ValuationMethod,
-    resolve_inventory_authoritative_closing,
 )
 
 

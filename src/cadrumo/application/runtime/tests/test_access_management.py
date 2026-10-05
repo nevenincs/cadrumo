@@ -11,8 +11,6 @@ from pydantic import ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.access_management import (
-    RuntimeAccessManagementReplyEnvelope,
-    RuntimeAccessManagementRequestEnvelope,
     RuntimeAutomationDenied,
     RuntimeAutomationDeny,
     RuntimeProfileRecoveryPrepare,
@@ -22,6 +20,7 @@ from cadrumo.application.runtime.access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryReply,
 )
+from cadrumo.application.runtime.profile_access import RuntimeReply, RuntimeRequest
 from cadrumo.application.user_profile.access_contracts import AccessScope, SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
@@ -57,7 +56,7 @@ def test_management_requests_are_closed_and_credential_free() -> None:
     )
     inventory = RuntimeSessionInventory(request_id=uuid4(), profile_id=profile_id, session_id=session_id)
     for request in (deny, recovery, resume, inventory):
-        assert RuntimeAccessManagementRequestEnvelope.model_validate_json(request.model_dump_json()).root == request
+        assert RuntimeRequest.model_validate_json(request.model_dump_json()).root == request
         document = request.model_dump_json()
         assert not any(secret in document for secret in ("password", "api_key", "wrapped_dek", "credential"))
     with pytest.raises(ValidationError):
@@ -67,7 +66,7 @@ def test_management_requests_are_closed_and_credential_free() -> None:
     with pytest.raises(ValidationError):
         RuntimeProfileResume.model_validate({**resume.model_dump(), "lock_generation": -1})
     with pytest.raises(ValidationError):
-        RuntimeAccessManagementRequestEnvelope.model_validate({**inventory.model_dump(), "action": "unknown"})
+        RuntimeRequest.model_validate({**inventory.model_dump(), "action": "unknown"})
 
 
 @pytest.mark.parametrize("kind", (AutomationDenialKind.KEY, AutomationDenialKind.GRANT))
@@ -134,7 +133,7 @@ def test_management_replies_are_correlated_and_allowlisted() -> None:
     )
     inventory = RuntimeSessionInventoryReply(**identity, sessions=(session,))
     for reply in (denied, prepared, resumed, inventory):
-        assert RuntimeAccessManagementReplyEnvelope.model_validate_json(reply.model_dump_json()).root == reply
+        assert RuntimeReply.model_validate_json(reply.model_dump_json()).root == reply
         assert "password" not in reply.model_dump_json()
     with pytest.raises(ValidationError):
         RuntimeProfileRecoveryPrepared.model_validate({**prepared.model_dump(), "lock_generation": -1})
@@ -143,4 +142,4 @@ def test_management_replies_are_correlated_and_allowlisted() -> None:
     with pytest.raises(ValidationError):
         RuntimeSessionInventoryReply.model_validate({**inventory.model_dump(), "credential": "secret"})
     with pytest.raises(ValidationError):
-        RuntimeAccessManagementReplyEnvelope.model_validate({**inventory.model_dump(), "kind": "unknown"})
+        RuntimeReply.model_validate({**inventory.model_dump(), "kind": "unknown"})

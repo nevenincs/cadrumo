@@ -1,0 +1,663 @@
+# One entry per exact AEAT source anchor. Split rows reuse the selected revision casilla endpoint.
+schema_version = 1
+fragment_id = "records"
+modelo = "280"
+design_epoch = "2022"
+source_ref = "aeat-dr-280-2022"
+source_sha256 = "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-280-declarante"
+record_type = "declarante"
+required = true
+
+[[records]]
+sheet = "Tipo 2 - Registro De Declarado"
+record_identity = "Tipo 2 - Registro De Declarado"
+export_record_id = "modelo-280-declarado"
+record_type = "declarado"
+required = true
+
+[[entries]]
+export_field_id = "modelo-280-t1-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 47
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-280-t1-modelo"
+kind = "literal"
+literal = "280"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 49
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-280-t1-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-280-t1-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 54
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-280-t1-razon-social"
+kind = "casilla"
+casilla_id = "declarante-razon-social"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 66
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-280-t1-tipo-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 71
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-280-t1-contact-phone"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 81
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-280-t1-contact-name"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 83
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-280-t1-numero-identificativo"
+kind = "casilla"
+casilla_id = "numero-identificativo-declaracion"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 88
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-280-t1-complementaria-sustitutiva"
+kind = "casilla"
+casilla_id = "declaracion-complementaria-sustitutiva"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 95
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-280-t1-numero-identificativo-anterior"
+kind = "casilla"
+casilla_id = "numero-identificativo-anterior"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 128
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-280-t1-numero-total-declarados"
+kind = "casilla"
+casilla_id = "numero-total-declarados"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 146
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-280-t1-importe-total-aportaciones"
+kind = "casilla"
+casilla_id = "importe-total-aportaciones"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 150
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-280-t1-base-retenciones"
+kind = "casilla"
+casilla_id = "base-retenciones"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 170
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-280-t1-blancos"
+kind = "filler"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 185
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-280-t2-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 205
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-280-t2-modelo"
+kind = "literal"
+literal = "280"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 207
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-280-t2-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 209
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-280-t2-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 212
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-280-t2-nif-declarado"
+kind = "casilla"
+casilla_id = "declarado-nif"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 215
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-280-t2-representante-legal-nif"
+kind = "casilla"
+casilla_id = "representante-legal-nif"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 234
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-280-t2-nombre-declarado"
+kind = "casilla"
+casilla_id = "declarado-nombre"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 248
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-280-t2-tipo-plan"
+kind = "casilla"
+casilla_id = "tipo-plan-ahorro"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 253
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-280-t2-tipo-identificador"
+kind = "casilla"
+casilla_id = "tipo-identificador"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 264
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-280-t2-identificador-producto"
+kind = "casilla"
+casilla_id = "identificador-producto"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 272
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-280-t2-fecha-apertura-component-102"
+kind = "casilla"
+casilla_id = "fecha-apertura"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 278
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-280-t2-fecha-apertura-component-106"
+kind = "casilla"
+casilla_id = "fecha-apertura"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 279
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-280-t2-fecha-apertura-component-108"
+kind = "casilla"
+casilla_id = "fecha-apertura"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 280
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-280-t2-clave-alta"
+kind = "casilla"
+casilla_id = "clave-alta"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 289
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-280-t2-aportaciones-ejercicio-component-111"
+kind = "casilla"
+casilla_id = "aportaciones-ejercicio"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 325
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-280-t2-aportaciones-ejercicio-component-115"
+kind = "casilla"
+casilla_id = "aportaciones-ejercicio"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 328
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-positivos-ejercicio-component-117"
+kind = "casilla"
+casilla_id = "rendimientos-positivos-ejercicio"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 358
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-positivos-ejercicio-component-125"
+kind = "casilla"
+casilla_id = "rendimientos-positivos-ejercicio"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 362
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "21"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-negativos-ejercicio-component-127"
+kind = "casilla"
+casilla_id = "rendimientos-negativos-ejercicio"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 393
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "23"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-negativos-ejercicio-component-135"
+kind = "casilla"
+casilla_id = "rendimientos-negativos-ejercicio"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 397
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "24"
+
+[[entries]]
+export_field_id = "modelo-280-t2-extincion-plan"
+kind = "casilla"
+casilla_id = "extincion-plan"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1192-2022:art-cuarto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 401
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "25"
+
+[[entries]]
+export_field_id = "modelo-280-t2-fecha-extincion-component-138"
+kind = "casilla"
+casilla_id = "fecha-extincion"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 452
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "27"
+
+[[entries]]
+export_field_id = "modelo-280-t2-fecha-extincion-component-142"
+kind = "casilla"
+casilla_id = "fecha-extincion"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 453
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "28"
+
+[[entries]]
+export_field_id = "modelo-280-t2-fecha-extincion-component-144"
+kind = "casilla"
+casilla_id = "fecha-extincion"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 454
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "29"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-positivos-acumulados-component-146"
+kind = "casilla"
+casilla_id = "rendimientos-positivos-acumulados"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 471
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "31"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-positivos-acumulados-component-154"
+kind = "casilla"
+casilla_id = "rendimientos-positivos-acumulados"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 475
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "32"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-negativos-acumulados-component-156"
+kind = "casilla"
+casilla_id = "rendimientos-negativos-acumulados"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 491
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "34"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-negativos-acumulados-component-164"
+kind = "casilla"
+casilla_id = "rendimientos-negativos-acumulados"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 495
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "35"
+
+[[entries]]
+export_field_id = "modelo-280-t2-base-retencion-practicada-component-166"
+kind = "casilla"
+casilla_id = "base-retencion-practicada"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 516
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "37"
+
+[[entries]]
+export_field_id = "modelo-280-t2-base-retencion-practicada-component-174"
+kind = "casilla"
+casilla_id = "base-retencion-practicada"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 519
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "38"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-negativos-imputables-sign"
+kind = "casilla"
+casilla_id = "rendimientos-negativos-imputables"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 522
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "39"
+
+[entries.part]
+offset = 176
+length = 1
+aeat_type = "Alfabético"
+statement = "176. SIGNO: Campo alfabético:"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-negativos-imputables-component-177"
+kind = "casilla"
+casilla_id = "rendimientos-negativos-imputables"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 547
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "40"
+
+[[entries]]
+export_field_id = "modelo-280-t2-rendimientos-negativos-imputables-component-185"
+kind = "casilla"
+casilla_id = "rendimientos-negativos-imputables"
+legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 550
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "41"
+
+[[entries]]
+export_field_id = "modelo-280-t2-blancos"
+kind = "filler"
+legal_refs = ["orden-hap-2118-2015:art-1"]
+source_refs = ["aeat-dr-280-2022"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 553
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal = "42"
+

@@ -26,10 +26,10 @@ from textual.widgets import Input
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.installation import runtime_installation
-from ....adapters.local_runtime.posix import PosixRuntimeEndpoint
+from ....adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from ....adapters.local_runtime.runtime_client import open_installed_runtime_client
-from ....adapters.local_runtime.server import RuntimeTransportServer
 from ....adapters.local_runtime.tests.profile_worker_support import owner_id
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ....adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from ....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -49,7 +49,11 @@ from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ...runtime.profile_connections import RuntimeProfileConnections
 from ...runtime.tests.test_profile_connections import LoginObservation
-from ..secret.runtime_login import RuntimeLoginHandoff, RuntimeLoginMethod, RuntimeLoginScreen
+from ..secret.runtime_login import RuntimeLoginScreen
+from ..secret.runtime_login_contracts import (
+    RuntimeLoginHandoff,
+    RuntimeLoginMethod,
+)
 
 pytestmark = [
     pytest.mark.integration,
@@ -131,7 +135,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
                 secret_store=lambda: native,
             )
             profiles.prepare_registry()
-            server = RuntimeTransportServer(
+            server = RetainedRuntimeTransportServer(
                 endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
             )
             with ThreadPoolExecutor(max_workers=1) as pool:

@@ -16,7 +16,7 @@ removing the production transport -- the rule bars *a test double living in
 production*, not a real harness living in tests.
 
 Ten test modules inject it: classification apply and reject, saturation, split
-proposal and apply, the review workflow, run telemetry and evidence wiring.
+proposal and apply, the review workflow, run record and evidence wiring.
 None of them is a cloud test; they test ledger logic that survives the
 deletion, and this was simply their only injection point.
 """

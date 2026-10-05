@@ -2,7 +2,7 @@
 
 Persists :class:`llm.UsageRecord` payloads under
 :data:`adapters.persistence.storage.secure_object_namespaces.LLM_USAGE_NAMESPACE` in the encrypted
-SQL secure-object backend and exposes load and aggregate helpers. Records are
+SQL secure-object backend and exposes record loading and retention. Records are
 routed through :func:`core.redaction.rules.redact_structured` at
 :class:`core.classification.policies.SensitivityClass` ``DIAGNOSTIC`` before they
 are encrypted, so NIFs and bearer-shaped tokens are redacted before
@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 from datetime import date, timedelta
-from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
@@ -23,7 +22,7 @@ from ....core.hashing import canonical_json_bytes
 from ....core.redaction.rules import default_rules_for_class, redact_structured
 from ....core.time.clock import now
 from ...outbound.llm.errors import LLMCacheError
-from ...outbound.llm.models import LLMResponse, UsageRecord, UsageSummary
+from ...outbound.llm.models import LLMResponse, UsageRecord
 from ...outbound.llm.retention import select_retention_removal_keys
 from ..storage.crypto.encrypted_columns import secure_object_key_digest
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -185,7 +184,7 @@ class UsageRecorder:
         """Delete usage records older than the retention window or beyond the count cap.
 
         Applies the same two-stage bound as
-        :meth:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder.prune`: first every
+        :meth:`~adapters.persistence.llm.run_records.LLMRunRecorder.prune`: first every
         record older than ``retention_days`` (measured against the current time)
         is removed, then -- if more than ``max_records`` remain -- the oldest
         excess records beyond the cap are removed too. Both bounds default to the
@@ -217,39 +216,6 @@ class UsageRecorder:
             if repository.delete(_USAGE_NAMESPACE, object_key):
                 removed += 1
         return removed
-
-    def summarize(self, since: date | None = None, until: date | None = None) -> UsageSummary:
-        """Aggregate usage records into a :class:`llm.UsageSummary`.
-
-        Args:
-            since: Inclusive lower date bound, or ``None`` for no lower bound.
-            until: Inclusive upper date bound, or ``None`` for no upper bound.
-
-        Returns:
-            Aggregate usage summary covering entries, total tokens, and
-            estimated cost.
-        """
-        records = self.load_records(since=since, until=until)
-        # An unpriced record poisons the total rather than being skipped. Summing
-        # only the priced rows would return a smaller number that still reads as
-        # the bill, which is the reported defect moved one layer up: the caller
-        # cannot see that anything was left out. The count travels beside it so
-        # the absence is attributable rather than merely total.
-        unpriced = sum(1 for record in records if record.cost_estimate_usd is None)
-        total_cost = (
-            None
-            if unpriced
-            else sum((record.cost_estimate_usd or Decimal("0") for record in records), start=Decimal("0"))
-        )
-        return UsageSummary(
-            entries=len(records),
-            total_input_tokens=sum(record.input_tokens for record in records),
-            total_output_tokens=sum(record.output_tokens for record in records),
-            total_cost_estimate_usd=total_cost,
-            unpriced_entries=unpriced,
-            since=since,
-            until=until,
-        )
 
     def _logical_root(self) -> str:
         """Return the stable logical usage partition."""

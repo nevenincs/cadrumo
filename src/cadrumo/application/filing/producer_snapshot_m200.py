@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 
 class Modelo200AdministradorRow(BaseModel):
@@ -276,7 +276,7 @@ class Modelo200ProfileFacts(BaseModel):
     header field to blancos.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     projection_rows: Modelo200ProjectionRows = Modelo200ProjectionRows()
     apartado_6_deduc_evitar_doble_imposicion_participacio: str | None = None
@@ -292,12 +292,7 @@ class Modelo200ProfileFacts(BaseModel):
     b_2_suma_de_porcentajes_de_participaciones_e: str | None = None
     balance_0_no_consta_1_mod_normal_2_mod_abrev: str | None = None
     codigo_cnae_2025_actividad_principal: str | None = None
-    codigo_pais_country_code: str | None = None
     como_consecuencia_de_la_presentacion_de_la_a: str | None = None
-    cuenta_bancaria_banco_bank_name: str | None = None
-    cuenta_bancaria_ciudad_city: str | None = None
-    cuenta_bancaria_codigo_swift_bic: str | None = None
-    cuenta_bancaria_marca_sepa: str | None = None
     cuenta_corriente_tributaria: str | None = None
     datos_de_la_sociedad_matriz_ultima_nif: str | None = None
     datos_de_la_sociedad_matriz_ultima_nombre_de: str | None = None
@@ -329,7 +324,6 @@ class Modelo200ProfileFacts(BaseModel):
     deduccion_resto_del_grupo_8: str | None = None
     deduccion_resto_del_grupo_9: str | None = None
     direccion_de_correo_electronico_para_inciden: str | None = None
-    direccion_del_banco_bank_address: str | None = None
     ecpn_0_no_consta_1_mod_normal_2_mod_abreviad: str | None = None
     ejercicio: str | None = None
     entidad_cuyo_importe_neto_de_la_cifra_de_neg: str | None = None
@@ -364,8 +358,6 @@ class Modelo200ProfileFacts(BaseModel):
     no_identificacion_de_la_sociedad_dominante_e: str | None = None
     no_residentes_mas_de_un_establecimiento_perm: str | None = None
     nombre_y_apellidos_de_la_persona_de_contacto: str | None = None
-    numero_de_cuenta_iban: str | None = None
-    numero_de_cuenta_iban_2: str | None = None
     numero_de_periodo_impositivo: str | None = None
     pais_de_expedicion_del_documento_de_identifi: str | None = None
     pais_de_residencia: str | None = None

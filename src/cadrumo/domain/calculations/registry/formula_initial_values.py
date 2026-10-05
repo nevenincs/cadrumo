@@ -32,9 +32,10 @@ from decimal import Decimal
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.casilla_value_absence import AbsentCasillaReading
 from ....core.decimal.constants import ZERO
 from .binding_selector_utils import provider_member
-from .binding_targets import bound_casilla_binding_ids
+from .binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from .binding_temporal import SameTargetContext
 from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
 from .bindings_previous_filing import PreviousFilingProvider
@@ -141,7 +142,7 @@ def initial_values(
     _reject_non_input_kind_inputs(inputs, casillas, {formula.target_casilla_id for formula in revision.formulas})
     _reject_numeric_inputs_for_text_casillas(inputs, casillas)
 
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     _reject_smuggled_previous_filing_inputs(
         inputs,
         casillas=casillas,
@@ -420,7 +421,7 @@ def _initial_value_for_casilla(
     """Resolve one manual or observation-backed initial casilla value."""
     bindings = _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id)
     if not bindings:
-        return inputs.get(casilla.id, ZERO), False
+        return AbsentCasillaReading.UNSUPPLIED_INPUT.read(inputs, casilla.id), False
     value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
     if value is not None:
         return value, False

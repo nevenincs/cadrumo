@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.payment_election import PaymentElection
 from ...core.period import Period, StandardPeriodCode
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
@@ -60,6 +60,7 @@ from ..aggregation.m303_arrivals import (
 )
 from ._producer_snapshot_m390 import M390FilingFacts as _M390FilingFacts
 from .producer_snapshot_m200 import Modelo200ProfileFacts
+from .producer_snapshot_m360 import Modelo360ProfileFacts
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
@@ -615,7 +616,7 @@ class Modelo210DevengoFactSet(BaseModel):
 class Modelo210DevolucionFactSet(BaseModel):
     """Modelo 210 devolucion facts, flat members named from the AEAT component vocabulary."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     cuenta_resto_banco: str | None = None
     cuenta_resto_ciudad: str | None = None
@@ -648,7 +649,7 @@ class Modelo210GananciaInmobiliariaFactSet(BaseModel):
 class Modelo210IngresoFactSet(BaseModel):
     """Modelo 210 ingreso facts, flat members named from the AEAT component vocabulary."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     cuenta_resto_banco: str | None = None
     cuenta_resto_ciudad: str | None = None
@@ -760,7 +761,7 @@ class Modelo210ProfileFacts(BaseModel):
     type's.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     contribuyente: Modelo210ContribuyenteFactSet | None = None
     declaracion: Modelo210DeclaracionFactSet | None = None
@@ -830,7 +831,7 @@ class Modelo202ProducerProfile(BaseModel):
     than unknown.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     taxpayer_profile: TaxpayerProfile
     activities: tuple[Modelo202ActivityFacts, ...]
@@ -864,7 +865,7 @@ class FilingElectionFacts(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    result_disposition: ResultDisposition
+    result_disposition: ResultDisposition | None
     payment: PaymentElection
     refund: RefundElection
     prior_domiciliation: PriorDomiciliationElection
@@ -1006,7 +1007,7 @@ class AmendmentEvidence(BaseModel):
 class RefundAccountSelection(BaseModel):
     """Secure account selected for a refund disposition."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     role: Literal["refund"]
     account: RefundAccount
@@ -1015,7 +1016,7 @@ class RefundAccountSelection(BaseModel):
 class ChargeAccountSelection(BaseModel):
     """Secure account selected for a direct-debit disposition."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     role: Literal["charge"]
     account: ChargeAccount
@@ -1031,6 +1032,7 @@ type FilingModelProfileFacts = (
     | Modelo222ProfileFacts
     | Modelo296ProfileFacts
     | Modelo353ProfileFacts
+    | Modelo360ProfileFacts
     | ModeloIVAProfile
 )
 
@@ -1038,7 +1040,7 @@ type FilingModelProfileFacts = (
 class FilingProducerSnapshot(BaseModel):
     """Complete immutable filing facts before registry-specific translation."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     modelo: Modelo
     taxpayer_tax_id: SubjectTaxId
@@ -1061,7 +1063,6 @@ class FilingProducerSnapshot(BaseModel):
     def _validate_model_profile(self) -> FilingProducerSnapshot:
         _validate_snapshot_model_profile(self)
         _validate_snapshot_account_selection(self)
-        _validate_snapshot_profile_secrecy(self)
         return self
 
 
@@ -1105,6 +1106,9 @@ def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo == Modelo("353"):
         _validate_modelo_353_snapshot(snapshot)
         return
+    if snapshot.modelo == Modelo("360"):
+        _validate_modelo_360_snapshot(snapshot)
+        return
     _validate_general_modelo_snapshot(snapshot)
 
 
@@ -1132,6 +1136,22 @@ def _validate_modelo_353_snapshot(snapshot: FilingProducerSnapshot) -> None:
     """Modelo 353 is the grupo de entidades aggregate; it cannot be filed without it."""
     if not isinstance(snapshot.model_profile, Modelo353ProfileFacts):
         raise ValueError("modelo 353 requires Modelo353ProfileFacts")
+
+
+def _validate_modelo_360_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 360 is a solicitud de devolución; DR360 makes its datos bancarios obligatorio.
+
+    Campos 115 and 116 -- the IBAN and the banco-BIC -- are both required, so a solicitud
+    without a selected refund account, or with one that carries no BIC, has nowhere to be
+    paid and is refused here rather than at the first blank position.
+    """
+    if not isinstance(snapshot.model_profile, Modelo360ProfileFacts):
+        raise ValueError("modelo 360 requires Modelo360ProfileFacts")
+    selected = snapshot.selected_account
+    if not isinstance(selected, RefundAccountSelection) or selected.account.iban is None:
+        raise ValueError("modelo 360 requires a selected refund account")
+    if not selected.account.swift_bic.strip():
+        raise ValueError("modelo 360 requires the refund account's banco-BIC")
 
 
 def _validate_modelo_222_snapshot(snapshot: FilingProducerSnapshot) -> None:
@@ -1189,13 +1209,23 @@ def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> No
             raise ValueError("domiciliacion disposition requires a selected charge account")
     elif snapshot.elections.payment is PaymentElection.DOMICILIACION:
         raise ValueError("domiciliacion payment election requires the matching result disposition")
-    elif result_disposition_is_refund(disposition):
+    elif disposition is not None and result_disposition_is_refund(disposition):
         if not isinstance(snapshot.selected_account, RefundAccountSelection):
             raise ValueError("refund disposition requires a selected refund account")
     elif snapshot.selected_account is not None and not (
-        _m303_nota_three_shape(snapshot) and isinstance(snapshot.selected_account, RefundAccountSelection)
+        _account_page_carries_refund_account(snapshot) and isinstance(snapshot.selected_account, RefundAccountSelection)
     ):
         raise ValueError("a result disposition without an account must not retain one")
+
+
+def _account_page_carries_refund_account(snapshot: FilingProducerSnapshot) -> bool:
+    """Whether the record design carries the refund account whatever the disposition says.
+
+    Modelo 303 Nota 3 does so for a rectificativa keeping its prior domiciliation, and
+    modelo 360 always does: a solicitud de devolución has no result casilla to derive a
+    refund disposition from, yet DR360 campos 113-117 are its obligatorio datos bancarios.
+    """
+    return _m303_nota_three_shape(snapshot) or snapshot.modelo == Modelo("360")
 
 
 def _m303_nota_three_shape(snapshot: FilingProducerSnapshot) -> bool:
@@ -1207,20 +1237,6 @@ def _m303_nota_three_shape(snapshot: FilingProducerSnapshot) -> bool:
         and amendment.is_rectificativa
         and snapshot.elections.prior_domiciliation is PriorDomiciliationElection.KEEP
     )
-
-
-def _validate_snapshot_profile_secrecy(snapshot: FilingProducerSnapshot) -> None:
-    profile_iva = _profile_iva(snapshot.model_profile)
-    if profile_iva is not None and (profile_iva.refund_account is not None or profile_iva.charge_account is not None):
-        raise ValueError("model profile must not retain accounts outside selected_account")
-
-
-def _profile_iva(model_profile: FilingModelProfileFacts) -> ModeloIVAProfile | None:
-    if isinstance(model_profile, ModeloIVAProfile):
-        return model_profile
-    if isinstance(model_profile, Modelo202ProducerProfile):
-        return model_profile.taxpayer_profile.iva
-    return None
 
 
 def _registered_snapshot_refusal(error: ValueError) -> FilingProducerSnapshotError | None:
@@ -1255,40 +1271,30 @@ def build_filing_producer_snapshot(
     charge_account: ChargeAccount | None,
     m303_filing_facts: M303FilingFacts | None,
     declaration_contact: DeclarationContactFacts | None = None,
-    nota_three_refund_account: bool = False,
+    account_page_refund_account: bool = False,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition.
 
     ``declaration_contact`` is optional so every caller that predates the
     informativa contact fact keeps working unchanged; an absent contact renders
     as blancos, which is what AEAT's own header rule prescribes.
-    """
-    safe_model_profile = _without_embedded_accounts(model_profile)
-    selected_account: SelectedFilingAccount | None
-    if elections.result_disposition is ResultDisposition.DOMICILIACION:
-        if charge_account is None:
-            raise FilingProducerSnapshotError("domiciliacion requires a charge account")
-        selected_account = ChargeAccountSelection(role="charge", account=charge_account)
-    elif result_disposition_is_refund(elections.result_disposition):
-        if refund_account is None or refund_account.iban is None:
-            raise FilingProducerSnapshotError("refund disposition requires a refund account")
-        selected_account = RefundAccountSelection(role="refund", account=refund_account)
-    elif nota_three_refund_account:
-        # Modelo 303 Nota 3: the account page carries the refund account even
-        # though the disposition itself is not a refund.
-        if refund_account is None:
-            raise FilingProducerSnapshotError("Nota 3 account page requires a refund account")
-        selected_account = RefundAccountSelection(role="refund", account=refund_account)
-    else:
-        selected_account = None
 
+    ``account_page_refund_account`` selects the refund account although the
+    disposition is not a refund: Modelo 303 Nota 3, and every modelo 360 solicitud.
+    """
+    selected_account = _select_filing_account(
+        elections,
+        refund_account=refund_account,
+        charge_account=charge_account,
+        account_page_refund_account=account_page_refund_account,
+    )
     try:
         return FilingProducerSnapshot(
             modelo=modelo,
             taxpayer_tax_id=taxpayer_tax_id,
             taxpayer_identity=taxpayer_identity,
             presenter=presenter,
-            model_profile=safe_model_profile,
+            model_profile=model_profile,
             elections=elections,
             amendment_evidence=amendment_evidence,
             selected_account=selected_account,
@@ -1300,17 +1306,28 @@ def build_filing_producer_snapshot(
         raise _registered_snapshot_refusal(exc) or FilingProducerSnapshotError(str(exc)) from exc
 
 
-def _without_embedded_accounts(model_profile: FilingModelProfileFacts) -> FilingModelProfileFacts:
-    if isinstance(model_profile, ModeloIVAProfile):
-        return model_profile.model_copy(update={"refund_account": None, "charge_account": None})
-    if isinstance(model_profile, Modelo202ProducerProfile):
-        taxpayer_profile = model_profile.taxpayer_profile
-        if taxpayer_profile.iva is None:
-            return model_profile
-        safe_iva = taxpayer_profile.iva.model_copy(update={"refund_account": None, "charge_account": None})
-        safe_taxpayer = taxpayer_profile.model_copy(update={"iva": safe_iva})
-        return model_profile.model_copy(update={"taxpayer_profile": safe_taxpayer})
-    return model_profile
+def _select_filing_account(
+    elections: FilingElectionFacts,
+    *,
+    refund_account: RefundAccount | None,
+    charge_account: ChargeAccount | None,
+    account_page_refund_account: bool,
+) -> SelectedFilingAccount | None:
+    if elections.result_disposition is ResultDisposition.DOMICILIACION:
+        if charge_account is None:
+            raise FilingProducerSnapshotError("domiciliacion requires a charge account")
+        return ChargeAccountSelection(role="charge", account=charge_account)
+    if elections.result_disposition is not None and result_disposition_is_refund(elections.result_disposition):
+        if refund_account is None or refund_account.iban is None:
+            raise FilingProducerSnapshotError("refund disposition requires a refund account")
+        return RefundAccountSelection(role="refund", account=refund_account)
+    if account_page_refund_account:
+        # Modelo 303 Nota 3 and modelo 360: the account page carries the refund
+        # account even though the disposition itself is not a refund.
+        if refund_account is None or refund_account.iban is None:
+            raise FilingProducerSnapshotError("the account page requires a refund account")
+        return RefundAccountSelection(role="refund", account=refund_account)
+    return None
 
 
 __all__ = [

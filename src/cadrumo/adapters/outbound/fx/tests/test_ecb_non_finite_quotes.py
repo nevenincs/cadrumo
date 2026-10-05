@@ -53,13 +53,13 @@ _UNUSABLE = (
 def test_an_unusable_quote_reports_no_rate_rather_than_raising(quote: Decimal) -> None:
     """The only unusable observation in the window yields a missing rate.
 
-    ``None`` is the provider's declared answer for "the ECB published nothing
-    usable here". What must not happen is a raw ``decimal`` exception escaping
+    A missing rate is the provider's declared answer for "the ECB published
+    nothing usable here". What must not happen is a raw ``decimal`` exception escaping
     the typed provider boundary, or a number coming back.
     """
     provider = _provider({_BAD_DAY: quote})
 
-    assert provider.get_eur_rate("USD", _BAD_DAY) is None
+    assert provider.lookup_eur_rate("USD", _BAD_DAY).rate is None
 
 
 @pytest.mark.parametrize("quote", _UNUSABLE)
@@ -74,7 +74,7 @@ def test_an_unusable_latest_quote_does_not_discard_the_valid_ones_behind_it(quot
     """
     provider = _provider({_GOOD_DAY: _GOOD_QUOTE, _BAD_DAY: quote})
 
-    rate = provider.get_eur_rate("USD", _BAD_DAY)
+    rate = provider.lookup_eur_rate("USD", _BAD_DAY).rate
 
     assert rate == Decimal("1") / _GOOD_QUOTE
 
@@ -83,7 +83,7 @@ def test_a_usable_quote_still_resolves() -> None:
     """The positive control: a parser that dropped everything would pass the rest."""
     provider = _provider({_GOOD_DAY: _GOOD_QUOTE})
 
-    assert provider.get_eur_rate("USD", _GOOD_DAY) == Decimal("1") / _GOOD_QUOTE
+    assert provider.lookup_eur_rate("USD", _GOOD_DAY).rate == Decimal("1") / _GOOD_QUOTE
 
 
 def test_an_infinite_quote_does_not_invert_to_an_effectively_zero_rate() -> None:
@@ -96,6 +96,6 @@ def test_an_infinite_quote_does_not_invert_to_an_effectively_zero_rate() -> None
     """
     provider = _provider({_BAD_DAY: Decimal("Infinity")})
 
-    rate = provider.get_eur_rate("USD", _BAD_DAY)
+    rate = provider.lookup_eur_rate("USD", _BAD_DAY).rate
 
     assert rate is None

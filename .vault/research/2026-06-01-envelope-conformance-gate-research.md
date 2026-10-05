@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#envelope-conformance-gate'
 date: '2026-06-01'
-modified: '2026-08-15'
-body_hash: 'sha256:0d648c089fdbdfa901a36d04690e34f461d50f3185357e38edbdabd64807bbe7'
+modified: '2026-10-03'
+body_hash: 'sha256:ec2b99a22786b8d2119d2a3c59b776399ed13cd4185c0714535ea87c58e060bb'
 related: []
 ---
 
@@ -47,7 +47,7 @@ JSON-schema gate is the load-bearing pattern.
 
 ### Implementation surface
 
-`src/aeat/entrypoints/cli/test_json_schema_conformance.py` walks
+The conformance test walks
 the live Typer `app` tree (via the application factory, so
 `_lazy()`-mounted subcommands are included), collects the leaf
 command paths as a `set[tuple[str, ...]]`, and asserts equality

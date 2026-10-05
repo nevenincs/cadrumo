@@ -11,11 +11,17 @@ import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
+from cadrumo.application.user_profile.access_contracts import (
+    AccessScope,
+    AuthorityState,
+    Availability,
+    ProfileAccessStatus,
+)
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import server as mcp_server
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -35,8 +41,8 @@ class _AdmittedClient:
             profile_id=profile_id,
             session_id=self.session_id,
             session_expires_at=now() + timedelta(minutes=5),
-            grant_state=None,
-            grant_expires_at=None,
+            grant_state=AuthorityState.ACTIVE,
+            grant_expires_at=now() + timedelta(minutes=5),
             grant_valid=True,
             profile_bound=True,
             storage=Availability.AVAILABLE,
@@ -76,8 +82,8 @@ async def test_failed_configured_reference_preserves_public_tools_and_fences_eve
         calls.append((profile_id, credential_reference, frontend))
         raise AutomationCustodyError(failure)
 
-    monkeypatch.setattr(mcp_server, "open_installed_credential_client", missing)
-    monkeypatch.setattr(mcp_server, "_authority_query", lambda _args: {"outcome": "published", "report": {}})
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", missing)
+    monkeypatch.setattr(mcp_runtime, "authority_query", lambda _args: {"outcome": "published", "report": {}})
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         await adapter.bootstrap_reference(reference)
@@ -144,7 +150,7 @@ async def test_explicit_successful_authentication_clears_failed_bootstrap_status
         assert credential_reference == replacement_reference
         return cast(RuntimeFrontendClient, candidate)
 
-    monkeypatch.setattr(mcp_server, "open_installed_credential_client", open_candidate)
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", open_candidate)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         await adapter.bootstrap_reference(configured_reference)

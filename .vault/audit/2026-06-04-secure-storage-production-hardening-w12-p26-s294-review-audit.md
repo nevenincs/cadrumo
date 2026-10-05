@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:fc01325787a3fd6e2fe913519c94b87144919a5269b79e0876ddb23d7ef30b38'
+modified: '2026-10-03'
+body_hash: 'sha256:65da401d244abf798f2748fadedc60471e0449037c348251cb4c6ad495a82e79'
 related: []
 ---
 
@@ -25,7 +25,7 @@ All new registry message keys were scaffolded and translated through `python -m 
 ## S294-004 | PASS | Validation
 
 - `uv run --no-sync ruff check ...`
-- `uv run --no-sync pytest -q src/aeat/core/errors/test_registry.py src/aeat/core/errors/test_registry_enforcement.py src/aeat/application/modelo/test_selectors.py src/aeat/entrypoints/cli/test_modelo_projection.py src/aeat/entrypoints/cli/test_modelo_work_natural_key.py src/aeat/entrypoints/cli/test_modelo_work_ux.py`
+- the historical check
 - `PYTHONPATH=src uv run --no-sync python -m aeat.locales scaffold --check`
 - `PYTHONPATH=src uv run --no-sync python -m aeat.locales audit`
 

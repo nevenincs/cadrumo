@@ -40,7 +40,7 @@ See Also:
 from __future__ import annotations
 
 from contextlib import suppress
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -54,7 +54,7 @@ from ...domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     validating_governed_facts,
 )
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import IvaCategory, IvaRateKind
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -122,6 +122,94 @@ def default_invoice_extraction_period() -> Period:
     return Period.from_year_and_code(today_madrid().year, "0A")
 
 
+def _next_period_boundary(effective_until: date | None, period: Period) -> date | None:
+    if effective_until is None or effective_until >= period.end_date:
+        return None
+    following = effective_until + timedelta(days=1)
+    return following if period.start_date <= following <= period.end_date else None
+
+
+def _add_table_boundaries(
+    period: Period,
+    operation: PinnedAuthorityOperation,
+    boundary_dates: set[date],
+) -> None:
+    from ...domain.iva.rates import load_iva_rate_table
+    from ...domain.iva.schema import spanish_eu_member_state
+
+    state = spanish_eu_member_state(effective_date=period.start_date, authority=operation)
+    for record in load_iva_rate_table(operation=operation).get(state, ()):
+        if period.start_date <= record.effective_from <= period.end_date:
+            boundary_dates.add(record.effective_from)
+        following = _next_period_boundary(record.effective_until, period)
+        if following is not None:
+            boundary_dates.add(following)
+
+
+def _add_fact_boundaries(
+    period: Period,
+    operation: PinnedAuthorityOperation,
+    boundary_dates: set[date],
+) -> None:
+    for fact_id in ("iva-rate-slot-catalogue", "eu-member-state-catalogue"):
+        for variant in operation.governed_fact(fact_id).variants:
+            if variant.valid_from is not None and period.start_date <= variant.valid_from <= period.end_date:
+                boundary_dates.add(variant.valid_from)
+            following = _next_period_boundary(variant.valid_to, period)
+            if following is not None:
+                boundary_dates.add(following)
+
+
+def _period_authority_boundaries(period: Period, operation: PinnedAuthorityOperation) -> tuple[date, ...]:
+    boundary_dates = {period.start_date}
+    _add_table_boundaries(period, operation, boundary_dates)
+    _add_fact_boundaries(period, operation, boundary_dates)
+    return tuple(sorted(boundary_dates))
+
+
+def _rate_kind_percentages(
+    kind: IvaRateKind,
+    *,
+    zero_token: IvaRateKind,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> set[Decimal]:
+    from ...domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
+    from ...domain.iva.errors import IvaRateNotFoundError
+    from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
+    from ...domain.iva.schema import spanish_eu_member_state
+
+    if kind == zero_token:
+        # RATE_0 is a permanent registry slot, while 0062's zero rows are
+        # date-bounded temporary measures. Project the slot's zero value
+        # through 0094 instead of treating an absent 0062 row as unavailable.
+        zero_slot = resolve_iva_rate_slot(ZERO, on_date)
+        zero_fraction = iva_rate_percentage(zero_slot, on_date)
+        return set() if zero_fraction is None else {zero_fraction * HUNDRED}
+    state = spanish_eu_member_state(effective_date=on_date, authority=operation)
+    percentages: set[Decimal] = set()
+    with suppress(IvaRateNotFoundError):
+        percentages.add(lookup_rate(state, kind, on_date, operation=operation).pct)
+    percentages.update(rate.pct for rate in coexisting_tier_rates(state, kind, on_date, operation=operation))
+    return percentages
+
+
+def _rates_at_authority_boundary(on_date: date, operation: PinnedAuthorityOperation) -> set[Decimal]:
+    from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+
+    catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation)
+    return {
+        percentage
+        for definition in catalogue.definitions
+        for percentage in _rate_kind_percentages(
+            definition.token,
+            zero_token=catalogue.zero_token,
+            on_date=on_date,
+            operation=operation,
+        )
+    }
+
+
 def _overlapping_iva_rate_pcts(
     period: Period,
     *,
@@ -135,66 +223,9 @@ def _overlapping_iva_rate_pcts(
     boundaries preserves every mid-period transition without repeating the same
     resolution for every calendar day.
     """
-    from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
-    from ...domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
-    from ...domain.iva.errors import IvaRateNotFoundError
-    from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
-    from ...domain.iva.rates import load_iva_rate_table
-    from ...domain.iva.schema import spanish_eu_member_state
-
     overlapping: set[Decimal] = set()
-    boundary_dates = {period.start_date}
-    spanish_state = spanish_eu_member_state(effective_date=period.start_date, authority=operation)
-    for record in load_iva_rate_table(operation=operation).get(spanish_state, ()):
-        if period.start_date <= record.effective_from <= period.end_date:
-            boundary_dates.add(record.effective_from)
-        if record.effective_until is not None and record.effective_until < period.end_date:
-            following = record.effective_until + timedelta(days=1)
-            if period.start_date <= following <= period.end_date:
-                boundary_dates.add(following)
-
-    for fact_id in ("iva-rate-slot-catalogue", "eu-member-state-catalogue"):
-        fact = operation.governed_fact(fact_id)
-        for variant in fact.variants:
-            if variant.valid_from is not None and period.start_date <= variant.valid_from <= period.end_date:
-                boundary_dates.add(variant.valid_from)
-            if variant.valid_to is not None and variant.valid_to < period.end_date:
-                following = variant.valid_to + timedelta(days=1)
-                if period.start_date <= following <= period.end_date:
-                    boundary_dates.add(following)
-
-    for on_date in sorted(boundary_dates):
-        catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation)
-        kinds = tuple(definition.token for definition in catalogue.definitions)
-        for kind in kinds:
-            if kind == catalogue.zero_token:
-                # RATE_0 is a permanent registry slot, while 0062's zero rows
-                # are date-bounded temporary measures.  Project the slot's
-                # zero value through 0094 instead of treating the absence of a
-                # temporary 0062 row as proof that zero is unavailable.
-                zero_slot = resolve_iva_rate_slot(ZERO, on_date)
-                zero_fraction = iva_rate_percentage(zero_slot, on_date)
-                if zero_fraction is not None:
-                    overlapping.add(zero_fraction * HUNDRED)
-                continue
-            with suppress(IvaRateNotFoundError):
-                overlapping.add(
-                    lookup_rate(
-                        spanish_eu_member_state(effective_date=on_date, authority=operation),
-                        kind,
-                        on_date,
-                        operation=operation,
-                    ).pct,
-                )
-            overlapping.update(
-                rate.pct
-                for rate in coexisting_tier_rates(
-                    spanish_eu_member_state(effective_date=on_date, authority=operation),
-                    kind,
-                    on_date,
-                    operation=operation,
-                )
-            )
+    for on_date in _period_authority_boundaries(period, operation):
+        overlapping.update(_rates_at_authority_boundary(on_date, operation))
     return tuple(sorted(overlapping))
 
 

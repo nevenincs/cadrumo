@@ -4,19 +4,14 @@ tags:
   - '#index'
   - '#modelo-verify-nonzero-guards'
 date: '2026-08-16'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:056aaa7572fdd21162da7688f20539d12aed0f95aaf7cd9c1de10e6c1db17ef9'
+body_hash: 'sha256:5f98eaea39188e48bb17649064762341af43448c643caacfbd430c46c9bbdce0'
 related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-adr]]'
   - '[[2026-06-30-modelo-verify-nonzero-guards-audit]]'
-  - '[[2026-06-30-modelo-verify-nonzero-guards-ledger]]'
-  - '[[2026-06-30-modelo-verify-nonzero-guards-plan]]'
   - '[[2026-06-30-modelo-verify-nonzero-guards-research]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-audit]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m123-rirpf-exoneration-corpus]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m202-b2-resultado-formula-wiring]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m210-inmobiliaria-e2e]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit]]'
 ---
@@ -37,17 +32,6 @@ Auto-generated index of all documents tagged with `#modelo-verify-nonzero-guards
 - `2026-07-01-modelo-verify-nonzero-guards-audit` - `modelo-verify-nonzero-guards` audit: `M123 exoneration grounding re-verification`
 - `2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit` - `modelo-verify-nonzero-guards` audit: `M202 deferred items grounded decisions`
 - `2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit` - `modelo-verify-nonzero-guards` audit: review closeout (code review + honesty review)
-
-### exec
-
-- `2026-06-30-modelo-verify-nonzero-guards-ledger` - `modelo-verify-nonzero-guards` ledger
-- `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m123-rirpf-exoneration-corpus` - M123 RIRPF exoneration corpus deferral resolution
-- `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m202-b2-resultado-formula-wiring` - M202 B2 resultado previo formula-wiring deferral resolution
-- `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m210-inmobiliaria-e2e` - M210 inmobiliaria silent-zero advisory end-to-end resolution
-
-### plan
-
-- `2026-06-30-modelo-verify-nonzero-guards-plan` - `modelo-verify-nonzero-guards` plan
 
 ### research
 

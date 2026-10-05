@@ -18,6 +18,7 @@ __all__ = [
     "AUXILIARY_ENVELOPE_HEADER_LENGTHS",
     "AUXILIARY_ENVELOPE_HEADER_ORDINALS",
     "AUXILIARY_ENVELOPE_HEADER_ROWS",
+    "RecordDesign369RelativeClosing",
     "RecordDesignAuxiliaryEnvelopeHeader",
     "RecordDesignAuxiliaryEnvelopeHeaderField",
     "RecordDesignAuxiliaryEnvelopeHeaderRole",
@@ -338,7 +339,8 @@ class RecordDesignRelativeSuffixMarker(RegistryModel):
     sheet: str
     row: int = Field(gt=0)
     ordinal: int = Field(gt=0)
-    offset: Literal["***"]
+    #: Either the literal relative marker or a source-printed relative position.
+    offset: Literal["***"] | int
     length: int = Field(gt=0)
     type_code: str
     description: str
@@ -403,28 +405,94 @@ class RecordDesignCompositeRelativeClosing(RegistryModel):
         )
 
 
+class RecordDesign369RelativeClosing(RegistryModel):
+    """The six source-printed relative-position rows of Modelo 369's wrapper."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    tag_prefix: RecordDesignRelativeSuffixMarker
+    modelo: RecordDesignRelativeSuffixMarker
+    discriminant: RecordDesignRelativeSuffixMarker
+    filing_year: RecordDesignRelativeSuffixMarker
+    period: RecordDesignRelativeSuffixMarker
+    tag_suffix: RecordDesignRelativeSuffixMarker
+
+    @property
+    def parts(self) -> tuple[RecordDesignRelativeSuffixMarker, ...]:
+        """Return the six source rows in their printed order."""
+        return (
+            self.tag_prefix,
+            self.modelo,
+            self.discriminant,
+            self.filing_year,
+            self.period,
+            self.tag_suffix,
+        )
+
+    @model_validator(mode="after")
+    def _require_exact_source_composition(self) -> Self:
+        parts = self.parts
+        _require_369_relative_closing_geometry(parts)
+        _require_369_relative_closing_source_semantics(parts)
+        return self
+
+
+def _require_369_relative_closing_geometry(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    _require_369_relative_closing_positions(parts)
+    _require_369_relative_closing_source_order(parts)
+
+
+def _require_369_relative_closing_positions(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    if tuple(part.offset for part in parts) != (1, 4, 7, 8, 12, 14):
+        raise ValueError("Modelo 369 relative closing positions do not tile 18 bytes")
+    if tuple(part.length for part in parts) != (3, 3, 1, 4, 2, 5):
+        raise ValueError("Modelo 369 relative closing lengths do not tile 18 bytes")
+
+
+def _require_369_relative_closing_source_order(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    if tuple(part.type_code.strip().casefold() for part in parts) != ("an",) * 6:
+        raise ValueError("Modelo 369 relative closing requires six alphanumeric parts")
+    if tuple(part.row for part in parts) != tuple(range(parts[0].row, parts[0].row + 6)):
+        raise ValueError("Modelo 369 relative closing source rows are not consecutive")
+    if tuple(part.ordinal for part in parts) != tuple(range(parts[0].ordinal, parts[0].ordinal + 6)):
+        raise ValueError("Modelo 369 relative closing ordinals are not consecutive")
+
+
+def _require_369_relative_closing_source_semantics(
+    parts: tuple[RecordDesignRelativeSuffixMarker, ...],
+) -> None:
+    if tuple((part.content or "").strip() for part in (parts[0], parts[1], parts[2], parts[5])) != (
+        'Constante "</T"',
+        'Constante "369"',
+        'Constante "0"',
+        '"0000>"',
+    ):
+        raise ValueError("Modelo 369 relative closing literals do not match their source")
+    if parts[3].content is not None or "Ejercicio de devengo" not in parts[3].description:
+        raise ValueError("Modelo 369 relative closing year is not the source devengo slot")
+    if "Periodo" not in parts[4].description:
+        raise ValueError("Modelo 369 relative closing period is not the source period slot")
+
+
 class RecordDesignVariableTotalMarker(RegistryModel):
-    """Official declaration that the composed record has variable total length."""
+    """Official total row, retaining whether its length cell actually says Variable."""
 
     sheet: str
     row: int = Field(gt=0)
     label: Literal["total"]
-    length: Literal["Variable"]
+    length: Literal["Variable"] | None
 
 
 class RecordDesignVariableEnvelope(RegistryModel):
     """Variable composition wrapper, distinct from a fixed-width record.
 
-    ITS TOTAL EXTENT IS NOT CHECKABLE, and that is a property of the design rather
-    than a gap in the checking. Every one of these sheets declares its total row as
-    ``Variable`` -- the body length varies by construction -- so there is no AEAT
-    figure to compare a computed extent against. What IS asserted is the fixed
-    tail: the closing identifier keeps its declared width and the terminator keeps
-    its two bytes, both carried rather than consumed.
+    Its total extent has no numeric source figure: the total row may print
+    ``Variable`` or leave the length unstated. The marker preserves that distinction.
+    The body length varies by construction; the fixed tail still retains its
+    declared width and terminator bytes.
 
-    Stated here because the absence otherwise reads as an oversight. A later
-    reader finding no extent assertion should conclude that AEAT declares no total,
-    not that nobody checked.
+    A computed emitted-byte total is a runtime property, not a claim that the
+    source printed a total length where its cell is blank.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -433,7 +501,7 @@ class RecordDesignVariableEnvelope(RegistryModel):
     prefix_fields: tuple[RecordDesignField, ...] = Field(min_length=1)
     prefix_extent: int = Field(gt=0)
     body: RecordDesignVariableBodyMarker
-    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing
+    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing | RecordDesign369RelativeClosing
     #: The physical end-of-record marker, when the design declares one as its own row.
     #:
     #: SEPARATE FROM ``closing`` because it is a different kind of thing. The closing

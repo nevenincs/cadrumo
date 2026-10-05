@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:f51caaf3ee1bede5fc5ca443442b04bbb6660b2c86fba17d88da1d7487a59338'
+modified: '2026-10-03'
+body_hash: 'sha256:6271b75db0b4a472295e3d5a31ac5b79b68799aeb9817fc3303af1638471a879'
 related: []
 ---
 
@@ -24,7 +24,7 @@ silently removing the candidate from the secure-storage rollout register.
 
 ## S361-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/renta/_substrate.py` passed.
+- the historical check passed.
 
 Reviewer note: no critical, high, medium, or low secure-storage findings remain for
 the S361 slice.

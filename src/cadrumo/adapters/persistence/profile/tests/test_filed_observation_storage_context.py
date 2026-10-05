@@ -24,7 +24,6 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import ModeloLocalObservationError
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
@@ -40,6 +39,8 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+
+from .....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

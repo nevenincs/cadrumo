@@ -2,35 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Never
-
 import typer
-from pydantic import BaseModel
 
-from ....application.runtime.contracts import RuntimeRefusalCode
 from ....application.workstation_check_operation import (
     WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
     WorkstationCheckProjection,
     WorkstationCheckRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ..registered_operation_errors import invalid_completion_error
 from ..runtime_profile_binding import bound_profile_client
-from ..runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    """Refuse a projection that does not match its admitted profile read."""
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
+from ..runtime_registered_operation import run_registered_operation
 
 
 def read_workstation_check_for_cli(ctx: typer.Context) -> WorkstationCheckProjection:
@@ -54,7 +36,7 @@ def read_workstation_check_for_cli(ctx: typer.Context) -> WorkstationCheckProjec
         or completed.refusal_code is not None
         or projection.profile_id != client.profile_id
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 

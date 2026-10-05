@@ -61,6 +61,7 @@ from ...storage.tests.secure_sql import (
     mutate_encrypted_secure_object_json,
 )
 from ..prorrata_register import ProrrataRegisterRepository
+from .prorrata_activity_authoring import upsert_activity_row
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
@@ -281,7 +282,7 @@ def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="474448e1-88e9-469a-bba5-b1fc9f007dbd"):
         repo = ProrrataRegisterRepository()
         retail = _activity_row(activity_id="retail", slot=1)
-        repo.upsert_activity_row(retail)
+        upsert_activity_row(repo, retail)
         repo.upsert_entry(
             ProrrataRegisterEntry(
                 ejercicio=2024,
@@ -298,7 +299,7 @@ def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None
             ),
         )
         replacement = retail.model_copy(update={"operaciones_total": Decimal("1250.00")})
-        saved = repo.upsert_activity_row(replacement)
+        saved = upsert_activity_row(repo, replacement)
 
         assert saved.activity_rows_for_ejercicio(2024) == (replacement,)
         loaded = repo.load()

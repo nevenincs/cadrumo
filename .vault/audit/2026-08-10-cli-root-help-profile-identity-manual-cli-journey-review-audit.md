@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cli-root-help-profile-identity'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:37e068f09eb5bfcc2b3c3f51bad4acc34ff17bc2d594cd82d0aa664fa1ba9722'
+body_hash: 'sha256:fc7a6e3eaec149a540a9bf356ab070682c885151661fba8d40ed86f81f01c924'
 related:
   - "[[2026-08-10-cli-root-help-profile-identity-audit]]"
 ---
@@ -50,26 +50,25 @@ contract the pending fix must satisfy.
 Post-fix verification re-read the live shared tree after the remediation settled.
 Both high findings and all four medium findings are resolved. Storage reclaim now
 validates each selected target before traversal at
-`src/cadrumo/application/storage_management/_service.py:283-287` and rejects a
+The retired module and rejects a
 symlink, junction, or resolved escape at
-`src/cadrumo/application/storage_management/_service.py:359-387`. Calculation
+The retired module. Calculation
 remedies are retained as structured context and text at
 `src/cadrumo/entrypoints/cli/_modelo_rendering.py:191-239`, while structured notice
 identity and presentation-line identity are deduplicated separately at
 `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py:618-638`. Work-unit input
 is limited to 12 or 64 hexadecimal characters at
-`src/cadrumo/application/modelo/_selectors.py:54-64`, ambiguity now names the
+The retired module, ambiguity now names the
 supplied id and directs the operator to the full id, and the candidate heading at
 `src/cadrumo/entrypoints/cli/_modelo_cli_support.py:664` is truthful. The pinned TUI
 sink redacts both summary and message values at
-`src/cadrumo/adapters/inbound/tui/_status_bar.py:85-168`.
 
 Profile/action parity is also resolved. The centralized bridge unwraps
 `ResolvedNoticeAction`, validates catalogue target and live argument names, joins
 the live `cli_path`, and renders argv from the live schema at
-`src/cadrumo/entrypoints/cli/_common.py:417-478`; the sandbox banner composes with,
+The retired module; the sandbox banner composes with,
 rather than replaces, derived actions at
-`src/cadrumo/entrypoints/cli/_common.py:555-561`. Modelo list projects an action
+The retired module. Modelo list projects an action
 only for exactly one work unit, status binds the full id for calculate, and both
 text paths show the canonical profile label once at
 `src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py:453-547`. Logged-out
@@ -87,7 +86,7 @@ notice-transport conformance, and calculate idempotency. A mistyped integration
 node that collected zero tests is not counted. The low finding is only partially
 resolved: both stale assertions now pass, but targeted Ruff still reports six
 deterministic errors from unused, misordered `next_action` imports at
-`src/cadrumo/entrypoints/cli/_config/_repair_profile.py:9` and
+The retired module and
 `src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py:27`, including the resulting
 name redefinitions at lines 89 and 107.
 
@@ -106,7 +105,7 @@ backticks, and backslashes, and focused Ruff is clean for the bridge and its tes
 
 The remaining low gate debt was also resolved before closeout. The obsolete
 `next_action` imports were removed from
-`src/cadrumo/entrypoints/cli/_config/_repair_profile.py` and
+The retired module and
 `src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`; an exact two-file Ruff
 rerun and diff check pass. Together with the already passing root and auth
 assertions, all recorded findings are resolved in the final reviewed tree.
@@ -115,10 +114,10 @@ assertions, all recorded findings are resolved in the final reviewed tree.
 
 ### storage-reclaim-target-redirection | high | Reclaim follows a redirected declared target outside the storage root
 
-`src/cadrumo/application/storage_management/_service.py:277-299` preflights the
+The retired module preflights the
 declared targets but then calls `target.iterdir()` when the target itself is a
 directory link or junction. The checks at
-`src/cadrumo/application/storage_management/_service.py:315-354` prove taxonomy
+The retired module prove taxonomy
 scope and lexical nesting only; they do not reject a redirected target or prove
 resolved filesystem containment. A temporary-directory probe against the real
 service created a selected-target symlink to an external directory and produced
@@ -137,7 +136,7 @@ but ignores it when constructing `Notice`, while
 `diagnostic.remedy` through that dead parameter. The text renderer at
 `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py:604-644` renders only the
 message. Concrete diagnostics separate diagnosis from repair: the carry diagnostic
-at `src/cadrumo/application/calculations/_relation_prefill.py:774-803` tells the
+at the retired module tells the
 operator to provide a binding override, and the rate-box diagnostic at
 `src/cadrumo/application/modelo/_rate_box_advisory.py:68-83` tells them to record
 the missing IVA rate before recalculating because export will refuse. Both remedies
@@ -160,8 +159,8 @@ the duplicate-presentation symptom into machine-visible provenance loss.
 
 ### modelo-short-id-selector | medium | One-character aliases can drive mutations and ambiguous refusals give circular guidance
 
-`src/cadrumo/application/modelo/_selectors.py:56-59` accepts any one-to-64-character
-hex token, and `src/cadrumo/application/modelo/_selectors.py:361-383` resolves it
+The retired module accepts any one-to-64-character
+hex token, and the retired module resolves it
 against both the beginning and end of every active work-unit id. A unique
 one-character token can therefore select work for mutating calculate/file flows,
 although the published UX exposes a 12-character display id and the addressing ADR
@@ -176,15 +175,15 @@ cover short-token mis-selection or prefix/suffix collisions.
 ### tui-failure-redaction | medium | Pinned status paths render raw exception and stage-failure text
 
 Unexpected credential failures fall back to `str(error)` at
-`src/cadrumo/adapters/inbound/tui/_credential_screen.py:146-165`, and manager worker
+The retired module, and manager worker
 failures do the same at
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:799-819`. The filed-history
+The retired module. The filed-history
 summary appends `run.stage_failures` verbatim at
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:407-437`; those strings are
+The retired module; those strings are
 formed from raw exception text at
-`src/cadrumo/application/live/_filed_data_capture.py:1713-1725` through
+The retired module through
 `bounded_context_text`, whose implementation at
-`src/cadrumo/application/live/_remote_state_outcomes.py:138-143` normalizes and
+The retired module normalizes and
 truncates but does not redact. Widget `markup=False` prevents markup interpretation,
 not disclosure. Backend exceptions can therefore put tax ids, secrets, URLs, or
 local paths directly into the TUI contrary to the centralized-output ADR.
@@ -199,8 +198,8 @@ The actions are already resolvable catalogue entries at
 `src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py:453-463` and
 `src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py:494-505`, but neither is
 folded into text lines. `_emit_envelope` says callers must do that at
-`src/cadrumo/entrypoints/cli/_common.py:403-450`, and its text branch at
-`src/cadrumo/entrypoints/cli/_common.py:470-485` emits only supplied lines. This is
+The retired module, and its text branch at
+The retired module emitted only supplied lines. This is
 not a request to invent actions for informational prose: these notices already
 carry typed actions. It is also a state/presentation defect because the
 profile-scoped text substitutes inconsistent storage placeholders for the one
@@ -212,24 +211,22 @@ The root-after-logout integration selector fails at
 `src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py:172` because it expects
 old unavailable-profile text while the implementation emits the accepted degraded
 explanation. The auth status selector at
-`src/cadrumo/application/auth/tests/test_operator.py:80` expects a bucket UUID even
+The retired test expects a bucket UUID even
 though the implementation correctly projects the profile label. Targeted Ruff
 reports ten unsorted/unused import and shadowing errors in
-`src/cadrumo/application/auth/_operator.py:28-331`,
-`src/cadrumo/entrypoints/cli/_config/__init__.py:9-59`,
-`src/cadrumo/entrypoints/cli/_config/_repair_profile.py:7-26`, and
+The retired module, and
 `src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py:25-107`. These are lower
 priority than runtime defects, but this slice cannot honestly be called green; a
 zero-collected or deselected invocation is not a pass.
 
 ### resolved-action-shell-quoting | medium | JSON quoting leaves PowerShell expressions executable in derived commands
 
-`src/cadrumo/entrypoints/cli/_common.py:454-478` treats a token outside
+The retired module treated a token outside
 `_SAFE_ACTION_TOKEN` as safe command text after `json.dumps(token)`. JSON string
 escaping is not PowerShell argument escaping: PowerShell expands `$variable` and
 `$(...)` inside the emitted double quotes. This bridge is generic and already
 renders operator-controlled profile names and export paths, while `ProfileName` at
-`src/cadrumo/domain/contribuyente/_constants.py:26-29` deliberately constrains only
+The retired module deliberately constrains only
 whitespace and length. A real resolver probe for `operator.profile.import` with the
 path `C:\tmp\$(Write-Output PWN)\bundle.aeat` emitted
 `next_action aeat config profile import "C:\\tmp\\$(Write-Output PWN)\\bundle.aeat"`.

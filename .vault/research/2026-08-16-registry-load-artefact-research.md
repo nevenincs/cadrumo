@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-load-artefact'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:118b460881928df017d8e390c545ecbecece34721f2f076fb2915cdf75165b2b'
+body_hash: 'sha256:1bc395ab1080630dc7531c02436e28de083a4d16e751ddf14c637c9888b3bd67'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
   - "[[2026-07-17-mcp-call-latency-adr]]"
@@ -455,19 +455,19 @@ option and it is unquantified.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_authority.py:433` —
+- the former source file —
   `_construct_authority`, the phase sequence timed above.
-- `src/cadrumo/domain/calculations/registry/_authority.py:99` —
+- the former source file —
   `ValidatedRegistryAuthority.load`, the first of the two tree walks.
-- `src/cadrumo/domain/calculations/registry/_loader.py:1223` —
+- the former source file —
   `_load_registry_tree_cached`, where the artefact is consulted after the walk.
-- `src/cadrumo/domain/calculations/registry/_compiled_cache.py:405` —
+- the former source file —
   `load_compiled_registry_cache`, the read/verify/hydrate path.
-- `src/cadrumo/domain/calculations/registry/_m303_orden_manifest.py:48`,
+
   `:106`, `:190` — the per-process BeautifulSoup extraction and its refusal.
-- `src/cadrumo/domain/calculations/registry/_loader_cache.py:437` —
+- the former source file —
   `is_bundled_registry_root` and why it does not mean immutable.
-- `src/cadrumo/domain/calculations/registry/_verdict_cache.py:187`, `:200` —
+- the former source file, `:200` —
   `shipped_verdict_location` and `bundled_verdict_path`, the stamp-presence
   discriminator and the sibling placement rule.
 - `dev/packaging/python_cohort.py:271` —

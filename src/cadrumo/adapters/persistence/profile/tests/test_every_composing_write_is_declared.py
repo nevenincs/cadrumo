@@ -100,14 +100,6 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "_build_filed_participation_writes",
     ): "per-transaction participation rows, as above; unclassified beyond that",
     (
-        "src/cadrumo/application/modelo/revision_persistence.py",
-        "persist_filed_revision",
-    ): "the work-unit and filing catalogues arrive as parameters; the calculation catalogue is guarded "
-    "here. Threading the other two is blocked on cost rather than capability: this function has 26 test "
-    "call sites, and the cheap way through -- an OPTIONAL revision defaulting to None -- would buy a "
-    "permanent green from this gate while guarding nothing, so it must be a required parameter or not "
-    "done at all",
-    (
         "src/cadrumo/application/modelo/filed_revision_observation.py",
         "filed_revision_observation_writes",
     ): "the observation row and the IVA history row are each PER COORDINATE rather than one singleton "
@@ -123,11 +115,6 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "the observation row is PER COORDINATE; its layers are read just before the write, but that read's "
     "revision is not asserted -- not yet judged",
     (
-        "src/cadrumo/application/invoices/transaction_linking.py",
-        "link_invoice_transaction_repositories",
-    ): "the transaction store writes a row PER TRANSACTION rather than one singleton document, so its "
-    "batch carries no whole-collection risk; the singleton invoice catalogue beside it IS guarded",
-    (
         "src/cadrumo/application/ledger/actions_common.py",
         "save_transaction_catalogue_and_events",
     ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by _commit_with_guarded_events",
@@ -136,10 +123,25 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "save_transaction_catalogue_invoices_and_events",
     ): "transaction and invoice catalogues arrive as parameters; the event side is guarded",
     (
-        "src/cadrumo/application/modelo/amendment_actions.py",
-        "_persist_amendment_side_effects",
-    ): "all three catalogues -- calculation, filing and work-unit -- arrive as parameters, read by "
-    "amend_calculation_revision at the top of the same call; closing it means threading three revisions",
+        "src/cadrumo/application/ledger/commit_fence.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding a caller-supplied transaction catalogue through the commit fence; "
+    "it performs no read. The fence authorizes the write but does not supply a revision guard",
+    (
+        "src/cadrumo/application/ledger/lifecycle_mutation_operation.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding a caller-supplied transaction catalogue while recording write entry; "
+    "it performs no read and recording entry does not supply a revision guard",
+    (
+        "src/cadrumo/application/modelo/m036_operation.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding the caller's per-declaration record after profile and commit checks; "
+    "the checks authorize the write rather than asserting a prior record revision",
+    (
+        "src/cadrumo/application/modelo/m145_communication_execution.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding the caller's per-communication record through the commit gate; "
+    "the gate authorizes the write rather than asserting a prior record revision",
     (
         "src/cadrumo/application/modelo/m036_lifecycle.py",
         "record_m036_declaration",

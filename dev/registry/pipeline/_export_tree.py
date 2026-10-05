@@ -1,83 +1,50 @@
-"""Deterministic rendering of generated export-fragment directory trees.
-
-This development-only boundary consumes the exact joined design, its reviewed
-record meanings, and a hash-pinned layout profile.  It writes a complete
-``export/`` directory without opening a shipped fragment directory or deriving
-any output fact from one.
-"""
+"""Deterministic rendering of generated export-fragment directory trees."""
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Final, Literal, cast
-
-import rtoml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.directory_scan import iter_directory
-from cadrumo.core.external_constants import LATIN_1_ENCODING
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_value_policy import (
-    ExportValuePolicy,
-    export_value_policy_wire_length,
-)
-from cadrumo.domain.calculations.registry.fixed_width_codec import (
-    ExportEncoding,
-    ExportJustification,
-    ExportPadding,
-    ExportSignPosition,
-)
 from cadrumo.domain.calculations.registry.ids import (
-    ExportLayoutId,
-    ModeloId,
     RevisionId,
-    SourceRefId,
 )
 from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ProjectionEndpointDeclaration,
 )
 
 from .export_fragment_provenance import (
-    EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
-    ExportFieldDerivationCode,
-    ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     attach_field_verdicts,
     emit_export_fragment_provenance_manifest,
 )
+from .export_tree_field_derivation import _normalise_field
+from .export_tree_models import ExportTreeTransportProfile, RenderedExportTree
+from .export_tree_serialization import (
+    SERIALIZER_CONVENTION,
+    render_inherited_tree_file,
+    render_tree_files,
+    require_safe_identifier,
+)
+from .generated_export_inheritance_model import GeneratedExportInheritanceContext
 from .generated_tree_dispositions import type_column_rulings_for
-from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord, design_view
-from .render_profile import (
-    RenderProfile,
-    RenderProfileAnchor,
-    RenderProfileSourceEvidence,
-    SignedMonetaryCompositeRule,
-    SingletonNumericRule,
-    Width17MembershipRule,
-    validate_render_profile,
-)
-from .render_profile_eligibility import (
-    _has_absent_naturaleza,
-    _is_numeric_aeat_type,
-    _states_no_wire_fact,
-)
+from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignRecord
+from .note_literals import NoteLiteralDeclaration, note_literals_for
+from .render_profile import validate_render_profile
+from .render_profile_evidence import RenderProfileSourceEvidence
+from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
 from .source_defects import (
     NoteGovernedAmountDeclaration,
     NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
-    adjudicated_literal_for,
-    note_governed_amount_for,
     note_governed_amounts_for,
     note_stated_applicability_for,
     validate_note_governed_amount_declarations,
@@ -88,343 +55,6 @@ from .variable_envelope import (
     compile_auxiliary_envelope_header_definition,
     compile_filing_envelope_definition,
 )
-
-__all__ = [
-    "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
-    "ExportFieldDerivation",
-    "ExportTreeTransportProfile",
-    "RenderedExportTree",
-    "render_complete_export_tree",
-]
-
-
-SERIALIZER_CONVENTION: Final[Literal["rtoml-pretty-v1"]] = "rtoml-pretty-v1"
-_SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
-_SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
-_ENCODING_ALIAS_MAP: Final[Mapping[str, str]] = {
-    LATIN_1_ENCODING: "iso-8859-1",
-    "latin_1": "iso-8859-1",
-    "iso-8859-1": "iso-8859-1",
-    "iso_8859_1": "iso-8859-1",
-    "cp1252": "cp1252",
-    "windows-1252": "cp1252",
-    "iso-8859-15": "iso-8859-15",
-    "iso_8859_15": "iso-8859-15",
-    "latin-9": "iso-8859-15",
-}
-# A bare trailing full stop is SENTENCE PUNCTUATION on the official content, not
-# an annotation, so each value grammar tolerates its own terminator rather than
-# the note peel removing it. Two reasons this is the right home. The peel is
-# named and contracted for one job -- it returns the stem plus the note numbers
-# it removed -- and a period carries no note number, so stripping it there would
-# mutate the stem while reporting nothing, making the peel's own accounting
-# untestable. And this file already settled the question the other way for the
-# constant and boolean-enumeration patterns, which carry their own optional
-# `\.?`; leaving three of four numeric grammars tolerant and one strict is what
-# let a design writing `15 enteros y 2 decimales.` refuse.
-#
-# The terminator is deliberately alternation rather than a stacked optional: the
-# "menor o igual que N." clause already ends in a period, so appending another
-# optional one would quietly admit a doubled `..` that no design writes.
-#
-# AEAT abbreviates the same clause as `15 ent. y 2 dec.` on some designs and
-# spells it out as `15 enteros y 2 decimales` on others. Modelo 303 only ever
-# spells it out, so the abbreviated form -- which is the DOMINANT form on Modelo
-# 210, covering 24 of its numeric anchors -- refused as ambiguous content. Both
-# spellings are the one grammar and are admitted as alternations rather than as
-# a second pattern, so the two cannot drift apart.
-#
-# `decmales` is not a third spelling of the word -- it is AEAT's typo, which
-# Modelo 151 ships once per design edition beside eighteen correctly spelled
-# siblings in the same 5-position shape. It is admitted by naming that exact
-# misspelling rather than by loosening the word to a fuzzy match: a tolerant
-# pattern would go on to accept spellings AEAT has never written, and the reading
-# is proved anyway, because the declared 3 + 2 digits must equal the slot's own
-# 5 positions before the derivation is accepted.
-#: The cardinals AEAT actually SPELLS OUT in a numeric shape clause. Modelo 308
-#: writes `[quince enteros + dos decimales]` where 200, 322 and 151 write the
-#: same clause with digits. Named exactly, in the spirit of the `decmales` typo
-#: above: a general Spanish numeral parser would accept words no design writes,
-#: and the point is to read what AEAT wrote, not to be clever.
-#:
-#: A mis-read is caught immediately and cannot ship: the declared whole plus
-#: decimals is checked against the slot's own width by `_require_numeric_extent`
-#: at both use sites, so mapping a word to the wrong number refuses there.
-_SPANISH_CARDINALS: Final[dict[str, int]] = {
-    "dos": 2,
-    "tres": 3,
-    "quince": 15,
-}
-
-
-def _numeric_word_or_digits(value: str) -> int | None:
-    """Return the integer a shape clause names, whether written in digits or words."""
-    if value.isdigit():
-        return int(value)
-    return _SPANISH_CARDINALS.get(value.casefold())
-
-
-_DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+|[^\W\d_]+)\s*(?:enteros?|ent\.?)\s*(?:y|\+)?\s*(?P<decimals>\d+|[^\W\d_]+)\s*(?:decimales?|decmales|dec\.?)"
-    r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.|\.)?$",
-    re.IGNORECASE,
-)
-_INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+)\s*(?:enteros?|ent\.?)\.?$",
-    re.IGNORECASE,
-)
-_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
-    r'^"\d+"(?:,\s*"\d+")*$',
-)
-# The same closed set written BARE, without quotes and without labels, which is
-# how Modelo 151 states every one of its single-position code slots: `1,2,3`,
-# `0,1,2`, `1,2,3,4`. Anchored whole and requiring at least two members, so it
-# cannot swallow a lone number -- a bare `1` states a constant, not a choice --
-# and the slot-width check below still refuses any value that does not fit.
-_BARE_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\d+(?:\s*,\s*\d+)+\.?$",
-)
-# A trailing `Nota N` reference annotates official content without altering the
-# wire fact it states: the AEAT note tables govern which value applies in which
-# filing period (Nota 8, Nota 9), whether a slot may be filled at all (Nota 10),
-# or an optional foral value (Nota 7). Every one of those axes is carried by the
-# anchor's canonical typed owner -- casilla 154's transitional-rate parameter
-# encodes Nota 8's two windows exactly -- so the reference is peeled before the
-# value grammar runs rather than tolerated ad hoc inside each pattern.
-#
-# AEAT writes the reference three ways: bare (`Nota 3`), parenthesised
-# (`(Nota 1)`) and parenthesised with a verb (`(ver Nota 5)`), the last often on
-# its own line after the value clause. All three annotate; none states a wire
-# fact, so the peel admits the optional bracket and verb rather than leaving a
-# design refusing as ambiguous because AEAT added two words.
-_TRAILING_NOTE_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(
-    r"[.,;\s]*\(?\s*(?:ver\s+)?\bNota\s+\d+\s*\.?\s*\)?\s*$",
-    re.IGNORECASE,
-)
-_NOTE_NUMBER_RE: Final[re.Pattern[str]] = re.compile(r"Nota\s+(?P<note>\d+)", re.IGNORECASE)
-_QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
-    r'^"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?(?:,\s*"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?)*\.?$',
-)
-_QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"')
-# AEAT writes the SAME closed value set two ways: quoted ("1", "2") on some
-# designs and dash-labelled with its meaning inline on others ("1 - 12 meses
-# dentro del año natural  2 - 12 meses (365 días)  3 - inferior a 12 meses").
-# Both are one enumeration and are derived through the one enumeration path, so
-# a design that changes only its spelling cannot change the emitted contract.
-#
-# The label may follow the dash with no space at all ("1 -Sí, 2 -No"), so the
-# separator admits none. What it does NOT admit is a digit after the dash: that
-# is a numeric RANGE ("01-12"), which states an interval rather than a closed
-# set, and reading it as an enumeration would emit two members where the design
-# means twelve.
-_DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?P<value>\d+)\s*-\s*(?=\D)")
-#: A third spelling of the same closed set, label FIRST: Modelo 322 writes
-#: "Si=1, No=2". The label must START WITH A LETTER, which is what keeps a
-#: COMPARISON out: Modelo 202 writes tranches as `"1" (>= 10 M y < 20 M €)`, and
-#: a rule that accepted any non-digit before the `=` read `>= 10` as the value
-#: 10 -- three two-character "values" for a one-character slot, which the width
-#: check then refused. A formula (`[65]=[66]`) is excluded for the same reason.
-_EQUALS_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?:^|[\s,;])[^\W\d_][^\s,;=]*\s*=\s*(?P<value>\d+)",
-)
-#: The quoted spelling with a FREE-TEXT label after each value, which is the same
-#: closed set as the SI/NO form above with a longer label: Modelo 202 writes
-#: `"0" No consta, "1" Cooperativa, "2" Otras entidades`. Only the values are
-#: quoted, so the label cannot contribute a value however many numbers it names.
-_QUOTED_NUMERIC_LABELLED_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
-    r'^"\d+"[^"]*(?:"\d+"[^"]*)+$',
-)
-#: The PARENTHESISED quoted spelling, which modelo 200 alone uses: `("0", "1")`,
-#: with a whitespace variant `( "0", "1")`. It is the same closed set the forms
-#: above express -- AEAT names every admissible value and no other -- so it is
-#: derived through the identical enumeration path rather than a second shape.
-#: The leading parenthesis is why the quoted-labelled rule above cannot see it:
-#: that one anchors on a value at position zero.
-_PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
-    r'^\(\s*"\d+"(?:\s*,\s*"\d+")+\s*\)$',
-)
-_DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
-    ExportValuePolicy.YYYYMMDD: "aaaammdd",
-    ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
-}
-#: The derivation code for each date policy, spelled out in full rather than
-#: built with an f-string from ``_DATE_FORMAT_BY_POLICY`` so the value stays a
-#: literal member of ``ExportFieldDerivationCode`` rather than an unbounded str.
-_DATE_DERIVATION_CODE_BY_POLICY: Final[Mapping[ExportValuePolicy, ExportFieldDerivationCode]] = {
-    ExportValuePolicy.YYYYMMDD: "numeric-date-aaaammdd-v1",
-    ExportValuePolicy.DDMMYYYY: "numeric-date-ddmmaaaa-v1",
-}
-#: AEAT also states a date slot as a QUOTED separator-bearing pattern in the
-#: programmer's vocabulary rather than the Spanish token: Modelo 151 writes
-#: `Formato: "dd/MM/yyyy"` for its fecha de nacimiento. The separators are
-#: presentation only -- the design's own Lon column gives that slot 8 positions,
-#: which the printed pattern does not fit -- so the pattern is folded to the same
-#: Spanish token the policy table already keys on rather than given a second
-#: table that could disagree with it. Case-sensitive on purpose: `MM` is the
-#: month and `mm` the minute in this vocabulary, and a slot spelling minutes is
-#: not a date this grammar should silently accept.
-_QUOTED_DATE_PATTERN_RE: Final[re.Pattern[str]] = re.compile(
-    r'^formato\s*:?\s*"(?P<pattern>[dMy][dMy/.\-]*[dMy])"$',
-    re.IGNORECASE,
-)
-_QUOTED_DATE_PATTERN_LETTERS: Final[Mapping[str, str]] = {"d": "d", "M": "m", "y": "a"}
-_SINGLETON_POLICY_SHAPES: Final[
-    Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity", "text"]]
-] = {
-    ExportValuePolicy.SELECTED_1_UNSELECTED_0: "integer",
-    ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: "integer",
-    ExportValuePolicy.UNSIGNED_INTEGER: "integer",
-    ExportValuePolicy.IMPLIED_DECIMAL: "decimal",
-    ExportValuePolicy.YYYYMMDD: "date",
-    ExportValuePolicy.DDMMYYYY: "date",
-    ExportValuePolicy.ENUMERATED_DIGITS: "integer",
-    ExportValuePolicy.DIGIT_STRING: "digit_identity",
-    ExportValuePolicy.IDENTIFIER_DIGITS: "digit_identity",
-    ExportValuePolicy.FOUR_DIGIT_YEAR: "integer",
-    ExportValuePolicy.TWO_DIGIT_MONTH: "integer",
-    ExportValuePolicy.TWO_DIGIT_DAY: "integer",
-    ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: "text",
-    ExportValuePolicy.INTEGER_PART: "integer",
-    ExportValuePolicy.FRACTIONAL_DIGITS: "integer",
-}
-#: Text naturalezas, split by the naturaleza AEAT names rather than by the
-#: vocabulary it names it in. A workbook prints the abbreviation; a PDF design
-#: prints the word, which the shipped parser canonicalises to
-#: ``Alfanumerico``/``Alfabetico``. Matched accent-folded, so the accented
-#: spellings land here too. The split is load-bearing: these two sets are the
-#: only thing that distinguishes the two text derivation codes, and reading
-#: them as one set keyed on the abbreviation records every PDF-sourced
-#: alphabetic field as the ALPHANUMERIC derivation, because the folded word
-#: ``alfabetico`` is not the abbreviation ``a``.
-_ALPHABETIC_TYPES: Final[frozenset[str]] = frozenset({"a", "alfabetico", "alphabetic"})
-_ALPHANUMERIC_TYPES: Final[frozenset[str]] = frozenset({"an", "alfanumerico", "alphanumeric"})
-#: A blank run states no text representation to derive one from. Where the
-#: semantic map calls such a field a filler it never reaches here; where it
-#: calls it a value-bearing field the two disagree, and the caller refuses
-#: rather than recording a naturaleza the design does not state.
-_BLANK_RUN_TYPES: Final[frozenset[str]] = frozenset({"blancos"})
-_OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
-    re.IGNORECASE,
-)
-#: The same quoted constant FOLLOWED BY an explanatory clause. Modelo 296 writes
-#: `Constante "F" ANEXO "VALORES NEGOCIABLES..."` and then several lines saying
-#: when that sheet type is used, so the constant is stated exactly but the cell
-#: does not end there. Two checks below make reading past the literal safe: the
-#: extracted value must equal the map's declared literal byte for byte, and its
-#: encoded length must equal the official slot width. A mis-read prefix fails
-#: both, so this widens what can be PARSED without widening what is ACCEPTED.
-#: TWO quoted constants joined by an alternation connector, which states a CHOICE
-#: rather than one constant with a label. `Constante "<T" o "ZZ"` names two
-#: possible byte strings and the design does not say which applies, so the
-#: renderer cannot know what to write.
-#:
-#: This is checked BEFORE the labelled form below, which would otherwise read the
-#: first alternative as the constant and the rest as its label -- silently
-#: choosing `<T` and discarding `o "ZZ"`. Wrong constant bytes on the wire is the
-#: worst outcome available here, and it would be invisible: the emitted record is
-#: well formed and the wrong literal is the right width.
-#:
-#: An explanatory clause may itself quote an ordinary field enumeration. Modelo
-#: 296's ``Constante «F» ... "1" ó "2"`` is the worked case: the trailing
-#: ``"1" ó "2"`` describes another field's permitted values, not alternative
-#: bytes for the already-declared ``F``. The indirect branch therefore requires
-#: prose immediately before the connector to end in a non-quote. Direct
-#: ``Constante "E" o "S"`` alternatives remain rejected by the first branch,
-#: and a later ``... rentas. o "S"`` remains rejected by the second.
-_OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])[^'\"]*(?P=quote)"
-    r"(?:\s*\.?\s*\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?"
-    r"|(?:\.\s+|\s+).*?[^\s'\"]\s+\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?)$",
-    re.IGNORECASE | re.DOTALL,
-)
-_OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)(?:\.\s+|\s+)\S.*$",
-    re.IGNORECASE | re.DOTALL,
-)
-#: A record's own identifier is the one constant some designs print BARE. Modelo
-#: 353 writes `</T35301000>` in the Contenido cell with neither the `Constante`
-#: label nor quotes, where its own opening tag on the same sheet carries both;
-#: Modelo 322 prints BOTH ends bare, `<T32201000>` and `</T32201000>`. The shape
-#: is what makes it unambiguous, so this pattern matches the tag itself rather
-#: than relaxing the labelled-constant pattern, which would turn every unlabelled
-#: cell on every design into a mandated literal.
-_OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+>")
-#: A LABELLED constant whose value AEAT left unquoted. Modelo 200 writes
-#: `Constante 0A` for its periodo and `Constante </T20003000>` for two record
-#: closers, where the same design quotes every other constant. The `Constante`
-#: label is kept as the requirement -- that is what separates this from the
-#: unlabelled cell the pattern above deliberately refuses to treat as a literal;
-#: only the quotes are optional. Measured across all thirteen committed generated
-#: trees, this matches ZERO fields that the quoted and bare-tag patterns did not
-#: already match, so it widens what an author may declare without moving any
-#: published tree.
-_OFFICIAL_UNQUOTED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\s*constante\s+(?P<literal>[^\s'\"]+?)\.?\s*$",
-    re.IGNORECASE,
-)
-#: A single bare token that IS the whole of a printed Contenido cell. Modelo 360
-#: writes its design version ``000100`` in that cell with neither the
-#: ``Constante`` label nor quotes. The cell is the design's statement of the
-#: field's content, so a lone token filling it states the constant as surely as
-#: the label does. Admitted ONLY when the reader located the text in that column
-#: (``content_in_contenido_column``): the same token arriving as text the line
-#: parser merely attributed to a field could be the tail of a description, and
-#: stays refused. One token, so a cell listing alternatives ("0" "1") or carrying
-#: prose never matches.
-_OFFICIAL_BARE_CELL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"[^\s'\"]+")
-#: The quotation marks AEAT wraps a constant in. A workbook prints straight
-#: quotes; a PDF design prints guillemets, and typographic pairs appear in both
-#: -- "Constante «D»." is Modelo 347's, and it read as an ambiguous
-#: constant because the pattern below only knew ' and ". Folded to a straight
-#: quote before matching, so one pattern reads every form AEAT ships.
-_OFFICIAL_QUOTE_FOLD: Final[dict[int, str]] = str.maketrans(
-    {"«": '"', "»": '"', "“": '"', "”": '"', "‘": "'", "’": "'"},
-)
-
-_OFFICIAL_BLANK_LITERAL_CONTENT: Final[str] = "En blanco"
-_MAX_FRAGMENT_LINES: Final[int] = 1_399
-_MAX_FRAGMENT_LINE_CHARS: Final[int] = 519
-#: Zero-padded width this renderer gives an administrative fragment prefix. It is the
-#: single place the width is stated: the same value formats the prefix and checks that
-#: the formatting did not overflow, so the guard cannot drift from the format it guards.
-_FRAGMENT_PREFIX_DIGITS: Final[int] = 4
-
-
-class _StrictModel(BaseModel):
-    """Frozen development-tool boundary with no untyped extras."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
-
-
-class ExportTreeTransportProfile(_StrictModel):
-    """Transport-only settings for one generated export tree."""
-
-    modelo: ModeloId
-    design_epoch: str = Field(min_length=1)
-    source_ref: SourceRefId
-    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    layout_id: ExportLayoutId
-    format: Literal["fixed_width"]
-    encoding: ExportEncoding
-    line_ending: Literal["crlf", "lf", "none"]
-    serializer_convention: Literal["rtoml-pretty-v1"]
-
-    @model_validator(mode="after")
-    def _require_supported_encoding_and_safe_ids(self) -> ExportTreeTransportProfile:
-        if self.encoding.casefold() not in _ENCODING_ALIAS_MAP:
-            raise ValueError(f"export tree transport profile declares unsupported encoding {self.encoding!r}")
-        _require_safe_identifier(str(self.layout_id), subject="export layout id")
-        return self
-
-
-class RenderedExportTree(_StrictModel):
-    """The complete in-memory layout and materialised output members."""
-
-    layout: ExportLayoutDefinition
-    field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
-    output_files: tuple[str, ...] = Field(min_length=2)
-    provenance_manifest: ExportFragmentProvenanceManifest
 
 
 def render_complete_export_tree(
@@ -437,6 +67,7 @@ def render_complete_export_tree(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    inheritance: GeneratedExportInheritanceContext | None = None,
 ) -> RenderedExportTree:
     """Render one whole generated ``export/`` tree from its three authorities.
 
@@ -444,79 +75,40 @@ def render_complete_export_tree(
     function does not validate or publish a surrounding revision; those
     responsibilities deliberately remain later generator steps.
     """
-    _validate_transport_profile(joined, transport_profile)
-    validate_source_defect_declarations(source_defects, joined.source)
-    # Resolved from the parser-read source rather than accepted from the caller,
-    # so every render path -- generator, drift check, test -- reads one
-    # adjudication set for one pinned design and cannot disagree about it.
-    note_governed_amounts = note_governed_amounts_for(joined.source.source_ref)
-    validate_note_governed_amount_declarations(note_governed_amounts, joined.source)
-    applicability_notes = note_stated_applicability_for(joined.source.source_ref)
-    validate_note_stated_applicability_declarations(applicability_notes, joined.source)
-    if joined.variable_envelopes and joined.variable_envelope_contract is None:
-        identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
-        raise RegistryValidationError(
-            "fixed-width export generation refuses variable envelopes without a separately typed and proven "
-            f"composition contract: {identities}",
-        )
-    if joined.variable_envelope_contract is not None and joined.revision_id != revision_id:
-        raise RegistryValidationError(
-            f"typed filing-envelope target revision {revision_id!r} does not match the "
-            f"selected revision {joined.revision_id!r}",
-        )
-    validate_render_profile(render_profile, joined, render_profile_source_evidence)
+    literal_notes, note_governed_amounts, applicability_notes = _validate_render_inputs(
+        revision_id=revision_id,
+        joined=joined,
+        transport_profile=transport_profile,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
+        source_defects=source_defects,
+    )
     records, derivations = _render_records(
         joined.records,
         transport_profile,
         render_profile,
         source_defects=source_defects,
+        literal_notes=literal_notes,
         note_governed_amounts=note_governed_amounts,
         applicability_notes=applicability_notes,
     )
-    # Every emitted field is attested against its official row: agreeing, or
-    # adjudicated by a type-column ruling pinned to these exact design bytes. A
-    # divergence nothing rules on refuses here, before any file is written.
-    derivations = list(
-        attach_field_verdicts(
-            tuple(derivations),
-            type_column_rulings_for(str(joined.source.source_ref), joined.source.source_sha256),
-        ),
-    )
-    _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
-    filing_envelope = (
-        compile_filing_envelope_definition(
-            joined.variable_envelope_contract.semantic,
-            joined.variable_envelope_contract.parser_envelope,
-            modelo=str(joined.modelo),
-            source=joined.source,
-            body_record_ids=tuple(record.id for record in records),
-        )
-        if joined.variable_envelope_contract is not None
-        else None
-    )
-    auxiliary_envelope_header = (
-        compile_auxiliary_envelope_header_definition(joined.auxiliary_envelope_headers, joined.source)
-        if joined.auxiliary_envelope_headers
-        else None
-    )
-    layout = ExportLayoutDefinition.model_validate(
-        {
-            "id": transport_profile.layout_id,
-            "format": transport_profile.format,
-            "source_refs": _sorted_refs(
-                (
-                    transport_profile.source_ref,
-                    *(source for field in derivations for source in field.field.source_refs),
-                ),
-            ),
-            "legal_refs": _sorted_refs(legal for field in derivations for legal in field.field.legal_refs),
-            "records": records,
-            "filing_envelope": filing_envelope,
-            "auxiliary_envelope_header": auxiliary_envelope_header,
-        },
+    layout, derivations = _build_export_layout(
+        revision_id=revision_id,
+        joined=joined,
+        transport_profile=transport_profile,
+        records=records,
+        derivations=derivations,
     )
     _require_semantic_map_attestation(joined, semantic_map)
-    rendered_files = _render_tree_files(revision_id=revision_id, layout=layout)
+    if inheritance is not None and layout != inheritance.baseline_layout:
+        raise RegistryValidationError(
+            "generated export inheritance refuses a changed ordered layout, field, or byte contract"
+        )
+    rendered_files = (
+        render_tree_files(revision_id=revision_id, layout=layout)
+        if inheritance is None
+        else render_inherited_tree_file(revision_id=revision_id)
+    )
     _prepare_target(target_export_dir)
     for relative_path, payload in rendered_files:
         (target_export_dir / relative_path).write_bytes(payload)
@@ -534,6 +126,7 @@ def render_complete_export_tree(
         field_derivations=tuple(derivations),
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        generated_export_inheritance=inheritance.attestation if inheritance is not None else None,
     )
     return RenderedExportTree(
         layout=layout,
@@ -543,11 +136,131 @@ def render_complete_export_tree(
     )
 
 
+def _validate_render_inputs(
+    *,
+    revision_id: RevisionId,
+    joined: JoinedRecordDesign,
+    transport_profile: ExportTreeTransportProfile,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
+    source_defects: tuple[SourceDefectDeclaration, ...],
+) -> tuple[
+    tuple[NoteLiteralDeclaration, ...],
+    tuple[NoteGovernedAmountDeclaration, ...],
+    tuple[NoteStatedApplicabilityDeclaration, ...],
+]:
+    """Validate source-bound inputs and return their exact adjudication sets."""
+    _validate_transport_profile(joined, transport_profile)
+    validate_source_defect_declarations(source_defects, joined.source)
+    literal_notes = note_literals_for(joined.source)
+    note_governed_amounts = note_governed_amounts_for(joined.source.source_ref)
+    validate_note_governed_amount_declarations(note_governed_amounts, joined.source)
+    applicability_notes = note_stated_applicability_for(joined.source.source_ref)
+    validate_note_stated_applicability_declarations(applicability_notes, joined.source)
+    _require_variable_envelope_contract(revision_id, joined)
+    validate_render_profile(render_profile, joined, render_profile_source_evidence)
+    return literal_notes, note_governed_amounts, applicability_notes
+
+
+def _require_variable_envelope_contract(revision_id: RevisionId, joined: JoinedRecordDesign) -> None:
+    """Refuse variable records without their exact typed composition contract."""
+    if joined.variable_envelopes and joined.variable_envelope_contract is None:
+        identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
+        raise RegistryValidationError(
+            "fixed-width export generation refuses variable envelopes without a separately typed and proven "
+            f"composition contract: {identities}",
+        )
+    if joined.variable_envelope_contract is not None and joined.revision_id != revision_id:
+        raise RegistryValidationError(
+            f"typed filing-envelope target revision {revision_id!r} does not match the "
+            f"selected revision {joined.revision_id!r}",
+        )
+
+
+def _build_export_layout(
+    *,
+    revision_id: RevisionId,
+    joined: JoinedRecordDesign,
+    transport_profile: ExportTreeTransportProfile,
+    records: tuple[ExportRecordDefinition, ...],
+    derivations: tuple[ExportFieldDerivation, ...],
+) -> tuple[ExportLayoutDefinition, list[ExportFieldDerivation]]:
+    """Attach row verdicts and construct the complete validated export layout."""
+    reviewed_derivations = list(
+        attach_field_verdicts(
+            derivations,
+            type_column_rulings_for(str(joined.source.source_ref), joined.source.source_sha256),
+        ),
+    )
+    _validate_generated_projection_bijection(tuple(reviewed_derivations), joined.projection_endpoints)
+    filing_envelope = _filing_envelope_definition(revision_id, joined, records)
+    auxiliary_envelope_header = _auxiliary_envelope_header_definition(joined)
+    layout = ExportLayoutDefinition.model_validate(
+        {
+            "id": transport_profile.layout_id,
+            "format": transport_profile.format,
+            "source_refs": _sorted_refs(
+                (
+                    transport_profile.source_ref,
+                    *(source for field in reviewed_derivations for source in field.field.source_refs),
+                ),
+            ),
+            "legal_refs": _sorted_refs(legal for field in reviewed_derivations for legal in field.field.legal_refs),
+            "records": records,
+            "filing_envelope": filing_envelope,
+            "auxiliary_envelope_header": auxiliary_envelope_header,
+        },
+    )
+    return layout, reviewed_derivations
+
+
+def _filing_envelope_definition(
+    revision_id: RevisionId,
+    joined: JoinedRecordDesign,
+    records: tuple[ExportRecordDefinition, ...],
+) -> object | None:
+    """Compile a filing envelope only when its reviewed contract is present."""
+    contract = joined.variable_envelope_contract
+    if contract is None:
+        return None
+    return compile_filing_envelope_definition(
+        contract.semantic,
+        contract.parser_envelope,
+        modelo=str(joined.modelo),
+        source=joined.source,
+        body_record_ids=tuple(record.id for record in records),
+    )
+
+
+def _auxiliary_envelope_header_definition(joined: JoinedRecordDesign) -> object | None:
+    """Compile an auxiliary envelope header only when the source declares one."""
+    if not joined.auxiliary_envelope_headers:
+        return None
+    return compile_auxiliary_envelope_header_definition(joined.auxiliary_envelope_headers, joined.source)
+
+
 def _validate_generated_projection_bijection(
     derivations: tuple[ExportFieldDerivation, ...],
     declarations: tuple[ProjectionEndpointDeclaration, ...],
 ) -> None:
     """Refuse a generated layout that differs from revision endpoint authority."""
+    generated = _generated_projection_refs(derivations)
+    duplicate_generated = _duplicate_projection_refs(generated)
+    if duplicate_generated:
+        raise RegistryValidationError(
+            "generated layout contains duplicate projection declarations: " + ", ".join(duplicate_generated),
+        )
+    declared = tuple(declaration.projection_ref for declaration in declarations)
+    duplicate_declared = _duplicate_projection_refs(declared)
+    if duplicate_declared:
+        raise RegistryValidationError(
+            "revision projection declarations are not unique: " + ", ".join(duplicate_declared),
+        )
+    _require_projection_bijection(generated, declared)
+
+
+def _generated_projection_refs(derivations: tuple[ExportFieldDerivation, ...]) -> tuple[object, ...]:
+    """Collect generated projection refs after requiring each one is typed."""
     projection_refs = tuple(
         derivation.field.projection_ref
         for derivation in derivations
@@ -555,22 +268,16 @@ def _validate_generated_projection_bijection(
     )
     if any(reference is None for reference in projection_refs):
         raise RegistryValidationError("generated projection field must carry a typed projection_ref")
-    generated = tuple(reference for reference in projection_refs if reference is not None)
-    duplicate_generated = tuple(
-        sorted(repr(reference) for reference, count in Counter(generated).items() if count > 1),
-    )
-    if duplicate_generated:
-        raise RegistryValidationError(
-            "generated layout contains duplicate projection declarations: " + ", ".join(duplicate_generated),
-        )
-    declared = tuple(declaration.projection_ref for declaration in declarations)
-    duplicate_declared = tuple(
-        sorted(repr(reference) for reference, count in Counter(declared).items() if count > 1),
-    )
-    if duplicate_declared:
-        raise RegistryValidationError(
-            "revision projection declarations are not unique: " + ", ".join(duplicate_declared),
-        )
+    return tuple(reference for reference in projection_refs if reference is not None)
+
+
+def _duplicate_projection_refs(references: tuple[object, ...]) -> tuple[str, ...]:
+    """Return stable evidence for duplicate projection refs."""
+    return tuple(sorted(repr(reference) for reference, count in Counter(references).items() if count > 1))
+
+
+def _require_projection_bijection(generated: tuple[object, ...], declared: tuple[object, ...]) -> None:
+    """Require generated and declared projection references to match exactly."""
     missing = tuple(sorted(repr(reference) for reference in set(declared) - set(generated)))
     undeclared = tuple(sorted(repr(reference) for reference in set(generated) - set(declared)))
     if missing or undeclared:
@@ -627,6 +334,7 @@ def _render_records(
     render_profile: RenderProfile,
     *,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    literal_notes: tuple[NoteLiteralDeclaration, ...] = (),
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
@@ -635,7 +343,7 @@ def _render_records(
     record_ids: set[str] = set()
     for order, joined_record in enumerate(joined_records):
         record_id = str(joined_record.semantic_record.export_record_id)
-        _require_safe_identifier(record_id, subject="export record id")
+        require_safe_identifier(record_id, subject="export record id")
         if record_id in record_ids:
             raise RegistryValidationError(f"generated export tree has duplicate record id {record_id!r}")
         record_ids.add(record_id)
@@ -647,6 +355,7 @@ def _render_records(
                 render_profile,
                 export_record_id=record_id,
                 source_defects=source_defects,
+                literal_notes=literal_notes,
                 note_governed_amounts=note_governed_amounts,
                 applicability_notes=applicability_notes,
             )
@@ -661,6 +370,7 @@ def _render_records(
                     "required": joined_record.semantic_record.required,
                     "repeat": joined_record.semantic_record.repeat,
                     "binding_record": joined_record.semantic_record.binding_record,
+                    "requires_positive_casilla_id": joined_record.semantic_record.requires_positive_casilla_id,
                     # The map carries these as sorted pairs to stay hashable; the
                     # registry record takes the mapping they stand for.
                     "row_field_casilla_ids": dict(joined_record.semantic_record.row_field_casilla_ids),
@@ -749,1157 +459,15 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
         )
 
 
-def _normalise_field(
-    joined_field: JoinedRecordDesignField,
-    transport_profile: ExportTreeTransportProfile,
-    render_profile: RenderProfile,
-    *,
-    export_record_id: str,
-    source_defects: tuple[SourceDefectDeclaration, ...] = (),
-    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
-    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
-) -> ExportFieldDerivation:
-    """Derive one emitted field, deriving a declared part from its own printed text.
-
-    A part is derived exactly as a whole cell carrying the part's offset,
-    length, type and statement would be, so it earns no reading a printed cell
-    could not. The derivation then records the real parser row beside the part
-    it filled, and re-validates, so the attested coordinates are the part's.
-    """
-    part = joined_field.semantic_entry.part
-    if part is None:
-        return _normalise_cell(
-            joined_field,
-            transport_profile,
-            render_profile,
-            export_record_id=export_record_id,
-            source_defects=source_defects,
-            note_governed_amounts=note_governed_amounts,
-            applicability_notes=applicability_notes,
-        )
-    view = joined_field.model_copy(update={"parser_field": design_view(joined_field)})
-    derived = _normalise_cell(
-        view,
-        transport_profile,
-        render_profile,
-        export_record_id=export_record_id,
-        source_defects=source_defects,
-        note_governed_amounts=note_governed_amounts,
-        applicability_notes=applicability_notes,
-    )
-    return ExportFieldDerivation.model_validate(
-        {
-            "export_record_id": derived.export_record_id,
-            "parser_field": joined_field.parser_field,
-            "semantic_entry": derived.semantic_entry,
-            "field": derived.field,
-            "normalization_schema_version": derived.normalization_schema_version,
-            "derivation_code": derived.derivation_code,
-            "verdict": derived.verdict,
-        },
-    )
-
-
-def _normalise_cell(
-    joined_field: JoinedRecordDesignField,
-    transport_profile: ExportTreeTransportProfile,
-    render_profile: RenderProfile,
-    *,
-    export_record_id: str,
-    source_defects: tuple[SourceDefectDeclaration, ...] = (),
-    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
-    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
-) -> ExportFieldDerivation:
-    parser_field = joined_field.parser_field
-    semantic_entry = joined_field.semantic_entry
-    _require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
-    if semantic_entry.kind is CasillaFieldKind.LITERAL:
-        return _literal_derivation(
-            joined_field, transport_profile, export_record_id=export_record_id, source_defects=source_defects
-        )
-    if semantic_entry.kind is CasillaFieldKind.FILLER:
-        return _schema_field(
-            joined_field,
-            data_type="text",
-            required=False,
-            padding=ExportPadding.RIGHT_SPACE,
-            justification=ExportJustification.LEFT,
-            signed=False,
-            export_record_id=export_record_id,
-            derivation_code="filler-v1",
-        )
-    if semantic_entry.kind is CasillaFieldKind.CHECKSUM:
-        raise RegistryValidationError(
-            f"official field {semantic_entry.export_field_id!r} has checksum semantics with no reviewed normalizer",
-        )
-    type_code = (
-        unicodedata.normalize("NFKD", parser_field.aeat_type.strip())
-        .encode("ascii", "ignore")
-        .decode("ascii")
-        .casefold()
-    )
-    if type_code in _BLANK_RUN_TYPES:
-        raise RegistryValidationError(
-            f"official field {semantic_entry.export_field_id!r} declares blank-run naturaleza "
-            f"{parser_field.aeat_type!r}, which states no text representation, but the semantic "
-            f"map does not declare it a filler",
-        )
-    if type_code in _ALPHABETIC_TYPES or type_code in _ALPHANUMERIC_TYPES:
-        composite = next(
-            (
-                rule
-                for rule in render_profile.signed_composite_rules
-                if rule.anchor == _render_profile_anchor(joined_field)
-            ),
-            None,
-        )
-        if composite is not None:
-            return _profile_signed_composite_derivation(
-                joined_field,
-                composite,
-                export_record_id=export_record_id,
-            )
-        derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code in _ALPHABETIC_TYPES else "text-an-v1"
-        return _schema_field(
-            joined_field,
-            data_type="text",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.RIGHT_SPACE,
-            justification=ExportJustification.LEFT,
-            signed=False,
-            export_record_id=export_record_id,
-            derivation_code=derivation_code,
-        )
-    if _is_numeric_aeat_type(parser_field.aeat_type):
-        # A workbook states the wire fact in its Contenido cell, so a non-blank
-        # one is derived from directly. A PDF design has no such column and the
-        # parser fills ``content`` with DESCRIPTIVE PROSE, which states the fact
-        # sometimes, partially, or not at all -- deriving a representation from
-        # it would read a sentence as a format. Those fields go to the reviewed
-        # profile, which is the same rule the profile's own eligibility applies,
-        # keyed on the same signal: a workbook anchor carries a ``source_cell``
-        # and a PDF anchor does not.
-        # Asks the profile's OWN predicate rather than restating it. The two were
-        # separate copies of one rule and had already drifted: a Contenido cell
-        # reading "No cumplimentar" counts as stating no wire fact there, while
-        # here it counted as stating one, so the field was refused as ambiguous
-        # AND rejected by profile coverage as ineligible -- unreachable from
-        # either side.
-        # The declaration set travels WITH the predicate, so the routing here and
-        # the profile's own eligibility admit exactly the same fields. Passing it
-        # on one side only would put a field into the profile that the renderer
-        # never sends there, or send one the profile refuses to cover.
-        if _states_no_wire_fact(parser_field, applicability_notes=applicability_notes):
-            return _render_profile_numeric_derivation(
-                joined_field,
-                render_profile,
-                export_record_id=export_record_id,
-            )
-        return _numeric_derivation(
-            joined_field,
-            export_record_id=export_record_id,
-            note_governed_amounts=note_governed_amounts,
-        )
-    if _has_absent_naturaleza(parser_field):
-        # AEAT printed the naturaleza cell EMPTY, so the parser stamped the
-        # absent-naturaleza marker rather than guessing a type. There is nothing
-        # here to derive a representation FROM, which makes this the strongest
-        # case for the reviewed profile rather than a reason to refuse: the
-        # profile's eligibility admits exactly these fields, so a rule for this
-        # anchor is already required to exist and to have been reviewed.
-        return _render_profile_numeric_derivation(
-            joined_field,
-            render_profile,
-            export_record_id=export_record_id,
-        )
-    raise RegistryValidationError(
-        f"official field {semantic_entry.export_field_id!r} declares unsupported AEAT type {parser_field.aeat_type!r}",
-    )
-
-
-def _fold_quoted_date_pattern(content: str) -> str | None:
-    """Fold a quoted separator-bearing date pattern to its Spanish format token.
-
-    Returns ``None`` for anything that is not one, so an unrecognised content
-    form still reaches the ambiguity refusal rather than being read as a date.
-    """
-    match = _QUOTED_DATE_PATTERN_RE.match(content)
-    if match is None:
-        return None
-    folded = "".join(
-        _QUOTED_DATE_PATTERN_LETTERS[character]
-        for character in match.group("pattern")
-        if character in _QUOTED_DATE_PATTERN_LETTERS
-    )
-    # A pattern naming only part of a date, or repeating a component, is not a
-    # calendar date this grammar can encode. The membership test below then
-    # refuses it as ambiguous content, which is the honest answer.
-    return folded if len(folded) == 8 else None
-
-
-def _split_official_note_references(content: str) -> tuple[str, tuple[int, ...]]:
-    """Peel every trailing ``Nota N`` reference off official content.
-
-    Returns the value-bearing stem and the referenced note numbers in source
-    order. A stem that empties out is content consisting only of note
-    references, which the numeric derivation treats as its own form.
-    """
-    stem = content
-    notes: list[int] = []
-    while (match := _TRAILING_NOTE_REFERENCE_RE.search(stem)) is not None:
-        reference = match.group(0)
-        number = _NOTE_NUMBER_RE.search(reference)
-        if number is None:
-            raise RegistryValidationError(
-                f"official content {content!r} matched a trailing note reference {reference!r} carrying no note number",
-            )
-        notes.append(int(number.group("note")))
-        stem = stem[: match.start()]
-    return stem.strip(), tuple(reversed(notes))
-
-
-def _note_governed_period_zero_boolean(raw_values: tuple[str, ...], note_references: tuple[int, ...]) -> bool:
-    """Recognise the source form whose adjacent notes extend ``1``/``2`` with ``0``.
-
-    An ordinary note leaves the printed enumeration closed.  The paired Nota 8
-    and Nota 9 form is different: the official note table adds the reserved
-    period value ``0`` before the printed Yes/No values apply.  The field's
-    typed producer supplies that period decision, while the generated schema
-    retains all three official wire tokens as its closed codec domain.
-    """
-    return (
-        tuple(str(int(value)) for value in raw_values) == ("1", "2") and 8 in note_references and 9 in note_references
-    )
-
-
-def _literal_derivation(
-    joined_field: JoinedRecordDesignField,
-    profile: ExportTreeTransportProfile,
-    *,
-    export_record_id: str,
-    source_defects: tuple[SourceDefectDeclaration, ...] = (),
-) -> ExportFieldDerivation:
-    parser_field = joined_field.parser_field
-    literal = joined_field.semantic_entry.literal
-    if literal is None:
-        raise RegistryValidationError(f"literal field {joined_field.semantic_entry.export_field_id!r} has no literal")
-    official_content = parser_field.content
-    if official_content is None:
-        raise RegistryValidationError(
-            f"literal field {joined_field.semantic_entry.export_field_id!r} has no exact official constant content",
-        )
-    official_content, _literal_note_references = _split_official_note_references(" ".join(official_content.split()))
-    blank_source_marker = official_content == _OFFICIAL_BLANK_LITERAL_CONTENT
-    if blank_source_marker:
-        official_literal = ""
-    else:
-        folded_content = official_content.translate(_OFFICIAL_QUOTE_FOLD)
-        match = _OFFICIAL_LITERAL_RE.fullmatch(folded_content)
-        if match is not None:
-            official_literal = match.group("literal")
-        elif _OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
-            official_literal = folded_content
-        elif (unquoted := _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)) is not None:
-            official_literal = unquoted.group("literal")
-        elif parser_field.content_in_contenido_column and _OFFICIAL_BARE_CELL_LITERAL_RE.fullmatch(folded_content):
-            official_literal = folded_content
-        elif _OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded_content) is not None:
-            raise RegistryValidationError(
-                f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
-                f"content {official_content!r}: it states two alternative constants and not which one applies",
-            )
-        elif (labelled := _OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded_content)) is not None:
-            official_literal = labelled.group("literal")
-        else:
-            raise RegistryValidationError(
-                f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
-                f"content {official_content!r}",
-            )
-    # An adjudicated defect in the published design replaces the literal the
-    # grammar read, and NOTHING ELSE: the byte comparison and the slot-width
-    # check below both still run against it, so a declaration cannot admit a
-    # value the document's own declared geometry refuses.
-    adjudicated = adjudicated_literal_for(
-        source_defects,
-        sheet=parser_field.sheet,
-        source_cell=parser_field.source_cell,
-        published_content=parser_field.content or "",
-    )
-    if adjudicated is not None:
-        official_literal = adjudicated
-    try:
-        literal_bytes = literal.encode(profile.encoding)
-        official_literal_bytes = official_literal.encode(profile.encoding)
-    except UnicodeEncodeError as exc:
-        raise RegistryValidationError(
-            f"literal field {joined_field.semantic_entry.export_field_id!r} cannot encode as {profile.encoding!r}",
-        ) from exc
-    if literal_bytes != official_literal_bytes:
-        raise RegistryValidationError(
-            f"literal field {joined_field.semantic_entry.export_field_id!r} value does not agree byte-for-byte "
-            "with the exact official constant content",
-        )
-    literal_length = len(literal_bytes)
-    if not blank_source_marker and literal_length != parser_field.length:
-        raise RegistryValidationError(
-            f"literal field {joined_field.semantic_entry.export_field_id!r} has {literal_length} encoded bytes, "
-            f"but the official slot is {parser_field.length} bytes",
-        )
-    return _schema_field(
-        joined_field,
-        data_type="text",
-        required=True,
-        padding=ExportPadding.NONE,
-        justification=ExportJustification.NONE,
-        signed=False,
-        export_record_id=export_record_id,
-        derivation_code="literal-exact-v1",
-    )
-
-
-#: What SEPARATES two quoted values in a labelled enumeration AEAT actually
-#: writes. `_QUOTED_NUMERIC_LABELLED_ENUMERATION_RE` allows any non-quote text
-#: between values, so an ordinary SENTENCE containing two quoted numbers -- `"0000"
-#: only if the taxpayer elects "0050"` -- parsed as a closed value set and the
-#: renderer went on to constrain the slot to it. Prose is not a value set.
-#:
-#: Derived from the corpus rather than guessed: across the 103 bundled designs
-#: that load, the labelled form matches 221 cells in 28 distinct shapes, and
-#: every one of them separates its values with a delimiter -- a comma, a
-#: newline, a dash, or a Spanish connective. Two are RANGE forms (`"01".."12"`
-#: and `"01" a "52"`), which is why `..` and ` a ` are admitted. All 28 stay
-#: admitted under this rule and the prose above does not.
-_LABELLED_ENUMERATION_VALUE_DELIMITER_RE: Final[re.Pattern[str]] = re.compile(
-    r"[,;\n]|\s(?:o|\u00f3|u|y|e|a)\s|\s[-\u2013\u2014.]\s|\s\.-\s|\.\.",
-    re.IGNORECASE,
-)
-_QUOTED_NUMERIC_VALUE_RE: Final[re.Pattern[str]] = re.compile(r'"\d+"')
-
-
-def _labelled_enumeration_values_are_delimited(content: str) -> bool:
-    """Report whether every gap between quoted values carries a real delimiter."""
-    gaps = _QUOTED_NUMERIC_VALUE_RE.split(content)[1:-1]
-    return all(_LABELLED_ENUMERATION_VALUE_DELIMITER_RE.search(gap) is not None for gap in gaps)
-
-
-#: The official type token for a signed amount, as the design's own type note
-#: defines it: "N: numerico con signo", against "Num: numerico sin signo".
-_SIGNED_AEAT_TYPE: Final[str] = "N"
-
-#: The scale the `money` shape carries in its own type. A signed amount has no
-#: other representable shape, so this is also the only scale a signed amount can
-#: be emitted at.
-_MONEY_SCALE: Final[int] = 2
-
-
-def _derive_sign_from_official_type(joined_field: JoinedRecordDesignField) -> bool:
-    """Return whether the official type column declares this amount signed.
-
-    This derivation used to write ``False`` for every amount without reading the
-    column at all, which is how a fifth of the generated surface came to declare
-    unsigned the slots the design types as signed.
-
-    The representation is grounded, so the sign can now be emitted rather than
-    refused. AEAT's "Disenos de registro" manual states the convention for every
-    design: numeric fields are right-aligned and zero-filled SIN SIGNOS, and only
-    NEGATIVE amounts are preceded by the character ``N``. So a signed slot reserves
-    no byte -- the marker displaces the leading digit when the value is negative,
-    which is what the codec now renders and parses.
-
-    Only ``N`` is read as signed. A token outside the design's own vocabulary is
-    left unsigned here rather than guessed at, and is answered by the separate
-    treatment of the uncontrolled type spellings.
-    """
-    return joined_field.parser_field.aeat_type == _SIGNED_AEAT_TYPE
-
-
-def _numeric_derivation(
-    joined_field: JoinedRecordDesignField,
-    *,
-    export_record_id: str,
-    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
-) -> ExportFieldDerivation:
-    parser_field = joined_field.parser_field
-    content = parser_field.content
-    if content is None:
-        raise RegistryValidationError(
-            f"official numeric field {joined_field.semantic_entry.export_field_id!r} has no unambiguous content form",
-        )
-    normalised_content = " ".join(content.split())
-    # Modelo 151 brackets the whole clause -- `[15 enteros + 2 decimales]` -- on
-    # every one of its money slots, where 202, 303 and 322 write the same clause
-    # bare. The brackets set the clause off typographically and state nothing, so
-    # they are peeled once here rather than admitted by each value grammar
-    # separately, which is how the note-reference peel below already works.
-    # Peeled only when they wrap the ENTIRE content: a stray bracket inside a
-    # clause is not a wrapper and must still reach the ambiguity refusal.
-    if normalised_content.startswith("[") and normalised_content.endswith("]"):
-        normalised_content = normalised_content[1:-1].strip()
-    pointer_content = normalised_content
-    normalised_content, note_references = _split_official_note_references(normalised_content)
-    if not normalised_content and note_references:
-        # A cell holding nothing but a pointer states no representation. There
-        # are three readings of that, and which one applies is decided by what
-        # somebody has READ, never by the shape of the text:
-        #
-        # * The note states the representation outright, or the design states it
-        #   for the surrounding run -- a ``NoteGovernedAmountDeclaration`` -- and
-        #   that stated representation applies here.
-        # * The note states APPLICABILITY and no representation -- a
-        #   ``NoteStatedApplicabilityDeclaration`` -- and the cell is then
-        #   equivalent to a blank one. Such a field never reaches this function:
-        #   ``_states_no_wire_fact`` sends it to the reviewed render profile
-        #   above, exactly where its blank-Contenido siblings go.
-        # * Nobody has opened the note yet, which is everything below. The
-        #   historical unscaled reading stands rather than being silently
-        #   re-scaled by a rule nobody reviewed for that document -- but it is a
-        #   reading the design does not support, not a derivation, and the
-        #   footnote-pointer screen carries the outstanding queue.
-        adjudicated = note_governed_amount_for(
-            note_governed_amounts,
-            sheet=parser_field.sheet,
-            published_content=pointer_content,
-        )
-        if adjudicated is not None:
-            # The sign travels with the adjudication and drives data_type,
-            # `signed` and `decimals` together, exactly as it does in
-            # `_profile_width_17_derivation`: `money` carries its scale inside
-            # the codec and the schema refuses a field declaring decimals beside
-            # any other data_type, so a signed run must not pass one. The width
-            # check counts the sign position, so a signed adjudication that does
-            # not fill the slot is refused like an unsigned one.
-            signed = adjudicated.signed
-            _require_numeric_extent(joined_field, expected_length=adjudicated.wire_length)
-            return _schema_field(
-                joined_field,
-                data_type="money" if signed else "decimal",
-                required=_is_required(parser_field.validation),
-                padding=ExportPadding.LEFT_ZERO,
-                justification=ExportJustification.RIGHT,
-                signed=signed,
-                export_record_id=export_record_id,
-                decimals=None if signed else adjudicated.decimal_digits,
-                # A note that mandates a value closes the slot's domain. The
-                # schema carries it on the unsigned scaled shape and on signed
-                # money alike, so a signed run keeps its mandate.
-                allowed_values=adjudicated.mandated_values,
-                derivation_code="numeric-note-governed-amount-v1",
-            )
-        return _schema_field(
-            joined_field,
-            data_type="integer",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.LEFT_ZERO,
-            justification=ExportJustification.RIGHT,
-            signed=False,
-            export_record_id=export_record_id,
-            derivation_code="numeric-integer-v1",
-        )
-    # Both published date orders are derived from the ONE policy table rather
-    # than from a single hardcoded order. Modelo 303's designs only ever spell
-    # `aaaammdd`, so a `ddmmaaaa` slot -- which Modelo 210 spells four times --
-    # fell through to the ambiguous-content refusal even though the policy, its
-    # wire width and its encoder already existed.
-    date_token = _fold_quoted_date_pattern(normalised_content) or normalised_content.casefold()
-    for policy, date_format in _DATE_FORMAT_BY_POLICY.items():
-        if date_token != date_format:
-            continue
-        expected_length = export_value_policy_wire_length(policy)
-        if parser_field.length != expected_length:
-            raise RegistryValidationError(
-                f"official date field {joined_field.semantic_entry.export_field_id!r} has "
-                f"{parser_field.length} bytes, expected {expected_length}",
-            )
-        return _schema_field(
-            joined_field,
-            data_type="date",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.NONE,
-            justification=ExportJustification.NONE,
-            signed=False,
-            export_record_id=export_record_id,
-            date_format=date_format,
-            derivation_code=_DATE_DERIVATION_CODE_BY_POLICY[policy],
-        )
-    # A bare `AAAA` is the ejercicio, not a date. It is a closed four-character
-    # wire fact the design states outright, so it is derived here rather than
-    # left to a render profile -- the profile exists for slots the design leaves
-    # UNSTATED, and this one is stated.
-    if normalised_content.casefold() == "aaaa":
-        expected_length = export_value_policy_wire_length(ExportValuePolicy.FOUR_DIGIT_YEAR)
-        if parser_field.length != expected_length:
-            raise RegistryValidationError(
-                f"official ejercicio field {joined_field.semantic_entry.export_field_id!r} has "
-                f"{parser_field.length} bytes, expected {expected_length}",
-            )
-        return _schema_field(
-            joined_field,
-            data_type="integer",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.LEFT_ZERO,
-            justification=ExportJustification.RIGHT,
-            signed=False,
-            export_record_id=export_record_id,
-            value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR,
-            derivation_code="numeric-ejercicio-aaaa-v1",
-        )
-    decimal_match = _DECIMAL_CONTENT_RE.fullmatch(normalised_content)
-    whole_value = _numeric_word_or_digits(decimal_match.group("whole")) if decimal_match else None
-    decimals_value = _numeric_word_or_digits(decimal_match.group("decimals")) if decimal_match else None
-    if decimal_match is not None and whole_value is not None and decimals_value is not None:
-        whole = whole_value
-        decimals = decimals_value
-        _require_numeric_extent(joined_field, expected_length=whole + decimals)
-        signed = _derive_sign_from_official_type(joined_field)
-        if signed and decimals != _MONEY_SCALE:
-            # `money` is the only shape the schema lets a signed amount take, and
-            # it carries a two-decimal scale in the type itself. A signed slot at
-            # any other scale has no representable shape, so it is refused rather
-            # than emitted at a scale the registry did not determine.
-            raise RegistryValidationError(
-                f"export field {joined_field.semantic_entry.export_field_id!r} is typed "
-                f"'{_SIGNED_AEAT_TYPE}' (numerico con signo) at {decimals} decimals, and a signed "
-                f"amount is representable only at the {_MONEY_SCALE}-decimal money scale",
-            )
-        return _schema_field(
-            joined_field,
-            # A signed amount is `money`, whose scale lives in the type; only the
-            # unsigned `decimal` shape declares a count, and the schema refuses a
-            # field that declares decimals beside any other data type.
-            data_type="money" if signed else "decimal",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.LEFT_ZERO,
-            justification=ExportJustification.RIGHT,
-            signed=signed,
-            export_record_id=export_record_id,
-            decimals=None if signed else decimals,
-            derivation_code="numeric-decimal-v1",
-        )
-    integer_match = _INTEGER_CONTENT_RE.fullmatch(normalised_content)
-    if integer_match is not None:
-        _require_numeric_extent(joined_field, expected_length=int(integer_match.group("whole")))
-        return _schema_field(
-            joined_field,
-            data_type="integer",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.LEFT_ZERO,
-            justification=ExportJustification.RIGHT,
-            signed=False,
-            export_record_id=export_record_id,
-            derivation_code="numeric-integer-v1",
-        )
-    dash_values = tuple(
-        match.group("value") for match in _DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(normalised_content)
-    )
-    equals_values = tuple(
-        match.group("value") for match in _EQUALS_NUMERIC_ENUMERATION_TOKEN_RE.finditer(normalised_content)
-    )
-    labelled_values = dash_values if len(dash_values) > 1 else equals_values
-    if not labelled_values and _BARE_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None:
-        labelled_values = tuple(value.strip() for value in normalised_content.rstrip(".").split(","))
-    if (
-        _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
-        or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(normalised_content) is not None
-        or (
-            _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE.fullmatch(normalised_content) is not None
-            and _labelled_enumeration_values_are_delimited(normalised_content)
-        )
-        or _PARENTHESISED_QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
-        or len(labelled_values) > 1
-    ):
-        raw_values = (
-            labelled_values
-            if len(labelled_values) > 1
-            else tuple(match.group("value") for match in _QUOTED_NUMERIC_TOKEN_RE.finditer(normalised_content))
-        )
-        if any(len(value) != parser_field.length for value in raw_values):
-            raise RegistryValidationError(
-                f"official numeric enumeration {joined_field.semantic_entry.export_field_id!r} has values "
-                "outside the declared slot width",
-            )
-        allowed_values = tuple(str(int(value)) for value in raw_values)
-        if len(set(allowed_values)) != len(allowed_values):
-            raise RegistryValidationError(
-                f"official numeric enumeration {joined_field.semantic_entry.export_field_id!r} has duplicate values",
-            )
-        if _note_governed_period_zero_boolean(raw_values, note_references):
-            # The source prints ``1``/``2`` beside its Yes/No labels, then its
-            # adjacent Nota 8/9 pair adds the period-reserved ``0``.  Preserve
-            # a closed codec domain rather than erasing enum validation; the
-            # typed producer owns which one of the three official values applies.
-            allowed_values = ("0", *allowed_values)
-        return _schema_field(
-            joined_field,
-            data_type="integer",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.LEFT_ZERO,
-            justification=ExportJustification.RIGHT,
-            signed=False,
-            export_record_id=export_record_id,
-            value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
-            allowed_values=allowed_values,
-            derivation_code="numeric-enumeration-v1",
-        )
-    constant_match = _OFFICIAL_LITERAL_RE.fullmatch(normalised_content)
-    if constant_match is not None:
-        constant_literal = constant_match.group("literal")
-        if len(constant_literal) != parser_field.length:
-            raise RegistryValidationError(
-                f"official numeric constant {joined_field.semantic_entry.export_field_id!r} has a value "
-                "outside the declared slot width",
-            )
-        if note_references:
-            # A `Constante` carrying note references is NOT a closed wire fact:
-            # Nota 7 admits the foral "00000" and Nota 10 gates the slot to
-            # periods from 10/4T 2024, so the anchor's canonical typed owner --
-            # not this constant alone -- decides the value. Width and unsigned
-            # integer shape are still fixed by the source and derived here,
-            # while no closed value domain is asserted over them.
-            return _schema_field(
-                joined_field,
-                data_type="integer",
-                required=_is_required(parser_field.validation),
-                padding=ExportPadding.LEFT_ZERO,
-                justification=ExportJustification.RIGHT,
-                signed=False,
-                export_record_id=export_record_id,
-                derivation_code="numeric-integer-v1",
-            )
-        # An unannotated `Constante` IS a closed wire fact: the design mandates
-        # exactly this value and admits no alternative, which makes it a
-        # one-member enumeration and is derived as one, deliberately reusing the
-        # enumeration shape rather than inventing a second.
-        #
-        # Carrying it matters most where the slot is homed to a CASILLA. The
-        # emitted value then comes from the casilla's own authority -- for a
-        # transitional rate, its dated parameter table, which is where the law
-        # actually lives and which a frozen literal would stop tracking. But
-        # deriving the value from the parameter while the design mandates a
-        # constant opens a divergence, and without a closed domain nothing would
-        # catch it: the field would carry the wire SHAPE only and the mandated
-        # value would be discarded. `_require_allowed_value` refuses at encode
-        # time against exactly this tuple, so the value follows the law AND a
-        # disagreement with the design is refused instead of silently emitted.
-        return _schema_field(
-            joined_field,
-            data_type="integer",
-            required=_is_required(parser_field.validation),
-            padding=ExportPadding.LEFT_ZERO,
-            justification=ExportJustification.RIGHT,
-            signed=False,
-            export_record_id=export_record_id,
-            value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
-            allowed_values=(str(int(constant_literal)),),
-            derivation_code="numeric-enumeration-v1",
-        )
-    raise RegistryValidationError(
-        f"official numeric field {joined_field.semantic_entry.export_field_id!r} has ambiguous content {content!r}",
-    )
-
-
-def _render_profile_numeric_derivation(
-    joined_field: JoinedRecordDesignField,
-    profile: RenderProfile,
-    *,
-    export_record_id: str,
-) -> ExportFieldDerivation:
-    anchor = _render_profile_anchor(joined_field)
-    # Indexed on the profile, not scanned here: a scan compared this anchor
-    # against every anchor of every rule, and anchors are pydantic models whose
-    # equality is not cheap.
-    width_rule = profile.width_17_rule_by_anchor.get(anchor)
-    if width_rule is not None:
-        return _profile_width_17_derivation(
-            joined_field,
-            width_rule,
-            export_record_id=export_record_id,
-        )
-    singleton = profile.singleton_rule_by_anchor.get(anchor)
-    if singleton is None:
-        raise RegistryValidationError(
-            f"validated render profile has no exact rule for blank numeric anchor {anchor!r}",
-        )
-    return _profile_singleton_derivation(
-        joined_field,
-        singleton,
-        export_record_id=export_record_id,
-    )
-
-
-#: The width-17 sign policies this derivation distinguishes. ``signed`` below is a
-#: boolean coercion of a two-member set, and it drives ``data_type``, ``signed``
-#: and ``decimals`` together -- so a third policy admitted by
-#: ``Width17MembershipRule.sign_policy`` without a decision here would not refuse;
-#: it would render as an unsigned decimal carrying the rule's scale, wrong in all
-#: three at once. The owning test holds this pair exhaustive against that field.
-_WIDTH_17_SIGNED_POLICY: Final[str] = "n-prefix-negative-blank-nonnegative"
-_WIDTH_17_UNSIGNED_POLICY: Final[str] = "unsigned"
-
-
-def _profile_width_17_derivation(
-    joined_field: JoinedRecordDesignField,
-    rule: Width17MembershipRule,
-    *,
-    export_record_id: str,
-) -> ExportFieldDerivation:
-    signed = rule.sign_policy == _WIDTH_17_SIGNED_POLICY
-    return _schema_field(
-        joined_field,
-        data_type="money" if signed else "decimal",
-        required=_is_required(joined_field.parser_field.validation),
-        padding=ExportPadding.LEFT_ZERO,
-        justification=ExportJustification.RIGHT,
-        signed=signed,
-        export_record_id=export_record_id,
-        # `money` carries its scale in the type; only `decimal` declares one, and
-        # the schema refuses a field that declares decimals beside any other
-        # data_type. Passing the rule's scale unconditionally would make every
-        # signed width-17 amount unrepresentable.
-        decimals=None if signed else rule.decimal_digits,
-        derivation_code="render-profile-width-17-v1",
-    )
-
-
-def _profile_singleton_derivation(
-    joined_field: JoinedRecordDesignField,
-    rule: SingletonNumericRule,
-    *,
-    export_record_id: str,
-) -> ExportFieldDerivation:
-    data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
-    date_format: str | None = None
-    decimals: int | None = None
-    policy_shape = _SINGLETON_POLICY_SHAPES.get(rule.value_policy)
-    if policy_shape is None:
-        raise RegistryValidationError(f"unsupported singleton export value policy {rule.value_policy!r}")
-    if policy_shape == "date":
-        data_type = "date"
-        date_format = _DATE_FORMAT_BY_POLICY.get(rule.value_policy)
-        if date_format is None:
-            raise RegistryValidationError(f"date singleton export policy lacks a date format {rule.value_policy!r}")
-        padding = ExportPadding.NONE
-        justification = ExportJustification.NONE
-    elif policy_shape == "decimal":
-        data_type = "decimal"
-        decimals = rule.decimal_digits
-        padding = ExportPadding.LEFT_ZERO
-        justification = ExportJustification.RIGHT
-    elif policy_shape == "digit_identity":
-        data_type = "text"
-        padding = ExportPadding.NONE
-        justification = ExportJustification.NONE
-    elif policy_shape == "text":
-        data_type = "text"
-        padding = ExportPadding.RIGHT_SPACE
-        justification = ExportJustification.LEFT
-    elif policy_shape == "integer":
-        data_type = "integer"
-        padding = ExportPadding.LEFT_ZERO
-        justification = ExportJustification.RIGHT
-    else:
-        raise RegistryValidationError(f"unsupported singleton export policy shape {policy_shape!r}")
-    allowed_values = rule.allowed_values or None if rule.value_policy is ExportValuePolicy.ENUMERATED_DIGITS else None
-    return _schema_field(
-        joined_field,
-        data_type=data_type,
-        required=_is_required(joined_field.parser_field.validation),
-        padding=padding,
-        justification=justification,
-        signed=False,
-        export_record_id=export_record_id,
-        derivation_code="render-profile-singleton-v1",
-        date_format=date_format,
-        decimals=decimals,
-        value_policy=rule.value_policy,
-        allowed_values=allowed_values,
-    )
-
-
-def _profile_signed_composite_derivation(
-    joined_field: JoinedRecordDesignField,
-    rule: SignedMonetaryCompositeRule,
-    *,
-    export_record_id: str,
-) -> ExportFieldDerivation:
-    return _schema_field(
-        joined_field,
-        data_type="money",
-        required=_is_required(joined_field.parser_field.validation),
-        padding=ExportPadding.LEFT_ZERO,
-        justification=ExportJustification.RIGHT,
-        signed=True,
-        sign_position=ExportSignPosition.BLANK_OR_N,
-        export_record_id=export_record_id,
-        derivation_code="render-profile-signed-monetary-composite-v1",
-    )
-
-
-def _render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfileAnchor:
-    field = joined_field.parser_field
-    # DERIVED, not authored: this anchor is built from the parser field, so a
-    # missing ordinal is an observed fact about the design rather than a claim,
-    # exactly as in ``render_profile._field_anchor``.
-    return RenderProfileAnchor(
-        sheet=field.sheet,
-        source_row=field.source_row,
-        source_cell=field.source_cell,
-        ordinal=field.ordinal,
-        ordinal_absent=field.ordinal is None,
-        record_identity=field.record_identity,
-    )
-
-
-def _require_numeric_extent(joined_field: JoinedRecordDesignField, *, expected_length: int) -> None:
-    actual_length = joined_field.parser_field.length
-    if actual_length != expected_length:
-        raise RegistryValidationError(
-            f"official numeric field {joined_field.semantic_entry.export_field_id!r} has {actual_length} bytes, "
-            f"but content declares {expected_length}",
-        )
-
-
-def _schema_field(
-    joined_field: JoinedRecordDesignField,
-    *,
-    data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"],
-    required: bool,
-    padding: ExportPadding,
-    justification: ExportJustification,
-    signed: bool,
-    sign_position: ExportSignPosition | None = None,
-    export_record_id: str,
-    derivation_code: ExportFieldDerivationCode,
-    date_format: str | None = None,
-    decimals: int | None = None,
-    value_policy: ExportValuePolicy | None = None,
-    allowed_values: tuple[str, ...] | None = None,
-) -> ExportFieldDerivation:
-    parser_field = joined_field.parser_field
-    semantic_entry = joined_field.semantic_entry
-    return ExportFieldDerivation(
-        export_record_id=export_record_id,
-        parser_field=parser_field,
-        semantic_entry=semantic_entry,
-        field=ExportFieldDefinition.model_validate(
-            {
-                "id": semantic_entry.export_field_id,
-                "offset": parser_field.offset,
-                "length": parser_field.length,
-                "kind": semantic_entry.kind,
-                "casilla_id": semantic_entry.casilla_id,
-                "binding": semantic_entry.binding,
-                "literal": semantic_entry.literal,
-                "producer_key": semantic_entry.producer_key,
-                "projection_ref": semantic_entry.projection_ref,
-                "draft_attribute": semantic_entry.draft_attribute,
-                "computed_key": semantic_entry.computed_key,
-                "data_type": data_type,
-                "required": required,
-                "padding": padding,
-                "justification": justification,
-                "date_format": date_format,
-                "decimals": decimals,
-                "signed": signed,
-                "sign_position": sign_position,
-                "required_for": _qualified_requirement(parser_field.validation),
-                "design_type": _design_type(parser_field.aeat_type, data_type),
-                "value_policy": value_policy,
-                "allowed_values": allowed_values,
-                "legal_refs": semantic_entry.legal_refs,
-                "source_refs": semantic_entry.source_refs,
-            },
-        ),
-        normalization_schema_version=EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
-        derivation_code=derivation_code,
-    )
-
-
-#: The requirement wordings this project has adjudicated as unconditional,
-#: written as the designs write them once punctuation and case are set aside.
-#:
-#: ``obligatorio pi`` is modelo 303's "Tipo Declaracion" cell. "PI" is not a
-#: condition on the requirement: it is the label under which the same design's
-#: Nota 1 lists the admitted declaration types ("PI: El tipo de declaracion puede
-#: ser: C ... D ... G ... I ... N ... V ..."), so the cell states a requirement
-#: and points at its value list. Read as a qualifier, it shipped the one field
-#: every 303 filing must carry as not required.
-_UNCONDITIONAL_REQUIREMENTS: Final[frozenset[str]] = frozenset({"obligatorio", "obligatorio pi"})
-
-#: The qualified requirement wordings this project has adjudicated, mapped to
-#: the taxpayer legal form they name. Modelo 390's sujeto pasivo nombre reads
-#: "OBLIGATORIO (persona fisica)": required for a natural person, meaningless for
-#: an entity, so it is carried as ``required_for`` and evaluated per filing.
-_QUALIFIED_REQUIREMENTS: Final[dict[str, Literal["natural_person"]]] = {
-    "obligatorio (persona fisica)": "natural_person",
-}
-
-#: Trailing punctuation a design may put after the requirement word. It ends a
-#: sentence; it does not qualify the requirement, and reading it as though it
-#: did is what silently downgraded twelve stated requirements in modelo 390.
-_REQUIREMENT_SENTENCE_PUNCTUATION: Final[str] = ".:;"
-
-
-def _design_type(aeat_type: str, data_type: str) -> Literal["N", "Num"] | None:
-    """Return the design's numeric type for a sign-bearing field, when it prints one exactly.
-
-    Only the design's own two-letter vocabulary is carried; a spelled-out type
-    such as "Numerico" states no sign, and a text slot has none to hold.
-    """
-    code = aeat_type.strip()
-    if data_type not in {"money", "decimal", "integer"} or code not in {"N", "Num"}:
-        return None
-    return "N" if code == "N" else "Num"
-
-
-def _qualified_requirement(validation: str | None) -> Literal["natural_person"] | None:
-    """Return the taxpayer legal form a qualified requirement names, or ``None``.
-
-    Accents are set aside because the designs spell the same qualifier both
-    ways. A field carrying one is not required unconditionally; the schema
-    admits the condition on a producer-supplied header field only, so a
-    qualified wording on any other field refuses at generation instead of
-    being dropped.
-    """
-    if validation is None:
-        return None
-    folded = unicodedata.normalize("NFKD", validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip())
-    ascii_only = "".join(character for character in folded if not unicodedata.combining(character))
-    return _QUALIFIED_REQUIREMENTS.get(ascii_only.casefold())
-
-
-def _is_required(validation: str | None) -> bool:
-    """Read whether the design states this field's requirement unconditionally.
-
-    A cell is one of three things and only two are answerable here. A SILENT
-    cell makes no requirement claim. A cell stating the bare requirement word,
-    which a design may end as a sentence, states an unconditional requirement.
-    A cell stating a QUALIFIED requirement -- modelo 390's
-    ``OBLIGATORIO (persona fisica)`` -- is neither, and this function's boolean
-    result cannot carry it; ``_qualified_requirement`` reads it instead. Modelo
-    303's ``Obligatorio PI`` looks qualified and is not; see
-    ``_UNCONDITIONAL_REQUIREMENTS``.
-
-    Only the first two are repaired here. The comparison used to demand exact
-    equality with the bare word, so ``OBLIGATORIO.`` fell through to ``False``
-    and twelve stated requirements shipped as no requirement, defeated by a
-    full stop. Trailing sentence punctuation is now set aside before the
-    comparison.
-
-    A qualified cell stays unrequired here: its requirement holds only for a
-    taxpayer of one legal form, which a layout cannot know, so it is carried as
-    a condition the export evaluates against the filing's own taxpayer.
-    """
-    if validation is None:
-        return False
-    return (
-        validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip().casefold() in _UNCONDITIONAL_REQUIREMENTS
-    )
-
-
-def _render_tree_files(
-    *,
-    revision_id: RevisionId,
-    layout: ExportLayoutDefinition,
-) -> tuple[tuple[str, bytes], ...]:
-    layout_payload = layout.model_dump(mode="json", exclude_none=True)
-    records = tuple(layout_payload.pop("records"))
-    metadata_payload = {"revisions": {str(revision_id): {"export_layouts": [layout_payload]}}}
-    metadata_bytes = render_toml_bytes("0000-export-layout.toml", metadata_payload)
-    _require_reviewable_fragment("0000-export-layout.toml", metadata_bytes)
-    rendered_files = [("0000-export-layout.toml", metadata_bytes)]
-    planned_paths = {"0000-export-layout.toml"}
-    # One prefix per emitted fragment, not per record. A partitioned record occupies
-    # several consecutive prefixes: the loader admits one fragment per administrative
-    # prefix, and merges records in prefix order, so the prefix sequence is what makes
-    # field order survive the round trip.
-    prefix = 0
-    for record in records:
-        record_id = record.get("id")
-        if not isinstance(record_id, str):
-            raise RegistryValidationError("validated generated export record has no string id")
-        record_parts = _render_record_parts(revision_id=revision_id, layout_id=layout.id, record=record)
-        for fragment_bytes in record_parts:
-            prefix += 1
-            relative_path = _record_relative_path(prefix, record_id)
-            if relative_path in planned_paths:
-                raise RegistryValidationError(f"generated export path collision at {relative_path!r}")
-            planned_paths.add(relative_path)
-            rendered_files.append((relative_path, fragment_bytes))
-    return tuple(rendered_files)
-
-
-def _render_record_parts(
-    *,
-    revision_id: RevisionId,
-    layout_id: object,
-    record: Mapping[str, object],
-) -> tuple[bytes, ...]:
-    raw_fields = record.get("fields")
-    if not isinstance(raw_fields, list) or not raw_fields:
-        raise RegistryValidationError(f"validated generated export record {record.get('id')!r} has no fields")
-    fields: list[Mapping[str, object]] = []
-    for field in cast(list[object], raw_fields):
-        if not isinstance(field, Mapping):
-            raise RegistryValidationError(
-                f"validated generated export record {record.get('id')!r} contains a non-table field",
-            )
-        fields.append(cast(Mapping[str, object], field))
-    record_without_fields = {key: value for key, value in record.items() if key != "fields"}
-    rendered_parts: list[bytes] = []
-    current_fields: list[Mapping[str, object]] = []
-    for field in fields:
-        candidate_fields: list[Mapping[str, object]] = [*current_fields, field]
-        candidate = _render_record_fragment(
-            revision_id=revision_id,
-            layout_id=layout_id,
-            record={**record_without_fields, "fields": candidate_fields},
-        )
-        if _is_reviewable_fragment(candidate):
-            current_fields = candidate_fields
-            continue
-        if not current_fields:
-            field_id = field.get("id")
-            raise RegistryValidationError(
-                f"generated export field {field_id!r} cannot fit the repository TOML reviewability baseline",
-            )
-        rendered_parts.append(
-            _render_record_fragment(
-                revision_id=revision_id,
-                layout_id=layout_id,
-                record={**record_without_fields, "fields": current_fields},
-            ),
-        )
-        current_fields = [field]
-        candidate = _render_record_fragment(
-            revision_id=revision_id,
-            layout_id=layout_id,
-            record={**record_without_fields, "fields": current_fields},
-        )
-        if not _is_reviewable_fragment(candidate):
-            field_id = field.get("id")
-            raise RegistryValidationError(
-                f"generated export field {field_id!r} cannot fit the repository TOML reviewability baseline",
-            )
-    rendered_parts.append(
-        _render_record_fragment(
-            revision_id=revision_id,
-            layout_id=layout_id,
-            record={**record_without_fields, "fields": current_fields},
-        ),
-    )
-    return tuple(rendered_parts)
-
-
-def _render_record_fragment(
-    *,
-    revision_id: RevisionId,
-    layout_id: object,
-    record: Mapping[str, object],
-) -> bytes:
-    return render_toml_bytes(
-        str(record.get("id", "record")),
-        {
-            "revisions": {
-                str(revision_id): {
-                    "export_layouts": [
-                        {
-                            "id": layout_id,
-                            "records": [record],
-                        },
-                    ],
-                },
-            },
-        },
-    )
-
-
-def render_toml_bytes(relative_path: str, payload: Mapping[str, object]) -> bytes:
-    try:
-        rendered = rtoml.dumps(_order_toml_values_before_tables(payload), pretty=True, none_value=None)
-    except (TypeError, ValueError) as exc:
-        # rtoml raises TomlSerializationError (a ValueError subclass) whose sole
-        # ``args[0]`` bakes the offending value's own ``repr`` into the message,
-        # with no structured field that omits it -- measured:
-        # ``rtoml.dumps({"bad": Foo()})`` produces "<Foo object at 0x...> (Foo)
-        # is not serializable to TOML". Unlike ``json.dumps``'s purely
-        # positional "Object of type X is not JSON serializable", there is no
-        # accessor here that separates the offending value from the message, so
-        # this refusal names only the exception's type, never its rendered text.
-        raise RegistryValidationError(
-            f"cannot serialize generated export TOML {relative_path!r}: {type(exc).__name__} refused the payload",
-        ) from exc
-    return rendered.encode("utf-8")
-
-
-def _order_toml_values_before_tables(value: object) -> object:
-    """Recursively order scalars before TOML tables and arrays of tables.
-
-    The generated M303 declaration introduces a nested prefix-field table.
-    ``rtoml`` correctly requires every scalar in that declaration to be
-    emitted before the nested table, so preserve values while presenting its
-    serializer a valid TOML order.
-    """
-    if isinstance(value, Mapping):
-        # Partitioned in ONE pass: the shape test was evaluated twice per item,
-        # once to reject it from the scalars and again to admit it to the
-        # tables, and this recursion reaches every node of every generated
-        # tree -- 8.9M calls for one modelo.
-        values: list[tuple[str, object]] = []
-        tables: list[tuple[str, object]] = []
-        for key, item in value.items():
-            ordered = _order_toml_values_before_tables(item)
-            (tables if _toml_table_like(ordered) else values).append((str(key), ordered))
-        return dict((*values, *tables))
-    if isinstance(value, list):
-        return [_order_toml_values_before_tables(item) for item in value]
-    if isinstance(value, tuple):
-        return [_order_toml_values_before_tables(item) for item in value]
-    return value
-
-
-def _toml_table_like(value: object) -> bool:
-    """Return whether TOML must emit ``value`` as a table-shaped value."""
-    if isinstance(value, Mapping):
-        return True
-    return isinstance(value, list) and any(isinstance(item, Mapping) for item in value)
-
-
-def _is_reviewable_fragment(payload: bytes) -> bool:
-    lines = payload.decode("utf-8").splitlines()
-    return (
-        len(lines) <= _MAX_FRAGMENT_LINES and max((len(line) for line in lines), default=0) <= _MAX_FRAGMENT_LINE_CHARS
-    )
-
-
-def _require_reviewable_fragment(relative_path: str, payload: bytes) -> None:
-    if not _is_reviewable_fragment(payload):
-        raise RegistryValidationError(
-            f"generated export TOML {relative_path!r} exceeds the repository reviewability baseline",
-        )
-
-
-def _record_relative_path(prefix: int, record_id: object) -> str:
-    """Return the fragment filename for one rendered record part.
-
-    The administrative prefix carries the whole ordering, so the filename states no
-    second one: a partitioned record appears as consecutive prefixes sharing a slug.
-    """
-    raw_record_id = str(record_id)
-    _require_safe_identifier(raw_record_id, subject="export record id")
-    slug = _SLUG_RE.sub("-", raw_record_id.casefold()).strip("-")
-    if not slug:
-        raise RegistryValidationError(f"export record id {raw_record_id!r} cannot form a stable output slug")
-    rendered_prefix = f"{prefix:0{_FRAGMENT_PREFIX_DIGITS}d}"
-    if len(rendered_prefix) != _FRAGMENT_PREFIX_DIGITS:
-        raise RegistryValidationError(
-            f"generated export record {raw_record_id!r} needs fragment prefix {prefix}, which overflows the "
-            f"{_FRAGMENT_PREFIX_DIGITS}-digit prefix width; an overflowed prefix does not sort late, it stops "
-            "being a readable fragment name",
-        )
-    return f"{rendered_prefix}-record-{slug}.toml"
-
-
 def _require_semantic_map_attestation(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> None:
+    compiled_map = _require_semantic_map_source(joined, semantic_map)
+    _require_semantic_map_identity(joined, semantic_map, compiled_map)
+    _require_semantic_map_entries(joined, compiled_map)
+    _require_semantic_map_records(joined, compiled_map)
+
+
+def _require_semantic_map_source(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> SemanticMap:
+    """Require the supplied map attests the joined source bytes."""
     if semantic_map.source_ref != joined.source.source_ref:
         raise RegistryValidationError(
             f"semantic-map source {semantic_map.source_ref!r} does not match joined source "
@@ -1907,24 +475,35 @@ def _require_semantic_map_attestation(joined: JoinedRecordDesign, semantic_map: 
         )
     if semantic_map.source_sha256 != joined.source.source_sha256:
         raise RegistryValidationError("semantic-map SHA-256 does not match joined official source")
-    compiled_map = joined.compiled_semantic_map or semantic_map
+    return joined.compiled_semantic_map or semantic_map
+
+
+def _require_semantic_map_identity(
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    compiled_map: SemanticMap,
+) -> None:
+    """Require an authored map or its compiled form agrees with the caller."""
     if (
         joined.authored_semantic_map is not None
         and semantic_map != joined.authored_semantic_map
         and semantic_map != compiled_map
     ):
         raise RegistryValidationError("joined fields do not attest the supplied semantic map")
+
+
+def _require_semantic_map_entries(joined: JoinedRecordDesign, compiled_map: SemanticMap) -> None:
+    """Require joined fields cover every compiled semantic entry exactly once."""
     joined_entries = frozenset(field.semantic_entry for field in joined.fields)
     if len(joined_entries) != len(joined.fields) or joined_entries != frozenset(compiled_map.entries):
         raise RegistryValidationError("joined fields do not attest the supplied complete semantic map")
+
+
+def _require_semantic_map_records(joined: JoinedRecordDesign, compiled_map: SemanticMap) -> None:
+    """Require joined records cover every compiled semantic record exactly once."""
     joined_records = frozenset(record.semantic_record for record in joined.records)
     if len(joined_records) != len(joined.records) or joined_records != frozenset(compiled_map.records):
         raise RegistryValidationError("joined records do not attest the supplied complete semantic map")
-
-
-def _require_safe_identifier(value: str, *, subject: str) -> None:
-    if not value or value in {".", ".."} or ".." in value or _SAFE_IDENTIFIER_RE.fullmatch(value) is None:
-        raise RegistryValidationError(f"{subject} is unsafe for generated export output: {value!r}")
 
 
 def _sorted_refs(refs: Iterable[object]) -> tuple[str, ...]:

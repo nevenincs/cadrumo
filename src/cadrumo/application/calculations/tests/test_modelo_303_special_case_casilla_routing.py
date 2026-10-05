@@ -8,13 +8,16 @@ classifier — no mocks — and reds if the routing regresses.
 Covered:
 
 - INTRACOM ACQUISITION REVERSE CHARGE (LIVA art. 84.Uno.2 + art. 92): one
-  self-assessed cuota is output IVA (it feeds ``iva.cuota-devengada-total``
-  through box [11]) AND is deductible (box [37], which box [45] sums into
-  ``iva.cuota-deducible-total``). The ledger reports that cuota under the
-  semantic selector and under both box selectors alike, so a fully-deductible
-  acquisition nets to zero in ``iva.resultado-regimen-general`` — the correct
-  reverse-charge double-entry. This is the routing the foreign persona could
-  not reach behind the B1/B3 wall.
+  classified intra-community acquisition row self-assesses output IVA (its cuota
+  feeds ``iva.cuota-devengada-total`` through
+  ``iva.autorepercutido.intracomunitaria``) AND is simultaneously deductible (the
+  same cuota reaches box [37] and through it ``iva.cuota-deducible-total``, which
+  the diseño de registro states as [29] + [31] + [33] + [35] + [37] + [39] + [41]
+  + [42] + [43] + [44]). The two legs net to zero in
+  ``iva.resultado-regimen-general`` for a fully-deductible acquisition — the
+  correct reverse-charge double-entry. The row goes through the real ledger
+  aggregation and the published ``ledger_iva_aggregation`` bindings, so both legs
+  come from one ledger fact rather than from hand-picked binding values.
 
 - RECARGO DE EQUIVALENCIA ANOMALY (LIVA arts. 148-163): a recargo-equivalencia
   retailer's input IVA is NON-deductible acquisition cost, so it must NOT silently
@@ -42,18 +45,22 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.iva_ledger import (
     IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations,
+    resolve_iva_ledger_binding_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -61,51 +68,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "303"
 _YEAR = 2025
 _PERIOD = "1T"
+_PROFILE_ID = "m303-special-test"
 
-#: The intracom autorepercutido cuota selectors + the engine bindings the M303
-#: régimen-general result drives off (each supplied as zero unless named below).
-#: The three intracom selectors read the same self-assessed ledger cuota: the
-#: semantic carrier, the devengado box [11] leg and, for a current acquisition
-#: whose deduction is recognised in full, the deducible box [37] leg.
-_INTRACOM_BINDING = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
-_INTRACOM_DEVENGADO_BINDING = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
-_INTRACOM_DEDUCIBLE_BINDING = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
-_INTRACOM_CUOTA_BINDINGS = (_INTRACOM_BINDING, _INTRACOM_DEVENGADO_BINDING, _INTRACOM_DEDUCIBLE_BINDING)
-_LEDGER_CUOTA_BINDINGS = (
-    "modelo-303-iva-repercutido-general-cuota",
-    "modelo-303-iva-repercutido-reducido-cuota",
-    "modelo-303-iva-repercutido-super-reducido-cuota",
-    "modelo-303-iva-soportado-interiores-cuota",
-    "modelo-303-iva-soportado-importaciones-cuota",
-    *_INTRACOM_CUOTA_BINDINGS,
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base",
-    "modelo-303-iva-autorepercutido-interior-devengado-cuota",
-    "modelo-303-iva-autorepercutido-interior-deducible-cuota",
-    "modelo-303-casilla-59-entregas-intracomunitarias-base",
-    "modelo-303-casilla-60-exportaciones-base",
-    "modelo-303-casilla-120-no-sujetas-localizacion-base",
-    "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
-    "modelo-303-iva-repercutido-general-base",
-    "modelo-303-iva-repercutido-reducido-base",
-    "modelo-303-iva-repercutido-super-reducido-base",
-    "modelo-303-iva-soportado-interiores-base",
-    "modelo-303-recargo-equivalencia-general-cuota",
-    "modelo-303-recargo-equivalencia-reducido-cuota",
-    "modelo-303-recargo-equivalencia-super-reducido-cuota",
-    # Criterio-de-caja informational bindings (LIVA arts. 163 decies ff.) for
-    # casillas 62/63/74/75; zero when the fixture has no cash-accounting rows.
-    "modelo-303-criterio-caja-entregas-art75-base",
-    "modelo-303-criterio-caja-entregas-art75-cuota",
-    "modelo-303-criterio-caja-adquisiciones-base",
-    "modelo-303-criterio-caja-adquisiciones-cuota",
-)
-_AUTOCONSUMO_BINDING = "modelo-303-autoconsumo-promotor-base"
-_STATE_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
-#: Casilla 110 is a bound casilla the engine always requires a fact for; supplied
-#: as zero (no prior-period carry) so the régimen-general result isolates the
-#: intracom double-entry under test.
-_PRIOR_COMPENSATION_BINDING = "modelo-303-compensacion-pendiente-anteriores"
+#: The profile's state attribution ratio (100 % common territory). Every other
+#: binding the ledger does not carry -- prior-period compensación, operator
+#: inputs, regularisations -- is supplied as zero so the régimen-general result
+#: isolates the intracom double-entry under test.
+_STATE_RATIO_BINDING: BindingId = "modelo-303-profile-state-attribution-ratio"
 
+#: 200.00 of base at 21 % self-assesses 42.00 of cuota.
+_INTRACOM_BASE = Decimal("200.00")
+_INTRACOM_CUOTA = Decimal("42.00")
 
 _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = validated_casilla_id("iva.autorepercutido.intracomunitaria")
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
@@ -115,65 +88,119 @@ _M303_BOX_11_CASILLA: CasillaId = validated_casilla_id("11")
 _M303_BOX_37_CASILLA: CasillaId = validated_casilla_id("37")
 
 
-def _intracom_binding_values(intracom_cuota: Decimal) -> dict[str, Decimal]:
-    """Bind one self-assessed intracom cuota to every selector the ledger reports it under."""
-    return {
-        _AUTOCONSUMO_BINDING: Decimal("0"),
-        _STATE_RATIO_BINDING: Decimal("100"),
-        _PRIOR_COMPENSATION_BINDING: Decimal("0"),
-        **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS},
-        **dict.fromkeys(_INTRACOM_CUOTA_BINDINGS, intracom_cuota),
+def _intracom_acquisition() -> Transaction:
+    """One intra-community goods acquisition from Germany, classified as a current deduction."""
+    raw = RawTransaction(
+        provider_transaction_id="intracom-acquisition-001",
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 10),
+        # The self-assessed cuota is not paid to the supplier: the movement is the base.
+        amount=_INTRACOM_BASE,
+        currency="EUR",
+        counterparty="Lieferant GmbH",
+        description="Adquisicion intracomunitaria de mercaderia",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="e" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=datetime(_YEAR, 2, 10, 10, 0, tzinfo=UTC),
+            provider_name="manual-ledger",
+        ),
+        raw_fields={"source_kind": "ledger_transaction"},
+    )
+    return Transaction.model_validate(
+        {
+            "transaction_id": derive_transaction_id(raw),
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "category_id": "material_oficina",
+            "iva_category": IvaCategory("intra_community_acquisition_reverse_charge"),
+            "taxable_base": _INTRACOM_BASE,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": _INTRACOM_CUOTA,
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("intra_eu_current"),
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment"),
+                source_locator="evidence:intracom-acquisition-001",
+                evidence_digest="b" * 64,
+            ),
+            "counterparty_country": "DE",
+            "counterparty_identification_state": "DE",
+            "classified_at": datetime(_YEAR, 2, 11, 12, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _calculate_intracom_quarter(operation: PinnedAuthorityOperation) -> dict[CasillaId, Decimal]:
+    """Aggregate the one acquisition through the real ledger and run the published 303 formulas."""
+    snapshot = operation.snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
+    aggregation = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((_intracom_acquisition(),)),
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
+        ledger_profile_id=_PROFILE_ID,
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id=_PROFILE_ID,
+        operation=operation,
+    )
+    assert aggregation.issues == (), aggregation.issues
+    ledger_values = resolve_iva_ledger_binding_values(
+        snapshot.revision,
+        aggregation.observations,
+        prorrata_apportionment=None,
+        operation=operation,
+    )
+    others: dict[BindingId, Decimal] = {
+        binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.id not in ledger_values
     }
+    others[_STATE_RATIO_BINDING] = Decimal("100")
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, ledger_values),
+        binding_values=others,
+        date_context={"filing_period": date(_YEAR, 12, 31)},
+    )
+    return dict(result.values)
 
 
-def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota() -> None:
+def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(*, operation: PinnedAuthorityOperation) -> None:
     """A reverse-charge intracom cuota feeds BOTH devengada-total AND deducible-total.
 
-    LIVA art. 84.Uno.2 makes the acquirer the sujeto pasivo (output IVA, devengada);
-    art. 92 makes that same self-assessed cuota deductible. The cuota reaches the
-    devengada total and prints in box [11]; it prints again in box [37], which the
-    deducible total sums as the design's box [45] does, so a fully-deductible
-    acquisition nets to zero régimen-general result. Reds if either leg drops it.
+    LIVA art. 84.Uno.2.a) makes the acquirer the sujeto pasivo (output IVA,
+    devengada); art. 92 makes that same self-assessed cuota deductible. One ledger
+    row reaches ``iva.autorepercutido.intracomunitaria`` on the devengado side and
+    box [37] on the deducible side, so a fully-deductible acquisition nets to zero
+    régimen-general result. Reds if either leg drops the intracom cuota.
     """
-    intracom_cuota = Decimal("42.00")
-    snapshot = published_snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
-    binding_values = _intracom_binding_values(intracom_cuota)
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        date_context={"filing_period": date(_YEAR, 12, 31)},
-    )
+    values = _calculate_intracom_quarter(operation)
 
     # The intracom cuota self-assesses as output IVA (devengada leg, art. 84)...
-    assert result.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA] == intracom_cuota
-    assert result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] == intracom_cuota
-    assert result.values[_M303_BOX_11_CASILLA] == intracom_cuota
+    assert values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA] == _INTRACOM_CUOTA
+    assert values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] == _INTRACOM_CUOTA
+    assert values[_M303_BOX_11_CASILLA] == _INTRACOM_CUOTA
+    assert values[_M303_BOX_37_CASILLA] == _INTRACOM_CUOTA
     # ...AND is deductible by the same amount (deducible leg, art. 92).
-    assert result.values[_M303_BOX_37_CASILLA] == intracom_cuota
-    assert result.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] == intracom_cuota
+    assert values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] == _INTRACOM_CUOTA
     # The reverse-charge double-entry nets to zero régimen-general result.
-    assert result.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] == Decimal("0.00")
+    assert values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] == Decimal("0.00")
 
 
-def test_intracom_cuota_is_not_silently_dropped_from_deducible() -> None:
+def test_intracom_cuota_is_not_silently_dropped_from_deducible(*, operation: PinnedAuthorityOperation) -> None:
     """Anti-tautology: a NON-zero intracom cuota must move the deducible-total off zero.
 
-    If the deducible-total formula ever dropped the autorepercutido leg, this would
-    show deducible-total == 0 while devengada-total == 42 (output IVA with no offset)
-    — a net positive result that over-states the IVA payable on a neutral acquisition.
+    If the deducible-total formula ever dropped the intracom deducible leg, this
+    would show deducible-total == 0 while devengada-total == 42 (output IVA with no
+    offset) — a net positive result that over-states the IVA payable on a neutral
+    acquisition.
     """
-    snapshot = published_snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
-    binding_values = _intracom_binding_values(Decimal("42.00"))
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        date_context={"filing_period": date(_YEAR, 12, 31)},
-    )
-    assert result.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] > Decimal("0"), (
+    values = _calculate_intracom_quarter(operation)
+
+    assert values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] > Decimal("0")
+    assert values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] > Decimal("0"), (
         "intracom autorepercutido cuota was dropped from the deducible total — "
         "reverse-charge acquisition would over-state IVA payable"
     )
@@ -181,8 +208,6 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible() -> None:
 
 def _recargo_purchase() -> Transaction:
     """A recargo-equivalencia retailer purchase: input IVA + RE surcharge, non-deductible."""
-    from ....domain.transactions.models import derive_transaction_id
-
     raw = RawTransaction(
         provider_transaction_id="recargo-purchase-001",
         booked_date=date(2025, 2, 1),

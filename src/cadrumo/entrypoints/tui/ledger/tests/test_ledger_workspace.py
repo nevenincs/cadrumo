@@ -35,10 +35,10 @@ from .workspace_fixtures import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LOCALE_EXPECTED = {
-    OutputLanguage.ES: ("Resumen del libro contable", "Filtro: todos los estados de revisión", "Revisado"),
-    OutputLanguage.EN: ("Ledger overview", "Filter: all review statuses", "Reviewed"),
-    OutputLanguage.CA: ("Resum del llibre comptable", "Filtre: tots els estats de revisió", "Revisat"),
-    OutputLanguage.HU: ("Főkönyvi áttekintés", "Szűrő: minden felülvizsgálati állapot", "Felülvizsgálva"),
+    OutputLanguage.ES: ("Registros: resumen", "Filtro: todos los estados de revisión", "Revisado"),
+    OutputLanguage.EN: ("Records: overview", "Filter: all review statuses", "Reviewed"),
+    OutputLanguage.CA: ("Registres: resum", "Filtre: tots els estats de revisió", "Revisat"),
+    OutputLanguage.HU: ("Nyilvántartás: áttekintés", "Szűrő: minden felülvizsgálati állapot", "Felülvizsgálva"),
 }
 
 
@@ -212,7 +212,7 @@ async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses
             await pilot.pause()
             quality = overview_screen.query_one("#ledger-quality", DataTable)
             evidence_row = tuple(str(cell) for cell in quality.get_row("evidence"))
-            assert evidence_row == ("Evidence", "Not measured", "Not measured")
+            assert evidence_row == ("Supporting documents", "Not measured", "Not measured")
             assert "0" not in evidence_row
 
 

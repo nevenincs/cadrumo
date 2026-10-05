@@ -16,13 +16,16 @@ from ....adapters.persistence.operations.secure_references import operation_secu
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo import calculate_input
 from ....application.modelo.calculation_action_ports import CalculationActionPortsFactory
-from ....application.modelo.operation_definitions import ModeloWorkCalculateRequest
 from ....application.modelo.registry_discovery import registry_bindings_for_scope
 from ....application.modelo.wizard_attempt_operation import (
     MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
     ModeloWorkWizardAttemptExecutor,
     ModeloWorkWizardAttemptProjection,
     ModeloWorkWizardAttemptRequest,
+)
+from ....application.modelo.work_calculation_contracts import (
+    ModeloWorkCalculateCallerContext,
+    ModeloWorkCalculateRequest,
 )
 from ....application.operations.models import OperationIdentity, OperationRequest
 from ....application.operations.owner import OperationExecutorContext
@@ -99,6 +102,7 @@ def _real_request(unit_id: str, *, binding_values: dict[str, str]) -> OperationR
             calculation=ModeloWorkCalculateRequest(
                 work_unit_id=unit_id,
                 actor="operator",
+                caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
                 inputs=ModeloCalculationInputFieldsV1(
                     binding_overrides=tuple(
                         ModeloCalculationOverride(key=key, value=value) for key, value in binding_values.items()

@@ -2,17 +2,116 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from collections.abc import Sequence
+from pathlib import Path
 
-from .record_design_pdf_rows import (
-    PdfRow,
-    clean_pdf_line,
-    parse_pdf_row,
-    pdf_candidate_record_name,
-    pdf_page_name,
-    pdf_record_heading_name,
-)
+from cadrumo.core.resources.bundled_data import resolve_corpus_binary
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.pipeline.source_defects import SupplementalBlankRunDeclaration, supplemental_blank_run_for
+
+from .record_design_pdf_rows import PdfRow, parse_pdf_row, unnamed_position_candidate
+
+_M270_2023_SOURCE_SHA256 = "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"
+
+
+def separate_m270_birth_country_coordinate(lines: tuple[str, ...], pdf_bytes: bytes) -> tuple[str, ...]:
+    """Restore the lost space in AEAT's printed second birth-place component.
+
+    The 2023 text layer joins ``496-497`` to ``CÓDIGO PAÍS``. The preceding
+    ``461-495 CIUDAD`` and the parent's declared two-part subdivision prove
+    both coordinates; this repair changes only their token boundary.
+    """
+    if hashlib.sha256(pdf_bytes).hexdigest() != _M270_2023_SOURCE_SHA256:
+        return lines
+    if (
+        len(lines) < 619
+        or lines[587].strip() != "461-497 Alfanumérico LUGAR DE NACIMIENTO"
+        or lines[599].strip() != "Este campo se subdivide en dos:"
+        or not lines[600].startswith("461-495 CIUDAD: 35 posiciones. Se")
+        or not lines[604].startswith("496-497CÓDIGO PAÍS: Campo alfabético de")
+        or not lines[618].startswith("498-499 Alfabético PAÍS O TERRITORIO DE RESIDENCIA")
+    ):
+        raise RegistryValidationError("M270 birth-place source rows no longer match pinned coordinate repair")
+    repaired = list(lines)
+    repaired[604] = repaired[604].replace("496-497CÓDIGO", "496-497 CÓDIGO", 1)
+    child = unnamed_position_candidate(repaired[604], 605)
+    if child is None or (child.offset, child.length) != (496, 2):
+        raise RegistryValidationError("M270 birth-country coordinate repair did not recover its source row")
+    return tuple(repaired)
+
+
+def require_m349_operator_blank_run_cache_dependency(path: Path) -> None:
+    """Revalidate both source pins before a memoized parser answer can return."""
+    declaration = supplemental_blank_run_for("aeat-dr-349-2020-current")
+    if declaration is None or path.suffix.lower() != ".pdf":
+        return
+    if path.name != declaration.pdf_filename and path.stat().st_size != declaration.pdf_byte_count:
+        return
+    if hashlib.sha256(path.read_bytes()).hexdigest() != declaration.source_sha256:
+        if path.name != declaration.pdf_filename:
+            return
+        raise RegistryValidationError("M349 operator blank-run PDF no longer matches pinned source")
+    _require_m349_boe_annex(declaration.boe_corpus_path, declaration.boe_sha256, declaration.boe_html_line)
+
+
+def _require_m349_boe_annex(corpus_path: str, sha256: str, html_line: int) -> None:
+    boe_path = resolve_corpus_binary(*corpus_path.split("/"))
+    if boe_path is None:
+        raise RegistryValidationError("M349 operator blank-run BOE Annex corpus source is missing")
+    boe_bytes = boe_path.read_bytes()
+    boe_lines = boe_bytes.decode("utf-8").splitlines()
+    if (
+        hashlib.sha256(boe_bytes).hexdigest() != sha256
+        or len(boe_lines) <= html_line + 4
+        or ">236-500</td>" not in boe_lines[html_line - 1]
+        or "Blancos.</td>" not in boe_lines[html_line + 3]
+    ):
+        raise RegistryValidationError("M349 operator blank-run BOE Annex no longer matches pinned row")
+
+
+def _m349_pdf_context_matches(lines: tuple[str, ...], declaration: SupplementalBlankRunDeclaration) -> bool:
+    return (
+        len(lines) >= 449
+        and lines[225].startswith("TIPO DE REGISTRO 2: REGISTRO DE OPERADOR INTRACOMUNITARIO.")
+        and lines[declaration.pdf_last_source_row - 1].startswith(
+            f"{declaration.pdf_last_offset}-{declaration.pdf_last_offset + declaration.pdf_last_length - 1} "
+            "Alfanumérico APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL SUJETO"
+        )
+    )
+
+
+def _m349_pdf_embedded_row_matches(lines: tuple[str, ...], declaration: SupplementalBlankRunDeclaration) -> bool:
+    return (
+        lines[435].strip() == declaration.pdf_embedded_position_text
+        and lines[446].strip() == "-------------- " + declaration.pdf_embedded_role_text
+        and lines[448].startswith("TIPO DE REGISTRO 2: REGISTRO DE RETIFICACIONES.")
+        and parse_pdf_row(lines[435], 436) is None
+    )
+
+
+def recover_m349_operator_blank_run(lines: tuple[str, ...], pdf_bytes: bytes) -> tuple[str, ...]:
+    """Read the collapsed PDF row only when the exact BOE Annex corroborates it.
+
+    The AEAT text layer gives the position pair on line 436 and its naturaleza
+    on line 447, after the preceding @196+40 row. The original BOE Annex prints
+    those same bytes as one unambiguous ``236-500 / Blancos`` table row. This
+    repair changes the parser's *reading* of the PDF; no row is sourced from an
+    invented intermediate anchor.
+    """
+    declaration = supplemental_blank_run_for("aeat-dr-349-2020-current")
+    if declaration is None or hashlib.sha256(pdf_bytes).hexdigest() != declaration.source_sha256:
+        return lines
+    if not _m349_pdf_context_matches(lines, declaration) or not _m349_pdf_embedded_row_matches(lines, declaration):
+        raise RegistryValidationError("M349 operator blank-run PDF geometry no longer matches pinned correction")
+    _require_m349_boe_annex(declaration.boe_corpus_path, declaration.boe_sha256, declaration.boe_html_line)
+    repaired = list(lines)
+    repaired[435] = f"{declaration.offset}-{declaration.offset + declaration.length - 1} {declaration.description}"
+    if parse_pdf_row(repaired[435], 436) is None:
+        raise RegistryValidationError("M349 operator blank-run correction did not produce a record field")
+    return tuple(repaired)
+
 
 REVERSED_ROW_TAIL_RE = re.compile(
     r"^\s*(?P<length>\d+)\s+(?P<type>An|Num|Tit|N|A)\.?\s+(?P<description>\S.*)$",
@@ -268,28 +367,6 @@ _STUTTERED_PDF_ROW_RE = re.compile(
 )
 
 
-def collapse_stuttered_row_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Drop a row's duplicated ordinal-and-position prefix.
-
-    Modelo 200's 2010 and 2011 editions emit nine rows this way, and every one
-    of their positions is currently reported as a hole, so the duplication is
-    not cosmetic -- it costs the record the field.
-
-    Deliberately narrow to the SELF-EVIDENCING case. A row may also arrive with
-    genuine leading text, where the tail of a wrapped description spills onto
-    its line, and those cannot be admitted on the line's own evidence: measured
-    across the bundled corpus, lines of that shape include both real rows and
-    prose carrying number sequences, and nothing in the line distinguishes them.
-    A back-reference to the same two numbers has no such ambiguity.
-    """
-    return tuple(
-        f"{match.group('indent')}{match.group('ordinal')} {match.group('offset')} {match.group('rest')}"
-        if (match := _STUTTERED_PDF_ROW_RE.match(line)) is not None
-        else line
-        for line in lines
-    )
-
-
 #: The TRUE ordinal and position of a damaged row, restated on a line of its
 #: own: ``54 827 Ajustes por valoracion [380]``. The line is not itself a row --
 #: it carries no length and no naturaleza -- so it can only be read together
@@ -312,92 +389,6 @@ _ANY_CASILLA_TAG_RE = re.compile(r"\[\d+\]")
 def _previous_parsed_row(parsed: Sequence[PdfRow | None], before: int) -> PdfRow | None:
     """Find the nearest parsed row before a source-line index."""
     return next((row for row in reversed(parsed[:before]) if row is not None), None)
-
-
-def _coordinate_stutter_donor(
-    lines: tuple[str, ...],
-    parsed: tuple[PdfRow | None, ...],
-    donor_index: int,
-    anchor: PdfRow | None,
-) -> tuple[str, str, str] | None:
-    """Return the donor's length, naturaleza, and description when usable."""
-    donor = parsed[donor_index]
-    if donor is None:
-        measure = _ORPHAN_MEASURE_RE.match(lines[donor_index])
-        if measure is None:
-            return None
-        return (
-            str(measure.group("length")),
-            str(measure.group("naturaleza")),
-            str(measure.group("description")),
-        )
-    if _continues(anchor, donor.ordinal or "", donor.offset):
-        return None
-    return str(donor.length), donor.type_code, donor.description
-
-
-def _coordinate_stutter_candidate(
-    lines: tuple[str, ...],
-    parsed: tuple[PdfRow | None, ...],
-    index: int,
-    rebuilt: dict[int, str],
-    dropped: set[int],
-) -> tuple[int, str] | None:
-    """Build a coordinate-stutter row only when both halves are evidenced."""
-    stutter = _COORDINATE_STUTTER_RE.match(lines[index])
-    if stutter is None or not _ANY_CASILLA_TAG_RE.search(lines[index]):
-        return None
-    donor_index = index - 1
-    if donor_index in dropped or donor_index in rebuilt:
-        return None
-    anchor = _previous_parsed_row(parsed, donor_index)
-    donor = _coordinate_stutter_donor(lines, parsed, donor_index, anchor)
-    if donor is None:
-        return None
-    ordinal = stutter.group("ordinal")
-    offset = int(stutter.group("offset"))
-    if not _continues(anchor, ordinal, offset):
-        return None
-    length, naturaleza, description = donor
-    return donor_index, f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
-
-
-def recover_coordinate_stutter_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Rebuild a row whose coordinate column was damaged, from the stutter restating it.
-
-    Modelo 200's 2010 and 2011 editions lose the coordinate column on some rows
-    and then restate it. The damage takes two forms: the coordinates vanish
-    entirely, leaving ``17 N <description>``; or they survive mangled, so
-    ``54 827`` arrives as ``4 82`` and parses as a real but WRONG row at
-    ordinal 4, position 82. Either way a following line states the true pair.
-
-    Both halves are required, and that is the whole guard. The coordinates are
-    admitted only when they are OVER-DETERMINED against the last undamaged row
-    -- the ordinal must follow by one AND the position must resume where that
-    row ended, the same two independent facts :func:`_continues` checks
-    everywhere else. The length and naturaleza are never inferred: they must be
-    stated by the donor half. Where no donor exists the site is left alone,
-    which is why this declines the three sites in these same two editions that
-    state coordinates and a casilla tag but nothing else -- recovering those
-    would mean inventing a naturaleza and truncating a description.
-    """
-    parsed = tuple(parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
-
-    rebuilt: dict[int, str] = {}
-    dropped: set[int] = set()
-    for index, _line in enumerate(lines):
-        if parsed[index] is not None or index == 0:
-            continue
-        candidate = _coordinate_stutter_candidate(lines, parsed, index, rebuilt, dropped)
-        if candidate is None:
-            continue
-        donor_index, repaired = candidate
-        rebuilt[donor_index] = repaired
-        dropped.add(index)
-
-    if not rebuilt:
-        return lines
-    return tuple(rebuilt.get(index, line) for index, line in enumerate(lines) if index not in dropped)
 
 
 #: A row whose three coordinate numbers were emitted ALONE on their own line,
@@ -425,160 +416,6 @@ _NATURALEZA_HEAD_RE = re.compile(
 )
 
 
-def _bare_coordinate_naturaleza_half(
-    lines: tuple[str, ...],
-    parsed: tuple[PdfRow | None, ...],
-    index: int,
-) -> tuple[re.Match[str], int] | None:
-    """Locate the naturaleza half, below first and then above a bare triple."""
-    head_index = index + 1
-    head = _NATURALEZA_HEAD_RE.match(lines[head_index])
-    if head is not None:
-        return head, head_index
-    for candidate in range(index - 1, max(-1, index - 1 - _BARE_COORDINATE_LOOKBEHIND), -1):
-        if parsed[candidate] is not None:
-            break
-        found = _NATURALEZA_HEAD_RE.match(lines[candidate])
-        if found is not None:
-            return found, candidate
-    return None
-
-
-def _bare_coordinate_successor(
-    parsed: tuple[PdfRow | None, ...],
-    index: int,
-    line_count: int,
-) -> tuple[int, PdfRow] | None:
-    """Find the first parsed row after a bare triple within the bounded window."""
-    for candidate in range(index + 2, min(index + 2 + _BARE_COORDINATE_LOOKAHEAD, line_count)):
-        successor = parsed[candidate]
-        if successor is not None:
-            return candidate, successor
-    return None
-
-
-def _bare_coordinate_triple(
-    lines: tuple[str, ...],
-    parsed: tuple[PdfRow | None, ...],
-    index: int,
-) -> re.Match[str] | None:
-    """Return a bare triple only when the following line is not a row."""
-    triple = _BARE_COORDINATE_TRIPLE_RE.match(lines[index])
-    if triple is None:
-        return None
-    if parsed[index + 1] is not None:
-        return None
-    return triple
-
-
-def _bare_coordinate_continues(triple: re.Match[str], successor: PdfRow) -> bool:
-    """Whether a successor agrees with both coordinates stated by a triple."""
-    ordinal = triple.group("ordinal")
-    offset = int(triple.group("offset"))
-    length = int(triple.group("length"))
-    return successor.ordinal == str(int(ordinal) + 1) and successor.offset == offset + length
-
-
-def _bare_coordinate_middle(
-    lines: tuple[str, ...],
-    start: int,
-    successor_index: int,
-    triple_index: int,
-    head_index: int,
-) -> str:
-    """Fold wrapped content between the two halves into the rebuilt row."""
-    return " ".join(
-        lines[position].strip()
-        for position in range(start, successor_index)
-        if position not in {triple_index, head_index}
-    )
-
-
-def _bare_coordinate_candidate(
-    lines: tuple[str, ...],
-    parsed: tuple[PdfRow | None, ...],
-    index: int,
-) -> tuple[int, str, tuple[int, ...]] | None:
-    """Build a bare-coordinate row when its successor over-determines it."""
-    triple = _bare_coordinate_triple(lines, parsed, index)
-    if triple is None:
-        return None
-    half = _bare_coordinate_naturaleza_half(lines, parsed, index)
-    if half is None:
-        return None
-    head, head_index = half
-    successor_data = _bare_coordinate_successor(parsed, index, len(lines))
-    if successor_data is None:
-        return None
-    successor_index, successor = successor_data
-    if not _bare_coordinate_continues(triple, successor):
-        return None
-    ordinal = triple.group("ordinal")
-    offset = int(triple.group("offset"))
-    length = int(triple.group("length"))
-    start = min(index, head_index)
-    middle = _bare_coordinate_middle(
-        lines,
-        start,
-        successor_index,
-        index,
-        head_index,
-    )
-    replacement = f"{ordinal} {offset} {length} {head.group('naturaleza')} {head.group('rest')} {middle}".rstrip()
-    consumed = tuple(position for position in range(start, successor_index) if position != start)
-    return start, replacement, consumed
-
-
-def rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Rebuild a row split between a bare coordinate line and its naturaleza half.
-
-    Modelo 200's ``17-200-orden-eha-1338-2010`` design emits the ``Indicador de
-    pagina complementaria`` row of its Pag. 21 and Pag. 22 records this way::
-
-        5 10 1
-        An C Indicador de pagina complementaria.
-        Blanco (No
-        complementaria) o
-        "C" (Complementaria)
-        6 11 1 A C Operaciones fusion, escision, canje valores - ...
-
-    Position 10 is then the ONLY hole on either record, and a record read with a
-    hole is skipped whole, so two sheets are lost to one split row.
-
-    ANCHORED ON THE SUCCESSOR, NOT THE PREDECESSOR, and that is forced rather
-    than chosen. On these pages the rows above -- ordinals 2, 3 and 4 -- are
-    emitted with their ordinal and position FUSED (``23 3 Num``, ``36 3 An``)
-    and are not recovered until record assembly, so at line-repair time the
-    nearest parsed row above is ordinal 1 and a backward check can never be
-    satisfied. The row BELOW is intact.
-
-    The over-determination is the same strength either way: the successor's
-    ordinal must be one more than the rebuilt row's AND its position must resume
-    exactly where the rebuilt row ends. Two independent facts, from a row read
-    without help, that must agree.
-
-    The intervening lines are the wrapped ``Contenido`` cell and are folded into
-    the description rather than dropped, so nothing AEAT printed is discarded.
-    """
-    parsed = tuple(parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
-
-    rebuilt: dict[int, str] = {}
-    consumed: set[int] = set()
-    for index, _line in enumerate(lines):
-        if parsed[index] is not None or index + 1 >= len(lines):
-            continue
-        candidate = _bare_coordinate_candidate(lines, parsed, index)
-        if candidate is None:
-            continue
-        start, replacement, positions = candidate
-        rebuilt[start] = replacement
-        consumed.update(positions)
-
-    if not rebuilt:
-        return lines
-    return tuple(rebuilt.get(index, line) for index, line in enumerate(lines) if index not in consumed)
-
-
 #: A row whose ORDINAL and POSITION were emitted as one token, with the length
 #: and naturaleza intact behind them: ``23 3 Num C Modelo.`` for AEAT's
 #: ``2 3 3 Num C Modelo.``. Distinct from :data:`_FUSED_ROW_RE`, which covers a
@@ -587,59 +424,6 @@ def rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
 _FUSED_ORDINAL_POSITION_RE = re.compile(
     r"^\s*(?P<fused>\d+)\s+(?P<length>\d+)\s+(?P<naturaleza>An|Num|N|A)\s+(?P<rest>\S.*)$",
 )
-
-
-def split_fused_ordinal_position_prefix(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Split a row whose ordinal and position were emitted as a single number.
-
-    Modelo 200's 2010 and 2011 PDF designs open several records this way::
-
-        1 1 2 An C Inicio del identificador de modelo y pagina.
-        23 3 Num C Modelo. Constante "200"
-        36 3 An C Pagina. Constante "021"
-        49 1 An C Fin de identificador de modelo.
-
-    Read literally the second line is ordinal 23 at position 3, which is not a
-    row anyone printed. It is ordinal 2 at position 3, and the ordinal ran into
-    the position because AEAT's two narrow columns touch.
-
-    RECONSTRUCTED FROM THE PREVIOUS ROW, NEVER GUESSED, and admitted only when
-    both halves agree. The previous row fixes exactly one candidate -- its
-    ordinal plus one, and the position where it ends -- and that candidate is
-    accepted only if concatenating the two reproduces the fused token
-    CHARACTER FOR CHARACTER. ``2`` and ``3`` give ``23``; anything else leaves
-    the line alone.
-
-    That is the same over-determination the sibling splitter uses, and it is
-    what keeps this away from rows that legitimately open with a large ordinal:
-    a real ``23 3 Num`` row at position 3 would follow a row ending at 3 with
-    ordinal 22, and ``22`` and ``3`` do not spell ``23``.
-    """
-    split: list[str] = []
-    previous: PdfRow | None = None
-    for index, line in enumerate(lines):
-        parsed = parse_pdf_row(line, index + 1)
-        if parsed is not None:
-            previous = parsed
-            split.append(line)
-            continue
-        fused = _FUSED_ORDINAL_POSITION_RE.match(line)
-        if fused is None or previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
-            split.append(line)
-            continue
-        ordinal = str(int(previous.ordinal) + 1)
-        offset = previous.offset + previous.length
-        if f"{ordinal}{offset}" != fused.group("fused"):
-            split.append(line)
-            continue
-        rebuilt = f"{ordinal} {offset} {fused.group('length')} {fused.group('naturaleza')} {fused.group('rest')}"
-        reparsed = parse_pdf_row(rebuilt, index + 1)
-        if reparsed is None:
-            split.append(line)
-            continue
-        previous = reparsed
-        split.append(rebuilt)
-    return tuple(split)
 
 
 #: A row whose NATURALEZA ran into the content-column marker that follows it:
@@ -652,59 +436,6 @@ _GLUED_NATURALEZA_ROW_RE = re.compile(
 )
 
 
-def split_glued_naturaleza_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Separate a naturaleza that ran into the following content-column marker.
-
-    Modelo 200's 2010 design loses one row of its ``Pag. 22`` record this way::
-
-        169 1690 7 Num C Agrup.interes economico y UTES - Modelo de info...
-        170 1697 9 AnC A i t   i UTES M d l d i f i  R l i  d i 18 NIF
-        171 1706 1 Num C Agrup.interes economico y UTES - Modelo de info...
-
-    Nothing is missing: ordinal 170 at position 1697, nine bytes, naturaleza
-    ``An``, content column ``A``. Only the space between ``An`` and the marker
-    is gone, and without it the row does not parse and its nine positions read
-    as a hole -- which costs the whole record.
-
-    ADMITTED ON OVER-DETERMINATION and on the split parsing. The coordinates
-    must continue the previous row -- ordinal one more, position resuming where
-    it ended -- and the separated line must then parse as a row. A line that
-    merely looks like this but sits at the wrong position is left alone.
-
-    The description here is visibly mangled -- AEAT's own PDF drops characters
-    from that cell -- and that is NOT this repair's business. Recovering the
-    row's POSITION is what stops the record being skipped; the description is
-    carried through exactly as extracted rather than being cleaned up, because
-    inventing text is a different and worse failure than reporting it damaged.
-    """
-    split: list[str] = []
-    previous: PdfRow | None = None
-    for index, line in enumerate(lines):
-        parsed = parse_pdf_row(line, index + 1)
-        if parsed is not None:
-            previous = parsed
-            split.append(line)
-            continue
-        glued = _GLUED_NATURALEZA_ROW_RE.match(line)
-        if glued is None or previous is None:
-            split.append(line)
-            continue
-        if not _continues(previous, glued.group("ordinal"), int(glued.group("offset"))):
-            split.append(line)
-            continue
-        rebuilt = (
-            f"{glued.group('ordinal')} {glued.group('offset')} {glued.group('length')} "
-            f"{glued.group('naturaleza')} {glued.group('marker')} {glued.group('rest')}"
-        )
-        reparsed = parse_pdf_row(rebuilt, index + 1)
-        if reparsed is None:
-            split.append(line)
-            continue
-        previous = reparsed
-        split.append(rebuilt)
-    return tuple(split)
-
-
 #: A row's TRUE ordinal and position, restated alone on the line below it after
 #: the row itself was printed with a truncated position: ``18 215`` under
 #: ``18 21 17 N ...``. Anchored end to end -- two integers and nothing else --
@@ -712,78 +443,6 @@ def split_glued_naturaleza_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
 _STRANDED_COORDINATE_PAIR_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s*$",
 )
-
-
-def _truncated_offset_candidate(
-    lines: tuple[str, ...],
-    parsed: Sequence[PdfRow | None],
-    index: int,
-) -> str | None:
-    """Build a corrected row when its stranded pair proves the offset."""
-    pair = _STRANDED_COORDINATE_PAIR_RE.match(lines[index])
-    if pair is None:
-        return None
-    damaged = parsed[index - 1]
-    if damaged is None or damaged.ordinal is None or damaged.ordinal != pair.group("ordinal"):
-        return None
-    anchor = _previous_parsed_row(parsed, index - 1)
-    if anchor is None:
-        return None
-    stated = int(pair.group("offset"))
-    resumes = anchor.offset + anchor.length
-    if stated != resumes or damaged.offset == resumes:
-        return None
-    rebuilt = re.sub(
-        rf"^(\s*{re.escape(damaged.ordinal)})\s+{damaged.offset}\s",
-        rf"\g<1> {stated} ",
-        lines[index - 1],
-        count=1,
-    )
-    return rebuilt if parse_pdf_row(rebuilt, index) is not None else None
-
-
-def repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Restore a row whose position lost a digit, from the pair restating it below.
-
-    Modelo 200's 2011 design loses one row of its ``Pag. 44`` record this way::
-
-        17 198 17 N  Inst. inversion colectiva - Cuenta perdidas y ganancias ...
-        18 21 17 N   Inst. inversion colectiva - Cuenta perdidas y ganancias ...
-        18 215
-        19 232 17 N  Inst. inversion colectiva - Cuenta perdidas y ganancias ...
-
-    The middle row PARSES, which is what makes this dangerous: it reads as
-    ordinal 18 at position 21, seventeen bytes, and nothing downstream doubts
-    it. Position 215 is then a hole and the record is skipped, while the row
-    quietly claims bytes 21-37 that belong to other fields.
-
-    The truncation is visible only against the neighbours, and they settle it
-    three ways at once. The stranded pair must repeat the parsed row's OWN
-    ordinal; the position it states must resume exactly where the row above
-    ends; and the position the row currently claims must NOT. All three, or the
-    line is left alone -- the third is what stops this touching a healthy row
-    that merely happens to sit above a stray pair.
-
-    Distinct from :func:`recover_coordinate_stutter_rows`, which handles the
-    same restatement when the stutter line also carries the casilla tag and the
-    damaged half does not parse at all. Here the line is bare and the damaged
-    half parses wrongly, so neither of that function's halves matches.
-    """
-    parsed = list(parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
-
-    repaired: dict[int, str] = {}
-    dropped: set[int] = set()
-    for index in range(1, len(lines)):
-        rebuilt = _truncated_offset_candidate(lines, parsed, index)
-        if rebuilt is None:
-            continue
-        repaired[index - 1] = rebuilt
-        parsed[index - 1] = parse_pdf_row(rebuilt, index)
-        dropped.add(index)
-
-    if not repaired:
-        return lines
-    return tuple(repaired.get(index, line) for index, line in enumerate(lines) if index not in dropped)
 
 
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
@@ -804,67 +463,6 @@ _STRANDED_CASILLA_TAG_RE = re.compile(r"^\s*\[\d+\]\s*$")
 _TRAILING_CASILLA_TAG_RE = re.compile(r"\[\d+\]\s*$")
 
 
-def _field_shaped_pdf_line(line: str, row_number: int) -> bool:
-    """Whether a line can carry a casilla tag as a field or split-row half."""
-    return (
-        parse_pdf_row(line, row_number) is not None
-        or REVERSED_ROW_TAIL_RE.match(line) is not None
-        or _REVERSED_ROW_HEAD_RE.match(line) is not None
-    )
-
-
-def _can_reattach_casilla_tag(previous: str, row_number: int) -> bool:
-    """Guard a stranded tag from headings, prose, and already-closed rows."""
-    if not previous.strip() or _TRAILING_CASILLA_TAG_RE.search(previous) is not None:
-        return False
-    cleaned = clean_pdf_line(previous)
-    if (
-        pdf_page_name(cleaned) is not None
-        or pdf_record_heading_name(cleaned) is not None
-        or pdf_candidate_record_name(cleaned) is not None
-    ):
-        return False
-    return _field_shaped_pdf_line(previous, row_number)
-
-
-def reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Fold a casilla reference emitted alone back onto the row it terminates.
-
-    Residue of the same wrapping the neighbouring repairs address, in two
-    shapes. Modelo 200's 2010 editions split a row across its columns and then
-    put the casilla on a THIRD line -- ``102 1529`` / ``17 Num Deducciones ...
-    aplic`` / ``[121]`` -- while its 2011-2012 editions keep the row intact and
-    strand only the tag: ``15 164 17 N Balance: ... Acciones y partic`` /
-    ``[194]``. Modelo 390's 2015 edition strands one the same way. In every
-    shape the tag sits immediately after the description it closes, because
-    extraction emits in reading order and the tag is that description's tail.
-
-    Nothing downstream recovers it. :func:`join_wrapped_row_descriptions`
-    absorbs a following line only into a row that has NO description, which
-    neither shape is, and :data:`_REVERSED_ROW_HEAD_RE` admits a casilla only
-    where it rides on the head half. So the tag is simply lost, and a position
-    that loses its tag contributes no casilla number to coverage -- the quiet
-    half of the damage found on modelo 390's ``@115``.
-
-    The tag is folded onto the PRECEDING line, never a following one, and only
-    where that line is itself field-shaped: a row, or one of the two halves of a
-    split row. A heading carries a record boundary and prose carries nothing, so
-    a tag next to either is left stranded and reported rather than attached to
-    bytes AEAT did not put it on -- which is the failure this repair could
-    otherwise cause, and the one a tiling mis-attribution proved can pass
-    quietly.
-    """
-    folded: list[str] = []
-    for line in lines:
-        if folded and _STRANDED_CASILLA_TAG_RE.match(line):
-            previous = folded[-1]
-            if _can_reattach_casilla_tag(previous, len(folded)):
-                folded[-1] = f"{previous.rstrip()} {line.strip()}"
-                continue
-        folded.append(line)
-    return tuple(folded)
-
-
 #: A row whose ORDINAL and OFFSET arrived fused into one token and whose LENGTH
 #: and NATURALEZA arrived fused into another: ``59 1A Indicador ...`` for what
 #: AEAT prints as ``5 9 1 A Indicador ...``.
@@ -879,245 +477,3 @@ _DOUBLED_COORDINATE_ROW_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+"
     r"(?P=offset)\s+(?P=length)\s+(?P<naturaleza>An|Num|Tit|N|A)(?P<rest>\S.*)$",
 )
-
-
-def _tail_fragment_candidate(
-    line: str,
-    following: str,
-    previous: PdfRow | None,
-) -> tuple[str, str] | None:
-    """Split a leading fragment when the following tail continues ``previous``."""
-    if previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
-        return None
-    if REVERSED_ROW_TAIL_RE.match(line) is not None:
-        return None
-    head = _REVERSED_ROW_HEAD_RE.match(following) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
-    if head is None or not _continues(previous, head.group("ordinal"), int(head.group("offset"))):
-        return None
-    tokens = line.split()
-    for cut in range(1, len(tokens)):
-        suffix = " ".join(tokens[cut:])
-        if REVERSED_ROW_TAIL_RE.match(suffix) is not None:
-            return " ".join(tokens[:cut]), suffix
-    return None
-
-
-def split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Separate a reversed-column TAIL from the previous row's trailing fragment.
-
-    Modelo 200's 2010 edition prints two consecutive RIC rows whose descriptions
-    differ only by a footnote marker, and the extraction runs the first row's
-    trailing ``(1) [020]`` into the second row's tail::
-
-        '78 1219 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones R'
-        '(1) [020] 17 Num Reg.reserva ... Inv.anticipadas futuras dotaciones'
-        '79 1236 (2 a 6) [021]'
-
-    The middle line is row 79's length, naturaleza and description; the last is
-    its ordinal and position. :func:`rejoin_reversed_column_rows` pairs a tail
-    with an adjacent head, but that tail cannot match
-    :data:`REVERSED_ROW_TAIL_RE` while a footnote and a casilla tag sit in
-    front of it, so the pair is never formed and position 1236 is lost.
-
-    Two independent facts are required before splitting, neither read off the
-    line being changed. The SUFFIX must be a well-formed tail, and the FOLLOWING
-    line must be a head whose ordinal follows the last row read by one and whose
-    offset resumes exactly where that row ended. A fragment that happens to
-    precede tail-shaped text, with no head continuing the sequence after it, is
-    left alone.
-
-    The fragment is emitted as its own line rather than dropped: it is the
-    previous row's own content, and discarding text to make a row appear is the
-    defect this repair exists to undo, inverted.
-    """
-    split: list[str] = []
-    previous: PdfRow | None = None
-    for index, line in enumerate(lines):
-        parsed = parse_pdf_row(line, index + 1)
-        if parsed is not None:
-            previous = parsed
-            split.append(line)
-            continue
-        candidate = _tail_fragment_candidate(line, lines[index + 1], previous) if index + 1 < len(lines) else None
-        if candidate is None:
-            split.append(line)
-            continue
-        fragment, tail = candidate
-        split.append(fragment)
-        split.append(tail)
-    return tuple(split)
-
-
-def collapse_doubled_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Collapse a row whose position and length were printed twice.
-
-    Modelo 200's 2010 edition emits some rows with the coordinate pair repeated
-    and the naturaleza run into the description's stray column marker, which
-    matches no column shape and is refused -- leaving a hole the width of the
-    row it lost.
-
-    Two independent confirmations are required, and the first is what makes this
-    safe: the repeat must be EXACT, matched by backreference rather than by
-    re-reading two numbers that merely look similar, so the source itself states
-    the coordinate twice. The row must then also continue the previous one --
-    ordinal by one, offset resuming where it ended -- so a doubled pair that
-    lands in the wrong place is still refused.
-
-    The naturaleza is separated on its own evidence: it is a closed set, so a
-    token beginning with one of its members and continuing into text can only be
-    that member followed by description. No position is inferred anywhere; every
-    number written out here was read from the line.
-    """
-    collapsed: list[str] = []
-    previous: PdfRow | None = None
-    for index, line in enumerate(lines):
-        parsed = parse_pdf_row(line, index + 1)
-        if parsed is not None:
-            previous = parsed
-            collapsed.append(line)
-            continue
-        doubled = _DOUBLED_COORDINATE_ROW_RE.match(line)
-        if (
-            doubled is not None
-            and previous is not None
-            and previous.ordinal is not None
-            and previous.ordinal.isdigit()
-            and _continues(previous, doubled.group("ordinal"), int(doubled.group("offset")))
-        ):
-            rebuilt = (
-                f"{doubled.group('ordinal')} {doubled.group('offset')} {doubled.group('length')} "
-                f"{doubled.group('naturaleza')} {doubled.group('rest').strip()}"
-            )
-            candidate = parse_pdf_row(rebuilt, index + 1)
-            if candidate is not None:
-                previous = candidate
-                collapsed.append(rebuilt)
-                continue
-        collapsed.append(line)
-    return tuple(collapsed)
-
-
-def split_fused_ordinal_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Separate a row whose first two columns were emitted without a space.
-
-    Modelo 100's 2012, 2013 and 2014 editions each lose exactly one position --
-    9 -- and always the same row: the ``Indicador de pagina complementaria``
-    flag arrives as ``59 1A ...`` where AEAT prints ``5 9 1 A ...``. Both the
-    ordinal/offset pair and the length/naturaleza pair are fused, so no
-    column-shaped pattern matches and the row is refused.
-
-    Splitting ``59`` needs no guesswork, and that is what makes this safe: the
-    previous row already fixes both values. The ordinal must follow by one and
-    the offset must resume where that row ended, so the split is accepted ONLY
-    when concatenating those two expected numbers reproduces the fused token
-    exactly. ``5`` and ``9`` give ``59``; any other reading of that token, and
-    any line whose neighbours do not agree, is left alone.
-    """
-    split: list[str] = []
-    previous: PdfRow | None = None
-    for index, line in enumerate(lines):
-        parsed = parse_pdf_row(line, index + 1)
-        if parsed is not None:
-            previous = parsed
-            split.append(line)
-            continue
-        fused = _FUSED_ROW_RE.match(line)
-        if fused is not None and previous is not None and previous.ordinal is not None and previous.ordinal.isdigit():
-            ordinal = int(previous.ordinal) + 1
-            offset = previous.offset + previous.length
-            if fused.group(1) == f"{ordinal}{offset}":
-                rebuilt = f"{ordinal} {offset} {fused.group(2)} {fused.group(3)} {fused.group(4)}"
-                candidate = parse_pdf_row(rebuilt, index + 1)
-                if candidate is not None:
-                    previous = candidate
-                    split.append(rebuilt)
-                    continue
-        split.append(line)
-    return tuple(split)
-
-
-def split_row_from_wrapped_content(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Separate a row from a preceding fragment of the previous cell's content.
-
-    AEAT's ``Contenido`` column wraps, and its last fragment can be emitted on
-    the same line as the NEXT row. Modelo 131's 2009 design does exactly that:
-    the payment-form codes wrap over three lines and the third arrives as
-    ``Domiciliacion 48 465 1 Num Ingreso (4) - Forma de pago``. The line does
-    not begin with its ordinal, so the row is refused and position 465 is the
-    record's only hole.
-
-    Splitting on appearance alone would fabricate rows out of prose, so the
-    suffix must satisfy the same OVER-DETERMINATION the reversed-column repair
-    relies on: it parses as a row AND its ordinal follows the previous row's by
-    one AND its offset resumes exactly where that row ended. Two independent
-    facts from an already-read row must both agree, which prose beginning with
-    two numbers cannot do by accident.
-
-    The stripped fragment is emitted as its own line rather than discarded. It
-    is content, the parser already ignores standalone content lines, and
-    dropping text to make a row appear would be the same defect in reverse.
-    """
-    split: list[str] = []
-    previous: PdfRow | None = None
-    for index, line in enumerate(lines):
-        parsed = parse_pdf_row(line, index + 1)
-        if parsed is not None:
-            previous = parsed
-            split.append(line)
-            continue
-        recovered = False
-        if previous is not None:
-            tokens = line.split()
-            for cut in range(1, len(tokens)):
-                suffix = " ".join(tokens[cut:])
-                candidate = parse_pdf_row(suffix, index + 1)
-                if candidate is None or candidate.ordinal is None:
-                    continue
-                if _continues(previous, candidate.ordinal, candidate.offset):
-                    split.append(" ".join(tokens[:cut]))
-                    split.append(suffix)
-                    previous = candidate
-                    recovered = True
-                    break
-        if not recovered:
-            split.append(line)
-    return tuple(split)
-
-
-def join_wrapped_row_descriptions(lines: tuple[str, ...]) -> tuple[str, ...]:
-    """Reattach a description AEAT wrapped onto the line after its row.
-
-    Done as a pre-pass rather than by loosening the row pattern, and the
-    difference is not cosmetic. Admitting a description-less row creates a field
-    that may never receive one -- the continuation handler only fills the field
-    still under construction, so anything that intervenes leaves it empty and a
-    later validator refuses the whole design. Three modelo 200 editions failed
-    exactly that way when the pattern was loosened. Joining first means every
-    row still reaches the parser complete, and no invariant downstream changes.
-
-    The line consumed must not itself look like a row, a page heading or a
-    record heading: those carry their own meaning and absorbing one would lose a
-    field or a record boundary. A row whose next line offers nothing usable is
-    left exactly as it was, to be reported as the hole it is.
-    """
-    joined: list[str] = []
-    absorbed = False
-    for index, line in enumerate(lines):
-        if absorbed:
-            absorbed = False
-            continue
-        if _BARE_COMPACT_PDF_ROW_RE.match(line) and index + 1 < len(lines):
-            candidate = lines[index + 1]
-            cleaned = clean_pdf_line(candidate)
-            if (
-                candidate.strip()
-                and parse_pdf_row(candidate, index + 2) is None
-                and pdf_page_name(cleaned) is None
-                and pdf_record_heading_name(cleaned) is None
-                and pdf_candidate_record_name(cleaned) is None
-            ):
-                joined.append(f"{line.rstrip()} {candidate.strip()}")
-                absorbed = True
-                continue
-        joined.append(line)
-    return tuple(joined)

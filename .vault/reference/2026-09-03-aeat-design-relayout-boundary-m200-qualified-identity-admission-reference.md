@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#aeat-design-relayout-boundary'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbcee203a0b1cc72bd2fc91774eefc889d9a2ae20c7b6f8a7b3e0ffa20e80be1'
-related:
-  - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
+body_hash: 'sha256:3927d2fab8c40450acc5b6709b2f47800df8c762e6882a0e3dccbb501e2a0b99'
+related: []
 ---
 
 # `aeat-design-relayout-boundary` reference: `m200 qualified identity admission`
@@ -34,14 +33,10 @@ declaration boundary when the compiler-published cohort uses literal quotes.
 
 ## Evidence
 
-- `dev/registry/pipeline/_semantic_map_validation.py` reconstructs the
   reviewed-promotion receipt and derives the private qualified admission.
-- `dev/registry/pipeline/_semantic_map_join.py` retains authored and compiled
   maps as a paired, constrained representation.
 - `dev/registry/pipeline/_export_tree.py` accepts only either member of that
   pair while still requiring joined fields and records to attest the compiled
   map exactly.
-- `dev/registry/pipeline/_casilla_export_refs.py` writes the derived reverse
   relation without loosening declaration discovery.
 - `dev/registry/tests/test_semantic_map_validation.py` and
-  `dev/registry/tests/test_export_tree.py` pin positive and mutation cases.

@@ -19,7 +19,7 @@ from ...application.runtime.submission_payload import (
     SubmissionPayloadDescriptor,
 )
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
-from .framing import read_document, write_document
+from .runtime_frame_io import read_document, write_document
 
 
 def write_worker_lease(channel: RuntimeByteChannel, request: ProfileWorkerRequest, *, deadline: float) -> None:

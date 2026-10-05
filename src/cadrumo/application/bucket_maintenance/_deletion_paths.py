@@ -23,7 +23,7 @@ def validated_bucket_deletion_paths(
     bucket_id: str,
     storage: ProfileBucketStoragePort,
 ) -> ProfileBucketStoragePathsPort:
-    """Return deletion paths only for a real, non-link bucket root."""
+    """Return deletion paths only beneath real, non-link bucket directories."""
     try:
         paths = storage.resolve(root, bucket_id)
     except ValueError as exc:
@@ -32,6 +32,8 @@ def validated_bucket_deletion_paths(
         # this boundary, so callers cannot depend on adapter error types or
         # messages.
         raise ValueError(f"bucket deletion path resolution refused for bucket {bucket_id!r}") from exc
+    if is_link_like(paths.bucket_dir.parent):
+        raise ValueError(f"bucket deletion refuses linked bucket container: {paths.bucket_dir.parent}")
     if is_link_like(paths.bucket_dir):
         raise ValueError(f"bucket deletion refuses linked bucket root: {paths.bucket_dir}")
     if not paths.bucket_dir.is_dir():

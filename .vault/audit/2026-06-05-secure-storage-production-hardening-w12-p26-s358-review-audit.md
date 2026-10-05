@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:2a732ecea224670701c27654b425ceb7abed1e28271e65525faa73ba2209282b'
+modified: '2026-10-03'
+body_hash: 'sha256:6da6e613a0c44da7f6d1bd32110662c2279d6360acf9f80682c5a21fbe39f46d'
 related: []
 ---
 
@@ -40,9 +40,9 @@ versions without fakes, mocks, stubs, monkeypatches, skips, or mirrored business
 
 ## S358-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/modelos/_verification_repository.py src/aeat/domain/modelos/test_verification_report_roundtrip.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_verification_report_roundtrip.py src/aeat/domain/modelos/test_repository_sensitivity_class.py` passed with 10 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "modelo or s85_runtime"` passed with 10 selected tests.
+- the historical check passed.
+- the historical check passed with 10 tests.
+- the historical check passed with 10 selected tests.
 
 Reviewer note: no critical, high, medium, or low runtime-storage findings remain for
 the S358 slice.

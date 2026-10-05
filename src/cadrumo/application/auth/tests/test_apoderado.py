@@ -6,7 +6,8 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
-from prompt_toolkit.input import create_pipe_input
+from prompt_toolkit.input import Input, create_pipe_input
+from prompt_toolkit.output import Output
 from prompt_toolkit.output.plain_text import PlainTextOutput
 
 from ....core.config import Settings, override_settings
@@ -21,9 +22,10 @@ from ..apoderado_flow import (
     REPRESENTED_NIF_PAGE_ID,
     SCOPES_PAGE_ID,
     build_apoderado_flow_definition,
-    run_apoderado_flow,
+    collect_apoderado_flow_answers,
 )
 from ..apoderado_service import (
+    ApoderadoConfiguration,
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
     ApoderadoService,
@@ -61,6 +63,21 @@ def _service(
             operation=operation,
             settings=settings,
         )
+
+
+def _run_door(
+    service: ApoderadoService,
+    *,
+    input: Input,
+    output: Output,
+) -> ApoderadoConfiguration:
+    """Drive the production door as the CLI does: collect the answers, then configure."""
+    represented_nif, scope_tokens = collect_apoderado_flow_answers(service.catalogue, input=input, output=output)
+    return service.configure(
+        bucket_id=_APODERADO_BUCKET_ID,
+        represented_nif=represented_nif,
+        scope_tokens=scope_tokens,
+    )
 
 
 class TestStatus:
@@ -300,12 +317,7 @@ class TestApoderadoFlowDoor:
         keys = f"87654321X\r{moves}\r\r"
         with create_pipe_input() as pipe:
             pipe.send_text(keys)
-            result = run_apoderado_flow(
-                svc,
-                bucket_id=_APODERADO_BUCKET_ID,
-                input=pipe,
-                output=PlainTextOutput(output),
-            )
+            result = _run_door(svc, input=pipe, output=PlainTextOutput(output))
 
         assert result.represented_nif == "87654321X"
         assert result.granted_scopes == ("IVA", "RENT")
@@ -322,12 +334,7 @@ class TestApoderadoFlowDoor:
         with create_pipe_input() as pipe:
             pipe.send_text("\x03")
             with pytest.raises(FlowRunAbandonedError) as excinfo:
-                run_apoderado_flow(
-                    svc,
-                    bucket_id=_APODERADO_BUCKET_ID,
-                    input=pipe,
-                    output=PlainTextOutput(output),
-                )
+                _run_door(svc, input=pipe, output=PlainTextOutput(output))
 
         assert excinfo.value.translated_message == "errors.refused.refused_flow_run_abandoned"
         assert svc.status(bucket_id=_APODERADO_BUCKET_ID).configured is False

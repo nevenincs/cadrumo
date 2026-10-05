@@ -1,0 +1,655 @@
+# Exact AEAT 2023 design anchors; split amount components reuse the selected casilla endpoint.
+schema_version = 1
+fragment_id = "records"
+modelo = "270"
+design_epoch = "2023"
+source_ref = "aeat-dr-270-2023"
+source_sha256 = "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-270-declarante"
+record_type = "declarante"
+required = true
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+export_record_id = "modelo-270-perceptor"
+record_type = "perceptor"
+required = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 49
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-270-decl-modelo"
+kind = "literal"
+literal = "270"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-270-decl-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 53
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-270-decl-nif"
+kind = "header"
+producer_key = "presenter.tax_id"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 56
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-270-decl-razon-social"
+kind = "header"
+producer_key = "taxpayer.legal_name"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 70
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-270-decl-tipo-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 81
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-270-decl-persona-contacto-telefono"
+kind = "casilla"
+casilla_id = "decl.persona-contacto-telefono"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 87
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-persona-contacto-nombre"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 89
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-numero-identificativo"
+kind = "casilla"
+casilla_id = "decl.numero-identificativo"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 94
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-270-decl-complementaria"
+kind = "casilla"
+casilla_id = "decl.complementaria"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 103
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[entries.part]
+offset = 121
+length = 1
+aeat_type = "Alfabético"
+statement = "121 DECLARACIÓN COMPLEMENTARIA.:"
+
+[[entries]]
+export_field_id = "modelo-270-decl-sustitutiva"
+kind = "casilla"
+casilla_id = "decl.sustitutiva"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 103
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "9"
+
+[entries.part]
+offset = 122
+length = 1
+aeat_type = "Alfabético"
+statement = "122 DECLARACIÓN SUSTITUTIVA:"
+
+[[entries]]
+export_field_id = "modelo-270-decl-numero-identificativo-anterior"
+kind = "casilla"
+casilla_id = "decl.numero-identificativo-anterior"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 144
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-270-decl-periodo"
+kind = "draft"
+draft_attribute = "period_code"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 162
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-270-decl-total-perceptores"
+kind = "casilla"
+casilla_id = "decl.total-perceptores"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 171
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-270-decl-total-importe-premios-component-147"
+kind = "casilla"
+casilla_id = "decl.total-importe-premios"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 190
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-total-importe-premios-component-162"
+kind = "casilla"
+casilla_id = "decl.total-importe-premios"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 192
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-total-base-retencion-component-164"
+kind = "casilla"
+casilla_id = "decl.total-base-retencion"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 211
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-total-base-retencion-component-179"
+kind = "casilla"
+casilla_id = "decl.total-base-retencion"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 213
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-total-retenciones-component-181"
+kind = "casilla"
+casilla_id = "decl.total-retenciones"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 227
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-total-retenciones-component-196"
+kind = "casilla"
+casilla_id = "decl.total-retenciones"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 229
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-decl-blancos"
+kind = "filler"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 232
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-270-perc-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 256
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-270-perc-modelo"
+kind = "literal"
+literal = "270"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 258
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-270-perc-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 260
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-270-perc-decl-nif"
+kind = "header"
+producer_key = "presenter.tax_id"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 263
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-270-perc-nif"
+kind = "casilla"
+casilla_id = "perc.nif"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 266
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-270-perc-nif-representante-legal"
+kind = "casilla"
+casilla_id = "perc.nif-representante-legal"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 300
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-270-perc-nombre"
+kind = "casilla"
+casilla_id = "perc.nombre"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 315
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-270-perc-nombre-representante"
+kind = "casilla"
+casilla_id = "perc.nombre-representante"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 331
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-270-perc-tipo-perceptor"
+kind = "casilla"
+casilla_id = "perc.tipo-perceptor"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 346
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-270-perc-clave-personalidad"
+kind = "casilla"
+casilla_id = "perc.clave-personalidad"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 363
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-270-perc-provincia"
+kind = "casilla"
+casilla_id = "perc.provincia"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 378
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-270-perc-fecha-sorteo"
+kind = "casilla"
+casilla_id = "perc.fecha-sorteo"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 435
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-270-perc-fecha-pago"
+kind = "casilla"
+casilla_id = "perc.fecha-pago"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 448
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-270-perc-importe-premio-component-136"
+kind = "casilla"
+casilla_id = "perc.importe-premio"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 470
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-importe-premio-component-149"
+kind = "casilla"
+casilla_id = "perc.importe-premio"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 475
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-base-retencion-component-151"
+kind = "casilla"
+casilla_id = "perc.base-retencion"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 508
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-base-retencion-component-164"
+kind = "casilla"
+casilla_id = "perc.base-retencion"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 510
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-retencion-component-166"
+kind = "casilla"
+casilla_id = "perc.retencion"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 533
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-retencion-component-179"
+kind = "casilla"
+casilla_id = "perc.retencion"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 535
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-gestor-cobro"
+kind = "casilla"
+casilla_id = "perc.gestor-cobro"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 538
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-270-perc-blancos"
+kind = "filler"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 546
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-270-perc-nif-pais-residencia"
+kind = "casilla"
+casilla_id = "perc.nif-pais-residencia"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 547
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "19"
+
+[[entries]]
+export_field_id = "modelo-270-perc-fecha-nacimiento"
+kind = "casilla"
+casilla_id = "perc.fecha-nacimiento"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 573
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-270-perc-ciudad-nacimiento"
+kind = "casilla"
+casilla_id = "perc.ciudad-nacimiento"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 601
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-codigo-pais-nacimiento"
+kind = "casilla"
+casilla_id = "perc.codigo-pais-nacimiento"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 605
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-270-perc-pais-residencia"
+kind = "casilla"
+casilla_id = "perc.pais-residencia"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 619
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "22"
+
+[[entries]]
+export_field_id = "modelo-270-perc-blanco-final"
+kind = "filler"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 636
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "23"
+

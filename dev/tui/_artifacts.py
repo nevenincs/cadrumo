@@ -54,7 +54,7 @@ name the last session happened to invent.
 RENDER_LOG_NAME: Final[str] = "render.log"
 
 MANIFEST_NAME: Final[str] = "manifest.json"
-MANIFEST_SCHEMA_VERSION: Final[int] = 3
+MANIFEST_SCHEMA_VERSION: Final[int] = 4
 """Bumped whenever the manifest shape changes. Older runs are refused rather
 than upgraded -- see :func:`read_manifest`."""
 INDEX_NAME: Final[str] = "index.md"
@@ -72,6 +72,43 @@ times the three files a frame writes. A surface that was renamed strands
 exactly that many, so the bound admits the ordinary case and refuses the
 one that is never ordinary -- a run whose matrix SHRANK, which strands the
 frames of every surface it no longer asks for."""
+
+
+def _append_index_refusals(manifest: Manifest, lines: list[str]) -> None:
+    """Append index refusals."""
+    if manifest.blocked_surfaces:
+        lines.extend(("## Surfaces that produced no frame", ""))
+        lines.extend(f"- `{name}`" for name in manifest.blocked_surfaces)
+        lines.append("")
+
+    if manifest.failures:
+        lines.extend(("## Refused", ""))
+        for failure in manifest.failures:
+            attempts = f" after {failure.attempts} attempts" if failure.attempts > 1 else ""
+            lines.append(f"- `{failure.key}` — {failure.kind}{attempts}")
+            if failure.detail:
+                # Indented as a fenced block: harness diagnostics are several
+                # lines of traceback or refusal text, and pasted raw they
+                # dissolve the surrounding list into unreadable prose.
+                lines.append("  ```")
+                lines.extend(f"  {line}" for line in failure.detail.splitlines())
+                lines.append("  ```")
+        lines.append("")
+
+    if manifest.skipped:
+        lines.extend(("## Not attempted", ""))
+        lines.extend(f"- `{entry.key}` — {entry.reason}" for entry in manifest.skipped)
+        lines.append("")
+
+
+def _append_index_coverage(manifest: Manifest, lines: list[str]) -> None:
+    """Append index coverage."""
+    lines.extend(("## Interface coverage", ""))
+    for record in manifest.interfaces:
+        mark = ", ".join(record.rendered_by) if record.covered else "NOT RENDERED"
+        suffix = f" — {record.note}" if record.note else ""
+        lines.append(f"- `{record.qualname}` ({record.kind}) — {mark}{suffix}")
+    lines.append("")
 
 
 class ThemeName(StrEnum):
@@ -95,6 +132,25 @@ class ThemeName(StrEnum):
 
     DARK = "dark"
     LIGHT = "light"
+
+
+class SequenceProvenance(BaseModel):
+    """The documented state a sequence-backed frame shows.
+
+    A sequence scenario renders a declaration that a documentation sequence
+    built, so the frame is only as trustworthy as that state. The record names
+    the sequence and the golden it was checked against, and says plainly when
+    the run no longer reproduced that golden: such a frame shows a state the
+    documentation does not describe, which a reviewer has to know.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    sequence_id: str
+    docs_page: str
+    golden_sha256: str
+    matches_golden: bool
+    golden_problems: tuple[str, ...] = ()
 
 
 class RenderedFrame(BaseModel):
@@ -130,6 +186,8 @@ class RenderedFrame(BaseModel):
     missing_glyphs: tuple[str, ...] = ()
     """Characters the pinned raster font could not draw; a blank box in the
     PNG at one of these is a font gap, never a defect in the surface."""
+    sequence: SequenceProvenance | None = None
+    """For a sequence scenario's frame, the documented state it shows."""
 
     @model_validator(mode="after")
     def _geometry_matches_the_named_viewport(self) -> RenderedFrame:
@@ -686,47 +744,11 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
         "",
     ]
     for surface in sorted({frame.surface for frame in manifest.frames}):
-        lines.append(f"### {surface}")
-        lines.append("")
-        for frame in manifest.frames:
-            if frame.surface != surface:
-                continue
-            shape = f"{frame.columns}x{frame.rows} {frame.orientation}"
-            lines.append(f"- `{frame.viewport}` {shape} · {frame.theme} — [{frame.png}]({frame.png})")
-            for finding in frame.geometry_findings:
-                lines.append(f"  - geometry: {finding}")
-        lines.append("")
+        _append_surface_frames(surface, manifest, lines)
 
-    if manifest.blocked_surfaces:
-        lines.extend(("## Surfaces that produced no frame", ""))
-        lines.extend(f"- `{name}`" for name in manifest.blocked_surfaces)
-        lines.append("")
+    _append_index_refusals(manifest, lines)
 
-    if manifest.failures:
-        lines.extend(("## Refused", ""))
-        for failure in manifest.failures:
-            attempts = f" after {failure.attempts} attempts" if failure.attempts > 1 else ""
-            lines.append(f"- `{failure.key}` — {failure.kind}{attempts}")
-            if failure.detail:
-                # Indented as a fenced block: harness diagnostics are several
-                # lines of traceback or refusal text, and pasted raw they
-                # dissolve the surrounding list into unreadable prose.
-                lines.append("  ```")
-                lines.extend(f"  {line}" for line in failure.detail.splitlines())
-                lines.append("  ```")
-        lines.append("")
-
-    if manifest.skipped:
-        lines.extend(("## Not attempted", ""))
-        lines.extend(f"- `{entry.key}` — {entry.reason}" for entry in manifest.skipped)
-        lines.append("")
-
-    lines.extend(("## Interface coverage", ""))
-    for record in manifest.interfaces:
-        mark = ", ".join(record.rendered_by) if record.covered else "NOT RENDERED"
-        suffix = f" — {record.note}" if record.note else ""
-        lines.append(f"- `{record.qualname}` ({record.kind}) — {mark}{suffix}")
-    lines.append("")
+    _append_index_coverage(manifest, lines)
 
     path = directory / INDEX_NAME
     path.write_text("\n".join(lines), encoding=UTF_8, newline="\n")
@@ -751,6 +773,7 @@ __all__ = [
     "Manifest",
     "ManifestVersionError",
     "RenderedFrame",
+    "SequenceProvenance",
     "SkippedFrame",
     "StaleArtifactPurgeRefusedError",
     "ThemeName",
@@ -769,3 +792,21 @@ __all__ = [
     "write_index",
     "write_manifest",
 ]
+
+
+def _append_surface_frames(surface: str, manifest: Manifest, lines: list[str]) -> None:
+    """Append surface frames."""
+    lines.append(f"### {surface}")
+    lines.append("")
+    for frame in manifest.frames:
+        if frame.surface != surface:
+            continue
+        shape = f"{frame.columns}x{frame.rows} {frame.orientation}"
+        lines.append(f"- `{frame.viewport}` {shape} · {frame.theme} — [{frame.png}]({frame.png})")
+        if frame.sequence is not None:
+            state = frame.sequence
+            golden = "matches its golden" if state.matches_golden else "DIVERGES from its golden"
+            lines.append(f"  - state: sequence `{state.sequence_id}` ({state.docs_page}), {golden}")
+        for finding in frame.geometry_findings:
+            lines.append(f"  - geometry: {finding}")
+    lines.append("")

@@ -1,0 +1,26 @@
+[package]
+name = "cadrumo-platform"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[profile.release]
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
+
+[[bin]]
+name = "platform-consumer"
+path = "src/consumer.rs"
+
+# WebView2 interface probes and settings for the desktop host. The C host
+# builds without this feature and links none of it.
+[features]
+webview2 = ["dep:webview2-com", "dep:windows-core"]
+
+[dependencies]
+webview2-com = { version = "0.39.1", optional = true }
+windows-core = { version = "0.62", optional = true }

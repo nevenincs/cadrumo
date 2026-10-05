@@ -12,11 +12,17 @@ import pytest
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import AccessScope, Availability, ProfileAccessStatus
+from cadrumo.application.user_profile.access_contracts import (
+    AccessScope,
+    AuthorityState,
+    Availability,
+    ProfileAccessStatus,
+)
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.time.clock import now
-from cadrumo_harness.mcp import server as mcp_server
-from cadrumo_harness.mcp.server import RuntimeMcpAdapter, build_server
+from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
+from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
+from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -88,8 +94,8 @@ class _RuntimeClientStub:
                 profile_id=self.profile_id,
                 session_id=self.session_id,
                 session_expires_at=self.session_expires_at,
-                grant_state=None,
-                grant_expires_at=None,
+                grant_state=AuthorityState.ACTIVE,
+                grant_expires_at=self.session_expires_at,
                 grant_valid=True,
                 profile_bound=True,
                 storage=Availability.AVAILABLE,
@@ -127,7 +133,7 @@ async def test_authenticate_admits_exact_profile_for_mcp_and_close_releases_clie
         opened.append((profile_id, credential_reference, frontend))
         return admitted
 
-    monkeypatch.setattr(mcp_server, "open_installed_credential_client", open_credential_client)
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", open_credential_client)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
@@ -185,7 +191,7 @@ async def test_authorization_prepare_keeps_live_pending_enrollment_and_admitted_
         opened.append(replacement)
         return replacement
 
-    monkeypatch.setattr(mcp_server, "open_installed_runtime_client", open_client)
+    monkeypatch.setattr(mcp_runtime, "open_installed_runtime_client", open_client)
     try:
         result = await adapter.call("authorization_prepare", {})
         assert result == {"outcome": "refused", "code": "invalid_request"}
@@ -230,7 +236,7 @@ async def test_authorization_prepare_retires_only_finished_or_expired_enrollment
         opened.append(replacement)
         return replacement
 
-    monkeypatch.setattr(mcp_server, "open_installed_runtime_client", open_client)
+    monkeypatch.setattr(mcp_runtime, "open_installed_runtime_client", open_client)
     try:
         result = await adapter.call("authorization_prepare", {})
         assert result == {
@@ -277,8 +283,8 @@ async def test_authorization_prepare_routes_own_grant_change_without_closing_adm
         opened_uncredentialed.append(profile_id)
         return request_client
 
-    monkeypatch.setattr(mcp_server, "open_installed_credential_client", open_credential_client)
-    monkeypatch.setattr(mcp_server, "open_installed_runtime_client", open_uncredentialed_client)
+    monkeypatch.setattr(mcp_runtime, "open_installed_credential_client", open_credential_client)
+    monkeypatch.setattr(mcp_runtime, "open_installed_runtime_client", open_uncredentialed_client)
     try:
         result = await adapter.call("authorization_prepare", {"credential_reference": str(credential_reference)})
         assert result["outcome"] == "prepared"

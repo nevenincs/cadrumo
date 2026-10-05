@@ -5,14 +5,14 @@ Provides the ``run-health``, ``runs``, ``latency``, ``errors``, and
 classification/completion run timing (duration, provider, outcome), so an
 operator can diagnose a slow LLM-backed run, a stale/expired auth session, or
 a recurring failure mode without leaving the host.
-``run-health`` folds the run telemetry with the persisted-AEAT-session
+``run-health`` folds the run record with the persisted-AEAT-session
 staleness probe into one aggregate-by-provider report; ``runs`` lists the
 individual recorded runs, most-recent-first; ``latency`` reports P50/P95/P99
 duration percentiles overall and per provider; ``errors`` breaks down failed
 runs by provider and ``error_kind``; ``llm-usage`` reports run counts,
 durations, and success rate grouped by provider and, within each provider, by
 model. None of the five verbs ever contacts AEAT or performs a network call;
-LLM run telemetry is read from encrypted local secure-object storage and the
+LLM run record is read from encrypted local secure-object storage and the
 auth probe reads only the locally persisted session token's metadata.
 
 This module presents reports returned by the exact-profile registered
@@ -29,8 +29,6 @@ See Also:
         reports exposed by this CLI group.
     :mod:`~entrypoints.cli._diagnostics_payloads`
         Typed JSON payload schemas emitted by these diagnostics commands.
-    :mod:`~entrypoints.cli._app_diagnostics_telemetry`
-        Nested telemetry subcommand group for the default-off remote tier.
     :func:`~entrypoints.diagnostics_run_health_composition.compose_diagnostics_run_health_port`
         Outer composition binding for the application diagnostics read port.
 """

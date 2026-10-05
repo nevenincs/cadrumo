@@ -18,14 +18,18 @@ from ...operations.public_scalar import PublicDecimal
 from ...operations.registry import OperationRegistry
 from ..enums import ReviewState
 from ..errors import ReviewItemNotFoundError
-from ..read_operation import (
+from ..read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
     REVIEW_VIEW_OPERATION_DEFINITION_ID,
-    ReviewQueueReadExecutor,
     ReviewQueueReadRequest,
     ReviewReadOperationPorts,
-    ReviewViewReadExecutor,
     ReviewViewReadRequest,
+)
+from ..read_operation import (
+    ReviewQueueReadExecutor,
+    ReviewViewReadExecutor,
+)
+from ..read_registration import (
     build_review_read_definitions,
     build_review_read_registrations,
 )

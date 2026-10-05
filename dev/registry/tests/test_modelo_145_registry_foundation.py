@@ -28,6 +28,8 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -245,6 +247,36 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
     record_end = resolved_layout.fields_by_id["modelo-145-dr-59-record-end"]
     assert record_end.kind == CasillaFieldKind.LITERAL
     assert record_end.literal == "</T145010>"
+
+
+def test_modelo_145_page_indicator_admits_exactly_blank_or_c() -> None:
+    """DR145 row 2 declares ``blanco o "C" (compl.)``; casilla and layout must agree on it.
+
+    The casilla admits ``C`` and nothing else, and its absence is the principal
+    page. The layout field therefore keeps a blank representation: absence
+    renders one space, ``C`` renders itself, and the wire bytes are read back
+    as the same two states.
+    """
+    modelo, catalogues = _modelo_145()
+    revision = modelo.revisions[_REVISION_ID]
+    casilla = next(item for item in revision.casillas if item.id == "comunicacion.pagina-complementaria")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="comunicacion")
+    field = resolve_export_layout(snapshot).fields_by_id["modelo-145-dr-02-page-complementaria"]
+    official_offset, official_length, official_text = _official_dr145_rows()[2]
+
+    assert 'blanco o "C"' in official_text
+    assert (field.offset, field.length) == (official_offset, official_length)
+    assert casilla.required is False
+    assert casilla.constraints is not None
+    assert casilla.constraints.enum == ("C",)
+    assert casilla.constraints.violates_text("C") is None
+    for refused in ("X", "c", "CC", "1"):
+        assert casilla.constraints.violates_text(refused) is not None
+    assert field.required is False
+    assert render_fixed_width_export_field(field, None) == " "
+    assert render_fixed_width_export_field(field, "C") == "C"
+    assert parse_fixed_width_export_field(field, " ") is None
+    assert parse_fixed_width_export_field(field, "C") == "C"
 
 
 def test_modelo_145_export_link_remains_local_communication_export() -> None:

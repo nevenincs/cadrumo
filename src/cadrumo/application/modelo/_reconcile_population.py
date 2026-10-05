@@ -57,6 +57,7 @@ from pydantic import BaseModel
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
@@ -185,7 +186,7 @@ def resolve_casilla_population_scope(
     formula_expressions: dict[CasillaId, FormulaExpression] = {
         formula.target_casilla_id: formula.expression for formula in registry_revision.formulas
     }
-    bindings_by_id: dict[BindingId, BindingDefinition] = {binding.id: binding for binding in registry_revision.bindings}
+    bindings_by_id: dict[BindingId, BindingDefinition] = revision_bindings_by_id(registry_revision)
     casilla_bindings: dict[CasillaId, BindingId] = {
         casilla.id: casilla.binding for casilla in registry_revision.casillas if casilla.binding is not None
     }

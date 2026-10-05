@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#data-provenance-consolidation'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:afe3bf345a163a339cd4fab60dd0185ef8435bad236a1b046ee5bd4c2ce8f673'
-related:
-  - "[[2026-09-10-data-provenance-consolidation-plan]]"
+related: []
 ---
 
 # `data-provenance-consolidation` audit: `w03 p06 s18 support tests review`

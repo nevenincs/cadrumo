@@ -14,52 +14,30 @@ from ..core.bucket_pointer import require_active_bucket_id
 from ..core.capabilities import ServiceCapability
 from ..core.hashing import canonical_json_bytes
 from ..core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ..core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-    profile_operation_subject,
-)
-from ..core.period import Period
+from ..core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..core.time.clock import now
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from .auth.operator_probe_ports import OperatorProbePorts
-from .operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from .operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from .operations.access_resolution import (
+    LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access_profile,
+    require_period_independent_admission,
 )
-from .operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from .operations.capabilities import RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES
 from .operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
+from .operations.operation_definition import OperationDefinition, build_single_phase_definition
 from .operations.owner import OperationExecutorContext
+from .operations.profile_guard import require_access_request_profile_payload
 from .operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
-from .operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-)
+from .operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from .operator_actions.projection import PreconditionVerdictSnapshot
 from .preflight import HealthSeverity, PreflightCheck
 from .provisioning import DependencyStatus
 from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .user_profile.access_contracts import (
-    AccessAction,
     AccessDenialCode,
-    Availability,
-    DisclosureCategory,
-    DisclosurePermission,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, CapabilitySource
@@ -157,38 +135,9 @@ class WorkstationCheckProjection(BaseModel):
         """Copy every original row, ordered fact and recovery verdict."""
         return cls(
             profile_id=report.profile_id,
-            capabilities=tuple(
-                WorkstationCapabilitySnapshot(
-                    capability=row.capability,
-                    enabled=row.enabled,
-                    source=row.source,
-                    reason=row.reason,
-                )
-                for row in report.capabilities
-            ),
-            dependencies=tuple(
-                WorkstationDependencySnapshot(
-                    service=row.service,
-                    available=row.available,
-                    facts=project_facts(row.facts),
-                    precondition_verdict=PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
-                    if row.precondition_verdict is not None
-                    else None,
-                )
-                for row in report.dependencies
-            ),
-            preflight=tuple(
-                WorkstationPreflightSnapshot(
-                    check=row.check,
-                    healthy=row.healthy,
-                    severity=row.severity,
-                    facts=project_facts(row.facts),
-                    precondition_verdict=PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
-                    if row.precondition_verdict is not None
-                    else None,
-                )
-                for row in report.preflight
-            ),
+            capabilities=tuple(_capability_snapshot(row) for row in report.capabilities),
+            dependencies=tuple(_dependency_snapshot(row) for row in report.dependencies),
+            preflight=tuple(_preflight_snapshot(row) for row in report.preflight),
             issues=report.issues,
         )
 
@@ -204,6 +153,42 @@ class WorkstationCheckProjection(BaseModel):
             preflight=tuple(row.to_check() for row in self.preflight),
             issues=self.issues,
         )
+
+
+def _capability_snapshot(row: CapabilityDecision) -> WorkstationCapabilitySnapshot:
+    return WorkstationCapabilitySnapshot(
+        capability=row.capability,
+        enabled=row.enabled,
+        source=row.source,
+        reason=row.reason,
+    )
+
+
+def _dependency_snapshot(row: DependencyStatus) -> WorkstationDependencySnapshot:
+    return WorkstationDependencySnapshot(
+        service=row.service,
+        available=row.available,
+        facts=project_facts(row.facts),
+        precondition_verdict=(
+            PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
+            if row.precondition_verdict is not None
+            else None
+        ),
+    )
+
+
+def _preflight_snapshot(row: PreflightCheck) -> WorkstationPreflightSnapshot:
+    return WorkstationPreflightSnapshot(
+        check=row.check,
+        healthy=row.healthy,
+        severity=row.severity,
+        facts=project_facts(row.facts),
+        precondition_verdict=(
+            PreconditionVerdictSnapshot.from_verdict(row.precondition_verdict)
+            if row.precondition_verdict is not None
+            else None
+        ),
+    )
 
 
 class WorkstationCheckExecutionResult(BaseModel):
@@ -285,45 +270,23 @@ class WorkstationCheckExecutor:
 
 
 def _request(request: OperationRequest[BaseModel], *, profile_id: UUID) -> WorkstationCheckRequest:
-    payload = request.payload
-    if (
-        request.definition_id != WORKSTATION_CHECK_OPERATION_DEFINITION_ID
-        or type(payload) is not WorkstationCheckRequest
-        or not isinstance(payload, WorkstationCheckRequest)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != profile_id or request.subject_ref != profile_operation_subject(str(profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return payload
+    return require_access_request_profile_payload(
+        request,
+        definition_id=WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
+        payload_type=WorkstationCheckRequest,
+        access_profile_id=profile_id,
+    )
 
 
 def build_workstation_check_definition(factory: WorkstationCheckPortsFactory) -> OperationDefinition:
     """Enroll the existing private CLI health report without additional frontends."""
-    return OperationDefinition(
+    return build_single_phase_definition(
         definition_id=WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
         request_type=WorkstationCheckRequest,
         result_type=WorkstationCheckExecutionResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=WorkstationCheckRequest,
-            executor_type=WorkstationCheckExecutor,
-            build=lambda: WorkstationCheckExecutor(factory),
-        ),
-        phase_codes=(WORKSTATION_CHECK_OPERATION_DEFINITION_ID,),
-        interaction_kinds=frozenset(),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.REQUEST_BOUND,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        executor_type=WorkstationCheckExecutor,
+        build=lambda: WorkstationCheckExecutor(factory),
+        capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
@@ -340,63 +303,16 @@ def resolve_workstation_check_access(
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     admitted = context.admitted_request
-    if admitted is not None and (
-        admitted.profile_id != context.profile_id
-        or admitted.definition_id != request.definition_id
-        or admitted.action is not AccessAction.SUBMIT
-        or admitted.periods
-        or not admitted.period_independent
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    disclosure = None
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
+    if admitted is not None:
+        require_period_independent_admission(
+            admitted, profile_id=context.profile_id, definition_id=request.definition_id
         )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-    return ResolvedOperationAccess(
-        request=OperationAccessRequest(
-            profile_id=context.profile_id,
-            definition_id=request.definition_id,
-            action=context.action,
-            frontend=context.frontend,
-            periods=frozenset[Period](),
-            period_independent=True,
-            destination_id=context.destination_id,
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=request.definition_id,
-            definition_contract_digest=context.contract.definition_contract_digest,
-            actions=frozenset(
-                {
-                    AccessAction.SUBMIT,
-                    AccessAction.START,
-                    AccessAction.RESUME,
-                    AccessAction.OBSERVE,
-                    AccessAction.RESULT,
-                    AccessAction.CANCEL,
-                    AccessAction.DETACH,
-                }
-            ),
-            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset[DisclosurePermission](),
-            periods=frozenset[Period](),
-            allow_period_independent=True,
-            requires_all_periods=False,
-            backend=Availability.AVAILABLE,
-            published_authority=context.published_authority,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+    return bind_operation_access_profile(
+        context,
+        LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
+        profile_id=context.profile_id,
+        definition_id=request.definition_id,
+        periods=frozenset(),
     )
 
 
@@ -404,23 +320,45 @@ def project_workstation_check_result(
     result: BaseModel, receipt: OperationTerminalReceipt, /
 ) -> WorkstationCheckProjection:
     """Release only the full exact-profile read with a successful NONE receipt."""
-    if type(result) is not WorkstationCheckExecutionResult or not isinstance(result, WorkstationCheckExecutionResult):
-        raise ValueError("invalid workstation check result")
-    projection = result.projection
+    execution = _workstation_check_execution_result(result)
+    projection = execution.projection
     if (
-        receipt.identity.definition_id != WORKSTATION_CHECK_OPERATION_DEFINITION_ID
-        or receipt.identity.subject_ref != profile_operation_subject(str(projection.profile_id))
-        or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect is not OperationEffect.NONE
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        not _receipt_identifies_workstation_check(projection, receipt)
+        or not _receipt_is_successful_result(receipt)
         or len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES
     ):
         raise ValueError("workstation check result contradicts its terminal receipt")
     return projection
+
+
+def _workstation_check_execution_result(result: BaseModel) -> WorkstationCheckExecutionResult:
+    if type(result) is not WorkstationCheckExecutionResult or not isinstance(result, WorkstationCheckExecutionResult):
+        raise ValueError("invalid workstation check result")
+    return result
+
+
+def _receipt_identifies_workstation_check(
+    projection: WorkstationCheckProjection,
+    receipt: OperationTerminalReceipt,
+) -> bool:
+    return (
+        receipt.identity.definition_id == WORKSTATION_CHECK_OPERATION_DEFINITION_ID
+        and receipt.identity.subject_ref == profile_operation_subject(str(projection.profile_id))
+    )
+
+
+def _receipt_is_successful_result(receipt: OperationTerminalReceipt) -> bool:
+    if receipt.condition is not OperationTerminalCondition.SUCCEEDED or receipt.effect is not OperationEffect.NONE:
+        return False
+    return receipt.result_ref is not None and all(
+        reference is None
+        for reference in (
+            receipt.refusal_ref,
+            receipt.refusal_detail_ref,
+            receipt.failure_error_code,
+            receipt.diagnostic_ref,
+        )
+    )
 
 
 def build_workstation_check_registration(
@@ -433,14 +371,9 @@ def build_workstation_check_registration(
         or definition.result_type is not WorkstationCheckExecutionResult
     ):
         raise ValueError("invalid workstation check definition contract")
-    return OperationPublicDefinitionRegistrationV1.compose(
+    return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".request", schema_version=1, model_type=WorkstationCheckRequest
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id=definition.definition_id + ".result", schema_version=1, model_type=WorkstationCheckProjection
-        ),
-        access_resolver=resolve_workstation_check_access,
+        public_result_type=WorkstationCheckProjection,
         result_projector=project_workstation_check_result,
+        access_resolver=resolve_workstation_check_access,
     )

@@ -1,6 +1,173 @@
 modelo:
   schema:
     '353':
+      binding:
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 1: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 1: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 1: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 1: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 10: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 10: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 10: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 10: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 11: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 11: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 11: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2c9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 11: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 12: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 12: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 12: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2chdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 12: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 13: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 13: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 13: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2cpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 13: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 14: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 14: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 14: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 14: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 15: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 15: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 15: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2d9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 15: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 16: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 16: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 16: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dhdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 16: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 17: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 17: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 17: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2dpdcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 17: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 18: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 18: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 18: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 18: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 19: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 19: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 19: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj2e9dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 19: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 2: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 2: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 2: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 2: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78bb4clo6sp3kclpiqp355lo62sjkd5hmis31ccmm2r1dcpkmsobc5li6ar0:
+          label: 'Dependent entity 20: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrhdd4mmc:
+          label: 'Dependent entity 20: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqrjldlin4rpdchiiqqjledq6ipj9:
+          label: 'Dependent entity 20: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj4c1dcln78qb4c5i6aspdchin0pbechkmarjkclpiqsj5edqmot31chng:
+          label: 'Dependent entity 20: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 3: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 3: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 3: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj6bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 3: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 4: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 4: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 4: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmj8bb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 4: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 5: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 5: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 5: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjabb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 5: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 6: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 6: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 6: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjcbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 6: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 7: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 7: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 7: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjebb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 7: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 8: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 8: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 8: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjgbb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 8: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq2qp35e1n68t35ecmm8p9de1gn4t39cdkn0ob35lgmobb6d5n62r1dchimo:
+          label: 'Dependent entity 9: % ownership at the end of the period'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmsbb95lj0:
+          label: 'Dependent entity 9: NIF'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmmstbdclp6ubb4ckmmktbjehkmcq8:
+          label: 'Dependent entity 9: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmjibb5dpq6ip31chin6bb4clo6arj4d5imst35ecmn4pbjelm78ob4ds:
+          label: 'Dependent entity 9: result'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9ddommibb6:
+          label: 'Dominant entity: NIF'
+        ? x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9ddpqmqpbidsmm8p9dd9qn6t39cpkm6obeehig
+        : label: 'Dominant entity: Modelo 322 receipt number'
+        x-dlnm8pbcdsmj6d9j5po62pr5bso32bj5dpq6ip31cgmm8rrdd5n62rjkckmmarjkd5i62p1dchnmqqbec5n78p9de9in6tbcehgm8ro:
+          label: 'Dominant entity: result'
       casilla:
         continuidad:
           filing-period:

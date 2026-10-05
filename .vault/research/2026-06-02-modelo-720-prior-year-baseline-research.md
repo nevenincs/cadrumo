@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-720-prior-year-baseline'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:7f567002a57fa43419b639202d7d08f1758b44480e5dd8ffac38408b6663b949'
+modified: '2026-10-03'
+body_hash: 'sha256:b5ae8d4e3d739bb45271c2ec00acf057ffc240123185caa6e2f3aec44f2aaf16'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---
@@ -35,7 +35,7 @@ not survive verification and are corrected here.
 ### Legal grounding (verified in the in-repo corpus)
 
 The foreign-asset obligation and its thresholds are fully present in the
-reviewed legal corpus under `src/aeat/_data/registry/aeat/legal/foreign-assets.toml`,
+reviewed legal corpus ,
 each slug carrying `review_status = "reviewed"`:
 
 - `ley-58-2003:da-18` — Disposición adicional decimoctava LGT, the origin of the
@@ -58,8 +58,7 @@ The two thresholds:
 
 - **Initial obligation (€50.000 per category):** declare a category only if its
   aggregate joint valuation strictly exceeds €50.000. Already centralised in code
-  as `MODELO_720_REPORTING_THRESHOLD_EUR = Decimal("50000.00")` in
-  `src/aeat/core/external_constants.py` (sibling of `M347_THRESHOLD_EUR`).
+  as `MODELO_720_REPORTING_THRESHOLD_EUR = Decimal("50000.00")`  (sibling of `M347_THRESHOLD_EUR`).
 - **Re-declaration increment (€20.000 over last-declared baseline):** once a
   category has been declared, re-declare it in a later year only if its joint
   valuation rose more than €20.000 since the last declaration (arts. 42-bis.5 /
@@ -73,7 +72,6 @@ The two thresholds:
 
 The fixed-width fichero already anticipates prior-year chaining; **no format
 change is required.** Verified against
-`src/aeat/_data/registry/aeat/modelos/720/.../bindings/0001-bindings.toml`:
 
 - `type_1` offset 123–135 (len 13) `numero-identificativo-de-la-declaracion-anterior`
   — the prior-declaration link; chaining is anticipated in the layout.
@@ -95,14 +93,14 @@ with `selector.grouping = "per_foreign_asset"` and `record = "bien"`.
 1. **`grouping = "per_foreign_asset_class"` does not exist.** The scratch design
    proposed a `previous_filing` binding with `grouping = "per_foreign_asset_class"`.
    Two independent facts refute this:
-   - `RowSetGroupingKind` (`src/aeat/core/aggregation.py`) declares only
+   - `RowSetGroupingKind`  declares only
      `FOREIGN_ASSET = "foreign_asset"` for this domain; there is no per-class
-     grouping member. `src/aeat/application/calculations/_row_set_assembly.py`
+     grouping member. the former source file
      maps `"per_foreign_asset" -> RowSetGroupingKind.FOREIGN_ASSET` and
      `"per_atribucion_member" -> RowSetGroupingKind.ATRIBUCION`, and nothing else
      for foreign assets.
    - The `previous_filing` selector model `_PreviousModeloSelector`
-     (`src/aeat/domain/calculations/registry/_bindings.py`) is
+      is
      `extra="forbid"` and **declares no `grouping` key at all.** A `grouping`
      entry on a `previous_filing` selector would fail to construct.
 

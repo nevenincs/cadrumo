@@ -1,0 +1,423 @@
+---
+tags:
+  - '#exec'
+  - '#taxpayer-bank-accounts'
+date: '2026-10-04'
+modified: '2026-10-04'
+body_schema: 'body-v2'
+body_hash: 'sha256:4c854b00f166609b71c61578f407c4e07110d75b5585293f021be3cec75f4879'
+related:
+  - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
+---
+
+# `taxpayer-bank-accounts` ledger
+
+## Changes
+
+- `S01` `A` `src/cadrumo/domain/transactions/own_accounts.py`
+- `S01` `A` `src/cadrumo/domain/transactions/tests/test_own_accounts.py`
+- `S01` `M` `src/cadrumo/core/iban.py`
+- `S01` `M` `src/cadrumo/core/tests/test_iban.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/schema_scalars.py`
+- `S01` `M` `src/cadrumo/application/modelo/value_presentation.py`
+- `S01` `M` `src/cadrumo/application/modelo/tests/test_value_presentation.py`
+- `S01` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S01` `M` `src/cadrumo/locales/en/errors.yml`
+- `S01` `M` `src/cadrumo/locales/es/errors.yml`
+- `S01` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S01` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S01` `verify:` `pytest domain/transactions/tests core/tests/test_iban.py core/errors/tests test_value_presentation.py` -> `pass`
+- `S01` `verify:` `ruff check and format on touched files` -> `pass`
+- `S01` `verify:` `ty on touched files` -> `pass`
+- `S01` `verify:` `just check-import-boundaries` -> `fail`
+- `S01` `by:` `lane-a`
+- `S10` `M` `src/cadrumo/core/result_disposition.py`
+- `S10` `M` `src/cadrumo/application/modelo/result_disposition_resolution.py`
+- `S10` `M` `src/cadrumo/application/modelo/export.py`
+- `S10` `M` `src/cadrumo/core/tests/test_result_disposition.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S10` `verify:` `pytest core/tests + disposition, producer_snapshot, DID wire, export_projection, export_output_paths, 303 refund e2e (1698 passed; 4 failures in other lanes' files)` -> `pass`
+- `S10` `verify:` `ruff check + ruff format --check on touched files` -> `pass`
+- `S10` `verify:` `ty on touched files` -> `pass`
+- `S10` `by:` `lane-c`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/profile/own_accounts.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/profile/tests/test_own_account_register_roundtrip.py`
+- `S02` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S02` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S02` `verify:` `pytest test_own_account_register_roundtrip.py test_namespace_registry.py` -> `pass`
+- `S02` `verify:` `pytest adapters/persistence/storage/tests adapters/persistence/profile/tests` -> `fail`
+- `S02` `verify:` `ruff check and format on touched files` -> `pass`
+- `S02` `verify:` `ty on touched files` -> `pass`
+- `S02` `by:` `lane-a`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/ledger_import.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/base.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/detection.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/ofx.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/pdf_n26.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/xls.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/providers/xlsx.py`
+- `S08` `M` `src/cadrumo/adapters/inbound/financial/tests/test_provider_id_dispatch.py`
+- `S08` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_provider_id_enum.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_ux.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_corpus_import_export.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py`
+- `S08` `M` `src/cadrumo/locales/en/cli.yml`
+- `S08` `M` `src/cadrumo/locales/es/cli.yml`
+- `S08` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S08` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S08` `M` `src/cadrumo/locales/en/errors.yml`
+- `S08` `M` `src/cadrumo/locales/es/errors.yml`
+- `S08` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S08` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S08` `M` `docs/how-to/import-bank-statements.md`
+- `S08` `M` `docs/locales/es/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S08` `M` `docs/locales/ca/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S08` `M` `docs/locales/hu/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S08` `A` `src/cadrumo/adapters/inbound/financial/providers/tests/test_source_byte_binding.py`
+- `S08` `verify:` `pytest src/cadrumo/adapters/inbound/financial` -> `pass`
+- `S08` `verify:` `pytest src/cadrumo/application/ledger/tests src/cadrumo/application/transactions` -> `pass`
+- `S08` `verify:` `pytest test_ledger_import_ux.py -k period-or-relative-import` -> `pass`
+- `S08` `verify:` `pytest entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py` -> `pass`
+- `S08` `verify:` `ruff check and format on touched files` -> `pass`
+- `S08` `verify:` `just check-types touched files` -> `pass`
+- `S08` `by:` `vaultspec-standard-executor`
+- `S14` `M` `src/cadrumo/core/result_disposition.py`
+- `S14` `M` `src/cadrumo/application/modelo/result_disposition_resolution.py`
+- `S14` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S14` `M` `src/cadrumo/core/errors/registry/_domain_part2.py`
+- `S14` `M` `src/cadrumo/application/modelo/export.py`
+- `S14` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S14` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S14` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S14` `M` `src/cadrumo/application/modelo/export_projection.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/_app_quickfile_payloads.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S14` `M` `src/cadrumo/application/modelo/work_plazo.py`
+- `S14` `M` `src/cadrumo/core/tests/test_result_disposition.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S14` `M` `src/cadrumo/locales/en/errors.yml`
+- `S14` `M` `src/cadrumo/locales/es/errors.yml`
+- `S14` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S14` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S14` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence, core/tests, core/errors (6899 passed; 62 failures attributed to concurrent registry/authority drift and other lanes, none in disposition paths)` -> `pass`
+- `S14` `verify:` `focused disposition and 360 export tests (61 passed)` -> `pass`
+- `S14` `verify:` `ruff check, ruff format --check, ty, pyrefly on touched files` -> `pass`
+- `S14` `by:` `lane-c`
+- `S05` `M` `src/cadrumo/domain/transactions/models.py`
+- `S05` `M` `src/cadrumo/domain/transactions/tests/test_models.py`
+- `S05` `verify:` `pytest src/cadrumo/domain/transactions` -> `pass`
+- `S05` `verify:` `ruff check and format on touched files` -> `pass`
+- `S05` `by:` `vaultspec-standard-executor`
+- `S03` `A` `src/cadrumo/application/ledger/own_account_operation.py`
+- `S03` `A` `src/cadrumo/application/ledger/own_account_ports.py`
+- `S03` `A` `src/cadrumo/application/ledger/tests/test_own_account_operation.py`
+- `S03` `M` `src/cadrumo/domain/transactions/own_accounts.py`
+- `S03` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S03` `verify:` `pytest test_own_account_operation.py test_own_accounts.py` -> `pass`
+- `S03` `verify:` `pytest test_registered_executor_conformance.py -k ledger.own_account and census` -> `pass`
+- `S03` `verify:` `pytest application/ledger/tests domain/transactions/tests` -> `pass`
+- `S03` `verify:` `ruff check and format on touched files` -> `pass`
+- `S03` `verify:` `ty pyrefly basedpyright on touched modules` -> `pass`
+- `S03` `by:` `lane-a`
+- `S04` `A` `src/cadrumo/entrypoints/cli/_app_ledger_account_command_specs.py`
+- `S04` `A` `src/cadrumo/entrypoints/cli/_ledger_account_cli.py`
+- `S04` `A` `src/cadrumo/entrypoints/cli/_ledger_account_payloads.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/native_api_cli_support.py`
+- `S04` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_own_account_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S04` `M` `src/cadrumo/locales/en/cli.yml`
+- `S04` `M` `src/cadrumo/locales/es/cli.yml`
+- `S04` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S04` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S04` `verify:` `pytest test_runtime_own_account_native.py` -> `pass`
+- `S04` `verify:` `pytest cli spec, graph, machine-secret, schema and authentication test set` -> `fail`
+- `S04` `verify:` `ruff check and format on touched files` -> `pass`
+- `S04` `verify:` `ty on touched files` -> `pass`
+- `S04` `verify:` `python -m dev.locales audit` -> `pass`
+- `S04` `by:` `lane-a`
+- `S09` `M` `src/cadrumo/application/modelo/export.py`
+- `S09` `M` `src/cadrumo/application/modelo/export_ports.py`
+- `S09` `M` `src/cadrumo/application/modelo/export_projection.py`
+- `S09` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S09` `M` `src/cadrumo/application/modelo/quickfile.py`
+- `S09` `M` `src/cadrumo/application/modelo/quickfile_operation.py`
+- `S09` `M` `src/cadrumo/application/modelo/quickfile_operation_contracts.py`
+- `S09` `M` `src/cadrumo/application/modelo/review_package_operation.py`
+- `S09` `M` `src/cadrumo/application/modelo/work_export_contracts.py`
+- `S09` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S09` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S09` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_ports_support.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S09` `M` `src/cadrumo/application/filing/tests/test_m303_did_account_wire_isolated_authority.py`
+- `S09` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S09` `M` `src/cadrumo/domain/deadlines/tests/test_account_iban_redaction.py`
+- `S09` `M` `dev/registry/tests/test_m303_did_account_wire_isolated_authority.py`
+- `S09` `M` `dev/registry/pipeline/tests/test_m303_generated_envelope_proof.py`
+- `S09` `M` `dev/registry/tests/test_payer_fact_declarations.py`
+- `S09` `verify:` `pytest application/modelo, application/filing, domain/deadlines, adapters/persistence/profile, entrypoints/tests/profile_persistence (no new failures vs pre-edit baseline of 62 failed + 4 errors; 6 baseline failures now pass)` -> `pass`
+- `S09` `verify:` `pytest export CLI surface parity + export verb + payer fact declarations (55 passed)` -> `pass`
+- `S09` `verify:` `pytest dev/registry m303 DID wire + generated envelope proof (5 failures: envelope language-role and tampered-occurrence checks, unrelated to accounts)` -> `fail`
+- `S09` `verify:` `ruff check + ruff format on touched files` -> `pass`
+- `S09` `verify:` `ty on touched files` -> `pass`
+- `S09` `verify:` `just check-import-boundaries (15/15 contracts kept; pre-existing dev/docs/serve_languages.py re-export and stale load-target metadata)` -> `fail`
+- `S09` `by:` `lane-d`
+- `S12` `M` `src/cadrumo/application/modelo/result_disposition_resolution.py`
+- `S12` `M` `src/cadrumo/application/modelo/export.py`
+- `S12` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S12` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S12` `verify:` `pytest test_export_output_paths.py (U, D, X and Nota 3 DID bytes and Tipo Declaracion at DR303 2026 offsets) + test_export_result_disposition.py (35 passed)` -> `pass`
+- `S12` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence, core/tests/test_result_disposition.py (no new failures vs baseline)` -> `pass`
+- `S12` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S12` `by:` `lane-d`
+- `S06` `M` `src/cadrumo/adapters/inbound/financial/providers/ofx.py`
+- `S06` `M` `src/cadrumo/adapters/inbound/financial/providers/base.py`
+- `S06` `A` `src/cadrumo/adapters/inbound/financial/tests/test_own_account_binding.py`
+- `S06` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S06` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S06` `M` `src/cadrumo/application/ledger/import_ports.py`
+- `S06` `M` `src/cadrumo/application/ledger/models.py`
+- `S06` `M` `src/cadrumo/application/ledger/protocols.py`
+- `S06` `M` `src/cadrumo/application/ledger/tests/test_import_operation.py`
+- `S06` `M` `src/cadrumo/application/ledger/tests/test_import_path_diagnostic_parity.py`
+- `S06` `M` `src/cadrumo/application/tests/test_import_dedup_path_parity.py`
+- `S06` `M` `src/cadrumo/application/transactions/import_diagnostics.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_import.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_ux.py`
+- `S06` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S06` `M` `src/cadrumo/locales/en/cli.yml`
+- `S06` `M` `src/cadrumo/locales/es/cli.yml`
+- `S06` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S06` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S06` `M` `src/cadrumo/locales/en/errors.yml`
+- `S06` `M` `src/cadrumo/locales/es/errors.yml`
+- `S06` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S06` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S06` `M` `docs/_sequences/how-to/first-quarterly-filing/import-provider-list.json`
+- `S06` `verify:` `pytest src/cadrumo/adapters/inbound/financial` -> `pass`
+- `S06` `verify:` `pytest src/cadrumo/application/ledger/tests src/cadrumo/application/transactions` -> `pass`
+- `S06` `verify:` `pytest test_ledger_import_ux.py -k account-period-relative native runtime` -> `pass`
+- `S06` `verify:` `pytest test_app_ledger_operations_management_command_specs.py` -> `pass`
+- `S06` `verify:` `ty on touched files` -> `pass`
+- `S06` `verify:` `ruff check and format on touched files` -> `pass`
+- `S06` `by:` `vaultspec-standard-executor`
+- `S11` `M` `src/cadrumo/application/modelo/export.py`
+- `S11` `M` `src/cadrumo/application/modelo/export_projection.py`
+- `S11` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S11` `M` `src/cadrumo/core/errors/registry/_domain_part2.py`
+- `S11` `M` `src/cadrumo/locales/en/errors.yml`
+- `S11` `M` `src/cadrumo/locales/es/errors.yml`
+- `S11` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S11` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_export_result_disposition.py`
+- `S11` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S11` `verify:` `pytest cutoff gate on the real 303 2026 windows (on/after Madrid cutoff day, undeclared cutoff) + export_output_paths + export CLI surface parity + core/errors (105 passed; 2 pre-existing exception-hygiene failures naming unrelated modules)` -> `pass`
+- `S11` `verify:` `dev.locales status --check: no finding for refused_modelo_domiciliation_past_cutoff (gate fails on pre-existing inventory backlog)` -> `pass`
+- `S11` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S11` `by:` `lane-d`
+- `S13` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S13` `M` `src/cadrumo/application/filing/producer_snapshot_m200.py`
+- `S13` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S13` `M` `src/cadrumo/application/wizard/commands.py`
+- `S13` `M` `src/cadrumo/application/modelo/action_errors.py`
+- `S13` `M` `src/cadrumo/application/filing/tests/test_producer_snapshot.py`
+- `S13` `M` `src/cadrumo/application/filing/tests/test_filing_account_iban_redaction.py`
+- `S13` `M` `src/cadrumo/locales/en/wizard.yml`
+- `S13` `M` `src/cadrumo/locales/es/wizard.yml`
+- `S13` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S13` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S13` `verify:` `pytest application/filing, application/wizard, domain/deadlines, profile charge-iban CLI refusal (1140 passed; 8 failed + 4 errors all in the pre-edit baseline or the pre-existing envelope-role failures)` -> `pass`
+- `S13` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S13` `by:` `lane-d`
+- `S15` `M` `src/cadrumo/application/filing/producer_snapshot_m360.py`
+- `S15` `M` `src/cadrumo/application/modelo/export.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/modelo_360_solicitud.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_roundtrip.py`
+- `S15` `verify:` `pytest test_modelo_360_solicitud_export.py + roundtrip + test_modelo_360_header_export.py (solicitante own-account and representante embedded exports at DR360 campos 114-117; undeclared, BIC-less and overridden accounts refuse REFUSED_MODELO_REFUND_ACCOUNT_MISSING)` -> `pass`
+- `S15` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence (5293 passed; no failure outside the pre-edit baseline)` -> `pass`
+- `S15` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S15` `by:` `lane-d`
+- `S07` `M` `src/cadrumo/adapters/inbound/financial/tests/test_own_account_binding.py`
+- `S07` `A` `src/cadrumo/adapters/persistence/profile/tests/test_actions_own_account_binding.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_common.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S07` `M` `src/cadrumo/application/ledger/actions_split_merge.py`
+- `S07` `M` `src/cadrumo/application/ledger/add_operation.py`
+- `S07` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S07` `M` `src/cadrumo/application/ledger/ledger_add_command.py`
+- `S07` `M` `src/cadrumo/application/ledger/ledger_add_contracts.py`
+- `S07` `M` `src/cadrumo/application/ledger/ledger_add_results.py`
+- `S07` `M` `src/cadrumo/application/ledger/models.py`
+- `S07` `M` `src/cadrumo/application/ledger/review_filter.py`
+- `S07` `M` `src/cadrumo/application/ledger/review_projection.py`
+- `S07` `M` `src/cadrumo/application/ledger/tests/test_add_operation.py`
+- `S07` `M` `src/cadrumo/application/ledger/tests/test_list_query.py`
+- `S07` `M` `src/cadrumo/application/ledger/update_contracts.py`
+- `S07` `M` `src/cadrumo/application/ledger/update_operation.py`
+- `S07` `M` `src/cadrumo/application/review/filter.py`
+- `S07` `M` `src/cadrumo/application/review/tests/test_filter.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_add.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_update.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_add_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S07` `M` `src/cadrumo/locales/en/cli.yml`
+- `S07` `M` `src/cadrumo/locales/es/cli.yml`
+- `S07` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S07` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S07` `M` `src/cadrumo/locales/en/errors.yml`
+- `S07` `M` `src/cadrumo/locales/es/errors.yml`
+- `S07` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S07` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S07` `verify:` `pytest src/cadrumo/application/ledger src/cadrumo/application/review src/cadrumo/application/transactions` -> `pass`
+- `S07` `verify:` `pytest test_actions_own_account_binding.py encrypted storage` -> `pass`
+- `S07` `verify:` `pytest test_runtime_ledger_add_native.py native runtime` -> `pass`
+- `S07` `verify:` `pytest test_app_*command_spec*.py` -> `pass`
+- `S07` `verify:` `ty and ruff on touched files` -> `pass`
+- `S07` `by:` `vaultspec-standard-executor`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/runtime_own_accounts.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/tests/own_account_fixtures.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_own_accounts.py`
+- `S18` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_own_accounts.py`
+- `S18` `A` `dev/tui/harness/ledger_fixtures.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/operations/runtime_profile_session.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/tests/workbench_fixtures.py`
+- `S18` `M` `dev/tui/harness/surfaces.py`
+- `S18` `M` `dev/tui/harness/profile_fixtures.py`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `verify:` `pytest test_own_accounts.py test_runtime_own_accounts.py (12 passed)` -> `pass`
+- `S18` `verify:` `pytest tui/ledger/tests tui/operations/tests test_workbench_responsive test_theme test_tui_review_elements (346 passed; 6 pre-existing failures in other modules)` -> `pass`
+- `S18` `verify:` `ruff check, ruff format, ty on touched files; dev.quality.types reports no touched file` -> `pass`
+- `S18` `verify:` `python -m dev.locales audit (no missing keys)` -> `pass`
+- `S18` `verify:` `dev.tui visual review: snapshot own-accounts-before, render ledger-overview--ready and 7 ledger-own-accounts-* surfaces at default viewports in both themes (64 frames, no failures, no missing glyphs or geometry findings), diff, frames inspected for layout, truncation and masking; inventory covers LedgerOwnAccountsScreen` -> `pass`
+- `S18` `by:` `lane-e`
+- `S17` `M` `src/cadrumo/application/modelo/export.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S17` `M` `src/cadrumo/locales/en/errors.yml`
+- `S17` `M` `src/cadrumo/locales/es/errors.yml`
+- `S17` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S17` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S17` `verify:` `pytest entrypoints/tests/profile_persistence, application/modelo/tests, 303 export CLI parity, export verb, rectificativa motive lifecycle (2963 passed; 18 failures all in the pre-edit baseline)` -> `pass`
+- `S17` `verify:` `ruff check + ruff format + ty on touched files` -> `pass`
+- `S17` `by:` `lane-d`
+- `S20` `A` `src/cadrumo/entrypoints/tui/ledger/runtime_ledger_import.py`
+- `S20` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_import_account_binding.py`
+- `S20` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_ledger_import.py`
+- `S20` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S20` `M` `src/cadrumo/application/ledger/tests/test_import_operation.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/ledger/import_flow.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_flows.py`
+- `S20` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S20` `M` `dev/tui/harness/ledger_fixtures.py`
+- `S20` `M` `dev/tui/harness/surfaces.py`
+- `S20` `M` `src/cadrumo/locales/en/common.yml`
+- `S20` `M` `src/cadrumo/locales/es/common.yml`
+- `S20` `M` `src/cadrumo/locales/ca/common.yml`
+- `S20` `M` `src/cadrumo/locales/hu/common.yml`
+- `S20` `verify:` `pytest application/ledger/tests tui/ledger/tests test_own_account_binding.py (1741 passed; 1 pre-existing failure, the adapter-import sweep)` -> `pass`
+- `S20` `verify:` `pytest test_import_operation test_import_account_binding test_runtime_ledger_import test_ledger_flows (31 passed)` -> `pass`
+- `S20` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
+- `S20` `verify:` `dev.tui visual review: render ledger-import--ready, ledger-import-account-picker, ledger-import-account-previewed at default viewports in both themes (24 frames, no failures, no missing glyphs or geometry findings), diff against own-accounts-before, frames inspected for masking and layout` -> `pass`
+- `S20` `by:` `lane-e`
+- `S28` `M` `dev/registry/mappings/modelo_360/2010/0003-pagina02.toml`
+- `S28` `M` `dev/registry/pipeline/export_field_schema.py`
+- `S28` `M` `dev/registry/pipeline/export_fragment_provenance.py`
+- `S28` `M` `dev/registry/pipeline/export_fragment_provenance_projection.py`
+- `S28` `M` `dev/registry/pipeline/semantic_map.py`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/casillas/0001-declarations.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/0003-record-m360-operaciones.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/0004-record-m360-operaciones.toml`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/export/_generation.provenance.json`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/export_field_validation.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/export_semantics.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/export_parse.py`
+- `S28` `M` `src/cadrumo/application/filing/record_field_renderer.py`
+- `S28` `M` `src/cadrumo/application/filing/export_verification.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`
+- `S28` `M` `src/cadrumo/application/filing/tests/test_modelo_360_header_export.py`
+- `S28` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`
+- `S28` `verify:` `python -m dev.registry.pipeline republish-target 360 2010-y-siguientes (temporary record_drift row for the 2 page-2 record files, retired after) then target-current` -> `pass`
+- `S28` `verify:` `publish-authority --if-stale (identity_digest cdfea85c6b382368d6def7fa768b950ad4c767b9a6ed990bd9b42c2ecf751331)` -> `pass`
+- `S28` `verify:` `pytest test_modelo_360_solicitud_export.py (ISO fecha to ddmmaaaa, one-operation blank block, stray op2 campo refused) + test_modelo_360_header_export.py (campo 2 blank principal, C continuation) + test_fixed_width_codec.py occurrence-block cases` -> `pass`
+- `S28` `verify:` `pytest application/modelo, application/filing, adapters/persistence/profile, entrypoints/tests/profile_persistence, domain/calculations/registry, adapters/outbound/aeat/export (7910 passed; only new ids are 6 modelo 180 committed-registry parses in a directory outside the baseline, unrelated to required_with)` -> `pass`
+- `S28` `verify:` `pytest dev/registry/pipeline/tests: failures trace to registry state (360 source ineligible for 2010, bootstrap targets already generated, 210 export_layouts clearance, m390 maps), none to required_with` -> `fail`
+- `S28` `verify:` `ruff check + ruff format + ty on touched scopes` -> `pass`
+- `S28` `by:` `lane-d`
+- `S19` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_export_accounts.py`
+- `S19` `A` `dev/tui/harness/modelo_export_fixtures.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/export.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/export_result.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_export_result_screen.py`
+- `S19` `M` `dev/tui/harness/surfaces.py`
+- `S19` `M` `src/cadrumo/locales/en/common.yml`
+- `S19` `M` `src/cadrumo/locales/es/common.yml`
+- `S19` `M` `src/cadrumo/locales/ca/common.yml`
+- `S19` `M` `src/cadrumo/locales/hu/common.yml`
+- `S19` `verify:` `pytest tui/modelo tui/ledger/tests test_tui_review_elements (970 passed; 3 pre-existing failures: test_grid_tables_real x2 fails identically with this Step reverted, adapter-import sweep)` -> `pass`
+- `S19` `verify:` `pytest test_workbench_export_accounts test_export_result_screen (22 passed)` -> `pass`
+- `S19` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
+- `S19` `verify:` `dev.tui visual review: render modelo-export-accounts and modelo-export-result-account at default viewports in both themes (16 frames, no failures, no missing glyphs or geometry findings), frames inspected for masking, scroll reach and layout; inventory now covers WorkbenchExportScreen and ModeloExportResultScreen` -> `pass`
+- `S19` `by:` `lane-e`
+
+## Notes
+
+- `S01` import-boundary gate: 15/15 contracts kept; its failure is the pre-existing `dev/docs/serve_languages.py` re-export and stale import-load-target metadata. 2 pre-existing failures in core/errors exception-hygiene tests name unrelated modules.
+- `S02` Directory run: own-account and namespace tests pass; 39 failures are pre-existing and unrelated (OS keyring logon-session probe, evidence-draft extraction, composing-write declarations naming other modules).
+- `S08` `docs/_sequences` import-provider-list golden not refreshed: dev.docs.sequences refresh fails in registry composition on Lane A in-flight `own_account_operation;` refresh pending
+- `S14` the 360 export test hunk for S14 was swept into commit 6bcf868788 by the page-marker session before this Step's code landed
+- `S14` docs goldens how-to/modelo-100 and modelo-349 recorded the fabricated I disposition and need a refresh after the authority is republished
+- `S03` ty on `operation_composition.py` reports one missing-argument diagnostic from Lane B's uncommitted import-ports change, not this Step.
+- `S04` CLI spec set: 643 passed; the remaining failures are environmental or other lanes (OS keyring logon-session probe, `runtime_unavailable,` ledger import surface). The CLI reference regeneration belongs to P06a.S25; import-load-target metadata regeneration is left for the shared gate owner.
+- `S09` per-filing --charge-account/--refund-account CLI options are left to P06a.S23 (Lane F owns entrypoints/cli); the request, command and operation models carry the overrides
+- `S12` the byte proofs live in `entrypoints/tests/profile_persistence` and adapters/persistence/profile/tests because they need the real encrypted register; application/modelo/tests holds no adapter-backed export tests
+- `S12` the filing transition still resolves its disposition without the refund account, so a local filing records D where the export of a foreign refund writes X; carry is unaffected (both refunds)
+- `S06` TUI import door has no production implementation yet; LedgerImportRequestV1 carries `own_account_id` for Lane E S20 to thread
+- `S11` every 303 quarterly window in the 2026-y-siguientes revision declares no `payment_cutoff_on` (only the monthly ones do), so a quarterly 303 U export advises rather than refuses until the registry authors those cutoffs
+- `S15` campo 114 is enforced as an invariant of the entry (the facts' `titular_en_calidad_de` must state the holder the account choice implies) rather than stored nowhere; the snapshot keeps reading it from the facts
+- `S07` ledger list/view display payloads do not show `own_account_id` yet; adding it to the canonical payload churns 36 CLI-sequence goldens, left for the display work
+- `S18` pre-existing failures left: `test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports` (every `runtime_*.py` door imports `adapters.local_runtime;` `runtime_own_accounts.py` follows that pattern), `test_theme` hardcoded measures in grouped.py and `overview_contracts.py,` declarations-overview heading rhythm; fixed the stale FieldEditScreen interface path in `dev/tui/harness/profile_fixtures.py` that blocked every render
+- `S20` `test_ledger_import_ux` CLI native tests fail with `REFUSED_LOCAL_RUNTIME` with and without this Step (checked against the committed `import_operation.py);` the TUI import door reads bank statements only, invoice books are refused with a pointer to app ledger invoice import because they have no registered preview; LedgerImportRequest gains `expected_source_sha256` and the result `source_digests` (application/ledger is Lane B scope, touched because the digest binding must be enforced in the worker)
+- `S28` `complementaria_page_marker` (amendment-driven C) is also mapped on the page indicators of 131, 232, 303 and 353, where DR353 and DR303 read the slot as a continuation-page marker too; only 360 moved to `continuation_page_marker` here
+- `S28` `required_with` is a new reviewed semantic-map and layout field: the block campos keep the design's obligatorio beside the anchor and render their blank fill without it
+- `S19` pickers are offered where the dialog asks elections (303); the export panel now scrolls, since the 303 dialog was already clipped below its elections at 80x24; capability refusals (missing, non-ES, past-cutoff) already reach the workbench notice through the recorded error detail, so no new refusal path was added; the export result value column truncates long values at narrow widths, pre-existing

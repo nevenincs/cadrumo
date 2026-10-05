@@ -46,10 +46,12 @@ from pydantic import Field
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.casilla_value_absence import AbsentCasillaReading
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from .binding_selector_utils import provider_member
 from .binding_targets import casillas_by_binding
 from .ids import BindingId
-from .ledger_iva_bindings import iva_ledger_selector
+from .ledger_iva_bindings import LedgerIvaProvider
 from .schema import BindingDefinition, ModeloRevision
 from .schema_base import RegistryModel
 
@@ -142,7 +144,7 @@ def _iva_selector_axes(binding: BindingDefinition) -> Mapping[str, object]:
     otherwise split one partition into two groups, silencing the gate for
     exactly the return it exists to catch.
     """
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(iva_ledger_selector(binding).model_dump())
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(provider_member(binding, LedgerIvaProvider).model_dump())
 
 
 def _partition_for_rate_box_group(
@@ -333,9 +335,12 @@ def rate_box_coverage_shortfalls(
     """
     shortfalls: list[RateBoxShortfall] = []
     for partition in partitions:
-        total = values.get(partition.total_casilla_id, Decimal("0"))
+        total = AbsentCasillaReading.OMITTED_BOX_DECLARES_ZERO.read(values, partition.total_casilla_id)
         boxes_total = sum(
-            (values.get(casilla_id, Decimal("0")) for casilla_id in partition.box_casilla_ids),
+            (
+                AbsentCasillaReading.OMITTED_BOX_DECLARES_ZERO.read(values, casilla_id)
+                for casilla_id in partition.box_casilla_ids
+            ),
             Decimal("0"),
         )
         if total - boxes_total <= 0:

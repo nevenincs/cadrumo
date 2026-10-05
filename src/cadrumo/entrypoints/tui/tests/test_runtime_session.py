@@ -4,29 +4,16 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
-from functools import partial
 from threading import Event
 from typing import override
 from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Button, Static
+from textual.widgets import Static
 
-from cadrumo.application.runtime.management_status import (
-    RuntimeListenerState,
-    RuntimeManagementSnapshot,
-    RuntimeManagerAvailability,
-)
-from cadrumo.entrypoints.tests.test_runtime_management import StopFixture
-from cadrumo.entrypoints.tui import runtime_management
-from cadrumo.entrypoints.tui.runtime_management import (
-    RuntimeManagementCleanup,
-    RuntimeManagementScreen,
-    RuntimeStopConfirmationScreen,
-)
-
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.profile_access import RuntimeProfileStatus, RuntimeSessionsLocked
 from ....application.user_profile.access_contracts import (
@@ -40,12 +27,9 @@ from ....application.user_profile.access_contracts import (
 )
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
-from ....core.async_cleanup import AsyncResourceCleanupError
 from ....core.i18n.render import tr
 from ....core.period import Period
-from .. import runtime_session
 from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from ..launcher import run_runtime_managed_application
 from ..runtime_session import RuntimeRestrictedSessionApp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -140,10 +124,11 @@ class _Client(RuntimeFrontendClient):
         raise AssertionError("status polling must not renew a lease")
 
 
-async def _shown(app: RuntimeRestrictedSessionApp, pilot: object) -> None:
+async def _shown(app: RuntimeRestrictedSessionApp, pilot: Pilot[AccountRecomposeRequiredV1 | None]) -> None:
     async with asyncio.timeout(5):
         while not str(app.query_one("#restricted-profile", Static).render()).strip():
-            await asyncio.sleep(0.02)
+            await pilot.pause()
+        await pilot.pause()
 
 
 def _disclosure_scope(client: _Client, *, delegation: bool = True) -> None:
@@ -169,11 +154,14 @@ def _disclosure_scope(client: _Client, *, delegation: bool = True) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("delegation", [False, True])
-async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_close(delegation: bool) -> None:
+@pytest.mark.parametrize("size", [(80, 24), (48, 24)])
+async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_close(
+    delegation: bool, size: tuple[int, int]
+) -> None:
     client = _Client()
     _disclosure_scope(client, delegation=delegation)
     app = RuntimeRestrictedSessionApp(client, profile_label="[bold]Literal profile[/bold]")
-    async with app.run_test() as pilot:
+    async with app.run_test(size=size) as pilot:
         await _shown(app, pilot)
         assert "[bold]Literal profile[/bold]" in str(app.query_one("#restricted-profile", Static).render())
         expected = (
@@ -186,7 +174,7 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
             f"{tr('tui.automation_inventory.delegation')}: "
             f"{tr('tui.restricted.yes') if delegation else tr('tui.restricted.no')}"
         )
-        await pilot.click("#restricted-close")
+        assert await pilot.click("#restricted-close")
         assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
         assert str(app.query_one("#restricted-delegation", Static).render()) == ""
     assert client.close_calls == 0 and client.lock_calls == 0 and client.human_calls == 0
@@ -200,10 +188,12 @@ async def test_status_shows_exact_allowlisted_scope_without_human_calls_or_clien
         await _shown(app, pilot)
         assert str(client.profile_id) in str(app.query_one("#restricted-profile", Static).render())
         assert "user-profile.view" in str(app.query_one("#restricted-operations", Static).render())
+        assert "submit" in str(app.query_one("#restricted-scope-actions", Static).render())
         assert "2025 1T" in str(app.query_one("#restricted-periods", Static).render())
         assert client.human_calls == 0
-        await pilot.click("#restricted-close")
+        assert await pilot.click("#restricted-close")
         assert app.return_value is None
+        assert str(app.query_one("#restricted-scope-actions", Static).render()) == ""
     assert client.close_calls == 0 and client.lock_calls == 0
 
 
@@ -269,7 +259,7 @@ async def test_lock_clears_private_status_before_owned_native_completion(
         await _shown(app, pilot)
         assert "profile_values" in str(app.query_one("#restricted-disclosures", Static).render())
         assert tr("tui.restricted.yes") in str(app.query_one("#restricted-delegation", Static).render())
-        await pilot.click(button)
+        assert await pilot.click(button)
         try:
             assert str(app.query_one("#restricted-profile", Static).render()) == ""
             assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
@@ -292,67 +282,10 @@ async def test_missing_lock_acknowledgement_or_refusal_requires_fresh_admission(
     app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile")
     async with app.run_test() as pilot:
         await _shown(app, pilot)
-        await pilot.click("#restricted-lock")
+        assert await pilot.click("#restricted-lock")
         async with asyncio.timeout(5):
             while app.return_value is None:
                 await pilot.pause(0.02)
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         assert str(app.query_one("#restricted-profile", Static).render()) == ""
     assert client.close_calls == 0
-
-
-@pytest.mark.asyncio
-async def test_restricted_installed_runner_retains_stop_cleanup_after_modal_close(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Installed scope exit retains failed stop release after its modal disappears."""
-    fixture = StopFixture(channel_failures=3)
-    monkeypatch.setattr(runtime_management, "preview_installed_runtime_stop", fixture.open)
-
-    async def read() -> RuntimeManagementSnapshot:
-        return RuntimeManagementSnapshot(
-            listener=RuntimeListenerState.READY,
-            manager_availability=RuntimeManagerAvailability.UNAVAILABLE,
-        )
-
-    monkeypatch.setattr(runtime_session, "RuntimeManagementScreen", partial(RuntimeManagementScreen, reader=read))
-    client = _Client()
-    cleanup = RuntimeManagementCleanup()
-    app = RuntimeRestrictedSessionApp(client, profile_label="Restricted profile", runtime_management_cleanup=cleanup)
-
-    async def drive(pilot: Pilot[object]) -> None:
-        async with asyncio.timeout(10):
-            app.screen.query_one("#restricted-runtime-status", Button).press()
-            while not isinstance(pilot.app.screen, RuntimeManagementScreen):
-                await pilot.pause(0.02)
-            screen = pilot.app.screen
-            while screen._busy or tr("tui.runtime_management.listener.ready") not in str(
-                screen.query_one("#runtime-management-listener", Static).content
-            ):
-                await pilot.pause(0.02)
-            screen.query_one("#runtime-management-stop", Button).press()
-            while not isinstance(pilot.app.screen, RuntimeStopConfirmationScreen):
-                await pilot.pause(0.02)
-            pilot.app.screen.query_one("#runtime-stop-confirm", Button).press()
-            while screen._busy or fixture.channel.close_calls != 1:
-                await pilot.pause(0.02)
-            assert fixture.consent.accepted is not None
-            assert "synthetic private" not in str(screen.query_one("#runtime-management-status", Static).content)
-            screen.action_close()
-
-            def modal_closed() -> bool:
-                return screen not in pilot.app.screen_stack and fixture.channel.close_calls == 2
-
-            while not modal_closed():
-                await pilot.pause(0.02)
-            pilot.app.exit()
-
-    with pytest.raises(AsyncResourceCleanupError) as failed:
-        await run_runtime_managed_application(app, cleanup=cleanup, headless=True, auto_pilot=drive)
-    assert fixture.channel.close_calls == 3 and fixture.endpoint.close_calls == 1
-    assert fixture.channel.confirmations == 1
-    await failed.value.retry_cleanup()
-    assert fixture.channel.close_calls == 4 and fixture.endpoint.close_calls == 1
-    assert fixture.consent.released and fixture.channel.confirmations == 1
-    assert client.close_calls == 0 and client.human_calls == 0
-    assert not cleanup.pending

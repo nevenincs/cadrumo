@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:906b14e52685ba7f8be12058e8ed7f1c12c56f114a6b742e9e61b6be930ea331'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:48d6c305b6a73dcbb56d2a54fa7fe6999540b51df0f61b9530319a3c7866dba2'
+related: []
 ---
 
 # `repo-gate-integrity` audit: `the facade census two-successive-heads criterion is unmeetable during active development`
@@ -24,13 +23,13 @@ HEADs before re-review. Read-only.
 
 Green at the HEAD where it was refreshed. Red seven commits later:
 `registry facade consumer census drifted for
-src/cadrumo/domain/calculations/registry/_loader.py`.
+The retired module`.
 
 The cause is a single genuine change. Diffing stored against generated for
 that row, one direct consumer category moved:
 
     category: test
-      added: src/cadrumo/domain/iva/tests/test_provision_window_bounds_grounding.py
+      added: the retired test
 
 A peer added one test file that imports the loader. No commit touched the
 loader itself, no symbol locator moved, and the transitive closure is already

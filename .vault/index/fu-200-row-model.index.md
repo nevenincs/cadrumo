@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#fu-200-row-model'
 date: '2026-08-16'
-modified: '2026-10-01'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:82974e7ef0eaf65df0f4e1fba3c07a2163dc6a0caa3c7c1a28fb9c0b7ff92d1f'
+body_hash: 'sha256:49d7c738675ad5a644d0c434c2ba760d684fdb870d0185c0ef98ff5e4959c0e6'
 related:
-  - '[[2026-06-04-fu-200-row-model-adr]]'
   - '[[2026-06-04-fu-200-row-model-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#fu-200-row-model`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-fu-200-row-model-adr` - `fu-200-row-model` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

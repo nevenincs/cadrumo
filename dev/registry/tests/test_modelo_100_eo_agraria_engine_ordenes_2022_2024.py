@@ -38,8 +38,8 @@ import pytest
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter

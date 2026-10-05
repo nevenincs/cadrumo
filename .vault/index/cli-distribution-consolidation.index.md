@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:38a89ade4f60a521bb32f0ffd9deb49f77b90b9b99cf75b7a4fa621be747c7c3'
+body_hash: 'sha256:64a3bacbfa9ad075a774582e3f06c681d435b523ca98b8721dc0ca1ed6732783'
 related:
   - '[[2026-09-02-cli-distribution-consolidation-adr]]'
-  - '[[2026-09-02-cli-distribution-consolidation-ledger]]'
-  - '[[2026-09-02-cli-distribution-consolidation-plan]]'
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
   - '[[2026-09-04-cli-distribution-consolidation-cohort-build-cost-audit]]'
   - '[[2026-09-04-cli-distribution-consolidation-surface-pruning-audit]]'
@@ -34,14 +32,6 @@ Auto-generated index of all documents tagged with `#cli-distribution-consolidati
 - `2026-09-04-cli-distribution-consolidation-surface-pruning-audit` - `cli-distribution-consolidation` audit: `surface pruning`
 - `2026-09-04-cli-distribution-consolidation-test-suite-cost-audit` - `cli-distribution-consolidation` audit: `test suite cost`
 - `2026-09-06-cli-distribution-consolidation-import-time-collectability-audit` - `cli-distribution-consolidation` audit: `import time collectability`
-
-### exec
-
-- `2026-09-02-cli-distribution-consolidation-ledger` - `cli-distribution-consolidation` ledger
-
-### plan
-
-- `2026-09-02-cli-distribution-consolidation-plan` - `cli-distribution-consolidation` plan
 
 ### research
 

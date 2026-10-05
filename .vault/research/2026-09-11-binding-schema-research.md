@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#binding-schema'
 date: '2026-09-11'
-modified: '2026-09-12'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8ce8558d38bcf16192bd3f59e419741c9bfc2b03b064c1ccef94fc0e9da0097'
+body_hash: 'sha256:3d541259ca1bd0e3af3754459a6b6190c7f766c907648fcb93970f4f759ec479'
 related: []
 ---
 # `binding-schema` research: `binding inventory and advisory route signal`
@@ -24,7 +24,7 @@ The raw corpus measurement found 9,233 binding rows and classified every row as 
 
 ### Revision delta authoring changes the consumer surface, not binding declaration ownership
 
-A revision naming a predecessor inherits only casillas. Bindings, formulas, relations, and other schema families remain fully declared in each revision. Inherited casillas retain the binding references authored by their originating edition, so binding coherence must be evaluated against the successor revision's full binding collection after casilla materialisation. `dev/registry/compiler/_loader_internals.py:268-331`; `src/cadrumo/domain/calculations/registry/schema.py:794-840`.
+A revision naming a predecessor inherits only casillas. Bindings, formulas, relations, and other schema families remain fully declared in each revision. Inherited casillas retain the binding references authored by their originating edition, so binding coherence must be evaluated against the successor revision's full binding collection after casilla materialisation. the former source file; `src/cadrumo/domain/calculations/registry/schema.py:794-840`.
 
 The signal records authored and compiler-materialised counts and performs binding, formula, casilla, export, and structural consumer analysis on the effective revision surface. That is deliberately broader than today's casilla-only inheritance: if the materialiser later merges bindings or formulas, the signal follows the materialised result instead of silently reverting to raw fragments. The corrected run found 768 effective casilla edges, but emitted 9,233 binding-owned routes. `.logs/test-runs/2026-09-12/20260912T050542.410863Z-check-bindings-59724-67df81dd/artifacts/binding-signal.json`.
 
@@ -42,7 +42,7 @@ Runtime resolver enrollment is read from `CALCULATION_ROUTE_RESOLVER_OWNERSHIP`,
 
 ### Temporal coherence is measured without inferring semantic identity
 
-Provider temporal members are inventoried by discriminator and relative field paths. Filing year, revision, or year fields outside the temporal member are actionable absolute-coordinate candidates. Binding identifiers use the same public `edition_token_in_identifier()` rule as the edition-delta signal. The corrected run reports zero temporal-ID candidates; the former 189 findings were range-token false positives such as `2001-2017`, not declaring-edition coupling. `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:791-875`; `dev/registry/analysis/edition_delta_status.py`; `dev/registry/bindings.py`.
+Provider temporal members are inventoried by discriminator and relative field paths. Filing year, revision, or year fields outside the temporal member are actionable absolute-coordinate candidates. Binding identifiers use the same public `edition_token_in_identifier()` rule as the edition-delta signal. The corrected run reports zero temporal-ID candidates; the former 189 findings were range-token false positives such as `2001-2017`, not declaring-edition coupling. `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:791-875`; the former source file; `dev/registry/bindings.py`.
 
 ### The command is advisory but operationally strict
 
@@ -64,7 +64,7 @@ The current reverse route proves static enrollment, not that a real filing conte
 - `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:393-875`
 - `src/cadrumo/domain/calculations/registry/bindings.py:423-488`
 - `src/cadrumo/application/modelo/calculation_route.py:47-152`
-- `dev/registry/compiler/_loader_internals.py:268-331`
+
 - `dev/registry/bindings.py:120-164`
 - `dev/registry/bindings.py:176-282`
 - `dev/registry/bindings.py:514-544`

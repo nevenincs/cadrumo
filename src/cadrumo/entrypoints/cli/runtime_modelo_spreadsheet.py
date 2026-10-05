@@ -15,34 +15,35 @@ from ...application.modelo.modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE,
     MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
     ModeloSpreadsheetCalculateOutcome,
-    ModeloSpreadsheetCalculateProjection,
     ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetExportOutcome,
-    ModeloSpreadsheetExportProjection,
     ModeloSpreadsheetExportRequest,
-    ModeloSpreadsheetProjection,
     ModeloSpreadsheetPullOutcome,
-    ModeloSpreadsheetPullProjection,
     ModeloSpreadsheetPullRequest,
     ModeloSpreadsheetRequest,
     ModeloSpreadsheetVerifyOutcome,
-    ModeloSpreadsheetVerifyProjection,
     ModeloSpreadsheetVerifyRequest,
     SpreadsheetOutputPathRefusal,
+    SpreadsheetRefusal,
     SpreadsheetRowIngressRefusal,
     SpreadsheetSnapshotMismatchRefusal,
+)
+from ...application.modelo.modelo_spreadsheet_operation_projections import (
+    ModeloSpreadsheetCalculateProjection,
+    ModeloSpreadsheetExportProjection,
+    ModeloSpreadsheetProjection,
+    ModeloSpreadsheetPullProjection,
+    ModeloSpreadsheetVerifyProjection,
 )
 from ...application.operations.public_period import PublicPeriod
 from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.hashing import sha256_file
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .errors import CliRecordedOperationError
+from .registered_operation_contracts import RegisteredOperationCompletion
+from .registered_operation_errors import invalid_completion_error, submitted_operation_error
 from .runtime_profile_binding import bound_profile_client, require_profile_client
-from .runtime_registered_operation import (
-    RegisteredOperationCompletion,
-    run_registered_operation,
-    submitted_operation_error,
-)
+from .runtime_registered_operation import run_registered_operation
 
 _OUTPUT_PATH_REFUSAL_CODE = "REFUSED_MODELO_EXPORT_OUTPUT_PATH"
 _SNAPSHOT_REFUSAL_CODE = "REFUSED_OUTBOUND_STORAGE_CONFLICT"
@@ -67,16 +68,6 @@ type ModeloSpreadsheetRegisteredOutcome = (
     | ModeloSpreadsheetCalculateOutcome
     | ModeloSpreadsheetVerifyOutcome
 )
-
-
-def _invalid[ProjectionT: BaseModel](completed: RegisteredOperationCompletion[ProjectionT]) -> Never:
-    raise submitted_operation_error(
-        completed.operation_id,
-        RuntimeRefusalCode.INVALID_FRAME.value,
-        terminal_condition=completed.terminal_condition,
-        effect=completed.effect,
-        refusal_code=completed.refusal_code,
-    )
 
 
 def _submit[ProjectionT: BaseModel](
@@ -186,29 +177,10 @@ def _correlate[OutcomeT: ModeloSpreadsheetRegisteredOutcome, ProjectionT: Modelo
     expected_effect: OperationEffect,
 ) -> ProjectionT:
     outcome = completed.projection
-    if (
-        outcome.profile_id != request.profile_id
-        or outcome.modelo != request.modelo
-        or outcome.period != request.period
-        or outcome.operation != operation
-    ):
-        _invalid(completed)
+    _require_spreadsheet_identity(completed, request, operation)
     result = outcome.result
     if outcome.outcome == "succeeded":
-        if (
-            completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            or completed.effect is not expected_effect
-            or completed.refusal_code is not None
-            or result is None
-            or outcome.refusal is not None
-            or not isinstance(result, projection_type)
-            or result.profile_id != request.profile_id
-            or result.modelo != request.modelo
-            or result.revision != outcome.revision
-            or result.period != request.period
-        ):
-            _invalid(completed)
-        return result
+        return _spreadsheet_success(completed, request, projection_type, expected_effect)
 
     refusal = outcome.refusal
     if (
@@ -219,34 +191,8 @@ def _correlate[OutcomeT: ModeloSpreadsheetRegisteredOutcome, ProjectionT: Modelo
         or completed.refusal_code is None
         or completed.effect not in {OperationEffect.NONE, OperationEffect.UNKNOWN}
     ):
-        _invalid(completed)
-    if isinstance(refusal, SpreadsheetOutputPathRefusal):
-        if (
-            operation != "export"
-            or not isinstance(request, ModeloSpreadsheetExportRequest)
-            or refusal.output_path != request.output_path
-            or completed.refusal_code != _OUTPUT_PATH_REFUSAL_CODE
-            or completed.effect not in {OperationEffect.NONE, OperationEffect.UNKNOWN}
-        ):
-            _invalid(completed)
-    elif isinstance(refusal, SpreadsheetRowIngressRefusal):
-        if (
-            operation != "pull"
-            or completed.refusal_code != MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE
-            or completed.effect is not OperationEffect.NONE
-        ):
-            _invalid(completed)
-    elif isinstance(refusal, SpreadsheetSnapshotMismatchRefusal):
-        if (
-            operation not in {"pull", "calculate"}
-            or not isinstance(request, (ModeloSpreadsheetPullRequest, ModeloSpreadsheetCalculateRequest))
-            or refusal.spreadsheet_id != request.spreadsheet_id
-            or completed.refusal_code != _SNAPSHOT_REFUSAL_CODE
-            or completed.effect is not OperationEffect.NONE
-        ):
-            _invalid(completed)
-    else:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
+    _require_spreadsheet_refusal(completed, request, operation, refusal)
     _refuse_from_correlated_outcome(
         outcome,
         operation_id=str(completed.operation_id),
@@ -289,7 +235,7 @@ def export_modelo_spreadsheet(
         expected_effect=OperationEffect.UPDATED,
     )
     if projection.output_path != request.output_path or projection.prefill_relations != request.prefill_relations:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -329,12 +275,9 @@ def pull_modelo_spreadsheet(
             not request.assemble_observations
             and (projection.assembled_groupings or projection.assembled_observation_count)
         )
-        or any(edit.value is None for edit in projection.operator_edits)
-        or any(edit.value is None for edit in projection.binding_edits)
-        or any(edit.value is None for edit in projection.relation_edits)
-        or any(cell.value is None for row in projection.row_set_edits for cell in row.cells)
+        or _contains_empty_spreadsheet_edits(projection)
     ):
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -367,7 +310,7 @@ def calculate_modelo_spreadsheet(
         expected_effect=OperationEffect.NONE,
     )
     if projection.spreadsheet_id != request.spreadsheet_id:
-        _invalid(completed)
+        raise invalid_completion_error(completed)
     return projection
 
 
@@ -410,3 +353,129 @@ __all__ = [
     "pull_modelo_spreadsheet",
     "verify_modelo_spreadsheet",
 ]
+
+
+def _require_spreadsheet_identity[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+) -> None:
+    """Correlate the exact profile, modelo, period, and operation identity."""
+    outcome = completed.projection
+    if (
+        outcome.profile_id != request.profile_id
+        or outcome.modelo != request.modelo
+        or outcome.period != request.period
+        or outcome.operation != operation
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _spreadsheet_success[OutcomeT: ModeloSpreadsheetRegisteredOutcome, ProjectionT: ModeloSpreadsheetProjection](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    projection_type: type[ProjectionT],
+    expected_effect: OperationEffect,
+) -> ProjectionT:
+    """Require the successful result and its registered terminal receipt."""
+    outcome = completed.projection
+    result = outcome.result
+    if (
+        _invalid_spreadsheet_success_terminal(completed, expected_effect)
+        or result is None
+        or outcome.refusal is not None
+        or (not isinstance(result, projection_type))
+        or (result.profile_id != request.profile_id)
+        or (result.modelo != request.modelo)
+        or (result.revision != outcome.revision)
+        or (result.period != request.period)
+    ):
+        raise invalid_completion_error(completed)
+    return result
+
+
+def _invalid_spreadsheet_success_terminal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT], expected_effect: OperationEffect
+) -> bool:
+    """Correlate the successful terminal condition, effect, and refusal absence."""
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not expected_effect
+        or completed.refusal_code is not None
+    )
+
+
+def _require_output_path_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+    refusal: SpreadsheetOutputPathRefusal,
+) -> None:
+    """Correlate this refusal with its request and admitted effects."""
+    if (
+        operation != "export"
+        or not isinstance(request, ModeloSpreadsheetExportRequest)
+        or refusal.output_path != request.output_path
+        or completed.refusal_code != _OUTPUT_PATH_REFUSAL_CODE
+        or completed.effect not in {OperationEffect.NONE, OperationEffect.UNKNOWN}
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _require_row_ingress_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+    refusal: SpreadsheetRowIngressRefusal,
+) -> None:
+    """Correlate this refusal with its request and admitted effects."""
+    if (
+        operation != "pull"
+        or completed.refusal_code != MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE
+        or completed.effect is not OperationEffect.NONE
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _require_snapshot_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+    refusal: SpreadsheetSnapshotMismatchRefusal,
+) -> None:
+    """Correlate this refusal with its request and admitted effects."""
+    if (
+        operation not in {"pull", "calculate"}
+        or not isinstance(request, (ModeloSpreadsheetPullRequest, ModeloSpreadsheetCalculateRequest))
+        or refusal.spreadsheet_id != request.spreadsheet_id
+        or completed.refusal_code != _SNAPSHOT_REFUSAL_CODE
+        or completed.effect is not OperationEffect.NONE
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _require_spreadsheet_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
+    completed: RegisteredOperationCompletion[OutcomeT],
+    request: ModeloSpreadsheetRequest,
+    operation: str,
+    refusal: SpreadsheetRefusal,
+) -> None:
+    """Dispatch a correlated refusal to its closed typed contract."""
+    if isinstance(refusal, SpreadsheetOutputPathRefusal):
+        _require_output_path_refusal(completed, request, operation, refusal)
+    elif isinstance(refusal, SpreadsheetRowIngressRefusal):
+        _require_row_ingress_refusal(completed, request, operation, refusal)
+    elif isinstance(refusal, SpreadsheetSnapshotMismatchRefusal):
+        _require_snapshot_refusal(completed, request, operation, refusal)
+    else:
+        raise invalid_completion_error(completed)
+
+
+def _contains_empty_spreadsheet_edits(projection: ModeloSpreadsheetPullProjection) -> bool:
+    """Detect absent values in any imported edit or row-set cell."""
+    return (
+        any(edit.value is None for edit in projection.operator_edits)
+        or any(edit.value is None for edit in projection.binding_edits)
+        or any(edit.value is None for edit in projection.relation_edits)
+        or any(cell.value is None for row in projection.row_set_edits for cell in row.cells)
+    )

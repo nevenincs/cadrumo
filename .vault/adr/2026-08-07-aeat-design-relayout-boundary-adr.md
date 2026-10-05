@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7eea83f88394473b9e2a3dd94752928deefafe3f987f23ed3c31d0981664c8a9'
+body_hash: 'sha256:0616b869e1f30749d1987b28a91fb8e4c5f46a668c84cf39cb274d64c12ce96a'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
   - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
@@ -29,7 +29,7 @@ total, meaning full correctness requires 14 revisions where 3 exist today
 (`2026-08-07-aeat-design-relayout-boundary-research`). A structural gate
 enforcing "no revision spans a re-layout" is already landed and deliberately
 red, naming the violations as its own specification
-(`src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`).
+
 This record ratifies the property that gate enforces, rules on the three
 questions its existence does not answer by itself, and authorizes the
 registry-split implementation as follow-on plan work. It makes no registry
@@ -69,7 +69,7 @@ edit itself.
   filing year remains legitimately amendable — and therefore exportable —
   until that period elapses, however long ago it nominally occurred. Checked
   empirically against the app itself, not assumed: `create_work_unit`
-  (`src/cadrumo/application/modelo/_work_lifecycle.py`) imposes no separate
+   imposes no separate
   year-recency ceiling of its own — the ONLY gate on which `filing_year` a
   work unit can target is whether a registry revision's `period_selector`
   declares that year. So today, before any split, the app already permits
@@ -165,7 +165,7 @@ currently-reachable filing window, where "reachable" means still inside its
 prescripción period (four years from the voluntary filing deadline, LGT
 art. 66-67) as of the implementation date — recomputed then, not read off
 this record's date of 2026-08-07. Confirmed empirically
-(`src/cadrumo/application/modelo/_work_lifecycle.py::create_work_unit`) that
+(`the former source file::create_work_unit`) that
 the app imposes no narrower gate of its own: the registry revision's own
 `period_selector` is the only thing standing between an operator and a work
 unit for an arbitrary old year, so the split boundary IS the enforcement

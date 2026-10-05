@@ -22,7 +22,7 @@ from ..calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .renta_codes import RentaMaritalStatus
 
@@ -59,9 +59,7 @@ def _resolve_seguro_enfermedad_registry_declarations(
 ) -> _SeguroEnfermedadRegistryDeclarations:
     """Resolve the selected Modelo 100 and dated insurance fact declarations."""
     effective_date = date(filing_year, 12, 31)
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise ValueError("insurance declarations require an explicit authority operation or scope")
+    authority = require_governed_fact_authority(authority, subject="insurance declarations")
 
     resolved_grade = authority.resolve_governed_fact(
         ScalarFactQuery(
@@ -94,15 +92,10 @@ def _resolve_seguro_enfermedad_registry_declarations(
         raise ValueError("insurance scalar declarations must be integral")
     disability_minimum_grade = resolved_grade.payload.value
     insured_child_maximum_age = resolved_age.payload.value
-    applicability: dict[str, str] = {}
-    for entry in resolved_applicability.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise TypeError("insurance applicability entries must be string-to-string")
-        applicability[entry.key] = entry.value
     declarations = _SeguroEnfermedadRegistryDeclarations(
         disability_minimum_grade=disability_minimum_grade,
         insured_child_maximum_age=insured_child_maximum_age,
-        applicability=MappingProxyType(applicability),
+        applicability=_insurance_applicability(resolved_applicability),
     )
     declarations.required("insured_population.taxpayer")
     declarations.required("insured_population.spouse")
@@ -111,6 +104,16 @@ def _resolve_seguro_enfermedad_registry_declarations(
     declarations.required("coverage_limb.discapacidad")
     declarations.required("coverage_limb.general")
     return declarations
+
+
+def _insurance_applicability(resolved: ResolvedMappingFact) -> Mapping[str, str]:
+    """Return the closed string mapping declared for insurance applicability."""
+    applicability: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("insurance applicability entries must be string-to-string")
+        applicability[entry.key] = entry.value
+    return MappingProxyType(applicability)
 
 
 class SeguroEnfermedadInsuredCounts(BaseModel):
@@ -230,9 +233,7 @@ def seguro_enfermedad_insured_counts_from_facts(
     from .descendant_facts import descendant_list_from_facts
 
     stored_facts = {str(path): str(value) for path, value in fact_index.items() if value is not None}
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise ValueError("insurance fact projection requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="insurance fact projection")
     descendientes = descendant_list_from_facts(stored_facts, authority=selected_authority)
     return count_seguro_enfermedad_insured(
         descendientes,

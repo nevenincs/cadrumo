@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import math
 import sys
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
@@ -20,6 +18,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.deadline_budget import deadline_after, remaining_budget
 from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
@@ -36,13 +35,6 @@ class _CredentialClientCleanup:
         await asyncio.to_thread(self.client.close)
 
 
-def _remaining(deadline: float) -> float:
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    return remaining
-
-
 def _authenticate_reference(
     client: RuntimeFrontendClient,
     *,
@@ -52,7 +44,7 @@ def _authenticate_reference(
     deadline: float,
 ) -> None:
     """Read native custody only after verified transport, then prove the key afresh."""
-    _remaining(deadline)
+    remaining_budget(deadline)
     if sys.platform == "win32":
         endpoint = WindowsRuntimeEndpoint(storage_root=root)
         try:
@@ -74,7 +66,7 @@ def _authenticate_reference(
     )
     proof = bytearray(handle.read().get_secret_value())
     try:
-        client.login_api_key(proof, timeout=_remaining(deadline))
+        client.login_api_key(proof, timeout=remaining_budget(deadline))
     finally:
         proof[:] = bytes(len(proof))
 
@@ -94,14 +86,14 @@ async def open_installed_credential_client(
     authentication: native peer checks, current custody and fresh API proof
     must all succeed. Failure or cancellation closes only this new connection.
     """
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
-    deadline = time.monotonic() + timeout
+    deadline = deadline_after(timeout)
     try:
         root = effective_storage_root().resolve(strict=True)
     except OSError:
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
-    client = await open_installed_runtime_client(profile_id=profile_id, frontend=frontend, timeout=_remaining(deadline))
+    client = await open_installed_runtime_client(
+        profile_id=profile_id, frontend=frontend, timeout=remaining_budget(deadline)
+    )
     try:
         await await_cancellation_complete(
             asyncio.to_thread(

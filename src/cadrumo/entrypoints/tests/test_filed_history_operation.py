@@ -21,7 +21,7 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from cadrumo.core.config import load_settings
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 
@@ -39,7 +39,16 @@ from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_pr
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.operator_scope_ports import OperatorScopePorts
 from ...application.auth.protocols import BrowserSessionFactoryPort
-from ...application.live.filed_data_capture import (
+from ...application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
+from ...application.live.filed_history_discovery import (
+    ExpectedFiledDeclarationGrid,
+    FiledHistoryDiscoveryPair,
+    FiledHistoryDiscoveryReport,
+    FiledHistoryOnboardingRun,
+    FiledHistoryPairOutcome,
+    filed_history_discovery_report,
+)
+from ...application.live.filed_history_events import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_IVA_WALLET_REFUSAL_CODE,
     FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE,
@@ -48,16 +57,7 @@ from ...application.live.filed_data_capture import (
     FILED_HISTORY_PHASE_DISCOVERY,
     FILED_HISTORY_PHASE_IVA_WALLET,
     FILED_HISTORY_PHASE_NOTIFICATIONS,
-    ExpectedFiledDeclarationGrid,
-    FiledHistoryDiscoveryPair,
-    FiledHistoryDiscoveryPort,
-    FiledHistoryDiscoveryReport,
-    FiledHistoryOnboardingRun,
-    FiledHistoryPairOutcome,
-    filed_history_discovery_report,
-    pull_filed_history,
 )
-from ...application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
 from ...application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FILED_HISTORY_PHASE_CLEANUP,
@@ -73,6 +73,7 @@ from ...application.live.filed_history_operation import (
     build_filed_history_operation_registration,
     settled_filed_history_effect,
 )
+from ...application.live.filed_history_pull import FiledHistoryDiscoveryPort, pull_filed_history
 from ...application.live.filed_observation_ports import FiledObservationPersistencePorts
 from ...application.live.iva_remote_state_ports import IvaRemoteStatePort
 from ...application.live.notification_ports import NotificationsPorts
@@ -103,7 +104,7 @@ from ...application.user_profile.access_contracts import (
     DisclosureCategory,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
-from ...application.user_profile.access_policy import operation_scope_refusal
+from ...application.user_profile.operation_access_policy import operation_scope_refusal
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.operations import (
@@ -146,9 +147,11 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
-def _test_filed_history_composition(output_root: Path) -> FiledHistoryComposition:
+def _test_filed_history_composition(
+    output_root: Path, *, operation: PinnedAuthorityOperation | None = None
+) -> FiledHistoryComposition:
     """Compose deterministic observation ports with the real outer capabilities."""
-    del output_root
+    del output_root, operation
     bundle = in_memory_filed_observation_test_bundle()
     return _TestFiledHistoryComposition(
         ports=bundle.ports,

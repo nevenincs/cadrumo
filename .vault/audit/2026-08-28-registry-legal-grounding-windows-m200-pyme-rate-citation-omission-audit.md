@@ -3,14 +3,48 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:203c12757ff6bce5a67f2a670f9973bc2679fce971ffecff90ffa0903943b940'
+body_hash: 'sha256:b9103c33d4e0cc608f9433b36ddbf60339faec4c2d3f07ecdb38bf4a77245c65'
 related: []
 ---
 
 # `registry-legal-grounding-windows` audit: `M200's 2024 pyme rate names its authorities in a comment but not in legal_refs`
 
+## Scope
+
+Reassess legal citations for Modelo 200 PyME rates and related transitional rates, including corrections to the initial remediation proposal.
+
+## Findings
+Two things, and both are narrower than what this audit previously claimed.
+
+**1. A real, validator-compatible gap on one row.** `is.modelo-200.tipo-gravamen-pyme`
+encodes 0,23 for the 2024 window and cites only `ley-27-2014:art-29`, which states
+the 25 % general rate and not 23 %. Its siblings `-pyme-display` and `-erd` both
+cite `ley-31-2022:art-39` for that same 23 %, and art. 39 declares
+`effective_from = 2023-01-01`, so it **is** in force at a 2024 devengo and can be
+cited. That is the fix: one row, one citation, no value moves.
+
+**2. Structurally ungroundable inert data.** The 2024 revision carries forward
+windows for 2025, 2026 and beyond whose establishing provision cannot be cited in
+that revision by construction. Period resolution never reaches them — 2025 filings
+resolve to their own revision — so they are documentation, not live values. They
+sit in a state no citation can legitimise. Whether to delete them or accept them
+as annotation is an owner's call; what cannot happen is grounding them where they
+are.
+
+## Recommendations
+Three ticks grew this finding from one row to four on the strength of a numeric
+corpus comparison, and the fourth-row extension was correct as an observation and
+wrong as a defect. The presence check sees that a cited article does not state a
+value; it cannot see that the provision which does state it was not yet law when
+the period closed.
+
+The campaign's own rule covers this and I did not apply it early enough: when two
+gates or two rules conflict, report, do not pick. The grounding rule says cite the
+provision that establishes the value; the window rule says never cite a provision
+that did not govern the period. For an inert forward-dated value those cannot both
+be satisfied, and that tension is the finding — not a missing citation.
 ## Finding
 
 `is.modelo-200.tipo-gravamen-pyme` in the Modelo 200 **2024** revision declares:
@@ -337,36 +371,3 @@ That also explains the asymmetry cleanly. `2025-y-siguientes` carries dt-44 on
 three rows because its devengo is 2025 or later, where the disposición is in
 force. The two revisions are each correct for their own period, and what looked
 like "a correction never backported" is two revisions obeying the same rule.
-
-## What actually survives
-
-Two things, and both are narrower than what this audit previously claimed.
-
-**1. A real, validator-compatible gap on one row.** `is.modelo-200.tipo-gravamen-pyme`
-encodes 0,23 for the 2024 window and cites only `ley-27-2014:art-29`, which states
-the 25 % general rate and not 23 %. Its siblings `-pyme-display` and `-erd` both
-cite `ley-31-2022:art-39` for that same 23 %, and art. 39 declares
-`effective_from = 2023-01-01`, so it **is** in force at a 2024 devengo and can be
-cited. That is the fix: one row, one citation, no value moves.
-
-**2. Structurally ungroundable inert data.** The 2024 revision carries forward
-windows for 2025, 2026 and beyond whose establishing provision cannot be cited in
-that revision by construction. Period resolution never reaches them — 2025 filings
-resolve to their own revision — so they are documentation, not live values. They
-sit in a state no citation can legitimise. Whether to delete them or accept them
-as annotation is an owner's call; what cannot happen is grounding them where they
-are.
-
-## What this says about the method
-
-Three ticks grew this finding from one row to four on the strength of a numeric
-corpus comparison, and the fourth-row extension was correct as an observation and
-wrong as a defect. The presence check sees that a cited article does not state a
-value; it cannot see that the provision which does state it was not yet law when
-the period closed.
-
-The campaign's own rule covers this and I did not apply it early enough: when two
-gates or two rules conflict, report, do not pick. The grounding rule says cite the
-provision that establishes the value; the window rule says never cite a provision
-that did not govern the period. For an inert forward-dated value those cannot both
-be satisfied, and that tension is the finding — not a missing citation.

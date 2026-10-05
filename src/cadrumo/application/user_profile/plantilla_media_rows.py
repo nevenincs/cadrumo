@@ -143,15 +143,6 @@ def plantilla_media_years_of(record: UserProfileRecord) -> tuple[PlantillaMediaY
     )
 
 
-def list_plantilla_media_years(
-    *,
-    profile_id: str,
-    profile_decode_context: ProfileDecodeContext,
-) -> tuple[PlantillaMediaYear, ...]:
-    """Return the active profile's declared average workforce, in year order."""
-    return plantilla_media_years_of(_load(profile_id, profile_decode_context))
-
-
 def set_plantilla_media_year(
     *,
     profile_id: str,
@@ -221,7 +212,6 @@ def remove_plantilla_media_year(
 __all__ = [
     "PlantillaMediaMutation",
     "PlantillaMediaWriteSurface",
-    "list_plantilla_media_years",
     "plantilla_media_years_of",
     "remove_plantilla_media_year",
     "set_plantilla_media_year",

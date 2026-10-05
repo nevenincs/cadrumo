@@ -43,7 +43,10 @@ from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -188,7 +191,7 @@ def _store_prior_303_compensation(
             source_kind="aeat_sede_justificante",
             source_headers=(
                 ObservedHeaderFact(
-                    header_key="declaration_type",
+                    header_key="filing.result_disposition",
                     value="C",
                     source_artefact_kind="submitted_file",
                     source_locator="test:iva-wallet:prior-declaration-type",
@@ -394,6 +397,15 @@ def _save_wallet_gate_decision(*, amount: Decimal, blocked: bool = False) -> Non
             target_period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             target_registry_snapshot_ref=_snapshot_303().snapshot_ref,
             source_registry_snapshot_refs=(),
+            authority_sources=(
+                IvaCompensationAuthoritySource(
+                    source_kind="aeat_wallet",
+                    amount=amount,
+                    source_locator="test://wallet",
+                    captured_at=_DECIDED_AT,
+                    registry_snapshot_refs=(),
+                ),
+            ),
             selected_authority="aeat_wallet" if not blocked else "missing",
             selected_amount=amount if not blocked else None,
             wallet_amount=amount,

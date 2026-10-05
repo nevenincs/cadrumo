@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:29a6dedb79a092ccb899e1fd42e4547d9d5023fa3b7d59c3f2224752beac20db'
+modified: '2026-10-03'
+body_hash: 'sha256:414a3498665391ccface5971ef6e15be3059e891f0fe06317a623a5d44d101f4'
 related:
   - "[[2026-06-03-cli-errors-domain-package-lazy-import-research]]"
   - "[[2026-06-03-user-profile-lazy-import-adr]]"
@@ -14,11 +14,10 @@ related:
 
 ## Problem Statement
 
-The CLI lazy-loading discipline gate at
-`src/cadrumo/entrypoints/cli/test_lazy_command_tree.py` reds five state-free-surface
+The CLI lazy-loading discipline gate  reds five state-free-surface
 tests even after the parent campaign's application-package boundary fix landed
 (commit `20992e0d4` — `cadrumo.application.user_profile` is now lazy-by-default and
-the producer probe at `src/cadrumo/application/user_profile/test_lazy_boundary.py`
+the producer probe
 confirms zero `cadrumo.domain.calculations.registry*` modules enter `sys.modules`
 on package import).
 
@@ -107,10 +106,9 @@ interpreter places zero `cadrumo.domain.calculations.registry*` modules in
 `sys.modules`. The `cli/_errors.py` import of `StoredProfileDriftError`
 resolves through the eager error re-exports and never touches
 `_portable_export`. The five red CLI-gate tests go green; the producer
-probe at `src/cadrumo/application/user_profile/test_lazy_boundary.py`
+probe
 continues to pass (the application boundary fix is preserved). The
-producer-side mirror probe at
-`src/cadrumo/domain/user_profile/test_lazy_boundary.py` lands alongside the
+producer-side mirror probe  lands alongside the
 change to pin the domain-package contract at the layer where it actually
 lives.
 
@@ -157,8 +155,7 @@ The implementation is a single atomic relocation:
   symmetry with eager-import semantics.
 - Keep `__all__` unchanged. The public surface is identical; a `dir()`
   call returns the same list.
-- Land a producer-side regression probe at
-  `src/cadrumo/domain/user_profile/test_lazy_boundary.py`. The probe runs
+- Land a producer-side regression probe . The probe runs
   a fresh subprocess (warm-cache pollution from other test modules
   is not adequate evidence), imports the domain package, and asserts
   the registry-module count is zero. This mirrors the application-side

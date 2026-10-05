@@ -15,10 +15,10 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n.render import tr
+from ......core.operator_progress import OperatorProgress, operator_progress_sink
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ...operator_progress import operator_progress_sink
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_support import (
     ClaveMovilConfigurationError,
@@ -198,6 +198,37 @@ def test_fresh_login_browser_mode_matches_the_authentication_flow(
     assert provider._attempt_context()["headless"] is expected_headless
 
 
+@pytest.mark.parametrize("headless", [True, False])
+def test_an_unchosen_route_uses_the_app_request_and_keeps_the_headless_setting(
+    tmp_path: Path,
+    headless: bool,
+) -> None:
+    """Without an explicit QR choice the provider never forces a visible browser."""
+    configured = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
+        update={"cadrumo_browser_headless": headless},
+    )
+    provider = ClaveMovilAuthProvider(configured)
+
+    context = provider._attempt_context()
+
+    assert context["auth_mode"] == "non_qr"
+    assert context["prefer_non_qr"] is True
+    assert provider._fresh_login_settings().cadrumo_browser_headless is headless
+
+
+def test_an_explicit_qr_route_forces_a_visible_browser(tmp_path: Path) -> None:
+    """The QR code has to be seen, so a headless setting is overridden for it."""
+    configured = _settings_for(
+        tmp_path,
+        CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
+        CADRUMO_CLAVE_PREFER_NON_QR="false",
+    ).model_copy(update={"cadrumo_browser_headless": True})
+    provider = ClaveMovilAuthProvider(configured)
+
+    assert provider._attempt_context()["auth_mode"] == "qr"
+    assert provider._fresh_login_settings().cadrumo_browser_headless is False
+
+
 @pytest.mark.parametrize(
     ("identity", "configured", "available", "severity"),
     [(None, False, False, "info"), ("12345678Z", True, True, ""), ("BAD", True, False, "warning")],
@@ -245,14 +276,28 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
 
 
 def test_render_progress_banner_routes_only_to_armed_operator_sink() -> None:
-    from ......core.operator_progress import OperatorProgress
-
     captured: list[OperatorProgress] = []
-    _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
-    assert captured == []
-    with operator_progress_sink(captured.append):
-        _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
-    assert len(captured) == 1
+
+    async def capture(progress: OperatorProgress) -> None:
+        captured.append(progress)
+
+    async def run() -> None:
+        await _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+        assert captured == []
+        with operator_progress_sink(capture):
+            await _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+            await _render_progress_banner(verification_code=None, timeout_seconds=120, used_non_qr_fallback=False)
+            await _render_progress_banner(
+                verification_code="code: 12 34", timeout_seconds=120, used_non_qr_fallback=True
+            )
+
+    _run(run())
+    assert [(progress.notice_code, progress.display_code) for progress in captured] == [
+        ("auth.clave-movil.approval-pending", "YLL"),
+        ("auth.clave-movil.qr-scan-pending", None),
+        # Page text outside the comparison-code shape stays in the log banner only.
+        ("auth.clave-movil.approval-pending", None),
+    ]
     assert "YLL" in captured[0].message
     assert captured[0].timeout_seconds == 120
     assert "Time remaining 2:00" in captured[0].render()
@@ -263,10 +308,12 @@ def test_render_progress_banner_uses_structured_log_not_stdio(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     with caplog.at_level(logging.INFO, logger="cadrumo.adapters.outbound.aeat.auth.clave_movil"):
-        _render_progress_banner(
-            verification_code="ABC123",
-            timeout_seconds=120,
-            used_non_qr_fallback=False,
+        _run(
+            _render_progress_banner(
+                verification_code="ABC123",
+                timeout_seconds=120,
+                used_non_qr_fallback=False,
+            )
         )
     captured = capsys.readouterr()
     assert captured.out == ""

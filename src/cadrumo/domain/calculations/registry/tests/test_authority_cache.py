@@ -42,9 +42,9 @@ def test_budget_accounts_shared_values_once_and_does_not_retain_oversize() -> No
     cache: AccountedAuthorityCache[str, str] = AccountedAuthorityCache(20)
     cache.get_or_load("a", lambda: RetainedAuthorityValue("a", 5, (("shared", 10),)))
     cache.get_or_load("b", lambda: RetainedAuthorityValue("b", 5, (("shared", 10),)))
-    assert cache.telemetry().retained_weight == 20
+    assert cache.stats().retained_weight == 20
     cache.get_or_load("large", lambda: RetainedAuthorityValue("large", 21))
-    assert cache.telemetry().entries == 2
+    assert cache.stats().entries == 2
 
 
 def test_decoded_graph_estimate_counts_shared_members_once_and_callers_survive_eviction() -> None:
@@ -55,7 +55,7 @@ def test_decoded_graph_estimate_counts_shared_members_once_and_callers_survive_e
 
     cache: AccountedAuthorityCache[str, dict[str, tuple[str, ...]]] = AccountedAuthorityCache(1)
     caller_value = cache.get_or_load("first", lambda: RetainedAuthorityValue(value, 2))
-    assert cache.telemetry().entries == 0
+    assert cache.stats().entries == 0
     assert caller_value == value
 
 
@@ -68,7 +68,7 @@ def test_failures_release_waiters_and_recursive_loads_refuse() -> None:
 
     with pytest.raises(AuthorityCacheCycleError):
         cache.get_or_load("cycle", recursive)
-    assert cache.telemetry().in_flight == 0
+    assert cache.stats().in_flight == 0
     assert cache.get_or_load("cycle", lambda: RetainedAuthorityValue("recovered", 1)) == "recovered"
 
 
@@ -99,4 +99,4 @@ def test_cross_thread_dependency_cycle_fails_promptly_and_releases_both_loads() 
 
     assert all(not thread.is_alive() for thread in threads), "cross-thread cache cycle did not resolve promptly"
     assert all(isinstance(error, AuthorityCacheCycleError) for error in errors)
-    assert cache.telemetry().in_flight == 0
+    assert cache.stats().in_flight == 0

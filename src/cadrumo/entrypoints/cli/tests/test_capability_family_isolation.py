@@ -47,7 +47,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from ....application.operator_surface.command_ports import CommandCapabilityClass
-from ..command_spec import Capability
+from ..command_shared_contracts import Capability
 from ..command_specs import COMMAND_GRAPH
 from .cli_performance import IMPORT_FAMILY_PREFIXES
 

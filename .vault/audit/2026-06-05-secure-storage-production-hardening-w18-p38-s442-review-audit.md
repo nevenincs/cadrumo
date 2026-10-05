@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:a3a778ad4c414bf097ff84e06dd80113a1c37958b6c9ae3f05c319f446a60f8c'
+modified: '2026-10-03'
+body_hash: 'sha256:1beb9153a3577533e3b748f6150377475c83404d76a0729bf784f78a60c86adc'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S442-001 | PASS | Projection module does not own storage routing
 
-Reviewed the S442 scope as `vaultspec-code-reviewer`. `src/aeat/application/modelo/_projection.py`
+Reviewed the S442 scope as `vaultspec-code-reviewer`. The retired module
 loads existing work units and calculation revisions through the application action
 surface, reads bundled registry snapshots through `resources()`, and asks
 `resolve_profile_sourced_bindings()` for profile-derived formula inputs. It does not

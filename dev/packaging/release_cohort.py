@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
 
@@ -328,6 +329,16 @@ def _build_identity(clean_root: Path) -> BuildIdentity:
     )
 
 
+def _assert_prepared_source_unchanged(root: Path, source_files: tuple[str, ...], expected_source_digest: str) -> None:
+    final_source_files = repository_files(root)
+    final_source_digest = content_digest(root, final_source_files)
+    if final_source_files != source_files or final_source_digest != expected_source_digest:
+        raise SystemExit(
+            "prepared release source drifted while assembling the cohort: "
+            f"expected {expected_source_digest}, got {final_source_digest}",
+        )
+
+
 def build_from_clean_source(
     *,
     clean_root: Path,
@@ -449,13 +460,7 @@ def build_from_clean_source(
             f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
         )
     if use_prepared_source:
-        final_source_files = repository_files(root)
-        final_source_digest = content_digest(root, final_source_files)
-        if final_source_files != source_files or final_source_digest != expected_source_digest:
-            raise SystemExit(
-                "prepared release source drifted while assembling the cohort: "
-                f"expected {expected_source_digest}, got {final_source_digest}",
-            )
+        _assert_prepared_source_unchanged(root, source_files, expected_source_digest)
     return _complete_release_cohort(
         output=output,
         manifest_path=manifest_path,
@@ -486,7 +491,7 @@ def build_release_cohort(
     # only moment that survives a kill.
     with contextlib.suppress(OSError):
         sweep_var_scratch(var)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-release-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-release-", dir=prepare_temporary_directory()) as temporary:
         clean_root = Path(temporary) / "source"
         # An isolated copy of the enumerated tree, not the live one: the rest
         # of this build runs in a child process against `clean_root`, so a

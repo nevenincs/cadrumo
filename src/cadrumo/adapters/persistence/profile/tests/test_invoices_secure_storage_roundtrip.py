@@ -16,6 +16,7 @@ from pydantic import ValidationError
 
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
+from .....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
@@ -30,7 +31,11 @@ from ..invoices import InvoiceCatalogueRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
+def _populated_invoice(
+    invoice_number: str = "F-2025-001",
+    *,
+    business_premises_lease: BusinessPremisesLease | None = None,
+) -> Invoice:
     """Build a typed Invoice with every field set to a non-default value."""
 
     return Invoice.model_validate(
@@ -61,6 +66,7 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
             "payment_status": PaymentStatus.PENDING,
             "linked_transaction_ids": ("a" * 64,),
             "notes": "Test invoice for roundtrip coverage.",
+            "business_premises_lease": business_premises_lease,
         },
     )
 
@@ -103,7 +109,14 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
     """A populated InvoiceCatalogue saved through the repository loads back equal."""
 
     with isolated_runtime_profile(tmp_path=tmp_path):
-        invoice_a = _populated_invoice(invoice_number="F-2025-001")
+        lease = BusinessPremisesLease(
+            situacion_inmueble=SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE,
+            referencia_catastral="12345678901234567890",
+        )
+        invoice_a = _populated_invoice(
+            invoice_number="F-2025-001",
+            business_premises_lease=lease,
+        )
         invoice_b = _populated_invoice(invoice_number="F-2025-002")
         original = InvoiceCatalogue(
             invoices={
@@ -121,6 +134,7 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         loaded_a = loaded.invoices[invoice_a.invoice_id]
         assert loaded_a.kind is InvoiceKind.ISSUED
         assert loaded_a.payment_status is PaymentStatus.PENDING
+        assert loaded_a.business_premises_lease == lease
         assert loaded_a.base_total == Decimal("1000.00")
         assert loaded_a.iva_total == Decimal("210.00")
         assert loaded_a.grand_total == Decimal("1210.00")
@@ -131,6 +145,120 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded_line.quantity == Decimal("10")
         assert loaded_line.iva_amount == Decimal("210.00")
         assert loaded_line.spending_category_id == "consultoria"
+
+
+def test_previous_encrypted_invoice_shape_loads_without_a_lease_family(tmp_path: Path) -> None:
+    """An old encrypted invoice defaults only the newly optional nested family."""
+    from sqlalchemy import select
+
+    from ...storage.sql.orm import SecureObjectRow
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        invoice = _populated_invoice(
+            invoice_number="F-2025-OLD-SHAPE",
+            business_premises_lease=BusinessPremisesLease(
+                situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            ),
+        )
+        repo = InvoiceCatalogueRepository()
+        repo.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
+        statement = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        )
+
+        def remove_new_optional_field(envelope):
+            stored = envelope["payload"]["invoices"][invoice.invoice_id]
+            stored.pop("business_premises_lease", None)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=statement,
+            mutate=remove_new_optional_field,
+        )
+
+        loaded = repo.load().invoices[invoice.invoice_id]
+
+        assert loaded.invoice_id == invoice.invoice_id
+        assert loaded.business_premises_lease is None
+
+
+def test_encrypted_malformed_non_null_lease_family_refuses_catalogue_read(tmp_path: Path) -> None:
+    from sqlalchemy import select
+
+    from ...storage.sql.orm import SecureObjectRow
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        invoice = _populated_invoice(
+            invoice_number="F-2025-MALFORMED-LEASE",
+            business_premises_lease=BusinessPremisesLease(
+                situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            ),
+        )
+        repo = InvoiceCatalogueRepository()
+        repo.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
+        statement = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        )
+
+        def set_invalid_situation(envelope) -> None:
+            stored = envelope["payload"]["invoices"][invoice.invoice_id]
+            stored["business_premises_lease"]["situacion_inmueble"] = "5"
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=statement,
+            mutate=set_invalid_situation,
+        )
+
+        with pytest.raises(ValidationError):
+            repo.load()
+
+
+@pytest.mark.parametrize("selected", [False, True])
+def test_historical_encrypted_flat_lease_facts_survive_load_and_canonical_save(tmp_path: Path, selected: bool) -> None:
+    """Read the actual old ciphertext shape without losing the recorded lease."""
+    from sqlalchemy import select
+
+    from ...storage.sql.orm import SecureObjectRow
+
+    lease = (
+        BusinessPremisesLease(
+            situacion_inmueble=SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE,
+            referencia_catastral="9872023VH5797S0001WX",
+        )
+        if selected
+        else None
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        invoice = _populated_invoice(invoice_number="F-2025-HISTORICAL-LEASE", business_premises_lease=lease)
+        repo = InvoiceCatalogueRepository()
+        repo.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
+        statement = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        )
+
+        def restore_historical_flat_shape(envelope) -> None:
+            stored = envelope["payload"]["invoices"][invoice.invoice_id]
+            stored.pop("business_premises_lease")
+            stored.update(
+                arrendamiento_local_negocio=selected,
+                situacion_inmueble="1" if selected else None,
+                referencia_catastral="9872023VH5797S0001WX" if selected else None,
+            )
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=statement,
+            mutate=restore_historical_flat_shape,
+        )
+        loaded = repo.load()
+        assert loaded.invoices[invoice.invoice_id].business_premises_lease == lease
+        assert loaded.invoices[invoice.invoice_id].invoice_id == invoice.invoice_id
+        repo.save(loaded)
+        assert repo.load() == loaded
+        assert not {"arrendamiento_local_negocio", "situacion_inmueble", "referencia_catastral"} & (
+            loaded.invoices[invoice.invoice_id].model_dump().keys()
+        )
 
 
 def test_invoice_catalogue_persists_only_to_the_secure_database_object(

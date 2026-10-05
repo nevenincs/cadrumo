@@ -9,31 +9,39 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.local_runtime.framing import (
+from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
+from cadrumo.adapters.local_runtime.installation import runtime_installation
+from cadrumo.adapters.local_runtime.runtime_frame_io import (
     MAXIMUM_FRAME_BYTES,
-    VerifiedRuntimeConnection,
     read_document,
     write_document,
     write_secret,
 )
-from cadrumo.adapters.local_runtime.installation import runtime_installation
-from cadrumo.adapters.local_runtime.server import RuntimeTransportServer
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
-    ModeloWorkRenamePublicResultV2,
-    ModeloWorkRenameRequest,
+from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
+from cadrumo.application.modelo.edit_models import (
+    ModeloBindingEditIntentV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditSubmissionV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
+from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2
+from cadrumo.application.modelo.operation_definitions import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenamePublicResultV2, ModeloWorkRenameRequest
 from cadrumo.application.operations.frontend_requests import (
+    OPERATION_OBSERVATION_PROJECTION_ID,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationResultProjectionRequestV1,
@@ -50,6 +58,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationContract,
     RuntimeOperationContractReply,
     RuntimeOperationControl,
+    RuntimeOperationFinancialInput,
     RuntimeOperationObserve,
     RuntimeOperationObserved,
     RuntimeOperationPayloadReady,
@@ -69,13 +78,24 @@ from cadrumo.application.runtime.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,
     SubmissionPayloadDescriptor,
 )
-from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.access_contracts import (
+    AccessAction,
+    AccessDenialCode,
+    AccessScope,
+    DisclosureCategory,
+    DisclosurePermission,
+)
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.test_registered_executor_conformance import seeded_modelo_edit_submission
 
+from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .test_modelo_metadata import _admit, _connect, _issue_scoped_key, _LoginObservation, _seed_periods
+from .test_modelo_metadata_history import _observe
 
 pytestmark = [
     pytest.mark.integration,
@@ -89,13 +109,17 @@ pytestmark = [
 @dataclass(frozen=True, slots=True)
 class _NativeBulkRuntime:
     endpoint: WindowsRuntimeEndpoint
+    storage_root: Path
     profile_id: UUID
     api_key: bytes
     work_unit: WorkUnit
+    edit_input: ModeloEditOperatorInputV2 | None = None
 
 
 @pytest.fixture
-def native_bulk_runtime(tmp_path: Path) -> Iterator[_NativeBulkRuntime]:
+def native_bulk_runtime(
+    tmp_path: Path, request: pytest.FixtureRequest, operation: PinnedAuthorityOperation
+) -> Iterator[_NativeBulkRuntime]:
     """Compose the real Windows runtime around a synthetic encrypted profile."""
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
@@ -108,8 +132,71 @@ def native_bulk_runtime(tmp_path: Path) -> Iterator[_NativeBulkRuntime]:
             tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
         ) as subject:
             profile_id = subject.store.binding.profile_id
-            work_unit, _ = _seed_periods(profile_id)
-            api_key = _issue_scoped_key(subject)
+            edit_input = None
+            if getattr(request, "param", None) == "financial":
+                unit_id, wire = seeded_modelo_edit_submission(profile_id, operation=operation)
+                work_unit = WorkUnitCatalogueRepository().load().get(unit_id)
+                assert work_unit is not None
+                original = wire.to_submission()
+                binding = next(
+                    entry
+                    for entry in original.baseline.permitted_surface
+                    if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+                    and entry.grammar.money_operand_bound
+                )
+                batch = ModeloEditSubmissionV1(
+                    baseline=original.baseline,
+                    mutation_family=original.mutation_family,
+                    scalar_intents=original.scalar_intents,
+                    binding_intents=(
+                        ModeloBindingEditIntentV1(
+                            address=ModeloEditBindingAddressV1(binding_id=binding.binding_id),
+                            kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                            value=Decimal("9876.54"),
+                        ),
+                    ),
+                )
+                edit_input = ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(batch))
+                definitions = frozenset({"modelo.edit.apply", "modelo.edit.preflight"})
+                registry = build_production_operation_registry()
+                disclosures = {
+                    DisclosurePermission(
+                        destination_id=subject.owner.requesting.client_id,
+                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+                        category=DisclosureCategory.OPERATION_METADATA,
+                    )
+                }
+                for definition_id in definitions:
+                    schema = registry.lookup_public_contract(definition_id).result_schema
+                    assert schema is not None
+                    disclosures.add(
+                        DisclosurePermission(
+                            destination_id=subject.owner.requesting.client_id,
+                            projection_id=schema.schema_id,
+                            category=DisclosureCategory.TAX_VALUES,
+                        )
+                    )
+                scope = AccessScope(
+                    operations=definitions,
+                    actions=frozenset(
+                        {
+                            AccessAction.SUBMIT,
+                            AccessAction.START,
+                            AccessAction.OBSERVE,
+                            AccessAction.RESULT,
+                            AccessAction.CANCEL,
+                            AccessAction.DETACH,
+                        }
+                    ),
+                    disclosures=frozenset(disclosures),
+                    periods=frozenset({work_unit.period}),
+                    allow_period_independent=False,
+                    allow_delegation=False,
+                )
+                api_key = _issue_scoped_key(subject, scope=scope)
+            else:
+                work_unit, _ = _seed_periods(profile_id)
+                api_key = _issue_scoped_key(subject)
             close_active_bucket_session()
 
             stop, boot = Event(), uuid4()
@@ -121,14 +208,15 @@ def native_bulk_runtime(tmp_path: Path) -> Iterator[_NativeBulkRuntime]:
                 capture_login=lambda _channel: _LoginObservation(),
                 secret_store=lambda: subject.native,
             )
-            server = RuntimeTransportServer(
+            profiles.prepare_registry()
+            server = RetainedRuntimeTransportServer(
                 endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
             )
             with ThreadPoolExecutor(max_workers=1) as pool:
                 running = pool.submit(server.serve)
                 try:
                     assert server.ready.wait(3)
-                    yield _NativeBulkRuntime(endpoint, profile_id, api_key, work_unit)
+                    yield _NativeBulkRuntime(endpoint, root, profile_id, api_key, work_unit, edit_input)
                 finally:
                     primary = sys.exception()
                     stop.set()
@@ -412,3 +500,62 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
             new_name="Survived locked upload",
         )
         assert work_unit.name == "Survived locked upload"
+
+
+@pytest.mark.parametrize("native_bulk_runtime", ("financial",), indirect=True)
+@pytest.mark.timeout(180)
+def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
+    native_bulk_runtime: _NativeBulkRuntime,
+) -> None:
+    """The real Windows channels and profile worker consume the complete scalar/binding batch."""
+    runtime = native_bulk_runtime
+    encoded = runtime.edit_input
+    assert encoded is not None
+    client = _connect(runtime.endpoint)
+    try:
+        session_id = _admit(client, runtime.profile_id, method="password", proof=PROFILE_INPUT.encode())
+        for definition_id, expected_effect in (
+            ("modelo.edit.preflight", OperationEffect.NONE),
+            ("modelo.edit.apply", OperationEffect.UPDATED),
+        ):
+            submitted = client.operation(
+                RuntimeOperationFinancialInput(
+                    request_id=uuid4(),
+                    profile_id=runtime.profile_id,
+                    session_id=session_id,
+                    definition_id=definition_id,
+                    subject_ref=runtime.work_unit.work_unit_id,
+                    payload_json=encoded.model_dump_json(),
+                ),
+                deadline=time.monotonic() + 20,
+            )
+            assert isinstance(submitted, RuntimeOperationSubmitted), submitted
+            operation_id = submitted.receipt.operation_id
+            started = client.operation(
+                RuntimeOperationControl(
+                    request_id=uuid4(),
+                    profile_id=runtime.profile_id,
+                    session_id=session_id,
+                    action="operation_start",
+                    operation_id=operation_id,
+                ),
+                # The acknowledgement waits behind the executor's first step.
+                deadline=time.monotonic() + 30,
+            )
+            assert isinstance(started, RuntimeOperationAcknowledged), started
+            deadline = time.monotonic() + 30
+            while True:
+                observed = _observe(client, runtime.profile_id, session_id, operation_id)
+                if observed.projection.terminal_condition is not None:
+                    break
+                assert time.monotonic() < deadline
+                time.sleep(0.05)
+            assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, observed
+            assert observed.projection.effect is expected_effect
+            journal_files = tuple(runtime.storage_root.rglob(f"{operation_id}.json"))
+            assert journal_files
+            for path in journal_files:
+                text = path.read_text(encoding="utf-8")
+                assert "9876.54" not in text and "scalar_intents" not in text and "binding_intents" not in text
+    finally:
+        client.close()

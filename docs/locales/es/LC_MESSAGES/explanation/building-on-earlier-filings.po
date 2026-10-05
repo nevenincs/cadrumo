@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -51,12 +51,13 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "For any term you are unsure of - {term}`modelo 100`, {term}`casilla`, "
-"{term}`justificante`, {term}`AEAT`, IVA, IRPF, or RENTA - look it up in "
-"the {doc}`glossary </_generated/glossary>`."
+"{term}`AEAT receipt <justificante>`, {term}`AEAT`, VAT, IRPF, or RENTA - "
+"look it up in the {doc}`glossary </_generated/glossary>`."
 msgstr ""
 "Para cualquier término que no tengas claro ({term}`modelo 100`, "
-"{term}`casilla`, {term}`justificante`, {term}`AEAT`, IVA, IRPF o RENTA), "
-"búscalo en el {doc}`glosario </_generated/glossary>`."
+"{term}`casilla`, {term}`justificante de la AEAT <justificante>`, "
+"{term}`AEAT`, IVA, IRPF o RENTA), búscalo en el {doc}`glosario "
+"</_generated/glossary>`."
 
 #: ../../explanation/building-on-earlier-filings.md:13
 msgid "Why a later form needs earlier figures"
@@ -77,7 +78,7 @@ msgstr "En los modelos aparecen dos patrones habituales:"
 #: ../../explanation/building-on-earlier-filings.md:19
 msgid ""
 "**Annual summaries gather the year.** A yearly form rolls up the periods "
-"inside it. Modelo 390, for example, summarises the year's Modelo 303 IVA "
+"inside it. Modelo 390, for example, summarises the year's Modelo 303 VAT "
 "filings. Modelo 100 (RENTA) pulls together the income-tax instalments and"
 " withholdings you reported through the year."
 msgstr ""
@@ -90,12 +91,12 @@ msgstr ""
 #: ../../explanation/building-on-earlier-filings.md:20
 msgid ""
 "**Unused amounts carry into the next period.** If a Modelo 303 quarter "
-"leaves you with more IVA paid than collected, the difference becomes an "
-"unused amount carried into a later period - an IVA credit you keep until "
-"a later return uses it or the legal carry window closes."
+"leaves you with more VAT paid than collected, the difference becomes an "
+"unused amount carried into a later period - a VAT credit you keep until a"
+" later return uses it or the legal carry window closes."
 msgstr ""
 "**Los importes no utilizados pasan al periodo siguiente.** Si un "
-"trimestre del modelo 303 te deja con más IVA soportado que repercutido, "
+"trimestre del Modelo 303 te deja con más IVA soportado que repercutido, "
 "la diferencia se convierte en un importe no utilizado que se arrastra a "
 "un periodo posterior: un crédito de IVA que conservas hasta que una "
 "declaración posterior lo aplique o se cierre el plazo legal de arrastre."
@@ -111,64 +112,64 @@ msgstr ""
 "desde tus presentaciones anteriores para que no tengas que volver a "
 "introducirlas a mano."
 
-#: ../../explanation/building-on-earlier-filings.md:24
-msgid "Earlier figures must be backed by evidence"
-msgstr "Las cifras anteriores deben estar respaldadas por evidencia"
+#: ../../explanation/building-on-earlier-filings.md:25
+msgid "Earlier figures must be backed by proof"
+msgstr "Las cifras anteriores deben estar respaldadas por pruebas"
 
-#: ../../explanation/building-on-earlier-filings.md:26
+#: ../../explanation/building-on-earlier-filings.md:27
 msgid ""
 "A carried-forward figure is only as trustworthy as the filing it came "
 "from. So the carry-forward rests on a clear principle. A figure carried "
 "in from an earlier filing should come from a filing you actually "
-"completed and marked as filed. Where possible, it should come from one "
-"backed by the agency's receipt."
+"completed and recorded as filed. Where possible, it should come from one "
+"backed by the AEAT receipt."
 msgstr ""
 "Una cifra arrastrada solo es tan fiable como la presentación de la que "
 "procede. Por eso el arrastre se apoya en un principio claro. Una cifra "
 "traída de una presentación anterior debe proceder de una presentación que"
-" realmente completaste y marcaste como presentada. Cuando sea posible, "
-"debe proceder de una respaldada por el justificante de la Agencia."
+" realmente completaste y registraste como presentada. Cuando sea posible,"
+" debe proceder de una respaldada por el justificante de la AEAT."
 
-#: ../../explanation/building-on-earlier-filings.md:28
+#: ../../explanation/building-on-earlier-filings.md:29
 msgid ""
 "The tool carries forward the figures it *has on record* for the matching "
 "modelo, year, and period. It does not invent a prior period that isn't "
 "there. If you ask a yearly form to gather four quarters and only two are "
 "on record, the tool brings in the two it has - it doesn't fabricate the "
-"missing pair to fill the gap. Verification then blocks the yearly form "
-"until you resolve the gap. That's deliberate. A guessed figure in a "
-"filing is worse than a visible blank you can act on."
+"missing pair to fill the gap. The check then blocks the yearly form until"
+" you resolve the gap. That's deliberate. A guessed figure in a filing is "
+"worse than a visible blank you can act on."
 msgstr ""
 "La herramienta arrastra las cifras que *tiene registradas* para el "
 "modelo, el año y el periodo que coinciden. No inventa un periodo anterior"
 " que no existe. Si le pides a un modelo anual que reúna cuatro trimestres"
 " y solo hay dos registrados, la herramienta aporta los dos que tiene: no "
-"fabrica el par que falta para rellenar el hueco. La verificación bloquea "
+"fabrica el par que falta para rellenar el hueco. La comprobación bloquea "
 "entonces el modelo anual hasta que resuelvas ese hueco. Es algo "
 "deliberado. Una cifra adivinada en una presentación es peor que un hueco "
 "visible sobre el que puedes actuar."
 
-#: ../../explanation/building-on-earlier-filings.md:30
+#: ../../explanation/building-on-earlier-filings.md:31
 msgid ""
 "Because of this, the figures it carries forward are a starting point you "
 "review, not a verdict you accept blindly. You confirm that each earlier "
-"figure came from a filing you completed and that it still reflects what "
-"you filed before you rely on it."
+"figure came from a filing you recorded as filed and that it still "
+"reflects what you filed before you rely on it."
 msgstr ""
 "Por ello, las cifras que arrastra son un punto de partida que revisas, no"
 " un veredicto que aceptas a ciegas. Confirmas que cada cifra anterior "
-"procede de una presentación que completaste y que sigue reflejando lo que"
-" presentaste antes de fiarte de ella."
-
-#: ../../explanation/building-on-earlier-filings.md:32
-msgid "The running IVA credit balance"
-msgstr "El saldo acumulado de crédito de IVA"
+"procede de una presentación que registraste como presentada y que sigue "
+"reflejando lo que presentaste antes de fiarte de ella."
 
 #: ../../explanation/building-on-earlier-filings.md:34
+msgid "The running VAT credit balance"
+msgstr "El saldo acumulado de crédito de IVA"
+
+#: ../../explanation/building-on-earlier-filings.md:36
 msgid ""
-"The unused-IVA case has its own small piece of memory. When a Modelo 303 "
-"period leaves you with IVA credit, the tool keeps a running record of "
-"that unused IVA credit to carry forward and brings it into the next "
+"The unused-VAT case has its own small piece of memory. When a Modelo 303 "
+"period leaves you with VAT credit, the tool keeps a running record of "
+"that unused VAT credit to carry forward and brings it into the next "
 "period's return."
 msgstr ""
 "El caso del IVA no utilizado tiene su propia pequeña memoria. Cuando un "
@@ -176,11 +177,11 @@ msgstr ""
 "mantiene un registro acumulado de ese crédito de IVA no utilizado para "
 "arrastrarlo, y lo incorpora a la declaración del periodo siguiente."
 
-#: ../../explanation/building-on-earlier-filings.md:36
+#: ../../explanation/building-on-earlier-filings.md:38
 msgid ""
 "That running record needs a true starting point. The first time you use "
 "the tool, it has no history of the credit you'd built up before. So you "
-"set the opening balance once - the unused IVA credit you were already "
+"set the opening balance once - the unused VAT credit you were already "
 "carrying when you started. From there, each period updates the balance on"
 " its own."
 msgstr ""
@@ -190,35 +191,35 @@ msgstr ""
 "de IVA no utilizado que ya arrastrabas cuando empezaste. A partir de ahí,"
 " cada periodo actualiza el saldo por sí solo."
 
-#: ../../explanation/building-on-earlier-filings.md:38
+#: ../../explanation/building-on-earlier-filings.md:40
 msgid ""
 "People make mistakes with an opening balance, so there's a correction "
-"path. Fix a wrong opening balance after the fact. One guard protects you:"
-" the tool refuses to change the basis of a period you've already "
-"completed and marked as filed. Rewriting a figure that a filed return "
-"already relied on would quietly change that return after the fact, so the"
-" correction is refused and names the filing that's in the way. If you hit"
-" that, the figure is locked because a filing already used it - which is "
+"path. You can fix a wrong opening balance after the fact. One guard "
+"protects you: the tool refuses to change the basis of a period you've "
+"already recorded as filed. Rewriting a figure that a filed return already"
+" relied on would quietly change that return after the fact, so the "
+"correction is refused and names the filing that's in the way. If you hit "
+"that, the figure is locked because a filing already used it - which is "
 "exactly when you'd want it locked."
 msgstr ""
-"Es fácil equivocarse con un saldo inicial, así que hay una vía de "
-"corrección: puedes corregir un saldo inicial equivocado después. Una "
-"salvaguarda te protege: la herramienta se niega a cambiar la base de un "
-"periodo que ya completaste y marcaste como presentado. Reescribir una "
-"cifra en la que ya se apoyó una declaración presentada cambiaría esa "
-"declaración a posteriori sin avisar, así que la corrección se rechaza y "
-"nombra la presentación que lo impide. Si te topas con eso, la cifra está "
+"La gente comete errores con un saldo inicial, así que hay una vía de "
+"corrección. Puedes corregir un saldo inicial equivocado a posteriori. Una"
+" salvaguarda te protege: la herramienta se niega a cambiar la base de un "
+"periodo que ya registraste como presentado. Reescribir una cifra en la "
+"que ya se apoyó una declaración presentada cambiaría esa declaración a "
+"posteriori sin avisar, así que la corrección se rechaza y nombra la "
+"presentación que lo impide. Si te encuentras con eso, la cifra está "
 "bloqueada porque una presentación ya la utilizó, que es justo cuando "
 "querrías que estuviera bloqueada."
 
-#: ../../explanation/building-on-earlier-filings.md:40
+#: ../../explanation/building-on-earlier-filings.md:42
 msgid ""
 "To see the figures a calculation is using, read [Review and supply "
 "calculation inputs](../how-to/review-calculation-values.md). The whole "
 "cycle - seeding the opening balance, a credit quarter, the carry, and the"
-" annual summary - is demonstrated live in [The IVA year](../how-to/iva-"
-"lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual "
-"Modelo 390 IVA summary](../how-to/modelo-390.md)."
+" annual summary - is demonstrated live in [The VAT year](../how-to/iva-"
+"lifecycle.md); for the yearly VAT summary alone, see [Prepare the annual "
+"Modelo 390 VAT summary](../how-to/modelo-390.md)."
 msgstr ""
 "Para ver las cifras que utiliza un cálculo, lee [Revisar y aportar las "
 "entradas de cálculo](../how-to/review-calculation-values.md). Todo el "
@@ -228,11 +229,11 @@ msgstr ""
 "[Preparar el resumen anual de IVA con el Modelo 390](../how-"
 "to/modelo-390.md)."
 
-#: ../../explanation/building-on-earlier-filings.md:42
+#: ../../explanation/building-on-earlier-filings.md:44
 msgid "The annual income-tax return pulls the year together"
 msgstr "La declaración anual del IRPF reúne todo el año"
 
-#: ../../explanation/building-on-earlier-filings.md:44
+#: ../../explanation/building-on-earlier-filings.md:46
 msgid ""
 "RENTA - the annual income-tax return - is the clearest example of a form "
 "that lives on earlier figures. Across the year you report income tax in "
@@ -246,7 +247,7 @@ msgstr ""
 "otros declararon por ti. Ninguno de ellos es la versión definitiva. La "
 "RENTA los reúne."
 
-#: ../../explanation/building-on-earlier-filings.md:46
+#: ../../explanation/building-on-earlier-filings.md:48
 msgid ""
 "The yearly return draws on those instalments and withholdings from your "
 "earlier filings, sets them against your full-year income, and settles the"
@@ -262,22 +263,22 @@ msgstr ""
 "aislados; son pagos a cuenta de una única liquidación anual, y la "
 "declaración anual es donde se encuentran."
 
-#: ../../explanation/building-on-earlier-filings.md:48
+#: ../../explanation/building-on-earlier-filings.md:50
 msgid ""
 "The same idea governs the figures: RENTA settles on the instalments and "
-"withholdings the tool has on record from filings you completed. You "
+"withholdings the tool has on record from filings recorded as filed. You "
 "review those before trusting the result."
 msgstr ""
 "La misma idea rige las cifras: la RENTA se liquida sobre los pagos "
 "fraccionados y las retenciones que la herramienta tiene registrados de "
-"presentaciones que completaste. Los revisas antes de fiarte del "
-"resultado."
+"presentaciones registradas como presentadas. Los revisas antes de fiarte "
+"del resultado."
 
-#: ../../explanation/building-on-earlier-filings.md:50
+#: ../../explanation/building-on-earlier-filings.md:52
 msgid "What the tool checks, and what it leaves to you"
 msgstr "Qué comprueba la herramienta y qué te deja a ti"
 
-#: ../../explanation/building-on-earlier-filings.md:52
+#: ../../explanation/building-on-earlier-filings.md:54
 msgid ""
 "It helps to be precise about the boundary here, because this is where a "
 "filing's accuracy is won or lost."
@@ -285,7 +286,7 @@ msgstr ""
 "Conviene ser preciso sobre esta frontera, porque es aquí donde se gana o "
 "se pierde la exactitud de una presentación."
 
-#: ../../explanation/building-on-earlier-filings.md:54
+#: ../../explanation/building-on-earlier-filings.md:56
 msgid ""
 "The tool finds and carries forward the earlier figures it has on record, "
 "matched by modelo, year, and period. That's the limit of what it does on "
@@ -301,21 +302,20 @@ msgstr ""
 "periodo anterior que no está registrado y no recoge sin más cada cifra "
 "que encuentra dando por hecho que todas son correctas."
 
-#: ../../explanation/building-on-earlier-filings.md:56
+#: ../../explanation/building-on-earlier-filings.md:58
 msgid ""
 "What it leaves to you is the judgement: that each carried-forward figure "
-"came from a filing you completed and marked as filed; that it matches the"
-" agency's receipt for that filing where one exists; and that a missing "
-"prior period is a real gap to resolve, not a zero the tool filled for "
-"you."
+"came from a filing you recorded as filed; that it matches the AEAT "
+"receipt for that filing where one exists; and that a missing prior period"
+" is a real gap to resolve, not a zero the tool filled for you."
 msgstr ""
 "Lo que te deja a ti es el criterio: que cada cifra arrastrada procede de "
-"una presentación que completaste y marcaste como presentada; que coincide"
-" con el justificante de la Agencia para esa presentación cuando existe; y"
-" que un periodo anterior que falta es un hueco real que resolver, no un "
-"cero que la herramienta rellenó por ti."
+"una presentación que registraste como presentada; que coincide con el "
+"justificante de la AEAT de esa presentación cuando existe; y que un "
+"periodo anterior que falta es un hueco real que resolver, no un cero que "
+"la herramienta rellenó por ti."
 
-#: ../../explanation/building-on-earlier-filings.md:58
+#: ../../explanation/building-on-earlier-filings.md:60
 msgid ""
 "This division is the point. The tool removes the re-typing and the "
 "arithmetic; you keep the confirmation. A figure that flows from a quarter"
@@ -327,11 +327,11 @@ msgstr ""
 "trimestre a un resumen anual, o del crédito de este periodo al siguiente,"
 " solo es tan sólida como tu revisión de su origen."
 
-#: ../../explanation/building-on-earlier-filings.md:60
+#: ../../explanation/building-on-earlier-filings.md:62
 msgid "Where this sits in the journey"
 msgstr "Dónde encaja esto en el recorrido"
 
-#: ../../explanation/building-on-earlier-filings.md:62
+#: ../../explanation/building-on-earlier-filings.md:64
 msgid ""
 "This page covered the connections between filings - why later forms "
 "depend on earlier ones and how figures carry forward. The [how-it-works "
@@ -348,7 +348,7 @@ msgstr ""
 "[Cómo tus registros se convierten en cifras fiscales](from-records-to-"
 "figures.md)."
 
-#: ../../explanation/building-on-earlier-filings.md:64
+#: ../../explanation/building-on-earlier-filings.md:66
 msgid ""
 "Once your figures are settled - including the ones carried in from "
 "earlier filings - the next concept is checking and sharing them. Continue"

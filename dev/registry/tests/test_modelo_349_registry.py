@@ -8,9 +8,9 @@ from functools import cache
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings, resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload

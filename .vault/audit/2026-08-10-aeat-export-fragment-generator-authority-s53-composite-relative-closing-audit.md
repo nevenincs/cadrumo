@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6398861b48ae19417444f58df07e23d8c5f9382603bfedc530bcf49992a37a22'
+body_hash: 'sha256:6fd7640a3a88c4dbe1da6654db2bf37af634101122e72e806408e4fb031a6c46'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S53 composite relative closing review`
 
@@ -16,9 +15,9 @@ related:
 
 Verdict: **PASS. No open critical, high, medium, or low findings remain.**
 
-Independently reviewed `W04.P07.S53` against the accepted generator-authority ADR, source-authority research, plan, S30 execution and audit, and the reconciled final S43 execution and audit. Fresh semantic discovery located the sole parser/schema authority in `src/cadrumo/domain/calculations/registry/_record_design.py` and `_record_design_schema.py`, the SHA-bound projection in `dev/registry/_record_design_ir.py`, exact preservation through `dev/registry/_semantic_map_join.py`, and fixed-generation refusal in `dev/registry/_export_tree.py`; targeted exact-symbol searches confirmed there is one composite-closing definition and constructor, no record-name/modelo/source selector, and no closing-row concatenation path.
+Independently reviewed `W04.P07.S53` against the accepted generator-authority ADR, source-authority research, plan, S30 execution and audit, and the reconciled final S43 execution and audit. Fresh semantic discovery located the sole parser/schema authority in the retired module and `_record_design_schema.py`, the SHA-bound projection in the retired module, exact preservation through the retired module, and fixed-generation refusal in the retired module; targeted exact-symbol searches confirmed there is one composite-closing definition and constructor, no record-name/modelo/source selector, and no closing-row concatenation path.
 
-The exact S53-owned review surface was the composite schema and parser hunks, the public registry-facade promotion, the intermediate schema-version and typed projection hunks, and the parser, source-boundary, intermediate, provenance-cutover, and real-generation-refusal tests. Concurrent changes in `dev/registry/_export_tree.py`, `dev/registry/_provenance_manifest.py`, unrelated registry-facade ordering, and S44/S45 vault and schema work were treated as peer-owned context and were not attributed to or modified by S53. The reviewed production blobs were `9640225d5f33faec0fd41b02569b2a5cec723304` for the schema, `6924a2f2a9fd3063e22d624f8070cf148052e577` for the parser, `918d03baf0a260c09cfaadd2274d7c651ce7a23d` for the IR, `de04ff1202c77d2984afbc699ecfb5aa1cba4fc3` for the join, and peer-context blob `adccc627339b5568c235319f31ab6284130c787b` for fixed-generation refusal.
+The exact S53-owned review surface was the composite schema and parser hunks, the public registry-facade promotion, the intermediate schema-version and typed projection hunks, and the parser, source-boundary, intermediate, provenance-cutover, and real-generation-refusal tests. Concurrent changes in the retired module, the retired module, unrelated registry-facade ordering, and S44/S45 vault and schema work were treated as peer-owned context and were not attributed to or modified by S53. The reviewed production blobs were `9640225d5f33faec0fd41b02569b2a5cec723304` for the schema, `6924a2f2a9fd3063e22d624f8070cf148052e577` for the parser, `918d03baf0a260c09cfaadd2274d7c651ce7a23d` for the IR, `de04ff1202c77d2984afbc699ecfb5aa1cba4fc3` for the join, and peer-context blob `adccc627339b5568c235319f31ab6284130c787b` for fixed-generation refusal.
 
 All three pinned Modelo 220 binaries (`2023`, `2024`, and `2025`) resolve through catalogue applicability plus source SHA-256 and produce one typed `T220000000` envelope. Its six relative-closing rows retain exact source rows, workbook cells, ordinals, `***` offsets, lengths `(3, 3, 1, 4, 2, 5)`, alphanumeric types, descriptions, validation, and contents `("</T", "220", "(*)[A|E|I|0]", null, "0A", "0000>")` without joining. The parser refuses incomplete, duplicate/over-complete, reordered, and content-ambiguous composite shapes through the production validators. Body-led recognition and isolated mixed-total refusal preserve the final S43 contract: all registered sources, including the ten M131/M232/M390 partial-marker designs, remain parseable, while real M200 and all five M303 epochs retain their existing one-row closing envelopes.
 

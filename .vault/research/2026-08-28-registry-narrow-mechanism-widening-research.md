@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-narrow-mechanism-widening'
 date: '2026-08-28'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d8fd695584e285eb6dc02dca22aeab7bdd115dcc3f87f935c2fbdb1da684ac0'
+body_hash: 'sha256:b26c0a8bca82e596e9374607741ea24efb420c53cc2ce266a2defc18dbb48900'
 related: []
 ---
 
@@ -163,17 +163,16 @@ consulted.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/record_design.py` -- `_parse_pdf_row`,
+- the former source file -- `_parse_pdf_row`,
   `_auxiliary_envelope_header`, `_NARRATIVE_PDF_ROW_RE`
-- `src/cadrumo/domain/calculations/registry/record_design_schema.py` --
+
   `RecordDesignFieldTypeCorrection`, `RecordDesignHeaderCellCorrection`,
   `RecordDesignSinglePositionCorrection`
-- `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py` --
+
   `_join_record`, `_sheet_constants`, `_record_literals`, the auxiliary-header branch
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_720_registry.py`
+
 - `src/cadrumo/domain/calculations/registry/tests/test_clasificacion_casillas_oficiales.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py`
-- `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/bindings/0001-bindings.toml`
+
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_165/files/` -- the three
   editions compared
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_720/files/01-720-599-kb-pdf.pdf`

@@ -23,9 +23,9 @@ from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
-    bound_profile_record_session,
     close_active_profile_record_session,
 )
+from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.config import override_settings
 from .....core.identity.profile import canonical_profile_bucket_id

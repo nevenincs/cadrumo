@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_absence import AbsentCasillaReading
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -58,6 +59,22 @@ def _registry_art52_declaration(
     return resolved
 
 
+def _individual_art52_sublimit_exceeded(
+    reduccion_value: Decimal,
+    trabajador_con_contribucion_value: Decimal,
+    empresarial_value: Decimal,
+    autonomos_empresarios_value: Decimal,
+    sublimit: Decimal,
+) -> bool:
+    """Retain the individual sublimit and absence of other contribution channels."""
+    return (
+        reduccion_value > sublimit
+        and trabajador_con_contribucion_value == Decimal(0)
+        and empresarial_value == Decimal(0)
+        and autonomos_empresarios_value == Decimal(0)
+    )
+
+
 def art52_reduccion_advisory_finding(
     revision: object,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -98,10 +115,14 @@ def art52_reduccion_advisory_finding(
     ):
         return None
 
-    reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
-    trabajador_con_contribucion_value = casilla_values.get(trabajador_con_contribucion_id, Decimal(0))
-    empresarial_value = casilla_values.get(empresarial_id, Decimal(0))
-    autonomos_empresarios_value = casilla_values.get(autonomos_empresarios_id, Decimal(0))
+    reduccion_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, reduccion_id)
+    trabajador_con_contribucion_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
+        casilla_values, trabajador_con_contribucion_id
+    )
+    empresarial_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, empresarial_id)
+    autonomos_empresarios_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
+        casilla_values, autonomos_empresarios_id
+    )
     effective_date = getattr(revision, "valid_to", None) or today_madrid()
     _registry_art52_declaration(
         revision,
@@ -118,11 +139,8 @@ def art52_reduccion_advisory_finding(
     sublimit = resolved_sublimit.payload.value
     if not isinstance(sublimit, Decimal):
         raise ModeloError("Art. 52 individual sublimit fact must resolve to a Decimal")
-    if (
-        reduccion_value > sublimit
-        and trabajador_con_contribucion_value == Decimal(0)
-        and empresarial_value == Decimal(0)
-        and autonomos_empresarios_value == Decimal(0)
+    if _individual_art52_sublimit_exceeded(
+        reduccion_value, trabajador_con_contribucion_value, empresarial_value, autonomos_empresarios_value, sublimit
     ):
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.ADVISORY,

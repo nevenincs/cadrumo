@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:033826858db9b5f1ea5aa9a2f1ce40fd9dff30278dc3c89e5ccc8218af09f461'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+body_hash: 'sha256:10402afa0ae5d9874bbc2ac41280c8eb6c5e649ee35114c8a7c3198634302358'
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `Modelo 200 2024/2025 split coherence`
@@ -25,15 +24,7 @@ covering a registry state nobody adjudicated.
 
 ### modelo-200-split-half-done | high | the 2024 revision carries the 2025 diseno's content while declaring the 2024 design as its authority
 
-The anchor-reach gate fails inside the authority builder with `parser
-intermediate source 'aeat-dr-200-2025' is not an authority of selected revision
-'2024'`. The declaration in `dev/registry/tests/test_generated_export_trees.py`
-pairs revision `2024` with source `aeat-dr-200-2025`, design epoch `2025` and
-filing year 2025 -- every field except the revision says 2025. That pairing read
-as coherent only while the revision was the open-ended `2024-y-siguientes`,
-which the 2025 diseno legitimately applied to. Bounded to ejercicio 2024, it no
-longer does, so the gate is reporting a true inconsistency rather than a
-regression in the test.
+The anchor-reach gate fails inside the authority builder with `parser intermediate source 'aeat-dr-200-2025' is not an authority of selected revision '2024'`. That pairing read as coherent only while the revision was the open-ended `2024-y-siguientes`, which the 2025 diseno legitimately applied to. Bounded to ejercicio 2024, it no longer does, so the gate is reporting a true inconsistency rather than a regression in the test.
 
 The defect is upstream of the declaration. Revisions `2024` and
 `2025-y-siguientes` each hold 1,025 identical casilla fragments, 3,462 entries.

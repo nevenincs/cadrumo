@@ -7,37 +7,26 @@ from typing import Final
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_spec import (
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import (
     FLAG_VALUE,
-    PATH_VALUE,
-    TEXT_VALUE,
-    WHOLE_NUMBER_VALUE,
-    ArgumentSpec,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
     LiteralValue,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
 )
-from ..command_spec import translation_key as _key
+from ..command_shared_contracts import translation_key as _key
+from ..command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from ._spec_policies import (
     GOOGLE_DESTRUCTIVE,
     GOOGLE_READ,
     GOOGLE_WRITE,
     state_free_group_spec,
 )
-
-_CREDENTIAL_KIND = ValueContract(
-    DeferredTarget("....core.google_credential_source", "GoogleCredentialSourceKind", __package__)
-)
-
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
 # The path used to be built with an f-string, which meant no static reader -- grep,
@@ -46,8 +35,6 @@ _CREDENTIAL_KIND = ValueContract(
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
     "_google": ".google",
-    "_google_credential_source_cli": "._google_credential_source_cli",
-    "_google_credential_source_payloads": "._google_credential_source_payloads",
     "_google_folder": "._google_folder",
     "_google_folder_payloads": "._google_folder_payloads",
     "_google_payloads": "._google_payloads",
@@ -130,29 +117,6 @@ def _leaf(
 GOOGLE_COMMAND_SPECS = (
     state_free_group_spec("config_google", "config", "google", "cli.config.google.help"),
     _leaf(
-        "config_google_register",
-        "config_google",
-        "register",
-        "cli.config.google.register_help",
-        "_google",
-        "google_register",
-        "_google_payloads",
-        "GoogleRegisterResult",
-        GOOGLE_WRITE,
-        (
-            _option(
-                "client_json",
-                ("--client-json",),
-                PATH_VALUE,
-                "cli.config.google.client_json_help",
-                required=True,
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.PRIMARY,
-            ),
-        ),
-    ),
-    _leaf(
         "config_google_login",
         "config_google",
         "login",
@@ -162,16 +126,6 @@ GOOGLE_COMMAND_SPECS = (
         "_google_payloads",
         "GoogleLoginResult",
         GOOGLE_WRITE,
-        (
-            _option(
-                "refresh_only",
-                ("--refresh-only",),
-                FLAG_VALUE,
-                "cli.config.google.refresh_only_help",
-                default=False,
-                flag=True,
-            ),
-        ),
     ),
     _leaf(
         "config_google_status",
@@ -195,91 +149,7 @@ GOOGLE_COMMAND_SPECS = (
         "GoogleLogoutResult",
         GOOGLE_DESTRUCTIVE,
     ),
-    state_free_group_spec(
-        "config_google_credential_source",
-        "config_google",
-        "credential-source",
-        "cli.config.google.credential_source.help",
-    ),
-    _leaf(
-        "config_google_credential_source_set",
-        "config_google_credential_source",
-        "set",
-        "cli.config.google.credential_source.set_help",
-        "_google_credential_source_cli",
-        "google_credential_source_set",
-        "_google_credential_source_payloads",
-        "GoogleCredentialSourceSetResult",
-        GOOGLE_WRITE,
-        (
-            _option(
-                "kind", ("--kind",), _CREDENTIAL_KIND, "cli.config.google.credential_source.kind_help", required=True
-            ),
-            _option(
-                "target_principal",
-                ("--target-principal",),
-                TEXT_VALUE,
-                "cli.config.google.credential_source.target_principal_help",
-            ),
-            _option(
-                "scopes",
-                ("--scope",),
-                TEXT_VALUE,
-                "cli.config.google.credential_source.scope_help",
-                multiple=True,
-            ),
-            _option(
-                "delegates",
-                ("--delegate",),
-                TEXT_VALUE,
-                "cli.config.google.credential_source.delegate_help",
-                multiple=True,
-            ),
-            _option("subject", ("--subject",), TEXT_VALUE, "cli.config.google.credential_source.subject_help"),
-            _option(
-                "lifetime_seconds",
-                ("--lifetime-seconds",),
-                WHOLE_NUMBER_VALUE,
-                "cli.config.google.credential_source.lifetime_help",
-            ),
-        ),
-        identity="config.google.credential_source.set",
-    ),
-    _leaf(
-        "config_google_credential_source_view",
-        "config_google_credential_source",
-        "view",
-        "cli.config.google.credential_source.view_help",
-        "_google_credential_source_cli",
-        "google_credential_source_view",
-        "_google_credential_source_payloads",
-        "GoogleCredentialSourceViewResult",
-        GOOGLE_READ,
-        identity="config.google.credential_source.view",
-    ),
     state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
-    _leaf(
-        "config_google_folder_set",
-        "config_google_folder",
-        "set",
-        "cli.config.google.folder.set_help",
-        "_google_folder",
-        "google_folder_set",
-        "_google_folder_payloads",
-        "GoogleFolderSetResult",
-        GOOGLE_WRITE,
-        (
-            ArgumentSpec(
-                "folder_id",
-                TEXT_VALUE,
-                ParameterDefault.required(),
-                _key("cli.config.google.folder.folder_id_help"),
-                transport_locus=TransportLocus.REMOTE_HANDLE,
-                transport_shape=TransportShape.NOT_APPLICABLE,
-                transport_role=TransportRole.NOT_APPLICABLE,
-            ),
-        ),
-    ),
     _leaf(
         "config_google_folder_view",
         "config_google_folder",

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d893890edcb4eb4a5825dc6045abd112f1e524d5adf1ad88ced449892000a05d'
+modified: '2026-10-03'
+body_hash: 'sha256:aa21a903d95797920ce9f2ca4770dc57b6a72ab5466fc229e8ceb4ae582baa50'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The layout planner skipped formula references to undeclared bindings, date bindi
 
 ## S257-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/storage/calc_sheets/_layout.py src/aeat/application/storage/calc_sheets/_translator.py src/aeat/application/storage/calc_sheets/test_layout_hardening.py src/aeat/application/storage/calc_sheets/test_engine_hardening.py` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/storage/calc_sheets/test_layout_hardening.py src/aeat/application/storage/calc_sheets/test_engine_hardening.py src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py src/aeat/application/storage/calc_sheets/test_modelo_export_formatting.py src/aeat/adapters/outbound/google/test_calc_sheets_export_integration.py src/aeat/adapters/outbound/google/test_grid_resize.py` passed with 40 tests.
+- the historical check passed.
+- the historical check passed with 40 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-155` as `remote-mirror` with layout resolver exceptions hardened.

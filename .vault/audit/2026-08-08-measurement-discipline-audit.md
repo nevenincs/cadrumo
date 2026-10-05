@@ -3,17 +3,18 @@ tags:
   - '#audit'
   - '#measurement-discipline'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:53d988a055500a4a790291a4960ef7b729541ad829aa9ba2cc1946ad5a8cd875'
+body_hash: 'sha256:d5939c9ad7fa589d9a63a2b06908321325c95e72881669e56950eaa83cf9a556'
 related: []
 ---
-
 # `measurement-discipline` audit: when a clean result is the defect
+
+## Scope
 
 One session produced enough instances of a single failure shape to make it worth recording as a shape rather than as four incidents. Every one of them presented as a passing check, a matching number, or an agreement between two sources. None presented as a failure.
 
-## The shape: an instrument answering a narrower question than the one being asked, and reporting cleanly on it
+### The shape: an instrument answering a narrower question than the one being asked, and reporting cleanly on it
 
 Four instances, each caught by a different agent, none caught by the check itself.
 
@@ -33,7 +34,9 @@ An investigation established that a registry revision declared no income total t
 
 Worth pairing with a corollary the same work produced. The fix that followed had to choose an antecedent between a gross-income total and a post-deductions one. The post-deductions figure can be **legitimately zero for a filer who did suffer withholding**, so keying on it would have suppressed the advisory in precisely the cases it exists for. An antecedent that is zero for the population you are trying to warn is an instrument narrower than its question, one layer down from the search that found it.
 
-## Why this shape is expensive
+## Findings
+
+### Why this shape is expensive
 
 A wrong answer invites a second look. A **narrow** answer does not, because it is correct about what it measured. The reviewer's natural question is whether the result is right, and the result is right; the question that would have caught it is what the instrument can see.
 
@@ -43,7 +46,7 @@ Two corollaries earned in the same session.
 
 **A guard can be blind to the absence of its own input.** Every check in one module asked whether the designs it was given disagreed. None asked whether it had been given all of them. Withhold a design and the boundary it formed goes unreported, so the verdict gets *shorter* — the direction a campaign reads as progress. That is the one case where the instrument going blind and the work succeeding are indistinguishable.
 
-## The related failure: an inferred cause reported as the cause
+### The related failure: an inferred cause reported as the cause
 
 **This section originally claimed that three agents converged on an inferred cause. That claim was wrong and is corrected here rather than quietly rewritten, because the corrected version carries a sharper lesson than the mistaken one.**
 
@@ -53,7 +56,7 @@ The HTML file was created at 11:34:23 and its extracted sidecars at 11:45:33 —
 
 So three readings, three instants, three correct observations. Not a convergence on a guess. The coordinator's own hypothesis — a stale loader cache — was the only genuinely inferred cause in the sequence, and it was wrong; the artefact mtimes settled it in one call, where a re-run would have shown green and explained nothing.
 
-## The corrected lesson: a verbatim error is authoritative about its instant, not about the file
+### The corrected lesson: a verbatim error is authoritative about its instant, not about the file
 
 Capturing the exact text is necessary and it is **not sufficient**. Both agents quoted correctly and then let the quotation stand as a description of *the condition* when it described a snapshot seconds old. The error was true; the tense was wrong.
 
@@ -63,11 +66,13 @@ This is the same shape as a point-in-time read of a plan row going stale twenty 
 
 The habit worth keeping unconditionally is still cheap: **paste the error, never summarise it** — a summary is a hypothesis wearing the clothes of an observation. Add the clock beside it, and the artefact's mtime when two readings disagree.
 
-## A note on this correction
+### A note on this correction
 
 The mistaken version of this section was published for roughly ten minutes and mischaracterised two agents' work as guessing when both had measured. It is corrected in place with the original claim stated, because a reader who sees only the final text cannot tell which parts were measured — which is the subject of this document.
 
-## What follows
+## Recommendations
+
+### What follows
 
 Before trusting a clean result, ask what the instrument can see rather than whether its answer is right. Before treating two sources as corroborating, establish that they do not share an implementation — and re-establish it after refactors, because convergence is silent. Before reporting a cause, quote the error. And when a verdict shrinks, treat the shrinkage as a question about the input rather than as evidence of progress.
 

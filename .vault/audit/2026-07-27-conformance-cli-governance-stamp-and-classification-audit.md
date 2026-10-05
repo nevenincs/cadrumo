@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#conformance-cli'
 date: '2026-07-27'
-modified: '2026-07-27'
-body_hash: 'sha256:99209d32f1da433855c7bde8cfb02b8e9e155496d8724c810220bf56b89bf9a7'
+modified: '2026-10-03'
+body_hash: 'sha256:0550ee6a3788bfbd3b9a68aca38989f7b657ebe7af0cde332604a5676d90d435'
 related:
-  - "[[2026-07-27-conformance-cli-plan]]"
   - "[[2026-07-27-conformance-cli-adr]]"
 ---
 
@@ -16,7 +15,7 @@ related:
 
 Mandatory code review of two landed work packages, verified at HEAD `0b3d198022`.
 Package A is Phase P01, the declared per-revision governance stamp: the review-status
-enum in `src/cadrumo/core/_revision_review.py`, the governance scalars and coherence
+enum in the retired module, the governance scalars and coherence
 validator in `registry/_schema.py` and `_schema_base.py`, the placement refusal in
 `registry/_loader.py`, the compiled-cache key enrolment in `registry/_compiled_cache.py`,
 and `registry/tests/test_governance_stamp.py` (commits `8b0194f88e`, `b3986f43de`,
