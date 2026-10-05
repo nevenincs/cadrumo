@@ -1,4 +1,7 @@
-"""Registered worker bridge for the ledger archive, stash, restore, and exclude verbs."""
+"""Registered worker bridge for the ledger archive, stash, restore, and exclude verbs.
+
+Core types: :class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

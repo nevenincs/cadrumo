@@ -27,11 +27,9 @@ from ...application.ledger.llm_review_results import LedgerLlmOperationResult
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.google_drive_reference import parse_google_drive_folder_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...core.operations import OperationEffect, OperationTerminalCondition
-from ...domain.attachments.enums import DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import (
@@ -101,141 +99,6 @@ def ledger_attach(
         result,
         command="ledger.attach",
         result_schema=LedgerAttachResult,
-    )
-
-
-def ledger_evidence_pull(
-    ctx: typer.Context,
-    transaction_id: str,
-    source: DocumentLinkSource,
-    reference: str,
-    note: str = "",
-    actor: str | None = None,
-) -> None:
-    """Fetch a document link and attach its bytes through the profile worker."""
-    from ._ledger_payloads import LedgerAttachResult, TransactionPayload
-    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_pull
-
-    projection = run_ledger_evidence_pull(
-        ctx,
-        transaction_id=transaction_id,
-        source=source,
-        reference=reference,
-        note=note,
-        actor=actor,
-    )
-    transaction = TransactionPayload.model_validate_json(projection.transaction.model_dump_json())
-    result = LedgerAttachResult.model_validate(
-        {
-            "bucket_id": str(projection.profile_id),
-            "transaction_id": projection.transaction_id,
-            "bucket_event_ids": list(projection.bucket_event_ids),
-            "review_status": projection.review_status,
-            "transaction": transaction.model_dump(mode="json"),
-        },
-    )
-    emit_envelope(
-        ctx,
-        command="ledger.evidence.pull",
-        result=result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{projection.review_status.value}",
-        ],
-    )
-
-
-def _parse_drive_folder_reference(reference: str) -> str:
-    """Resolve a Drive folder id/URL/reference to a bare folder id.
-
-    A folder id has the same shape as a file id — only the ``in parents``
-    query disambiguates the two on the Drive side — so a bare id and a
-    ``?id=`` link resolve through the core Drive reference grammar.
-
-    A folder URL does not. Drive writes it as ``/drive/folders/<id>`` (with an
-    optional ``/u/<n>/`` account segment and a ``?usp=sharing`` suffix), and
-    the file grammar looks for ``/d/<id>``, so the URL an operator copies out
-    of the browser to sweep a folder was refused as unrecognisable — the one
-    reference form this verb exists to accept.
-
-    Refuses anything carrying no recognisable Drive id rather than sending an
-    unparsed string to the API.
-    """
-    folder_id = parse_google_drive_folder_id(reference)
-    if folder_id is None:
-        raise bad(
-            tr("cli.app.ledger.evidence.pull_all_errors.folder_id_unrecognised", reference=reference),
-        )
-    return folder_id
-
-
-def ledger_evidence_pull_all(
-    ctx: typer.Context,
-    folder: str,
-    note: str = "",
-) -> None:
-    """Bulk-fetch Drive folder children through the exact profile worker."""
-    from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult
-    from .runtime_ledger_evidence_ingestion import run_ledger_evidence_pull_all
-
-    folder_id = _parse_drive_folder_reference(folder)
-    projection = run_ledger_evidence_pull_all(ctx, folder=folder_id, note=note)
-    rows = [
-        LedgerEvidencePullAllFilePayload(
-            file_id=row.file_id,
-            name=row.name,
-            mime_type=row.mime_type,
-            fetched=row.fetched,
-            attachment_id=row.attachment_id,
-            refusal_reason=None if row.refusal_reason is None else row.refusal_reason.value,
-        )
-        for row in projection.files
-    ]
-    result = LedgerEvidencePullAllResult.model_validate(
-        {
-            "bucket_id": str(projection.profile_id),
-            "folder_id": projection.folder_id,
-            "total_documents": projection.total_documents,
-            "fetched_count": projection.fetched_count,
-            "refused_count": projection.refused_count,
-            "skipped_non_document_count": projection.skipped_non_document_count,
-            "files": [row.model_dump(mode="json") for row in rows],
-        },
-    )
-    lines = [
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.folder_id')}\t{projection.folder_id}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.total')}\t{projection.total_documents}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.fetched')}\t{projection.fetched_count}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.refused')}\t{projection.refused_count}",
-        f"{tr('cli.app.ledger.evidence.pull_all_labels.skipped')}\t{projection.skipped_non_document_count}",
-    ]
-    lines.extend(
-        f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
-        f"{row.attachment_id or row.refusal_reason or ''}"
-        for row in rows
-    )
-    notices: list[Notice] = []
-    if projection.refused_count:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="ledger.pull_folder.files_refused",
-                message=tr(
-                    "cli.app.ledger.evidence.pull_all_notices.files_refused",
-                    refused_count=projection.refused_count,
-                ),
-                context={"folder_id": projection.folder_id, "refused_count": str(projection.refused_count)},
-            ),
-        )
-    emit_envelope(
-        ctx,
-        command="ledger.evidence.pull_all",
-        result=result,
-        lines=lines,
-        notices=notices or None,
     )
 
 
@@ -848,8 +711,6 @@ def ledger_merge(
 __all__ = [
     "ledger_archive",
     "ledger_attach",
-    "ledger_evidence_pull",
-    "ledger_evidence_pull_all",
     "ledger_exclude",
     "ledger_merge",
     "ledger_remove",

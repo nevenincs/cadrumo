@@ -4,6 +4,8 @@ Every payload shows an own account only through its mask (country code and last
 four characters) and its opaque ``own_account_id``. No account number, BIC or
 foreign-bank block appears in any output, so a command transcript or captured
 JSON envelope never carries account material.
+
+Core types: :class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations
@@ -11,7 +13,9 @@ from __future__ import annotations
 from datetime import date
 
 from ...application.ledger.own_account_operation import OwnAccountDesignationProjection, OwnAccountProjection
+from ...core.country_code import CountryCodeAlpha2
 from ...core.json_contract import OutputSchema
+from ...core.parsing.codes import IsoCurrencyCode
 from ...core.text_bounds import NonEmptyStr
 
 
@@ -22,11 +26,11 @@ class OwnAccountPayload(OutputSchema):
     label: NonEmptyStr
     holding: NonEmptyStr
     masked_iban: NonEmptyStr
-    country_code: NonEmptyStr
+    country_code: CountryCodeAlpha2
     sepa_marca: NonEmptyStr
     has_swift_bic: bool
     has_bank_block: bool
-    currency: NonEmptyStr
+    currency: IsoCurrencyCode
     opened_on: date | None = None
     closed_on: date | None = None
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....domain.censo.tests.test_certificado import _certificado
+from .....domain.censo.tests.certificado_builder import build_certificado
 from .. import _censo_payloads
 from .._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullResult
 from .._censo_transport import _file_import_preview_lines
@@ -44,7 +44,7 @@ def test_censo_transport_and_pull_share_one_canonical_fact_wire_projection() -> 
     assert not hasattr(_censo_payloads, "CensoFileFactPayload")
 
     row = CensoFactPayload(path="contact.postcode", value="28001", source="censo_artefact_g313")
-    file_result = CensoFileIngestResult(applied=False, certificate=_certificado(), facts=(row,))
+    file_result = CensoFileIngestResult(applied=False, certificate=build_certificado(), facts=(row,))
     pull_result = CensoPullResult(
         applied=False,
         source_url="https://example.invalid/censal",
@@ -64,7 +64,7 @@ def test_import_preview_retains_all_certified_axes_without_adopting_display_evid
 
     from .....domain.censo.certificado import censo_facts_from_certificado
 
-    certificate = _certificado()
+    certificate = build_certificado()
     facts = censo_facts_from_certificado(certificate)
     result = CensoFileIngestResult(
         applied=False,

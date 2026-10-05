@@ -14,6 +14,7 @@ from ...application.prorrata_register.projection_contracts import (
     ProrrataMutationProjection,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
 from .registered_operation_contracts import RegisteredOperationCompletion
@@ -41,7 +42,7 @@ def submit_prorrata_operation[ProjectionT: BaseModel](
     """Submit one exact-profile prorrata request through the shared runtime."""
     profile_id = getattr(request, "profile_id", None)
     if not isinstance(profile_id, UUID):
-        raise RuntimeError("prorrata request has no typed profile identity")
+        raise InternalInvariantError("prorrata request has no typed profile identity")
     client = _client(ctx, profile_id)
     completed = run_registered_operation(
         client,

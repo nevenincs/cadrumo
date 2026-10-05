@@ -1,4 +1,7 @@
-"""Sole production composition seam for the supervised operation platform."""
+"""Sole production composition seam for the supervised operation platform.
+
+Core types: :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 

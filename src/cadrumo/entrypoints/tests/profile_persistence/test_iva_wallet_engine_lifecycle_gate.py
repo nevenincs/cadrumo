@@ -19,16 +19,18 @@ from cadrumo.application.calculations.binding_prefill import BindingPrefillRepor
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     require_persisted_iva_compensation_decision_matches_revision,
     resolve_iva_compensation_decision_for_calculation,
 )
+from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
@@ -53,7 +55,10 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 from cadrumo.tests.env_scope import ready_clave_settings
 
+from ....adapters.persistence.profile.tests.wallet_history import load_decision_history
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -295,3 +300,127 @@ def test_persisted_wallet_ages_before_lifecycle_use(
             decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, work_unit.period)
             assert decision is not None and decision.stale_wallet and decision.blocked
             assert decision.wallet_captured_at == _DECIDED_AT
+
+
+@pytest.mark.parametrize("action", ["calculate", "verify", "file"])
+def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
+    tmp_path: Path, action: str, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A refused clock must not replace stale authority with a backdated fresh decision."""
+    lifecycle_at = _DECIDED_AT + timedelta(days=32)
+    backdated_at = _DECIDED_AT + timedelta(days=31)
+    with frozen_clock(lifecycle_at), _secure_backend(tmp_path):
+        _store_operator_profile()
+        snapshot = _snapshot_303(period="1T")
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, clock=lifecycle_at, operation=operation
+        )
+        decisions = IvaWalletDecisionRepository(operation=operation)
+        observations = CalculationObservationRepository()
+        profile = workflow_profile().model_copy(update={"activity_start_date": date(2026, 1, 1)})
+        revision = None
+        verification = None
+        if action != "calculate":
+            fresh = _reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_NIF,
+                wallet=_wallet_observation(
+                    pending=Decimal("0"), target_period=work_unit.period, captured_at=lifecycle_at
+                ),
+                repository=observations,
+                decision_repository=decisions,
+                decided_at=lifecycle_at,
+                local_recurrence=None,
+                prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+            )
+            revision = _calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                backend_binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=fresh.decision,
+                filing_period_date=date(2026, 3, 31),
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+                clock=lifecycle_at,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-backdated-clock", operation=operation
+                ),
+            )
+            if action == "file":
+                verification = _verify_modelo_revision(
+                    revision.calculation_revision_id,
+                    actor="operator",
+                    workflow_profile=profile,
+                    settings=ready_clave_settings(_TAXPAYER_NIF),
+                    clock=lifecycle_at,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                )
+                assert verification.granted_verificado_completo is True
+
+        # At the refused operation instant this same capture is exactly 31 days
+        # old, so a misplaced wallet refresh would replace the blocked decision.
+        stale = _reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=_wallet_observation(pending=Decimal("0"), target_period=work_unit.period),
+            repository=observations,
+            decision_repository=decisions,
+            decided_at=lifecycle_at,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+        ).decision
+        assert stale.blocked is True and stale.stale_wallet is True
+        assert stale.wallet_captured_at == _DECIDED_AT
+        history_before = load_decision_history(decisions, _TAXPAYER_NIF, work_unit.period)
+        assert decisions.load_decision(_TAXPAYER_NIF, work_unit.period) == stale
+        assert history_before and stale in history_before
+
+        with pytest.raises(ModeloLifecycleClockPrecedesError) as exc_info:
+            if action == "calculate":
+                _calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    actor="operator",
+                    casilla_inputs={},
+                    binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                    backend_binding_values=_modelo_303_engine_inputs(),
+                    filing_period_date=date(2026, 3, 31),
+                    work_unit_repository=work_repo,
+                    calculation_repository=calc_repo,
+                    bucket_event_repository=event_repo,
+                    clock=backdated_at,
+                    filing_instance_evidence=general_m303_filing_evidence(
+                        work_unit.period, reference="test:iva-wallet-backdated-clock", operation=operation
+                    ),
+                )
+            elif action == "verify":
+                assert revision is not None
+                _verify_modelo_revision(
+                    revision.calculation_revision_id,
+                    actor="operator",
+                    workflow_profile=profile,
+                    settings=ready_clave_settings(_TAXPAYER_NIF),
+                    clock=backdated_at,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                )
+            else:
+                assert revision is not None and verification is not None
+                file_modelo_revision(
+                    revision.calculation_revision_id,
+                    approved_verification_report_id=verification.verification_report_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    actor="operator",
+                    workflow_profile=profile,
+                    operation=operation,
+                    settings=ready_clave_settings(_TAXPAYER_NIF),
+                    clock=backdated_at,
+                )
+
+        assert exc_info.value.context is not None
+        assert exc_info.value.context["operation"] == action
+        assert decisions.load_decision(_TAXPAYER_NIF, work_unit.period) == stale
+        assert load_decision_history(decisions, _TAXPAYER_NIF, work_unit.period) == history_before

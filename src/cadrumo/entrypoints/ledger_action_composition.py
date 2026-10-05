@@ -23,7 +23,11 @@ def compose_ledger_action_ports(
     operation: PinnedAuthorityOperation,
     objects: SecureObjectRepository | None = None,
 ) -> LedgerActionPorts:
-    """Build the complete explicit persistence bundle for ``bucket_id``."""
+    """Build the complete explicit persistence bundle for ``bucket_id``.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository

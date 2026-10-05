@@ -36,6 +36,8 @@ is projected into a :class:`FlowDefinition` page whose copy slots are
 schema-field references resolved by this module's registered copy source
 against the per-run registry-derived table. The definition carries
 references only; the registry stays the copy authority.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
 """
 
 from __future__ import annotations

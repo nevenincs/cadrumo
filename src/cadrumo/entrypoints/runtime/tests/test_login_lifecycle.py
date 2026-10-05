@@ -306,7 +306,7 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
     monkeypatch.setattr(main, "posix_owner_uid", lambda: 1000)
     monkeypatch.setattr(main, "linux_login_inventory", inventory)
     monkeypatch.setattr(main, "PosixRuntimeEndpoint", endpoint)
-    monkeypatch.setattr(main, "RetainedRuntimeTransportServer", ServerPort)
+    monkeypatch.setattr(main, "RuntimeTransportServer", ServerPort)
     monkeypatch.setattr(main, "RuntimeShutdownWatchdog", watchdog)
     monkeypatch.setattr(RuntimeProfileConnections, "prepare_registry", prepare_registry)
     monkeypatch.setattr(
@@ -319,18 +319,19 @@ def test_main_linux_inventory_composition_drives_real_login_lifecycle(
             signal=lambda number, handler: signal_calls.append((number, handler)),
         ),
     )
-    assert (
-        main.run(
-            [
-                "--storage-root",
-                str(tmp_path),
-                "--storage-identity",
-                "unit-storage",
-                "--expected-version",
-                "unit-version",
-            ]
+    with override_settings(cadrumo_dev_runtime_session_override="0"):
+        assert (
+            main.run(
+                [
+                    "--storage-root",
+                    str(tmp_path),
+                    "--storage-identity",
+                    "unit-storage",
+                    "--expected-version",
+                    "unit-version",
+                ]
+            )
+            == RuntimeExitReason.LOGIN_WITNESS_LOSS
         )
-        == RuntimeExitReason.LOGIN_WITNESS_LOSS
-    )
     assert released == [True] and len(prepared) == 1
     assert signal_calls[-2:] == list(original_handlers.items())

@@ -30,6 +30,8 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import BaseModel
 
+from ...core.errors.hierarchy import InternalInvariantError
+
 if TYPE_CHECKING:
     from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
@@ -253,7 +255,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
 
     temporary_location = storage_location(StorageCategory.TEMPORARY_FILES)
     if temporary_location.settings_field is None:
-        raise RuntimeError("temporary storage location must declare its environment setting")
+        raise InternalInvariantError("temporary storage location must declare its environment setting")
     temporary_base = storage_directory(
         temporary_location.settings_field.upper(),
         temporary_location.relative_path().as_posix(),

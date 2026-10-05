@@ -680,6 +680,7 @@ def test_filed_observation_capture_reconciles_a_matching_pending_filing_without_
 
 
 def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_same_csv(tmp_path: Path) -> None:
+    """An incomparable repeated receipt retains the whole existing filing and its audit history."""
     with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store)
@@ -692,13 +693,21 @@ def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_
                 imported_at=_CAPTURED_AT,
             ),
         )
+        events_before = BucketEventHistoryRepository().load()
 
         result = enroll_filed_justificante_evidence(
             observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
         )
 
-        assert result.filing_record_ids == (filing.filing_record_id,)
+        assert result.justificante_csvs == (_MODELO_130_FIXTURE_CSV,)
+        assert result.filing_record_ids == ()
         assert result.conflicting_filing_record_ids == ()
+        assert [(item.outcome, item.filing_record_id) for item in result.reconciliation_results] == [
+            (FilingReconciliationOutcome.UNVERIFIABLE, filing.filing_record_id),
+        ]
+        assert [notice.code.value for notice in result.reconciliation_results[0].notices] == [
+            "receipt_totals_not_reconciled",
+        ]
         current = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -709,21 +718,18 @@ def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_
                 period=Period.from_year_and_code(2026, "1T"),
             )
         )
+        assert current == filing
         assert current is not None
         assert current.external_evidence is not None
         assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         assert current.external_evidence.reference_id == "ABCD1234EFGH5678"
-        events = [
-            event
-            for event in BucketEventHistoryRepository().load().events.values()
-            if event.event_type is BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED
-        ]
-        assert events == []
+        assert BucketEventHistoryRepository().load() == events_before
 
 
 def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same_csv_case_insensitive(
     tmp_path: Path,
 ) -> None:
+    """CSV case folding identifies the recorded filing without bypassing content comparison."""
     with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store)
@@ -736,13 +742,21 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
                 imported_at=_CAPTURED_AT,
             ),
         )
+        events_before = BucketEventHistoryRepository().load()
 
         result = enroll_filed_justificante_evidence(
             observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
         )
 
-        assert result.filing_record_ids == (filing.filing_record_id,)
+        assert result.justificante_csvs == (_MODELO_130_FIXTURE_CSV,)
+        assert result.filing_record_ids == ()
         assert result.conflicting_filing_record_ids == ()
+        assert [(item.outcome, item.filing_record_id) for item in result.reconciliation_results] == [
+            (FilingReconciliationOutcome.UNVERIFIABLE, filing.filing_record_id),
+        ]
+        assert [notice.code.value for notice in result.reconciliation_results[0].notices] == [
+            "receipt_totals_not_reconciled",
+        ]
         current = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -753,16 +767,12 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
                 period=Period.from_year_and_code(2026, "1T"),
             )
         )
+        assert current == filing
         assert current is not None
         assert current.external_evidence is not None
         assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
         assert current.external_evidence.reference_id == "abcd1234efgh5678"
-        events = [
-            event
-            for event in BucketEventHistoryRepository().load().events.values()
-            if event.event_type is BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED
-        ]
-        assert events == []
+        assert BucketEventHistoryRepository().load() == events_before
 
 
 def test_filed_observation_capture_leaves_a_different_confirmed_filing_untouched(tmp_path: Path) -> None:

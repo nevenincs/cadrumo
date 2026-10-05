@@ -81,6 +81,9 @@ def bind_calculation_revision_persistence_from_profile(
     identity from another persisted object. A held operation resolves identity
     from that profile's record using the same operation's schema and decode
     context.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
     """
     resolved_bucket_id = bucket_id.strip()
     if not resolved_bucket_id:
@@ -113,7 +116,11 @@ def bind_calculation_revision_persistence_from_resolved_identity(
     operation: PinnedAuthorityOperation,
     taxpayer_tax_id: SubjectTaxId,
 ) -> CalculationRevisionPersistenceBinding:
-    """Bind persistence to identity already resolved by the caller's operation."""
+    """Bind persistence to identity already resolved by the caller's operation.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     return _calculation_revision_persistence_binding(
         bucket_id=bucket_id,
         objects=objects,

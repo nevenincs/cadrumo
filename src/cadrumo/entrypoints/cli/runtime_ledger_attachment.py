@@ -1,4 +1,7 @@
-"""Registered worker bridge for ``ledger attach`` and ``ledger detach``."""
+"""Registered worker bridge for ``ledger attach`` and ``ledger detach``.
+
+Core types: :class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,7 @@
-"""Safe typed CLI envelopes for runtime-owned profile access management."""
+"""Safe typed CLI envelopes for runtime-owned profile access management.
+
+Core types: :class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

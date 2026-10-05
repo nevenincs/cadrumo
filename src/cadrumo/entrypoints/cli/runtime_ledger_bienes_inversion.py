@@ -26,6 +26,7 @@ from ...application.bienes_inversion.registered_result_contracts import (
 )
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._bienes_inversion_payloads import (
     BienesInversionDeclareResult,
@@ -54,7 +55,7 @@ def _run[ProjectionT: BaseModel](
 ) -> RegisteredOperationCompletion[ProjectionT]:
     profile_id = getattr(request, "profile_id", None)
     if not isinstance(profile_id, UUID):
-        raise RuntimeError("bienes-inversión request has no typed profile identity")
+        raise InternalInvariantError("bienes-inversión request has no typed profile identity")
     client = _client(ctx, profile_id)
     completed = run_registered_operation(
         client,

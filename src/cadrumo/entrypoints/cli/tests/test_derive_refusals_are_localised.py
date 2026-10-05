@@ -1,18 +1,4 @@
-"""The IVA derivation refusals reach an operator in their own language.
-
-Both refusals in the operator-initiated derive path were raw English
-f-strings built from the category and the derivation note. Every other refusal
-in this command family goes through ``tr``, so a Spanish, Catalan or Hungarian
-operator met English at exactly the point they were being told to supply three
-values by hand.
-
-The wording is now catalogued, and these hold the two things a catalogue entry
-can silently get wrong. ``tr`` does NOT raise on a missing key -- it humanises
-the last dotted segment -- so an unworded locale renders English-looking text
-and nothing fails. And the sentences carry placeholders naming WHICH category
-was refused and WHY, so a translation that drops one leaves the operator with a
-refusal they cannot act on.
-"""
+"""The active IVA derivation refusal names its category, reason and remedy in every locale."""
 
 from __future__ import annotations
 
@@ -26,12 +12,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _LOCALES = ("en", "es", "ca", "hu")
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
 
-#: Each refusal and the placeholders its sentence must carry. ``note`` belongs
-#: only to the non-derivable case: it is the registry's own reason, and the
-#: other refusal reports a broken contract for which there is no note.
+#: The current derive refusal carries the registry's category and reason.
 _REQUIRED_PLACEHOLDERS = {
     "derive_non_derivable": ("{category}", "{note}"),
-    "derive_substrate_incomplete": ("{category}",),
 }
 
 
@@ -42,7 +25,7 @@ def _classify_copy(locale: str) -> dict[str, str]:
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
-def test_both_derive_refusals_are_worded_in_this_locale(locale: str) -> None:
+def test_derive_refusal_is_worded_in_this_locale(locale: str) -> None:
     """An unworded key renders a humanised token, not a translation."""
     copy = _classify_copy(locale)
 
@@ -73,7 +56,7 @@ def test_each_refusal_names_what_it_refused(locale: str) -> None:
 
 @pytest.mark.parametrize("locale", _LOCALES)
 def test_each_refusal_still_names_the_flags_that_resolve_it(locale: str) -> None:
-    """Both refusals end in the same remedy, and it is the only way forward.
+    """The non-derivable refusal names the manual substrate flags.
 
     A non-derivable category cannot be rated for the operator, so the sentence
     has to say what to supply instead. Checked as literal flag spellings

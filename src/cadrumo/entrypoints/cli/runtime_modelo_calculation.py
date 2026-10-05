@@ -1,4 +1,7 @@
-"""CLI client for one exact-profile registered Modelo calculation."""
+"""CLI client for one exact-profile registered Modelo calculation.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
+"""
 
 from __future__ import annotations
 

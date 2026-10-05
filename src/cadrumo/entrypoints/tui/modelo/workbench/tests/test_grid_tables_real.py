@@ -29,6 +29,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
+    ModeloFormScalar,
     ModeloWorkForm,
     address_key,
 )
@@ -584,7 +585,9 @@ async def test_the_303_grid_never_draws_the_word_fixed(operation: PinnedAuthorit
 # ── repeated records ─────────────────────────────────────────────────────
 
 
-def _records_page(form: ModeloWorkForm, rows: tuple[ModeloFormRepeatingRow, ...] | None) -> WorkbenchPage:
+def _records_page(
+    form: ModeloWorkForm, rows: tuple[tuple[int, Mapping[str | None, ModeloFormScalar]], ...] | None
+) -> WorkbenchPage:
     """The 349 operators page; with ``rows``, as if the records had been read from their source."""
     page = next(
         page
@@ -594,7 +597,18 @@ def _records_page(form: ModeloWorkForm, rows: tuple[ModeloFormRepeatingRow, ...]
     sections = []
     for section in page.sections:
         blocks = tuple(
-            block.model_copy(update={"rows_known": True, "rows": rows})
+            block.model_copy(
+                update={
+                    "rows_known": True,
+                    "rows": tuple(
+                        ModeloFormRepeatingRow(
+                            index=index,
+                            values=tuple(values.get(casilla_id) for casilla_id in block.column_casilla_ids),
+                        )
+                        for index, values in rows
+                    ),
+                }
+            )
             if rows is not None and isinstance(block, ModeloFormRepeatingBlock)
             else block
             for block in section.blocks
@@ -603,11 +617,27 @@ def _records_page(form: ModeloWorkForm, rows: tuple[ModeloFormRepeatingRow, ...]
     return WorkbenchPage(id=page.id, heading=page.heading, sections=tuple(sections))
 
 
-_RECORDS: Final[tuple[ModeloFormRepeatingRow, ...]] = (
-    ModeloFormRepeatingRow(
-        index=1, values=(None, None, "FR", "FR00000000001", "Operador Uno", "E", Decimal("1500.00"))
+_RECORDS: Final[tuple[tuple[int, Mapping[str | None, ModeloFormScalar]], ...]] = (
+    (
+        1,
+        {
+            "op.codigo-pais": "FR",
+            "op.nif-comunitario": "FR00000000001",
+            "op.apellidos-razon-social": "Operador Uno",
+            "op.clave-operacion": "E",
+            "op.base-imponible": Decimal("1500.00"),
+        },
     ),
-    ModeloFormRepeatingRow(index=2, values=(None, None, "DE", "DE000000002", "Operador Dos", "A", Decimal("250.50"))),
+    (
+        2,
+        {
+            "op.codigo-pais": "DE",
+            "op.nif-comunitario": "DE000000002",
+            "op.apellidos-razon-social": "Operador Dos",
+            "op.clave-operacion": "A",
+            "op.base-imponible": Decimal("250.50"),
+        },
+    ),
 )
 
 
@@ -668,6 +698,17 @@ async def test_known_records_are_a_read_only_table_with_an_index_column(
     if table:
         header = [line for line in lines if block.columns[-1].heading.text.split()[0] in line]
         assert header, "the columns carry the labels of their boxes"
+        cells = {
+            "op.codigo-pais": " FR ",
+            "op.nif-comunitario": "FR00000000001",
+            "op.apellidos-razon-social": "Operador Uno",
+            "op.clave-operacion": " E ",
+            "op.base-imponible": "1,500.00",
+        }
+        positions = tuple(
+            first.index(cells[casilla_id]) for casilla_id in block.column_casilla_ids if casilla_id in cells
+        )
+        assert positions == tuple(sorted(positions)), "the table preserves the declared column order"
     else:
         assert "Operador Uno" in text and "Operador Dos" in text
         assert "FR" in text and "DE" in text

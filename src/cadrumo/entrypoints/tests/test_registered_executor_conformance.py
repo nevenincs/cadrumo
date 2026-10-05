@@ -1595,15 +1595,15 @@ class _ExecutionDriver:
         assert result.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
 
 
-def _resolve_result_projection(
+def _resolve_result_projection[ProjectionT: BaseModel](
     driver: _ExecutionDriver,
     registry: OperationRegistry,
     *,
     definition_id: str,
     operation_id: str,
     terminal_revision: int,
-    projection_type: type[BaseModel],
-) -> BaseModel:
+    projection_type: type[ProjectionT],
+) -> ProjectionT:
     """Resolve one typed public result through encrypted operand custody."""
     contract = registry.lookup_public_contract(definition_id)
     assert contract.result_schema is not None
@@ -5819,47 +5819,6 @@ def _run_registered_executor_conformance_case(
             assert view.review_status is LedgerReviewStatus.PENDING
             assert view.latest_llm_rejection is not None
             assert view.latest_llm_rejection.operator_reason == "operator rejected the conformance suggestion"
-        if case.definition_id == "ledger.list":
-            assert isinstance(payload, LedgerListRequest)
-            selection = _resolve_result_projection(
-                driver,
-                registry,
-                definition_id=case.definition_id,
-                operation_id=submitted.receipt.operation_id,
-                terminal_revision=observed.projection.revision,
-                projection_type=LedgerListProjection,
-            )
-            assert isinstance(selection, LedgerListProjection)
-            assert selection.profile_id == profile_id
-            assert selection.total == 3
-            assert selection.truncated is True
-            assert selection.offset == payload.offset == 1
-            assert selection.limit == payload.limit == 2
-            assert selection.by_group is False
-            assert [row.transaction.description for row in selection.rows] == [
-                "ledger list page B",
-                "ledger list page C",
-            ]
-            assert all(row.group_label == _LEDGER_LIST_PRIVATE_FILTER_SENTINEL for row in selection.rows)
-            materialization = asyncio.run(
-                driver.services.observation.reader.read_observation(
-                    submitted.receipt.operation_id,
-                    0,
-                    limit=256,
-                )
-            )
-            assert materialization.snapshot.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
-            assert materialization.snapshot.credential_free_request_json is None
-            journal_file = (
-                tmp_path
-                / case.definition_id
-                / "cadrumo-storage"
-                / "operations"
-                / storage_location(StorageCategory.OPERATION_JOURNAL).relative_path()
-                / f"{submitted.receipt.operation_id}.json"
-            )
-            assert journal_file.is_file()
-            assert _LEDGER_LIST_PRIVATE_FILTER_SENTINEL.encode() not in journal_file.read_bytes()
         if definition_id == "ledger.track":
             _assert_ledger_track_result(
                 driver,

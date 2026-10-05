@@ -76,7 +76,10 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
     """Show one API lease without borrowing human workbench or admin authority."""
 
     BINDINGS: ClassVar = [Binding("q", "leave", "", show=False)]
-    CSS = tokenised(BASE_CSS)
+    CSS = BASE_CSS + tokenised("""
+    #restricted-actions { height: auto; }
+    #restricted-actions Button { width: 1fr; min-width: $cadrumo-space-0; }
+    """)
 
     def __init__(
         self,
@@ -111,7 +114,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             yield Static("", id="restricted-delegation", markup=False)
             yield Static("", id="restricted-periods", markup=False)
             yield Static("", id="restricted-availability", markup=False)
-            with Horizontal():
+            with Horizontal(id="restricted-actions"):
                 if self._requester_factory is not None:
                     yield Button(tr("tui.automation_request.title"), id="restricted-request-access")
                 yield Button(tr("tui.restricted.lock"), id="restricted-lock")

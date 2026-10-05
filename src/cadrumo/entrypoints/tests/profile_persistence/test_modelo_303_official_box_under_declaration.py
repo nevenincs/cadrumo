@@ -67,7 +67,10 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -299,6 +302,15 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         stale_wallet=False,
         reason_identity="aeat_wallet_validated",
         wallet_captured_at=_T1,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("0.00"),
+                source_locator="aeat-wallet:synthetic-fixture",
+                captured_at=_T1,
+                registry_snapshot_refs=(),
+            ),
+        ),
         decided_at=_T1,
     )
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -56,6 +57,7 @@ from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.deadlines.models import (
@@ -121,7 +123,7 @@ def _product_software_identity() -> AeatProductSoftwareIdentity:
     )
 
 
-def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance(
+def test_export_modelo_303_matched_wallet_revision_writes_fichero_with_redacted_wallet_provenance(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
@@ -130,7 +132,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
             operation=_authority_operation_for_test,
         )
 
-        output_path = tmp_path / "modelo-303-wallet-only.txt"
+        output_path = tmp_path / "modelo-303-matched-wallet.txt"
         result = export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=verified.calculation_revision_id,
@@ -162,11 +164,11 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         provenance = result.iva_wallet_decision_provenance
         assert provenance is not None
         assert provenance.selected_authority == "aeat_wallet"
-        assert provenance.divergence == "wallet_only"
+        assert provenance.divergence == "match"
         assert provenance.target_year == 2026
         assert provenance.target_period == Period.from_year_and_code(2026, "2T")
         assert provenance.decision_ref.startswith("sha256:")
-        assert provenance.authority_source_kinds == ("aeat_wallet",)
+        assert provenance.authority_source_kinds == ("aeat_wallet", "local_recurrence", "filed_history_observation")
         assert provenance.authority_source_refs[0].startswith("sha256:")
 
         event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
@@ -175,7 +177,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         assert "refund_election" not in event.payload
         assert "payment_election" not in event.payload
         assert event.payload["iva_wallet_selected_authority"] == "aeat_wallet"
-        assert event.payload["iva_wallet_divergence"] == "wallet_only"
+        assert event.payload["iva_wallet_divergence"] == "match"
         assert event.payload["iva_wallet_target_period"] == "2T"
         result_json = result.model_dump_json()
         event_json = event.model_dump_json()
@@ -1451,3 +1453,10 @@ def test_export_refuses_an_existing_file_unless_the_operator_chooses_to_replace_
         replaced = export(replace_existing=True, minute=5)
         assert replaced.file_sha256 == first.file_sha256
         assert not (output_path.with_name(output_path.name + ".tmp")).exists()
+
+
+@pytest.fixture(autouse=True)
+def authored_export_clock() -> Iterator[None]:
+    """Keep captured wallet freshness on the authored scenario's timeline."""
+    with frozen_clock(datetime(2026, 6, 4, 12, 0, tzinfo=UTC)):
+        yield

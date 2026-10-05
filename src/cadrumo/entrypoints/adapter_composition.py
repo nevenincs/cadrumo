@@ -395,7 +395,11 @@ def build_modelo_export_ports(
     operation: PinnedAuthorityOperation,
     objects: SecureObjectRepository | None = None,
 ) -> ModeloExportPorts:
-    """Compose every persisted authority required by one Modelo export."""
+    """Compose every persisted authority required by one Modelo export.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
@@ -580,7 +584,11 @@ def build_diagnostics_ports(*, bucket_id: str | None = None) -> DiagnosticsPorts
 def build_draft_review_ports(
     *, bucket_id: str, operation: PinnedAuthorityOperation | None = None, objects: SecureObjectRepository | None = None
 ) -> DraftReviewPorts:
-    """Compose draft review using the caller's authority pin when supplied."""
+    """Compose draft review using the caller's authority pin when supplied.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -772,7 +780,11 @@ def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
 def build_borrador_100_snapshot_repository(
     *, bucket_id: str, objects: SecureObjectRepository | None = None
 ) -> Borrador100SnapshotRepository:
-    """Bind the encrypted borrador snapshot adapter to one profile bucket."""
+    """Bind the encrypted borrador snapshot adapter to one profile bucket.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from pydantic import ValidationError
 
     from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
@@ -884,7 +896,11 @@ def build_borrador_100_snapshot_repository(
 def build_retencion_observation_ports(
     *, bucket_id: str, objects: SecureObjectRepository | None = None
 ) -> RetencionObservationPorts:
-    """Compose the encrypted retención observation capability for one bucket."""
+    """Compose the encrypted retención observation capability for one bucket.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.aggregation.retencion_observations_repository import RetencionObservationPorts
@@ -974,6 +990,9 @@ def build_state_projection_read_ports(
     :class:`ProfileAdapterComposition` -- the TUI's own workspace admission,
     for one -- reaches the same composition rather than assembling a second
     one from the same adapters.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
     """
     from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
@@ -1012,7 +1031,11 @@ def build_calculation_action_ports(
     profile_record: object | None = None,
     objects: SecureObjectRepository | None = None,
 ) -> CalculationActionPorts:
-    """Compose every persisted authority required by one Modelo calculation."""
+    """Compose every persisted authority required by one Modelo calculation.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -1409,7 +1432,11 @@ def build_ledger_membership_ports(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     objects: SecureObjectRepository | None = None,
 ) -> LedgerMembershipPorts:
-    """Compose read-only source admission capabilities over the verification bucket."""
+    """Compose read-only source admission capabilities over the verification bucket.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
@@ -1437,7 +1464,11 @@ def build_ledger_membership_ports(
 def build_verification_repository_bundle(
     bucket_id: str, *, operation: PinnedAuthorityOperation, objects: SecureObjectRepository | None = None
 ) -> VerificationRepositoryBundle:
-    """Bind one profile's repositories and rectificativa identity to the held authority."""
+    """Bind one profile's repositories and rectificativa identity to the held authority.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
         CalculationObservationRepository,

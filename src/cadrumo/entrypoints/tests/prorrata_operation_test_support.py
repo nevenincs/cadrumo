@@ -63,7 +63,6 @@ from ...core.prorrata_register import (
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.prorrata_register_catalogue import (
-    aeat_autorizada_prorrata_provenance,
     carried_prior_definitiva_prorrata_provenance,
     especial_prorrata_register_regime,
     general_prorrata_register_regime,
@@ -72,6 +71,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     revocacion_prorrata_transition,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.tests.provisional_catalogue import aeat_autorizada_prorrata_provenance
 from ...domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,

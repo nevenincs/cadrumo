@@ -25,6 +25,7 @@ from ...application.ledger.ledger_add_contracts import LedgerAddOperationResult
 from ...application.ledger.models import (
     ManualLedgerTransactionPatch,
 )
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
@@ -101,7 +102,7 @@ def _manual_add_notices(
     """Project add advisories into the shared notice and text channels."""
     transaction = result.transaction
     if transaction is None:
-        raise RuntimeError("ledger add notices require a successful transaction projection")
+        raise InternalInvariantError("ledger add notices require a successful transaction projection")
     normalized_idempotency_key = idempotency_key.strip() if idempotency_key and idempotency_key.strip() else None
     notices: list[Notice] = []
     extra_lines: list[str] = []
@@ -125,7 +126,7 @@ def _manual_add_notices(
     if result.advisory_input_classification_inert:
         input_classification = result.advisory_input_classification
         if input_classification is None:
-            raise RuntimeError("ledger add inert-classification advisory omitted its source token")
+            raise InternalInvariantError("ledger add inert-classification advisory omitted its source token")
         ejercicio = int(transaction.booked_date[:4])
         inert_message = tr(
             "cli.ledger.add.input_classification_inert",
@@ -223,7 +224,7 @@ def ledger_add(
         own_account_id=account,
     )
     if result.transaction is None or result.review_status is None:
-        raise RuntimeError("ledger add runtime returned no successful transaction projection")
+        raise InternalInvariantError("ledger add runtime returned no successful transaction projection")
     notices, extra_lines = _manual_add_notices(
         result=result,
         idempotency_key=idempotency_key,
@@ -763,7 +764,7 @@ def _append_unmatched_sector_notice(
     if result.advisory_sector_unmatched:
         sector_id = result.advisory_sector_id
         if sector_id is None:
-            raise RuntimeError("ledger add unmatched-sector advisory omitted its sector")
+            raise InternalInvariantError("ledger add unmatched-sector advisory omitted its sector")
         unmatched_message = tr("cli.ledger.add.sector_unmatched", sector_id=sector_id)
         notices.append(
             Notice(

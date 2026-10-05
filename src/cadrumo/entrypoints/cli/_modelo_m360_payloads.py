@@ -3,6 +3,8 @@
 A solicitud appears by its filing year, destination, holder and account kind;
 an own account by its opaque ``own_account_id`` and a representante account by
 its mask. No IBAN, BIC, name, address or tax identifier appears in any output.
+
+Core types: :class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

@@ -140,7 +140,7 @@ _EDIT_DIALOG_CSS = tokenised("""
     height: auto;
     max-height: 100%;
 }
-#edit-body { height: auto; max-height: 80vh; }
+#edit-body { height: auto; max-height: $cadrumo-modal-max-height; }
 #edit-requirement { color: $text-muted; }
 #edit-context { color: $text-muted; margin-bottom: $cadrumo-space-1; }
 #edit-label { text-style: bold; }

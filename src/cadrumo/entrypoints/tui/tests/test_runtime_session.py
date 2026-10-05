@@ -9,6 +9,7 @@ from typing import override
 from uuid import UUID, uuid4
 
 import pytest
+from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
@@ -123,10 +124,11 @@ class _Client(RuntimeFrontendClient):
         raise AssertionError("status polling must not renew a lease")
 
 
-async def _shown(app: RuntimeRestrictedSessionApp, pilot: object) -> None:
+async def _shown(app: RuntimeRestrictedSessionApp, pilot: Pilot[AccountRecomposeRequiredV1 | None]) -> None:
     async with asyncio.timeout(5):
         while not str(app.query_one("#restricted-profile", Static).render()).strip():
-            await asyncio.sleep(0.02)
+            await pilot.pause()
+        await pilot.pause()
 
 
 def _disclosure_scope(client: _Client, *, delegation: bool = True) -> None:
@@ -152,11 +154,14 @@ def _disclosure_scope(client: _Client, *, delegation: bool = True) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("delegation", [False, True])
-async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_close(delegation: bool) -> None:
+@pytest.mark.parametrize("size", [(80, 24), (48, 24)])
+async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_close(
+    delegation: bool, size: tuple[int, int]
+) -> None:
     client = _Client()
     _disclosure_scope(client, delegation=delegation)
     app = RuntimeRestrictedSessionApp(client, profile_label="[bold]Literal profile[/bold]")
-    async with app.run_test() as pilot:
+    async with app.run_test(size=size) as pilot:
         await _shown(app, pilot)
         assert "[bold]Literal profile[/bold]" in str(app.query_one("#restricted-profile", Static).render())
         expected = (
@@ -169,7 +174,7 @@ async def test_status_renders_exact_disclosures_and_delegation_and_clears_on_clo
             f"{tr('tui.automation_inventory.delegation')}: "
             f"{tr('tui.restricted.yes') if delegation else tr('tui.restricted.no')}"
         )
-        await pilot.click("#restricted-close")
+        assert await pilot.click("#restricted-close")
         assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
         assert str(app.query_one("#restricted-delegation", Static).render()) == ""
     assert client.close_calls == 0 and client.lock_calls == 0 and client.human_calls == 0
@@ -186,7 +191,7 @@ async def test_status_shows_exact_allowlisted_scope_without_human_calls_or_clien
         assert "submit" in str(app.query_one("#restricted-scope-actions", Static).render())
         assert "2025 1T" in str(app.query_one("#restricted-periods", Static).render())
         assert client.human_calls == 0
-        await pilot.click("#restricted-close")
+        assert await pilot.click("#restricted-close")
         assert app.return_value is None
         assert str(app.query_one("#restricted-scope-actions", Static).render()) == ""
     assert client.close_calls == 0 and client.lock_calls == 0
@@ -254,7 +259,7 @@ async def test_lock_clears_private_status_before_owned_native_completion(
         await _shown(app, pilot)
         assert "profile_values" in str(app.query_one("#restricted-disclosures", Static).render())
         assert tr("tui.restricted.yes") in str(app.query_one("#restricted-delegation", Static).render())
-        await pilot.click(button)
+        assert await pilot.click(button)
         try:
             assert str(app.query_one("#restricted-profile", Static).render()) == ""
             assert str(app.query_one("#restricted-disclosures", Static).render()) == ""
@@ -277,7 +282,7 @@ async def test_missing_lock_acknowledgement_or_refusal_requires_fresh_admission(
     app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic API profile")
     async with app.run_test() as pilot:
         await _shown(app, pilot)
-        await pilot.click("#restricted-lock")
+        assert await pilot.click("#restricted-lock")
         async with asyncio.timeout(5):
             while app.return_value is None:
                 await pilot.pause(0.02)

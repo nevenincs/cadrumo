@@ -88,6 +88,7 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.auth.certificate.secret.set",
         "ledger.account.add",
         "ledger.account.update",
+        "modelo.m360.declare",
     }
     for node in adopters:
         assert node.spec.kind == "leaf"

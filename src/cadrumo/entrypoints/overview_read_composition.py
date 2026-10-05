@@ -1,4 +1,9 @@
-"""Compose canonical overview reads inside one authenticated profile worker."""
+"""Compose canonical overview reads inside one authenticated profile worker.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`,
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

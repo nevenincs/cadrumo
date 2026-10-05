@@ -75,7 +75,7 @@ def _record_wire_length(record: ExportRecordDefinition) -> int:
 
 def _field_slice(layout: ExportLayoutDefinition, field: ExportFieldDefinition) -> slice:
     """Locate one field in the emitted bytes by walking the layout's records in order."""
-    cursor = 0
+    cursor = layout.filing_envelope.prefix_extent if layout.filing_envelope is not None else 0
     for record in sorted(layout.records, key=lambda item: item.order):
         if field in record.fields:
             assert field.offset is not None
@@ -123,6 +123,7 @@ def _export_negative_m130(tmp_path: Path, *, period: str, activity_start: date) 
     assert result.period == Period.from_year_and_code(_FILING_YEAR, period)
     written = output_path.read_bytes()
     assert result.byte_size == len(written)
+    assert result.resolved_result_disposition is not None
     return result.resolved_result_disposition, written
 
 
@@ -144,6 +145,9 @@ def test_negative_m130_result_exports_the_quarter_disposition_in_tipo_de_declara
 ) -> None:
     disposition, written = _export_negative_m130(tmp_path, period=period, activity_start=activity_start)
     layout = _m130_layout(period)
+    # DR 13000 contributes the declared 328-byte prefix before page 01.
+    assert layout.filing_envelope is not None
+    assert layout.filing_envelope.prefix_extent == 328
     tipo_declaracion = _field_slice(layout, _producer_field(layout, FilingProducerKey.FILING_RESULT_DISPOSITION))
     resultado = _field_slice(layout, _casilla_field(layout, _M130_RESULT_CASILLA))
 

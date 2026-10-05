@@ -1,4 +1,7 @@
-"""Lazy canonical operation composition within one immutable profile worker."""
+"""Lazy canonical operation composition within one immutable profile worker.
+
+Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 
@@ -437,8 +440,7 @@ class ProfileWorkerOperationHost:
         """Bind each internal projection to policy the runtime must recheck on final output."""
         self.custody.require(session_id)
         await self._require_current_inventory()
-        with startup_phase(_log, "worker_operation_prepare"):
-            self._composed()
+        self._composed()
         execution = self._execution
         if execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)

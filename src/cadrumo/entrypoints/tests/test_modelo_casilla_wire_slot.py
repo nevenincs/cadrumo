@@ -87,14 +87,16 @@ def test_the_nace_slot_is_written_through_its_casilla(tmp_path: Path) -> None:
             schema_provider=provider,
         )
         snapshot = provider.get_snapshot("360")
-        record = next(
+        records = [
             record
             for layout in snapshot.revision.export_layouts
             for record in layout.records
-            if record.record_type == "page_01"
-        )
+            if any(field.casilla_id == _CASILLA for field in record.fields)
+        ]
+        assert len(records) == 1, [record.id for record in records]
+        [record] = records
         wire = next(field for field in record.fields if field.casilla_id == _CASILLA)
-        assert (record.record_type, wire.offset, wire.length) == ("page_01", 799, 5)
+        assert (record.record_type, wire.offset, wire.length) == ("solicitud", 799, 5)
         assert wire.kind is CasillaFieldKind.CASILLA
         assert wire.binding is None
         value = next(value for value in draft.values if value.casilla_id == _CASILLA)

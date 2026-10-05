@@ -32,6 +32,7 @@ from ...application.inventory.registered_requests import (
     InventoryValuationPreviewRequest,
 )
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .errors import CliRefusedBoundaryError
 from .ledger_business_payloads import (
@@ -64,7 +65,7 @@ _REFUSAL_LOCALE_KEYS = {
 def _client_for_request(ctx: typer.Context, request: BaseModel) -> RuntimeFrontendClient:
     profile_id = getattr(request, "profile_id", None)
     if not isinstance(profile_id, UUID):
-        raise RuntimeError("inventory request has no typed profile identity")
+        raise InternalInvariantError("inventory request has no typed profile identity")
     return require_profile_client(ctx, expected_profile_id=profile_id)
 
 

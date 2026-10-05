@@ -253,6 +253,7 @@ def _seed_modelo_303_1t_clean_state(
     *,
     bucket_id: str,
     taxpayer_tax_id: str,
+    available_compensation: Decimal = Decimal("800.00"),
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -279,6 +280,7 @@ def _seed_modelo_303_1t_clean_state(
     )
     assert source_casilla_ids, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
+    values["iva.compensacion-disponible-fin-periodo"] = available_compensation
     values, source_headers = modelo_303_filed_disposition(
         values,
         source_locator="modelo-303-2026-1T:declaration-type",
@@ -314,11 +316,9 @@ def _seed_modelo_303_1t_clean_state(
     # reference, and the advanced work-unit pointers.
     filed_at = datetime(2026, 5, 21, 11, 1, tzinfo=UTC)
     filed_by = "aeat-import-test"
-    # Deliberately None, exactly as the import verb persisted it: absent
-    # filing-instance evidence is what marks this revision as EXTERNALLY
-    # imported AEAT evidence rather than an app-produced local filing. Supplying
-    # real evidence here reclassifies the period as a local recurrence and
-    # changes the wallet reconciliation outcome these tests assert.
+    # This revision represents imported AEAT evidence. The validated observation
+    # envelope below independently grounds the prior-period carry, so its amount
+    # must agree with the wallet whenever the fixture expects verification.
     prior_filing_instance_evidence = None
     prior_observations = external_filing_observations(
         casilla_values=values,
@@ -520,6 +520,7 @@ def calculate_and_verify_modelo_303_revision(
     _seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
         taxpayer_tax_id=taxpayer_nif,
+        available_compensation=Decimal("1200.00"),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
@@ -563,5 +564,5 @@ def build_verified_modelo_303_revision(
             operation=operation,
         )
     )
-    assert report.granted_verificado_completo is True
+    assert report.granted_verificado_completo is True, report.model_dump_json(indent=2)
     return taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo

@@ -81,7 +81,7 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
     ),
     _DeclaredExclusion(
         path="src/cadrumo/entrypoints/tui/installed_session.py",
-        owner="run_installed_workbench_session",
+        owner="_attempt_runtime_session",
         construct="asyncio.run",
         reason=(
             "the installed session is the launcher's production composition root; "
@@ -96,7 +96,7 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
     ),
     _DeclaredExclusion(
         path="src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py",
-        owner="compose_runtime_modelo_lifecycle_door.admit",
+        owner="_RuntimeModeloLifecycleBindings.admit",
         construct="asyncio.run",
         reason="the lifecycle door invokes attestation admission through asyncio.to_thread",
     ),
@@ -113,13 +113,37 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
         reason="the evidence screen reads records and reader readiness through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/secret/automation_requester.py",
-        owner="RuntimeAutomationRequesterScreen._reconcile.reconcile",
+        path="src/cadrumo/entrypoints/tui/secret/automation_requester_delivery.py",
+        owner="RequesterDeliveryMixin._reconcile_fresh",
         construct="asyncio.run",
         reason=(
             "the enrollment journey invokes this reconciliation callback on the worker thread the "
             "requester submits from; the fresh credential client it opens there closes asynchronously"
         ),
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py",
+        owner="_RuntimeModeloLifecycleBindings.read",
+        construct="asyncio.run",
+        reason="ModeloWorkspaceLifecycleDoor runs prerequisite, renewal and preflight reads through asyncio.to_thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py",
+        owner="RuntimeModeloWorkbenchSource.read_form",
+        construct="asyncio.run",
+        reason="ModeloWorkbenchScreen loads its InstalledModeloWorkbench reader through asyncio.to_thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py",
+        owner="RuntimeModeloWorkbenchSource.help_card",
+        construct="asyncio.run",
+        reason="WorkbenchHelpMixin reads InstalledModeloWorkbench.help_card through asyncio.to_thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/profile/runtime_auth_configuration.py",
+        owner="configure_runtime_auth",
+        construct="asyncio.run",
+        reason="the profile field editor invokes RuntimeProfileManagerComposition._field on its owned worker thread",
     ),
     _DeclaredExclusion(
         path="src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py",
@@ -195,9 +219,13 @@ def _dynamic_definition_ids() -> Mapping[str, str]:
 
 
 @cache
-def _definition_id_collections() -> Mapping[str, frozenset[str]]:
+def _definition_id_collections() -> Mapping[tuple[str, str], frozenset[str]]:
     """Preserve the IDs carried by the overview's enum-derived declaration."""
-    return {"OVERVIEW_READ_DEFINITION_IDS": frozenset(_dynamic_definition_ids())}
+    return {
+        ("src/cadrumo/application/overview/read_request.py", "OVERVIEW_READ_DEFINITION_IDS"): frozenset(
+            _dynamic_definition_ids()
+        )
+    }
 
 
 @cache
@@ -228,12 +256,14 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
     builders = _request_builders()
 
     def named_by_name(name: str, origins: Mapping[str, tuple[str, str]]) -> frozenset[str]:
-        if name in constant_to_id:
-            return frozenset({constant_to_id[name]})
-        if name in collections:
-            return collections[name]
         origin = origins.get(name)
-        return builders[origin] if origin is not None and origin in builders else _NO_IDS
+        if origin is None:
+            return _NO_IDS
+        if origin in constant_to_id:
+            return frozenset({constant_to_id[origin]})
+        if origin in collections:
+            return collections[origin]
+        return builders.get(origin, _NO_IDS)
 
     collected: dict[str, frozenset[str]] = {}
     for path in _production_sources():
@@ -242,11 +272,26 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
         for node in ast.walk(_parsed(path)):
             if isinstance(node, ast.Name):
                 found |= named_by_name(node.id, origins)
+            elif isinstance(node, ast.Attribute):
+                origin = _attribute_origin(node, origins)
+                if origin is None:
+                    continue
+                if origin in constant_to_id:
+                    found.add(constant_to_id[origin])
+                found |= collections.get(origin, _NO_IDS)
             elif isinstance(node, ast.alias):
                 found |= named_by_name(node.asname or node.name.split(".")[-1], origins)
         if found:
             collected[path] = frozenset(found)
     return collected
+
+
+def _attribute_origin(node: ast.Attribute, origins: Mapping[str, tuple[str, str]]) -> tuple[str, str] | None:
+    """Resolve ``module_alias.CONSTANT`` to the module the alias imports."""
+    if not isinstance(node.value, ast.Name):
+        return None
+    module = origins.get(node.value.id)
+    return (module[0], node.attr) if module is not None else None
 
 
 _DISPATCH_ARGUMENT = "definition_id"
@@ -391,12 +436,16 @@ def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
                 and inner.value in literal_ids
             ):
                 named.add(inner.value)
-            elif isinstance(inner, ast.Name) and inner.id in constants:
-                named.add(constants[inner.id])
-            elif isinstance(inner, ast.Name) and inner.id in collections:
-                named |= collections[inner.id]
-            elif isinstance(inner, ast.Name) and origins.get(inner.id, ("", ""))[0] == path:
-                deferred.add(origins[inner.id])
+            elif isinstance(inner, ast.Name | ast.Attribute):
+                origin = origins.get(inner.id) if isinstance(inner, ast.Name) else _attribute_origin(inner, origins)
+                if origin is None:
+                    continue
+                if origin in constants:
+                    named.add(constants[origin])
+                elif origin in collections:
+                    named |= collections[origin]
+                elif isinstance(inner, ast.Name) and origin[0] == path:
+                    deferred.add(origin)
         return named, deferred
 
     # A module-level population (``DEFINITIONS = (_definition(id=..._ID), ...)``)
@@ -437,15 +486,15 @@ def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
 
 
 @cache
-def _definition_id_constants() -> Mapping[str, str]:
-    """Constant name to the operation id it carries."""
-    constants: dict[str, str] = {}
+def _definition_id_constants() -> Mapping[tuple[str, str], str]:
+    """Canonical declaring module and constant name to the operation id it carries."""
+    constants: dict[tuple[str, str], str] = {}
     for path in _production_sources():
         for name, value in _module_level_bindings(_parsed(path)):
             if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
                 continue
             if name.endswith(_DEFINITION_ID_SUFFIX):
-                constants[name] = value.value
+                constants[path, name] = value.value
     return constants
 
 
@@ -625,6 +674,28 @@ def test_the_reference_census_detects_a_hard_coded_dispatch() -> None:
     # share the operation id's spelling.
     naming = ast.parse('DESTINATION = "domain.thing.undo"\nhelp(command="domain.thing.undo")\n')
     assert _dispatched_literals_in_tree(naming, ids) == frozenset()
+
+
+def test_qualified_constant_resolution_keeps_its_declaring_module() -> None:
+    """A module alias resolves only its own symbol, even when another module uses the same name."""
+    reference = ast.parse("requests.DO_DEFINITION_ID", mode="eval").body
+    assert isinstance(reference, ast.Attribute)
+    assert _attribute_origin(reference, {"requests": ("own/requests.py", "requests")}) == (
+        "own/requests.py",
+        "DO_DEFINITION_ID",
+    )
+    assert _attribute_origin(reference, {"unrelated": ("elsewhere/requests.py", "requests")}) is None
+
+
+def test_aliased_and_qualified_real_ids_reach_the_shared_composition_seam() -> None:
+    """The live alias shapes must carry their declared families through one builder hop."""
+    builders = _request_builders()
+    assert builders[
+        "src/cadrumo/application/prorrata_register/registered_operations.py", "build_prorrata_list_definition"
+    ] == frozenset({"ledger.prorrata.list"})
+    assert builders[
+        "src/cadrumo/application/overview/read_operation.py", "build_overview_read_definition"
+    ] == frozenset(_dynamic_definition_ids())
 
 
 def test_no_full_screen_surface_reaches_an_outbound_adapter_directly() -> None:

@@ -127,7 +127,10 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -415,11 +418,20 @@ def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
         wallet_amount=Decimal("0.00"),
         local_recurrence_amount=None,
         override_amount=None,
-        divergence="match",
+        divergence="wallet_only",
         blocked=False,
         stale_wallet=False,
-        reason_identity="aeat_wallet_validated",
+        reason_identity="aeat_wallet_uncrosschecked",
         wallet_captured_at=_PRORRATA_T1,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("0.00"),
+                source_locator="aeat-wallet:prorrata-parity-synthetic-fixture",
+                captured_at=_PRORRATA_T1,
+                registry_snapshot_refs=(),
+            ),
+        ),
         decided_at=_PRORRATA_T1,
     )
 

@@ -130,6 +130,7 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
             "actor",
             "idempotency_key",
             "source_jurisdiction",
+            "account",
         ),
         "app_ledger_allocate": (
             "transaction_id",

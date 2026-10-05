@@ -438,7 +438,7 @@ def _file_period(
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
-    return resolve_modelo_result_disposition(
+    disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile(
@@ -448,6 +448,8 @@ def _file_period(
         period=work_unit.period,
         refund_election=refund_election,
     )
+    assert disposition is not None
+    return disposition
 
 
 def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None:

@@ -1,4 +1,7 @@
-"""Bind canonical spreadsheet algorithms to one immutable profile worker."""
+"""Bind canonical spreadsheet algorithms to one immutable profile worker.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
