@@ -470,6 +470,39 @@ mod tests {
         assert!(count.load(Ordering::SeqCst) >= 1);
     }
 
+    /// The holder acknowledges on the connection that carried the request,
+    /// so an acknowledgement it gives after that claim stopped waiting
+    /// reaches no later claim, even one sent while the holder is closing.
+    #[test]
+    fn a_late_acknowledgement_does_not_answer_a_later_claim() {
+        let scratch = Scratch::new("late");
+        let mut lock = primary(&scratch.0, FAMILY, SESSION);
+        let (decide, decisions) = std::sync::mpsc::channel::<bool>();
+        let decisions = std::sync::Mutex::new(decisions);
+        let (seen, requests) = std::sync::mpsc::channel::<()>();
+        let closing = Arc::new(AtomicBool::new(false));
+        let closed = closing.clone();
+        lock.serve(move || {
+            let _ = seen.send(());
+            !closed.load(Ordering::SeqCst) && decisions.lock().unwrap().recv().unwrap_or(false)
+        })
+        .unwrap();
+        // The first claim gives up while the holder still deliberates.
+        let error = claim_in(&scratch.0, FAMILY, SESSION, Duration::from_millis(300))
+            .err()
+            .unwrap();
+        assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+        requests.recv().unwrap();
+        // The holder starts closing, then acknowledges that request late.
+        closing.store(true, Ordering::SeqCst);
+        decide.send(true).unwrap();
+        let error = claim_in(&scratch.0, FAMILY, SESSION, Duration::from_millis(1500))
+            .err()
+            .unwrap();
+        assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+        assert!(requests.try_iter().count() >= 1);
+    }
+
     #[test]
     fn open_directories_invalid_families_and_sessions_are_refused() {
         let scratch = Scratch::new("refusal");

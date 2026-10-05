@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:fad2189e0457b665e9c50a1c3a5d839e220614b8ae4382f9dab1fd275d5969f7'
+body_hash: 'sha256:564755ab5d93ae6855b6f7fec0a352ddafd0ce90d635c4c33b9c9e863c3e7b64'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -366,6 +366,15 @@ related:
 - `S07` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
 - `S07` `verify:` `live relocated test: window-state.json saves and loads in Launch.webview, the declared webview member under the explicit root` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
+- `S19` `verify:` `platform cargo test --locked --lib desktop:: in a HEAD snapshot with the working desktop.rs (15 tests, new two-process a_late_acknowledgement_does_not_answer_a_later_claim: a claim that timed out is acknowledged late, the holder then closes, and a later claim times out instead of reporting activated), 3 runs, with and without webview2` -> `pass`
+- `S19` `verify:` `platform mutation check: removing the acknowledgement drain fails the late-acknowledgement test with activated` -> `pass`
+- `S19` `verify:` `platform cargo clippy --all-targets -D clippy::all -D warnings with and without webview2: only the 5 HEAD lib.rs missing_safety_doc findings, clean with that lint allowed on the command line` -> `pass`
+- `S19` `verify:` `desktop cargo test --locked single_instance in a HEAD snapshot with the working platform desktop.rs (7 tests incl. the two-install-path processes)` -> `pass`
+- `S19` `verify:` `linux backend in rust:1.96-slim: rustc --test (8 tests, new late acknowledgement reaches only its own connection, 3 runs) and clippy-driver -D clippy::all -D warnings` -> `pass`
+- `S19` `verify:` `rustfmt --check on desktop.rs and linux.rs` -> `pass`
+- `S19` `verify:` `contract patch of only the single-instance hunks: git apply --cached --check against a temporary index read from HEAD 4376485759` -> `pass`
+- `S19` `verify:` `private namespace probe on Windows 11 26200: a foreign-SID boundary is refused with error 5; the namespace survives its creator while another process holds a namespace handle, and once none does a new CreatePrivateNamespace makes a separate namespace` -> `pass`
+- `S19` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -421,3 +430,4 @@ related:
 - `S11` Webview profile and window-state.json still live under the development tool cache (desktop-webview); the declared webview member `(CADRUMO_WEBVIEW_DIR)` is not consumed yet; the contract records the current location
 - `S11` Mutable-root rows state the declared per-OS, per-channel default; the committed native host still resolves the root from its working directory until the uncommitted native platform resolver lands
 - `S11` Minimum WebView2 runtime recorded as required interfaces only; no runtime version measured; no automated packaged window test exists
+- `S19` S19 Global names kept: private namespace cross-session visibility undocumented and unverifiable from this session-0 shell; residual denial of service by another standard account recorded in native/CONTRACT.md

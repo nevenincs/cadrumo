@@ -197,6 +197,12 @@ pub enum InstanceClaim {
 /// session has no activation event, the holder is in another session. An
 /// event has no content, so a request carries nothing from the second
 /// instance but the request.
+///
+/// The second instance consumes any acknowledgement already set before it
+/// sends each request, so a late acknowledgement of a claim that stopped
+/// waiting cannot answer it. An acknowledgement still cannot name its
+/// request: one the holder sets for a request it took before that point
+/// answers the second instance too.
 pub struct InstanceLock {
     mutex: Owned,
     activate: Arc<Owned>,
@@ -634,7 +640,16 @@ fn claim_in_session(family: &str, session: u32, patience: Duration) -> io::Resul
             continue;
         };
         absent_since = None;
+        // An acknowledgement already set answers an earlier request that no
+        // claim waited for any longer, this claim's previous round included,
+        // so it is consumed before this request is sent and only one given
+        // afterwards counts.
         // SAFETY: both handles are open for the duration of these calls.
+        match unsafe { WaitForSingleObject(acknowledge.0, 0) } {
+            WAIT_OBJECT_0 | WAIT_TIMEOUT => {}
+            _ => return Err(io::Error::last_os_error()),
+        }
+        // SAFETY: as above.
         checked(unsafe { SetEvent(activate.0) })?;
         let round = remaining.min(ACKNOWLEDGEMENT_ROUND).as_millis() as u32;
         // SAFETY: as above.
@@ -987,6 +1002,129 @@ mod tests {
         );
         let error = claim_from_session(&family, 4, Duration::from_secs(2)).unwrap_err();
         assert_eq!(error.kind(), io::ErrorKind::PermissionDenied, "{error}");
+    }
+
+    const HOLDER_VARIABLE: &str = "CADRUMO_PLATFORM_INSTANCE_HOLDER";
+    /// Marks the holder's reports among the test harness's own output.
+    const REPORT: &str = "@holder-report ";
+
+    /// Runs as a holder process when the parent test selects a family. It
+    /// reports each activation request and answers it as its standard input
+    /// says: `accept` acknowledges the pending request, and `close` refuses
+    /// it and every later one, as a closing window does. End of input
+    /// releases the lock.
+    #[test]
+    fn holder() {
+        use std::io::BufRead;
+        use std::sync::{Mutex, atomic::AtomicBool};
+        let Ok(family) = std::env::var(HOLDER_VARIABLE) else {
+            return;
+        };
+        let mut lock = primary(&family);
+        let (decide, decisions) = mpsc::channel::<bool>();
+        let decisions = Mutex::new(decisions);
+        let closing = Arc::new(AtomicBool::new(false));
+        let closed = closing.clone();
+        lock.serve(move || {
+            println!("{REPORT}request");
+            !closed.load(Ordering::SeqCst) && decisions.lock().unwrap().recv().unwrap_or(false)
+        })
+        .unwrap();
+        println!("{REPORT}primary");
+        for line in std::io::stdin().lock().lines() {
+            match line.unwrap().as_str() {
+                "accept" => decide.send(true).unwrap(),
+                "close" => {
+                    closing.store(true, Ordering::SeqCst);
+                    decide.send(false).unwrap();
+                }
+                other => panic!("unknown holder command {other}"),
+            }
+        }
+        // A request still waiting for a decision is refused, so the
+        // activation thread can be joined.
+        drop(decide);
+        drop(lock);
+    }
+
+    /// A holder process that a failed assertion must not leave running.
+    struct Running(std::process::Child);
+    impl Drop for Running {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+
+    /// Reads the holder's output until it reports `expected`.
+    fn until_report(lines: &mut impl Iterator<Item = String>, expected: &str) {
+        assert!(
+            lines.any(|line| line
+                .rsplit_once(REPORT)
+                .is_some_and(|(_, report)| report == expected)),
+            "the holder never reported {expected}"
+        );
+    }
+
+    /// An acknowledgement the holder gives after the claim that asked for
+    /// it has given up must not answer a later claim: the holder may have
+    /// started closing in between, and that claim then has to wait for the
+    /// lock instead of reporting an activation that never happened.
+    #[test]
+    fn a_late_acknowledgement_does_not_answer_a_later_claim() {
+        use std::io::{BufRead, BufReader, Write};
+        use std::process::{Command, Stdio};
+        let family = family("late-acknowledgement");
+        let mut holder = Running(
+            Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "desktop::tests::holder",
+                    "--nocapture",
+                    "--test-threads=1",
+                ])
+                .env(HOLDER_VARIABLE, &family)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::inherit())
+                .spawn()
+                .unwrap(),
+        );
+        let mut input = holder.0.stdin.take().unwrap();
+        let mut lines = BufReader::new(holder.0.stdout.take().unwrap())
+            .lines()
+            .map_while(Result::ok);
+        until_report(&mut lines, "primary");
+
+        // The first claim gives up while the holder still deliberates.
+        let error = claim_elsewhere(&family, Duration::from_millis(300)).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+        until_report(&mut lines, "request");
+        // Its acknowledgement now arrives with nobody waiting for it.
+        writeln!(input, "accept").unwrap();
+
+        // The holder answers requests one at a time, so once it reports this
+        // bare request it has set the late acknowledgement.
+        let (user, _, base) = holder_objects(&family);
+        let activate =
+            open_existing_event(&session_names(&base, current_session().unwrap()).0, &user)
+                .unwrap()
+                .unwrap();
+        // SAFETY: the event handle is open.
+        checked(unsafe { SetEvent(activate.0) }).unwrap();
+        until_report(&mut lines, "request");
+        // From here on the holder is closing and refuses every request.
+        writeln!(input, "close").unwrap();
+
+        let error = claim_elsewhere(&family, Duration::from_millis(1500)).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::TimedOut, "{error}");
+
+        drop(input);
+        assert!(holder.0.wait().unwrap().success());
+        assert_eq!(
+            claim_elsewhere(&family, Duration::from_secs(5)).unwrap(),
+            "primary"
+        );
     }
 
     #[test]

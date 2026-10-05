@@ -821,9 +821,11 @@ form of the process token user's SID. Named mutexes and events in `Global\` need
   `WAIT_OBJECT_0` or `WAIT_ABANDONED`. It then creates its session's two events,
   resets both, and keeps the lock until its window has closed.
 - A claimant in session `N` that finds the lock held opens, without creating, its
-  own session's two events. When they exist it sets the activation event and waits
+  own session's two events. When they exist it first consumes an acknowledgement
+  already set, with a zero-timeout wait, then sets the activation event and waits
   up to 500 ms for the acknowledgement; an acknowledgement means the window was
-  activated, and the claimant exits with 0. Without one it checks the lock again.
+  activated, and the claimant exits with 0. Without one it checks the lock again
+  and sends a new request.
 - When the lock is held and the claimant's session has no activation event for
   500 ms, the holder is in another session. The claimant sets nothing, writes
   `{"outcome":"open_in_other_session"}` as one line on standard error and exits
@@ -831,10 +833,34 @@ form of the process token user's SID. Named mutexes and events in `Global\` need
 - The holder acknowledges only a request it accepted. Once its window is closing it
   stops acknowledging, so claimants keep checking until the lock is released. A
   claimant gives up after 10 s with a `timed_out` launch error.
-- Events have no content: a request carries nothing from the claimant.
+- Events have no content: a request carries nothing from the claimant, and an
+  acknowledgement does not name the request it answers. Consuming a set
+  acknowledgement before each request keeps a late one, given after its claimant
+  stopped waiting, from answering a later claim. An acknowledgement the holder sets
+  for a request it took before that point can still answer the later claim; the
+  holder was then still accepting requests.
+
+The names are predictable: the family is public, and any local account can look up
+another account's SID. Another local account can therefore create any of these
+objects first, from any session and without a privilege. A claimant refuses such an
+object, since it cannot open it with full access or does not own it, so the GUI
+launch exits with 69 and `desktop_unavailable` while the other account keeps a
+handle to the object open. Nothing reaches that account: no request, no
+acknowledgement and no handle to the user's own objects. The headless CLI
+passthrough is unaffected. Administrators and `SYSTEM` can deny the GUI in other
+ways too, so this risk concerns other standard accounts.
+
+A private namespace whose boundary holds the user's SID would prevent this, since
+`CreatePrivateNamespace` requires the caller to be within the boundary. It is not
+used. Microsoft documents neither whether such a namespace is visible from the
+user's other sessions nor a lifetime this lock can rely on. The documentation says
+the namespace can no longer be opened once its creator's handle closes. On Windows
+11 build 26200 it stays open while any process holds a namespace handle, and once
+none does, `CreatePrivateNamespace` makes a separate namespace in which a second
+claimant would take a second lock.
 
 On Linux the objects live in `$XDG_RUNTIME_DIR`, which must deny group and other
-access.
+access, so no other account can create or reach them.
 
 | Object | Name |
 | --- | --- |
@@ -846,9 +872,10 @@ access.
 - On taking the lock, the holder removes every
   `<family>.desktop.session.*.activate` socket, then binds its own.
 - A claimant connects to its own session's socket and writes nothing. The holder
-  reads nothing and writes the byte `0x01` for a request it accepted. Timing, the
-  other-session report and the exit status match Windows; a socket that is missing
-  or refuses the connection counts as absent.
+  reads nothing and writes the byte `0x01` for a request it accepted, on the
+  connection that carried it, so a late acknowledgement reaches no later claim.
+  Timing, the other-session report and the exit status match Windows; a socket that
+  is missing or refuses the connection counts as absent.
 
 macOS runs no desktop GUI and takes no lock.
 
