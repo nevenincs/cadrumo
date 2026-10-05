@@ -5,6 +5,8 @@
 #[cfg(all(feature = "fixture-test-mode", not(debug_assertions)))]
 compile_error!("release builds refuse the fixture test mode");
 
+#[cfg(any(windows, test))]
+pub mod admission;
 pub mod contract;
 pub mod custody;
 pub mod identity;

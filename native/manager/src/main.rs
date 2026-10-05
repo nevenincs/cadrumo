@@ -1,6 +1,6 @@
 //! Entrypoint of the per-user runtime manager image.
 //!
-//! The entrypoint accepts only `--version` and starts no runtime.
+//! Bare startup checks native admission. Runtime composition is not yet installed.
 #![windows_subsystem = "windows"]
 
 use cadrumo_manager::identity;
@@ -11,11 +11,22 @@ use std::{
 };
 
 const USAGE_ERROR: u8 = 2;
+#[cfg(windows)]
+const ADMISSION_REFUSED: u8 = 77;
+
+fn start() -> ExitCode {
+    #[cfg(windows)]
+    if let Err(refusal) = cadrumo_manager::admission::require_current() {
+        let _ = writeln!(io::stderr(), "{}", refusal.code());
+        return ExitCode::from(ADMISSION_REFUSED);
+    }
+    ExitCode::SUCCESS
+}
 
 fn main() -> ExitCode {
     let arguments: Vec<_> = env::args_os().skip(1).collect();
     match arguments.as_slice() {
-        [] => ExitCode::SUCCESS,
+        [] => start(),
         [flag] if flag == "--version" => {
             match writeln!(
                 io::stdout(),

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:ba8f41afe92bccc307871ec46c2621f6db1d656b69e919653aca199f63e336de'
+body_hash: 'sha256:8801732e03637854aeadf97d2cc49c1b2b43c8702f6ffa73b66fc13624e35a0f'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -204,6 +204,13 @@ related:
 - `S08` `verify:` `cargo clippy --locked --manifest-path native/manager/Cargo.toml --all-targets --features fixture-test-mode -- -D warnings` -> `pass`
 - `S08` `verify:` `cargo fmt --manifest-path native/manager/Cargo.toml -- --check` -> `pass`
 - `S08` `verify:` `cargo build --locked --manifest-path native/manager/Cargo.toml --release` -> `pass`
+- `S10` `A` `native/manager/src/admission.rs`
+- `S10` `M` `native/manager/src/lib.rs`
+- `S10` `M` `native/manager/src/main.rs`
+- `S10` `M` `native/manager/tests/entrypoint.rs`
+- `S10` `verify:` `manager admission and entrypoint tests (8)` -> `pass`
+- `S10` `verify:` `manager all-target fixture Clippy` -> `pass`
+- `S10` `verify:` `manager fmt` -> `pass`
 
 ## Notes
 
@@ -219,3 +226,4 @@ related:
 - `S11` POSIX/Linux paths compile-checked only (no Rust toolchain in WSL). Adds unix-only libc 0.2.190 (same as sibling crates). supervision::json made pub(crate) for reuse. Follow-ons added to the plan: gate supervisor restarts through the start claim, register manager .runtime records in the Python storage taxonomy, and record the session lock/claim/Quit grammar as a cross-version contract. Token-user/owner-only descriptor code duplicates native/platform desktop.rs; a shared helper needs the platform owner.
 - `S23` Windows verification only; no Linux compile check. Toolchain C:/Users/hello/.cargo/bin/cargo.exe; target build/b5-manager-cargo; generated contract and identity build/windows-x86-64/b1/generated. main.rs remains version-only; composition and B4 S04/S22/S24 contracts remain open. `run_with_permit` transfers the initial claim safely through pre-readiness retry.
 - `S08` Partial S08 checkpoint: canonical native/platform installed-default resolver and Strict child environment replace manager's duplicated allowlist. Only filtered output is lazily cached for restarts, authority is package-pinned, and diagnostics omit environment values. Final 85 affected tests and release checks passed on Windows in build/b5-manager-cargo with B1-generated contract/identity; executor completion 22caa0 and 7edfba. S08 stays open for bounded interpreter identity/version probes and shared Settings projection; production entrypoint composition and B4 shutdown/count/schema contracts remain absent.
+- `S10` Partial S10 only: bare startup checks native session, full-token elevation and interactive desktop evidence before state or child work; --version remains available. Job escape, session-end and real runtime composition remain unimplemented. B4 ordered settle, exact operation counts and manager record grammars are still prerequisites.

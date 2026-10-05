@@ -18,8 +18,18 @@ fn version_reports_the_projected_manager_name_and_version() {
 }
 
 #[test]
-fn bare_start_exits_successfully_without_output() {
+fn bare_start_enforces_native_admission() {
     let output = Command::new(MANAGER).output().expect("run the manager");
+    #[cfg(windows)]
+    if let Err(refusal) = cadrumo_manager::admission::require_current() {
+        assert_eq!(output.status.code(), Some(77), "{output:?}");
+        assert!(output.stdout.is_empty(), "{output:?}");
+        assert_eq!(
+            String::from_utf8(output.stderr).unwrap(),
+            format!("{}\n", refusal.code())
+        );
+        return;
+    }
     assert!(output.status.success(), "{output:?}");
     assert!(
         output.stdout.is_empty() && output.stderr.is_empty(),
