@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9789f5bcf6e888e0f28697e3f7463eb4387a4a7967a747aefc15c2eab9a31617'
+body_hash: 'sha256:1931b29a174132014b27260adefa02f47bc07c875bb17549e494c7b14263cca9'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -337,6 +337,20 @@ related:
 - `S05` `verify:` `pytest dev/packaging/tests/test_native_docs_references.py (68 incl. 24 shared cases, 19 shared malformed tables)` -> `pass`
 - `S05` `verify:` `mutants in build snapshot: old hard-coded table, hard-coded htm, case-insensitive extension each fail the shared-case test; Python first-dot, case-insensitive, extension-first, hard-coded htm each fail shared cases` -> `pass`
 - `S05` `by:` `s05b-high-executor`
+- `S19` `M` `native/platform/src/desktop.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/single_instance/linux.rs`
+- `S19` `M` `native/CONTRACT.md`
+- `S19` `verify:` `platform cargo test --locked --lib desktop:: (13 instance tests, new: other-session holder reported in under 2 s with 0 requests while a same-session claim activates; grace covers a holder that takes the lock 150 ms before creating its events; a per-session event with a foreign DACL is refused), with and without webview2` -> `pass`
+- `S19` `verify:` `platform tests under runas /trustlevel:0x20000 (no privileges incl. SeCreateGlobalPrivilege, Administrators deny-only, Session 0): 13 of 13 including Global creation` -> `pass`
+- `S19` `verify:` `platform mutation check: zero grace, session-blind event names, and never reporting other-session each fail a platform test` -> `pass`
+- `S19` `verify:` `platform cargo clippy --all-targets -D warnings with and without webview2: only the 5 HEAD lib.rs missing_safety_doc findings` -> `pass`
+- `S19` `verify:` `desktop snapshot of HEAD 9ed6b9fae7 plus S19 files with a regenerated contract: cargo clippy --locked --all-targets -D warnings with and without live-package-tests` -> `pass`
+- `S19` `verify:` `desktop cargo test --locked full suite without live tests (98, incl. two-install-path processes and the other-session report mapping)` -> `pass`
+- `S19` `verify:` `linux backend in rust:1.96-slim: rustc --test (7 tests, 3 runs) and clippy-driver -D clippy::all` -> `pass`
+- `S19` `verify:` `linux mutation check: zero grace, no stale-socket sweep, session-blind socket name, never reporting other-session each fail a test` -> `pass`
+- `S19` `verify:` `rustfmt --check on touched Rust files` -> `pass`
+- `S19` `by:` `high-executor`
 
 ## Notes
 
@@ -383,3 +397,9 @@ related:
 - `S05` Served media types now come from the contract's `layout.user_docs.media_types,` parsed once in docs::plugin; the shared case list `media_type_cases.json` is read by Rust tests and pytest
 - `S05` Rust also refuses a media type that is not a valid HTTP header value; the Python staging parser does not check this
 - `S05` Live docs test still fails pre-existing: the s02 package lacks docs/user/manifest.json and no staged docs tree exists in the worktree
+- `S19` Scheme: holder-only per-session events named `<base>.session.<N>.activate/.acknowledge` under Global; a claimant opens (never creates) its own session's events; held lock plus absent events for a 500 ms grace means other session. Claimants reopen the events every round so their own handles cannot keep a departed holder's events alive
+- `S19` Other-session outcome writes the token line `{"outcome":"open_in_other_session"}` to stderr and maps to Admission::Activated so main.rs stays unchanged; no localized operator text was added (needs the coordinator's ruling)
+- `S19` Unproven: a real second interactive session (activation across sessions, focus, and Global creation from a non-zero session where only sections and symlinks need SeCreateGlobalPrivilege per the Kernel Object Namespaces documentation); the basic-user run kept the High mandatory label and ran in Session 0
+- `S19` Linux session key is `XDG_SESSION_ID` or 'unnamed' when unset: two sessions that both lack it behave as one session
+- `S19` native/CONTRACT.md working copy is CRLF throughout (another writer); the section was inserted with CRLF and only the new section was added
+- `S19` Desktop checks used a contract regenerated from the worktree (build/s15-desktop-host/contract) because HEAD 9ed6b9fae7 docs tests need the media type table; platform checks used HEAD lib.rs with the s07-cmake contract.rs

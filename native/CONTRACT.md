@@ -399,6 +399,69 @@ project always depends on `user_docs`.
 
 `native/cmake/distribution` packages an already assembled payload. Its shared
 identity projection covers Windows x64, Linux x64/ARM64 and macOS ARM64. The
+## Desktop single instance
+
+The desktop GUI holds one lock per user and channel, across installed versions and
+install paths. The names and the protocol below are a cross-version contract: a
+version that changed them would take a separate lock, and two versions could open
+windows at once. The headless CLI passthrough (`cadrumo` with arguments, or
+`--headless`) never opens these objects.
+
+`<family>` is the application identifier of the generated Tauri configuration: the
+identity projection's `application_id` with its channel suffix, such as
+`md.neve.cadrumo` or `md.neve.cadrumo.preview`. Neither the version nor the install
+path enters a name. `native/platform/src/desktop.rs` implements the Windows side and
+`native/desktop/src-tauri/src/shell/single_instance/` the Linux side and the
+desktop's use of both.
+
+On Windows, `<base>` is `Global\<family>.desktop.<SID>`, where `<SID>` is the string
+form of the process token user's SID. Named mutexes and events in `Global\` need no
+`SeCreateGlobalPrivilege`.
+
+| Object | Name | Created by |
+| --- | --- | --- |
+| Lock | `<base>.lock`, a mutex | Every claimant, creating or opening it |
+| Activation | `<base>.session.<N>.activate`, an auto-reset event | The holder only; `<N>` is its session ID |
+| Acknowledgement | `<base>.session.<N>.acknowledge`, an auto-reset event | The holder only |
+
+- Every object is created with the security descriptor `O:<SID>D:P(A;;GA;;;<SID>)`.
+  A claimant refuses an object it cannot open with full access, or whose owner is
+  not its token user.
+- The holder is the thread whose zero-timeout wait on the lock returned
+  `WAIT_OBJECT_0` or `WAIT_ABANDONED`. It then creates its session's two events,
+  resets both, and keeps the lock until its window has closed.
+- A claimant in session `N` that finds the lock held opens, without creating, its
+  own session's two events. When they exist it sets the activation event and waits
+  up to 500 ms for the acknowledgement; an acknowledgement means the window was
+  activated, and the claimant exits with 0. Without one it checks the lock again.
+- When the lock is held and the claimant's session has no activation event for
+  500 ms, the holder is in another session. The claimant sets nothing, writes
+  `{"outcome":"open_in_other_session"}` as one line on standard error and exits
+  with 0.
+- The holder acknowledges only a request it accepted. Once its window is closing it
+  stops acknowledging, so claimants keep checking until the lock is released. A
+  claimant gives up after 10 s with a `timed_out` launch error.
+- Events have no content: a request carries nothing from the claimant.
+
+On Linux the objects live in `$XDG_RUNTIME_DIR`, which must deny group and other
+access.
+
+| Object | Name |
+| --- | --- |
+| Lock | `<family>.desktop.lock`, held with an exclusive `flock` |
+| Activation | `<family>.desktop.session.<session>.activate`, a Unix stream socket the holder binds |
+
+- `<session>` is `XDG_SESSION_ID`, or `unnamed` when it is unset. It is letters,
+  digits, `-` and `_`.
+- On taking the lock, the holder removes every
+  `<family>.desktop.session.*.activate` socket, then binds its own.
+- A claimant connects to its own session's socket and writes nothing. The holder
+  reads nothing and writes the byte `0x01` for a request it accepted. Timing, the
+  other-session report and the exit status match Windows; a socket that is missing
+  or refuses the connection counts as absent.
+
+macOS runs no desktop GUI and takes no lock.
+
 application ID is `md.neve.cadrumo`; the preview channel adds `.preview`. Upgrade
 UUIDs are deterministic per application/channel, target and machine installation
 scope. They do not change with the version. MSI product/package codes retain their

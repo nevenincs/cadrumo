@@ -12,9 +12,9 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:7afef85ca385aaa5f742ef0c3d94d207f588af54c17e2550bdc02feb75ae34b2'
+body_hash: 'sha256:f58eed1b86baea17282e582167fb23cf7484401f627db9a917626580ba6452ea'
 ---
 
 # `desktop-shell` plan
@@ -134,6 +134,7 @@ Questions for the user and the RUNTIME-MANAGEMENT session: which process owns th
 - [ ] `S16` - Add the desktop sign-in host commands per the accepted application-sign-in decision: a token-checked sign-in command taking the password as a raw IPC body that spawns a fresh packaged aeat config login with secrets on stdin and JSON output (never the headless passthrough), pipes and closes stdin after one write, zeroizes host buffers, keeps child output out of diagnostics and logs, and maps the bounded JSON envelope to a typed result; a sign-in status command over aeat config sign-in-status reporting present, absent or unknown without resuming; and sign out over aeat config logout; the aeat image is resolved from the generated entrypoint inventory under the package bin directory with the pinned child environment, never from PATH, and children are reaped on window close; command shapes: sign_in_status returns supported, state present, absent or unknown, and active_profile, with runtime unavailable distinguishable; sign_in_submit takes the raw password body and returns signed-in or a typed refusal carrying the code and retryAfterSeconds for THROTTLED, a wrong password arriving as CREDENTIAL_REJECTED; sign_out returns remainingAccess from the logout envelope; supported is false on macOS and non-GNOME Linux; `native/desktop/src-tauri/src/shell/, native/desktop/frontend/src/ipc/contract.ts sign-in types`.
 - [ ] `S17` - Implement the shell sign-in view in the TUI pane while sign-in status is absent or unknown, per the accepted application-sign-in decision (owner CADRUMO-BUILD-TAURI-DESIGNER): password form without automatic retry, typed refusal messages with a live THROTTLED countdown and TUI handover for locked, first-run, other-profile and recovery cases, an Account section in settings with global sign out and the remaining-access notice, status refresh on TUI exit and window focus, hidden where unsupported; `native/desktop/frontend/src/, native/desktop/frontend/tests/desktop.spec.ts`.
 - [x] `S18` - Author the 28 desktop sign-in chrome keys in all four catalogues through dev.locales set-batch in the informal register and add them to the desktop chrome key declaration so the generator and locale scanner include them; `dev/locales/desktop_chrome.py, src/cadrumo/locales/{en,es,ca,hu}/common.yml desktop subtree`.
+- [x] `S19` - Make the desktop single instance per user across interactive sessions: move the lock and activation objects to the Global namespace with the same user-only security and squatter refusal, activate only within the caller's session and otherwise report that the application is already open in the user's other session and exit 0, and record the object names and activation protocol as a cross-version contract in the native contract document; `native/platform/src/desktop.rs, native/desktop/src-tauri/src/shell/single_instance/, native/CONTRACT.md desktop single-instance section`.
 
 ## Parallelization
 

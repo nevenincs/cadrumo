@@ -177,19 +177,26 @@ pub enum InstanceClaim {
     Primary(InstanceLock),
     /// The instance holding the lock acknowledged an activation request.
     Activated,
+    /// The instance holding the lock runs in another session of this user,
+    /// where no window of this session can be brought forward.
+    OtherSession,
 }
 
 /// The per-user desktop instance lock, held by the thread that claimed it.
 ///
-/// The lock is a named mutex in the session's `Local\` namespace. Its name
-/// joins the caller's family with the user's SID, and its security
-/// descriptor names that user as owner with the only access entry, so
-/// another account in the session can neither open nor answer for it, and
-/// an object of that name another account created first is refused.
+/// The lock is a named mutex in the machine-wide `Global\` namespace, so it
+/// spans every session of the user. Its name joins the caller's family with
+/// the user's SID, and its security descriptor names that user as owner with
+/// the only access entry, so another account can neither open nor answer for
+/// it, and an object of that name another account created first is refused.
 ///
-/// Activation travels on a named auto-reset event: a second instance sets
-/// it and waits on an acknowledgement event. An event has no content, so a
-/// request carries nothing from the second instance but the request.
+/// Activation travels on named auto-reset events that carry the holder's
+/// session number in their names, and only the holder creates them. A second
+/// instance opens its own session's activation event, sets it and waits on
+/// that session's acknowledgement event. When the lock is held but its own
+/// session has no activation event, the holder is in another session. An
+/// event has no content, so a request carries nothing from the second
+/// instance but the request.
 pub struct InstanceLock {
     mutex: Owned,
     activate: Arc<Owned>,
@@ -261,9 +268,17 @@ const WAIT_OBJECT_0: u32 = 0;
 const WAIT_ABANDONED: u32 = 0x80;
 const WAIT_TIMEOUT: u32 = 0x102;
 const INFINITE: u32 = u32::MAX;
+const EVENT_ALL_ACCESS: u32 = 0x001F_0003;
+const ERROR_FILE_NOT_FOUND: i32 = 2;
 /// How long a second instance waits for each acknowledgement before it
 /// checks the lock again.
 const ACKNOWLEDGEMENT_ROUND: Duration = Duration::from_millis(500);
+/// How long a held lock may go without an activation event for the caller's
+/// session before the holder counts as being in another session. It covers
+/// the moment between a holder taking the lock and creating its events.
+const HOLDER_GRACE: Duration = Duration::from_millis(500);
+/// The pause between checks while that grace runs.
+const HOLDER_POLL: Duration = Duration::from_millis(25);
 
 #[link(name = "kernel32")]
 unsafe extern "system" {
@@ -279,6 +294,7 @@ unsafe extern "system" {
         initial_state: i32,
         name: *const u16,
     ) -> *mut c_void;
+    fn OpenEventW(access: u32, inherit: i32, name: *const u16) -> *mut c_void;
     fn SetEvent(event: *mut c_void) -> i32;
     fn ResetEvent(event: *mut c_void) -> i32;
     fn WaitForSingleObject(handle: *mut c_void, milliseconds: u32) -> u32;
@@ -290,6 +306,8 @@ unsafe extern "system" {
     ) -> u32;
     fn CloseHandle(handle: *mut c_void) -> i32;
     fn GetCurrentProcess() -> *mut c_void;
+    fn GetCurrentProcessId() -> u32;
+    fn ProcessIdToSessionId(process: u32, session: *mut u32) -> i32;
     fn LocalFree(memory: *mut c_void) -> *mut c_void;
 }
 
@@ -447,7 +465,7 @@ fn owner_only(sid: &str) -> io::Result<LocalMemory> {
     Ok(LocalMemory(descriptor))
 }
 
-/// The session-local base name of `family`'s instance objects for the user
+/// The machine-wide base name of `family`'s instance objects for the user
 /// whose SID string is `sid`.
 fn instance_name(family: &str, sid: &str) -> io::Result<String> {
     let valid = !family.is_empty()
@@ -463,12 +481,40 @@ fn instance_name(family: &str, sid: &str) -> io::Result<String> {
             "instance family is not a reverse-DNS identifier",
         ));
     }
-    Ok(format!("Local\\{family}.desktop.{sid}"))
+    Ok(format!("Global\\{family}.desktop.{sid}"))
+}
+
+/// The names of the activation and acknowledgement events a holder in
+/// `session` serves.
+fn session_names(base: &str, session: u32) -> (String, String) {
+    (
+        format!("{base}.session.{session}.activate"),
+        format!("{base}.session.{session}.acknowledge"),
+    )
+}
+
+fn current_session() -> io::Result<u32> {
+    let mut session = 0u32;
+    // SAFETY: the call writes only the `u32` it is given.
+    checked(unsafe { ProcessIdToSessionId(GetCurrentProcessId(), &mut session) })?;
+    Ok(session)
 }
 
 enum Kind {
     Mutex,
     Event,
+}
+
+/// Refuses an object this user does not own. `handle` must be open with
+/// `READ_CONTROL`, which full access includes.
+fn owned(handle: Owned, user: &User) -> io::Result<Owned> {
+    if !user.owns(handle.0)? {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "another account owns the instance object",
+        ));
+    }
+    Ok(handle)
 }
 
 /// Creates or opens a named object and refuses one this user does not own.
@@ -491,26 +537,39 @@ fn open_owned(
     if handle.is_null() {
         return Err(io::Error::last_os_error());
     }
-    let handle = Owned(handle);
-    // Opened with full access, which includes `READ_CONTROL`.
-    if !user.owns(handle.0)? {
-        return Err(io::Error::new(
-            io::ErrorKind::PermissionDenied,
-            "another account owns the instance object",
-        ));
+    owned(Owned(handle), user)
+}
+
+/// Opens an existing named event without creating it: `None` when no
+/// object of that name exists.
+fn open_existing_event(name: &str, user: &User) -> io::Result<Option<Owned>> {
+    let name = wide(name);
+    // SAFETY: the name is nul-terminated; a null result is reported below.
+    let handle = unsafe { OpenEventW(EVENT_ALL_ACCESS, 0, name.as_ptr()) };
+    if handle.is_null() {
+        let error = io::Error::last_os_error();
+        return match error.raw_os_error() {
+            Some(ERROR_FILE_NOT_FOUND) => Ok(None),
+            _ => Err(error),
+        };
     }
-    Ok(handle)
+    owned(Owned(handle), user).map(Some)
 }
 
 /// Claims the desktop instance for `family`, or hands activation to the
 /// instance that holds it.
 ///
-/// A second instance asks for activation and waits for the holder to
-/// acknowledge it. Without an acknowledgement it checks the lock again, so
-/// a holder that is exiting passes the lock on instead of swallowing the
-/// request. After `patience` without either outcome the claim fails with
-/// [`io::ErrorKind::TimedOut`].
+/// A second instance in the holder's session asks for activation and waits
+/// for the holder to acknowledge it. Without an acknowledgement it checks
+/// the lock again, so a holder that is exiting passes the lock on instead of
+/// swallowing the request. A second instance in another session sends no
+/// request and returns [`InstanceClaim::OtherSession`]. After `patience`
+/// without an outcome the claim fails with [`io::ErrorKind::TimedOut`].
 pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceClaim> {
+    claim_in_session(family, current_session()?, patience)
+}
+
+fn claim_in_session(family: &str, session: u32, patience: Duration) -> io::Result<InstanceClaim> {
     let user = User::current()?;
     let name = instance_name(family, &user.text)?;
     if HELD.with(|held| held.borrow().contains(&name)) {
@@ -525,22 +584,19 @@ pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceCl
         descriptor: descriptor.0,
         inherit: 0,
     };
+    let (activate_name, acknowledge_name) = session_names(&name, session);
     let mutex = open_owned(Kind::Mutex, &format!("{name}.lock"), &attributes, &user)?;
-    let activate = open_owned(Kind::Event, &format!("{name}.activate"), &attributes, &user)?;
-    let acknowledge = open_owned(
-        Kind::Event,
-        &format!("{name}.acknowledge"),
-        &attributes,
-        &user,
-    )?;
     let deadline = Instant::now() + patience;
+    let mut absent_since = None;
     loop {
-        // SAFETY: each handle is open for the duration of these calls.
+        // SAFETY: the mutex handle is open for the duration of the call.
         match unsafe { WaitForSingleObject(mutex.0, 0) } {
             WAIT_OBJECT_0 | WAIT_ABANDONED => {
+                let activate = open_owned(Kind::Event, &activate_name, &attributes, &user)?;
+                let acknowledge = open_owned(Kind::Event, &acknowledge_name, &attributes, &user)?;
                 // Requests left for a holder that never answered them are
                 // not this instance's to acknowledge.
-                // SAFETY: as above.
+                // SAFETY: both handles are open.
                 unsafe {
                     ResetEvent(activate.0);
                     ResetEvent(acknowledge.0);
@@ -562,7 +618,23 @@ pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceCl
         if remaining.is_zero() {
             return Err(io::ErrorKind::TimedOut.into());
         }
-        // SAFETY: as above.
+        // Opened afresh each round, so this instance's own handles never
+        // keep alive the events of a holder that has gone.
+        let events = match open_existing_event(&activate_name, &user)? {
+            Some(activate) => open_existing_event(&acknowledge_name, &user)?
+                .map(|acknowledge| (activate, acknowledge)),
+            None => None,
+        };
+        let Some((activate, acknowledge)) = events else {
+            let since = *absent_since.get_or_insert_with(Instant::now);
+            if since.elapsed() >= HOLDER_GRACE {
+                return Ok(InstanceClaim::OtherSession);
+            }
+            std::thread::sleep(HOLDER_POLL.min(remaining));
+            continue;
+        };
+        absent_since = None;
+        // SAFETY: both handles are open for the duration of these calls.
         checked(unsafe { SetEvent(activate.0) })?;
         let round = remaining.min(ACKNOWLEDGEMENT_ROUND).as_millis() as u32;
         // SAFETY: as above.
@@ -664,21 +736,38 @@ mod tests {
     fn primary(family: &str) -> InstanceLock {
         match claim_instance(family, Duration::from_secs(5)).unwrap() {
             InstanceClaim::Primary(lock) => lock,
-            InstanceClaim::Activated => panic!("{family}: expected the lock"),
+            InstanceClaim::Activated | InstanceClaim::OtherSession => {
+                panic!("{family}: expected the lock")
+            }
+        }
+    }
+
+    fn outcome(claim: InstanceClaim) -> &'static str {
+        match claim {
+            InstanceClaim::Primary(_) => "primary",
+            InstanceClaim::Activated => "activated",
+            InstanceClaim::OtherSession => "other-session",
         }
     }
 
     /// Claims on a fresh thread, which never owns the mutex already.
     fn claim_elsewhere(family: &str, patience: Duration) -> io::Result<&'static str> {
         let family = family.to_owned();
-        std::thread::spawn(move || {
-            claim_instance(&family, patience).map(|claim| match claim {
-                InstanceClaim::Primary(_) => "primary",
-                InstanceClaim::Activated => "activated",
-            })
-        })
-        .join()
-        .unwrap()
+        std::thread::spawn(move || claim_instance(&family, patience).map(outcome))
+            .join()
+            .unwrap()
+    }
+
+    /// Claims on a fresh thread as if from `session`.
+    fn claim_from_session(
+        family: &str,
+        session: u32,
+        patience: Duration,
+    ) -> io::Result<&'static str> {
+        let family = family.to_owned();
+        std::thread::spawn(move || claim_in_session(&family, session, patience).map(outcome))
+            .join()
+            .unwrap()
     }
 
     fn counting(lock: &mut InstanceLock, accept: bool) -> Arc<AtomicUsize> {
@@ -693,15 +782,23 @@ mod tests {
     }
 
     #[test]
-    fn names_are_session_local_per_user_and_per_family() {
+    fn names_are_machine_wide_per_user_and_per_family() {
         let user = User::current().unwrap();
         assert!(user.text.starts_with("S-1-5-"), "{}", user.text);
         let stable = instance_name("md.neve.cadrumo", &user.text).unwrap();
         let preview = instance_name("md.neve.cadrumo.preview", &user.text).unwrap();
         assert_eq!(
             stable,
-            format!("Local\\md.neve.cadrumo.desktop.{}", user.text)
+            format!("Global\\md.neve.cadrumo.desktop.{}", user.text)
         );
+        assert_eq!(
+            session_names(&stable, 3),
+            (
+                format!("{stable}.session.3.activate"),
+                format!("{stable}.session.3.acknowledge")
+            )
+        );
+        current_session().unwrap();
         assert_ne!(stable, preview);
         assert_ne!(
             stable,
@@ -793,15 +890,103 @@ mod tests {
         let waiting = family.clone();
         let claimant = std::thread::spawn(move || {
             sender.send(()).unwrap();
-            claim_instance(&waiting, Duration::from_secs(10)).map(|claim| match claim {
-                InstanceClaim::Primary(_) => "primary",
-                InstanceClaim::Activated => "activated",
-            })
+            claim_instance(&waiting, Duration::from_secs(10)).map(outcome)
         });
         receiver.recv().unwrap();
         std::thread::sleep(Duration::from_millis(700));
         drop(lock);
         assert_eq!(claimant.join().unwrap().unwrap(), "primary");
+    }
+
+    #[test]
+    fn a_holder_in_another_session_is_reported_without_a_request() {
+        let family = family("sessions");
+        let mut lock = match claim_in_session(&family, 7, Duration::from_secs(5)).unwrap() {
+            InstanceClaim::Primary(lock) => lock,
+            _ => panic!("expected the lock"),
+        };
+        let count = counting(&mut lock, true);
+        let started = Instant::now();
+        assert_eq!(
+            claim_from_session(&family, 8, Duration::from_secs(5)).unwrap(),
+            "other-session"
+        );
+        assert!(started.elapsed() < Duration::from_secs(2));
+        assert_eq!(count.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            claim_from_session(&family, 7, Duration::from_secs(5)).unwrap(),
+            "activated"
+        );
+        assert_eq!(count.load(Ordering::SeqCst), 1);
+    }
+
+    /// The lock and attributes a test uses to act as a holder by hand.
+    fn holder_objects(family: &str) -> (User, LocalMemory, String) {
+        let user = User::current().unwrap();
+        let descriptor = owner_only(&user.text).unwrap();
+        let base = instance_name(family, &user.text).unwrap();
+        (user, descriptor, base)
+    }
+
+    #[test]
+    fn the_grace_covers_a_holder_that_has_not_created_its_events_yet() {
+        let family = family("grace");
+        let (ready, holding) = mpsc::channel();
+        let (finish, finished) = mpsc::channel::<()>();
+        let held = family.clone();
+        let holder = std::thread::spawn(move || {
+            let (user, descriptor, base) = holder_objects(&held);
+            let attributes = SecurityAttributes {
+                length: size_of::<SecurityAttributes>() as u32,
+                descriptor: descriptor.0,
+                inherit: 0,
+            };
+            let mutex =
+                open_owned(Kind::Mutex, &format!("{base}.lock"), &attributes, &user).unwrap();
+            // SAFETY: the mutex handle is open.
+            assert_eq!(unsafe { WaitForSingleObject(mutex.0, 0) }, WAIT_OBJECT_0);
+            ready.send(()).unwrap();
+            // Held, with no events yet, for part of the grace.
+            std::thread::sleep(Duration::from_millis(150));
+            let (activate, acknowledge) = session_names(&base, 5);
+            let activate = open_owned(Kind::Event, &activate, &attributes, &user).unwrap();
+            let acknowledge = open_owned(Kind::Event, &acknowledge, &attributes, &user).unwrap();
+            // SAFETY: both event handles are open.
+            unsafe {
+                assert_eq!(WaitForSingleObject(activate.0, 5000), WAIT_OBJECT_0);
+                SetEvent(acknowledge.0);
+            }
+            finished.recv().unwrap();
+            // SAFETY: this thread owns the mutex.
+            unsafe {
+                ReleaseMutex(mutex.0);
+            }
+        });
+        holding.recv().unwrap();
+        assert_eq!(
+            claim_from_session(&family, 5, Duration::from_secs(5)).unwrap(),
+            "activated"
+        );
+        finish.send(()).unwrap();
+        holder.join().unwrap();
+    }
+
+    #[test]
+    fn a_session_event_another_account_could_have_placed_is_refused() {
+        let family = family("squat-session");
+        let _lock = match claim_in_session(&family, 3, Duration::from_secs(5)).unwrap() {
+            InstanceClaim::Primary(lock) => lock,
+            _ => panic!("expected the lock"),
+        };
+        let (_, _, base) = holder_objects(&family);
+        let user = User::current().unwrap();
+        let _squatter = squat(
+            Kind::Event,
+            &session_names(&base, 4).0,
+            &format!("D:P(A;;0x00100000;;;{})", user.text),
+        );
+        let error = claim_from_session(&family, 4, Duration::from_secs(2)).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied, "{error}");
     }
 
     #[test]

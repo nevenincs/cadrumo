@@ -9,6 +9,11 @@
 //! when the user closes it. The headless CLI passthrough never takes or
 //! contends for the lock.
 //!
+//! The lock spans all of the user's sessions. A window can be brought
+//! forward only in its own session, so a launch in another session sends
+//! no request: it reports that the window is open in another session and
+//! exits.
+//!
 //! An activation request carries nothing from the second instance: the
 //! holder learns only that a request arrived, and answers by restoring and
 //! focusing its window.
@@ -46,9 +51,16 @@ pub enum Admission {
     Headless,
     /// This launch holds the lock and opens the window.
     Primary(Primary),
-    /// The open window accepted activation; this launch exits with 0.
+    /// Another window holds the lock, and this launch exits with 0: the
+    /// window accepted activation, or it is open in another session of this
+    /// user, which the launch reported on standard error.
     Activated,
 }
+
+/// The standard error line of a launch whose window is open in another
+/// session. A protocol token, not operator text.
+#[cfg(any(windows, target_os = "linux", test))]
+const OTHER_SESSION_REPORT: &str = "{\"outcome\":\"open_in_other_session\"}";
 
 /// The held instance lock. Dropping it releases the lock.
 pub struct Primary {
@@ -168,9 +180,27 @@ fn admit_with(mode: &Mode, family: impl FnOnce() -> Result<String>) -> Result<Ad
 
 #[cfg(any(windows, target_os = "linux"))]
 fn claim(family: &str) -> Result<Admission> {
+    admitted(
+        claim_instance(family, PATIENCE),
+        &mut std::io::stderr().lock(),
+    )
+}
+
+/// The admission a lock claim grants, reporting a window open in another
+/// session on `report`.
+#[cfg(any(windows, target_os = "linux"))]
+fn admitted(
+    claim: std::io::Result<InstanceClaim>,
+    report: &mut dyn std::io::Write,
+) -> Result<Admission> {
     let unavailable = || ApplicationError::new(ErrorCode::DesktopUnavailable, Operation::Launch);
-    match claim_instance(family, PATIENCE) {
+    match claim {
         Ok(InstanceClaim::Activated) => Ok(Admission::Activated),
+        Ok(InstanceClaim::OtherSession) => {
+            // Best effort: a launch without a console has nowhere to report.
+            let _ = writeln!(report, "{OTHER_SESSION_REPORT}");
+            Ok(Admission::Activated)
+        }
         Ok(InstanceClaim::Primary(mut lock)) => {
             let activation = Arc::new(Activation::default());
             let requests = activation.clone();
@@ -336,6 +366,32 @@ mod tests {
         // A window attached after closing never takes requests again.
         activation.attach(Box::new(|| panic!("attached after close")));
         assert!(!activation.request());
+    }
+
+    #[test]
+    fn a_window_in_another_session_is_reported_and_the_launch_exits() {
+        let mut report = Vec::new();
+        let admission = admitted(Ok(InstanceClaim::OtherSession), &mut report).unwrap();
+        assert!(matches!(admission, Admission::Activated));
+        assert_eq!(
+            report,
+            format!(
+                "{OTHER_SESSION_REPORT}
+"
+            )
+            .as_bytes()
+        );
+        let parsed: serde_json::Value = serde_json::from_slice(&report).unwrap();
+        assert_eq!(parsed["outcome"], "open_in_other_session");
+        // An activation in this session reports nothing.
+        let mut quiet = Vec::new();
+        let admission = admitted(Ok(InstanceClaim::Activated), &mut quiet).unwrap();
+        assert!(matches!(admission, Admission::Activated));
+        assert!(quiet.is_empty());
+        let timed_out = admitted(Err(std::io::ErrorKind::TimedOut.into()), &mut quiet);
+        assert_eq!(timed_out.err().unwrap().code, ErrorCode::TimedOut);
+        let refused = admitted(Err(std::io::ErrorKind::PermissionDenied.into()), &mut quiet);
+        assert_eq!(refused.err().unwrap().code, ErrorCode::DesktopUnavailable);
     }
 
     #[test]
