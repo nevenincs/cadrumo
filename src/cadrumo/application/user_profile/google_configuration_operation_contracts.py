@@ -15,7 +15,6 @@ from ..operations.models import OperationIdentity, OperationRevision
 from ..operations.registry import OperationSchemaBindingV1
 from .google_configuration_operation_refusal import GoogleConfigurationRefusalProjection
 
-GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID = "config.google.folder.set"
 GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID = "config.google.folder.view"
 GOOGLE_LOGIN_OPERATION_DEFINITION_ID = "config.google.login"
 GOOGLE_LOGOUT_OPERATION_DEFINITION_ID = "config.google.logout"
@@ -23,7 +22,6 @@ GOOGLE_PROBE_OPERATION_DEFINITION_ID = "config.google.probe"
 GOOGLE_STATUS_OPERATION_DEFINITION_ID = "config.google.status"
 GOOGLE_CONSENT_PRESENTATION_CODE = "google.consent.terminal-required"
 _Text = Annotated[str, Field(max_length=65_536)]
-_Input = Annotated[str, Field(max_length=16_384)]
 
 
 class GoogleConfigurationExportDisabledError(CadrumoError):
@@ -37,18 +35,12 @@ class GoogleProfileRequest(BaseModel):
     profile_id: UUID
 
 
-class GoogleFolderSetRequest(GoogleProfileRequest):
-    """Original root-folder text, retaining canonical whitespace normalization."""
-
-    folder_id: _Input
-
-
 class GoogleFolderViewRequest(GoogleProfileRequest):
-    """Read persisted root-folder configuration."""
+    """Read the root folder created for the profile."""
 
 
 class GoogleLoginRequest(GoogleProfileRequest):
-    """Sign in through the browser consent flow."""
+    """Sign in through the browser consent flow and create the profile's root folder."""
 
 
 class GoogleLogoutRequest(GoogleProfileRequest):
@@ -66,25 +58,12 @@ class GoogleStatusRequest(GoogleProfileRequest):
 
 
 type GoogleConfigurationRequest = (
-    GoogleFolderSetRequest
-    | GoogleFolderViewRequest
-    | GoogleLoginRequest
-    | GoogleLogoutRequest
-    | GoogleProbeRequest
-    | GoogleStatusRequest
+    GoogleFolderViewRequest | GoogleLoginRequest | GoogleLogoutRequest | GoogleProbeRequest | GoogleStatusRequest
 )
 
 
-class GoogleFolderSetProjection(BaseModel):
-    """Acknowledged canonical root-folder configuration."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    profile_id: UUID
-    root_folder_id: _Text
-
-
 class GoogleFolderViewProjection(BaseModel):
-    """Persisted root-folder presence and complete orientation value."""
+    """Whether a root folder has been created for the profile, and its ID."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -93,12 +72,13 @@ class GoogleFolderViewProjection(BaseModel):
 
 
 class GoogleLoginProjection(BaseModel):
-    """Canonical linked account and scopes; tokens have no public field."""
+    """Canonical linked account, scopes and created root folder; tokens have no public field."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     account_email: _Text
     granted_scopes: tuple[_Text, ...] = ()
+    root_folder_id: _Text
 
 
 class GoogleLogoutProjection(BaseModel):
@@ -136,8 +116,7 @@ class GoogleStatusProjection(BaseModel):
 
 
 type GoogleConfigurationProjection = (
-    GoogleFolderSetProjection
-    | GoogleFolderViewProjection
+    GoogleFolderViewProjection
     | GoogleLoginProjection
     | GoogleLogoutProjection
     | GoogleProbeProjection
@@ -165,7 +144,6 @@ class GoogleConfigurationOutcome(BaseModel):
 
 
 GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]]] = {
-    GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID: (GoogleFolderSetRequest, GoogleFolderSetProjection),
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: (GoogleFolderViewRequest, GoogleFolderViewProjection),
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID: (GoogleLoginRequest, GoogleLoginProjection),
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID: (GoogleLogoutRequest, GoogleLogoutProjection),
@@ -173,7 +151,6 @@ GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]
     GOOGLE_STATUS_OPERATION_DEFINITION_ID: (GoogleStatusRequest, GoogleStatusProjection),
 }
 GOOGLE_CONFIGURATION_REQUEST_TYPES = (
-    GoogleFolderSetRequest,
     GoogleFolderViewRequest,
     GoogleLoginRequest,
     GoogleLogoutRequest,
@@ -243,7 +220,6 @@ __all__ = [
     "GOOGLE_CONSENT_PRESENTATION_CODE",
     "GOOGLE_CONSENT_RESPONSE_SCHEMA_BINDING",
     "GOOGLE_CONSENT_REVIEW_SCHEMA_BINDING",
-    "GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID",
     "GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID",
     "GOOGLE_LOGIN_OPERATION_DEFINITION_ID",
     "GOOGLE_LOGOUT_OPERATION_DEFINITION_ID",
@@ -257,8 +233,6 @@ __all__ = [
     "GoogleConsentProposal",
     "GoogleConsentResponse",
     "GoogleConsentReviewProjection",
-    "GoogleFolderSetProjection",
-    "GoogleFolderSetRequest",
     "GoogleFolderViewProjection",
     "GoogleFolderViewRequest",
     "GoogleLoginProjection",

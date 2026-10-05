@@ -42,23 +42,6 @@
     {
       "argv": [
         "aeat",
-        "config",
-        "google",
-        "folder",
-        "set",
-        "docs-folder-123"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tconfig.google.folder.set\nprofile\t<profile-id>\nroot_folder_id\tdocs-folder-123\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
-    },
-    {
-      "argv": [
-        "aeat",
         "--format",
         "json",
         "config",
@@ -80,10 +63,10 @@
           }
         ],
         "result": {
-          "configured": true,
+          "configured": false,
           "operation": "config.google.folder.view",
           "profile": "<profile-id>",
-          "root_folder_id": "docs-folder-123"
+          "root_folder_id": null
         },
         "schema_version": "2",
         "status": "warning"

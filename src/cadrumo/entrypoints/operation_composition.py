@@ -22,7 +22,11 @@ from ..adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailabl
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
-from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
+from ..adapters.outbound.storage.factory import (
+    build_google_credentials,
+    require_application_drive_root,
+    resolve_drive_root_folder_id,
+)
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -906,14 +910,11 @@ if TYPE_CHECKING:
     from ..domain.deadlines.festivos import CalendarCCAA
 
 
-def _google_sheets_export_prepare_port(
-    *,
-    settings: Settings,
-):
+def _google_sheets_export_prepare_port():
     """Compose the sole Google transport and mandatory sync-run provenance handoff."""
 
     def prepare(profile_id: str) -> GoogleSheetsExportPreparedPort:
-        root_folder_id = resolve_drive_root_folder_id(profile=profile_id, settings=settings)
+        root_folder_id = resolve_drive_root_folder_id(profile=profile_id)
         if not root_folder_id:
             raise GoogleSheetsExportRootFolderRequiredError("Google Drive root folder is required")
         try:
@@ -931,6 +932,8 @@ def _google_sheets_export_prepare_port(
 
         class PreparedGoogleSheetsExport:
             def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+                # The stored root is read back before anything is listed or written beneath it.
+                require_application_drive_root(credentials, root_folder_id=root_folder_id)
                 if dry_run:
                     preview = preview_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
                     return GoogleSheetsExportRemoteResult(
@@ -2125,9 +2128,7 @@ def _production_registry_google_export(
     return (
         google_export_definition
         if google_export_definition is not None
-        else build_google_sheets_export_operation_definition(
-            prepare_port=_google_sheets_export_prepare_port(settings=resolved_settings)
-        )
+        else build_google_sheets_export_operation_definition(prepare_port=_google_sheets_export_prepare_port())
     )
 
 

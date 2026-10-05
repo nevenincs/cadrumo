@@ -13,7 +13,7 @@ local path. It needs no Google account, but no command reads an edited local
 workbook back. Use Google Sheets to review and adjust, and see
 [Export an offline workbook](#export-an-offline-workbook) for the other route.
 
-The local configuration commands on this page (status, folder setting, logout) and the readiness checks on your records run live at build time. The commands that reach
+The local configuration commands on this page (status, folder view, logout) and the readiness checks on your records run live at build time. The commands that reach
 Google Drive and Sheets run against your own authorized account rather than the
 documentation sandbox, so they are shown as examples that are not run.
 
@@ -25,32 +25,37 @@ You need:
 - classified transaction data; see [Import and manage transactions](import-bank-statements.md)
 - a modelo and period ready enough to calculate
 - the `google` extra, installed with `pip install "cadrumo[google]"`
-- the ID of a Google Drive folder where Cadrumo should create spreadsheets
-  (copy the ID from the folder's URL in Google Drive)
 
-Cadrumo creates its `cadrumo-vault/` folder inside that Drive folder. It does
-not use an older `aeat-vault/` folder; export a new workbook before pulling
-edits into Cadrumo.
+Cadrumo works only inside a folder it creates in your Google Drive when you
+sign in. It never opens, lists or changes a file or folder you already had,
+and no command accepts a Drive folder or file from you, apart from the ID of
+a workbook Cadrumo itself exported. It does not use an older `aeat-vault/`
+folder; export a new workbook before pulling edits into Cadrumo.
 
 ## Configure Google access
 
 Sign in to Google for the active profile. Cadrumo opens Google's consent page
 in your browser and asks for your email address and for access to the files
 it creates, nothing else in your Drive. You do not need a Google Cloud project
-or a credentials file. Sign-in reaches Google, so it is shown here without
-being run:
+or a credentials file. Signing in also creates one folder in your My Drive,
+named `Cadrumo` followed by the first characters of the profile's ID, where
+every exported workbook and the encrypted backup are kept. Sign-in reaches
+Google, so it is shown here without being run:
 
 ```{cli-sequence} sheets-oauth
 ```
 
-Check the Google status and set the Drive folder where Cadrumo will create
-spreadsheets. These are local configuration commands, so they run here. On an
-unconfigured profile the status shows `session_present` as false, and the
-folder you set reads back verbatim:
+Check the Google status and the folder created for the profile. These are
+local commands, so they run here. On a profile that has not signed in, the
+status shows `session_present` as false and no folder exists yet:
 
 ```{cli-sequence} sheets-folder
-:verify: Confirm the Drive folder input reads back the value you set.
+:verify: Confirm that a profile which has not signed in has no Drive folder.
 ```
+
+If you move the folder to the bin, or sign in to a different Google account,
+sign in again: Cadrumo finds its folder or creates a new one, and you export
+your workbooks again.
 
 Probe the connection once you have signed in. The probe reaches
 Google, so it is shown here without being run:
@@ -58,7 +63,7 @@ Google, so it is shown here without being run:
 ```{cli-sequence} sheets-probe
 ```
 
-The Google integration is profile-scoped. If you switch profiles, check Google status and the folder setting again.
+The Google integration is profile-scoped. Each profile signs in separately and gets its own folder.
 
 ## Export a calculation workbook
 
@@ -159,8 +164,8 @@ copy and never reads Drive back as the original of your data.
 
 Clear the Google session for the active profile. Logout is a local command, so
 it runs here. If a session exists, it removes the saved session token and its
-metadata. The Drive folder setting is kept, so a later `aeat config google
-login` signs in again without further setup:
+metadata. The profile's Drive folder is kept, so a later `aeat config google
+login` signs in again and finds it:
 
 ```{cli-sequence} sheets-logout
 :verify: Confirm that with no saved session logout removes nothing.

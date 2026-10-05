@@ -347,8 +347,8 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         description=(
             "Backend for `cadrumo.adapters.outbound.storage`. "
             "Accepted values: local_filesystem (default), google_drive, in_memory. "
-            "google_drive additionally requires cadrumo_google_drive_root_folder_id "
-            "and a per-profile registered OAuth client + token via `aeat config google`."
+            "google_drive additionally requires a Google sign-in for the profile "
+            "through `aeat config google login`."
         ),
     )
     cadrumo_local_storage_root: Path = Field(
@@ -385,15 +385,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
     cadrumo_webview_dir: Path = Field(
         default=Path("webview"),
         description="Desktop webview profile beneath the storage root; the renderer evicts its own cache.",
-    )
-    cadrumo_google_drive_root_folder_id: str | None = Field(
-        default=None,
-        description=(
-            "Drive folder ID under which `cadrumo-vault/` is created and used. "
-            "Required when cadrumo_storage_provider_kind=google_drive. Operator obtains "
-            "this from the Cloud Console / Drive web UI; the app creates `cadrumo-vault/` "
-            "lazily on first probe."
-        ),
     )
 
     cadrumo_profile_kdf_measure_calibration: bool = Field(

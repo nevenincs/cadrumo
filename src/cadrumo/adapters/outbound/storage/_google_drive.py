@@ -6,7 +6,7 @@ the Drive API:
 - Each namespace is a folder directly under the operator-configured
   ``cadrumo-vault/`` root. The root folder ID is required when
   ``cadrumo_storage_provider_kind=google_drive`` and the vault folder is created
-  lazily under ``cadrumo_google_drive_root_folder_id``.
+  lazily under the root folder created for the profile.
 - Each object is a ``files().create(...)`` upload with
   ``mimeType=application/octet-stream``, named
   ``<hmac_prefix_8>--<label>.bin``. The Drive ``appProperties`` field carries

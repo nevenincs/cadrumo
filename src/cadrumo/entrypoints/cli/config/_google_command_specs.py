@@ -10,7 +10,6 @@ from ....core.transport_locus import TransportLocus, TransportRole, TransportSha
 from ..command_parameter_contracts import ArgumentSpec, OptionSpec
 from ..command_shared_contracts import (
     FLAG_VALUE,
-    TEXT_VALUE,
     DeferredTarget,
     LazyBinding,
     LiteralValue,
@@ -151,28 +150,6 @@ GOOGLE_COMMAND_SPECS = (
         GOOGLE_DESTRUCTIVE,
     ),
     state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
-    _leaf(
-        "config_google_folder_set",
-        "config_google_folder",
-        "set",
-        "cli.config.google.folder.set_help",
-        "_google_folder",
-        "google_folder_set",
-        "_google_folder_payloads",
-        "GoogleFolderSetResult",
-        GOOGLE_WRITE,
-        (
-            ArgumentSpec(
-                "folder_id",
-                TEXT_VALUE,
-                ParameterDefault.required(),
-                _key("cli.config.google.folder.folder_id_help"),
-                transport_locus=TransportLocus.REMOTE_HANDLE,
-                transport_shape=TransportShape.NOT_APPLICABLE,
-                transport_role=TransportRole.NOT_APPLICABLE,
-            ),
-        ),
-    ),
     _leaf(
         "config_google_folder_view",
         "config_google_folder",

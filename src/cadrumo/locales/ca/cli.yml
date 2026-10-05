@@ -1370,8 +1370,8 @@ cli:
           prefill_relations_help: Preomple els valors de relacions entre revisions
             des del magatzem local d'observacions abans d'exportar (resums anuals,
             arrossegament de trimestres anteriors, etc.)
-          root_folder_required: No hi ha cap carpeta arrel de Drive configurada; executa
-            `aeat config google folder set <id>` primer
+          root_folder_required: No s'ha creat cap carpeta de Drive per a aquest perfil;
+            executa `aeat config google login` primer
           snapshot_failure: No es pot construir la instantània de les definicions
             dels models per al model {modelo} ({period} {year}).
         push_help: Exporta el càlcul d'un model i període, tal com el fixen les definicions
@@ -2176,15 +2176,12 @@ cli:
         perfil; activa-la amb 'aeat config profile capabilities set google_export
         on'.
       folder:
-        folder_id_help: Id de la carpeta de Google Drive
-        help: Gestiona la carpeta arrel de Google Drive
-        set_help: Vincula una carpeta de Google Drive al perfil actiu
-        view_help: Mostra la carpeta arrel de Google Drive configurada per al perfil
-          actiu.
+        help: Mostra la carpeta de Google Drive creada per al perfil actiu
+        view_help: Mostra la carpeta de Google Drive creada per al perfil actiu.
       help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
       login_help: Executar el flux de consentiment OAuth
       logout_help: Esborrar el token de refresc i les metadades
-      probe_help: Comprova l'accés a la carpeta configurada de Google Drive
+      probe_help: Comprova l'accés a la carpeta de Google Drive del perfil
       probe_read_only_help: Comprova Google Drive en mode només lectura
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu

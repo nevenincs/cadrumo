@@ -1,8 +1,6 @@
 @step Check the Google connection status for the active profile.
 aeat --format json config google status
-@step Set the Drive folder where Cadrumo will create spreadsheets.
-aeat config google folder set docs-folder-123
-@step Confirm the folder input.
+@step Show the Drive folder created for the active profile.
 @result aeat --format json config google folder view
-@expect result.root_folder_id == "docs-folder-123"
+@expect result.configured == false
 @expect exit_code == 0

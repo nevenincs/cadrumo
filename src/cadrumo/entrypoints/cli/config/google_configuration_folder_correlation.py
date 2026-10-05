@@ -6,23 +6,11 @@ from pydantic import BaseModel
 
 from ....application.user_profile.google_configuration_operation_contracts import (
     GoogleConfigurationOutcome,
-    GoogleFolderSetProjection,
-    GoogleFolderSetRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
 )
 from ..registered_operation_contracts import RegisteredOperationCompletion
 from .google_configuration_refusals import google_invalid_frame
-
-
-def correlate_folder_set(
-    request: GoogleFolderSetRequest,
-    result: GoogleFolderSetProjection,
-    completed: RegisteredOperationCompletion[GoogleConfigurationOutcome],
-) -> None:
-    """Correlate the folderset result to its submitted contract."""
-    if result.root_folder_id != request.folder_id.strip():
-        google_invalid_frame(operation_id=completed.operation_id, completed=completed)
 
 
 def correlate_folder_view(
@@ -37,10 +25,7 @@ def correlate_folder_request(
     request: BaseModel, result: BaseModel, completed: RegisteredOperationCompletion[GoogleConfigurationOutcome]
 ) -> bool:
     """Correlate a matching folder request without changing branch order."""
-    if isinstance(request, GoogleFolderSetRequest) and isinstance(result, GoogleFolderSetProjection):
-        correlate_folder_set(request, result, completed)
-        return True
-    elif isinstance(request, GoogleFolderViewRequest) and isinstance(result, GoogleFolderViewProjection):
+    if isinstance(request, GoogleFolderViewRequest) and isinstance(result, GoogleFolderViewProjection):
         correlate_folder_view(result, completed)
         return True
     return False

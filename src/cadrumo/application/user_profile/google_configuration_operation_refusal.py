@@ -81,6 +81,7 @@ type GoogleConfigurationMessageKey = Literal[
     "adapters.outbound.storage._factory.errors.google_token_missing",
     "adapters.outbound.storage._factory.errors.google_auth_import_failed",
     "adapters.outbound.storage._factory.errors.drive_root_missing",
+    "adapters.google.root_folder.errors.root_folder_not_owned",
     "adapters.outbound.storage.google_drive.errors.root_folder_id_blank",
     "adapters.outbound.storage.google_drive.errors.vault_folder_name_blank",
     "adapters.outbound.storage.google_drive.errors.former_vault_folder",
@@ -123,6 +124,7 @@ _DYNAMIC_CODES: dict[str, frozenset[str]] = {
         )
     },
     "adapters.outbound.storage._factory.errors.google_auth_import_failed": frozenset({"FAIL_OUTBOUND_STORAGE"}),
+    "adapters.google.root_folder.errors.root_folder_not_owned": frozenset({"REFUSED_OUTBOUND_STORAGE_CONFLICT"}),
     **{
         f"adapters.outbound.storage.google_drive.errors.{key}": frozenset({"REFUSED_OUTBOUND_STORAGE_VALIDATION"})
         for key in (

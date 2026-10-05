@@ -240,6 +240,7 @@
         "cadrumo.adapters.outbound.google.installation_client",
         "cadrumo.adapters.outbound.google.oauth_flow",
         "cadrumo.adapters.outbound.google.records",
+        "cadrumo.adapters.outbound.google.root_folder",
         "cadrumo.adapters.outbound.google.session_store",
         "cadrumo.adapters.outbound.google.sign_in_state",
         "cadrumo.adapters.outbound.llm",

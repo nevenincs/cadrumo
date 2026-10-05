@@ -8,10 +8,9 @@ active profile. :class:`core.config.Settings` drives the choice:
 - ``cadrumo_storage_provider_kind`` selects the backend.
 - ``cadrumo_local_storage_root`` chooses the root directory for the local
   backend.
-- ``cadrumo_google_drive_root_folder_id`` plus the per-profile
-  :class:`~adapters.outbound.google.records.OAuthClient` /
-  :class:`~adapters.outbound.google.records.OAuthToken` records parameterise
-  the Drive backend's credentials.
+- The installation's :class:`~adapters.outbound.google.records.OAuthClient`,
+  the profile's :class:`~adapters.outbound.google.records.OAuthToken` and the
+  root folder created for the profile parameterise the Drive backend.
 
 Composition order:
 
@@ -24,7 +23,8 @@ Composition order:
    :func:`build_google_credentials`, which hydrates the profile's desktop
    sign-in, then instantiates
    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
-   keyed on ``cadrumo_google_drive_root_folder_id``.
+   under the profile's root folder, once that folder has been read back as
+   one this application created.
 4. Refuse unknown kinds with :class:`OutboundStorageValidationError`.
 """
 
@@ -34,6 +34,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
+
+    from ..google.records import OAuthClient, OAuthToken
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....application.user_profile.access_contracts import AccessDenialCode
@@ -128,6 +130,11 @@ def build_google_credentials(*, profile: str) -> Credentials:
                 backend="google_drive",
             ),
         )
+    return google_credentials_for(client, token)
+
+
+def google_credentials_for(client: OAuthClient, token: OAuthToken) -> Credentials:
+    """Pair a client with a token it minted, as credentials that refresh on first use."""
     try:
         from google.oauth2.credentials import Credentials
     except ImportError as exc:
@@ -158,24 +165,15 @@ def _resolve_profile() -> str:
     return resolve_active_profile()
 
 
-def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
-    """Resolve the Drive root folder id with the canonical precedence.
+def resolve_drive_root_folder_id(*, profile: str) -> str:
+    """Return the ID of the Drive root folder created for ``profile``.
 
-    1. ``CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`` env var / ``.env`` value
-       (:class:`core.config.Settings`
-       ``cadrumo_google_drive_root_folder_id``; overrides for one-off / CI /
-       debugging without persisting state)
-    2. Per-profile persisted
-       :class:`adapters.outbound.google.records.DriveConfig` record (canonical
-       operator enrolment state)
-
-    Returns the empty string when neither source is configured.
+    The per-profile :class:`adapters.outbound.google.records.DriveConfig`
+    record written at sign-in is the only source. Returns the empty string
+    when the profile has none.
     """
     from ..google.session_store import load_drive_config
 
-    override = str(settings.cadrumo_google_drive_root_folder_id or "").strip()
-    if override:
-        return override
     config = load_drive_config(profile)
     if config is not None:
         return config.root_folder_id.strip()
@@ -204,9 +202,10 @@ def get_storage_provider(
 
     Raises:
         :class:`OutboundStorageValidationError`: When the settings value is
-            unknown, the Drive backend is selected without
-            ``cadrumo_google_drive_root_folder_id``, or the profile lacks the
-            records the chosen backend needs.
+            unknown, or the profile lacks the records the chosen backend
+            needs.
+        :class:`OutboundStorageError`: When the profile's stored root folder
+            is not a live folder this application created.
     """
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.cadrumo_storage_provider_kind)
@@ -225,9 +224,10 @@ def get_storage_provider(
     if kind is ProviderKind.GOOGLE_DRIVE:
         from ._google_drive import GoogleDriveProvider
 
-        root_folder_id = resolve_required_drive_root_folder_id(profile=profile, settings=settings_resolved)
+        root_folder_id = resolve_required_drive_root_folder_id(profile=profile)
         if before_handoff is None and acknowledged is None:
             credentials = build_google_credentials(profile=profile)
+            require_application_drive_root(credentials, root_folder_id=root_folder_id)
             return GoogleDriveProvider(
                 credentials=credentials,
                 root_folder_id=root_folder_id,
@@ -238,6 +238,11 @@ def get_storage_provider(
         credentials = build_google_credentials(profile=profile)
         if acknowledged is not None:
             acknowledged("google.credentials-acquisition")
+        if before_handoff is not None:
+            before_handoff("drive.root-folder.verification")
+        require_application_drive_root(credentials, root_folder_id=root_folder_id)
+        if acknowledged is not None:
+            acknowledged("drive.root-folder.verification")
         return GoogleDriveProvider(
             credentials=credentials,
             root_folder_id=root_folder_id,
@@ -254,12 +259,12 @@ def get_storage_provider(
     )
 
 
-def resolve_required_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
-    """Validate canonical local root configuration before any credential hydration."""
-    root_folder_id = resolve_drive_root_folder_id(profile=profile, settings=settings)
+def resolve_required_drive_root_folder_id(*, profile: str) -> str:
+    """Require the profile's stored root folder before any credential hydration."""
+    root_folder_id = resolve_drive_root_folder_id(profile=profile)
     if not root_folder_id:
         raise OutboundStorageValidationError(
-            "no Drive root folder id is configured for this profile",
+            "no Drive root folder has been created for this profile",
             context={"profile": profile},
             translated_message="adapters.outbound.storage._factory.errors.drive_root_missing",
             precondition_verdict=_configuration_validation_verdict(
@@ -271,4 +276,19 @@ def resolve_required_drive_root_folder_id(*, profile: str, settings: Settings) -
     return root_folder_id
 
 
-__all__ = ["get_storage_provider", "resolve_required_drive_root_folder_id"]
+def require_application_drive_root(credentials: Credentials, *, root_folder_id: str) -> None:
+    """Read the stored root folder back from Drive and refuse it unless this application created it.
+
+    Every composition that is about to write or read beneath the root
+    calls this first, so a stored ID is never trusted on its own.
+    """
+    from ..google.root_folder import require_owned_root_folder
+
+    require_owned_root_folder(credentials, root_folder_id=root_folder_id)
+
+
+__all__ = [
+    "get_storage_provider",
+    "require_application_drive_root",
+    "resolve_required_drive_root_folder_id",
+]

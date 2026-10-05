@@ -86,7 +86,6 @@ value already present in your shell always wins.
 | `CADRUMO_FORCE_COLOR` | bool | `false` | Force ANSI colour output even when stdout is not a TTY. Operators set this when piping Cadrumo output through a terminal renderer (less -R, gh actions, etc.). Defaults to False; the should_use_color() helper consults this and the standard NO_COLOR convention through Settings rather than reading os.environ directly. |
 | `CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S` | int | `15` | Timeout (seconds) for one ECB Data Portal euro reference-rate lookup. A ledger import resolves one lookup per distinct currency/date, so this budget bounds a single observation query rather than the whole import. |
 | `CADRUMO_GNOME_EXTENSIONS_DIR` | Path | (derived) | Explicit GNOME extension publication directory. |
-| `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | str | unset | Drive folder ID under which `cadrumo-vault/` is created and used. Required when cadrumo_storage_provider_kind=google_drive. Operator obtains this from the Cloud Console / Drive web UI; the app creates `cadrumo-vault/` lazily on first probe. |
 | `CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME` | str | `cadrumo-vault` | Folder name created under the Google Drive root for the Cadrumo vault |
 | `CADRUMO_INBOX_ALERT_LEAD_DAYS` | int | `7` | Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH notifications whose appeal_deadline falls within the next N days |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
@@ -159,7 +158,7 @@ value already present in your shell always wins.
 | `CADRUMO_RUNTIME_SOCKET_DIR` | Path | (derived) | Owner-only POSIX runtime sockets and locks beneath the storage root. |
 | `CADRUMO_SECRET_PASSPHRASE` | SecretStr | (secret) | Passphrase that derives the encrypted-secret-store master key. With the default of None, the master-key loader refuses operation on None or empty values to preserve fail-closed behaviour. The environment name CADRUMO_SECRET_PASSPHRASE belongs to the separately governed programmatic substrate; CLI secret input uses explicit stdin or descriptor channels and does not fall back to this setting. |
 | `CADRUMO_SECRET_STORE_DIR` | Path | (derived) | Directory for the encrypted secret-store master-key file and ciphertext records |
-| `CADRUMO_STORAGE_PROVIDER_KIND` | str | `local_filesystem` | Backend for `cadrumo.adapters.outbound.storage`. Accepted values: local_filesystem (default), google_drive, in_memory. google_drive additionally requires cadrumo_google_drive_root_folder_id and a per-profile registered OAuth client + token via `aeat config google`. |
+| `CADRUMO_STORAGE_PROVIDER_KIND` | str | `local_filesystem` | Backend for `cadrumo.adapters.outbound.storage`. Accepted values: local_filesystem (default), google_drive, in_memory. google_drive additionally requires a Google sign-in for the profile through `aeat config google login`. |
 | `CADRUMO_STORAGE_ROOT` | Path | (derived) | Shared storage root; defaults to the repository's var/storage. CADRUMO_LOCAL_STORAGE_ROOT overrides it for the local backend. |
 | `CADRUMO_STRICT_SECURITY` | bool | `false` | Raise instead of warn when AEAT credential artifact permission hardening fails |
 | `CADRUMO_SUBMISSIONS_DIR` | Path | (derived) | Directory where ModeloPresentado JSON audit records are persisted |

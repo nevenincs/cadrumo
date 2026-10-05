@@ -9,14 +9,16 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
+from google.oauth2.credentials import Credentials as OAuthCredentials
 
 from ...adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
 from ...adapters.outbound.google.google_configuration_refusal import google_configuration_refusal_error
-from ...adapters.outbound.google.records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
+from ...adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 from ...adapters.outbound.google.session_store import (
     load_drive_config,
     load_metadata,
     load_token,
+    save_drive_config,
     save_metadata,
     save_token,
 )
@@ -29,6 +31,7 @@ from ...adapters.outbound.google.tests.installation_client_support import (
     use_installation_client_file,
     write_installation_client,
 )
+from ...adapters.outbound.storage.errors import OutboundStorageConflictError
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...application.user_profile import google_configuration_operation_contracts as contracts
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
@@ -78,9 +81,14 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
                 terminal_admission=None,
             )
 
-        root = run(contracts.GoogleFolderSetRequest(profile_id=_PROFILE, folder_id=" synthetic-root "))
-        assert isinstance(root, contracts.GoogleFolderSetProjection) and root.root_folder_id == "synthetic-root"
-        assert load_drive_config(str(_PROFILE)) is not None
+        unconfigured = run(contracts.GoogleFolderViewRequest(profile_id=_PROFILE))
+        assert isinstance(unconfigured, contracts.GoogleFolderViewProjection)
+        assert unconfigured.configured is False and unconfigured.root_folder_id is None
+        # A sign-in is what creates and stores the root folder; this fixture stores one directly.
+        save_drive_config(str(_PROFILE), DriveConfig(root_folder_id="synthetic-root"))
+        viewed = run(contracts.GoogleFolderViewRequest(profile_id=_PROFILE))
+        assert isinstance(viewed, contracts.GoogleFolderViewProjection)
+        assert viewed.configured is True and viewed.root_folder_id == "synthetic-root"
         now = datetime.now(UTC)
         # Canonical fixture setup supplies a previously acknowledged session.
         save_token(
@@ -120,7 +128,7 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
         )
         assert load_token(str(_PROFILE)) is None and load_metadata(str(_PROFILE)) is None
         assert load_drive_config(str(_PROFILE)) is not None
-        assert commits == [True, True, False]
+        assert commits == [True, False]
         with pytest.raises(ProfileAccessRefusedError):
             composition.build_google_configuration_operation_ports(profile_id=uuid4(), operation=authority_operation)
 
@@ -203,3 +211,111 @@ def test_sign_in_without_usable_installation_client_is_one_closed_prewrite_refus
         assert original.context is not None
         assert original.context["operation_id"] == "a" * 64 and original.context["effect"] == "none"
         assert load_token(str(_PROFILE)) is None and load_metadata(str(_PROFILE)) is None
+
+
+def _consented(profile: str) -> tuple[OAuthToken, OAuthMetadata]:
+    """Records a completed browser consent would hand back; the browser itself cannot run here."""
+    return (
+        OAuthToken(refresh_token=_REFRESH_CREDENTIAL, client_id=SYNTHETIC_CLIENT_ID, token_uri=_OAUTH_ENDPOINT),
+        OAuthMetadata(
+            account_email="synthetic@example.invalid", granted_scopes=REQUIRED_SCOPES, issued_at=datetime.now(UTC)
+        ),
+    )
+
+
+def test_sign_in_creates_the_root_folder_before_anything_is_stored(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Order of effects: consent, folder creation under an admitted write handoff, then the three records."""
+    use_installation_client(monkeypatch, tmp_path / "installation")
+    events: list[str] = []
+
+    def consent(client: object, profile: str, **_kwargs: object) -> tuple[OAuthToken, OAuthMetadata]:
+        events.append("consent")
+        return _consented(profile)
+
+    def create_folder(credentials: object, *, profile: str) -> str:
+        assert isinstance(credentials, OAuthCredentials)
+        assert credentials.client_id == SYNTHETIC_CLIENT_ID and credentials.refresh_token == _REFRESH_CREDENTIAL
+        assert load_token(profile) is None and load_metadata(profile) is None and load_drive_config(profile) is None
+        events.append("create-folder")
+        return "created-root-folder"
+
+    monkeypatch.setattr(composition, "run_login_flow", consent)
+    monkeypatch.setattr(composition, "ensure_profile_root_folder", create_folder)
+
+    def commit[T](save: Callable[[], T], *, changed: Callable[[T], bool]) -> T:
+        result = save()
+        events.append("commit")
+        return result
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)):
+        ports = composition.build_google_configuration_operation_ports(
+            profile_id=_PROFILE, operation=authority_operation
+        )
+        signed_in = ports.run(
+            contracts.GoogleLoginRequest(profile_id=_PROFILE),
+            commit=commit,
+            before_handoff=lambda action, *, writes=False: events.append(f"before:{action}:{writes}"),
+            acknowledged=lambda action, *, writes=False: events.append(f"done:{action}:{writes}"),
+            terminal_admission=lambda: None,
+        )
+
+        assert isinstance(signed_in, contracts.GoogleLoginProjection)
+        assert signed_in.root_folder_id == "created-root-folder"
+        assert signed_in.account_email == "synthetic@example.invalid"
+        assert events == [
+            "consent",
+            "before:drive.root-folder.ensure:True",
+            "create-folder",
+            "done:drive.root-folder.ensure:True",
+            "commit",
+            "commit",
+            "commit",
+        ]
+        assert load_drive_config(str(_PROFILE)) == DriveConfig(root_folder_id="created-root-folder")
+        stored = load_token(str(_PROFILE))
+        assert stored is not None and stored.client_id == SYNTHETIC_CLIENT_ID
+        assert load_metadata(str(_PROFILE)) is not None
+
+
+def test_a_sign_in_whose_folder_cannot_be_created_stores_nothing(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    use_installation_client(monkeypatch, tmp_path / "installation")
+
+    def refuse_folder(credentials: object, *, profile: str) -> str:
+        raise OutboundStorageConflictError(
+            "folder exists but is not marked as app-owned",
+            translated_message="errors.refused.refused_outbound_storage_conflict",
+        )
+
+    monkeypatch.setattr(composition, "run_login_flow", lambda client, profile, **_kwargs: _consented(profile))
+    monkeypatch.setattr(composition, "ensure_profile_root_folder", refuse_folder)
+
+    def forbidden_commit[T](save: Callable[[], T], *, changed: Callable[[T], bool]) -> T:
+        pytest.fail("a sign-in without a root folder reached a save")
+
+    acknowledged: list[str] = []
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)):
+        ports = composition.build_google_configuration_operation_ports(
+            profile_id=_PROFILE, operation=authority_operation
+        )
+        with pytest.raises(GoogleConfigurationRefusedError) as refused:
+            ports.run(
+                contracts.GoogleLoginRequest(profile_id=_PROFILE),
+                commit=forbidden_commit,
+                before_handoff=lambda action, *, writes=False: None,
+                acknowledged=lambda action, *, writes=False: acknowledged.append(action),
+                terminal_admission=lambda: None,
+            )
+
+        assert refused.value.projection.provider_code == "REFUSED_OUTBOUND_STORAGE_CONFLICT"
+        assert acknowledged == []
+        assert load_token(str(_PROFILE)) is None
+        assert load_metadata(str(_PROFILE)) is None
+        assert load_drive_config(str(_PROFILE)) is None

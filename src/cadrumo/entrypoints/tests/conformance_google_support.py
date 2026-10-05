@@ -34,7 +34,6 @@ from ...application.operations.frontend_requests import OperationPublicEffectEve
 from ...application.operator_actions.preconditions import no_action_precondition_verdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...application.user_profile.google_configuration_operation_contracts import (
-    GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID,
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID,
@@ -42,8 +41,6 @@ from ...application.user_profile.google_configuration_operation_contracts import
     GOOGLE_STATUS_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
     GoogleConfigurationProjection,
-    GoogleFolderSetProjection,
-    GoogleFolderSetRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
     GoogleLoginRequest,
@@ -107,19 +104,6 @@ def _preparation(
         expected_result=expected,
         verify=verify,
     )
-
-
-def _prepare_folder_set(context: ConformanceFamilyContext) -> ConformancePreparation:
-    profile = str(context.profile_id)
-    before = load_drive_config(profile)
-    request = GoogleFolderSetRequest(profile_id=context.profile_id, folder_id=f"  {_ROOT_FOLDER_ID}\t")
-    expected = GoogleFolderSetProjection(profile_id=context.profile_id, root_folder_id=_ROOT_FOLDER_ID)
-
-    def verify(_outcome: ConformanceOutcome) -> None:
-        assert before is None
-        assert load_drive_config(profile) == DriveConfig(root_folder_id=_ROOT_FOLDER_ID)
-
-    return _preparation(context, request, _succeeded(context.profile_id, expected), verify=verify)
 
 
 def _prepare_folder_view(context: ConformanceFamilyContext) -> ConformancePreparation:
@@ -209,7 +193,6 @@ def _prepare_status(context: ConformanceFamilyContext) -> ConformancePreparation
 
 
 _PREPARERS: dict[str, Callable[[ConformanceFamilyContext], ConformancePreparation]] = {
-    GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID: _prepare_folder_set,
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: _prepare_folder_view,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID: _prepare_login,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID: _prepare_logout,
@@ -237,7 +220,6 @@ _SUCCEEDED = OperationTerminalCondition.SUCCEEDED
 _REFUSED = OperationTerminalCondition.REFUSED
 GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
-        _case(GOOGLE_FOLDER_SET_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
         _case(GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
         _case(GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
         _case(GOOGLE_LOGOUT_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),
@@ -264,13 +246,6 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
     result: GoogleConfigurationProjection | None = None
     refused: GoogleConfigurationRefusalProjection | None = None
     match operation_id:
-        case "config.google.folder.set":
-            request = GoogleFolderSetRequest(
-                profile_id=context.profile_id, folder_id="  synthetic-conformance-folder  "
-            )
-            result = GoogleFolderSetProjection(
-                profile_id=context.profile_id, root_folder_id="synthetic-conformance-folder"
-            )
         case "config.google.folder.view":
             save_drive_config(profile, DriveConfig(root_folder_id="synthetic-existing-folder"))
             request = GoogleFolderViewRequest(profile_id=context.profile_id)
@@ -312,9 +287,7 @@ def _retained_google_prepare(context: ConformanceFamilyContext) -> ConformancePr
             raise AssertionError(operation_id)
 
     def verify(outcome: ConformanceOutcome) -> None:
-        if operation_id.endswith("folder.set"):
-            assert load_drive_config(profile) == DriveConfig(root_folder_id="synthetic-conformance-folder")
-        elif operation_id.endswith("login"):
+        if operation_id.endswith("login"):
             assert load_metadata(profile) == _RETAINED_GOOGLE_METADATA and load_token(profile) is not None
         elif operation_id.endswith("logout"):
             assert load_metadata(profile) is None and load_token(profile) is None
@@ -346,7 +319,7 @@ GOOGLE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             if suffix in {"login", "probe"}
             else OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED
-            if suffix in {"folder.set", "logout"}
+            if suffix == "logout"
             else OperationEffect.UNKNOWN
             if suffix == "probe"
             else OperationEffect.NONE,
@@ -354,7 +327,6 @@ GOOGLE_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
             "REFUSED_GOOGLE_CONFIGURATION" if suffix in {"login", "probe"} else None,
         )
         for suffix in (
-            "folder.set",
             "folder.view",
             "login",
             "logout",

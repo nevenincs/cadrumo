@@ -53,7 +53,6 @@ from ..application.storage.calc_sheets.row_set_assembly import assemble_row_sets
 from ..application.user_profile.access_contracts import AccessDenialCode
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
-from ..core.config import load_settings
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..domain.calculations.registry.schema import RegistrySnapshot
@@ -153,15 +152,24 @@ def build_modelo_spreadsheet_operation_ports(
         return operation.snapshot(request.modelo, filing_year=period.filing_year, period=period.registry_token)
 
     def credentials_and_root(admit_provider: SpreadsheetProviderAdmission) -> tuple[Credentials, str]:
-        from ..adapters.outbound.storage.factory import build_google_credentials, resolve_required_drive_root_folder_id
+        from ..adapters.outbound.storage.factory import (
+            build_google_credentials,
+            require_application_drive_root,
+            resolve_required_drive_root_folder_id,
+        )
 
         require_profile()
         # The canonical local root precondition retains its original refusal
         # before any credential/provider discovery or remote dispatch.
-        root = resolve_required_drive_root_folder_id(profile=str(profile_id), settings=load_settings())
+        root = resolve_required_drive_root_folder_id(profile=str(profile_id))
         admit_provider()
         require_profile()
         credentials = build_google_credentials(profile=str(profile_id))
+        require_profile()
+        # A stored root is used only after Drive shows it as a folder this
+        # application created.
+        admit_provider()
+        require_application_drive_root(credentials, root_folder_id=root)
         require_profile()
         return credentials, root
 

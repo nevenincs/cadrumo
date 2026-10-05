@@ -1275,8 +1275,8 @@ cli:
           prefill_relations_help: Prefill cross-revision relation values from the
             local observation store before exporting (annual roll-ups, prior-quarter
             carry-forward etc.)
-          root_folder_required: No Drive root folder id is configured; run `aeat config
-            google folder set <id>` first
+          root_folder_required: No Drive folder has been created for this profile;
+            run `aeat config google login` first
           snapshot_failure: Cannot build the snapshot of the modelo definitions for
             modelo {modelo} ({period} {year}).
         push_help: Export the calculation of a modelo and period, as set in the modelo
@@ -2035,14 +2035,12 @@ cli:
       export_capability_disabled: Google export is disabled for this profile; enable
         it with 'aeat config profile capabilities set google_export on'.
       folder:
-        folder_id_help: Google Drive folder id
-        help: Manage the Google Drive root folder linked to the active profile
-        set_help: Link a Google Drive folder id to the active profile
-        view_help: Show the Google Drive root folder configured for the active profile.
+        help: Show the Google Drive folder created for the active profile
+        view_help: Show the Google Drive folder created for the active profile.
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow
       logout_help: Clear the refresh token and metadata
-      probe_help: Probe the configured Google Drive folder for read/write access
+      probe_help: Probe the profile's Google Drive folder for read/write access
       probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
       status_help: Show the current Google OAuth session state for the active profile
     list:

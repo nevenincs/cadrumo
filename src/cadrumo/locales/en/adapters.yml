@@ -95,6 +95,11 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No active Cadrumo profile is bound for Google OAuth.
+    root_folder:
+      errors:
+        root_folder_not_owned: The Google Drive folder stored for this profile is
+          not a folder this application created, or it is in the bin. Run `aeat config
+          google login` to create a new one.
   inbound:
     declaracion:
       errors:
@@ -141,8 +146,8 @@ adapters:
     storage:
       _factory:
         errors:
-          drive_root_missing: No Google Drive root folder id is configured for the
-            active profile. Run `aeat config google folder set <id>` first.
+          drive_root_missing: No Google Drive folder has been created for the active
+            profile. Run `aeat config google login` first.
           google_auth_import_failed: The google-auth dependency is not importable;
             run `uv sync` and retry.
           google_token_missing: No Google OAuth token is persisted for the active

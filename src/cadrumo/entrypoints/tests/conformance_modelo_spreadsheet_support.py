@@ -37,7 +37,6 @@ from ...application.storage.calc_sheets.records import TabName
 from ...application.user_profile.capabilities import resolve_active_capability
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.capabilities import ServiceCapability
-from ...core.config import load_settings
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.buckets.event import BucketEventObjectType
@@ -225,7 +224,6 @@ def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyConte
     definition_id = context.definition.definition_id
     assert session_store.load_token(profile) is None
     assert session_store.load_drive_config(profile) is None
-    assert not load_settings().cadrumo_google_drive_root_folder_id
     output = context.input_root / "modelo-130.xlsx"
     if definition_id == "modelo.spreadsheet.calculate":
         session_store.save_drive_config(profile, DriveConfig(root_folder_id="conformance-selected-folder"))

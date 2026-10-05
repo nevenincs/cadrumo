@@ -18,7 +18,7 @@ storage registry:
   and issuance audit fields at ``FINANCIAL`` sensitivity.
 - :data:`adapters.persistence.storage.secure_object_namespaces.GOOGLE_DRIVE_CONFIG_NAMESPACE`
   stores the :class:`adapters.outbound.google.records.DriveConfig` root folder
-  selection used by
+  created at sign-in and used by
   :func:`adapters.outbound.storage.factory.get_storage_provider` at
   ``FINANCIAL`` sensitivity.
 
@@ -137,7 +137,7 @@ def save_drive_config(profile: str, config: DriveConfig) -> None:
     with :class:`~core.classification.policies.SensitivityClass`
     ``FINANCIAL`` so
     :func:`adapters.outbound.storage.factory.get_storage_provider` can resolve
-    the Drive root folder without re-reading environment-only configuration.
+    the Drive root folder this application created for the profile.
     """
     _repository().save(
         namespace=_NAMESPACE_DRIVE_CONFIG,
@@ -154,7 +154,7 @@ def load_drive_config(profile: str) -> DriveConfig | None:
 
     Returns:
         The stored :class:`adapters.outbound.google.records.DriveConfig`, or
-        ``None`` when the profile has no persisted Drive root folder selection.
+        ``None`` when no Drive root folder has been created for the profile.
     """
     record = _repository().load(
         _NAMESPACE_DRIVE_CONFIG,

@@ -32,7 +32,10 @@ def correlate_session_request(
 ) -> bool:
     """Correlate a matching session request without changing branch order."""
     if isinstance(request, GoogleLoginRequest) and isinstance(result, GoogleLoginProjection):
-        # A sign-in result names the account and scopes; neither is derivable from the request.
+        # A sign-in result names the account, scopes and created folder; none is derivable
+        # from the request, but a sign-in without a folder is not a complete one.
+        if not result.root_folder_id.strip():
+            google_invalid_frame(operation_id=completed.operation_id, completed=completed)
         return True
     elif isinstance(request, GoogleProbeRequest) and isinstance(result, GoogleProbeProjection):
         correlate_probe(request, result, completed)

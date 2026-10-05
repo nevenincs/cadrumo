@@ -8,7 +8,6 @@ from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.user_profile.google_configuration_operation_contracts import (
     GoogleConfigurationOutcome,
-    GoogleFolderSetRequest,
     GoogleFolderViewRequest,
     GoogleLoginRequest,
     GoogleLogoutProjection,
@@ -92,8 +91,6 @@ def correlate_google_completion(
 
 def google_success_effects(request: BaseModel, result: BaseModel) -> frozenset[OperationEffect]:
     """Admit only the effects permitted by this exact successful Google action."""
-    if isinstance(request, GoogleFolderSetRequest):
-        return frozenset({OperationEffect.UPDATED})
     if isinstance(request, (GoogleFolderViewRequest, GoogleStatusRequest)):
         return frozenset({OperationEffect.NONE})
     if isinstance(request, GoogleLoginRequest):

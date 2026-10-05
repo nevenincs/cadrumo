@@ -12,6 +12,7 @@ from ..adapters.outbound.google.google_configuration_refusal import GOOGLE_CONFI
 from ..adapters.outbound.google.installation_client import load_installation_client
 from ..adapters.outbound.google.oauth_flow import require_resolvable_profile_record, run_login_flow
 from ..adapters.outbound.google.records import DriveConfig
+from ..adapters.outbound.google.root_folder import ensure_profile_root_folder
 from ..adapters.outbound.google.session_store import (
     delete_session,
     load_drive_config,
@@ -21,7 +22,7 @@ from ..adapters.outbound.google.session_store import (
 )
 from ..adapters.outbound.google.sign_in_state import load_sign_in_record
 from ..adapters.outbound.storage.errors import OutboundStorageError
-from ..adapters.outbound.storage.factory import get_storage_provider
+from ..adapters.outbound.storage.factory import get_storage_provider, google_credentials_for
 from ..application.operator_actions.models import PreconditionVerdict
 from ..application.operator_actions.projection import PreconditionVerdictSnapshot
 from ..application.user_profile.access_contracts import AccessDenialCode
@@ -32,8 +33,6 @@ from ..application.user_profile.google_configuration_operation_contracts import 
     GoogleConfigurationExportDisabledError,
     GoogleConfigurationProjection,
     GoogleConfigurationRequest,
-    GoogleFolderSetProjection,
-    GoogleFolderSetRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
     GoogleLoginProjection,
@@ -205,19 +204,10 @@ def _append_google_provider_refusal(
     return True
 
 
-def _dispatch_google_folder_set(
-    request: GoogleFolderSetRequest, profile: str, profile_id: UUID, commit: GoogleConfigurationCommit
-) -> GoogleFolderSetProjection:
-    """Run the existing GoogleFolderSet branch in its original effect order."""
-    selected_folder = DriveConfig(root_folder_id=request.folder_id.strip())
-    commit(lambda: save_drive_config(profile, selected_folder), changed=lambda _result: True)
-    return GoogleFolderSetProjection(profile_id=profile_id, root_folder_id=selected_folder.root_folder_id)
-
-
 def _dispatch_google_folder_view(
     request: GoogleFolderViewRequest, profile: str, profile_id: UUID
 ) -> GoogleFolderViewProjection:
-    """Run the existing GoogleFolderView branch in its original effect order."""
+    """Report the root folder created for the profile, if any."""
     config = load_drive_config(profile)
     return GoogleFolderViewProjection(
         profile_id=profile_id,
@@ -251,12 +241,20 @@ def _dispatch_google_login(
         before_handoff=before_handoff,
         acknowledged=acknowledged,
     )
+    # The root folder is created before anything is stored, so a sign-in whose
+    # folder could not be created leaves no half-configured profile behind.
+    before_handoff("drive.root-folder.ensure", writes=True)
+    root_folder_id = ensure_profile_root_folder(google_credentials_for(client, consent_token), profile=profile)
+    acknowledged("drive.root-folder.ensure", writes=True)
+    created_root = DriveConfig(root_folder_id=root_folder_id)
     commit(lambda: save_token(profile, consent_token), changed=lambda _result: True)
     commit(lambda: save_metadata(profile, consent_metadata), changed=lambda _result: True)
+    commit(lambda: save_drive_config(profile, created_root), changed=lambda _result: True)
     return GoogleLoginProjection(
         profile_id=profile_id,
         account_email=consent_metadata.account_email,
         granted_scopes=consent_metadata.granted_scopes,
+        root_folder_id=root_folder_id,
     )
 
 
@@ -338,8 +336,6 @@ def _dispatch_google_configuration(
 ) -> GoogleConfigurationProjection:
     """Dispatch one admitted request to its typed owner without changing branch priority."""
     _require_google_request_profile(request, profile_id, require_profile)
-    if isinstance(request, GoogleFolderSetRequest):
-        return _dispatch_google_folder_set(request, profile, profile_id, commit)
     if isinstance(request, GoogleFolderViewRequest):
         return _dispatch_google_folder_view(request, profile, profile_id)
     if isinstance(request, GoogleLoginRequest):

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:6236d9d70a992ca9f1b7ffdf0371cc0eb82b75c2f357538266d8dedac75a3856'
+body_hash: 'sha256:acdcb755404952915e2fe6671f5593de50112355ec978e98598b696c4dfc0c9e'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -365,6 +365,70 @@ related:
 - `S08` `verify:` `just check-types` -> `pass`
 - `S08` `verify:` `python -m dev.locales status` -> `pass`
 - `S08` `by:` `CADRUMO-GOOGLE-OATH`
+- `S05` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.json`
+- `S05` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-backup-push.seq`
+- `S05` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-folder.seq`
+- `S05` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-probe.seq`
+- `S05` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-folder.json`
+- `S05` `M` `docs/how-to/review-with-google-sheets.md`
+- `S05` `M` `docs/reference/environment-overrides.md`
+- `S05` `M` `env/.env.example`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/tests/test_boot_record.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/google/records.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/google/session_store.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/storage/_google_drive.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/storage/factory.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/storage/tests/test_factory.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_live.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_sign_in_generation.py`
+- `S05` `M` `src/cadrumo/application/operations/typed_financial_operand_submission.py`
+- `S05` `M` `src/cadrumo/application/user_profile/google_configuration_operation_contracts.py`
+- `S05` `M` `src/cadrumo/application/user_profile/google_configuration_operation_refusal.py`
+- `S05` `M` `src/cadrumo/application/user_profile/tests/test_google_configuration_operation.py`
+- `S05` `M` `src/cadrumo/core/config.py`
+- `S05` `M` `src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/_google_command_specs.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/_google_folder.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/_google_folder_payloads.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/_google_payloads.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/google.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_contract_map.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_folder_correlation.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_receipt_correlation.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/google_configuration_session_correlation.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/tests/test_google_command_specs.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_consent.py`
+- `S05` `M` `src/cadrumo/entrypoints/google_configuration_operation_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/modelo_spreadsheet_operation_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/profile_archive_operation_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_google_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/conformance_modelo_spreadsheet_support.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_google_configuration_operation_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_modelo_spreadsheet_operation_composition.py`
+- `S05` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S05` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/en/cli.yml`
+- `S05` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/es/cli.yml`
+- `S05` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S05` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S05` `A` `src/cadrumo/adapters/outbound/google/root_folder.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/google/tests/drive_files_server.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/google/tests/test_root_folder.py`
+- `S05` `verify:` `pytest unit, integration and docs: Google and storage adapter suites, user-profile application, export, Google composition and CLI tests, documented-command conformance, settings-constant and environment-reference tests (1666)` -> `pass`
+- `S05` `verify:` `pytest: folder find-or-create and stored-root read-back through the real client library against a local Drive files endpoint (14)` -> `pass`
+- `S05` `verify:` `pytest integration: registered-executor conformance Google and spreadsheet cases, native Google journey, documented-command conformance (383)` -> `pass`
+- `S05` `verify:` `ruff check and ruff format --check on touched files; just check-style; just check-format` -> `pass`
+- `S05` `verify:` `just check-import-boundaries` -> `pass`
+- `S05` `verify:` `just check-types` -> `pass`
+- `S05` `verify:` `python -m dev.locales status` -> `pass`
+- `S05` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -413,3 +477,11 @@ related:
 - `S08` docs/reference/environment-overrides.md and the sheets-folder golden were regenerated by their owning commands; env/.env.example is a hand-annotated template and was edited directly. The native contract projection of the settings surface belongs to the packaging work and was not regenerated here.
 - `S08` GoogleAuthClientRevokedError and its code remain with no producer; it is a client state rather than a refresh state and was left alone.
 - `S08` Two tests in `dev/ci/tests/test_core_external_constants.py` fail on AEAT route literals and an unparsable AEAT sede module that other sessions are changing; neither concerns the setting removed here.
+- `S05` Design chosen without a new command: config google login creates the folder, named Cadrumo plus the first eight characters of the profile ID, in My Drive. An explicit folder-creating command was the other proposal; it was not needed because signing in again is also the recovery action. The name and the trigger are implementation choices that can change without touching a commitment.
+- `S05` Pending verification, owed to S10: no folder has been created in a real Drive. The find-or-create and read-back logic ran through the real client library against a local endpoint that serves files.list, files.get and files.create, and the sign-in ordering was tested with the browser consent and the Drive call substituted, since neither can run in a test.
+- `S05` The stored root is read back in the three compositions that use it (spreadsheet operations, the Sheets export, and the storage provider behind the probe and the archive push), not inside the Sheets and Drive adapters, so their existing request-sequence tests are unchanged. Under drive.file a folder the user picked by hand is invisible and reads back as not found.
+- `S05` The non-Cadrumo workbook refusal named in this Step already existed and was left as it is: pull, calculate and verify check the ownership marker before any content is read and refuse with the typed condition `google.calc_sheets.pull.ownership_aligned.`
+- `S05` config google login now returns `root_folder_id.` That adds a field to a public result schema.
+- `S05` The native contract projection of the removed setting belongs to the packaging work and was not regenerated; docs/reference/environment-overrides.md and the sheets-folder golden were regenerated by their owners and env/.env.example was edited by hand.
+- `S05` Correction to S08: its commit left `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_consent.py` constructing a login result with the removed mode field, so one test failed between that commit and this one. The S08 run selected test files by name and missed it. It is fixed here.
+- `S05` Failures in the wider run that are not in files changed here: CLI tests that refuse with 'not logged in' or `runtime_unavailable` because no runtime session exists in this development session (local-observation spreadsheet, Google-export capability refusals), and two AEAT route-literal tests.

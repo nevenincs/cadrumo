@@ -38,13 +38,15 @@ class GoogleLoginResult(OutputSchema):
     Mirrors the
     :class:`OAuthMetadata` returned with an
     :class:`OAuthToken` by
-    :func:`run_login_flow`. The refresh token is never exposed.
+    :func:`run_login_flow`, with the ID of the Drive folder the sign-in
+    created for the profile. The refresh token is never exposed.
     """
 
     operation: str = "config.google.login"
     profile: str
     account_email: str
     granted_scopes: list[str] = []
+    root_folder_id: str
 
 
 class GoogleStatusResult(OutputSchema):
@@ -89,7 +91,7 @@ class GoogleSyncProbeResult(OutputSchema):
     Adapts :class:`ProviderProbeReport` from
     the resolved Google Drive :class:`StorageProvider`.
     ``root_folder_id`` is included from the configured provider so operators
-    can line up probe health with the selected Drive root.
+    can line up probe health with the profile's Drive root.
     """
 
     operation: str = "config.google.probe"

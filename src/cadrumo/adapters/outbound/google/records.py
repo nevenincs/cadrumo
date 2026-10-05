@@ -8,7 +8,7 @@ The per-profile Google session persists
 :class:`adapters.outbound.google.records.OAuthMetadata` through
 :mod:`adapters.outbound.google.session_store`.
 :class:`adapters.outbound.google.records.DriveConfig` stores the Drive root
-folder selected for the profile and is read by
+folder created for the profile and is read by
 :func:`adapters.outbound.storage.factory.get_storage_provider` when building the
 Drive backend. :class:`adapters.outbound.google.records.DriveAppProperties`
 captures the typed ``appProperties`` commit-log schema at the storage boundary.
@@ -209,11 +209,10 @@ class DriveConfig(BaseModel):
     """Per-profile Drive backend configuration persisted alongside OAuth records.
 
     :func:`adapters.outbound.google.session_store.save_drive_config`
-    persists the operator's chosen ``cadrumo-vault/`` parent folder id.
-    :func:`adapters.outbound.storage.factory.get_storage_provider` reads it after
-    :class:`core.config.Settings`; the
-    ``CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`` setting remains an override for
-    one-off and CI runs.
+    persists the ID of the folder
+    :func:`adapters.outbound.google.root_folder.ensure_profile_root_folder`
+    created at sign-in. Nothing else writes it: no command, setting or
+    environment variable supplies a Drive folder.
     """
 
     model_config = STRICT_FROZEN_CONFIG

@@ -25,11 +25,12 @@ from pydantic import JsonValue
 from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from .....adapters.outbound.google.installation_client import INSTALLATION_CLIENT_DATA_PARTS
-from .....adapters.outbound.google.records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
+from .....adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 from .....adapters.outbound.google.session_store import (
     load_drive_config,
     load_metadata,
     load_token,
+    save_drive_config,
     save_metadata,
     save_token,
 )
@@ -208,9 +209,11 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         assert removed.exit_code == 2, removed.output
         assert not any(definition.endswith(".register") for definition in definitions.values())
         assert unwrap_cli_result(invoke("folder", "view"))["configured"] is False
+        # No command accepts a Drive folder from the operator.
         folder_id = "synthetic-native-root-folder"
-        assert unwrap_cli_result(invoke("folder", "set", folder_id))["root_folder_id"] == folder_id
-        assert unwrap_cli_result(invoke("folder", "view"))["root_folder_id"] == folder_id
+        removed_folder_set = _invoke(profile, "folder", "set", folder_id)
+        assert removed_folder_set.exit_code == 2, removed_folder_set.output
+        assert unwrap_cli_result(invoke("folder", "view"))["configured"] is False
 
         close_active_bucket_session()
         login_profile(
@@ -220,8 +223,10 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
         )
         try:
             profile_id = str(owner_profile)
+            assert load_drive_config(profile_id) is None
+            # A sign-in is what stores the folder it created; this fixture stores one directly.
+            save_drive_config(profile_id, DriveConfig(root_folder_id=folder_id))
             reopened_folder = load_drive_config(profile_id)
-            assert reopened_folder is not None and reopened_folder.root_folder_id == folder_id
             instant = datetime.now(UTC)
             # Local synthetic fixture records make actual logout deletion observable;
             # they are not an OAuth or provider credential-acquisition simulation.
@@ -243,6 +248,7 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
             )
         finally:
             close_active_bucket_session()
+        assert unwrap_cli_result(invoke("folder", "view"))["root_folder_id"] == folder_id
         linked = unwrap_cli_result(invoke("status"))
         assert linked["session_present"] is True
         definition, effect, outcome = completions[-1]

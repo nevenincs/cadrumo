@@ -56,6 +56,7 @@ def google_login(ctx: typer.Context) -> None:
         profile=profile,
         account_email=projection.account_email,
         granted_scopes=list(projection.granted_scopes),
+        root_folder_id=projection.root_folder_id,
     )
     emit_envelope(
         ctx,
@@ -65,6 +66,7 @@ def google_login(ctx: typer.Context) -> None:
             "operation\tconfig.google.login",
             f"profile\t{profile}",
             f"account_email\t{projection.account_email}",
+            f"root_folder_id\t{projection.root_folder_id}",
             *tuple(f"scope\t{scope}" for scope in projection.granted_scopes),
         ),
     )

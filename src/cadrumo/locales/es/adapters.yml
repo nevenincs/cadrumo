@@ -105,6 +105,11 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
+    root_folder:
+      errors:
+        root_folder_not_owned: La carpeta de Google Drive guardada para este perfil
+          no es una carpeta creada por esta aplicación, o está en la papelera. Ejecuta
+          `aeat config google login` para crear una nueva.
   inbound:
     declaracion:
       errors:
@@ -156,8 +161,8 @@ adapters:
     storage:
       _factory:
         errors:
-          drive_root_missing: No hay ningún id de carpeta raíz de Google Drive configurado
-            para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.
+          drive_root_missing: No se ha creado ninguna carpeta de Google Drive para
+            el perfil activo. Ejecuta `aeat config google login` primero.
           google_auth_import_failed: La dependencia google-auth no se puede importar;
             ejecuta `uv sync` y reinténtalo.
           google_token_missing: No hay ningún token OAuth de Google persistido para

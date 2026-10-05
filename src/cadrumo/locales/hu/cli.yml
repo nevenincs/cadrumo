@@ -1356,8 +1356,8 @@ cli:
           prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a helyi
             megfigyelési tárból exportálás előtt (éves összesítések, előző negyedévre
             átvitt értékek stb.).
-          root_folder_required: 'Nincs beállított Drive gyökérmappa-azonosító; futtasd:
-            `aeat config google folder set <azonosító>`.'
+          root_folder_required: 'Ehhez a profilhoz még nem jött létre Drive-mappa;
+            futtasd először: `aeat config google login`.'
           snapshot_failure: A Modelo {modelo} nyomtatvány ({period}, {year}) nyomtatványdefiníciós
             pillanatképe nem készíthető el.
         push_help: Egy nyomtatvány és időszak számításának exportálása a nyomtatványdefiníciók
@@ -2162,14 +2162,12 @@ cli:
       export_capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
         engedélyezd a 'aeat config profile capabilities set google_export on' paranccsal.
       folder:
-        folder_id_help: Google Drive mappa azonosítója.
-        help: Az aktív profilhoz kapcsolt Google Drive gyökérmappa kezelése.
-        set_help: Google Drive mappa azonosítójának összekapcsolása az aktív profillal.
-        view_help: Megjeleníti az aktív profilhoz beállított Google Drive gyökérmappát.
+        help: Az aktív profilhoz létrehozott Google Drive-mappa megjelenítése.
+        view_help: Megjeleníti az aktív profilhoz létrehozott Google Drive-mappát.
       help: A Google OAuth asztali integráció kezelése a Drive és a Sheets számára.
       login_help: Az OAuth-hozzájárulási folyamat futtatása.
       logout_help: A megújítási token és a metaadatok törlése.
-      probe_help: A beállított Google Drive mappa olvasási/írási hozzáférésének vizsgálata.
+      probe_help: A profil Google Drive-mappájának olvasási/írási hozzáférését vizsgálja.
       probe_read_only_help: Google Drive vizsgálata csak olvasási módban (nincs írási
         kísérlet).
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.

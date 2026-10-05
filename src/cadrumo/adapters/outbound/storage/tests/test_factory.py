@@ -14,6 +14,7 @@ import textwrap
 from pathlib import Path
 
 import pytest
+from google.oauth2.credentials import Credentials as OAuthCredentials
 
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
@@ -21,6 +22,7 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...google import root_folder
 from ...google.errors import GoogleAuthClientMetadataUnavailableError, GoogleAuthSignInRequiredError
 from ...google.records import DriveConfig, OAuthToken
 from ...google.session_store import save_drive_config, save_token
@@ -30,7 +32,8 @@ from ...google.tests.installation_client_support import (
     use_absent_installation_client,
     use_installation_client,
 )
-from ..errors import OutboundStorageValidationError
+from .._google_drive import GoogleDriveProvider
+from ..errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from ..protocol import StorageProvider
 from ..records import ProviderKind
@@ -160,10 +163,7 @@ def test_factory_rejects_unknown_provider_kind_with_localized_context() -> None:
 def test_factory_rejects_google_drive_without_root_before_loading_credentials(tmp_path: Path) -> None:
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a5106137-0c0d-4f8f-9c58-606f5bd06dc8"),
-        override_settings(
-            cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
-            cadrumo_google_drive_root_folder_id="",
-        ) as settings,
+        override_settings(cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value) as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
         get_storage_provider(settings=settings)
@@ -178,14 +178,18 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
     )
 
 
-def test_drive_root_whitespace_override_uses_persisted_profile_configuration(tmp_path: Path) -> None:
+def test_the_drive_root_comes_only_from_the_folder_stored_for_the_profile(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The environment variable that used to supply a folder is not read."""
+    monkeypatch.setenv("CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID", "folder-from-the-environment")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="609a333e-f1cd-4f0e-a2d8-39f0d76e233d") as profile:
-        save_drive_config(profile.bucket_id, DriveConfig(root_folder_id="persisted-drive-root"))
+        assert resolve_drive_root_folder_id(profile=profile.bucket_id) == ""
+        save_drive_config(profile.bucket_id, DriveConfig(root_folder_id="created-drive-root"))
 
-        with override_settings(cadrumo_google_drive_root_folder_id="   ") as settings:
-            root_folder_id = resolve_drive_root_folder_id(profile=profile.bucket_id, settings=settings)
+        root_folder_id = resolve_drive_root_folder_id(profile=profile.bucket_id)
 
-    assert root_folder_id == "persisted-drive-root"
+    assert root_folder_id == "created-drive-root"
 
 
 def test_factory_refuses_google_drive_when_the_installation_carries_no_client(
@@ -194,12 +198,10 @@ def test_factory_refuses_google_drive_when_the_installation_carries_no_client(
     use_absent_installation_client(monkeypatch, tmp_path)
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4"),
-        override_settings(
-            cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
-            cadrumo_google_drive_root_folder_id="drive-root",
-        ) as settings,
+        override_settings(cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value) as settings,
         pytest.raises(GoogleAuthClientMetadataUnavailableError) as raised,
     ):
+        save_drive_config("2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4", DriveConfig(root_folder_id="drive-root"))
         get_storage_provider(settings=settings)
 
     assert raised.value.code.code == "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE"
@@ -211,12 +213,10 @@ def test_factory_rejects_google_drive_without_persisted_token(monkeypatch: pytes
     use_installation_client(monkeypatch, tmp_path)
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="893af7b9-9656-466c-9d8a-5d638b189a20"),
-        override_settings(
-            cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
-            cadrumo_google_drive_root_folder_id="drive-root",
-        ) as settings,
+        override_settings(cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value) as settings,
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
+        save_drive_config("893af7b9-9656-466c-9d8a-5d638b189a20", DriveConfig(root_folder_id="drive-root"))
         get_storage_provider(settings=settings)
 
     exc = raised.value
@@ -254,8 +254,6 @@ def test_build_google_credentials_pairs_the_installation_client_with_the_three_n
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """A stored sign-in is hydrated with the installation client and the consented scope set, nothing wider."""
-    from google.oauth2.credentials import Credentials as OAuthCredentials
-
     profile = "0d3ee1f5-2f0b-4a62-8a56-7d7f7e0a9b11"
     use_installation_client(monkeypatch, tmp_path)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile):
@@ -302,3 +300,82 @@ def test_build_google_credentials_never_pairs_a_token_with_a_client_that_did_not
     assert raised.value.code.code == "REFUSED_GOOGLE_SIGN_IN_REQUIRED"
     verdict = raised.value.terminal_precondition_verdict
     assert verdict is not None and verdict.failed_condition_id == "google.auth.sign_in_client.bound"
+
+
+def _signed_in_profile(profile: str) -> None:
+    save_drive_config(profile, DriveConfig(root_folder_id="stored-drive-root"))
+    save_token(
+        profile,
+        OAuthToken(
+            refresh_token="1//refresh-token",
+            client_id=SYNTHETIC_CLIENT_ID,
+            token_uri="https://oauth2.googleapis.com/token",
+        ),
+    )
+
+
+def test_the_drive_provider_is_built_only_after_the_stored_root_is_read_back_as_ours(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The read-back is its own admitted provider handoff, after credentials and before any use."""
+    profile = "0b6d3f7a-2c1e-4a59-8d43-9e7f5a1c6b20"
+    use_installation_client(monkeypatch, tmp_path)
+    events: list[str] = []
+
+    def read_back(credentials: object, *, root_folder_id: str) -> None:
+        assert isinstance(credentials, OAuthCredentials) and credentials.client_id == SYNTHETIC_CLIENT_ID
+        events.append(f"verify:{root_folder_id}")
+
+    monkeypatch.setattr(root_folder, "require_owned_root_folder", read_back)
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile),
+        override_settings(cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value) as settings,
+    ):
+        _signed_in_profile(profile)
+        provider = get_storage_provider(
+            settings=settings,
+            before_handoff=lambda action, *, writes=False: events.append(f"before:{action}"),
+            acknowledged=lambda action, *, writes=False: events.append(f"done:{action}"),
+        )
+        direct = get_storage_provider(settings=settings)
+
+    assert events == [
+        "before:google.credentials-acquisition",
+        "done:google.credentials-acquisition",
+        "before:drive.root-folder.verification",
+        "verify:stored-drive-root",
+        "done:drive.root-folder.verification",
+        "verify:stored-drive-root",
+    ]
+    assert isinstance(provider, GoogleDriveProvider) and provider.root_folder_id == "stored-drive-root"
+    assert isinstance(direct, GoogleDriveProvider) and direct.root_folder_id == "stored-drive-root"
+
+
+def test_a_stored_root_that_is_not_ours_yields_no_drive_provider(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    profile = "6c9e2b14-5d7a-4f38-b0a1-3e8d7c5f4a92"
+    use_installation_client(monkeypatch, tmp_path)
+    events: list[str] = []
+
+    def refuse(credentials: object, *, root_folder_id: str) -> None:
+        raise OutboundStorageConflictError(
+            "the stored Drive root is not a live folder created by this application",
+            translated_message="adapters.google.root_folder.errors.root_folder_not_owned",
+        )
+
+    monkeypatch.setattr(root_folder, "require_owned_root_folder", refuse)
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=profile),
+        override_settings(cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value) as settings,
+        pytest.raises(OutboundStorageConflictError),
+    ):
+        _signed_in_profile(profile)
+        get_storage_provider(
+            settings=settings,
+            before_handoff=lambda action, *, writes=False: events.append(f"before:{action}"),
+            acknowledged=lambda action, *, writes=False: events.append(f"done:{action}"),
+        )
+
+    # The verification handoff was admitted and never acknowledged.
+    assert events[-1] == "before:drive.root-folder.verification"

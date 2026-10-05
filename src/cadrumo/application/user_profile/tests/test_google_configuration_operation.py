@@ -184,14 +184,13 @@ def _refusal() -> GoogleConfigurationRefusalProjection:
     )
 
 
-def test_all_six_public_contracts_compile_and_require_human_dual_whole_profile_access(
+def test_all_five_public_contracts_compile_and_require_human_dual_whole_profile_access(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     def unused(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> GoogleConfigurationOperationPorts:
         pytest.fail("compiling Google contracts constructed credential capabilities")
 
     payloads: tuple[contracts.GoogleConfigurationRequest, ...] = (
-        contracts.GoogleFolderSetRequest(profile_id=_PROFILE, folder_id="folder"),
         contracts.GoogleFolderViewRequest(profile_id=_PROFILE),
         contracts.GoogleLoginRequest(profile_id=_PROFILE),
         contracts.GoogleLogoutRequest(profile_id=_PROFILE),
@@ -199,7 +198,7 @@ def test_all_six_public_contracts_compile_and_require_human_dual_whole_profile_a
         contracts.GoogleStatusRequest(profile_id=_PROFILE),
     )
     definitions = worker.build_google_configuration_definitions(unused)
-    assert len(definitions) == 6
+    assert len(definitions) == 5
     for definition, payload in zip(definitions, payloads, strict=True):
         registration = worker.build_google_configuration_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -408,7 +407,9 @@ def test_consent_requires_actual_consumed_exact_revision_proposal_before_canonic
         assert not fence.inside
         flows.append("consent")
         acknowledged("oauth.browser-consent")
-        return contracts.GoogleLoginProjection(profile_id=_PROFILE, account_email="synthetic@example.invalid")
+        return contracts.GoogleLoginProjection(
+            profile_id=_PROFILE, account_email="synthetic@example.invalid", root_folder_id="synthetic-root"
+        )
 
     executor = GoogleConfigurationExecutor(_factory(run))
     assert asyncio.run(executor.execute(request, context)) is None

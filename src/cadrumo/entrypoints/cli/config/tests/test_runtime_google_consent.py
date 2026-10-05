@@ -280,7 +280,9 @@ class _Client:
                 profile_id=_PROFILE,
                 outcome="succeeded",
                 result=GoogleLoginProjection(
-                    profile_id=_PROFILE, mode="consent", account_email="synthetic@example.invalid"
+                    profile_id=_PROFILE,
+                    account_email="synthetic@example.invalid",
+                    root_folder_id="synthetic-root-folder",
                 ),
             ),
         )

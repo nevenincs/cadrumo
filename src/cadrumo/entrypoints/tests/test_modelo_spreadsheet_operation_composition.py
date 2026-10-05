@@ -140,7 +140,7 @@ def test_port_construction_is_lazy_and_denied_admission_precedes_credentials(
         calls.append("credentials")
         pytest.fail("refused provider admission must prevent credential discovery")
 
-    def root(*, profile: str, settings: object) -> str:
+    def root(*, profile: str) -> str:
         assert profile == str(_PROFILE)
         calls.append("root")
         return "synthetic-drive-root"

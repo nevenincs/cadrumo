@@ -23,7 +23,6 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
         "config_google_status",
         "config_google_logout",
         "config_google_folder",
-        "config_google_folder_set",
         "config_google_folder_view",
         "config_google_probe",
     }

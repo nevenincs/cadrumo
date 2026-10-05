@@ -100,6 +100,11 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
+    root_folder:
+      errors:
+        root_folder_not_owned: 'A profilhoz tárolt Google Drive-mappát nem ez az alkalmazás
+          hozta létre, vagy a kukában van. Új mappa létrehozásához futtasd: `aeat
+          config google login`.'
   inbound:
     declaracion:
       errors:
@@ -148,8 +153,8 @@ adapters:
     storage:
       _factory:
         errors:
-          drive_root_missing: 'Nincs Google Drive gyökérmappa-azonosító beállítva
-            az aktív profilhoz. Futtasd először: `aeat config google folder set <id>`.'
+          drive_root_missing: 'Az aktív profilhoz még nem jött létre Google Drive-mappa.
+            Futtasd először: `aeat config google login`.'
           google_auth_import_failed: 'A google-auth függőség nem importálható; futtasd:
             `uv sync`, majd próbáld újra.'
           google_token_missing: 'Nincs Google OAuth-token mentve az aktív profilhoz.
