@@ -18,6 +18,7 @@ import {
   AVAILABLE,
   FIXTURE_DROPPED,
   FIXTURE_RECORDS,
+  generatedBatches,
   MISSING,
   UNREADABLE,
 } from "./fixtures/logs";
@@ -34,6 +35,8 @@ export type ScenarioHostOptions = {
   language: string;
   /** Fixed delay before a sign-in or sign-out answer, in milliseconds. */
   latencyMs: number;
+  /** Replace the fixture records with this many generated ones. */
+  logRecords?: number;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -135,31 +138,33 @@ export function scenarioHost(
       // the ring had already dropped, as a large backlog does.
       const split = Math.ceil(FIXTURE_RECORDS.length / 2);
       const batches: LogBatch[] =
-        scenario.logs === "records"
-          ? [
-              {
-                records: FIXTURE_RECORDS.slice(0, split),
-                dropped: 0,
-                state: AVAILABLE,
-              },
-              {
-                records: FIXTURE_RECORDS.slice(split),
-                dropped: FIXTURE_DROPPED,
-                state: AVAILABLE,
-              },
-            ]
-          : [
-              {
-                records: [],
-                dropped: 0,
-                state:
-                  scenario.logs === "empty"
-                    ? AVAILABLE
-                    : scenario.logs === "missing"
-                      ? MISSING
-                      : UNREADABLE,
-              },
-            ];
+        scenario.logs === "records" && options.logRecords
+          ? generatedBatches(options.logRecords)
+          : scenario.logs === "records"
+            ? [
+                {
+                  records: FIXTURE_RECORDS.slice(0, split),
+                  dropped: 0,
+                  state: AVAILABLE,
+                },
+                {
+                  records: FIXTURE_RECORDS.slice(split),
+                  dropped: FIXTURE_DROPPED,
+                  state: AVAILABLE,
+                },
+              ]
+            : [
+                {
+                  records: [],
+                  dropped: 0,
+                  state:
+                    scenario.logs === "empty"
+                      ? AVAILABLE
+                      : scenario.logs === "missing"
+                        ? MISSING
+                        : UNREADABLE,
+                },
+              ];
       let subscribed = true;
       window.setTimeout(() => {
         for (const batch of batches) if (subscribed) listener(batch);

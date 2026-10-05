@@ -23,8 +23,10 @@ const DEFAULT_LATENCY_MS = 600;
 // of its own. The host name this page was opened on, with that port, is a
 // different origin, as the documentation is in the desktop window, and it is
 // reachable from wherever this page is.
-function docsOrigin(): string {
-  return `${window.location.protocol}//${window.location.hostname}:${docsPort}`;
+function docsOrigin(): string | null {
+  return docsPort === null
+    ? null
+    : `${window.location.protocol}//${window.location.hostname}:${docsPort}`;
 }
 
 function docsLanguages(origin: string, search: string): DocsLanguage[] {
@@ -48,6 +50,8 @@ function readParams() {
         ? latency
         : DEFAULT_LATENCY_MS,
     bar: params.get("bar") !== "off",
+    // A log of this many generated records, for measuring the log view.
+    logRecords: Math.max(0, Math.trunc(Number(params.get("records")) || 0)),
   };
 }
 
@@ -86,10 +90,13 @@ function Scenarios() {
   const host = useMemo(() => {
     const origin = docsOrigin();
     return scenarioHost(run.scenario, {
-      docs: {
-        origin,
-        languages: docsLanguages(origin, run.scenario.docsSearch),
-      },
+      docs: origin
+        ? {
+            origin,
+            languages: docsLanguages(origin, run.scenario.docsSearch),
+          }
+        : null,
+      logRecords: initial.logRecords,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {
@@ -98,7 +105,7 @@ function Scenarios() {
         setCalls((current) => [...current, { id, call }].slice(-CALL_LIMIT));
       },
     });
-  }, [run, initial.latencyMs]);
+  }, [run, initial]);
 
   return (
     <>

@@ -6,7 +6,8 @@ declare module "virtual:desktop-content" {
   };
 }
 
-/** Development server only: the documentation fixture's own port. */
+/** The documentation fixture's own port; null where no development server
+ * runs it. */
 declare module "virtual:docs-fixture" {
-  export const port: number;
+  export const port: number | null;
 }

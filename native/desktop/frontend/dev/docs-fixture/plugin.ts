@@ -174,7 +174,8 @@ export function docsFixture(): Plugin {
   let port: Promise<number> | null = null;
   return {
     name: "development-docs-fixture",
-    apply: "serve",
+    // The fixture exists only beside a development server. A build of the
+    // development entry gets no port, and so no documentation.
     configureServer(vite) {
       const configured = vite.config.server.host;
       const fixture = listen(
@@ -188,8 +189,7 @@ export function docsFixture(): Plugin {
     },
     async load(id) {
       if (id !== RESOLVED) return;
-      if (!port) throw new Error("The documentation fixture is not running.");
-      return `export const port = ${await port};`;
+      return `export const port = ${port ? await port : null};`;
     },
   };
 }

@@ -10,6 +10,9 @@ import {
 type IconButtonProps = Omit<ButtonProps, "size" | "aria-label" | "title"> & {
   /** The accessible name, also shown as the tooltip. */
   label: string;
+  /** The accessible name where it must say more than the tooltip does, as
+   * when the button also shows a count. It has to contain what is visible. */
+  accessibleName?: string;
   /** A chord shown beside the label in the tooltip; it binds nothing. */
   shortcut?: string;
   size?: "xs" | "sm" | "md" | "lg";
@@ -23,6 +26,7 @@ type IconButtonProps = Omit<ButtonProps, "size" | "aria-label" | "title"> & {
  */
 function IconButton({
   label,
+  accessibleName,
   shortcut,
   size = "xs",
   side = "bottom",
@@ -37,7 +41,7 @@ function IconButton({
           data-slot="icon-button"
           variant={variant}
           size={`icon-${size}`}
-          aria-label={label}
+          aria-label={accessibleName ?? label}
           {...props}
         >
           {children}

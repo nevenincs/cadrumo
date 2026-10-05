@@ -80,7 +80,6 @@
   [data-scheme="dark"] {
     /* In the dark the card is the darker surface, so what lifts is lighter. */
     --raised: var(--color-background-border);
-    --selected: var(--color-foreground-border);
     --scrim: rgb(0 0 0 / 48%);
     --elevation-raised:
       0 0 0 var(--hairline) var(--border), 0 0.0625rem 0.125rem rgb(0 0 0 / 30%);

@@ -79,6 +79,7 @@ import {
 } from "./shell/strings";
 import { DARK_TERMINAL, LIGHT_TERMINAL } from "./shell/terminalThemes";
 import { failureCode } from "./errors";
+import { identity } from "virtual:desktop-content";
 
 const RECORD_CAP = 10000;
 const COUNT_LIMIT = 99;
@@ -1030,6 +1031,7 @@ export function App({ host }: { host: Host }) {
       shortcut: primaryChord(byId("panel.logs")),
       pressed: tabOpen("logs"),
       badge: errorCount,
+      badgeLabel: t("desktop.logs.errors", { count: errorCount }),
       onClick: () => openTab("logs"),
     },
   ];
@@ -1166,6 +1168,9 @@ export function App({ host }: { host: Host }) {
             `scheme-${scheme}`,
           )}
         >
+          <header className="sr-only">
+            <h1>{identity.name}</h1>
+          </header>
           <Rail
             label={t("desktop.rail.label")}
             top={railTop}
@@ -1190,37 +1195,9 @@ export function App({ host }: { host: Host }) {
                 label={t("desktop.split.resize")}
               />
             </main>
-            {layout.panelOpen && !maximized && (
-              <ResizeHandle
-                className="panel-separator"
-                orientation="horizontal"
-                aria-label={t("desktop.panel.resize")}
-                value={(panelHeight / viewportHeight) * 100}
-                // The panel sits on the window's bottom edge, so its height
-                // is what lies below the pointer. Dragged well past its
-                // smallest size, it collapses.
-                onDrag={({ y }) => {
-                  const next = viewportHeight - y;
-                  if (next < panelMin - panelCollapseThreshold)
-                    patch({ panelOpen: false });
-                  else setPanelHeight(next);
-                }}
-                onStep={(direction) =>
-                  setPanelHeight(panelHeight - direction * panelResizeStep)
-                }
-                onLimit={(limit) =>
-                  setPanelHeight(
-                    limit === "min" ? panelMin : viewportHeight - docsMin,
-                  )
-                }
-                onReset={() =>
-                  setPanelHeight(DEFAULT_LAYOUT.panelRatio * viewportHeight)
-                }
-              />
-            )}
             <section
               className={cn(
-                "panel flex min-h-0 flex-col bg-chrome",
+                "panel @container/panel flex min-h-0 flex-col bg-chrome",
                 maximized === "panel" ? "is-maximized flex-auto" : "flex-none",
               )}
               hidden={!panelVisible}
@@ -1229,6 +1206,34 @@ export function App({ host }: { host: Host }) {
               }
               aria-label={t("desktop.panel.label")}
             >
+              {layout.panelOpen && !maximized && (
+                <ResizeHandle
+                  className="panel-separator"
+                  orientation="horizontal"
+                  aria-label={t("desktop.panel.resize")}
+                  value={(panelHeight / viewportHeight) * 100}
+                  // The panel sits on the window's bottom edge, so its height
+                  // is what lies below the pointer. Dragged well past its
+                  // smallest size, it collapses.
+                  onDrag={({ y }) => {
+                    const next = viewportHeight - y;
+                    if (next < panelMin - panelCollapseThreshold)
+                      patch({ panelOpen: false });
+                    else setPanelHeight(next);
+                  }}
+                  onStep={(direction) =>
+                    setPanelHeight(panelHeight - direction * panelResizeStep)
+                  }
+                  onLimit={(limit) =>
+                    setPanelHeight(
+                      limit === "min" ? panelMin : viewportHeight - docsMin,
+                    )
+                  }
+                  onReset={() =>
+                    setPanelHeight(DEFAULT_LAYOUT.panelRatio * viewportHeight)
+                  }
+                />
+              )}
               <Tabs
                 value={layout.tab}
                 // Arrow keys move through the tabs and choose; a click or
@@ -1250,10 +1255,21 @@ export function App({ host }: { host: Host }) {
                       value={tab}
                       id={`tab-${tab}`}
                       aria-controls={`panel-${tab}`}
+                      title={t(labelKey)}
                       onClick={() => openTab(tab, { toggle: false })}
+                      onKeyDown={(event) => {
+                        // Enter and Space choose a tab without a click, so
+                        // they hand the keyboard over here.
+                        if (event.key === "Enter" || event.key === " ")
+                          openTab(tab, { toggle: false });
+                      }}
                     >
                       <Icon name={icon} />
-                      {t(labelKey)}
+                      {/* In a narrow panel the tab keeps its name, not its
+                          width. */}
+                      <span className="@max-md/panel:sr-only">
+                        {t(labelKey)}
+                      </span>
                       {tab !== "logs" &&
                         exitCode(status[tab]) !== undefined && (
                           <span className="exit-note text-xs font-normal text-faint">

@@ -11,6 +11,8 @@ export type RailItem = {
   shortcut?: string;
   pressed?: boolean;
   badge?: number;
+  /** What the badge counts, said in full for the accessible name. */
+  badgeLabel?: string;
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
   onClick: () => void;
@@ -25,6 +27,11 @@ function RailButton({ item }: { item: RailItem }) {
       <Toolbar.Button asChild>
         <IconButton
           label={item.label}
+          accessibleName={
+            item.badge && item.badgeLabel
+              ? `${item.label}, ${item.badgeLabel}`
+              : undefined
+          }
           shortcut={item.shortcut}
           size="lg"
           side="right"
@@ -38,6 +45,7 @@ function RailButton({ item }: { item: RailItem }) {
           {item.badge ? (
             <Badge
               variant="count"
+              aria-hidden="true"
               className="absolute -top-0.5 -right-0.5 ring-2 ring-chrome"
             >
               {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}

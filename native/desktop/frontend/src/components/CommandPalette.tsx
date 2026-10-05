@@ -91,6 +91,9 @@ export function CommandPalette({
   close: () => void;
 }) {
   const t = useStrings();
+  // Closing returns focus to where the palette was opened from, which may be
+  // the documentation frame.
+  const [returnTo] = useState(() => document.activeElement);
   const [query, setQuery] = useState("");
   const [docs, setDocs] = useState<{
     state: "idle" | "searching" | "done" | "unavailable";
@@ -158,6 +161,10 @@ export function CommandPalette({
         placement="top"
         className="palette flex w-palette flex-col gap-0 overflow-hidden rounded-2xl p-0"
         aria-describedby={undefined}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (returnTo instanceof HTMLElement) returnTo.focus();
+        }}
       >
         <DialogTitle className="sr-only">
           {t("desktop.palette.label")}
@@ -212,7 +219,7 @@ export function CommandPalette({
                             )}
                           </span>
                           {result.crumb && (
-                            <span className="truncate text-xs text-faint">
+                            <span className="truncate text-xs text-muted-foreground">
                               {result.crumb}
                             </span>
                           )}

@@ -47,6 +47,11 @@ export function recordLine(record: LogRecord): string {
   return `${record.timestamp} [${record.level ?? "-"}] ${record.logger ?? record.source}: ${record.message}`;
 }
 
+// How many of the newest matching records are in the document at once. The
+// log holds up to ten thousand; drawing them all costs every scroll and every
+// keystroke in the filter. Reaching the top brings in the next span.
+const WINDOW = 400;
+
 const LEVEL_TONE: Partial<Record<LogLevel, string>> = {
   WARNING: "text-warning",
   ERROR: "text-destructive",
@@ -163,6 +168,7 @@ export function RecordList({
   const list = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
   const [follow, setFollow] = useState(true);
+  const [extent, setExtent] = useState(WINDOW);
   const all = useMemo(() => records ?? [], [records]);
 
   const sources = useMemo(() => {
@@ -185,10 +191,17 @@ export function RecordList({
     );
   }, [all, filters]);
 
+  // The newest `extent` of what matches; the browser's own scroll anchoring
+  // keeps the view still when an earlier span is brought in above it.
+  const drawn = useMemo(
+    () => (visible.length > extent ? visible.slice(-extent) : visible),
+    [visible, extent],
+  );
+
   useEffect(() => {
     if (shown && follow && list.current)
       list.current.scrollTop = list.current.scrollHeight;
-  }, [visible, follow, shown]);
+  }, [drawn, follow, shown]);
 
   const counts = useMemo(() => {
     let warnings = 0;
@@ -386,6 +399,8 @@ export function RecordList({
           const atEnd =
             el.scrollHeight - el.scrollTop - el.clientHeight < followSlack;
           if (atEnd !== follow) setFollow(atEnd);
+          if (el.scrollTop < el.clientHeight && extent < visible.length)
+            setExtent(extent + WINDOW);
         }}
       >
         {dropped > 0 && (
@@ -398,7 +413,7 @@ export function RecordList({
             {all.length ? t("desktop.logs.no_match") : t("desktop.logs.empty")}
           </p>
         )}
-        {visible.map((record) => (
+        {drawn.map((record) => (
           <Row
             key={record.seq}
             record={record}

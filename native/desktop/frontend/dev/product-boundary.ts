@@ -19,9 +19,13 @@ export function developmentModules(
 ): string[] {
   const found: string[] = [];
   for (const id of ids) {
-    // Virtual modules and query suffixes are not files of this project.
+    // Query suffixes are not part of a file's name, and a virtual module is
+    // not a file: the documentation fixture's is the one that is tooling.
     const file = id.split("?")[0] ?? id;
-    if (file.startsWith("\0")) continue;
+    if (file.startsWith("\0")) {
+      if (file.includes("docs-fixture")) found.push(file.slice(1));
+      continue;
+    }
     const path = relative(root, file).split(sep).join("/");
     if (path.startsWith("..")) continue;
     if (DEVELOPMENT.some((pattern) => pattern.test(path))) found.push(path);

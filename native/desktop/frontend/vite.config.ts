@@ -26,15 +26,26 @@ export default defineConfig(({ mode }) => {
     .split(",")
     .map((host) => host.trim())
     .filter(Boolean);
+  // `--mode scenarios` builds the development entry instead, minified, into
+  // the testing directory. It is what the benchmarks measure, because a
+  // development server's unminified modules are not what ships; it is never
+  // the product and nothing packages it.
+  const scenarios = mode === "scenarios";
+  // The product has one entry. The development entry beside it is never an
+  // input of the product build, and the boundary plugin refuses its modules
+  // by any route.
+  const input: Record<string, string> = scenarios
+    ? { scenarios: resolve(root, "scenarios.html") }
+    : { index: resolve(root, "index.html") };
   return {
     base: "./",
     cacheDir: buildPath("desktop_cache"),
     build: {
-      outDir: buildPath("desktop_frontend"),
-      emptyOutDir: false,
-      // The product has one entry. The development entry beside it is never
-      // an input, and the boundary plugin refuses its modules by any route.
-      rolldownOptions: { input: { index: resolve(root, "index.html") } },
+      outDir: scenarios
+        ? resolve(buildPath("desktop_testing"), "scenarios")
+        : buildPath("desktop_frontend"),
+      emptyOutDir: scenarios,
+      rolldownOptions: { input },
     },
     server: {
       host: ports.host,
@@ -56,7 +67,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       docsFixture(),
-      productBoundary(root),
+      ...(scenarios ? [] : [productBoundary(root)]),
       {
         name: "canonical-desktop-content",
         transformIndexHtml() {

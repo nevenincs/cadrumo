@@ -166,3 +166,42 @@ export const FIXTURE_RECORDS: readonly LogRecord[] = [
 
 /** Records the fixture reports as lost to ring overflow before delivery. */
 export const FIXTURE_DROPPED = 3;
+
+const BATCH_LIMIT = 5000;
+const GENERATED_LEVELS: readonly LogLevel[] = [
+  "INFO",
+  "INFO",
+  "DEBUG",
+  "INFO",
+  "WARNING",
+  "INFO",
+  "ERROR",
+];
+
+/**
+ * A log of `count` generated records, in batches no larger than the host
+ * sends, for measuring the log view under the load the contract allows.
+ */
+export function generatedBatches(
+  count: number,
+): { records: LogRecord[]; dropped: number; state: LogSourceState }[] {
+  const batches = [];
+  for (let start = 0; start < count; start += BATCH_LIMIT) {
+    const records: LogRecord[] = [];
+    for (let at = start; at < Math.min(count, start + BATCH_LIMIT); at++) {
+      const level = GENERATED_LEVELS[at % GENERATED_LEVELS.length] ?? "INFO";
+      records.push(
+        python(
+          at + 1,
+          at * 37,
+          level,
+          `cadrumo.generated.module_${at % 23}`,
+          `Generated record ${at + 1} of ${count} for the log view measurement`,
+          level === "ERROR" ? TRACEBACK : null,
+        ),
+      );
+    }
+    batches.push({ records, dropped: 0, state: AVAILABLE });
+  }
+  return batches;
+}
