@@ -514,6 +514,10 @@ cache/
 # work, and are reclaimed on the next attempt if their holder died.
 /src/cadrumo/_data/registry/aeat/.*.lock
 /src/cadrumo/_data/registry/aeat/.*.lock.lock
+# Export publication takes a 0-byte lock sidecar per modelo revision beside the
+# `aeat` root and never deletes it on release. It records only that a local
+# generation ran.
+/src/cadrumo/_data/registry/.*-generated-export-transaction-*.lock
 
 # The Google OAuth client file a development checkout signs in with. The
 # developer supplies it; it is installation data and is never committed.
