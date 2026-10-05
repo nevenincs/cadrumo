@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:853cc1724fd57a40bc130ff46a6de35a6e21ef17ba3d823edbc416bf6b9b3bd9'
+body_hash: 'sha256:e27045b030243e2ed6f02935b2a33138e50b6f6ebdad3ec0d041950924c4dd78'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -146,6 +146,34 @@ related:
 - `S05` `verify:` `just check-module-reachability` -> `pass`
 - `S05` `verify:` `just check-types` -> `fail`
 - `S05` `verify:` `just check-import-boundaries` -> `fail`
+- `S09` `M` `native/manager/Cargo.toml`
+- `S09` `M` `native/manager/Cargo.lock`
+- `S09` `M` `native/manager/src/lib.rs`
+- `S09` `A` `native/manager/src/contract.rs`
+- `S09` `A` `native/manager/src/supervision.rs`
+- `S09` `A` `native/manager/src/supervision/adoption.rs`
+- `S09` `A` `native/manager/src/supervision/boot_record.rs`
+- `S09` `A` `native/manager/src/supervision/environment.rs`
+- `S09` `A` `native/manager/src/supervision/exit.rs`
+- `S09` `A` `native/manager/src/supervision/json.rs`
+- `S09` `A` `native/manager/src/supervision/launch.rs`
+- `S09` `A` `native/manager/src/supervision/process.rs`
+- `S09` `A` `native/manager/src/supervision/protocol.rs`
+- `S09` `A` `native/manager/src/supervision/restart.rs`
+- `S09` `A` `native/manager/src/supervision/stop.rs`
+- `S09` `A` `native/manager/src/supervision/supervisor.rs`
+- `S09` `A` `native/manager/src/supervision/windows.rs`
+- `S09` `A` `native/manager/tests/supervision.rs`
+- `S09` `A` `native/manager/tests/protocol_conformance.rs`
+- `S09` `A` `native/manager/tests/protocol_vectors.json`
+- `S09` `A` `native/manager/tests/fixture/runtime.rs`
+- `S09` `A` `dev/packaging/tests/test_native_manager_protocol.py`
+- `S09` `verify:` `cargo fmt --check; build --locked debug and release; clippy -D warnings with and without fixture-test-mode and for linux target` -> `pass`
+- `S09` `verify:` `cargo test --locked 35 unit 5 entrypoint 7 conformance` -> `pass`
+- `S09` `verify:` `fixture-test-mode supervision tests 21 passed on three consecutive runs` -> `pass`
+- `S09` `verify:` `release build with fixture-test-mode refused` -> `pass`
+- `S09` `verify:` `negative controls (env_clear, creation-time check, Ctrl+C handler) fail as expected` -> `pass`
+- `S09` `verify:` `shared protocol vectors pytest 13 passed; ruff; ty` -> `pass`
 
 ## Notes
 
@@ -156,3 +184,4 @@ related:
 - `S03` Import gate failed on stale `import_load_targets` metadata (another writer's uncommitted file), a mid-run tree change and two other workers' test files. Boot record registered as a taxonomy member only (no .runtime directory path definition, which would pull installation.json into scope); creation time is platform-native and can exceed 2^53 on Windows (the manager parses it as u64); package directory is null outside an installed package. Taxonomy files committed with only this Step's hunks.
 - `S07` Part A only (crate, standalone Manager.cmake not yet included, identity projection of `manager_id` and `manager_name` with one owner for the Background Services suffix). Step stays open for Part B: include point after `add_subdirectory(application),` packaging declaration shared with the desktop S13 mechanism, assemble/verify/signing inventory, Windows version resource. No platform/application crate dependency until a Step needs it.
 - `S05` check-types failures are in other writers' operations, aggregation and `server_connection_handling` files. Import gate: two foreign private imports and stale `import_load_targets` metadata (shared, held by another writer; needs just generate-import-load-targets to include `core.child_console` and `local_runtime.windows_token_elevation).` A full elevated token is not available on this host; the refusal is proven by a faked token read. The supervised flag reaches spawners through `core.process_binding.ProcessScopedBinding.` Finding for the manager: a runtime launched without -I on Windows relaunches through subprocess.run on the same console, so a Ctrl+C kills it without draining; the manager must launch the packaged single-process host.
+- `S09` Exit reasons come from the generated contract.rs via `include!(env!(CADRUMO_CONTRACT_RS));` the CMake build of the manager needs Part B's Manager.cmake wiring (not yet included in native/CMakeLists, so the bundle is unaffected). ADR stop-delivery hypothesis corrected: the Ctrl+C handler must be registered after AttachConsole (a handler installed before attach does not apply to a console-less process), kept for the whole attachment, removed after FreeConsole. `unsafe_code` changed from forbid to deny with allows only in supervision/windows.rs, the POSIX kill module and the fixture. Interim fixed environment allow-list until S08; Windows-only fixture coverage; a foreign runtime is final for run() in this Step.

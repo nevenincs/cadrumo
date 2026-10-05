@@ -5,12 +5,35 @@ edition = "2024"
 rust-version = "1.96"
 publish = false
 
+[features]
+# Lets the supervision core launch a fixture image and builds the fixture runtime and its
+# tests. Release builds refuse the feature; the release CMake build never sets it.
+fixture-test-mode = []
+
+[dependencies]
+serde = "1"
+serde_json = "1"
+
 [[bin]]
 name = "cadrumo-manager"
 path = "src/main.rs"
 
+# A protocol-speaking stand-in for the runtime, launched by the supervision tests in
+# isolated synthetic roots, and a detached harness that runs the core without a console.
+[[bin]]
+name = "cadrumo-manager-fixture"
+path = "tests/fixture/runtime.rs"
+required-features = ["fixture-test-mode"]
+
+[[test]]
+name = "supervision"
+path = "tests/supervision.rs"
+required-features = ["fixture-test-mode"]
+
 [lints.rust]
-unsafe_code = "forbid"
+# Only the modules that call the operating system allow unsafe code, each block with
+# its invariants stated.
+unsafe_code = "deny"
 
 [lints.clippy]
 all = "deny"
