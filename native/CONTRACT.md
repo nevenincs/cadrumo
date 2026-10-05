@@ -75,7 +75,7 @@ other, such as `cadrumo-preview`; the channel comes from the identity projection
 
 | Location | Windows x64 | Linux mapping, unimplemented | macOS mapping, deferred |
 | --- | --- | --- | --- |
-| Executables | `P/python.exe`; application images such as `P/cadrumo.exe`; console entrypoints such as `P/bin/cadrumo-runtime.exe` and components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
+| Executables | `P/python.exe`; application images such as `P/cadrumo.exe` and `P/cadrumo-manager.exe`; console entrypoints such as `P/bin/cadrumo-runtime.exe` and components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | Private `P/lib/cadrumo/python.zip` and site-packages | `Contents/Resources/python.zip` and site-packages |
 | Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | Private `P/lib/`; extension identities retained | `Contents/Frameworks/`, extension package subtrees |
 | Immutable resources | `P/data/`, `P/docs/` | `P/share/cadrumo/` | `Contents/Resources/data/` and `docs/` |
@@ -189,6 +189,17 @@ verification hash it. With `CADRUMO_PACKAGE_USER_DOCS=OFF` the package omits it,
 because the desktop project always builds the documentation and the desktop serves
 it; ZIP verification then requires its absence. The source build configures the
 desktop project, so configuring it requires `npm` and `node`.
+
+`cadrumo-manager.exe` comes from `rust_manager` through
+`CADRUMO_MANAGER_EXECUTABLE`, which `cmake/Manager.cmake` defines in the `native/`
+directory scope. It is the per-user runtime manager, not the desktop application,
+so every package stages it, with or without the documentation. It is not a
+startup file. Its Windows version resource names the manager: `FileDescription`
+is the channel's manager name, such as `CADRUMO Background Services`,
+`ProductName` is the channel's product name, `FileVersion` and `ProductVersion`
+are the release version and `OriginalFilename` is `cadrumo-manager.exe`. The
+crate's build script writes that resource and the process manifest without a
+resource compiler, from the `CADRUMO_ID_*` identity projection.
 
 ## Mutable data and reconciliation
 

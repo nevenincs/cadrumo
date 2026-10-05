@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:e27045b030243e2ed6f02935b2a33138e50b6f6ebdad3ec0d041950924c4dd78'
+body_hash: 'sha256:11ee0e020340c68f1ae76dddcd98f2aa9f9551c1ec55dcbd638fab9d3707bcc8'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -174,6 +174,18 @@ related:
 - `S09` `verify:` `release build with fixture-test-mode refused` -> `pass`
 - `S09` `verify:` `negative controls (env_clear, creation-time check, Ctrl+C handler) fail as expected` -> `pass`
 - `S09` `verify:` `shared protocol vectors pytest 13 passed; ruff; ty` -> `pass`
+- `S07` `M` `native/platforms/windows-x64.json`
+- `S07` `M` `native/CMakeLists.txt`
+- `S07` `M` `native/CONTRACT.md`
+- `S07` `M` `native/cmake/Manager.cmake`
+- `S07` `M` `native/manager/build.rs`
+- `S07` `A` `native/manager/tests/version_resource.rs`
+- `S07` `verify:` `configure stages cadrumo-manager.exe from rust_manager` -> `pass`
+- `S07` `verify:` `rust_manager Release build with manifest check; CTest manager.rust and manager.supervision` -> `pass`
+- `S07` `verify:` `version-resource falsifiers fail without the resource link or with a wrong ProductName` -> `pass`
+- `S07` `verify:` `clippy -D warnings with and without fixture-test-mode; rustfmt --check` -> `pass`
+- `S07` `verify:` `application_images pytest 33 passed` -> `pass`
+- `S07` `verify:` `verify 13/13 and verify-package (staged, hashed, not startup, CADRUMO Background Services 0.5.1)` -> `pass`
 
 ## Notes
 
@@ -185,3 +197,4 @@ related:
 - `S07` Part A only (crate, standalone Manager.cmake not yet included, identity projection of `manager_id` and `manager_name` with one owner for the Background Services suffix). Step stays open for Part B: include point after `add_subdirectory(application),` packaging declaration shared with the desktop S13 mechanism, assemble/verify/signing inventory, Windows version resource. No platform/application crate dependency until a Step needs it.
 - `S05` check-types failures are in other writers' operations, aggregation and `server_connection_handling` files. Import gate: two foreign private imports and stale `import_load_targets` metadata (shared, held by another writer; needs just generate-import-load-targets to include `core.child_console` and `local_runtime.windows_token_elevation).` A full elevated token is not available on this host; the refusal is proven by a faked token read. The supervised flag reaches spawners through `core.process_binding.ProcessScopedBinding.` Finding for the manager: a runtime launched without -I on Windows relaunches through subprocess.run on the same console, so a Ctrl+C kills it without draining; the manager must launch the packaged single-process host.
 - `S09` Exit reasons come from the generated contract.rs via `include!(env!(CADRUMO_CONTRACT_RS));` the CMake build of the manager needs Part B's Manager.cmake wiring (not yet included in native/CMakeLists, so the bundle is unaffected). ADR stop-delivery hypothesis corrected: the Ctrl+C handler must be registered after AttachConsole (a handler installed before attach does not apply to a console-less process), kept for the whole attachment, removed after FreeConsole. `unsafe_code` changed from forbid to deny with allows only in supervision/windows.rs, the POSIX kill module and the fixture. Interim fixed environment allow-list until S08; Windows-only fixture coverage; a foreign runtime is final for run() in this Step.
+- `S07` Part B closes the Step. Fixed a Part A Manager.cmake defect that split escaped LIB/INCLUDE semicolons. Fixture target dir is `CADRUMO_PATH_CARGO/manager-fixture` inside the declared cargo output. ProductName is the channel display name (CADRUMO Preview on preview). Signing gap: signed=true is validated only; no signing inventory exists in packaging. CompanyName omitted pending a publisher projection. Desktop packaging path not exercised (docs off).

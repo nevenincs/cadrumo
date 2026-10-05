@@ -24,6 +24,15 @@
       "desktop": true,
       "signed": true,
       "version_arguments": ["--headless", "--", "--version"]
+    },
+    {
+      "name": "cadrumo-manager",
+      "placement": ".",
+      "target": "rust_manager",
+      "artifact": "CADRUMO_MANAGER_EXECUTABLE",
+      "desktop": false,
+      "signed": true,
+      "version_arguments": ["--version"]
     }
   ],
   "files": {

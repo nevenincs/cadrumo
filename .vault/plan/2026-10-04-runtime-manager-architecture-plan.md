@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:c84b3c9a20bae662861b4781385c4a1db97ed2eea47c87fe878ff4a309668c7f'
+body_hash: 'sha256:9b3c0404ef77ff6217c859a0ed37516934fb7ab2a7fddd198ec2d482409d6165'
 ---
 
 # `runtime-manager-architecture` plan
@@ -68,7 +68,7 @@ Runtime-side supervised mode, boot record, settle and exit reasons from the supe
 
 The cadrumo-manager native image: identity-derived names, canonical locations, supervision core, Windows stop and session-end handling, session ownership, IPC, tray, logs and preference.
 
-- [ ] `P02.S07` - Create the native/manager crate and cadrumo-manager root-level image with identity-projected names, the Background Services suffix owner, DEPENDENTLOADFLAG linkage, platform-mapping declaration, manifest, verification and signing inventory; `native/manager/ (new), native/CMakeLists.txt, native/cmake/, dev/packaging/native/identity.py, dev/packaging/native/ layout and verification, src/cadrumo/core/product_identity.py`.
+- [x] `P02.S07` - Create the native/manager crate and cadrumo-manager root-level image with identity-projected names, the Background Services suffix owner, DEPENDENTLOADFLAG linkage, platform-mapping declaration, manifest, verification and signing inventory; `native/manager/ (new), native/CMakeLists.txt, native/cmake/, dev/packaging/native/identity.py, dev/packaging/native/ layout and verification, src/cadrumo/core/product_identity.py`.
 - [ ] `P02.S08` - Consume the canonical location definition in strict profile through native/platform and probe storage identity and version from the installed interpreter; `native/manager/, native/platform/, native/application/ after desktop-shell S04-S07`.
 - [x] `P02.S09` - Implement the supervision core with fixture test mode: launch with allow-list environment, readiness ceiling, heartbeat hang escalation, restart classes with monotonic backoff, crash-loop ceiling, adoption by image, elevation and boot record, and foreign state; `native/manager/, fixture runtimes in isolated synthetic roots`.
 - [ ] `P02.S10` - Implement Windows stop delivery, the manager window procedure for session end with cancel restart and restart suppression, job escape, and elevation and session-0 refusal; `native/manager/ Windows modules`.

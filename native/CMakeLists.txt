@@ -59,6 +59,8 @@ set(CADRUMO_BUILD_HELPER "${CADRUMO_BUILD_HELPER}" PARENT_SCOPE)
 include("${PROJECT_SOURCE_DIR}/native/cmake/Rust.cmake")
 include("${PROJECT_SOURCE_DIR}/native/cmake/platforms/${CMAKE_SYSTEM_NAME}.cmake")
 add_subdirectory(application)
+# Defines rust_manager and CADRUMO_MANAGER_EXECUTABLE in this directory scope for Packaging.cmake.
+include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")
 set(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}" PARENT_SCOPE)
 set(CADRUMO_ENTRYPOINTS "${CADRUMO_ENTRYPOINTS}" PARENT_SCOPE)
 set(CADRUMO_ENTRYPOINT_TARGETS "${CADRUMO_ENTRYPOINT_TARGETS}" PARENT_SCOPE)
