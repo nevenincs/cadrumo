@@ -1,6 +1,7 @@
 // The one action registry. The keymap, the palette, rail tooltips and menu
 // shortcuts all derive from it, so a chord or a label is declared exactly once.
 
+import type { IconName } from "@/components/ui/icon";
 import type { BridgeChord } from "../ipc/contract";
 
 // User-agent client hints where the engine has them (WebView2); the older
@@ -35,7 +36,7 @@ export type Action = {
   id: string;
   label: string;
   group: string;
-  icon: string;
+  icon: IconName;
   keywords?: string;
   chords?: readonly Chord[];
   /** Kept out of the palette (shortcut-only actions such as terminal copy). */

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { DocsResultKind, DocsSearchResult } from "../ipc/contract";
 import { primaryChord, scoreAction, type Action } from "../shell/actions";
 import { useStrings } from "../shell/strings";
-import { Icon } from "./Icon";
+import { Icon } from "@/components/ui/icon";
 
 /** Docs search provider; null until the documentation can answer queries. */
 export type DocsSearch =
@@ -163,7 +163,7 @@ export function CommandPalette({
                 ? "page"
                 : "term"
           }
-          size="m"
+          size="md"
         />
       </span>
       <span className="palette-text">
@@ -217,7 +217,7 @@ export function CommandPalette({
         }}
       >
         <div className="palette-input">
-          <Icon name="search" />
+          <Icon name="search" size="lg" />
           <input
             ref={input}
             value={query}

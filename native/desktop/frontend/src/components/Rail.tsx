@@ -1,9 +1,9 @@
 import { useRef, useState, type KeyboardEvent } from "react";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 
 export type RailItem = {
   id: string;
-  icon: string;
+  icon: IconName;
   label: string;
   shortcut?: string;
   pressed?: boolean;
@@ -51,7 +51,7 @@ export function Rail({
       onClick={item.onClick}
       data-tip={item.shortcut ? `${item.label}  ${item.shortcut}` : item.label}
     >
-      <Icon name={item.icon} />
+      <Icon name={item.icon} size="lg" />
       {item.badge ? (
         <span className="rail-badge">
           {item.badge > 99 ? "99+" : item.badge}

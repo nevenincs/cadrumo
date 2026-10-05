@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { LogLevel, LogRecord, LogSourceState } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import { Icon } from "./Icon";
+import { Icon } from "@/components/ui/icon";
 
 export const LEVELS: readonly LogLevel[] = [
   "DEBUG",
@@ -56,7 +56,7 @@ export function RecordList({
 }) {
   const t = useStrings();
   // How close to the end still counts as following the newest record.
-  const followSlack = useMetric("--space-24", 24);
+  const followSlack = useMetric("--log-follow-slack", 24);
   const list = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
   const [follow, setFollow] = useState(true);

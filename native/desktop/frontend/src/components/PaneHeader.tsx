@@ -1,8 +1,8 @@
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 
 export type PaneControl = {
   id: string;
-  icon: string;
+  icon: IconName;
   label: string;
   pressed?: boolean;
   run: () => void;
@@ -58,7 +58,7 @@ export function IconButton({
       aria-pressed={pressed}
       onClick={run}
     >
-      <Icon name={icon} size="s" />
+      <Icon name={icon} size="sm" />
     </button>
   );
 }

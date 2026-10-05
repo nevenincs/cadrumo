@@ -8,7 +8,7 @@ import {
 } from "react";
 import { CommandPalette, type DocsSearch } from "./components/CommandPalette";
 import { ContextMenu } from "./components/ContextMenu";
-import { Icon } from "./components/Icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 import {
   DocsFrame,
   type DocsFrameApi,
@@ -76,7 +76,7 @@ import { DARK_TERMINAL, LIGHT_TERMINAL } from "./shell/terminalThemes";
 import { failureCode } from "./errors";
 
 const RECORD_CAP = 10000;
-const TABS: readonly (readonly [PanelTab, string, string])[] = [
+const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["console", "desktop.rail.console", "console"],
   ["python", "desktop.rail.python", "python"],
   ["logs", "desktop.rail.logs", "logs"],
@@ -427,7 +427,7 @@ export function App({ host }: { host: Host }) {
         id: "docs.zoomIn",
         label: t("desktop.action.zoom_in"),
         group: "docs",
-        icon: "zoom",
+        icon: "zoomIn",
         chords: [{ mod: true, code: "Equal", key: "=", scope: "docs" }],
         run: () =>
           patch({
@@ -438,7 +438,7 @@ export function App({ host }: { host: Host }) {
         id: "docs.zoomOut",
         label: t("desktop.action.zoom_out"),
         group: "docs",
-        icon: "zoom",
+        icon: "zoomOut",
         chords: [{ mod: true, code: "Minus", key: "-", scope: "docs" }],
         run: () =>
           patch({
@@ -449,7 +449,7 @@ export function App({ host }: { host: Host }) {
         id: "docs.zoomReset",
         label: t("desktop.action.zoom_reset"),
         group: "docs",
-        icon: "zoom",
+        icon: "search",
         chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
         run: () => patch({ zoom: 1 }),
       },
@@ -1227,7 +1227,7 @@ export function App({ host }: { host: Host }) {
                     document.getElementById(`tab-${next}`)?.focus();
                   }}
                 >
-                  <Icon name={icon} size="s" />
+                  <Icon name={icon} />
                   {t(labelKey)}
                   {tab !== "logs" && exitCode(status[tab]) !== undefined && (
                     <span className="exit-note">
