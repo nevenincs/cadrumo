@@ -66,7 +66,7 @@ The numbered references mirror the project rules in [the canonical rules folder]
 | Modelo calculation, edits, revisions, export and reconciliation | [11-modelo-work-and-revision-lifecycle-part-1](references/11-modelo-work-and-revision-lifecycle-part-1.md) |
 | Modelo addressing, verification, workbench and workspace currentness | [11-modelo-work-and-revision-lifecycle-part-2](references/11-modelo-work-and-revision-lifecycle-part-2.md) |
 | Operation supervisor, profiles, read projections and workflows | [12-operations-profiles-and-workflows](references/12-operations-profiles-and-workflows.md) |
-| Shared contracts, configuration, provenance, errors and telemetry | [13-core-authority-and-shared-controls](references/13-core-authority-and-shared-controls.md) |
+| Shared contracts, configuration, provenance and errors | [13-core-authority-and-shared-controls](references/13-core-authority-and-shared-controls.md) |
 | Tax registry snapshots, facts, bindings, formulas and layouts | [14-tax-calculation-domain](references/14-tax-calculation-domain.md) |
 | Taxpayer, family, business and financial domain records | [15-business-and-taxpayer-domain](references/15-business-and-taxpayer-domain.md) |
 | Bundled knowledge, registry data and localization | [16-bundled-knowledge-and-localization](references/16-bundled-knowledge-and-localization.md) |
