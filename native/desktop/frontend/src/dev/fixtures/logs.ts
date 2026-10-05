@@ -178,6 +178,20 @@ const GENERATED_LEVELS: readonly LogLevel[] = [
   "ERROR",
 ];
 
+/** The generated record with this sequence number. */
+function generated(seq: number): LogRecord {
+  const at = seq - 1;
+  const level = GENERATED_LEVELS[at % GENERATED_LEVELS.length] ?? "INFO";
+  return python(
+    seq,
+    at * 37,
+    level,
+    `cadrumo.generated.module_${at % 23}`,
+    `Generated record ${seq} for the log view measurement`,
+    level === "ERROR" ? TRACEBACK : null,
+  );
+}
+
 /**
  * A log of `count` generated records, in batches no larger than the host
  * sends, for measuring the log view under the load the contract allows.
@@ -188,20 +202,25 @@ export function generatedBatches(
   const batches = [];
   for (let start = 0; start < count; start += BATCH_LIMIT) {
     const records: LogRecord[] = [];
-    for (let at = start; at < Math.min(count, start + BATCH_LIMIT); at++) {
-      const level = GENERATED_LEVELS[at % GENERATED_LEVELS.length] ?? "INFO";
-      records.push(
-        python(
-          at + 1,
-          at * 37,
-          level,
-          `cadrumo.generated.module_${at % 23}`,
-          `Generated record ${at + 1} of ${count} for the log view measurement`,
-          level === "ERROR" ? TRACEBACK : null,
-        ),
-      );
-    }
+    for (let at = start; at < Math.min(count, start + BATCH_LIMIT); at++)
+      records.push(generated(at + 1));
     batches.push({ records, dropped: 0, state: AVAILABLE });
   }
   return batches;
+}
+
+/** How many records one batch of a live feed carries. */
+export const FEED_BATCH = 20;
+
+/** The next batch of a live feed: records `from` onward, as they would
+ * arrive from a process that is writing its log. */
+export function feedBatch(from: number): {
+  records: LogRecord[];
+  dropped: number;
+  state: LogSourceState;
+} {
+  const records: LogRecord[] = [];
+  for (let seq = from; seq < from + FEED_BATCH; seq++)
+    records.push(generated(seq));
+  return { records, dropped: 0, state: AVAILABLE };
 }

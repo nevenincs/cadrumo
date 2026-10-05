@@ -98,6 +98,7 @@ Select one in the control or in the address:
 | `latency`  | milliseconds           | The fixed delay before a sign-in or sign-out answer, 600 by default |
 | `bar`      | `off`                  | Hide the scenario control, for a clean screenshot                   |
 | `records`  | a count                | Fill the log with that many generated records, up to its ring size  |
+| `feed`     | milliseconds           | Keep the log growing: twenty more records at that interval          |
 
 The terminals show deterministic fixture sessions in the real xterm view: type
 `exit` in the console or `exit()` in the Python tab, or press `q` in the TUI, to

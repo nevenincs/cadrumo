@@ -65,6 +65,7 @@ import {
   type Prefs,
 } from "./shell/layout";
 import { useMetric, useTerminalFontSize } from "./shell/metrics";
+import { fromPointer } from "./shell/pointer";
 import {
   SOURCE_LOCALE,
   StringsContext,
@@ -367,12 +368,12 @@ export function App({ host }: { host: Host }) {
   // none does in time.
   const wanted = useRef<{
     view: TerminalKind | "logs";
-    until: number;
+    since: number;
   } | null>(null);
   const grantFocus = useCallback(() => {
     const wish = wanted.current;
     if (!wish) return;
-    if (performance.now() > wish.until) {
+    if (performance.now() > wish.since + FOCUS_WISH_MS) {
       wanted.current = null;
       return;
     }
@@ -390,9 +391,24 @@ export function App({ host }: { host: Host }) {
     wanted.current = null;
   }, []);
   useEffect(grantFocus);
+  useEffect(() => {
+    // Whatever the person presses next decides where focus is: a wish from
+    // before that press is dropped, never granted over it. The press that
+    // made the wish is older than the wish and leaves it alone.
+    const drop = (event: Event) => {
+      if (wanted.current && wanted.current.since < event.timeStamp)
+        wanted.current = null;
+    };
+    window.addEventListener("pointerdown", drop, true);
+    window.addEventListener("keydown", drop, true);
+    return () => {
+      window.removeEventListener("pointerdown", drop, true);
+      window.removeEventListener("keydown", drop, true);
+    };
+  }, []);
   const focusView = useCallback(
     (view: TerminalKind | "logs") => {
-      wanted.current = { view, until: performance.now() + FOCUS_WISH_MS };
+      wanted.current = { view, since: performance.now() };
       grantFocus();
     },
     [grantFocus],
@@ -1064,10 +1080,11 @@ export function App({ host }: { host: Host }) {
             run: () => api.clear(),
           },
         );
-      // The menu key fires contextmenu with no pointer type; that menu
-      // belongs at the event's position rather than at the cursor.
-      const pointer = (event as PointerEvent).pointerType !== "";
-      openMenu(items, { x: event.clientX, y: event.clientY }, pointer);
+      openMenu(
+        items,
+        { x: event.clientX, y: event.clientY },
+        fromPointer(event),
+      );
     },
     [openMenu, t, copy, paste],
   );
@@ -1634,7 +1651,8 @@ export function App({ host }: { host: Host }) {
             // TUI that has just started.
             onClosed={() => {
               if (signInButton.current) signInButton.current.focus();
-              else focusView("tui");
+              else if (tuiVisible) focusView("tui");
+              else focusRail();
             }}
           />
         </div>

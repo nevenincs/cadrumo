@@ -18,6 +18,8 @@ import {
   AVAILABLE,
   FIXTURE_DROPPED,
   FIXTURE_RECORDS,
+  feedBatch,
+  FEED_BATCH,
   generatedBatches,
   MISSING,
   UNREADABLE,
@@ -37,6 +39,9 @@ export type ScenarioHostOptions = {
   latencyMs: number;
   /** Replace the fixture records with this many generated ones. */
   logRecords?: number;
+  /** Keep the log growing: a batch of records every this many milliseconds
+   * after the backlog, as a process writing its log sends them. */
+  logFeedMs?: number;
   /** Receives one line per host call; never a password or its length. */
   onCall?: (call: string) => void;
 };
@@ -166,11 +171,22 @@ export function scenarioHost(
                 },
               ];
       let subscribed = true;
+      let feed = 0;
       window.setTimeout(() => {
         for (const batch of batches) if (subscribed) listener(batch);
+        if (!subscribed || scenario.logs !== "records" || !options.logFeedMs)
+          return;
+        let next =
+          1 +
+          Math.max(0, ...batches.flatMap((b) => b.records.map((r) => r.seq)));
+        feed = window.setInterval(() => {
+          listener(feedBatch(next));
+          next += FEED_BATCH;
+        }, options.logFeedMs);
       }, 0);
       return Promise.resolve(() => {
         subscribed = false;
+        window.clearInterval(feed);
       });
     },
 

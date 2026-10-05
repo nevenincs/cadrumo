@@ -338,10 +338,10 @@ try {
         new Promise((done) => {
           const list = document.querySelector(".logview-list");
           const started = performance.now();
-          // Upward at a steady pace for two seconds, as a held Page Up
+          // Upward a screen at a time for two seconds, as a held Page Up
           // scrolls, so earlier spans are brought in on the way.
           const step = (now) => {
-            list.scrollTop -= list.clientHeight / 3;
+            list.scrollTop -= list.clientHeight;
             if (now - started < 2000) requestAnimationFrame(step);
             else done();
           };

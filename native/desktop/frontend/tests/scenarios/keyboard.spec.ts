@@ -390,17 +390,30 @@ test("log records are reached, marked and given their menu by keyboard", async (
       (all) => all.filter((row) => row.tabIndex === 0).length,
     ),
   ).toBe(1);
-  // The menu key opens the menu a right-click opens, under its row.
-  await target.keyboard.press("ArrowUp");
-  await rows.nth(count - 2).dispatchEvent("contextmenu", { button: 0 });
+  // The menu key opens the menu a right-click opens, beside its row and
+  // never across it: at the end of the list, in the middle and at the top.
   const menu = target.getByRole("menu", {
     name: label("desktop.palette.actions"),
   });
-  await expect(menu).toBeVisible();
-  await expect(rows.nth(count - 2)).toHaveAttribute("aria-current", "true");
-  await target.keyboard.press("Escape");
-  await expect(menu).toBeHidden();
-  await expect(rows.nth(count - 2)).toBeFocused();
+  for (const at of [count - 1, Math.floor(count / 2), 0]) {
+    const row = rows.nth(at);
+    await row.focus();
+    await target.keyboard.press("ContextMenu");
+    await expect(menu).toBeVisible();
+    await expect(row).toHaveAttribute("aria-current", "true");
+    const [rowBox, menuBox] = [
+      await row.boundingBox(),
+      await menu.boundingBox(),
+    ];
+    if (!rowBox || !menuBox) throw new Error("The menu or its row is gone.");
+    const across =
+      menuBox.y < rowBox.y + rowBox.height - 1 &&
+      menuBox.y + menuBox.height > rowBox.y + 1;
+    expect(across, `row ${at}`).toBe(false);
+    await target.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(row).toBeFocused();
+  }
 });
 
 test("Enter on a record opens its detail", async ({ page: target }) => {
@@ -591,4 +604,40 @@ test("a chord pressed in the documentation focuses the view it shows", async ({
     await page.press("Control+Shift+Digit3");
     await expect(target.locator(".logview .filter-text")).toBeFocused();
   }
+});
+
+test("the arrow keys move on from a record's detail toggle", async ({
+  page: target,
+}) => {
+  await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .click();
+  const rows = target.locator(".logview-list .record");
+  const withDetail = rows.filter({ has: target.locator("[aria-expanded]") });
+  // A click leaves focus on the toggle; the keyboard carries on from there.
+  await withDetail.first().locator("[aria-expanded]").click();
+  await expect(withDetail.first().locator("pre")).toBeVisible();
+  await target.keyboard.press("ArrowDown");
+  await expect(target.locator(".logview-list .record:focus")).toHaveCount(1);
+  await expect(withDetail.first()).not.toBeFocused();
+});
+
+test("a press in the documentation while a menu is open keeps focus there", async ({
+  page: target,
+}) => {
+  await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.rail.logs") })
+    .click();
+  await target
+    .locator(".logview-list .record")
+    .nth(1)
+    .click({ button: "right" });
+  const menu = target.getByRole("menu");
+  await expect(menu).toBeVisible();
+  await target.frameLocator(".docs-frame").locator("h1").click();
+  await expect(menu).toBeHidden();
+  await target.waitForTimeout(200);
+  await expect(target.locator(".docs-frame")).toBeFocused();
 });

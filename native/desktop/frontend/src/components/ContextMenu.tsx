@@ -60,7 +60,13 @@ export function ContextMenu({
         }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
-          if (!pressedElsewhere.current && returnTo instanceof HTMLElement)
+          // A press in the documentation frame closes the menu without
+          // being reported as a press outside; the frame has focus by then.
+          if (
+            !pressedElsewhere.current &&
+            !(document.activeElement instanceof HTMLIFrameElement) &&
+            returnTo instanceof HTMLElement
+          )
             returnTo.focus();
         }}
       >

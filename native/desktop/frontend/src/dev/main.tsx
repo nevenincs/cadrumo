@@ -52,6 +52,8 @@ function readParams() {
     bar: params.get("bar") !== "off",
     // A log of this many generated records, for measuring the log view.
     logRecords: Math.max(0, Math.trunc(Number(params.get("records")) || 0)),
+    // A batch of records every this many milliseconds, for a log that grows.
+    logFeedMs: Math.max(0, Math.trunc(Number(params.get("feed")) || 0)),
   };
 }
 
@@ -97,6 +99,7 @@ function Scenarios() {
           }
         : null,
       logRecords: initial.logRecords,
+      logFeedMs: initial.logFeedMs,
       language: run.language,
       latencyMs: initial.latencyMs,
       onCall: (call) => {

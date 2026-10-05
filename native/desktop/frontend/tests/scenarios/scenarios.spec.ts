@@ -403,6 +403,28 @@ test("the smallest window keeps the newest record in view", async ({
       window: window.innerHeight,
     };
   });
+  // Every control of that one row keeps its own width: none is squeezed
+  // under its neighbour.
+  const controls = await target
+    .locator(".logview .filter-text, .logview select, .logview button")
+    .evaluateAll((all) =>
+      all
+        .filter((control) => !control.closest(".logview-list"))
+        .map((control) => {
+          const box = control.getBoundingClientRect();
+          return { left: box.left, right: box.right, width: box.width };
+        })
+        .sort((a, b) => a.left - b.left),
+    );
+  expect(controls.length).toBeGreaterThan(4);
+  for (const [index, control] of controls.entries()) {
+    expect(control.width, `control ${index}`).toBeGreaterThan(40);
+    const next = controls[index + 1];
+    if (next)
+      expect(control.right, `control ${index}`).toBeLessThanOrEqual(
+        next.left + 1,
+      );
+  }
   // In a panel at its floor the log's bar is one row, so the records keep
   // room; the list is the only thing in the view that scrolls.
   expect(boxes.list?.height ?? 0).toBeGreaterThanOrEqual(40);
@@ -413,4 +435,80 @@ test("the smallest window keeps the newest record in view", async ({
       .locator(".logview")
       .evaluate((view) => view.scrollHeight - view.clientHeight),
   ).toBeLessThanOrEqual(1);
+});
+
+test("a reader who has left the end keeps their place while records arrive", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=40",
+  );
+  await openLogs(target);
+  const list = target.locator(".logview-list");
+  const follow = target.getByRole("button", {
+    name: label("desktop.logs.follow"),
+  });
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect(list.locator(".record")).toHaveCount(400);
+  // Wheel up from the end, as a reader does: following stops and the view
+  // rests on a record.
+  const box = await list.boundingBox();
+  if (!box) throw new Error("The log's list is not on screen.");
+  await target.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await target.mouse.wheel(0, -600);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  const resting = await list.evaluate((element) => {
+    const edge = element.getBoundingClientRect().top;
+    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
+      (candidate) => candidate.getBoundingClientRect().top >= edge,
+    );
+    return {
+      seq: row?.dataset.seq ?? "",
+      top: (row?.getBoundingClientRect().top ?? 0) - edge,
+    };
+  });
+  expect(resting.seq).not.toBe("");
+  const newest = async () =>
+    Number(await list.locator(".record").last().getAttribute("data-seq"));
+  const before = await newest();
+  // Well over a span's worth arrives; the record at the top stays there.
+  await expect.poll(newest, { timeout: 15000 }).toBeGreaterThan(before + 600);
+  const after = await list.evaluate((element, seq) => {
+    const edge = element.getBoundingClientRect().top;
+    const row = element.querySelector(`[data-seq="${seq}"]`);
+    return (row?.getBoundingClientRect().top ?? Number.NaN) - edge;
+  }, resting.seq);
+  expect(Math.abs(after - resting.top)).toBeLessThanOrEqual(2);
+  // Back at the end, following resumes and the span is the newest one again.
+  await follow.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect(list.locator(".record")).toHaveCount(400);
+});
+
+test("a focused record that scrolls out of the log hands focus to the log, once", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=1000&feed=30",
+  );
+  await openLogs(target);
+  const list = target.locator(".logview-list");
+  const follow = target.getByRole("button", {
+    name: label("desktop.logs.follow"),
+  });
+  await expect(list.locator(".record")).toHaveCount(400);
+  // The keyboard is on the newest record, and the view stays at the end.
+  await list
+    .locator(".record")
+    .last()
+    .evaluate((row) => row.focus({ preventScroll: true }));
+  // Following, the newest span moves on and the focused record leaves it:
+  // focus goes to the list and stays there, and the log goes on following.
+  await expect(list).toBeFocused({ timeout: 15000 });
+  await target.waitForTimeout(500);
+  await expect(list).toBeFocused();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  // An arrow key goes on to the record Tab would reach.
+  await target.keyboard.press("ArrowUp");
+  await expect(list.locator(".record:focus")).toHaveCount(1);
 });
