@@ -129,6 +129,19 @@ nothing was applied (`src/cadrumo/adapters/outbound/google/oauth_flow.py`,
 messages only for the word Google being absent from its spelling dictionary,
 as it does for every existing Google message.
 
+### declined-consent-discrimination | low | The declined-consent check could have matched an answer of the token endpoint
+
+Found by the second re-review, which passed commit `dc7771a25e` and confirmed
+the finding grant-after-completed-exchange resolved at every site. The check
+keyed on the error code of whatever exception the flow raised, so a token
+endpoint that answered with the same code after an approved consent would
+have been taken for a decline and settled with no effect.
+
+Resolved: the decision is read from the redirect Google sends, before the
+exchange is admitted (`src/cadrumo/adapters/outbound/google/oauth_flow.py`,
+`_consent_declined`), and a test shows the same code answered by the token
+endpoint leaves the exchange open.
+
 ## Recommendations
 
 - The high and medium findings needed no new decision and are fixed within

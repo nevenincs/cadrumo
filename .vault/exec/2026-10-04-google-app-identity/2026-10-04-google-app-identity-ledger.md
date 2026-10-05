@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:87103e4f70f4e9c84f1d881d6d591f05fd367cb60d9b640be6e5d7ffd3f46ab1'
+body_hash: 'sha256:f34878ad11439c142cefc272e4d982ffa53e8f9569083d43cd85c1fc87745878'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -496,6 +496,8 @@ related:
 - `S12` `verify:` `just check-types` -> `pass`
 - `S12` `verify:` `just check-import-boundaries` -> `pass`
 - `S12` `verify:` `just check-locales` -> `fail`
+- `S12` `verify:` `pytest user_profile, google configuration composition, google and storage adapters (1206 passed)` -> `pass`
+- `S12` `verify:` `just check-types` -> `pass`
 
 ## Notes
 
@@ -585,3 +587,5 @@ related:
 - `S12` Reopened a second time by the re-review (audit finding grant-after-completed-exchange, high): a completed token exchange was acknowledged as writing nothing, so a refusal after it settled as no effect while Google held a grant. The exchange is now accounted as a change and such a refusal settles as partial.
 - `S12` Also fixed here (audit finding declined-consent-reported-as-unreachable, medium): a declined consent was reported as an unreachable endpoint, failed, effect unknown. It is now the sign-in-required refusal with its own message and settles with no effect.
 - `S12` just check-locales fails on the repository-wide backlog (23205 inventory violations, 4781 cells to review). Its only findings on the new key are the word Google missing from the spelling dictionary in es, ca and hu, the same finding every existing Google message carries; missing and needs-repair counts are zero.
+- `S12` Second re-review passed dc7771a25e. Its one low finding (audit finding declined-consent-discrimination) is fixed here without reopening the Step: a declined consent is read from Google's redirect before the exchange is admitted, so an answer of the token endpoint can never be taken for it.
+- `S12` The edit to `src/cadrumo/application/user_profile/tests/test_google_configuration_operation.py` that belongs to this fix (the duplicate declined mode removed) was committed by another session in 62bc7fab4a before this Step's commit; its content was checked there and is unchanged.

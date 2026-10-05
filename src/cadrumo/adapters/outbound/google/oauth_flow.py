@@ -28,6 +28,7 @@ from collections.abc import Callable, Mapping
 from contextlib import nullcontext
 from datetime import datetime
 from typing import TYPE_CHECKING, NoReturn, Protocol, cast
+from urllib.parse import parse_qs, urlsplit
 
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.google_configuration_operation_ports import (
@@ -70,7 +71,7 @@ _LOOPBACK_HOST = "127.0.0.1"
 
 # The authorization response's error code for a request the resource owner or
 # the authorization server denied (RFC 6749 section 4.1.2.1). No authorization
-# code accompanies it, so no grant was issued and nothing was exchanged.
+# code accompanies it, so no grant was issued and there is nothing to exchange.
 _CONSENT_DECLINED = "access_denied"
 
 
@@ -340,6 +341,10 @@ def _run_local_server(
     class AdmittedInstalledAppFlow(InstalledAppFlow):
         def fetch_token(self, **kwargs: object) -> Mapping[str, object]:
             """Renew after the human wait, just before the canonical token exchange."""
+            # Read from the redirect itself, before the exchange is admitted, so
+            # no later answer of the token endpoint can be taken for a decline.
+            if _consent_declined(kwargs.get("authorization_response")):
+                raise _consent_declined_refusal()
             # A completed exchange means Google holds a grant for this client,
             # whatever is refused afterwards, so it is accounted as a change.
             if before_handoff is not None:
@@ -384,7 +389,7 @@ def _run_local_server(
                 timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS,
                 authorization_prompt_message=None,
             )
-    except ProfileAccessRefusedError:
+    except (ProfileAccessRefusedError, GoogleAuthSignInRequiredError):
         raise
     except OSError as exc:
         raise GoogleAuthLoopbackBindError(
@@ -410,19 +415,29 @@ def _run_local_server(
     return _oauth_loopback_records(credentials, client, before_handoff=before_handoff, acknowledged=acknowledged)
 
 
+def _consent_declined(authorization_response: object) -> bool:
+    """Return whether the redirect Google sent says the consent request was declined."""
+    if not isinstance(authorization_response, str):
+        return False
+    return parse_qs(urlsplit(authorization_response).query).get("error") == [_CONSENT_DECLINED]
+
+
+def _consent_declined_refusal() -> GoogleAuthSignInRequiredError:
+    """Build the refusal for a consent that was declined before anything was exchanged."""
+    return GoogleAuthSignInRequiredError(
+        "the Google consent was declined",
+        translated_message="adapters.google.oauth_flow.errors.consent_declined",
+        precondition_verdict=google_auth_no_action_verdict(
+            condition=GoogleAuthPreconditionCondition.CONSENT_GRANTED,
+            facts={"consent_granted": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
+
+
 def _raise_local_server_error(exc: Exception) -> NoReturn:
     """Translate upstream local-server OAuth failures into the Google auth hierarchy."""
-    if getattr(exc, "error", None) == _CONSENT_DECLINED:
-        raise GoogleAuthSignInRequiredError(
-            "the Google consent was declined",
-            translated_message="adapters.google.oauth_flow.errors.consent_declined",
-            precondition_verdict=google_auth_no_action_verdict(
-                condition=GoogleAuthPreconditionCondition.CONSENT_GRANTED,
-                facts={"consent_granted": False},
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-            ),
-        ) from exc
     message = str(exc).lower()
     if "browser" in message or "webbrowser" in message:
         raise GoogleAuthBrowserOpenError(

@@ -117,7 +117,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_raise_local_server_error:GoogleAuthSignInRequiredError:the Google consent was declined": _contract(
+    "oauth_flow:_consent_declined_refusal:GoogleAuthSignInRequiredError:the Google consent was declined": _contract(
         GoogleAuthPreconditionCondition.CONSENT_GRANTED,
         (("consent_granted", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,

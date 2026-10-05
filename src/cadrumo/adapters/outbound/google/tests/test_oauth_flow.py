@@ -401,13 +401,14 @@ def test_a_completed_token_exchange_is_accounted_as_a_change_before_a_later_refu
     ]
 
 
-def test_a_declined_consent_is_refused_with_both_boundaries_still_open(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_declined_consent_is_refused_before_the_exchange_is_admitted(monkeypatch: pytest.MonkeyPatch) -> None:
     """Declining on Google's page is a refusal that names itself, not an unreachable endpoint.
 
     The real flow receives the redirect Google sends for a declined request.
-    No authorization code arrives, so no token request is made, and the
-    refusal is of a kind the operation accepts as proof that nothing was
-    granted.
+    The decision is read from that redirect: the exchange is never admitted
+    and no token request is made, so only the consent boundary is open when
+    the refusal arrives, and the refusal is of a kind the operation accepts
+    as proof that nothing was granted.
     """
     browser = _BrowserStandIn("error=access_denied")
     monkeypatch.setattr(webbrowser, "get", lambda using=None: browser)
@@ -432,4 +433,29 @@ def test_a_declined_consent_is_refused_with_both_boundaries_still_open(monkeypat
     assert error.translated_message == "adapters.google.oauth_flow.errors.consent_declined"
     verdict = error.terminal_precondition_verdict
     assert verdict is not None and verdict.failed_condition_id == "google.auth.consent.granted"
+    assert boundaries == ["before:oauth.browser-consent:False"]
+
+
+def test_an_error_the_token_endpoint_answers_is_never_taken_for_a_declined_consent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """After an approved consent a grant may exist, so the exchange stays open whatever the endpoint says."""
+    browser = _BrowserStandIn("code=synthetic-authorization-code")
+    monkeypatch.setattr(webbrowser, "get", lambda using=None: browser)
+    monkeypatch.setenv("OAUTHLIB_INSECURE_TRANSPORT", "1")
+    boundaries: list[str] = []
+
+    with token_endpoint(status=400, body={"error": "access_denied"}) as endpoint:
+        client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+        with pytest.raises(GoogleAuthNetworkError):
+            oauth_flow._run_local_server(
+                client,
+                before_handoff=lambda action, *, writes=False: boundaries.append(f"before:{action}:{writes}"),
+                acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
+            )
+        for visit in browser.visits:
+            visit.join(timeout=10)
+
+        assert len(endpoint.grant_requests) == 1
+
     assert boundaries == ["before:oauth.browser-consent:False", "before:oauth.token-exchange:True"]
