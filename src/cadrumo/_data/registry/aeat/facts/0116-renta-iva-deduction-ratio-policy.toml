@@ -37,6 +37,9 @@ required_text = ["modelo 390 de declaración-resumen anual del Impuesto sobre el
 [fact.variants.payload]
 kind = "mapping"
 entries = [
+  { key = "prorrata.volume.con_derecho_categories", value = "domestic_general,domestic_reduced,domestic_super_reduced,domestic_zero,domestic_reverse_charge,intra_community_supply,export_third_country_zero_rated,export_assimilated_zero_rated" },
+  { key = "prorrata.volume.sin_derecho_categories", value = "domestic_exempt" },
+  { key = "prorrata.volume.sin_derecho_exemption_articles", value = "art_20_uno_8,art_20_uno_14" },
   { key = "exempt_regime.deduction_ratio", value = "0" },
   { key = "percentage.unit_divisor", value = "100" },
   { key = "prorrata_especial_mandatory.legal_ref", value = "ley-37-1992:art-103" },

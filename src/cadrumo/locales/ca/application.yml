@@ -990,6 +990,18 @@ application:
           barreja d'activitat exempta i subjecta.
         what_to_do: Consulta les regles de la prorrata de l'IVA o el teu assessor,
           i aplica la prorrata especial si és obligatòria.
+      prorrata_volume_check_unavailable:
+        what: La comparació anual amb el llibre és incompleta.
+        what_to_do: Classifiqueu les operacions de sortida i reviseu les exclusions
+          de prorrata.
+      prorrata_volume_declaration_missing:
+        what: El llibre conté operacions de sortida per comparar amb els volums anuals
+          de prorrata.
+        what_to_do: Declareu els volums anuals; el llibre no els substitueix.
+      prorrata_volume_divergence:
+        what: Els volums anuals de prorrata declarats difereixen del llibre classificat.
+        what_to_do: Reviseu els volums i les exclusions. Les xifres declarades continuen
+          sent l’autoritat.
       rate_boxes_underaccount_total:
         what: Una part del total d'IVA de la casella {box} no és a cap casella per
           tipus.

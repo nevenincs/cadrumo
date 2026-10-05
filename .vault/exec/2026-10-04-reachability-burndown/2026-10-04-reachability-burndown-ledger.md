@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e34b4bca7d5c2bda4743cba702f8e3bc2f44be790329e3162d314040cae10db'
+body_hash: 'sha256:ef738d9440a212ad1217aaee46cc90300c537090407f46a6e38080d82fb8afaa'
 related:
   - "[[2026-10-04-reachability-burndown-plan]]"
 ---
@@ -930,6 +930,27 @@ related:
 - `S24` `verify:` `S24 exact manifest Ruff and ty` -> `pass`
 - `S24` `A` `src/cadrumo/application/operations/tests/financial_operand_models.py`
 - `S24` `verify:` `S24 previously verified current production supervisor and purge fixtures` -> `pass`
+- `S10` `M` `src/cadrumo/_data/registry/aeat/facts/0116-renta-iva-deduction-ratio-policy.toml`
+- `S10` `A` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_declared_volume_reconciliation.py`
+- `S10` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S10` `A` `src/cadrumo/application/aggregation/prorrata_volume.py`
+- `S10` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S10` `A` `src/cadrumo/application/aggregation/tests/test_prorrata_volume.py`
+- `S10` `M` `src/cadrumo/application/calculations/prorrata_regularizacion.py`
+- `S10` `M` `src/cadrumo/application/calculations/tests/test_prorrata_applicability.py`
+- `S10` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S10` `M` `src/cadrumo/application/modelo/prorrata_regularizacion_advisory.py`
+- `S10` `A` `src/cadrumo/domain/calculations/registry/prorrata_volume_catalogue.py`
+- `S10` `M` `src/cadrumo/locales/ca/application.yml`
+- `S10` `M` `src/cadrumo/locales/en/application.yml`
+- `S10` `M` `src/cadrumo/locales/es/application.yml`
+- `S10` `M` `src/cadrumo/locales/hu/application.yml`
+- `S10` `verify:` `S10 actual encrypted annual ledger reconciliation` -> `pass`
+- `S10` `verify:` `S10 cash fragment and quarter negative controls` -> `pass`
+- `S10` `verify:` `S10 applicability and cross-revision settlement verification` -> `pass`
+- `S10` `verify:` `S10 existing regularisation and mandatory especial controls` -> `pass`
+- `S10` `verify:` `S10 corrected authority publication` -> `pass`
+- `S10` `verify:` `S10 exact manifest Ruff and ty` -> `pass`
 
 ## Notes
 
@@ -963,3 +984,4 @@ related:
 - `S28` Resolved external Modelo 720 drift: 33 relocated corpus and full article-anchor tests now pass. Reused unchanged 89 passing owner controls and style/type evidence; no suppression or disposition baseline.
 - `S24` Completed the accepted whole ModeloEditSubmissionV1 transient design. Apply and preflight use amount-free V2 requests; typed private grants, exact baseline binding, one-shot executor delivery and bounded shutdown use the supervisor transition lock. Hardened durable custody records contain no financial batch values. Exact co-committed edit receipts alone prove UPDATED after owner loss; all seven custody recovery positions are covered. Retired the scalar prototype and preserved its failure-settlement controls. Human native financial intake and ordinary bulk native regressions both pass. Refusal settlement 8 integration controls pass; four registered edit executor cases pass after migrating preflight to the volatile human input. Broker/recovery/shutdown 15 controls and lifetime/projection-forgery 10 controls pass. Previous connected-unit failures were stale V1/schema expectations and passed in 197 public connected controls plus 8 version controls after correction. Ruff and ty passed for the exact Step manifest; broad imports and final integrated review remain S07.
 - `S24` Corrected checkpoint ownership capture: retain the already tested S29 purge marker, the already tested awaiting-custody notice transition, and the shared synthetic typed-batch fixture. Working behavior is unchanged; the cached staged capture had omitted these pieces.
+- `S10` Completed the accepted annual declared-versus-ledger prorrata advisory. The annual Period window and canonical IVA ledger classifier supply classifiable output bases; input cuotas, prior-year rows, cash payment fragments and declared art.104.Tres exclusions do not inflate turnover. Dated registry memberships retain uncertain exempt and foreign-service rights as unclassified. Declaration absence and incomplete classification produce distinct localized nonblocking diagnostics; only complete evidence produces a divergence, and declared values remain untouched. Ledger sin-derecho now participates in missing-provisional applicability even when declared values show no exempt turnover, including settlement. Real encrypted repository controls 2 pass, annual cash and quarter-refusal 2 pass, applicability/verification 16 pass, existing special-regime and regularisation 16 pass, existing calculation-note form/gate controls passed in the previous connected selection. Exact manifest Ruff and ty pass. Published corrected source authority identity 64578b399a91c3743178129dac23ee58dea8b9a393d98f16ad448b9fde7e2dc7. An invalid category token and mutation during the first immutable publication were corrected and reverified. One freshly introduced exact helper in the concurrent active application-sign-in workstream remains for the current S07 population review; no threshold or identity suppression was added.

@@ -950,6 +950,16 @@ application:
           tevékenységed is van.
         what_to_do: Nézd meg az áfa-arányosítás szabályait, vagy kérdezd meg a tanácsadódat,
           és ha kötelező, alkalmazd a különleges arányosítást.
+      prorrata_volume_check_unavailable:
+        what: Az éves főkönyvi összehasonlítás hiányos.
+        what_to_do: Osztályozza az értékesítéseket, és ellenőrizze a prorrata kizárásait.
+      prorrata_volume_declaration_missing:
+        what: A főkönyv értékesítései összevethetők az éves prorrata forgalommal.
+        what_to_do: Adja meg az éves forgalmat; a főkönyv nem helyettesíti azt.
+      prorrata_volume_divergence:
+        what: A bevallott éves prorrata forgalom eltér az osztályozott főkönyvtől.
+        what_to_do: Ellenőrizze a forgalmat és a kizárásokat. A bevallott adatok maradnak
+          irányadók.
       rate_boxes_underaccount_total:
         what: A(z) {box} rovat áfa-összegének egy része egyetlen kulcsonkénti rovatban
           sem szerepel.

@@ -219,18 +219,64 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    declared_volume_total: Decimal
-    declared_volume_con_derecho: Decimal
-    declared_volume_sin_derecho: Decimal
+    declared_volume_total: Decimal | None
+    declared_volume_con_derecho: Decimal | None
+    declared_volume_sin_derecho: Decimal | None
     ledger_volume_total: Decimal
     ledger_volume_con_derecho: Decimal
     ledger_volume_sin_derecho: Decimal
     included_ledger_ids: tuple[str, ...] = ()
+    unclassified_ledger_ids: tuple[str, ...] = ()
     #: Ledger ids skipped from the rollup because they carry an operator-declared
     #: LIVA art. 104.Tres judgment exclusion (foreign PE, non-habitual
     #: inmobiliario/financiero). Recorded so the exclusion is auditable and the
     #: proposal is never a silent substitution of the declared volumes.
     art_104_tres_excluded_ledger_ids: tuple[str, ...] = ()
+
+
+def build_prorrata_declared_volume_advisory(
+    rollup: ProrrataDeclaredVolumeLedgerRollup, *, ejercicio: int
+) -> CalculationSourceDiagnostic | None:
+    """Disclose incomplete classification separately from an actual volume disagreement."""
+    present = rollup.declared_volume_total is not None and rollup.declared_volume_con_derecho is not None
+    if not rollup.included_ledger_ids and not rollup.unclassified_ledger_ids:
+        return None
+    if rollup.unclassified_ledger_ids:
+        reason = "prorrata_volume_check_unavailable"
+        message = (
+            f"La comparación anual de prorrata de {ejercicio} no es completa: "
+            f"{len(rollup.unclassified_ledger_ids)} operaciones de salida no tienen clasificación suficiente. "
+            "Revise sus hechos de IVA y las exclusiones del art. 104.Tres; no se afirma una divergencia."
+        )
+    elif not present:
+        reason = "prorrata_volume_declaration_missing"
+        message = (
+            f"Declare los volúmenes anuales de prorrata de {ejercicio} para compararlos con "
+            f"{len(rollup.included_ledger_ids)} operaciones de salida clasificadas del libro."
+        )
+    elif (
+        rollup.declared_volume_total == rollup.ledger_volume_total
+        and rollup.declared_volume_con_derecho == rollup.ledger_volume_con_derecho
+        and rollup.declared_volume_sin_derecho == rollup.ledger_volume_sin_derecho
+    ):
+        return None
+    else:
+        reason = "prorrata_volume_divergence"
+        message = (
+            f"Los volúmenes declarados de prorrata de {ejercicio} difieren de las "
+            f"{len(rollup.included_ledger_ids)} operaciones de salida clasificadas del libro: "
+            f"total {rollup.ledger_volume_total}, con derecho {rollup.ledger_volume_con_derecho}, "
+            f"sin derecho {rollup.ledger_volume_sin_derecho}. "
+            f"Se han excluido {len(rollup.art_104_tres_excluded_ledger_ids)} operaciones con declaración "
+            "de exclusión del art. 104.Tres. Revise también las exclusiones que el libro no puede inferir; "
+            "los volúmenes declarados siguen siendo la autoridad y no se sustituyen."
+        )
+    return CalculationSourceDiagnostic(
+        reason=reason,
+        source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
+        message=message,
+        asserted_legal_refs=("ley-37-1992:art-94", "ley-37-1992:art-104"),
+    )
 
 
 class ProrrataApplicabilityProjection(BaseModel):

@@ -921,6 +921,15 @@ application:
           mix of exempt and taxable activity.
         what_to_do: Check the VAT prorrata rules or ask your advisor, and apply the
           special prorrata if it is compulsory.
+      prorrata_volume_check_unavailable:
+        what: The annual ledger comparison is incomplete.
+        what_to_do: Classify the output operations and review the prorrata exclusions.
+      prorrata_volume_declaration_missing:
+        what: The ledger has output operations to compare with annual prorrata volumes.
+        what_to_do: Declare the annual volumes; the ledger does not replace them.
+      prorrata_volume_divergence:
+        what: Declared annual prorrata volumes differ from the classified ledger.
+        what_to_do: Review the volumes and exclusions. Declared figures remain authoritative.
       rate_boxes_underaccount_total:
         what: Part of the VAT total in box {box} is not placed in any rate box.
         what_to_do: Check the VAT rate on your invoices and records, then calculate

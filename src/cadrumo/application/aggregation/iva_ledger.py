@@ -88,7 +88,7 @@ from ...domain.calculations.registry.prorrata_vocabulary import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.classification import territorial_scope_alias
+from ...domain.iva.classification import InvoiceKind, territorial_scope_alias
 from ...domain.iva.errors import ProrrataInputError
 from ...domain.iva.establishment import (
     StatedCountryCodeStatus,
@@ -118,6 +118,7 @@ from ..prorrata_register.service import require_prorrata_register_coordinates_cu
 from . import _shared_issue_reasons
 from .business_proportion import business_proportion
 from .errors import AggregationValidationError
+from .invoice_kind import invoice_kind_for_direction
 
 
 class IvaLedgerAggregationIssueReason(StrEnum):
@@ -385,6 +386,7 @@ class IvaLedgerAggregation(BaseModel):
     prorrata_references: Sequence[ProrrataLedgerReference] = Field(default_factory=tuple)
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None
     issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
+    unclassified_output_ledger_ids: tuple[str, ...] = ()
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
     # Ledger ids of operator-tagged LIVA art. 104.Tres judgment exclusions
     # (foreign PE, non-habitual inmobiliario/financiero). The prorrata annual
@@ -720,6 +722,7 @@ def aggregate_iva_ledger_observations(
     prorrata_references: list[ProrrataLedgerReference] = []
     issues: list[IvaLedgerAggregationIssue] = []
     art_104_tres_excluded_ledger_ids: list[str] = []
+    unclassified_output_ledger_ids: list[str] = []
     from ._iva_transaction import classify_iva_transaction
 
     for transaction in transactions.values():
@@ -734,6 +737,13 @@ def aggregate_iva_ledger_observations(
         outcome = classify_iva_transaction(transaction, resolved_period=resolved_period, operation=operation)
         if outcome.gate_issue is not None:
             issues.append(outcome.gate_issue)
+            if invoice_kind_for_direction(
+                transaction.direction
+            ) is InvoiceKind.ISSUED and outcome.gate_issue.reason not in {
+                IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
+                IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            }:
+                unclassified_output_ledger_ids.append(transaction.transaction_id)
             continue
         if outcome.prorrata_issue is not None:
             issues.append(outcome.prorrata_issue)
@@ -754,6 +764,7 @@ def aggregate_iva_ledger_observations(
         prorrata_apportionment=prorrata_apportionment,
         issues=tuple(issues),
         art_104_tres_excluded_ledger_ids=tuple(art_104_tres_excluded_ledger_ids),
+        unclassified_output_ledger_ids=tuple(unclassified_output_ledger_ids),
     )
     _validate_investment_asset_authority(
         result.observations,
