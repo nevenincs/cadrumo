@@ -457,11 +457,9 @@ host, every terminal kind and the CLI passthrough therefore share one root
 whatever their working directory. The host adds no storage, log or Settings
 variable of its own.
 
-The webview profile directory is `desktop-webview` beneath the cache directory
-the query reports, which is the development tool cache location
-(`U/development/cache/tools` by default). The
-storage taxonomy declares a `webview` member (`U/webview`, override
-`CADRUMO_WEBVIEW_DIR`) for this profile, and the host does not read it yet. The
+The webview profile directory is the absolute path the query resolves for the
+storage taxonomy's `webview` member (`U/webview`, override
+`CADRUMO_WEBVIEW_DIR`), and the host refuses a projection without one. The
 window state, `window-state.json`, lives in the same directory: the host restores
 each window's size, position and maximized state when the window is ready,
 shrunk and moved to lie within a current display, and on close writes the

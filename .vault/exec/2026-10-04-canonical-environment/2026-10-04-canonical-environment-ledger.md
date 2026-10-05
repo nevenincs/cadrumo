@@ -3,42 +3,16 @@ tags:
   - '#exec'
   - '#canonical-environment'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:b6116f12fc109f9edf408c05a5baa8d523863968a3a827c303d808657e86a446'
+body_hash: 'sha256:949891059d4f0774213da9148122040cd5cd2b988332c6d3e6f855423086d78d'
 related:
   - "[[2026-10-04-canonical-environment-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `canonical-environment` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `src/cadrumo/core/storage_environment.py`
 - `S01` `M` `src/cadrumo/core/storage_taxonomy.py`
@@ -80,6 +54,18 @@ related:
 - `S02` `verify:` `native/platform builds and tests against generated contract.rs` -> `pass`
 - `S02` `verify:` `ruff, format, ty` -> `pass`
 - `S02` `by:` `CADRUMO-BUILD-RUNTIME`
+- `S04` `M` `native/desktop/src-tauri/src/python/environment.py`
+- `S04` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S04` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S04` `M` `native/CONTRACT.md`
+- `S04` `verify:` `desktop cargo clippy --locked --all-targets -D warnings -D clippy::all, with and without live-package-tests, build/webview-desktop-host snapshot` -> `pass`
+- `S04` `verify:` `desktop cargo test --locked without live tests (99, incl. relative webview projection refused)` -> `pass`
+- `S04` `verify:` `desktop cargo test --locked --features live-package-tests against a copy of smoke kit app build 1911: 114 of 115, the failure is docs staged_documentation PackageUnavailable because the package has no docs/user` -> `fail`
+- `S04` `verify:` `live relocated webview test: explicit root gives root joined with the contract subpath; absolute CADRUMO_WEBVIEW_DIR (operator_overridable) honoured` -> `pass`
+- `S04` `verify:` `falsifier: HEAD environment.rs and environment.py (tool-cache join) fail the webview test; a literal storage/webview join fails the override assertion` -> `pass`
+- `S04` `verify:` `ruff check and ruff format --check on python/environment.py; rustfmt --check on touched Rust files` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -92,3 +78,4 @@ related:
 - `S02` `TOOL_CACHE_ENV,` `TOOL_CACHE_DEFAULT` and legacy constants still emitted, now derived from declarations; S03 removes them with the pywin32 cache successor per the recorded packaging constraint
 - `S02` CMake dry-run unsupported by the MSBuild generator; regeneration evidence is the build log from the declared `native_contract` OUTPUT and storage DEPENDS glob
 - `S02` Committed by CADRUMO-BUILD-RUNTIME as 00f44b5ae1
+- `S04` The desktop host no longer reads the development tool cache. HEAD native/platform/src/lib.rs still pins `XDG_CACHE_HOME` to the tool cache (S03 scope). The fixed query still names `STORAGE_ROOT_FIELD` and keeps `storage_root_disagreement;` those S04 items stay open.

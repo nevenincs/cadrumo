@@ -7,7 +7,7 @@ pub mod single_instance;
 pub mod token;
 #[cfg(windows)]
 pub mod webview;
-mod window_state;
+pub mod window_state;
 
 use crate::{app::Commands, docs, environment::Launch};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};

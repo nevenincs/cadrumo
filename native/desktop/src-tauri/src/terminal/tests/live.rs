@@ -960,6 +960,24 @@ mod relocated {
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap()
     }
 
+    /// A fresh directory outside any project, so the package resolves in
+    /// installed mode.
+    fn outside_project(label: &str) -> Scratch {
+        let base = std::env::temp_dir().join(format!(
+            "cadrumo-{label}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        assert!(
+            !inside_project(&base),
+            "the temporary directory must lie outside any project for an installed-mode layout"
+        );
+        Scratch(base)
+    }
+
     fn settings_storage_names() -> Vec<String> {
         serde_json::from_value(contract()["storage_environment_allowlist"].clone()).unwrap()
     }
@@ -1049,19 +1067,7 @@ mod relocated {
 
     #[tokio::test]
     async fn every_child_kind_resolves_the_explicit_storage_root_from_any_directory() {
-        let base = std::env::temp_dir().join(format!(
-            "cadrumo-relocated-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        ));
-        assert!(
-            !inside_project(&base),
-            "the temporary directory must lie outside any project for an installed-mode layout"
-        );
-        let scratch = Scratch(base);
+        let scratch = outside_project("relocated");
         let package_root = scratch.0.join("package");
         relocate(&package(), &package_root);
         let explicit = scratch.0.join("storage");
@@ -1171,5 +1177,111 @@ mod relocated {
                 assert_ne!(values[1], explicit, "unpinned child in {directory:?}");
             }
         }
+    }
+
+    /// The storage member the generated contract declares for the webview
+    /// profile.
+    fn webview_member() -> serde_json::Value {
+        contract()["locations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|location| location["category"] == "desktop-webview")
+            .cloned()
+            .expect("the contract declares the desktop webview member")
+    }
+
+    /// Resolves a launch with the parent's storage variables replaced by `pins`.
+    async fn resolve_pinned(
+        package_root: &Path,
+        launch_directory: &Path,
+        pins: &[(&str, &Path)],
+    ) -> Launch {
+        let storage_names = settings_storage_names();
+        let mut environment: Vec<(OsString, OsString)> = std::env::vars_os()
+            .filter(|(key, _)| !storage_name(key, &storage_names))
+            .collect();
+        for (name, value) in pins {
+            assert!(
+                storage_names.iter().any(|owned| owned == name),
+                "{name} is not a storage variable"
+            );
+            environment.push(((*name).into(), (*value).into()));
+        }
+        let parent = Parent {
+            environment,
+            working_directory: launch_directory.to_owned(),
+        };
+        environment::resolve(
+            package_root.to_owned(),
+            &parent,
+            Arc::new(Diagnostics::default()),
+        )
+        .await
+        .unwrap()
+    }
+
+    /// The webview profile and the window state live in the declared storage
+    /// member beneath the explicit root, not under the development tool cache,
+    /// and an absolute override of that member is honoured.
+    #[tokio::test]
+    async fn the_webview_profile_and_window_state_live_in_the_declared_member() {
+        use crate::shell::window_state::{self, Placement};
+
+        let scratch = outside_project("webview");
+        let package_root = scratch.0.join("package");
+        relocate(&package(), &package_root);
+        let explicit = scratch.0.join("storage");
+        let launch_directory = scratch.0.join("launch");
+        fs::create_dir_all(&launch_directory).unwrap();
+        let member = webview_member();
+        let root = root_variable();
+
+        let launch = resolve_pinned(&package_root, &launch_directory, &[(&root, &explicit)]).await;
+        assert_eq!(launch.working_directory, explicit, "projected storage root");
+        assert_eq!(
+            launch.webview,
+            explicit.join(member["subpath"].as_str().unwrap()),
+            "webview profile"
+        );
+
+        // The window state round-trips through the record the shell opens there.
+        let record = launch.webview.join(window_state::FILE);
+        let placements = BTreeMap::from([(
+            "main".to_owned(),
+            Placement {
+                x: -1200,
+                y: 40,
+                width: 1440,
+                height: 900,
+                maximized: true,
+            },
+        )]);
+        window_state::save(&record, &placements).unwrap();
+        assert_eq!(window_state::load(&record), placements);
+        assert_eq!(
+            fs::read_dir(&launch.webview)
+                .unwrap()
+                .map(|entry| entry.unwrap().file_name())
+                .collect::<Vec<_>>(),
+            [window_state::FILE]
+        );
+
+        // The member is declared operator-overridable, so its absolute
+        // override moves the profile while the storage root stays put.
+        assert_eq!(member["override_policy"], "operator_overridable");
+        let variable = member["variable"].as_str().unwrap();
+        let elsewhere = scratch.0.join("elsewhere").join("profile");
+        let overridden = resolve_pinned(
+            &package_root,
+            &launch_directory,
+            &[(&root, &explicit), (variable, &elsewhere)],
+        )
+        .await;
+        assert_eq!(
+            overridden.working_directory, explicit,
+            "projected storage root"
+        );
+        assert_eq!(overridden.webview, elsewhere, "overridden webview profile");
     }
 }

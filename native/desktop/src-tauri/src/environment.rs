@@ -50,7 +50,8 @@ struct Projection {
     environment: BTreeMap<String, String>,
     storage: PathBuf,
     storage_variable: String,
-    cache: PathBuf,
+    /// The webview profile directory the storage taxonomy resolves.
+    webview: PathBuf,
     logs: PathBuf,
     log_file: PathBuf,
     log_format: String,
@@ -64,6 +65,7 @@ pub struct Launch {
     pub child: ChildConfiguration,
     /// The projected storage root; the child environment pins Settings to it.
     pub working_directory: PathBuf,
+    /// The webview profile directory, which also holds the window state.
     pub webview: PathBuf,
     pub diagnostics: Arc<Diagnostics>,
     /// The user's home directory, where interactive shells start.
@@ -134,7 +136,7 @@ pub async fn resolve(
     Ok(Launch {
         child,
         working_directory: projection.storage,
-        webview: projection.cache.join("desktop-webview"),
+        webview: projection.webview,
         diagnostics,
         home: projection.home,
         package_root: root,
@@ -244,8 +246,15 @@ async fn project(
     };
     let projection: Projection = serde_json::from_slice(&output)
         .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
-    if ![
-        &projection.cache,
+    if !admissible(&projection, &contract.storage_environment_allowlist) {
+        return Err(failure(ErrorCode::EnvironmentFailed));
+    }
+    Ok((executable, projection, layout))
+}
+
+fn admissible(projection: &Projection, settings_storage_names: &[String]) -> bool {
+    [
+        &projection.webview,
         &projection.storage,
         &projection.logs,
         &projection.log_file,
@@ -253,18 +262,14 @@ async fn project(
     ]
     .iter()
     .all(|path| path.is_absolute())
-        || projection.log_file.parent() != Some(projection.logs.as_path())
-        || projection.log_format.is_empty()
-        || projection.output_language.is_empty()
-        || !projection
+        && projection.log_file.parent() == Some(projection.logs.as_path())
+        && !projection.log_format.is_empty()
+        && !projection.output_language.is_empty()
+        && projection
             .output_language
             .bytes()
             .all(|byte| byte.is_ascii_lowercase())
-        || !pins_storage(&projection, &contract.storage_environment_allowlist)
-    {
-        return Err(failure(ErrorCode::EnvironmentFailed));
-    }
-    Ok((executable, projection, layout))
+        && pins_storage(projection, settings_storage_names)
 }
 
 /// Every child must carry the resolved root under the Settings-owned name, or
@@ -306,7 +311,7 @@ mod tests {
             "environment": environment,
             "storage": "C:/state/var/storage",
             "storage_variable": "CADRUMO_LOCAL_STORAGE_ROOT",
-            "cache": "C:/state/var/storage/cache",
+            "webview": "C:/state/var/storage/webview",
             "logs": "C:/state/var/storage/logs",
             "log_file": "C:/state/var/storage/logs/cadrumo.log",
             "log_format": "%(message)s",
@@ -338,6 +343,25 @@ mod tests {
         ] {
             assert!(!pins_storage(&projection(unpinned), &owned));
         }
+    }
+
+    #[test]
+    fn a_projection_with_a_relative_webview_location_is_refused() {
+        let owned = ["CADRUMO_LOCAL_STORAGE_ROOT".to_owned()];
+        // Absolute on the running platform, so only the webview field varies.
+        let storage = std::env::temp_dir().join("state");
+        let mut admitted = projection(serde_json::json!({
+            "CADRUMO_LOCAL_STORAGE_ROOT": storage.to_string_lossy(),
+        }));
+        admitted.logs = storage.join("logs");
+        admitted.log_file = admitted.logs.join("cadrumo.log");
+        admitted.home = std::env::temp_dir();
+        admitted.webview = storage.join("webview");
+        admitted.storage = storage;
+        assert!(admissible(&admitted, &owned));
+        let mut relative = admitted;
+        relative.webview = PathBuf::from("webview");
+        assert!(!admissible(&relative, &owned));
     }
 
     // Launch does not carry these facts until their consumers land; this keeps

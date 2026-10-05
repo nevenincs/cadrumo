@@ -8,7 +8,9 @@ from pathlib import Path
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.i18n.render import output_language
 from cadrumo.core.logging import LOG_FILE_FORMAT, default_log_file_path
-from cadrumo.core.storage_environment import configured_storage_root, tool_storage_environment
+from cadrumo.core.storage_environment import configured_storage_root
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 
 STORAGE_ROOT_FIELD = "cadrumo_local_storage_root"
 storage_variable = STORAGE_ROOT_FIELD.upper()
@@ -28,7 +30,7 @@ json.dump(
         environment=environment,
         storage=str(storage),
         storage_variable=storage_variable,
-        cache=tool_storage_environment()["XDG_CACHE_HOME"],
+        webview=str(storage_path(StorageCategory.DESKTOP_WEBVIEW, settings=settings)),
         logs=str(log_file.parent),
         log_file=str(log_file),
         log_format=LOG_FILE_FORMAT,

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1fddf00e085257190b0f764b1b7b90bfbd3fc12cfcc9b9629bcec24eee5c05d'
+body_hash: 'sha256:fad2189e0457b665e9c50a1c3a5d839e220614b8ae4382f9dab1fd275d5969f7'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -363,6 +363,9 @@ related:
 - `S11` `verify:` `git apply --cached --check of the S11-only patch against a temporary HEAD index` -> `pass`
 - `S11` `verify:` `npx prettier --check on the desktop tree` -> `pass`
 - `S11` `by:` `vaultspec-high-executor`
+- `S07` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S07` `verify:` `live relocated test: window-state.json saves and loads in Launch.webview, the declared webview member under the explicit root` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
 
 ## Notes
 
