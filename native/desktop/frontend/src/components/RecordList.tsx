@@ -359,7 +359,10 @@ export const RecordList = memo(function RecordList({
 
   return (
     <div
-      className="logview @container flex min-h-0 flex-1 flex-col bg-background"
+      // Where the panel is too short for the bar and a few records, as at a
+      // large text size in a small window, the whole view scrolls instead
+      // of the records being squeezed out.
+      className="logview @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background"
       hidden={!shown}
       role="tabpanel"
       id="panel-logs"
@@ -503,7 +506,7 @@ export const RecordList = memo(function RecordList({
         </Alert>
       )}
       <div
-        className="logview-list min-h-0 flex-1 overflow-auto pt-1 pb-2 font-mono text-sm leading-relaxed select-text"
+        className="logview-list min-h-10 flex-1 overflow-auto pt-1 pb-2 font-mono text-sm leading-relaxed select-text"
         ref={list}
         role="log"
         aria-live="off"

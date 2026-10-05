@@ -353,3 +353,32 @@ test("the palette's first section is the documentation's while a query searches 
     label("desktop.rail.logs"),
   );
 });
+
+test("a small window at twice the text size keeps every area inside it", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1024, height: 640 });
+  await open(target, "signed-in");
+  // The text size a person sets reaches the page as its root font size; the
+  // shell reads its floors again when the window reports a resize.
+  await target.addStyleTag({ content: "html { font-size: 200% }" });
+  await target.evaluate(() => window.dispatchEvent(new Event("resize")));
+  await openLogs(target);
+  await expect(target.locator(".logview-list .record").last()).toBeVisible();
+  const boxes = await target.evaluate(() => {
+    const box = (selector: string) =>
+      document.querySelector(selector)?.getBoundingClientRect();
+    return {
+      main: box(".main-area")?.height ?? 0,
+      panelBottom: box("section.panel")?.bottom ?? 0,
+      list: box(".logview-list")?.height ?? 0,
+      window: window.innerHeight,
+      scrolled: document.documentElement.scrollTop,
+    };
+  });
+  // Neither floor fits, so the two share the height: both stay on screen.
+  expect(boxes.panelBottom).toBeLessThanOrEqual(boxes.window);
+  expect(boxes.main).toBeGreaterThan(boxes.window / 3);
+  expect(boxes.list).toBeGreaterThanOrEqual(40);
+  expect(boxes.scrolled).toBe(0);
+});

@@ -1071,7 +1071,12 @@ export function App({ host }: { host: Host }) {
   );
 
   const clampPanel = (height: number) =>
-    Math.max(panelMin, Math.min(viewportHeight - docsMin, height));
+    // A window too short for both floors, as a small one at a large text
+    // size is, shares its height between them in proportion: neither the
+    // documentation nor the panel is pushed out of the window.
+    viewportHeight < docsMin + panelMin
+      ? Math.round((viewportHeight * panelMin) / (docsMin + panelMin))
+      : Math.max(panelMin, Math.min(viewportHeight - docsMin, height));
   const panelHeight = clampPanel(
     Math.round(layout.panelRatio * viewportHeight),
   );
@@ -1345,7 +1350,7 @@ export function App({ host }: { host: Host }) {
           />
           <div className="flex min-h-0 min-w-0 flex-col">
             <main
-              className="main-area flex min-h-(--docs-min) flex-auto"
+              className="main-area flex min-h-0 flex-auto"
               hidden={maximized === "panel"}
             >
               <Split
