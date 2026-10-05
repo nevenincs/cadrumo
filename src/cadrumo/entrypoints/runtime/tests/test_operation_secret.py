@@ -16,9 +16,13 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
-from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
+from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
+    PROFILE_INPUT,
+    administration_subject,
+)
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
@@ -64,6 +68,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 
 from ....adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .test_modelo_metadata import _issue_scoped_key
 
 pytestmark = [
     pytest.mark.integration,
@@ -93,19 +98,29 @@ class _LoginObservation:
 
 def test_original_tui_export_secret_is_one_use_and_server_refuses_mcp_before_bytes(tmp_path: Path) -> None:
     """Wrong peers cannot answer the copied requirement; genuine export settles."""
-    with worker_profiles(tmp_path) as (root, targets):
-        profile_id = targets[0][0].binding.profile_id
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsRuntimeEndpoint(storage_root=root)
+    installation = runtime_installation(
+        storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+    )
+    with administration_subject(
+        tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
+    ) as subject:
+        profile_id = subject.store.binding.profile_id
         destination = tmp_path / "private-transfer.bundle"
-        endpoint = WindowsRuntimeEndpoint(storage_root=root)
-        runtime_installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
-        stop, boot, native = Event(), uuid4(), MemoryNativePort()
+        # The runtime admits an MCP frontend by API key only, so the peer that
+        # must be refused before the protected frame holds a genuine key.
+        api_key = _issue_scoped_key(subject)
+        close_active_bucket_session()
+        stop, boot = Event(), uuid4()
         profiles = RuntimeProfileConnections(
             storage_root=root,
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
             capture_login=lambda _channel: _LoginObservation(),
-            secret_store=lambda: native,
+            secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
         server = RetainedRuntimeTransportServer(
@@ -175,9 +190,9 @@ def test_original_tui_export_secret_is_one_use_and_server_refuses_mcp_before_byt
                                 request_id=uuid4(),
                                 profile_id=profile_id,
                                 frontend=OperationFrontendProjection.MCP,
-                                method="password",
+                                method="api_key",
                             ),
-                            bytearray(PROFILE_INPUT.encode()),
+                            bytearray(api_key),
                             deadline=deadline,
                         )
                         assert isinstance(login, RuntimeProfileStatus)
