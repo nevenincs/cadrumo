@@ -57,6 +57,7 @@ PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SES
 #: declared once in the taxonomy and read here rather than typed at the writer.
 PROFILE_SESSION_RETIREMENT_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION_RETIREMENT).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
+SIGN_IN_GENERATION_FILENAME = storage_location(StorageCategory.KEYSTORE_SIGN_IN_GENERATION).subpath
 #: The three owner directories below the hold-evidence root, each the home of one
 #: persisted format. Declared as whole taxonomy subpaths (``<root>``-relative,
 #: two components) rather than as bare leaf names, so the grammars below spell
@@ -324,6 +325,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         owner="cadrumo.adapters.persistence.storage.master_key",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=LOGIN_THROTTLE_FILENAME,
+    ),
+    StoragePathDefinition(
+        key="sign_in_generation",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{SIGN_IN_GENERATION_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=SIGN_IN_GENERATION_FILENAME,
     ),
     # The three custody hold-evidence records. Each is one file per profile
     # under its own owner directory, each carries its own schema version, and

@@ -189,6 +189,7 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
     "profile_session": "<root>/keystore/<bucket_id>/session.v2.json",
     "profile_session_retirement_journal": "<root>/keystore/<bucket_id>/session.v2.retirement.json",
     "login_throttle": "<root>/keystore/<bucket_id>/login-throttle.json",
+    "sign_in_generation": "<root>/keystore/<bucket_id>/sign-in-generation.json",
     "profile_legal_hold_snapshot": "<root>/profile-custody-holds/legal-case-owner/<profile_id>.json",
     "profile_filing_retention_snapshot": ("<root>/profile-custody-holds/filing-retention-owner/<profile_id>.json"),
     "profile_custody_hold_evidence": ("<root>/profile-custody-holds/derived-evidence/<owner>/<profile_id>.json"),

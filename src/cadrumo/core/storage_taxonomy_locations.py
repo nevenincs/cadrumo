@@ -804,6 +804,19 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    _location(
+        # The durable revocation fence for receipt resume. Deleting it would
+        # let an undeleted receipt outlive a sign-out, so no lifecycle that
+        # reclaim may delete applies to it.
+        StorageCategory.KEYSTORE_SIGN_IN_GENERATION,
+        "sign-in-generation.json",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
+        node_kind=StorageNodeKind.FILE,
+        scope=StorageScope.KEYSTORE_RELATIVE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
 )
 
 

@@ -296,6 +296,7 @@ class StorageCategory(StrEnum):
     KEYSTORE_PROFILE_SESSION = "keystore.profile-session"
     KEYSTORE_PROFILE_SESSION_RETIREMENT = "keystore.profile-session-retirement"
     KEYSTORE_LOGIN_THROTTLE = "keystore.login-throttle"
+    KEYSTORE_SIGN_IN_GENERATION = "keystore.sign-in-generation"
 
 
 class StorageLocation(BaseModel):

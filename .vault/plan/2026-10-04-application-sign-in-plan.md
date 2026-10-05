@@ -6,9 +6,9 @@ date: '2026-10-04'
 tier: L2
 related:
   - '[[2026-10-04-application-sign-in-adr]]'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:3bf5227212f3d44aeedab2ea88487db7257d75b963bc7b7a1c024ff1abdb18e2'
+body_hash: 'sha256:dee8094f50f4e9f30d837fc2ca76d372a0ef88d582ce653464d85b669ac300a4'
 ---
 
 # `application-sign-in` plan
@@ -40,8 +40,8 @@ Ownership: runtime and client source under `src/cadrumo/**`, owned by this works
 Runtime-owned shared sign-in: three-state lock observation, durable generation, bound receipt, ordered mint, proof-only borrowing, lock-down, global sign-out, status and typed refusals.
 
 - [x] `P01.S01` - Report OS lock state as locked, unlocked or unknown in every login observer and make admission and lock-down consume the three states; `src/cadrumo/adapters/local_runtime/windows_login.py, linux_login.py, macos_login.py, login_policy.py, application/user_profile session authority consumers, owning tests`.
-- [ ] `P01.S02` - Add the durable per-profile human sign-in generation record outside the encrypted bucket, fsynced before any receipt deletion, refusing resume when missing or unreadable, and register it in the storage taxonomy; `src/cadrumo/adapters/persistence/storage/custody/ new generation module beside automation_profile_lock.py, storage taxonomy owner, owning tests`.
-- [ ] `P01.S03` - Bind the receipt to the originating login_id and sign-in generation under a new schema_version in session.v2.json, keeping the v2 keychain service and sending older schemas to the delete-only path; `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py, owning tests`.
+- [x] `P01.S02` - Add the durable per-profile human sign-in generation record outside the encrypted bucket, fsynced before any receipt deletion, refusing resume when missing or unreadable, and register it in the storage taxonomy; `src/cadrumo/adapters/persistence/storage/custody/ new generation module beside automation_profile_lock.py, storage taxonomy owner, owning tests`.
+- [ ] `P01.S03` - Bind the receipt to the originating login_id and sign-in generation under a new schema_version in session.v2.json, keeping the v2 keychain service and sending older schemas to the delete-only path; `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py, acceleration_receipt_crypto.py, the mint chain (entrypoints/runtime/profile_login.py, application/user_profile/login_session.py, login_session_port.py, adapters/persistence/storage/profile_login_session.py) with legacy in-process login no longer persisting receipts, owning tests`.
 - [ ] `P01.S04` - Mint the receipt only after session publication, under the admission guard, stamped with the generation captured at publication and discarded if the session is no longer published; `src/cadrumo/entrypoints/runtime/session_owner.py, profile_login.py, src/cadrumo/application/user_profile/session_authority_admission.py, owning tests`.
 - [ ] `P01.S05` - Make receipt borrowing proof-only so clients read only the keychain proof and locator while the runtime verifies, unwraps and deletes; `src/cadrumo/adapters/local_runtime/frontend_client.py, acceleration_receipt.py, src/cadrumo/application/user_profile/login_session.py, owning tests`.
 - [ ] `P01.S06` - Advance the generation and delete the receipt on lock everywhere, positive OS lock and logout evidence, password rotation or reset, recovery and profile deletion, and sweep receipts whose bound login is positively gone; `src/cadrumo/application/user_profile/session_authority_lifecycle.py, automation_lifecycle_service.py, src/cadrumo/entrypoints/runtime/profile_host.py, profile_connections.py, owning tests`.

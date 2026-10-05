@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:0bcdb4cd0412bb3d1c71e530c397e1e95c19d2b5b40d077af437555340e8fb8a'
+body_hash: 'sha256:1c210df07a037c7a1416cdc4ee4279d55e03562eb6847d6d464e2f289b844c15'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -118,7 +118,19 @@ related:
 - `S01` `verify:` `ruff check and format --check on 73 files` -> `pass`
 - `S01` `verify:` `just check-types` -> `pass`
 - `S01` `verify:` `just check-import-boundaries` -> `fail`
+- `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/sign_in_generation.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_sign_in_generation.py`
+- `S02` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S02` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/storage_path_definitions.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/tests/test_storage_path_directory_agreement_gate.py`
+- `S02` `verify:` `focused custody and taxonomy pytest 126 passed` -> `pass`
+- `S02` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
+- `S02` `verify:` `just check-persistence-write-paths and check-secure-store-write-paths` -> `pass`
+- `S02` `verify:` `just check-module-reachability (alone)` -> `fail`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
 - `S01` Import-boundary gate reported unavailable because the governed tree changed mid-run; its findings name no touched file. Four unrelated test failures came from other writers' in-progress journal and label repository edits and passed when rerun alone. Mixed-owner files committed with only the lock-state hunks.
+- `S02` Reachability is red only until P01.S03 consumes the module; S03 lands in the next commit and its reachability run passes. Import gate failed on 44 findings in other writers' files plus a mid-run tree change. Record kept in the keystore beside the receipt and throttle, since .automation-v1 is cleared on automation retirement; value is lineage plus counter so an unreadable record can be repaired without reusing an issued generation. Taxonomy files committed with only this Step's hunks.
