@@ -105,13 +105,13 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_run_local_server:GoogleAuthNetworkError:OAuth client config refused: {value}": _contract(
+    "oauth_flow:_run_local_server:GoogleAuthNetworkError:OAuth client config refused": _contract(
         GoogleAuthPreconditionCondition.OAUTH_CLIENT_CONFIG_VALID,
         (("oauth_client_config_valid", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_run_local_server:GoogleAuthLoopbackBindError:loopback receiver failed to bind: {value}": _contract(
+    "oauth_flow:_run_local_server:GoogleAuthLoopbackBindError:loopback receiver failed to bind": _contract(
         GoogleAuthPreconditionCondition.LOOPBACK_RECEIVER_BOUND,
         (("loopback_receiver_bound", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -123,19 +123,19 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "oauth_flow:_raise_local_server_error:GoogleAuthBrowserOpenError:OS browser launcher refused: {value}": _contract(
+    "oauth_flow:_raise_local_server_error:GoogleAuthBrowserOpenError:OS browser launcher refused": _contract(
         GoogleAuthPreconditionCondition.BROWSER_LAUNCHER_AVAILABLE,
         (("browser_launcher_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth endpoint unreachable: {value}": _contract(
+    "oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth endpoint unreachable": _contract(
         GoogleAuthPreconditionCondition.OAUTH_ENDPOINT_REACHABLE,
         (("oauth_endpoint_reachable", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth local server flow failed: {value}": _contract(
+    "oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth local server flow failed": _contract(
         GoogleAuthPreconditionCondition.OAUTH_FLOW_COMPLETED,
         (("oauth_flow_completed", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -153,21 +153,27 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_decode_email_from_id_token:GoogleAuthNetworkError:id_token verification failed: {value}": _contract(
+    "oauth_flow:_decode_email_from_id_token:GoogleAuthNetworkError:id_token verification failed": _contract(
         GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_VERIFIED,
         (("id_token_verified", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_decode_email_from_id_token:GoogleAuthScopeInsufficientError:id_token verified but carries no `email` claim": _contract(
-        GoogleAuthPreconditionCondition.IDENTITY_EMAIL_PRESENT,
-        (("id_token_email_present", "False"),),
+    "oauth_flow:_decode_email_from_id_token:GoogleAuthValidationError:id_token carries incomplete or uncorrelated identity claims": _contract(
+        GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_VERIFIED,
+        (("id_token_verified", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
     "oauth_flow:_oauth_loopback_records:GoogleAuthValidationError:Google completed the consent without issuing a refresh token": _contract(
         GoogleAuthPreconditionCondition.REFRESH_CREDENTIAL_ISSUED,
         (("refresh_token_issued", "False"),),
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        NoRecoveryOutcome.SAFETY,
+    ),
+    "oauth_flow:_oauth_loopback_records:GoogleAuthScopeInsufficientError:Google did not confirm the exact required scope grant": _contract(
+        GoogleAuthPreconditionCondition.REQUIRED_SCOPES_GRANTED,
+        (("required_scopes_granted", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
@@ -430,7 +436,8 @@ def test_local_oauth_external_refusals_have_exact_runtime_safety_verdicts(
     with pytest.raises(GoogleAuthError) as raised:
         _raise_local_server_error(upstream)
 
-    assert raised.value.__cause__ is upstream
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     _assert_terminal_contract(
         raised.value,
         condition=condition,
@@ -443,7 +450,9 @@ def test_local_oauth_external_refusals_have_exact_runtime_safety_verdicts(
 def test_missing_identity_assertion_has_an_exact_runtime_safety_verdict() -> None:
     credentials = Credentials(token="short-lived-access-token")
     with pytest.raises(GoogleAuthError) as raised:
-        _decode_email_from_id_token(credentials, audience="desktop-client.apps.googleusercontent.com")
+        _decode_email_from_id_token(
+            credentials, audience="desktop-client.apps.googleusercontent.com", expected_nonce="synthetic-nonce"
+        )
 
     _assert_terminal_contract(
         raised.value,

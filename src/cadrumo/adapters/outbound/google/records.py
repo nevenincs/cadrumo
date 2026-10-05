@@ -151,7 +151,7 @@ class OAuthToken(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    refresh_token: str = Field(min_length=1)
+    refresh_token: str = Field(min_length=1, repr=False)
     client_id: str = Field(min_length=1)
     token_uri: OAuthTokenUri
 

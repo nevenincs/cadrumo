@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import ast
 import http.client
-import inspect
 import subprocess
 import sys
 import textwrap
@@ -17,7 +15,6 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow, WSGITimeoutError
 from pydantic import ValidationError
 
 from .....application.user_profile.capsule_record import ProfileRecordIntegrityError
@@ -34,7 +31,6 @@ from ..errors import (
     GoogleAuthValidationError,
 )
 from ..oauth_flow import (
-    _LOOPBACK_HOST,
     _oauth_loopback_client_config,
     _oauth_loopback_records,
     _raise_local_server_error,
@@ -119,7 +115,8 @@ def test_local_server_error_classifier_routes_browser_failures() -> None:
     with pytest.raises(GoogleAuthBrowserOpenError) as raised:
         _raise_local_server_error(upstream)
 
-    assert raised.value.__cause__ is upstream
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.browser_launcher_refused"
 
 
@@ -129,7 +126,8 @@ def test_local_server_error_classifier_routes_network_failures() -> None:
     with pytest.raises(GoogleAuthNetworkError) as raised:
         _raise_local_server_error(upstream)
 
-    assert raised.value.__cause__ is upstream
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.endpoint_unreachable"
 
 
@@ -139,7 +137,8 @@ def test_local_server_error_classifier_wraps_unclassified_failures() -> None:
     with pytest.raises(GoogleAuthNetworkError) as raised:
         _raise_local_server_error(upstream)
 
-    assert raised.value.__cause__ is upstream
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     assert raised.value.context == {"error_type": "RuntimeError"}
 
 
@@ -288,7 +287,11 @@ def test_a_consent_that_issues_no_refresh_token_is_refused_before_identity_is_re
         # CAST-RATIONALE-thirdparty: the real credentials class leaves the attributes the
         # flow's credential protocol names unannotated, so it does not satisfy it structurally.
         _oauth_loopback_records(
-            cast("OAuthCredentials", credentials), _valid_oauth_client(), before_handoff=None, acknowledged=None
+            cast("OAuthCredentials", credentials),
+            _valid_oauth_client(),
+            before_handoff=None,
+            acknowledged=None,
+            expected_nonce="synthetic-nonce",
         )
 
     error = refused.value
@@ -299,36 +302,6 @@ def test_a_consent_that_issues_no_refresh_token_is_refused_before_identity_is_re
     assert verdict.failed_condition_id == GoogleAuthPreconditionCondition.REFRESH_CREDENTIAL_ISSUED.value
     assert dict(verdict.evidence[0].values) == {"refresh_token_issued": False}
     assert "synthetic-access-value" not in str(error)
-
-
-def test_consent_redirect_is_received_on_the_loopback_ip_literal() -> None:
-    """The listener binds, and Google redirects to, 127.0.0.1 rather than a resolved host name."""
-    assert _LOOPBACK_HOST == "127.0.0.1"
-    consent_calls = [
-        node
-        for node in ast.walk(ast.parse(inspect.getsource(oauth_flow)))
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "run_local_server"
-    ]
-    assert len(consent_calls) == 2
-    for call in consent_calls:
-        hosts = [keyword.value for keyword in call.keywords if keyword.arg == "host"]
-        assert [ast.unparse(host) for host in hosts] == ["_LOOPBACK_HOST"]
-
-    # The real flow, given that host, listens there and names it in the redirect.
-    flow = InstalledAppFlow.from_client_config(
-        _oauth_loopback_client_config(_valid_oauth_client()), scopes=list(REQUIRED_SCOPES)
-    )
-    with pytest.raises(WSGITimeoutError):
-        flow.run_local_server(
-            host=_LOOPBACK_HOST,
-            port=0,
-            open_browser=False,
-            authorization_prompt_message=None,
-            timeout_seconds=0.2,
-        )
-    assert flow.redirect_uri is not None
-    redirect = urlsplit(flow.redirect_uri)
-    assert redirect.scheme == "http" and redirect.hostname == "127.0.0.1" and redirect.port
 
 
 class _BrowserStandIn:

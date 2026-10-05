@@ -238,6 +238,7 @@
         "cadrumo.adapters.outbound.google.google_configuration_admission",
         "cadrumo.adapters.outbound.google.google_configuration_refusal",
         "cadrumo.adapters.outbound.google.installation_client",
+        "cadrumo.adapters.outbound.google.oauth_callback",
         "cadrumo.adapters.outbound.google.oauth_flow",
         "cadrumo.adapters.outbound.google.records",
         "cadrumo.adapters.outbound.google.root_folder",
