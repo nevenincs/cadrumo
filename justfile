@@ -561,20 +561,17 @@ build-packaging-cohort: test-packaging-source
 # The expression keys on `serial` alone rather than on `integration and serial`:
 # two serial contracts here carry `unit`, and the narrower expression left them
 # owned by nothing that runs them -- selected by the preflight lane, held out
-# of it by the scheduler, and outside this one. `perf` is deliberately NOT
-# excluded: this recipe is the serving-path benchmark's only owner, and
-# narrowing it away from that cohort makes those tests unreachable. Guarded by
+# of it by the scheduler, and outside this one. Guarded by
 # `dev/packaging/tests/test_preflight_recipe_selection.py`.
 [doc('Run the portable packaging campaign against one sealed temporary cohort.')]
 [group('test')]
 test-packaging-portable:
     @uv run --no-sync python -m dev.packaging.campaign --profile portable
 
-[doc('Run the CI packaging campaign and the held-out performance contracts.')]
+[doc('Run the CI packaging campaign against one sealed temporary cohort.')]
 [group('test')]
 test-packaging-ci:
     @uv run --no-sync python -m dev.packaging.campaign --profile ci
-    @uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
 
 # `windows_only` is excluded because the one such case here drives the
 # development environment's installed launchers, not the sealed cohort, and

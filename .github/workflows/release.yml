@@ -315,10 +315,6 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-channel-artifacts
 
-      - name: Packaging performance contracts
-        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
-        run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" dev/packaging/tests
-
       - name: Future-directive policy
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash

@@ -25,11 +25,10 @@ SOME invocation, and the campaign driver's own passes must cover it without
 help from the justfile. An invocation may narrow its selection freely,
 provided the remainder has a named owner.
 
-``perf`` is the one marker-grounded exclusion. Its registered policy in
-``pyproject.toml`` states it is held out of every per-push lane and enrolled
-explicitly in a selection only a dispatch-triggered release run reaches, so
-it is excluded by that
-declared policy rather than by a per-test allowlist.
+No marker is subtracted from that invariant. Every invocation here excludes
+``perf`` under the policy registered in ``pyproject.toml``, so a ``perf`` test
+written into this directory is owned by nothing until an invocation enrols it,
+and the coverage cases below fail until one does.
 
 Selection is not the only way a test disappears. ``serial`` items are
 DESELECTED at collection whenever xdist workers are active, behind a warning
@@ -107,7 +106,6 @@ _ANCHOR_RECIPES: Final = frozenset(
         "test-packaging-contracts",
         "test-installed-oracles",
         "test-packaging-serial",
-        "test-packaging-ci",
     },
 )
 
@@ -604,8 +602,7 @@ def test_the_pass_argument_reader_refuses_an_argv_it_cannot_offset(argv: list[st
     assert "does not start with the pytest invocation prefix" in message, message
 
 
-#: Per-surface floors for the invocation census. Live: four justfile recipes
-#: and three campaign driver passes. Stated per surface because the census
+#: Per-surface floors for the invocation census. Stated per surface because the census
 #: is the SUM of two independent readers -- a justfile parse and a campaign
 #: driver walk -- and either can stop yielding while the other carries the
 #: total past any combined floor.
@@ -666,12 +663,6 @@ def test_every_serial_test_here_is_run_by_some_single_process_invocation() -> No
     workers contributes nothing here, because what it contributes is a
     warning; only an invocation that can actually run the test counts as its
     owner.
-
-    The ``perf`` cohort is NOT subtracted here, unlike in the selection
-    assertions. That exclusion is a policy about which lanes ENROL the
-    benchmark, and the whole benchmark cohort is serial: subtracting it would
-    let its only single-process owner narrow away from it and leave seven
-    tests that nothing anywhere runs.
     """
     serial_cohort = _directory_selection("serial")
 
@@ -738,16 +729,14 @@ def test_the_campaign_driver_passes_alone_own_every_test_in_this_directory() -> 
     nobody runs on a release leg would otherwise hide the driver's own hole.
     """
     everything = _directory_selection("")
-    held_out_by_policy = _directory_selection("perf")
 
     assert everything, "collected nothing for the whole directory"
-    assert held_out_by_policy < everything, "the perf policy exclusion must be a proper subset"
 
     owned: set[str] = set()
     for invocation in campaign_pytest_passes(None):
         owned |= _collect(f"'{invocation.name}'", invocation.arguments)
 
-    unowned = everything - held_out_by_policy - owned
+    unowned = everything - owned
 
     assert not unowned, (
         f"{len(unowned)} test(s) in {_TARGET_DIRECTORY} are selected by no campaign pass, so the packaging "
@@ -756,14 +745,13 @@ def test_the_campaign_driver_passes_alone_own_every_test_in_this_directory() -> 
 
 
 def test_the_invocations_together_own_every_test_in_this_directory() -> None:
-    """Every non-perf test here is selected by some recipe or campaign pass.
+    """Every test here is selected by some recipe or campaign pass.
 
     An invocation may narrow its own selection, but the remainder must have a
     named owner, so no test can be dropped by a marker expression without
     another invocation picking it up.
     """
     everything = _directory_selection("")
-    held_out_by_policy = _directory_selection("perf")
 
     assert everything, "collected nothing for the whole directory"
 
@@ -771,7 +759,7 @@ def test_the_invocations_together_own_every_test_in_this_directory() -> None:
     for invocation in packaging_pytest_invocations():
         owned |= _collect(f"'{invocation.name}'", invocation.arguments)
 
-    unowned = everything - held_out_by_policy - owned
+    unowned = everything - owned
 
     assert not unowned, (
         f"{len(unowned)} test(s) in {_TARGET_DIRECTORY} are selected by no justfile recipe and no campaign "

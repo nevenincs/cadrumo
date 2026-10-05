@@ -273,8 +273,8 @@ class PytestPass:
 #:
 #: Split because the directory holds both cohorts and one invocation cannot
 #: carry both schedulers. Together with the installed-oracle pass below they
-#: own every test in the directory except the ``perf`` holdout, which is the
-#: invariant ``dev/packaging/tests/test_preflight_recipe_selection.py`` proves.
+#: own every test in the directory, which is the invariant
+#: ``dev/packaging/tests/test_preflight_recipe_selection.py`` proves.
 _PREFLIGHT_PASSES: Final[tuple[PytestPass, ...]] = (
     PytestPass(
         label="preflight-tests",
