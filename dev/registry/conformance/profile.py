@@ -112,6 +112,11 @@ from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
 )
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries as _xml_dictionary_entries
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority as _CandidateFactAuthority
+from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource as _GovernedFactSource
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    validating_governed_facts as _validating_governed_facts,
+)
 from cadrumo.domain.calculations.registry.ids import BindingId as _BindingId
 from cadrumo.domain.calculations.registry.ids import FormulaId as _FormulaId
 from cadrumo.domain.calculations.registry.ids import LegalRefId as _LegalRefId
@@ -119,7 +124,9 @@ from cadrumo.domain.calculations.registry.ids import ModeloId as _ModeloId
 from cadrumo.domain.calculations.registry.ids import RelationId as _RelationId
 from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
 from cadrumo.domain.calculations.registry.ids import SourceRefId as _SourceRefId
-from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
+from cadrumo.domain.calculations.registry.modelo_obligation_scope import (
+    resolve_modelo_obligation_scope as _resolve_modelo_obligation_scope,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
@@ -135,9 +142,13 @@ from dev.registry.compiler.producer_inventory import CasillaProducerKind as _Cas
 from dev.registry.compiler.producer_inventory import producer_inventory
 
 from ..compiler.authority import compile_validated_authority as _compile_validated_authority
+from ..compiler.fact_providers import compile_authored_fact_catalogue as _compile_authored_fact_catalogue
 from ..compiler.identity import resolve_registry_identity as _resolve_registry_identity
 from ..compiler.loader import (
     load_registry_tree as _load_registry_tree,
+)
+from ..compiler.loader import (
+    load_shared_catalogues as _load_shared_catalogues,
 )
 from ..compiler.loader_fingerprints import (
     collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
@@ -1188,6 +1199,12 @@ def build_registry_conformance_profile(
     )
 
 
+def _non_registry_modelo_codes(authority: _GovernedFactSource) -> frozenset[str]:
+    """Resolve the declared non-registry Modelo codes from the audited authority."""
+    _out_of_scope, non_registry_modelos = _resolve_modelo_obligation_scope(authority=authority)
+    return frozenset(item.value for item in non_registry_modelos)
+
+
 def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConformanceProfile:
     """Compose the conformance profile for the bundled registry tree.
 
@@ -1213,26 +1230,32 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
     """
     registry_root = _bundled_path("registry", "aeat")
     inventory = _load_bundled_external_oracle_inventory()
-    non_registry_codes = frozenset(item.value for item in _NON_REGISTRY_MODELOS)
     if not validate:
-        modelos, _catalogues = _load_registry_tree(registry_root)
-        known_codes = frozenset(modelo.id for modelo in modelos)
-        return build_registry_conformance_profile(
-            modelos,
-            external_grounding=_build_external_grounding_audit(
-                modelos,
-                inventory=inventory,
-                registry_validated=False,
-            ),
-            classification=_build_classification_coherence_audit(
-                modelos,
-                non_registry_modelo_codes=non_registry_codes,
-                known_modelo_codes=known_codes,
-                registry_validated=False,
-            ),
-            scope_diagnostics=_validate_registry_scope(modelos),
-            registry_validated=False,
+        # The tree's own authored facts answer every governed-vocabulary read, so
+        # the degraded read depends on no published generation and no ambient scope.
+        candidate_facts = _CandidateFactAuthority(
+            _compile_authored_fact_catalogue(registry_root),
+            _load_shared_catalogues(registry_root).require_supported_filing_years(),
         )
+        with _validating_governed_facts(candidate_facts):
+            modelos, _catalogues = _load_registry_tree(registry_root)
+            known_codes = frozenset(modelo.id for modelo in modelos)
+            return build_registry_conformance_profile(
+                modelos,
+                external_grounding=_build_external_grounding_audit(
+                    modelos,
+                    inventory=inventory,
+                    registry_validated=False,
+                ),
+                classification=_build_classification_coherence_audit(
+                    modelos,
+                    non_registry_modelo_codes=_non_registry_modelo_codes(candidate_facts),
+                    known_modelo_codes=known_codes,
+                    registry_validated=False,
+                ),
+                scope_diagnostics=_validate_registry_scope(modelos),
+                registry_validated=False,
+            )
 
     authority = _compile_validated_authority(
         registry_root,
@@ -1242,26 +1265,29 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
             collect_fingerprints=_collect_registry_tree_fingerprints,
         ),
     )
-    known_codes = frozenset(modelo.id for modelo in authority.modelos)
-    return build_registry_conformance_profile(
-        authority.modelos,
-        external_grounding=_build_external_grounding_audit(
+    # Scope validation re-resolves governed vocabularies, so it reads the
+    # authority under audit rather than any ambient or published generation.
+    with _validating_governed_facts(authority):
+        known_codes = frozenset(modelo.id for modelo in authority.modelos)
+        return build_registry_conformance_profile(
             authority.modelos,
-            inventory=inventory,
+            external_grounding=_build_external_grounding_audit(
+                authority.modelos,
+                inventory=inventory,
+                registry_validated=True,
+            ),
+            classification=_build_classification_coherence_audit(
+                authority.modelos,
+                non_registry_modelo_codes=_non_registry_modelo_codes(authority),
+                known_modelo_codes=known_codes,
+                registry_validated=True,
+            ),
+            scope_diagnostics=_validate_registry_scope(authority.modelos),
             registry_validated=True,
-        ),
-        classification=_build_classification_coherence_audit(
-            authority.modelos,
-            non_registry_modelo_codes=non_registry_codes,
-            known_modelo_codes=known_codes,
-            registry_validated=True,
-        ),
-        scope_diagnostics=_validate_registry_scope(authority.modelos),
-        registry_validated=True,
-        model_law_coverage=_audit_registry_model_law_coverage(authority),
-        construct_evidence=_audit_registry_construct_evidence(authority),
-        support_matrix=_build_support_matrix(authority),
-    )
+            model_law_coverage=_audit_registry_model_law_coverage(authority),
+            construct_evidence=_audit_registry_construct_evidence(authority),
+            support_matrix=_build_support_matrix(authority),
+        )
 
 
 def _governance_stamp(revision: _ModeloRevision) -> RevisionGovernanceStamp:
