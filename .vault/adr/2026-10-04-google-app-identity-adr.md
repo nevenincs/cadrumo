@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:76f7e33b6a04213d379ee47c11fb798c172cc90ab4ca8948b5c855b20b11a990'
+body_hash: 'sha256:ee65c683cdb703ab34be72507888964b9ff42ec26ce6c8752268fc7be79a2113'
 related:
   - "[[2026-10-04-google-app-identity-research]]"
   - "[[2026-10-04-google-app-identity-reference]]"
@@ -45,8 +45,15 @@ operator-registered client as a production override, which the product owner
 then refused as conflating development with production. The amendment was
 drafted in `2026-10-04-google-app-identity-client-registration-adr`, approved
 by the product owner on 2026-10-05 in the cloud-setup session on a summary of
-its main points, and relayed. Statements under "Implementation hypotheses"
-remain hypotheses.
+its main points, and relayed. Later on 2026-10-05 the product owner ruled, in
+the same session and relayed verbatim, that the application is deployed with
+Google sign-in built in and that the `cadrumo` project's client is the client
+in development and deployment alike: "We will deploy this application. This
+is the only way this can work. Even in development, no more arguing. The
+authentication is to be added to the application now." Commitment 3 was
+revised again to say the client file is committed and built in, replacing the
+earlier wording that kept it out of the repository and out of builds.
+Statements under "Implementation hypotheses" remain hypotheses.
 
 ## Considerations
 
@@ -100,11 +107,16 @@ Binding commitments:
 3. **Client identity.** A publisher-owned Desktop client is the only client.
    Its metadata is public installation data read from one location by one
    resolver; it is not a profile record and not a secret. No command, setting
-   or environment override accepts a client from the operator. A development
-   installation uses the same location and the same code path, holding the
-   development project's client file, which the developer supplies and which
-   is never committed. With no client metadata present, sign-in is a typed
-   refusal with remediation.
+   or environment override accepts a client from the operator. The client is
+   the Desktop client of the publisher's `cadrumo` Google Cloud project. Its
+   metadata file is part of the application: it is committed with the source
+   and included in every build, so a development checkout and a deployed
+   installation run the same client through the same code path. The value
+   Google labels `client_secret` in that file is not a secret for the purposes
+   of this project's rule against committing credentials, because Google does
+   not treat it as confidential for an installed application
+   (`2026-10-04-google-app-identity-research`). With no client metadata
+   present, sign-in is a typed refusal with remediation.
 4. **Root folder.** Cadrumo creates its root folder and stores its ID per
    profile. No command, setting or environment override accepts a Drive
    folder or file reference from the user. The one exception is a workbook
@@ -130,8 +142,8 @@ Binding commitments:
    is not adopted. Creation carries the marker so that an application-created
    entry without it cannot exist.
 8. **Token integrity.** A stored token is bound to the client that minted it
-   and is never used with another, so a token minted under the development
-   client cannot be used with the production one. A sign-in that yields no refresh token is
+   and is never used with another, so a token is never refreshed against a
+   different client if the application's client ever changes. A sign-in that yields no refresh token is
    refused. A revoked or expired grant is reported as a typed
    sign-in-required state, not as a network failure.
 9. **No migration.** No compatibility reader and no adoption of earlier
@@ -161,8 +173,8 @@ Binding commitments:
     removal also changes the generated environment example and the native
     contract projection.
 
-Out of scope: the publisher's Google Cloud registration and verification,
-build-time delivery of the client metadata, the desktop Connect interface, and
+Out of scope: the publisher's Google verification and publishing status, the
+desktop Connect interface, and
 the remote-mirror policy for the OAuth token namespace. The last is an open
 question recorded in `2026-10-04-google-app-identity-reference`.
 
@@ -249,13 +261,14 @@ Implementation hypotheses, free to change within the commitments:
 - Workbooks are created through Drive `files.create` with the spreadsheet
   MIME type, parent and marker in one call, then populated through Sheets
   `batchUpdate`.
-- The publisher client metadata lives under the installation's `data/google/`
-  location named in `2026-10-03-application-packaging-adr`; a development
-  checkout resolves it through the same storage taxonomy. The metadata
-  includes `client_secret`, because refreshing a Desktop client's token
-  without it was not tested.
-- A helper under `dev/` may place a client file into a development
-  installation. It is not part of the shipped command tree.
+- The client metadata is package data at
+  `src/cadrumo/_data/google/oauth_client.json`, read through the bundled-data
+  reader, so a wheel carries it and no assembler step has to place it. If the
+  native layout in `2026-10-03-application-packaging-adr` relocates bundled
+  data, the same reader follows it.
+- The file is Google's Desktop client download unmodified, including
+  `client_secret`, because refreshing a Desktop client's token without it was
+  not tested.
 - The loopback listener uses the IP literal. Sign-in does not force a consent
   prompt: Google always returns a refresh token to an installed application
   (`2026-10-04-google-app-identity-research`), so the refusal in commitment 8
@@ -280,23 +293,27 @@ with Google is the sign-in developers test, and no user can be asked to bring
 a Cloud project.
 
 Enforcing ownership in code rather than relying on the scope keeps the
-boundary true whichever client file an installation holds. Removing
-impersonation leaves one sign-in path to verify and document, and drops a
-path that could not serve the product goal. Binding tokens to their client
-follows from development and production installations holding different
-clients: without it a token could be refreshed against the wrong one.
+boundary true even if the client's registered scopes were ever widened.
+Removing impersonation leaves one sign-in path to verify and document, and
+drops a path that could not serve the product goal. Binding tokens to their
+client guards the case where the application's client changes: without it a
+token could be refreshed against the wrong one. Building the client into the
+application is what lets sign-in work in any installation without a setup
+step.
 
 ## Consequences
 
-- The publisher needs a domain, a public home page, a privacy policy and a
-  Cloud project before any user outside a 100-person test list can sign in.
+- The publisher needs a domain, a public home page and a privacy policy
+  before any user outside a 100-person test list can sign in.
 - Files exported under an operator's own client are not visible to the
   publisher client; affected users export again.
 - An organisation that blocks third-party clients must allow the publisher
   client; it cannot substitute its own.
-- A development installation cannot sign in until a developer supplies a
-  client file, and until build-time delivery of the client metadata exists,
-  only development installations can sign in.
+- Development and deployment share one Google Cloud project, so its
+  publishing status applies to both. While it is in Testing, only accounts on
+  its test-user list can sign in and their grants expire after 7 days;
+  widening that is a console action by the publisher.
+- The client metadata is readable by anyone with the source or a build.
 - Users lose evidence pull from Drive and use local import instead.
 - The public client can be presented by a third party on a consent screen;
   the exposure is limited to `drive.file`.
