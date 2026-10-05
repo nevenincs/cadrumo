@@ -60,7 +60,7 @@ def test_published_casilla_audit_retains_binding_presentation_keys() -> None:
         index
         for index, occurrence in enumerate(catalogue.occurrences)
         if (occurrence.modelo, occurrence.revision, occurrence.casilla)
-        == ("131", "2026-late", "construct:modelo-131-objective-estimation-instalment")
+        == ("131", "2026-3t-4t", "construct:modelo-131-objective-estimation-instalment")
     )
     assert catalogue.occurrences[late_index].chain("label")[-1] == shared_title
     assert all(

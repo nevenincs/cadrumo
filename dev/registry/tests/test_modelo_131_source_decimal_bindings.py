@@ -67,7 +67,7 @@ def test_descendants_keep_decimal_shape_and_source_cited_construct_closure() -> 
         ("2024", "2024", 26),
         ("2025", "2025", 23),
         ("2026", "2026", 23),
-        ("2026-late", "2026-late", 23),
+        ("2026-3t-4t", "2026-late", 23),
     ):
         revision = modelo.revisions[revision_id]
         actual_decimal = sum(

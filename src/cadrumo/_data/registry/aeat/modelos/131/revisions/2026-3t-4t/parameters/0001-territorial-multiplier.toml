@@ -1,18 +1,18 @@
 # The AEAT instructions give the 0.4 multiplier only for eligible Ceuta/Melilla
 # activity and, exceptionally, La Palma activity in 2026 quarters 3T and 4T.
-[[revisions."2026-late".parameters]]
+[[revisions."2026-3t-4t".parameters]]
 id = "irpf.objective_la_palma_fractional_payment_multiplier"
 data_type = "ratio"
 unit = "coefficient"
 legal_refs = ["ley-35-2006:art-68.4", "real-decreto-ley-23-2026:art-1"]
 source_refs = ["aeat-modelo-131-instructions-2026-late"]
 
-[[revisions."2026-late".parameters.values]]
+[[revisions."2026-3t-4t".parameters.values]]
 value = "0.4"
 date_axis = "filing_period"
 valid_from = 2026-07-01
 valid_to = 2026-12-31
 
-[[revisions."2026-late".parameters.source_citations]]
+[[revisions."2026-3t-4t".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions-2026-late"
 required_text = ["3er y del 4º trimestres de 2026", "multiplicando por 0,4"]

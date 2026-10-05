@@ -450,6 +450,6 @@ modelo:
                   becslés rendszerében (2026. adóév)'
           field:
             label: Adóév 2026
-        2026-late:
+        2026-3t-4t:
           field:
             label: Adóév 2026 (3T/4T változat)

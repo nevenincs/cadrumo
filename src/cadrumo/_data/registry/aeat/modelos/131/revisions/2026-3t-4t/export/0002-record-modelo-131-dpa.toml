@@ -1,7 +1,7 @@
-[[revisions.2026-late.export_layouts]]
+[[revisions.2026-3t-4t.export_layouts]]
 id = 'modelo-131-fichero-boe'
 
-[[revisions.2026-late.export_layouts.records]]
+[[revisions.2026-3t-4t.export_layouts.records]]
 id = 'modelo-131-dpa'
 record_type = 'DPA'
 order = 1
@@ -11,7 +11,7 @@ required = true
 repeat = 'binding_rows'
 binding_record = 'DPA'
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-open'
 offset = 1
 length = 2
@@ -28,7 +28,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-modelo'
 offset = 3
 length = 3
@@ -45,7 +45,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-page'
 offset = 6
 length = 5
@@ -62,7 +62,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-end'
 offset = 11
 length = 1
@@ -79,7 +79,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-complementaria-indicator'
 offset = 12
 length = 1
@@ -96,7 +96,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.epigrafe-iae'
 offset = 13
 length = 4
@@ -115,7 +115,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.indicador-auxiliar-actividad-iae'
 offset = 17
 length = 1
@@ -134,7 +134,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.participacion-comunidad'
 offset = 18
 length = 4
@@ -155,7 +155,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.dias-actividad-temporada'
 offset = 22
 length = 3
@@ -175,7 +175,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.ano-inicio-actividad'
 offset = 25
 length = 4
@@ -195,7 +195,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.deduccion-ceuta-melilla-la-palma'
 offset = 29
 length = 1
@@ -225,7 +225,7 @@ source_refs = [
     'aeat-modelo-131-instructions-2026-late',
 ]
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.local-unico'
 offset = 30
 length = 1
@@ -251,7 +251,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.vehiculos-afectos'
 offset = 31
 length = 2
@@ -271,7 +271,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.tractocamion-sin-semirremolque'
 offset = 33
 length = 1
@@ -290,7 +290,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.tractocamion-unico-sin-semirremolque'
 offset = 34
 length = 1
@@ -309,7 +309,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.carga-superior-1000kg'
 offset = 35
 length = 1
@@ -335,7 +335,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.municipio-actividad'
 offset = 36
 length = 1
@@ -355,7 +355,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-37'
 offset = 37
 length = 1
@@ -371,7 +371,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-38'
 offset = 38
 length = 3
@@ -387,7 +387,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-41'
 offset = 41
 length = 1
@@ -403,7 +403,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-42'
 offset = 42
 length = 1
@@ -419,7 +419,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.porcentaje-superior'
 offset = 43
 length = 4
@@ -440,7 +440,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.personal-asalariado-mayor-19'
 offset = 47
 length = 7
@@ -460,7 +460,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.personal-asalariado-menor-19'
 offset = 54
 length = 7
@@ -480,7 +480,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.personal-asalariado-discapacidad'
 offset = 61
 length = 7
@@ -500,7 +500,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.personal-asalariado-horas-convenio'
 offset = 68
 length = 4
@@ -520,7 +520,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.resto-personal-asalariado-mayor-19'
 offset = 72
 length = 7
@@ -540,7 +540,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.resto-personal-asalariado-menor-19'
 offset = 79
 length = 7
@@ -560,7 +560,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.resto-personal-asalariado-discapacidad'
 offset = 86
 length = 7
@@ -580,7 +580,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.resto-personal-asalariado-horas-convenio'
 offset = 93
 length = 4
@@ -600,7 +600,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.personal-no-asalariado-titular'
 offset = 97
 length = 4
@@ -620,7 +620,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.personal-no-asalariado-conyuge'
 offset = 101
 length = 4
@@ -640,7 +640,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.personal-no-asalariado-hijos'
 offset = 105
 length = 7
@@ -660,7 +660,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-1-capacidad'
 offset = 112
 length = 2
@@ -680,7 +680,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-1-unidades'
 offset = 114
 length = 4
@@ -700,7 +700,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-2-capacidad'
 offset = 118
 length = 2
@@ -720,7 +720,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-2-unidades'
 offset = 120
 length = 4
@@ -740,7 +740,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-3-capacidad'
 offset = 124
 length = 2
@@ -760,7 +760,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-3-unidades'
 offset = 126
 length = 4
@@ -780,7 +780,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-4-capacidad'
 offset = 130
 length = 2
@@ -800,7 +800,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.mesas-4-unidades'
 offset = 132
 length = 4
@@ -820,7 +820,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-1-unidades'
 offset = 136
 length = 10
@@ -841,7 +841,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-1-rendimiento-neto'
 offset = 146
 length = 17
@@ -862,7 +862,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-2-unidades'
 offset = 163
 length = 10
@@ -883,7 +883,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-2-rendimiento-neto'
 offset = 173
 length = 17
@@ -904,7 +904,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-3-unidades'
 offset = 190
 length = 10
@@ -925,7 +925,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-3-rendimiento-neto'
 offset = 200
 length = 17
@@ -946,7 +946,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-4-unidades'
 offset = 217
 length = 10
@@ -967,7 +967,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-4-rendimiento-neto'
 offset = 227
 length = 17
@@ -988,7 +988,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-5-unidades'
 offset = 244
 length = 10
@@ -1009,7 +1009,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-5-rendimiento-neto'
 offset = 254
 length = 17
@@ -1030,7 +1030,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-6-unidades'
 offset = 271
 length = 10
@@ -1051,7 +1051,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-6-rendimiento-neto'
 offset = 281
 length = 17
@@ -1072,7 +1072,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-7-unidades'
 offset = 298
 length = 10
@@ -1093,7 +1093,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.modulo-7-rendimiento-neto'
 offset = 308
 length = 17
@@ -1114,7 +1114,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.incentivos-empleo'
 offset = 325
 length = 10
@@ -1135,7 +1135,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.incentivos-inversion'
 offset = 335
 length = 10
@@ -1156,7 +1156,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.indice-corrector-especial'
 offset = 345
 length = 4
@@ -1177,7 +1177,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.indice-corrector-pequena-dimension'
 offset = 349
 length = 4
@@ -1198,7 +1198,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.indice-corrector-temporada'
 offset = 353
 length = 4
@@ -1219,7 +1219,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.indice-corrector-exceso'
 offset = 357
 length = 4
@@ -1240,7 +1240,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.indice-corrector-nueva-actividad'
 offset = 361
 length = 4
@@ -1261,7 +1261,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-365'
 offset = 365
 length = 10
@@ -1277,7 +1277,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-375'
 offset = 375
 length = 10
@@ -1293,7 +1293,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa.modelo-131.dpa.dias-ejercicio-trimestre'
 offset = 385
 length = 2
@@ -1313,7 +1313,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-387'
 offset = 387
 length = 1
@@ -1329,7 +1329,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-388'
 offset = 388
 length = 10
@@ -1345,7 +1345,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-reservado-398'
 offset = 398
 length = 189
@@ -1361,7 +1361,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-dpa-close'
 offset = 587
 length = 12
@@ -1378,4 +1378,4 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[revisions.2026-late.export_layouts.records.row_field_casilla_ids]
+[revisions.2026-3t-4t.export_layouts.records.row_field_casilla_ids]

@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.mark.parametrize(
     ("modelo", "revision", "year", "period", "ineligible_period"),
-    (("131", "2026-late", 2026, "3T", "1T"), ("303", "2024-desde-09-y-3t", 2024, "09", "01")),
+    (("131", "2026-3t-4t", 2026, "3T", "1T"), ("303", "2024-desde-09-y-3t", 2024, "09", "01")),
 )
 def test_static_comparison_defaults_to_a_declared_source_covered_period(
     modelo: str, revision: str, year: int, period: str, ineligible_period: str
@@ -80,12 +80,12 @@ def test_historical_design_source_selection_requires_the_actual_year(modelo: str
 def test_late_m131_source_is_only_eligible_for_its_quarters() -> None:
     catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
     definition = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "131"))
-    selected = definition.revisions["2026-late"]
+    selected = definition.revisions["2026-3t-4t"]
     source, epoch = _select_record_design_source(
         selected,
         catalogues.sources,
         modelo="131",
-        revision="2026-late",
+        revision="2026-3t-4t",
         source_ref=None,
         filing_year=2026,
         period="3T",
@@ -97,7 +97,7 @@ def test_late_m131_source_is_only_eligible_for_its_quarters() -> None:
                 selected,
                 catalogues.sources,
                 modelo="131",
-                revision="2026-late",
+                revision="2026-3t-4t",
                 source_ref=None,
                 filing_year=2026,
                 period=period,

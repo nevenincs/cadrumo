@@ -25,8 +25,8 @@ def _modelo():
     (
         ("1T", date(2026, 4, 1), "2026"),
         ("2T", date(2026, 7, 1), "2026"),
-        ("3T", date(2026, 10, 1), "2026-late"),
-        ("4T", date(2027, 1, 1), "2026-late"),
+        ("3T", date(2026, 10, 1), "2026-3t-4t"),
+        ("4T", date(2027, 1, 1), "2026-3t-4t"),
     ),
 )
 def test_actual_2026_filing_window_selects_its_own_source_branch(period: str, on: date, expected: str) -> None:
@@ -41,7 +41,7 @@ def test_actual_2026_filing_window_selects_its_own_source_branch(period: str, on
 
 def test_late_hydrated_delta_rekeys_only_four_source_changed_binding_slots() -> None:
     early = _modelo().revisions["2026"]
-    late = _modelo().revisions["2026-late"]
+    late = _modelo().revisions["2026-3t-4t"]
     early_by_offset = {
         (binding.provider.record, binding.provider.offset): binding
         for binding in early.bindings

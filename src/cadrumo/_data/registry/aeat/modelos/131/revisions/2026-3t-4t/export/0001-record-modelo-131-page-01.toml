@@ -1,7 +1,7 @@
-[[revisions.2026-late.export_layouts]]
+[[revisions.2026-3t-4t.export_layouts]]
 id = 'modelo-131-fichero-boe'
 
-[[revisions.2026-late.export_layouts.records]]
+[[revisions.2026-3t-4t.export_layouts.records]]
 id = 'modelo-131-page-01'
 record_type = 'page_1'
 order = 0
@@ -9,7 +9,7 @@ encoding = 'iso-8859-1'
 line_ending = 'none'
 required = true
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-open'
 offset = 1
 length = 2
@@ -26,7 +26,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-modelo'
 offset = 3
 length = 3
@@ -43,7 +43,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-number'
 offset = 6
 length = 5
@@ -60,7 +60,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-end'
 offset = 11
 length = 1
@@ -77,7 +77,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-complementaria-indicator'
 offset = 12
 length = 1
@@ -93,7 +93,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-declaration-type'
 offset = 13
 length = 1
@@ -110,7 +110,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-tax-id'
 offset = 14
 length = 9
@@ -127,7 +127,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-declarante-apellidos'
 offset = 23
 length = 60
@@ -144,7 +144,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-declarante-nombre'
 offset = 83
 length = 20
@@ -161,7 +161,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-devengo-ejercicio'
 offset = 103
 length = 4
@@ -180,7 +180,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-devengo-periodo'
 offset = 107
 length = 2
@@ -197,7 +197,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.discapacidad-33'
 offset = 109
 length = 1
@@ -216,7 +216,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-1-epigrafe'
 offset = 110
 length = 4
@@ -235,7 +235,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-1-rendimiento-neto'
 offset = 114
 length = 17
@@ -255,7 +255,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-1-porcentaje'
 offset = 131
 length = 5
@@ -276,7 +276,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-1-resultado'
 offset = 136
 length = 17
@@ -296,7 +296,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-2-epigrafe'
 offset = 153
 length = 4
@@ -315,7 +315,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-2-rendimiento-neto'
 offset = 157
 length = 17
@@ -335,7 +335,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-2-porcentaje'
 offset = 174
 length = 5
@@ -356,7 +356,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-2-resultado'
 offset = 179
 length = 17
@@ -376,7 +376,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-3-epigrafe'
 offset = 196
 length = 4
@@ -395,7 +395,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-3-rendimiento-neto'
 offset = 200
 length = 17
@@ -415,7 +415,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-3-porcentaje'
 offset = 217
 length = 5
@@ -436,7 +436,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-3-resultado'
 offset = 222
 length = 17
@@ -456,7 +456,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-4-epigrafe'
 offset = 239
 length = 4
@@ -475,7 +475,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-4-rendimiento-neto'
 offset = 243
 length = 17
@@ -495,7 +495,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-4-porcentaje'
 offset = 260
 length = 5
@@ -516,7 +516,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-4-resultado'
 offset = 265
 length = 17
@@ -536,7 +536,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-5-epigrafe'
 offset = 282
 length = 4
@@ -555,7 +555,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-5-rendimiento-neto'
 offset = 286
 length = 17
@@ -575,7 +575,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-5-porcentaje'
 offset = 303
 length = 5
@@ -596,7 +596,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.actividad-5-resultado'
 offset = 308
 length = 17
@@ -616,7 +616,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-01'
 offset = 325
 length = 17
@@ -634,7 +634,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-02'
 offset = 342
 length = 17
@@ -652,7 +652,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-ceuta-melilla-la-palma'
 offset = 359
 length = 1
@@ -682,7 +682,7 @@ source_refs = [
     'aeat-modelo-131-instructions-2026-late',
 ]
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-volumen'
 offset = 360
 length = 10
@@ -703,7 +703,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-porcentaje'
 offset = 370
 length = 4
@@ -724,7 +724,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-vivienda-base'
 offset = 374
 length = 10
@@ -745,7 +745,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-vivienda-porcentaje'
 offset = 384
 length = 3
@@ -765,7 +765,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.sin-datos-base-vivienda-limite'
 offset = 387
 length = 3
@@ -785,7 +785,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-03'
 offset = 390
 length = 17
@@ -803,7 +803,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-04'
 offset = 407
 length = 17
@@ -821,7 +821,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-ordinarias-generales'
 offset = 424
 length = 10
@@ -842,7 +842,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-prioritarias-generales'
 offset = 434
 length = 10
@@ -863,7 +863,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-generales-porcentaje'
 offset = 444
 length = 4
@@ -884,7 +884,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla-la-palma'
 offset = 448
 length = 10
@@ -909,7 +909,7 @@ source_refs = [
     'aeat-modelo-131-instructions-2026-late',
 ]
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma'
 offset = 458
 length = 10
@@ -934,7 +934,7 @@ source_refs = [
     'aeat-modelo-131-instructions-2026-late',
 ]
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-ingresos-territoriales-porcentaje'
 offset = 468
 length = 4
@@ -955,7 +955,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-vivienda-base'
 offset = 472
 length = 10
@@ -976,7 +976,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-vivienda-porcentaje'
 offset = 482
 length = 3
@@ -996,7 +996,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.agraria-vivienda-limite'
 offset = 485
 length = 3
@@ -1016,7 +1016,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-05'
 offset = 488
 length = 17
@@ -1034,7 +1034,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-06'
 offset = 505
 length = 17
@@ -1052,7 +1052,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-07'
 offset = 522
 length = 17
@@ -1070,7 +1070,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-08'
 offset = 539
 length = 17
@@ -1088,7 +1088,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.deduccion-art-110-tramo'
 offset = 556
 length = 1
@@ -1108,7 +1108,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.deduccion-art-110-cuantia'
 offset = 557
 length = 5
@@ -1129,7 +1129,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-09'
 offset = 562
 length = 17
@@ -1147,7 +1147,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-10'
 offset = 579
 length = 17
@@ -1165,7 +1165,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-11'
 offset = 596
 length = 17
@@ -1183,7 +1183,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.vivienda-derecho-deduccion'
 offset = 613
 length = 1
@@ -1202,7 +1202,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.vivienda-deduccion-aplicada'
 offset = 614
 length = 10
@@ -1223,7 +1223,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-12'
 offset = 624
 length = 17
@@ -1241,7 +1241,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-13'
 offset = 641
 length = 17
@@ -1259,7 +1259,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-14'
 offset = 658
 length = 17
@@ -1277,7 +1277,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-casilla-15'
 offset = 675
 length = 17
@@ -1295,7 +1295,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.declaracion-complementaria'
 offset = 692
 length = 1
@@ -1314,7 +1314,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01.modelo-131.page1.justificante-anterior'
 offset = 693
 length = 13
@@ -1333,7 +1333,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01-reservado-706'
 offset = 706
 length = 101
@@ -1349,7 +1349,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-01-reservado-807'
 offset = 807
 length = 13
@@ -1365,7 +1365,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-page-close'
 offset = 820
 length = 12
@@ -1382,4 +1382,4 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[revisions.2026-late.export_layouts.records.row_field_casilla_ids]
+[revisions.2026-3t-4t.export_layouts.records.row_field_casilla_ids]

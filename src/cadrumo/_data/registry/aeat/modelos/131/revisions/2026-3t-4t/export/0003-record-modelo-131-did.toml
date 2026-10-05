@@ -1,7 +1,7 @@
-[[revisions.2026-late.export_layouts]]
+[[revisions.2026-3t-4t.export_layouts]]
 id = 'modelo-131-fichero-boe'
 
-[[revisions.2026-late.export_layouts.records]]
+[[revisions.2026-3t-4t.export_layouts.records]]
 id = 'modelo-131-did'
 record_type = 'DID'
 order = 2
@@ -10,7 +10,7 @@ line_ending = 'none'
 required = false
 requires_positive_casilla_id = '15'
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-did-open'
 offset = 1
 length = 2
@@ -27,7 +27,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-did-modelo'
 offset = 3
 length = 3
@@ -44,7 +44,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-did-page'
 offset = 6
 length = 5
@@ -61,7 +61,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-did-end'
 offset = 11
 length = 1
@@ -78,7 +78,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-did.modelo-131.did.iban'
 offset = 12
 length = 34
@@ -97,7 +97,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-did-reservado-46'
 offset = 46
 length = 200
@@ -113,7 +113,7 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[[revisions.2026-late.export_layouts.records.fields]]
+[[revisions.2026-3t-4t.export_layouts.records.fields]]
 id = 'modelo-131-did-close'
 offset = 246
 length = 12
@@ -130,4 +130,4 @@ legal_refs = [
 ]
 source_refs = ['aeat-dr-131-2026-late']
 
-[revisions.2026-late.export_layouts.records.row_field_casilla_ids]
+[revisions.2026-3t-4t.export_layouts.records.row_field_casilla_ids]

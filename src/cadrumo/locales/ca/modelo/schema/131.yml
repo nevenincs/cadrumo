@@ -444,6 +444,6 @@ modelo:
                   2026)'
           field:
             label: Exercici 2026
-        2026-late:
+        2026-3t-4t:
           field:
             label: Exercici 2026 (revisió 3T/4T)

@@ -90,7 +90,7 @@ def test_modelo_131_historical_page_is_source_complete_without_duplicate_binding
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "131"))
     late_law = "real-decreto-ley-23-2026:art-1"
     assert late_law not in modelo.legal_refs
-    assert late_law in modelo.revisions["2026-late"].legal_refs
+    assert late_law in modelo.revisions["2026-3t-4t"].legal_refs
 
     invocation = GeneratedTreeInvocation("131", "2019-2023", "aeat-dr-131-2019-2023-v101", 2022, "1T")
     prepared = prepare_generated_tree_invocation(invocation, tmp_path, authority=compiled_bundled_authority())
