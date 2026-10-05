@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:1959b7d68d0437b48797024636a54b500cb0fba1a39613eab61706925b7b8eb9'
+body_hash: 'sha256:d2e550ae1c22d8686d57837865595e9798e610a7d8627acf9d6b2c7987351e25'
 related:
   - "[[2026-10-04-google-app-identity-plan]]"
 ---
@@ -185,6 +185,18 @@ related:
 - `S03` `verify:` `just check-types` -> `fail`
 - `S03` `verify:` `just check-import-boundaries` -> `fail`
 - `S03` `by:` `CADRUMO-GOOGLE-OATH`
+- `S04` `M` `src/cadrumo/adapters/outbound/google/drive_entries.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/storage/_google_drive.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/google/tests/test_drive_entries.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_failure_preconditions.py`
+- `S04` `verify:` `pytest unit: Google adapters and storage provider, including refusals of unmarked and foreign entries in both the Sheets adapter and the mirror provider (550 tests)` -> `pass`
+- `S04` `verify:` `pytest unit and integration: calc sheets, export and Google CLI tests that do not need the runtime (168 tests)` -> `pass`
+- `S04` `verify:` `ruff check, ruff format --check and ty on touched files` -> `pass`
+- `S04` `verify:` `pytest integration: runtime-backed Google journeys and registered-executor conformance` -> `fail`
+- `S04` `verify:` `just check-types` -> `fail`
+- `S04` `verify:` `just check-import-boundaries` -> `fail`
+- `S04` `by:` `CADRUMO-GOOGLE-OATH`
 
 ## Notes
 
@@ -206,3 +218,6 @@ related:
 - `S03` check-types reports diagnostics only in files this Step does not touch after the two new tests were made type-clean; the local InstalledAppFlow stub gained the two members the consent-URL test calls.
 - `S03` check-import-boundaries kept all 15 contracts; its two hard findings are in modelo workbench tests another session is changing.
 - `S03` One native automation-change test failed in a broad run; it does not involve Google scopes.
+- `S04` Skipped within this Step: workbooks are still created through Sheets and stamped in the single Drive call that moves them into the period folder. Creating them through Drive files.create with the marker in one call changes the Drive and Sheets call sequence and is owed to the live proof in S10. Until then an interrupted creation can leave an unmarked workbook in the Drive root, which no lookup reads.
+- `S04` Runtime-backed tests and the conformance suite could not be collected: another session's uncommitted edit to the financial operand custody modules fails at import (OperationFinancialOperandCustodyConflictError). Adapter-level tests, which cover everything this Step changes, ran once that session's earlier break cleared.
+- `S04` check-types reports 20 diagnostics, none in files changed here; check-import-boundaries kept all 15 contracts and its five hard findings are in `dev/quality/import_load_worker.py` and a persistence test other sessions are changing.

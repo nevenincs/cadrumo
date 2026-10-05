@@ -204,9 +204,8 @@ class CalcSheetsExportPreview(BaseModel):
     """What :func:`apply_export_plan` would clear and (re)write, computed with no write call.
 
     Returned by :func:`preview_export_plan`, which reads Drive and Sheets state
-    only: it never creates a folder or a spreadsheet, never backfills an
-    ownership marker on a fresh lookup, and never issues a ``batchClear`` or
-    ``batchUpdate`` write. The three facts a dry-run promises per the decision
+    only: it never creates a folder or a spreadsheet and never issues a
+    ``batchClear`` or ``batchUpdate`` write. The three facts a dry-run promises per the decision
     record: the per-tab ranges the apply would clear, how many value cells
     would actually change against the current read-back, and how many formula
     cells the apply would (unconditionally) rewrite — the live apply always
@@ -239,7 +238,7 @@ def _find_folder(
     name: str,
 ) -> File | None:
     #
-    # Ownership acceptance, marker backfill, foreign-content refusal,
+    # Ownership acceptance, refusal of unmarked or foreign content,
     # query-name escaping, and entry-id validation are the shared policy in
     # ``drive_entries``; only the MIME type and the action/error text are
     # folder-specific.
@@ -249,7 +248,6 @@ def _find_folder(
         name=name,
         mime_type=GOOGLE_DRIVE_FOLDER_MIME_TYPE,
         list_action="drive.files.list",
-        backfill_action="drive.files.update.backfill_marker",
         conflict_message=(
             f"folder named {name!r} under parent {parent_id!r} exists but is not marked as "
             "app-owned; refusing to adopt foreign Drive content"
@@ -295,7 +293,7 @@ def _find_spreadsheet(
     parent_id: str,
     name: str,
 ) -> File | None:
-    # Same shared ownership/backfill/refusal policy as ``_find_folder``; only
+    # Same shared ownership and refusal policy as ``_find_folder``; only
     # the MIME type and the action/error text are spreadsheet-specific.
     return find_owned_drive_entry(
         drive,
@@ -303,7 +301,6 @@ def _find_spreadsheet(
         name=name,
         mime_type=_SPREADSHEET_MIME,
         list_action="drive.files.list.spreadsheet",
-        backfill_action="drive.files.update.backfill_marker.spreadsheet",
         conflict_message=(
             f"spreadsheet {name!r} exists under parent {parent_id!r} but is not marked as "
             "app-owned; refusing to overwrite"

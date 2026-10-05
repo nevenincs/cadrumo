@@ -6,9 +6,9 @@ date: '2026-10-04'
 tier: L1
 related:
   - '[[2026-10-04-google-app-identity-adr]]'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: body-v2
-body_hash: 'sha256:714fc23b8251a5cc913f4507a8b1b80b654f433ebd9a4e4c0b38d7e7c3f0add2'
+body_hash: 'sha256:c0bfaddb56c989fff15dc5a0462b7cbe74bd2877a7214d6d2167d32dda6e1b08'
 ---
 
 # `google-app-identity` plan
@@ -86,7 +86,7 @@ proposed to the product owner at plan close.
 - [x] `S01` - Remove the service-account impersonation credential source, its taxonomy, dispatch, adapter, error types, stored selection namespace, credential-source commands, locale keys and tests; `src/cadrumo/adapters/outbound/google/impersonation.py`.
 - [x] `S02` - Remove Google evidence acquisition, the evidence pull and pull-all commands and the document-link CLI choice, keeping the stored attachment source vocabulary; `src/cadrumo/adapters/outbound/google/document_link_resolver.py`.
 - [x] `S03` - Drop the spreadsheets scope from the bundled scope constants and the required scope set so sign-in requests exactly openid, userinfo.email and drive.file; `src/cadrumo/core/external_constants.toml`.
-- [ ] `S04` - Refuse unmarked Drive entries in the Sheets adapter and the mirror provider, and create workbooks through Drive with the ownership marker in one call; `src/cadrumo/adapters/outbound/google/drive_entries.py`.
+- [x] `S04` - Refuse unmarked Drive entries in the Sheets adapter and the mirror provider, and create workbooks through Drive with the ownership marker in one call; `src/cadrumo/adapters/outbound/google/drive_entries.py`.
 - [ ] `S05` - Create and store a marker-stamped root folder per profile, trust a stored ID only when marker-owned, type the non-Cadrumo workbook refusal, and remove the folder-set command, the root folder setting and its environment example and reference; `src/cadrumo/adapters/outbound/storage/factory.py`.
 - [ ] `S06` - Resolve the OAuth client through one owner with precedence profile-registered, then installation-bundled public metadata, then a typed refusal, committing no client ID; `src/cadrumo/adapters/outbound/google/session_store.py`.
 - [ ] `S07` - Bind the stored token to its minting client, refuse a sign-in without a refresh token, report a revoked or expired grant as a typed sign-in-required state, and use the loopback IP literal; `src/cadrumo/adapters/outbound/google/oauth_flow.py`.

@@ -2,9 +2,10 @@
 
 Every adapter that resolves an app-owned Drive entry by name runs the same
 policy: build a parent/name/MIME query literal, accept an entry carrying the
-``appProperties.cadrumo_vault_app=cadrumo`` ownership marker, backfill that
-marker onto an unmarked entry a previous run created, and refuse a
-foreign-owned entry rather than adopt operator content.
+``appProperties.cadrumo_vault_app=cadrumo`` ownership marker, and refuse any
+other entry. An entry without the marker is never adopted: the application
+stamps the marker when it creates an entry, so an unmarked one of the same
+name is not known to be its own.
 
 That policy previously existed twice inside
 :mod:`adapters.outbound.google.calc_sheets_apply` (once for folders, once
@@ -63,26 +64,10 @@ class DriveEntryPreconditionCondition(StrEnum):
     OWNERSHIP_ALIGNED = "google.drive_entry.ownership_aligned"
 
 
-class DriveOwnership(StrEnum):
-    """How an existing Drive entry stands against this app's ownership marker."""
-
-    OWNED = "owned"
-    UNMARKED = "unmarked"
-    FOREIGN = "foreign"
-
-
-def classify_drive_ownership(app_properties: Mapping[str, Any]) -> DriveOwnership:
-    """Classify an entry's ``appProperties`` under the one ownership policy.
-
-    A marked entry is ours. An entry with no properties at all predates marker
-    stamping and may be adopted by stamping it. Any other properties belong to
-    something else, so the entry must not be adopted.
-    """
-    if app_properties.get(OWNERSHIP_KEY) == OWNERSHIP_VALUE:
-        return DriveOwnership.OWNED
-    if not app_properties:
-        return DriveOwnership.UNMARKED
-    return DriveOwnership.FOREIGN
+def is_app_owned(app_properties: Mapping[str, Any]) -> bool:
+    """Return whether ``appProperties`` carries this application's ownership marker."""
+    marker = app_properties.get(OWNERSHIP_KEY)
+    return isinstance(marker, str) and marker == OWNERSHIP_VALUE
 
 
 def _drive_entry_terminal_refusal(
@@ -167,15 +152,13 @@ def find_owned_drive_entry(
     name: str,
     mime_type: str,
     list_action: str,
-    backfill_action: str,
     conflict_message: str,
 ) -> File | None:
     """Return the app-owned Drive entry of ``name`` under ``parent_id``, if any.
 
     Applies the one ownership policy shared by every Drive lookup: an entry
-    already carrying the ownership marker is adopted; an entry carrying no
-    ``appProperties`` at all is a pre-marker artefact of this app and is
-    backfilled then adopted; an entry carrying foreign properties is refused.
+    carrying the ownership marker is returned; any other same-named entry,
+    whether it carries foreign properties or none at all, is refused.
     Every returned entry has been checked to carry a usable ID.
 
     Args:
@@ -184,7 +167,6 @@ def find_owned_drive_entry(
         name: Entry name to match.
         mime_type: Drive MIME type constraining the entry kind.
         list_action: Action label for the list call's error context.
-        backfill_action: Action label for the marker-backfill call.
         conflict_message: Message raised when a foreign-owned entry is found.
 
     Returns:
@@ -241,24 +223,8 @@ def find_owned_drive_entry(
                     "ownership_metadata_mapping": False,
                 },
             )
-        ownership = classify_drive_ownership(existing)
-        if ownership is DriveOwnership.OWNED:
+        if is_app_owned(existing):
             require_drive_entry_id(entry, name=name, parent_id=parent_id)
-            return entry
-        if ownership is DriveOwnership.UNMARKED:
-            # Backfill the marker on an entry this app created on a previous
-            # run that predated marker stamping. The ID is validated first so
-            # the update call cannot be issued against a malformed entry.
-            entry_id = require_drive_entry_id(entry, name=name, parent_id=parent_id)
-            execute_request(
-                drive.files().update(
-                    fileId=entry_id,
-                    body={"appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE}},
-                    fields="id,appProperties",
-                ),
-                action=backfill_action,
-                retry=RequestRetryPolicy.REPLAY_SAFE,
-            )
             return entry
         raise _drive_entry_terminal_refusal(
             OutboundStorageConflictError(
@@ -274,9 +240,8 @@ def find_owned_drive_entry(
 __all__ = [
     "OWNERSHIP_KEY",
     "OWNERSHIP_VALUE",
-    "DriveOwnership",
     "build_owned_entry_query",
-    "classify_drive_ownership",
     "find_owned_drive_entry",
+    "is_app_owned",
     "require_drive_entry_id",
 ]
