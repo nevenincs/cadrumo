@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a53931cfce4e4f2aa108fa46e13f36f2396b9d892a0ea50c18d47b0d221995b'
+body_hash: 'sha256:b00362c4884615bf085f4432ddaa42afd75d42e96f48d4fd3acdb31f4c5335ce'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -66,6 +66,62 @@ Pending: the full four-language docs build and rebuild behavior, the Release doc
 ### localized-term-records | medium | localized docs search returns Spanish-key term titles and domain crumbs
 
 Observed by the designer session on 2026-10-05 against the 2026-10-04 Catalan web-flavor build with the current bridge: term results carry unaccented lowercase Spanish keys as titles (for example "regimen del recargo de equivalencia") and Spanish domain words in the crumb, taken from Pagefind record meta read at `docs/_static/cadrumo-docs.js:554-571` and produced by the record injection in `dev/docs/pagefind_inject.py` and `dev/docs/terminology/concept_card_projection.py`. Needs confirmation on a fresh desktop-flavor build, currently blocked by the stale authority; if confirmed, the localized term records should carry the localized display title and domain label rather than the canonical key.
+
+### second-review | low | second independent review of S04 to S08, S11, S14, S15 and S19 found no critical or high defects
+
+Read-only review on 2026-10-05 of ce3adf79e8, 97e941334d, ca1936819a, f0d5414dd7, d0649ebbb4, 9c4c240ace and the follow-ups through 5ce4452635. Prior findings contract-step-ids, relocated-root-test, import-load-targets-stale, docs-build-root-literal and remote-gate-coverage are fixed. Sound: the single token check over every command and body form, postMessage-fallback responses bypassing the fetch queue, context-menu sentinel ordering, docs-scheme containment with CSP on every response, the unsafe blocks and DACL in the platform desktop module, atomic window state, and the log view excluding captured output.
+
+### contract-section-split | medium | the single-instance section splits the native distribution paragraph mid-sentence
+
+`native/CONTRACT.md:784-786` and `:849` at 5878a051b1: the section was inserted after the word "The" of the distribution identity sentence, which resumes under the wrong heading.
+
+### logs-ui-thread | medium | log commands run on the main thread and wait on a lock held across file I/O
+
+`native/desktop/src-tauri/src/logs/mod.rs:79-95,126-134,153-158`: synchronous subscribe and unsubscribe run on the UI thread while the tick holds the hub mutex across up to 16 MiB of reads, so a large log stalls the window at startup and reload; `open_external` also runs ShellExecute on the UI thread.
+
+### log-batch-bytes | low | log batches are bounded by record count, not size
+
+`logs/record.rs:16` with `tail.rs:27,29` and `shell/channel.rs:40-49`: one batch can become a single eval script of tens of megabytes.
+
+### log-idle-polling | low | the log tail reopens every rotation every 100 ms without a subscriber
+
+`logs/mod.rs:109-117` and `tail.rs:313-326,517-535`.
+
+### interceptor-failure-invisible | low | the channel interceptor reports every frame as delivered
+
+`shell/channel.rs:19-27` always succeeds, so terminal and log sinks cannot detect a dead receiver; material only at shutdown with the pinned runtime.
+
+### reload-orphan-session | low | a terminal open racing a shell reload leaves an unowned live session
+
+`terminal/mod.rs:270-276` with `terminal/ipc.rs:72-90`: the new document is refused that kind until the window closes.
+
+### stale-acknowledgement | low | a late activation acknowledgement can satisfy a later claimant
+
+`native/platform/src/desktop.rs:638-645,683-689`: the acknowledgement event is not drained before a new activation.
+
+### global-name-squatting | low | another local account can deny the GUI by squatting predictable Global names
+
+`desktop.rs:468-485,588`: refusal is correct but the names are predictable; the residual denial-of-service risk is unrecorded.
+
+### no-top-navigation-policy | low | nothing prevents the top frame navigating away from the shell
+
+`app.rs:149-154` has no navigation handler; a top-level navigation replaces the shell and settles every session.
+
+### webview2-ambient-overrides | low | ambient WEBVIEW2 variables relocate the profile or open a debugging port
+
+The host inherits `WEBVIEW2_USER_DATA_FOLDER`, `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` and `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`, which take precedence over `app.rs:152`.
+
+### mailto-parameters | low | open_external passes arbitrary mailto headers
+
+`shell/external.rs:43` admits headers such as attach.
+
+### clipboard-read-unbounded | low | clipboard read has no size bound
+
+`shell/clipboard.rs:24-29`.
+
+### contract-timestamp-comment | low | contract.ts misdescribes timestampMs for Python records
+
+`native/desktop/frontend/src/ipc/contract.ts:150` claims parsing; the host always sends null for Python records.
 
 ## Recommendations
 
