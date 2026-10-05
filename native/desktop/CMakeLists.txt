@@ -125,3 +125,30 @@ add_custom_target(desktop-headless-test
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/headless.test.mjs"
   DEPENDS desktop-host-build
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" VERBATIM)
+
+# The packaged end-to-end test drives the window over the WebView2 DevTools protocol, so
+# it needs an interactive desktop session. Its host carries the webview2-remote-debugging
+# feature and is built apart, into the desktop testing directory: it is never the image
+# desktop-host-build declares, and nothing stages or packages it.
+add_custom_target(desktop-packaged-host
+  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+    "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
+  DEPENDS desktop-frontend-build
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
+if(TARGET native_contract)
+  add_dependencies(desktop-packaged-host native_contract)
+endif()
+add_custom_target(desktop-packaged-test
+  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+    "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+    "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
+    "CADRUMO_STORAGE_ROOT_VARIABLE=${CADRUMO_STORAGE_ROOT_VARIABLE}"
+    "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged.test.mjs"
+  DEPENDS desktop-packaged-host
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" USES_TERMINAL VERBATIM)
+# The harness's own frame and assertion logic against a plain Chromium and stand-in pages.
+add_custom_target(desktop-packaged-harness-test
+  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
+    "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged-harness.test.mjs"
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" USES_TERMINAL VERBATIM)

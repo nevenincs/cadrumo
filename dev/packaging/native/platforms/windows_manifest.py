@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import sys
 from pathlib import Path
 
 
 def embedded_manifest(executable: Path) -> bytes:
     """Read process manifest resource 1 without executing the image."""
+    if sys.platform != "win32":
+        raise OSError("Embedded Windows manifest inspection requires Windows")
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     pointer = ctypes.c_void_p
     signatures = {
