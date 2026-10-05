@@ -273,7 +273,7 @@ class LLMCache:
         """Delete cached entries older than the retention window or beyond the count cap.
 
         Two-stage bound mirroring
-        :meth:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder.prune`: entries
+        :meth:`~adapters.persistence.llm.run_records.LLMRunRecorder.prune`: entries
         older than ``retention_days`` (measured against the current time) are
         removed, then -- if more than ``max_records`` remain -- the oldest excess
         entries beyond the cap are removed too. Both bounds default to the
@@ -403,7 +403,7 @@ class LLMCache:
         """Wrap a redacted entry with its logical partition before encryption.
 
         Serialised through :func:`~core.hashing.canonical_json_bytes`, the same
-        helper the sibling usage and run-telemetry stores write their payloads
+        helper the sibling usage and run-record stores write their payloads
         with, so all three diagnostic stores in this package produce one byte
         shape. ``entry`` reaches here as ``model_dump(mode="json")`` output that
         has been through redaction, so it is JSON-native and the helper's

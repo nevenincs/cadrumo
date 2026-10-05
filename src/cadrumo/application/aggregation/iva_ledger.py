@@ -126,7 +126,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
 
     The first five values are shared with
     :class:`~application.aggregation.renta_ledger.RentaLedgerAggregationIssueReason`
-    through :mod:`~application.aggregation._shared_issue_reasons` so cross-ledger telemetry can
+    through :mod:`~application.aggregation._shared_issue_reasons` so cross-ledger reporting can
     group upstream filter rejections under one key. The remaining values
     are IVA-specific.
     """

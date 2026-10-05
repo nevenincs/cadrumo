@@ -283,12 +283,12 @@ def _published_candidate(directory: Path) -> Path:
 def test_profile_component_load_is_generation_pinned_and_lazy(tmp_path: Path) -> None:
     reader = SQLiteAuthorityReader(_published_candidate(tmp_path), max_connections=2)
     try:
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
         with reader.lease() as pin:
             profile = reader.load(ProfileSchemaComponentQuery(), pin=pin)
         assert isinstance(profile, ProfileSchemaDefinition)
         assert profile.id == "cadrumo.user_profile"
-        assert reader.telemetry().entries == 1
+        assert reader.stats().entries == 1
         assert reader.active_leases == 0
     finally:
         reader.close()
@@ -340,7 +340,7 @@ def test_a_database_changed_under_the_reader_is_refused_at_its_next_database_tou
             with pytest.raises(AuthorityStoreCorruptionError, match="changed after admission"):
                 reader.load(ModeloDirectoryComponentQuery("130"), pin=pin)
 
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
         with pytest.raises(AuthorityStoreCorruptionError, match="changed after admission"), reader.lease():
             pass
     finally:
@@ -431,10 +431,10 @@ def test_digest_consistent_unused_component_refuses_only_when_requested(tmp_path
 
     reader = SQLiteAuthorityReader(descriptor_path)
     try:
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
         with reader.lease() as pin, pytest.raises(AuthorityComponentCodecError, match="failed typed decoding"):
             reader.load(ProfileSchemaComponentQuery(), pin=pin)
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
     finally:
         reader.close()
 

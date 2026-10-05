@@ -273,7 +273,7 @@ class ModeloWorkflowGateError(ModeloError):
     on a private attribute and exposes it through :attr:`result`. The rendered
     error context contains only primitive machine codes (``abort_code`` and
     ``stage``), which keeps CLI JSON/text payloads stable while allowing
-    telemetry and tests to inspect the full workflow run.
+    diagnostics and tests to inspect the full workflow run.
 
     See Also:
         :func:`cadrumo.application.modelo.workflow_gate.run_revision_workflow_gate`:

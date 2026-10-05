@@ -244,7 +244,7 @@ def measure_sqlite_authority(descriptor_path: Path, *, workload: str) -> dict[st
                 else:
                     raise ValueError(f"unknown benchmark workload {workload!r}")
                 first = perf_counter() - first_started
-        telemetry = reader.telemetry()
+        stats = reader.stats()
         generation = reader.pin().logical_generation
         return {
             "backend": "sqlite",
@@ -258,9 +258,9 @@ def measure_sqlite_authority(descriptor_path: Path, *, workload: str) -> dict[st
             "identity_digest": generation,
             "detail": detail,
             "cache": {
-                "budget": telemetry.budget,
-                "retained_weight": telemetry.retained_weight,
-                "entries": telemetry.entries,
+                "budget": stats.budget,
+                "retained_weight": stats.retained_weight,
+                "entries": stats.entries,
             },
         }
     finally:

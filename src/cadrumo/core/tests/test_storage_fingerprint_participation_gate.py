@@ -116,8 +116,8 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "Usage meters. They move on every model call and carry no taxpayer state.",
     ),
     ExclusionExpectation(
-        "cadrumo_llm_run_telemetry_dir",
-        "Run-timing telemetry. It moves on every model call and carries no taxpayer state.",
+        "cadrumo_llm_run_record_dir",
+        "Run-timing records. It moves on every model call and carries no taxpayer state.",
     ),
     ExclusionExpectation(
         "cadrumo_corpus_search_cache_dir",

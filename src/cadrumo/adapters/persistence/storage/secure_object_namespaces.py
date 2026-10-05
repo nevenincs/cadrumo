@@ -904,7 +904,7 @@ LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
+LLM_RUN_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_run_telemetry",
     namespace="cadrumo.adapters.outbound.llm.run_telemetry",
     owner="cadrumo.adapters.outbound.llm",

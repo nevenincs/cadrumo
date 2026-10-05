@@ -291,7 +291,8 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
         # A boundary admitted without a write is not thereby harmless: a consent
         # whose answer is lost can leave a grant behind, so it stays unknown too.
         ("read-uncertain", OperationEffect.UNKNOWN),
-        # The same boundary, refused in a way that proves nothing was applied.
+        # The same boundary, refused in a way that proves nothing was applied,
+        # as a declined consent does.
         ("read-not-applied", OperationEffect.NONE),
         # A write was admitted and the provider answered that it refused it.
         ("write-not-applied", OperationEffect.NONE),
@@ -302,9 +303,6 @@ def test_local_commit_reports_actual_deletion_and_projector_rejects_wrong_receip
         # Google issued a grant, then the sign-in was refused for a reason that
         # proves nothing further was applied: the grant is still there.
         ("granted-not-applied", OperationEffect.PARTIAL),
-        # The consent was declined: both sign-in boundaries are open and the
-        # answer proves that no grant was issued and nothing was exchanged.
-        ("declined-not-applied", OperationEffect.NONE),
         ("acknowledged", OperationEffect.UPDATED),
     ],
 )
@@ -332,9 +330,6 @@ def test_provider_boundaries_leave_no_commit_held_and_settle_honest_effects(
             commit(lambda: True, changed=lambda value: value)
         if mode.startswith("read"):
             before_handoff("oauth.browser-consent")
-        elif mode.startswith("declined"):
-            before_handoff("oauth.browser-consent")
-            before_handoff("oauth.token-exchange", writes=True)
         elif mode.startswith("granted"):
             before_handoff("oauth.token-exchange", writes=True)
             acknowledged("oauth.token-exchange", writes=True)

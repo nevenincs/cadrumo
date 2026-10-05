@@ -80,14 +80,14 @@ ACTIVE_PROFILE_POINTER_FILENAME = storage_location(StorageCategory.ACTIVE_PROFIL
 CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
 OPERATION_JOURNAL_DIRNAME = storage_location(StorageCategory.OPERATION_JOURNAL).subpath
 #: The six names below back the parameterised fan-out grammars further down this
-#: module (run-trace, LLM usage/telemetry logs, the token acquisition lock, and
+#: module (run-trace, LLM usage/run-record logs, the token acquisition lock, and
 #: the two cache families). Each was previously hand-typed straight into its
 #: grammar string even though the taxonomy already declares it, duplicating the
 #: name the same way the bucket/keystore literals above did before this module
 #: started reading them off ``storage_location`` too.
 RUNS_DIRNAME = storage_location(StorageCategory.RUNS).subpath
 LLM_USAGE_DIRNAME = storage_location(StorageCategory.LLM_USAGE).subpath
-LLM_RUN_TELEMETRY_DIRNAME = storage_location(StorageCategory.LLM_RUN_TELEMETRY).subpath
+LLM_RUN_RECORD_DIRNAME = storage_location(StorageCategory.LLM_RUN_RECORD).subpath
 TOKENS_DIRNAME = storage_location(StorageCategory.TOKENS).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
@@ -484,11 +484,11 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     # The four entries below declare filename TEMPLATES rather than a single
     # fixed leaf -- a daily log filename, a bucket/provider-keyed lock name, a
     # provider/model-keyed cache path -- each governed by the taxonomy's parent
-    # directory member (LLM_USAGE, LLM_RUN_TELEMETRY, TOKENS, LLM_CACHE) plus a
+    # directory member (LLM_USAGE, LLM_RUN_RECORD, TOKENS, LLM_CACHE) plus a
     # grammar spelling the interpolated shape, exactly the mechanism the six
     # entries above already use for the blob/run fan-outs.
     #
-    # Usage and run-telemetry display paths are not materialised as files;
+    # Usage and run-record display paths are not materialised as files;
     # their producers persist
     # through ``secure_object_repository_for_active_bucket().save(...)``
     # (encrypted SQL secure objects), and each producer's own docstring
@@ -507,9 +507,9 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
-        key="llm_run_telemetry_record",
+        key="llm_run_record_file",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{LLM_RUN_TELEMETRY_DIRNAME}/run-telemetry-<timestamp>.jsonl",
+        grammar=f"<root>/{LLM_RUN_RECORD_DIRNAME}/run-record-<timestamp>.jsonl",
         owner="cadrumo.adapters.outbound.llm",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),

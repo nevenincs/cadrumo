@@ -3085,28 +3085,6 @@
       "contract": "adapters-do-not-reach-composition",
       "created_on": "2026-09-15",
       "expires_on": "2027-03-15",
-      "fingerprint": "e959b614be531c1f2a2f54968664ce83c7a65a10f608809db679baa759cd8703",
-      "import_form": "static",
-      "imported_symbols": [
-        "compose_ledger_llm"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "retirement": {
-        "kind": "source_module_removed",
-        "verified_at": "2026-09-24T12:00:59Z"
-      },
-      "source_module": "cadrumo.adapters.outbound.llm.tests.test_llm_classify_run_telemetry",
-      "status": "retired",
-      "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "adapters-do-not-reach-composition",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
       "fingerprint": "e9e9ce9f5655664e65702d4023e3089cce7a847a62cbebac6ca9634a3e2fd431",
       "import_form": "static",
       "imported_symbols": [

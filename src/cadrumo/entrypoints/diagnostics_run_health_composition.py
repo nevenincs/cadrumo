@@ -1,4 +1,4 @@
-"""Outer composition for diagnostic run-health telemetry."""
+"""Outer composition for diagnostic run-health records."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.diagnostics_run_health_ports import (
     DiagnosticAuthProbePort,
     DiagnosticAuthProbeResult,
-    DiagnosticRunTelemetryPort,
+    DiagnosticRunRecordPort,
 )
 from ..application.state_projection_ports import StateProjectionReadPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -55,14 +55,14 @@ class _DiagnosticsAuthProbeAdapter(DiagnosticAuthProbePort):
         )
 
 
-def compose_diagnostics_run_health_port() -> DiagnosticRunTelemetryPort:
-    """Bind the diagnostic read port to encrypted local run telemetry."""
-    from ..adapters.persistence.llm.run_telemetry import (
-        LLMRunTelemetryDiagnosticsAdapter,
-        LLMRunTelemetryRecorder,
+def compose_diagnostics_run_health_port() -> DiagnosticRunRecordPort:
+    """Bind the diagnostic read port to encrypted local run record."""
+    from ..adapters.persistence.llm.run_records import (
+        LLMRunRecordDiagnosticsAdapter,
+        LLMRunRecorder,
     )
 
-    return LLMRunTelemetryDiagnosticsAdapter(LLMRunTelemetryRecorder())
+    return LLMRunRecordDiagnosticsAdapter(LLMRunRecorder())
 
 
 def compose_diagnostics_auth_probe_port(

@@ -132,13 +132,13 @@ _NAMESAKE = '''"""A different subject that also has a capture verb."""
 from __future__ import annotations
 
 
-class TelemetrySink:
+class MetricsSink:
     def capture(self, event: object) -> None:
         self._events = event
 
 
 def record(event: object) -> None:
-    TelemetrySink().capture(event)
+    MetricsSink().capture(event)
 '''
 
 
@@ -154,7 +154,7 @@ def _planted_tree(root: Path, *, with_writer: bool, with_namesake: bool = False)
     if with_writer:
         imports.append("from . import writer")
     if with_namesake:
-        imports.append("from . import telemetry")
+        imports.append("from . import metrics")
     _write(root, "src/pkg/__init__.py")
     _write(root, "src/pkg/cli.py", "\n".join(imports) + "\n\n\ndef main() -> None:\n    del reader\n")
     _write(root, "src/pkg/snapshot_base.py", _BASE)
@@ -163,7 +163,7 @@ def _planted_tree(root: Path, *, with_writer: bool, with_namesake: bool = False)
     if with_writer:
         _write(root, "src/pkg/writer.py", _WRITER)
     if with_namesake:
-        _write(root, "src/pkg/telemetry.py", _NAMESAKE)
+        _write(root, "src/pkg/metrics.py", _NAMESAKE)
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",

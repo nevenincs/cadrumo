@@ -71,7 +71,7 @@ def _settings(tmp_path: Path, *, openai_chat_url: str | None = None) -> EnvFileF
         cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
         cadrumo_llm_openai_api_key=SecretStr("sk-loopback-only"),
         cadrumo_llm_gemini_api_key=SecretStr("gemini-loopback-only"),
     )

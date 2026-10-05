@@ -177,7 +177,8 @@ errors:
       torna a intentar la neteja abans de continuar.
     error_cadrumo_core: S'ha produït un error intern en l'aplicació.
     error_cadrumo_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
-    error_cadrumo_observability: S'ha produït un error en la telemetria de l'aplicació.
+    error_cadrumo_observability: S'ha produït un error en el registre de diagnòstic
+      de l'aplicació.
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
     error_calc_sheets_parity: L'escenari del bastiment de paritat fa referència a
@@ -401,7 +402,7 @@ errors:
       catàleg de factures.
     canonical_counterparty_establishment_persistence: No s'ha pogut desar el registre
       d'establiment de la contrapart.
-    canonical_diagnostic_run_telemetry: No s'ha pogut llegir la telemetria de l'execució
+    canonical_diagnostic_run_record: No s'han pogut llegir els registres de l'execució
       diagnòstica.
     canonical_evidence_bundle_persistence: No s'ha pogut desar el paquet d'evidències.
     canonical_invoice_catalogue_read_persistence: No s'ha pogut carregar el catàleg
@@ -762,7 +763,7 @@ errors:
     internal_modelo_work_form_layout: La distribució de l'imprès d'aquest model no
       coincideix amb la seva revisió.
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
-      un esdeveniment de telemetria fora d''un context d''execució actiu.'
+      un esdeveniment de diagnòstic fora d''un context d''execució actiu.'
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
       ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
       no declara.'

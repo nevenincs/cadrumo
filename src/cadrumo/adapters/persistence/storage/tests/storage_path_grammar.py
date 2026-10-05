@@ -41,7 +41,7 @@ _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # Observability per-run trace directory: 16 lowercase hex characters,
     # the shape core.observability.context._mint_run_id mints.
     "run_id": r"[0-9a-f]{16}",
-    # ISO calendar date (llm-usage / llm-run-telemetry daily filenames).
+    # ISO calendar date (llm-usage / run-record daily filenames).
     "timestamp": r"\d{4}-\d{2}-\d{2}",
     # Closed set: core.AuthProviderKind's members, spelled precisely rather
     # than bounded only by "not a path separator" like the free-form tokens

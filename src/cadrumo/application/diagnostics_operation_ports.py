@@ -7,7 +7,7 @@ from typing import Protocol
 from uuid import UUID
 
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from .diagnostics_run_health_ports import DiagnosticAuthProbePort, DiagnosticRunTelemetryPort
+from .diagnostics_run_health_ports import DiagnosticAuthProbePort, DiagnosticRunRecordPort
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,7 +16,7 @@ class DiagnosticsReadPorts:
 
     profile_id: UUID
     operation: PinnedAuthorityOperation
-    run_telemetry_port: DiagnosticRunTelemetryPort
+    run_record_port: DiagnosticRunRecordPort
     auth_probe_port: DiagnosticAuthProbePort
 
 

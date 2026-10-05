@@ -225,11 +225,11 @@ class StorageCategory(StrEnum):
     LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY = "live-state.iva-remote-state.filed-history"
     LIVE_STATE_IVA_REMOTE_STATE_WALLET = "live-state.iva-remote-state.wallet"
 
-    # ── Diagnostic and append-only telemetry logs ───────────────────────────
+    # ── Diagnostic and append-only run-record logs ───────────────────────────
     LOGS = "logs"
     LOG_FILE = "logs.file"
     LLM_USAGE = "llm-usage"
-    LLM_RUN_TELEMETRY = "llm-run-telemetry"
+    LLM_RUN_RECORD = "llm-run-telemetry"
     RUNS = "runs"
 
     # ── Regenerable, evictable caches ───────────────────────────────────────

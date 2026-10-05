@@ -2839,22 +2839,22 @@ cli:
       header: 'Latencia de ejecuciones LLM:'
       help: Muestra los percentiles P50/P95/P99 de duración de las ejecuciones LLM
         locales recientes.
-      no_run_data: Todavía no se ha registrado telemetría de ejecuciones LLM. Ejecuta
-        una clasificación asistida por LLM para generarla.
+      no_run_data: Todavía no se han registrado datos de ejecuciones LLM. Ejecuta
+        una clasificación asistida por LLM para generarlos.
       provider_help: Restringe el informe a esta etiqueta de proveedor (por ejemplo,
         claude, antigravity, codex).
       since_help: Límite inferior inclusivo (AAAA-MM-DD) en los registros de ejecuciones
         LLM.
       until_help: Límite superior inclusivo (AAAA-MM-DD) en los registros de ejecuciones
         LLM.
-    llm_run_data_observed: No se registró telemetría de ejecución del LLM para este
+    llm_run_data_observed: No se registraron datos de ejecución del LLM para este
       informe.
     llm_usage:
       header: 'Uso de ejecuciones LLM:'
       help: Informa de los totales de uso de ejecuciones LLM (recuentos, duraciones,
         tasa de éxito) por proveedor y modelo.
-      no_run_data: Todavía no se ha registrado telemetría de ejecuciones LLM. Ejecuta
-        una clasificación asistida por LLM para generarla.
+      no_run_data: Todavía no se han registrado datos de ejecuciones LLM. Ejecuta
+        una clasificación asistida por LLM para generarlos.
       provider_help: Restringe el resumen a esta etiqueta de proveedor (p. ej. claude,
         antigravity, codex).
       since_help: Límite inferior inclusivo en fecha ISO (AAAA-MM-DD) sobre los registros
@@ -2880,8 +2880,8 @@ cli:
       header: 'Estado de las ejecuciones del LLM:'
       help: Muestra el tiempo reciente de las ejecuciones del LLM y el estado de la
         sesión de AEAT persistida (solo local).
-      no_run_data: Aún no hay telemetría de ejecuciones del LLM. Ejecuta una clasificación
-        asistida por LLM para generarla.
+      no_run_data: Aún no hay datos de ejecuciones del LLM. Ejecuta una clasificación
+        asistida por LLM para generarlos.
       no_session_message: No se encontró ninguna sesión de AEAT persistida en disco.
       provider_help: Restringe la sección de tiempos del LLM a este proveedor (p.
         ej. claude, antigravity, codex).
@@ -2897,8 +2897,8 @@ cli:
       help: Muestra las ejecuciones recientes del LLM registradas localmente, de la
         más reciente a la más antigua.
       limit_help: Limita el listado a este número de ejecuciones más recientes.
-      no_run_data: Aún no hay telemetría de ejecuciones del LLM. Ejecuta una clasificación
-        asistida por LLM para generarla.
+      no_run_data: Aún no hay datos de ejecuciones del LLM. Ejecuta una clasificación
+        asistida por LLM para generarlos.
       provider_help: Restringe el listado a este proveedor (p. ej. claude, antigravity,
         codex).
       until_help: Fecha ISO (AAAA-MM-DD) superior inclusiva para los registros de

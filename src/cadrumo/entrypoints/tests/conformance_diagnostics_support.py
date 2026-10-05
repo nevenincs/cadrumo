@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from ...adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ...adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ...application.diagnostics_operation import DIAGNOSTICS_READ_OPERATION_DEFINITION_ID
 from ...application.diagnostics_read_contracts import DiagnosticsReadProjection, DiagnosticsReadRequest
 from ...application.diagnostics_run_report_contracts import DiagnosticsRunRecordSnapshot
@@ -80,7 +80,7 @@ def _expected_row(record: LLMRunRecord) -> DiagnosticsRunRecordSnapshot:
 
 
 def _prepare_read(context: ConformanceFamilyContext) -> ConformancePreparation:
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     for record in _SEEDED_RUNS:
         recorder.record(record)
     by_id = {record.run_id: record for record in _SEEDED_RUNS}

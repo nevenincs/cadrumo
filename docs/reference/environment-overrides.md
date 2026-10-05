@@ -126,9 +126,9 @@ value already present in your shell always wins.
 | `CADRUMO_LLM_OPENAI_API_KEY` | SecretStr | (secret) | OpenAI API key (optional) |
 | `CADRUMO_LLM_OPENAI_CHAT_COMPLETIONS_URL` | str | `https://api.openai.com/v1/chat/completions` | OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies |
 | `CADRUMO_LLM_PROVIDER` | LLMProvider | `ANTHROPIC` | Default LLM provider name |
-| `CADRUMO_LLM_RUN_TELEMETRY_DIR` | Path | (derived) | Directory for append-only local LLM run-timing telemetry logs |
-| `CADRUMO_LLM_RUN_TELEMETRY_MAX_RECORDS` | int | `5000` | Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned |
-| `CADRUMO_LLM_RUN_TELEMETRY_RETENTION_DAYS` | int | `30` | Retention window in days for local LLM run-telemetry records; older records are pruned |
+| `CADRUMO_LLM_RUN_RECORD_DIR` | Path | (derived) | Directory for append-only local LLM run-timing record logs |
+| `CADRUMO_LLM_RUN_RECORD_MAX_RECORDS` | int | `5000` | Maximum number of local LLM run-record records retained; oldest excess records are pruned |
+| `CADRUMO_LLM_RUN_RECORD_RETENTION_DAYS` | int | `30` | Retention window in days for local LLM run-record records; older records are pruned |
 | `CADRUMO_LLM_USAGE_DIR` | Path | (derived) | Directory for append-only LLM usage JSONL logs |
 | `CADRUMO_LLM_USAGE_MAX_RECORDS` | int | `5000` | Maximum number of LLM usage records retained; oldest excess records are pruned |
 | `CADRUMO_LLM_USAGE_RETENTION_DAYS` | int | `30` | Retention window in days for LLM usage records; older records are pruned |

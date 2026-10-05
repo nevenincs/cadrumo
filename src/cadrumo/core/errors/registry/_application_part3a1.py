@@ -4,11 +4,11 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.application.diagnostics_run_health_ports.DiagnosticRunTelemetryError",
+        "cadrumo.application.diagnostics_run_health_ports.DiagnosticRunRecordError",
         ErrorCode(
-            code="FAIL_DIAGNOSTIC_RUN_TELEMETRY",
+            code="FAIL_DIAGNOSTIC_RUN_RECORD",
             category=ErrorCategory.FAIL,
-            message_key="errors.fail.canonical_diagnostic_run_telemetry",
+            message_key="errors.fail.canonical_diagnostic_run_record",
             retryable=False,
             runbook_id=None,
         ),

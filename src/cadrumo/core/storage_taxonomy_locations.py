@@ -232,7 +232,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
-    # ── Diagnostic and append-only telemetry logs ───────────────────────────
+    # ── Diagnostic and append-only run-record logs ───────────────────────────
     _location(
         StorageCategory.LOGS,
         "logs",
@@ -264,10 +264,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        StorageCategory.LLM_RUN_TELEMETRY,
+        StorageCategory.LLM_RUN_RECORD,
         "llm-run-telemetry",
-        consumer_module="adapters/persistence/llm/run_telemetry.py",
-        settings_field="cadrumo_llm_run_telemetry_dir",
+        consumer_module="adapters/persistence/llm/run_records.py",
+        settings_field="cadrumo_llm_run_record_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,

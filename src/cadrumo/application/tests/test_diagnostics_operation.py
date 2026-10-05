@@ -260,7 +260,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             since=request.payload.since,
             until=request.payload.until,
             provider=request.payload.provider,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
             auth_probe_port=canonical_probe,
         )
         assert projection.run_health.to_report().session_stale
@@ -271,7 +271,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             until=request.payload.until,
             provider=request.payload.provider,
             limit=1,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
         )
         assert tuple(row.model_dump() for row in projection.runs) == tuple(row.model_dump() for row in canonical)
         assert projection.runs[0].run_id == "b"
@@ -281,7 +281,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             since=request.payload.since,
             until=request.payload.until,
             provider=request.payload.provider,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
         )
     elif kind == "errors":
         assert projection.errors is not None
@@ -291,7 +291,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
                 since=request.payload.since,
                 until=request.payload.until,
                 provider=request.payload.provider,
-                run_telemetry_port=canonical_runs,
+                run_record_port=canonical_runs,
             ).model_dump()
         )
     else:
@@ -300,7 +300,7 @@ async def test_read_preserves_complete_canonical_report_and_filters(
             since=request.payload.since,
             until=request.payload.until,
             provider=request.payload.provider,
-            run_telemetry_port=canonical_runs,
+            run_record_port=canonical_runs,
         )
     with pytest.raises(ValueError):
         project_diagnostics_read_result(result, invocation.receipt(OperationEffect.UNKNOWN))

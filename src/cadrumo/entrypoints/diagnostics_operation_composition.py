@@ -19,7 +19,7 @@ def build_diagnostics_read_ports(*, profile_id: UUID, operation: PinnedAuthority
     return DiagnosticsReadPorts(
         profile_id=profile_id,
         operation=operation,
-        run_telemetry_port=compose_diagnostics_run_health_port(),
+        run_record_port=compose_diagnostics_run_health_port(),
         auth_probe_port=compose_diagnostics_auth_probe_port(
             certificate_secret_backend_factory=auth.certificate_secret_backend_factory,
             operator_probe_ports=auth.operator_probe_ports,

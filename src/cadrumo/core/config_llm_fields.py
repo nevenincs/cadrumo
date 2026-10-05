@@ -1,4 +1,4 @@
-"""LLM provider, cache, telemetry, and usage-retention settings.
+"""LLM provider, cache, run-record, and usage-retention settings.
 
 Split from :mod:`~core.config` to keep the central settings facade within the
 line budget. :class:`~core.config.Settings` inherits these fields (through the
@@ -69,19 +69,19 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
         default=Path("llm-usage"),
         description="Directory for append-only LLM usage JSONL logs",
     )
-    cadrumo_llm_run_telemetry_dir: Path = Field(
+    cadrumo_llm_run_record_dir: Path = Field(
         default=Path("llm-run-telemetry"),
-        description="Directory for append-only local LLM run-timing telemetry logs",
+        description="Directory for append-only local LLM run-timing record logs",
     )
-    cadrumo_llm_run_telemetry_retention_days: int = Field(
+    cadrumo_llm_run_record_retention_days: int = Field(
         default=30,
         ge=1,
-        description="Retention window in days for local LLM run-telemetry records; older records are pruned",
+        description="Retention window in days for local LLM run-record records; older records are pruned",
     )
-    cadrumo_llm_run_telemetry_max_records: int = Field(
+    cadrumo_llm_run_record_max_records: int = Field(
         default=5000,
         ge=1,
-        description="Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned",
+        description="Maximum number of local LLM run-record records retained; oldest excess records are pruned",
     )
     cadrumo_llm_cache_retention_days: int = Field(
         default=30,

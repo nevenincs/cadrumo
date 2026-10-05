@@ -1029,7 +1029,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings):
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
-        "cadrumo_llm_run_telemetry_dir",
+        "cadrumo_llm_run_record_dir",
         "cadrumo_submissions_dir",
         "cadrumo_workflow_runs_dir",
         "cadrumo_drafts_dir",

@@ -99,24 +99,22 @@ class DiagnosticsReadExecutor:
             if payload.kind == "run_health":
                 report = build_run_health_report(
                     **common,
-                    run_telemetry_port=ports.run_telemetry_port,
+                    run_record_port=ports.run_record_port,
                     auth_probe_port=ports.auth_probe_port,
                 )
                 values["run_health"] = DiagnosticsRunHealthSnapshot.from_report(report)
             elif payload.kind == "runs":
-                rows = list_recent_runs(**common, limit=payload.limit, run_telemetry_port=ports.run_telemetry_port)
+                rows = list_recent_runs(**common, limit=payload.limit, run_record_port=ports.run_record_port)
                 values["runs"] = tuple(row.model_dump() for row in rows)
             elif payload.kind == "latency":
                 values["latency"] = DiagnosticsLatencySnapshot.from_report(
-                    build_latency_report(**common, run_telemetry_port=ports.run_telemetry_port)
+                    build_latency_report(**common, run_record_port=ports.run_record_port)
                 )
             elif payload.kind == "errors":
-                values["errors"] = build_error_breakdown(
-                    **common, run_telemetry_port=ports.run_telemetry_port
-                ).model_dump()
+                values["errors"] = build_error_breakdown(**common, run_record_port=ports.run_record_port).model_dump()
             else:
                 values["llm_usage"] = DiagnosticsUsageSnapshot.from_report(
-                    build_llm_usage_report(**common, run_telemetry_port=ports.run_telemetry_port)
+                    build_llm_usage_report(**common, run_record_port=ports.run_record_port)
                 )
             return DiagnosticsReadExecutionResult(projection=DiagnosticsReadProjection.model_validate(values))
 

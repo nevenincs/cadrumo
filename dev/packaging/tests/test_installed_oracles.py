@@ -1026,7 +1026,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     client on an upgrader's machine provides. It pins the startup chain that
     died four separate ways during the distribution campaign: import-time
     registry settings, the schema-build config subtree, the adapter module
-    constants, and the eager telemetry-directory resolution.
+    constants, and the eager run-record-directory resolution.
     """
     cohort = installed_cohort
     environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal", cohort.venv)
@@ -1059,7 +1059,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     }
     # The degradation is visible, never silent: the startup note names the
     # storage-root refusal on stderr, which the client's MCP log captures.
-    assert "serving without telemetry" in stderr_text
+    assert "serving without run records" in stderr_text
 
 
 async def _call_dev_installed_mcp_authenticate(

@@ -4,7 +4,7 @@ Folds two existing local-only signals into one typed operator-facing report so
 a slow LLM-backed classification run or a stale/expired persisted AEAT auth
 session is diagnosable without leaving the host:
 
-* :class:`~application.diagnostics_run_health_ports.DiagnosticRunTelemetryPort`
+* :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecordPort`
   supplies
   duration/outcome metadata for every LLM classification, split-proposal, and
   completion run (see :class:`~llm.LLMClient` and
@@ -22,14 +22,14 @@ only the locally persisted session token's metadata. This backs the
 :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord` rows
 individually (most-recent-first, optionally limited) rather than aggregated
 per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb.
-It reads them through the injected diagnostic telemetry port -- there is no
+It reads them through the injected diagnostic run record port -- there is no
 parallel capture or storage path here.
 
 :func:`build_latency_report` and :func:`build_error_breakdown` project the
 *same* recorded rows into a percentile-latency view and a failed-run
 error-kind breakdown, backing the ``aeat app diagnostics latency`` and
 ``aeat app diagnostics errors`` verbs. Neither introduces a new capture or
-storage path -- both read through the diagnostic telemetry port exactly as
+storage path -- both read through the diagnostic run record port exactly as
 ``run-health`` and ``runs`` do, honouring ``aeat-architecture-boundaries``.
 
 :func:`build_llm_usage_report` projects the same recorded rows into a
@@ -43,11 +43,11 @@ token/cost figures (those are covered by the separate
 :func:`~application.ledger.llm_diagnostics.build_llm_diagnostics_report`
 usage/cost/confidence report, which folds the distinct completion-call
 :class:`~llm.UsageRecord` log). This report again
-reads through the injected diagnostic telemetry port -- there is no parallel
+reads through the injected diagnostic run record port -- there is no parallel
 capture or storage path here either.
 
 See Also:
-    :class:`~application.diagnostics_run_health_ports.DiagnosticRunTelemetryPort`
+    :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecordPort`
         Application-owned read contract that supplies every run row this module reads.
     :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord`
         Timing/outcome-only record projected into each diagnostic report.
@@ -71,7 +71,7 @@ from ..core.time.date_range import validate_inclusive_date_range
 from .diagnostics_run_health_ports import (
     DiagnosticAuthProbePort,
     DiagnosticRunRecord,
-    DiagnosticRunTelemetryPort,
+    DiagnosticRunRecordPort,
 )
 
 __all__ = [
@@ -129,7 +129,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 
 
 class LlmRunProviderMetrics(BaseModel):
-    """Per-provider aggregate of recent local LLM run-timing telemetry.
+    """Per-provider aggregate of recent local LLM run-timing record.
 
     Aggregated from :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord` rows for
     a single :attr:`provider`. Carries only timing and outcome metadata --
@@ -151,7 +151,7 @@ class RunHealthReport(BaseModel):
     """Typed local-only run-health report: LLM run timing plus auth staleness.
 
     Produced by :func:`build_run_health_report`. :attr:`has_run_data` is
-    ``False`` when no LLM run telemetry has been recorded yet, so callers can
+    ``False`` when no LLM run record has been recorded yet, so callers can
     print an instructive empty message. The auth section always carries a
     verdict (a fresh profile with no configured provider still reports
     ``persisted_session_present = False``).
@@ -201,10 +201,10 @@ def build_run_health_report(
     since: date | None = None,
     until: date | None = None,
     provider: str | None = None,
-    run_telemetry_port: DiagnosticRunTelemetryPort,
+    run_record_port: DiagnosticRunRecordPort,
     auth_probe_port: DiagnosticAuthProbePort,
 ) -> RunHealthReport:
-    """Aggregate local LLM run telemetry and the auth-session probe into one report.
+    """Aggregate local LLM run record and the auth-session probe into one report.
 
     Args:
         since: Inclusive lower date bound on run records, or ``None``.
@@ -214,7 +214,7 @@ def build_run_health_report(
             run-timing section. This is distinct from an AEAT auth provider
             name -- the auth-session probe always auto-resolves its provider
             from workflow state and never receives this filter.
-        run_telemetry_port: Injected diagnostic telemetry read port supplied by
+        run_record_port: Injected diagnostic run record read port supplied by
             the outer composition root.
         auth_probe_port: Injected redacted auth-readiness probe supplied by the
             outer composition root.
@@ -222,7 +222,7 @@ def build_run_health_report(
     Returns:
         The populated :class:`RunHealthReport`.
     """
-    records = run_telemetry_port.load_records(since=since, until=until)
+    records = run_record_port.load_records(since=since, until=until)
     if provider is not None:
         records = tuple(item for item in records if item.provider == provider)
     llm_providers = _aggregate_runs(records)
@@ -271,11 +271,11 @@ def list_recent_runs(
     until: date | None = None,
     provider: str | None = None,
     limit: int | None = None,
-    run_telemetry_port: DiagnosticRunTelemetryPort,
+    run_record_port: DiagnosticRunRecordPort,
 ) -> tuple[RunRecordView, ...]:
     """Return recent local LLM run-timing records, most-recent-first.
 
-    Reads through the same injected diagnostic telemetry port
+    Reads through the same injected diagnostic run record port
     :func:`build_run_health_report` uses, so there is no parallel capture or
     storage path for this listing.
 
@@ -286,7 +286,7 @@ def list_recent_runs(
             provider.
         limit: Optional cap on the number of most-recent rows returned;
             ``None`` returns every matching record.
-        run_telemetry_port: Injected diagnostic telemetry read port supplied by
+        run_record_port: Injected diagnostic run record read port supplied by
             the outer composition root.
 
     Returns:
@@ -294,7 +294,7 @@ def list_recent_runs(
         broken by ``run_id`` descending, mirroring the recorder's own stable
         ascending order reversed).
     """
-    records = run_telemetry_port.load_records(since=since, until=until)
+    records = run_record_port.load_records(since=since, until=until)
     if provider is not None:
         records = tuple(item for item in records if item.provider == provider)
     ordered = tuple(reversed(records))
@@ -454,11 +454,11 @@ def build_latency_report(
     since: date | None = None,
     until: date | None = None,
     provider: str | None = None,
-    run_telemetry_port: DiagnosticRunTelemetryPort,
+    run_record_port: DiagnosticRunRecordPort,
 ) -> LatencyReport:
     """Aggregate recorded run durations into overall and per-provider percentiles.
 
-    Reads through the same injected diagnostic telemetry port
+    Reads through the same injected diagnostic run record port
     :func:`build_run_health_report` and :func:`list_recent_runs` use, so there
     is no parallel capture or storage path for this report.
 
@@ -468,13 +468,13 @@ def build_latency_report(
         provider: Optional provider label filter; when supplied, ``overall``
             reflects only that provider's runs and ``by_provider`` is left
             empty (a single-provider breakdown would duplicate ``overall``).
-        run_telemetry_port: Injected diagnostic telemetry read port supplied by
+        run_record_port: Injected diagnostic run record read port supplied by
             the outer composition root.
 
     Returns:
         The populated :class:`LatencyReport`.
     """
-    records = run_telemetry_port.load_records(since=since, until=until)
+    records = run_record_port.load_records(since=since, until=until)
     if provider is not None:
         records = tuple(item for item in records if item.provider == provider)
 
@@ -497,11 +497,11 @@ def build_error_breakdown(
     since: date | None = None,
     until: date | None = None,
     provider: str | None = None,
-    run_telemetry_port: DiagnosticRunTelemetryPort,
+    run_record_port: DiagnosticRunRecordPort,
 ) -> ErrorsBreakdownReport:
     """Group failed recorded runs by provider and ``error_kind``.
 
-    Reads through the same injected diagnostic telemetry port every sibling
+    Reads through the same injected diagnostic run record port every sibling
     diagnostics report uses, so there is no parallel capture or storage path
     for this report.
 
@@ -510,13 +510,13 @@ def build_error_breakdown(
         until: Inclusive upper date bound on run records, or ``None``.
         provider: Optional provider label filter; ``None`` breaks down every
             provider's failures.
-        run_telemetry_port: Injected diagnostic telemetry read port supplied by
+        run_record_port: Injected diagnostic run record read port supplied by
             the outer composition root.
 
     Returns:
         The populated :class:`ErrorsBreakdownReport`.
     """
-    records = run_telemetry_port.load_records(since=since, until=until)
+    records = run_record_port.load_records(since=since, until=until)
     if provider is not None:
         records = tuple(item for item in records if item.provider == provider)
 
@@ -544,7 +544,7 @@ def build_error_breakdown(
 
 
 class LlmUsageModelMetrics(BaseModel):
-    """One provider's per-model aggregate of recent local LLM run telemetry.
+    """One provider's per-model aggregate of recent local LLM run record.
 
     Aggregated from :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord` rows
     sharing a single provider (recorded on the owning
@@ -574,7 +574,7 @@ class LlmUsageModelMetrics(BaseModel):
 
 
 class LlmRunHealthProviderMetrics(BaseModel):
-    """One provider's aggregate of recent local LLM run telemetry, plus its per-model rows.
+    """One provider's aggregate of recent local LLM run record, plus its per-model rows.
 
     :attr:`models` breaks the same provider-scoped records down further by
     :attr:`~LlmUsageModelMetrics.model`, so an operator can see which model
@@ -609,7 +609,7 @@ class LlmUsageReport(BaseModel):
     :func:`build_run_health_report` reads by provider (:attr:`by_provider`),
     each provider row carrying its own per-model breakdown
     (:attr:`~LlmRunHealthProviderMetrics.models`). :attr:`has_run_data` is
-    ``False`` when no LLM run telemetry has been recorded yet.
+    ``False`` when no LLM run record has been recorded yet.
     """
 
     model_config = _STRICT_FROZEN
@@ -700,11 +700,11 @@ def build_llm_usage_report(
     since: date | None = None,
     until: date | None = None,
     provider: str | None = None,
-    run_telemetry_port: DiagnosticRunTelemetryPort,
+    run_record_port: DiagnosticRunRecordPort,
 ) -> LlmUsageReport:
-    """Aggregate recorded LLM run telemetry into a usage summary by provider and model.
+    """Aggregate recorded LLM run record into a usage summary by provider and model.
 
-    Reads through the same injected diagnostic telemetry port every sibling
+    Reads through the same injected diagnostic run record port every sibling
     diagnostics report uses, so there is no parallel capture or storage path
     for this report (``aeat-architecture-boundaries``).
     :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord` carries no token
@@ -716,13 +716,13 @@ def build_llm_usage_report(
         until: Inclusive upper date bound on run records, or ``None``.
         provider: Optional provider label filter; ``None`` aggregates every
             provider.
-        run_telemetry_port: Injected diagnostic telemetry read port supplied by
+        run_record_port: Injected diagnostic run record read port supplied by
             the outer composition root.
 
     Returns:
         The populated :class:`LlmUsageReport`.
     """
-    records = run_telemetry_port.load_records(since=since, until=until)
+    records = run_record_port.load_records(since=since, until=until)
     if provider is not None:
         records = tuple(item for item in records if item.provider == provider)
 

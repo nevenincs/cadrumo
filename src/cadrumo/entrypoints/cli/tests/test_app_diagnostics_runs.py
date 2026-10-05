@@ -3,8 +3,8 @@
 Exercises the listing verb end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.list_recent_runs` projection,
 and real encrypted SQLite persistence in an isolated storage root. No test
-doubles: LLM run telemetry is seeded through its production writer
-(:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`), the exact same
+doubles: LLM run record is seeded through its production writer
+(:class:`~cadrumo.adapters.outbound.llm.LLMRunRecorder`), the exact same
 recorder ``run-health`` reads, and the verb reports it back typed.
 """
 
@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture
@@ -38,7 +38,7 @@ def _invoke(args: list[str]) -> Result:
 
 def _seed_runs() -> None:
     """Write three real run-timing records: two claude (one failed), one codex."""
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     recorder.record(
         LLMRunRecord(
             run_id="run-1",
@@ -76,7 +76,7 @@ def _seed_runs() -> None:
 
 
 def test_runs_lists_seeded_records_most_recent_first(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """The verb lists the seeded run telemetry typed, most-recent-first."""
+    """The verb lists the seeded run record typed, most-recent-first."""
     _seed_runs()
 
     result = _invoke(["--format", "json", "app", "diagnostics", "runs"])
@@ -91,7 +91,7 @@ def test_runs_lists_seeded_records_most_recent_first(diagnostics_native_profile:
 
 
 def test_runs_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
+    """With no LLM run record the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "runs"])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)

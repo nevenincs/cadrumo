@@ -14,7 +14,7 @@ layer: the key grammar is a pure function of the record, so no consumer needs
 the outbound adapter to derive it.
 
 The store is deliberately not pruned. Its sibling LLM stores (cache, usage,
-run-telemetry) are swept on retention because they are diagnostic and
+run-record) are swept on retention because they are diagnostic and
 regenerable; this one is neither, because a consent withdrawal reads it to
 enumerate which artefacts depend on a cloud read, and an entry aged out of
 existence would make that withdrawal silently incomplete.

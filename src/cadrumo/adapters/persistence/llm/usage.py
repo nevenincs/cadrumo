@@ -184,7 +184,7 @@ class UsageRecorder:
         """Delete usage records older than the retention window or beyond the count cap.
 
         Applies the same two-stage bound as
-        :meth:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder.prune`: first every
+        :meth:`~adapters.persistence.llm.run_records.LLMRunRecorder.prune`: first every
         record older than ``retention_days`` (measured against the current time)
         is removed, then -- if more than ``max_records`` remain -- the oldest
         excess records beyond the cap are removed too. Both bounds default to the

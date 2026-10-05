@@ -640,7 +640,7 @@ def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestam
 
     Mirrors :func:`~cadrumo.adapters.outbound.llm.retention.select_retention_removal_keys`'s
     pure rank-and-bound shape, generalized to a filesystem entry (a run
-    directory, a dump file, a telemetry file, a compiled-cache pickle)
+    directory, a dump file, a log file, a compiled-cache pickle)
     instead of a secure-object key, and widened from that primitive's fixed
     cutoff-then-count pipeline to composable, independently-optional bounds.
     Deletion stays with the caller: this function only decides who survives.

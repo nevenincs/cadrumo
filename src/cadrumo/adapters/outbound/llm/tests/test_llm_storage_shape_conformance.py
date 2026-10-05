@@ -1,8 +1,8 @@
-"""The LLM usage and telemetry display paths match their declared grammar shapes.
+"""The LLM usage and run-record display paths match their declared grammar shapes.
 
 Two of ``STORAGE_PATH_DEFINITIONS``' filesystem-kind entries are NOT
 materialised as files: :class:`~adapters.outbound.llm.UsageRecorder`,
-:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` persist through
+:class:`~adapters.outbound.llm.LLMRunRecorder` persist through
 ``secure_object_repository_for_active_bucket().save(...)`` (encrypted SQL
 secure objects); each producer's own docstring says its returned path is
 "logical ... for operator display only". The
@@ -28,7 +28,7 @@ from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.storage_taxonomy import StorageCategory
 from .....tests.storage_scope import storage_overrides
-from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
 from ..models import LLMResponse
@@ -67,10 +67,10 @@ def test_the_usage_record_logical_path_matches_its_declared_shape(tmp_path: Path
     assert_path_matches_grammar(key="llm_usage_record", root=root, produced=path)
 
 
-def test_the_run_telemetry_logical_path_matches_its_declared_shape(tmp_path: Path) -> None:
+def test_the_run_record_logical_path_matches_its_declared_shape(tmp_path: Path) -> None:
     root = tmp_path
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.LLM_RUN_TELEMETRY)):
-        recorder = LLMRunTelemetryRecorder()
+    with override_settings(**storage_overrides(tmp_path, StorageCategory.LLM_RUN_RECORD)):
+        recorder = LLMRunRecorder()
         record = LLMRunRecord(
             run_id="run-0001",
             caller="test-suite",
@@ -83,7 +83,7 @@ def test_the_run_telemetry_logical_path_matches_its_declared_shape(tmp_path: Pat
         path = recorder.record(record)
 
     assert not path.exists()
-    assert_path_matches_grammar(key="llm_run_telemetry_record", root=root, produced=path)
+    assert_path_matches_grammar(key="llm_run_record_file", root=root, produced=path)
 
 
 def test_a_non_conforming_usage_filename_is_rejected_by_the_grammar(tmp_path: Path) -> None:

@@ -1,4 +1,4 @@
-"""Real-behaviour tests for LLM run-timing telemetry on the subprocess classify path.
+"""Real-behaviour tests for LLM run-timing record on the subprocess classify path.
 
 Exercises :func:`suggest_llm_classification` against a REAL subprocess CLI
 (``python -c <script>``, no mocks) and asserts one
@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
-from cadrumo.adapters.persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from cadrumo.adapters.persistence.llm.run_records import LLMRunRecorder
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.ledger.llm_classification import suggest_llm_classification
@@ -51,7 +51,7 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
-        provider_transaction_id="row-telemetry",
+        provider_transaction_id="row-run-record",
         booked_date=date(2025, 3, 1),
         value_date=date(2025, 3, 1),
         amount=Decimal("50.00"),
@@ -90,7 +90,7 @@ def test_suggest_llm_classification_records_one_run_on_success(profile: TestRunt
             model="test-model",
         )
 
-        run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
+        run_recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
         assert run_recorder.load_records() == ()
         ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=profile.settings).ports
 
@@ -126,7 +126,7 @@ def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRunt
             model="test-model",
         )
 
-        run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
+        run_recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
         ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=profile.settings).ports
 
         with pytest.raises(LLMClassifierError):

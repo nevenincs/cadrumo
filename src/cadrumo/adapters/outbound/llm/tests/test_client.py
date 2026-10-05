@@ -29,7 +29,7 @@ from .....tests.loopback_llm import (
     write_json_response,
 )
 from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..errors import LLMProviderError, LLMRateLimitError
@@ -44,17 +44,17 @@ def _settings(tmp_path: Path) -> EnvFileFreeSettings:
         cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "probe-cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
 
 
-def _client(tmp_path: Path, *, run_recorder: LLMRunTelemetryRecorder | None = None) -> LLMClient:
+def _client(tmp_path: Path, *, run_recorder: LLMRunRecorder | None = None) -> LLMClient:
     settings = _settings(tmp_path)
     return LLMClient(
         settings=settings,
         cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
         usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_telemetry_recorder=run_recorder,
+        run_record_recorder=run_recorder,
     )
 
 
@@ -119,9 +119,9 @@ def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
     assert exc_info.value.retry_after_seconds == pytest.approx(0.01)
 
 
-def test_client_records_run_telemetry_on_success(tmp_path: Path) -> None:
+def test_client_records_run_record_on_success(tmp_path: Path) -> None:
     """A successful provider call records one succeeded run-timing record."""
-    run_recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
+    run_recorder = LLMRunRecorder(root_dir=tmp_path / "run-record")
     with _serve_ollama() as (endpoint, _events), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
         asyncio.run(_client(tmp_path, run_recorder=run_recorder).complete(LLMRequest(prompt="hello")))
 
@@ -137,7 +137,7 @@ def test_client_records_run_telemetry_on_success(tmp_path: Path) -> None:
 
 def test_client_cache_hit_does_not_record_a_second_run(tmp_path: Path) -> None:
     """A cache hit must not append a second provider run-timing record."""
-    run_recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
+    run_recorder = LLMRunRecorder(root_dir=tmp_path / "run-record")
     with _serve_ollama() as (endpoint, _events), override_settings(cadrumo_llm_ollama_chat_url=endpoint):
         client = _client(tmp_path, run_recorder=run_recorder)
         request = LLMRequest(prompt="hello")
@@ -147,9 +147,9 @@ def test_client_cache_hit_does_not_record_a_second_run(tmp_path: Path) -> None:
     assert len(run_recorder.load_records()) == 1
 
 
-def test_client_records_run_telemetry_on_provider_failure(tmp_path: Path) -> None:
+def test_client_records_run_record_on_provider_failure(tmp_path: Path) -> None:
     """A provider failure records one failed run naming the error kind."""
-    run_recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
+    run_recorder = LLMRunRecorder(root_dir=tmp_path / "run-record")
     with (
         _serve_ollama(HTTPStatus.SERVICE_UNAVAILABLE) as (endpoint, _events),
         override_settings(cadrumo_llm_ollama_chat_url=endpoint),

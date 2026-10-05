@@ -65,7 +65,7 @@ class LlmRunProviderPayload(OutputSchema):
 class RunHealthResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics run-health``.
 
-    Presents local-only LLM run-timing telemetry (per-provider run counts,
+    Presents local-only LLM run-timing record (per-provider run counts,
     outcomes, and duration distribution) alongside the persisted-AEAT-session
     staleness probe in one read-only report, both sourced from
     :func:`~application.diagnostics_run_health.build_run_health_report`. It
@@ -304,7 +304,7 @@ class LlmUsageResult(OutputSchema):
     provider and, within each provider, by model. Sourced from
     :func:`~application.diagnostics_run_health.build_llm_usage_report`,
     which projects the same recorded
-    :class:`~adapters.persistence.llm.run_telemetry.LLMRunRecord` telemetry every sibling
+    :class:`~adapters.persistence.llm.run_records.LLMRunRecord` data every sibling
     diagnostics verb reads -- no new capture or storage path. That record
     carries no token counts, so this is a run/timing/success-rate summary
     rather than a token-usage summary; it reports only accounting/timing

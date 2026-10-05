@@ -2805,19 +2805,19 @@ cli:
       header: 'LLM futtatási késleltetés:'
       help: A közelmúltbeli helyi LLM-futtatások időtartamának P50/P95/P99 percentiliseit
         jelenti.
-      no_run_data: Még nincs rögzített LLM futtatási telemetria. Futtass egy LLM-alapú
-        besorolást a létrehozásához.
+      no_run_data: Még nincs rögzített LLM-futásadat. Futtass egy LLM-alapú besorolást
+        a létrehozásához.
       provider_help: Szűkítsd a jelentést erre a szolgáltatói címkére (pl. claude,
         antigravity, codex).
       since_help: Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
       until_help: Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
-    llm_run_data_observed: Ehhez a jelentéshez nem rögzítettek LLM-futtatási telemetriát.
+    llm_run_data_observed: Ehhez a jelentéshez nem rögzítettek LLM-futásadatot.
     llm_usage:
       header: 'LLM-futtatások felhasználása:'
       help: LLM-futtatási felhasználási összesítők jelentése (darabszám, időtartam,
         sikerarány) szolgáltató és modell szerint.
-      no_run_data: Még nem rögzítettek LLM-futtatási telemetriát. Futtass egy LLM-alapú
-        osztályozást az adatok létrehozásához.
+      no_run_data: Még nem rögzítettek LLM-futásadatot. Futtass egy LLM-alapú osztályozást
+        az adatok létrehozásához.
       provider_help: Korlátozza az összesítést erre a szolgáltatócímkére (pl. claude,
         antigravity, codex).
       since_help: Alsó, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.

@@ -26,7 +26,7 @@ from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObs
 from ...adapters.outbound.google import session_store as google_session_store
 from ...adapters.persistence.llm.cache import LLMCache
 from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
-from ...adapters.persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ...adapters.persistence.llm.run_records import LLMRunRecorder
 from ...adapters.persistence.llm.usage import UsageRecorder
 from ...adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -191,7 +191,7 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("google_drive_config", lambda: google_session_store.load_drive_config("operator-google")),
     ("llm_cache_stats", lambda: LLMCache(root_dir=Path("runtime-cache")).stats()),
     ("llm_usage_load", lambda: UsageRecorder(root_dir=Path("runtime-usage")).load_records()),
-    ("llm_run_telemetry", lambda: LLMRunTelemetryRecorder(root_dir=Path("runtime-telemetry")).load_records()),
+    ("llm_run_telemetry", lambda: LLMRunRecorder(root_dir=Path("runtime-run-record")).load_records()),
     ("llm_consent_ledger", lambda: EvidenceConsentLedger().load_entries()),
     (
         "review_recipient_registry",

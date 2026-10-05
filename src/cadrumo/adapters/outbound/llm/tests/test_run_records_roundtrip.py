@@ -1,7 +1,7 @@
-"""Strict roundtrip across the encrypted ``LLMRunTelemetryRecorder`` boundary.
+"""Strict roundtrip across the encrypted ``LLMRunRecorder`` boundary.
 
-``LLMRunTelemetryRecorder`` persists :class:`LLMRunRecord` rows under the
-``cadrumo.adapters.outbound.llm.run_telemetry`` namespace at
+``LLMRunRecorder`` persists :class:`LLMRunRecord` rows under the
+run-record secure-object namespace at
 ``SensitivityClass.DIAGNOSTIC``, mirroring ``UsageRecorder``'s persistence
 shape.
 
@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -75,7 +75,7 @@ def test_llm_run_record_refuses_non_utc_started_at_before_storage(
 
 def test_llm_run_records_survive_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """Two LLMRunRecord rows survive the encrypted append-only sink with date filtering."""
-    recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")
+    recorder = LLMRunRecorder(root_dir=tmp_path / "llm-run-record")
     today = _TODAY
     yesterday = today - timedelta(days=1)
     record_today = _record(
@@ -112,9 +112,9 @@ def test_llm_run_records_survive_encrypted_storage_roundtrip(tmp_path: Path) -> 
     assert only_yesterday == (record_yesterday,)
 
 
-def test_llm_run_telemetry_preserves_provider_outcome_and_duration(tmp_path: Path) -> None:
+def test_llm_run_record_preserves_provider_outcome_and_duration(tmp_path: Path) -> None:
     """Encrypted rows preserve each provider, outcome and duration."""
-    recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")
+    recorder = LLMRunRecorder(root_dir=tmp_path / "llm-run-record")
     recorder.record(
         _record(_TODAY, run_id="a", caller="c", provider="claude", duration_ms=1000, succeeded=True),
     )
@@ -133,13 +133,13 @@ def test_llm_run_telemetry_preserves_provider_outcome_and_duration(tmp_path: Pat
     )
 
 
-def test_llm_run_telemetry_empty_store_has_no_records(tmp_path: Path) -> None:
+def test_llm_run_record_empty_store_has_no_records(tmp_path: Path) -> None:
     """An empty encrypted store returns no records."""
-    recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")
+    recorder = LLMRunRecorder(root_dir=tmp_path / "llm-run-record")
     assert recorder.load_records() == ()
 
 
-def test_llm_run_telemetry_record_corrupted_on_disk_breaks_roundtrip(tmp_path: Path) -> None:
+def test_llm_run_record_file_corrupted_on_disk_breaks_roundtrip(tmp_path: Path) -> None:
     """Anti-tautology proof: mutating the persisted record must break equality.
 
     Confirms the roundtrip test is not vacuously true by writing a record,
@@ -147,7 +147,7 @@ def test_llm_run_telemetry_record_corrupted_on_disk_breaks_roundtrip(tmp_path: P
     asserting the two are NOT equal and NOT both present under a filter that
     should isolate exactly one.
     """
-    recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")
+    recorder = LLMRunRecorder(root_dir=tmp_path / "llm-run-record")
     original = _record(_TODAY, run_id="x", caller="c", provider="claude", duration_ms=1000, succeeded=True)
     recorder.record(original)
 

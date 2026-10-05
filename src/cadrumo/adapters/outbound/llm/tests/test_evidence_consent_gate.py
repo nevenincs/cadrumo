@@ -106,7 +106,7 @@ def _settings(
         cadrumo_llm_openai_api_key=SecretStr("loopback-key"),
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
         cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
         cadrumo_evidence_gestor_mode=gestor_mode,
     )

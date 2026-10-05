@@ -178,7 +178,7 @@ errors:
       a folytatás előtt próbáld meg újra a tisztítást.
     error_cadrumo_core: Belső alkalmazáshiba történt.
     error_cadrumo_core_not_found: A kért erőforrás vagy rekord nem található.
-    error_cadrumo_observability: Hiba történt az alkalmazás telemetriájában.
+    error_cadrumo_observability: Hiba történt az alkalmazás diagnosztikai naplózásában.
     error_calc_sheets_engine: A táblázatexportáló motor feloldhatatlan állapotba került
       az exportálási terv elkészítésekor.
     error_calc_sheets_parity: A paritás-tesztelési forgatókönyv olyan casilla.id értékekre
@@ -371,8 +371,8 @@ errors:
     canonical_catalogue_invoice_rate: A számlakatalógus árfolyamlekérdezése meghiúsult.
     canonical_counterparty_establishment_persistence: A partner letelepedési rekordját
       nem sikerült menteni.
-    canonical_diagnostic_run_telemetry: A diagnosztikai futtatás telemetriáját nem
-      sikerült beolvasni.
+    canonical_diagnostic_run_record: A diagnosztikai futtatás adatait nem sikerült
+      beolvasni.
     canonical_evidence_bundle_persistence: A bizonyítékcsomagot nem sikerült menteni.
     canonical_invoice_catalogue_read_persistence: A számlakatalógust nem sikerült
       betölteni a hivatkozások ellenőrzéséhez.
@@ -704,7 +704,7 @@ errors:
     internal_modelo_value_presentation_unknown: Egy rovat értéktípusához nincs megjelenítési
       szabály.
     internal_modelo_work_form_layout: A nyomtatvány elrendezése nem egyezik a változatával.
-    internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
+    internal_observability_run_context_missing: 'Belső hiba: diagnosztikai eseményt
       rögzítettek aktív futási kontextuson kívül.'
     internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
       fázist, hatást, erőforrást vagy interakciót igényelt, amelyet a definíciója

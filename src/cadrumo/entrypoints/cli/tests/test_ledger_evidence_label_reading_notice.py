@@ -48,7 +48,7 @@ from click.testing import Result
 from ....adapters.outbound.llm.client import LLMClient
 from ....adapters.outbound.llm.models import LLMRequest
 from ....adapters.persistence.llm.cache import LLMCache
-from ....adapters.persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....adapters.persistence.llm.run_records import LLMRunRecorder
 from ....adapters.persistence.llm.usage import UsageRecorder
 from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.config import load_settings, override_settings
@@ -327,13 +327,13 @@ def _start_holding_read(tmp_path: Path) -> tuple[threading.Thread, list[object]]
         cadrumo_llm_ollama_chat_url=load_settings().cadrumo_llm_ollama_chat_url,
         cadrumo_llm_cache_dir=root / "cache",
         cadrumo_llm_usage_dir=root / "usage",
-        cadrumo_llm_run_telemetry_dir=root / "run-telemetry",
+        cadrumo_llm_run_record_dir=root / "run-record",
     )
     client = LLMClient(
         settings=settings,
         cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
         usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_telemetry_recorder=LLMRunTelemetryRecorder(root_dir=settings.cadrumo_llm_run_telemetry_dir),
+        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
     )
     outcome: list[object] = []
     context = contextvars.copy_context()

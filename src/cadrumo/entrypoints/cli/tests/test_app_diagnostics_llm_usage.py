@@ -3,8 +3,8 @@
 Exercises the verb end to end against the real CLI, the real
 :func:`~cadrumo.application.diagnostics_run_health.build_llm_usage_report`
 aggregator, and real encrypted SQLite persistence in an isolated storage
-root. No test doubles: LLM run telemetry is seeded through its production
-writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder`) and the
+root. No test doubles: LLM run record is seeded through its production
+writer (:class:`~cadrumo.adapters.outbound.llm.LLMRunRecorder`) and the
 verb reports the run-count/duration/success-rate summary back typed, grouped
 by provider and, within each provider, by model.
 """
@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from .diagnostics_native_support import diagnostics_native_profile, invoke_diagnostics_cli
 from .runtime_profile_cli_fixture import NativeCliProfileFixture
@@ -44,7 +44,7 @@ def _seed_runs() -> None:
     150ms). This exercises both the provider-level fold and the nested
     per-model fold within a provider that uses more than one model.
     """
-    recorder = LLMRunTelemetryRecorder()
+    recorder = LLMRunRecorder()
     seeds = (
         ("run-1", "llm:claude:test-model", "model-a", 100, True, ""),
         ("run-2", "llm:claude:test-model", "model-a", 300, True, ""),
@@ -119,7 +119,7 @@ def test_llm_usage_aggregates_by_provider_and_model(diagnostics_native_profile: 
 
 
 def test_llm_usage_empty_is_instructive(diagnostics_native_profile: NativeCliProfileFixture) -> None:
-    """With no LLM run telemetry the verb reports empty and surfaces a guidance notice."""
+    """With no LLM run record the verb reports empty and surfaces a guidance notice."""
     result = _invoke(["--format", "json", "app", "diagnostics", "llm-usage"])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)

@@ -222,9 +222,9 @@ def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
     """Serve a real reader on a loopback port; yield a callable taking the reply.
 
     Depends on ``secure_object_test_profile`` for the real bucket runtime, because the
-    reading path writes run telemetry through the profile-bound encrypted
+    reading path writes run record through the profile-bound encrypted
     repository. Taking the shared fixture keeps this a real storage runtime
-    rather than disabling the telemetry write to make the test pass.
+    rather than disabling the run-record write to make the test pass.
     """
     requests: Queue[dict[str, object]] = Queue()
     _LoopbackRequestHandler.requests = requests

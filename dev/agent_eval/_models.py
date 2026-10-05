@@ -683,7 +683,7 @@ class LiveElicitationRecord(BaseModel):
 class LiveTrajectory(BaseModel):
     """The full captured record of one live subagent-persona session.
 
-    The unit the scorer consumes and the telemetry layer persists: every tool
+    The unit the scorer consumes and the recording layer persists: every tool
     call, narration, and elicitation exchange in order of occurrence, plus the
     session identity. ``observed_command_keys`` projects the tool calls onto
     registry command keys for the golden-scenario dimensions that assert over

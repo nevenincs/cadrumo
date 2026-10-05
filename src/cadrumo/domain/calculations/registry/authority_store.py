@@ -27,7 +27,7 @@ from .authority_artifact import (
 )
 from .authority_cache import (
     AccountedAuthorityCache,
-    AuthorityCacheTelemetry,
+    AuthorityCacheStats,
     RetainedAuthorityValue,
 )
 from .authority_component_codec import decode_authority_component
@@ -245,9 +245,9 @@ class SQLiteAuthorityReader:
             lambda: self._load_uncached(query, pin=pin),
         )
 
-    def telemetry(self) -> AuthorityCacheTelemetry:
+    def stats(self) -> AuthorityCacheStats:
         """Return retained component accounting, excluding connections and leases."""
-        return self._cache.telemetry()
+        return self._cache.stats()
 
     def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
         """Iterate the complete component directory without hydrating payloads.

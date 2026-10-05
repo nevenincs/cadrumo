@@ -206,7 +206,7 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
     "run_events": "<root>/runs/<run_id>/events.jsonl",
     "run_envelope": "<root>/runs/<run_id>/envelope.json",
     "llm_usage_record": "<root>/llm-usage/usage-<timestamp>.jsonl",
-    "llm_run_telemetry_record": "<root>/llm-run-telemetry/run-telemetry-<timestamp>.jsonl",
+    "llm_run_record_file": "<root>/llm-run-telemetry/run-record-<timestamp>.jsonl",
     "auth_acquisition_lock": "<root>/tokens/<bucket_id>-<auth_provider_kind>-auth.lock",
 }
 """One byte-exact expected string per :data:`STORAGE_PATH_DEFINITIONS` key.

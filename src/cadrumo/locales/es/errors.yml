@@ -176,7 +176,8 @@ errors:
       vuelve a intentar la limpieza antes de continuar.
     error_cadrumo_core: Se produjo un error interno en la aplicación.
     error_cadrumo_core_not_found: No se encontró el recurso o registro solicitado.
-    error_cadrumo_observability: Se produjo un error en la telemetría de la aplicación.
+    error_cadrumo_observability: Se produjo un error en el registro de diagnóstico
+      de la aplicación.
     error_calc_sheets_engine: El motor de exportación de hojas de cálculo encontró
       un estado irresoluble al generar el plan de exportación.
     error_calc_sheets_parity: El escenario del arnés de paridad hace referencia a
@@ -399,7 +400,7 @@ errors:
       catálogo de facturas.
     canonical_counterparty_establishment_persistence: No se pudo guardar el registro
       de establecimiento de la contraparte.
-    canonical_diagnostic_run_telemetry: No se pudo leer la telemetría de la ejecución
+    canonical_diagnostic_run_record: No se pudieron leer los registros de la ejecución
       diagnóstica.
     canonical_evidence_bundle_persistence: No se pudo guardar el conjunto de evidencias.
     canonical_invoice_catalogue_read_persistence: No se pudo cargar el catálogo de
@@ -752,7 +753,7 @@ errors:
     internal_modelo_work_form_layout: La distribución del impreso de este modelo no
       coincide con su revisión.
     internal_observability_run_context_missing: 'Error interno: se intentó registrar
-      un evento de telemetría fuera de un contexto de ejecución activo.'
+      un evento de diagnóstico fuera de un contexto de ejecución activo.'
     internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
       reclamó una fase, un efecto, un recurso o una interacción que su definición
       no declara.'

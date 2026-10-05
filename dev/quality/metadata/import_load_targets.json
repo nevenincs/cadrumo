@@ -291,7 +291,7 @@
         "cadrumo.adapters.persistence.llm",
         "cadrumo.adapters.persistence.llm.cache",
         "cadrumo.adapters.persistence.llm.consent_ledger",
-        "cadrumo.adapters.persistence.llm.run_telemetry",
+        "cadrumo.adapters.persistence.llm.run_records",
         "cadrumo.adapters.persistence.llm.usage",
         "cadrumo.adapters.persistence.operations",
         "cadrumo.adapters.persistence.operations._journal_validation",

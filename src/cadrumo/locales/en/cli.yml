@@ -2630,19 +2630,19 @@ cli:
     latency:
       header: 'LLM run latency:'
       help: Report P50/P95/P99 duration percentiles over recent local LLM runs.
-      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
-        to populate it.
+      no_run_data: No LLM run records yet. Run an LLM-assisted classification to populate
+        them.
       provider_help: Restrict the report to this provider label (e.g. claude, antigravity,
         codex).
       since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
-    llm_run_data_observed: No LLM run telemetry was recorded for this report.
+    llm_run_data_observed: No LLM run records were recorded for this report.
     llm_usage:
       header: 'LLM run usage:'
       help: Report LLM run-usage totals (counts, durations, success rate) by provider
         and model.
-      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
-        to populate it.
+      no_run_data: No LLM run records yet. Run an LLM-assisted classification to populate
+        them.
       provider_help: Restrict the summary to this provider label (e.g. claude, antigravity,
         codex).
       since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
@@ -2665,8 +2665,8 @@ cli:
       bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
       header: 'LLM run health:'
       help: Report recent local LLM run timing and persisted AEAT session staleness.
-      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
-        to populate it.
+      no_run_data: No LLM run records yet. Run an LLM-assisted classification to populate
+        them.
       no_session_message: No persisted AEAT session found on disk.
       provider_help: Restrict the LLM run-timing section to this provider label (e.g.
         claude, antigravity, codex).
@@ -2679,8 +2679,8 @@ cli:
       header: 'Recent LLM runs:'
       help: List recent local LLM run-timing records, most-recent-first.
       limit_help: Cap the listing to this many most-recent runs.
-      no_run_data: No LLM run telemetry recorded yet. Run an LLM-assisted classification
-        to populate it.
+      no_run_data: No LLM run records yet. Run an LLM-assisted classification to populate
+        them.
       provider_help: Restrict the listing to this provider label (e.g. claude, antigravity,
         codex).
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.

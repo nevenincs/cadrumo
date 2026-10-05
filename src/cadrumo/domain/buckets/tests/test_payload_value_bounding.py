@@ -87,7 +87,7 @@ def _emits_bucket_events(tree: ast.AST) -> bool:
     """Return whether a module builds bucket events at all.
 
     Scopes the gate to its actual subject. ``payload`` is a common name for
-    Sheets rows, LLM telemetry and CLI result bodies, none of which are
+    Sheets rows, LLM run records and CLI result bodies, none of which are
     written into the capped bucket-event slot, and none of which this gate
     has any business bounding.
     """

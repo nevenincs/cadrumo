@@ -1591,7 +1591,7 @@ def _bind_candidate_promotion(
         if accelerated != handover:
             _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=accelerated)
         handover = accelerated
-        # Activation is required B state, not best-effort telemetry.  Keep it
+        # Activation is required B state, not best-effort diagnostics.  Keep it
         # inside the rollback window, with one stable event instant so a crash
         # before the phase receipt can replay the same content-addressed event.
         _record_activation(profile_id=candidate.bucket_id, occurred_at=handover.activation_at)

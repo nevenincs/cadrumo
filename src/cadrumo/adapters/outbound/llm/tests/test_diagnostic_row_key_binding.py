@@ -24,9 +24,9 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
-from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
-from ....persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE, LLM_USAGE_NAMESPACE
+from ....persistence.storage.secure_object_namespaces import LLM_RUN_RECORD_NAMESPACE, LLM_USAGE_NAMESPACE
 from ..errors import LLMCacheError
 from ..models import UsageRecord
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine
@@ -124,12 +124,12 @@ def test_a_substituted_usage_row_is_refused_on_prune(tmp_path: Path) -> None:
         recorder.prune(retention_days=0, max_records=0)
 
 
-def test_a_substituted_run_telemetry_row_is_refused(tmp_path: Path) -> None:
-    """The run-telemetry recorder carries the same binding on both paths."""
-    recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
+def test_a_substituted_run_record_row_is_refused(tmp_path: Path) -> None:
+    """The run-record recorder carries the same binding on both paths."""
+    recorder = LLMRunRecorder(root_dir=tmp_path / "run-record")
     recorder.record(_run("recent-run", _RECENT))
     recorder.record(_run("old-run", _OLD))
-    _substitute(LLM_RUN_TELEMETRY_NAMESPACE.namespace, victim_marker="recent-run", donor_marker="old-run")
+    _substitute(LLM_RUN_RECORD_NAMESPACE.namespace, victim_marker="recent-run", donor_marker="old-run")
 
     with pytest.raises(LLMCacheError):
         recorder.load_records()
@@ -185,13 +185,13 @@ def test_untampered_records_still_read_and_prune(tmp_path: Path) -> None:
     usage.record(_usage("recent-request", _RECENT))
     usage.record(_usage("old-request", _OLD))
 
-    telemetry = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
-    telemetry.record(_run("recent-run", _RECENT))
-    telemetry.record(_run("old-run", _OLD))
+    records = LLMRunRecorder(root_dir=tmp_path / "run-record")
+    records.record(_run("recent-run", _RECENT))
+    records.record(_run("old-run", _OLD))
 
     assert [item.request_id for item in usage.load_records()] == ["old-request", "recent-request"]
-    assert [item.run_id for item in telemetry.load_records()] == ["old-run", "recent-run"]
+    assert [item.run_id for item in records.load_records()] == ["old-run", "recent-run"]
     assert usage.prune(retention_days=0, max_records=0) == 2
-    assert telemetry.prune(retention_days=0, max_records=0) == 2
+    assert records.prune(retention_days=0, max_records=0) == 2
     assert usage.load_records() == ()
-    assert telemetry.load_records() == ()
+    assert records.load_records() == ()
