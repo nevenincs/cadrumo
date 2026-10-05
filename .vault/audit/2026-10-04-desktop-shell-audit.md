@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:f60613a10fbf26221a68e83f2c76a8f7050e9dc5709f0e5758134921d9cc18ea'
+body_hash: 'sha256:ee2d5073dd01b96938d9b28d9f7e9feb15e974137a00d32e24803fb5aa6d4b55'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -126,6 +126,13 @@ The host inherits `WEBVIEW2_USER_DATA_FOLDER`, `WEBVIEW2_BROWSER_EXECUTABLE_FOLD
 ### d2-sign-in-presentation | low | S17 passes presentation review and browser verification
 
 2026-10-05: root reviewed the S17 working-tree change against bcdce3f752, including raw UTF-8 password submission, buffer clearing, typed refusal/countdown, TUI admission presentation, explicit handover, global sign-out and refresh behavior. A review correction invalidates stale status reads at mutation start and suppresses focus reads during mutation; the browser test releases a stale present response after logout and proves it cannot relaunch the TUI. No critical or high finding remains in this scope. npm build and check pass; 17 browser presentation tests and a focused race rerun pass; 16 desktop-chrome locale tests, Ruff and ty pass. These tests run the React shell/Tauri adapter against a transport fixture, not a native sign-in acceptance environment. Build output: `build/d2-desktop`, ports 15370/15371. S17 is complete as a presentation Step; S16/S10 native and packaged verification, S12 manager-start integration and S09 live desktop smoke remain open.
+
+### d1-sign-in-host-checkpoint | low | Windows host checks pass while S16 acceptance remains pending
+
+2026-10-05 review of D1's seven-file S16 change: root inspected package-manifest binary selection, pinned environment, raw secret serialization, zeroized owned buffers, bounded output, CLI envelope translation, central token dispatch and close-time cleanup. Cleanup retains an unsettled child and both sign-in and terminal cleanup are attempted even if one fails. D1 matched all seven source files to the tested snapshot by SHA256. 132 desktop unit tests, including ten sign-in tests and real Windows subprocess EOF/flood/close cases, passed; clippy with warnings denied and formatting passed. Logs: `build/s16-desktop-host/test-all.log`, `test-sign-in.log`, `clippy.log`. The D2 TypeScript shapes agree with Rust serialization.
+
+Verdict PENDING for full S16: the host conservatively reports non-Windows sign-in unsupported until the backend exposes authoritative GNOME observer capability. Actual packaged CLI/UI secret isolation and end-to-end sign-in remain unverified under S16/S10. The runner owns only its direct CLI child; inspected current login/status/logout leaves connect to the existing runtime and do not spawn descendants, but descendant pipe containment is not established. S16 stays open. S12 manager-start integration is separately pending; no dead UI control was added.
+
 
 ## Recommendations
 

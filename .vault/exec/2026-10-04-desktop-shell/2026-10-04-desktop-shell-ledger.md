@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:92f80f830f377131126c96983a4dc22ec005c7119ad3613de033afc73fbad6ca'
+body_hash: 'sha256:2129b62b8c4f30b89ce3a554889dffbb001696ec6408e2a61b5cab164b941d4f'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -455,6 +455,17 @@ related:
 - `S17` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16 tests)` -> `pass`
 - `S17` `verify:` `ruff check and format dev/locales/desktop_chrome.py` -> `pass`
 - `S17` `verify:` `ty check dev/locales/desktop_chrome.py` -> `pass`
+- `S16` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S16` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S16` `M` `native/desktop/src-tauri/src/app.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S16` `verify:` `cargo test desktop bin cadrumo locked test-threads 1 (132 tests)` -> `pass`
+- `S16` `verify:` `cargo clippy desktop locked all-targets -D warnings` -> `pass`
+- `S16` `verify:` `cargo fmt desktop check` -> `pass`
+- `S16` `verify:` `git diff check desktop src-tauri` -> `pass`
 
 ## Notes
 
@@ -527,3 +538,4 @@ related:
 - `S13` import boundary gate: 0 hard findings but status unavailable because `dev/quality/metadata/import_load_targets.json` is stale for src/cadrumo; pre-existing, no src module changed
 - `S13` Desktop subdirectory gated on a staged desktop image so docs-off source builds need neither Node.js nor npm, per CADRUMO-BUILD-RUNTIME review
 - `S17` Browser boundary fixtures verify presentation, not native package acceptance. Isolated build/d2-desktop uses ports 15370/15371. S16/S10 retain native/platform and packaged acceptance; S12 retains manager-start integration; S09 retains live desktop-host smoke. Canonical S18 translations reused, and 26 now-consumed keys removed from awaiting-consumer declaration.
+- `S16` Windows host checkpoint only: S16 stays open for authoritative GNOME observer capability and packaged CLI/UI acceptance. Exact tested snapshot and generated contract at build/s16-desktop-host; logs test-all.log test-sign-in.log clippy.log. SHA256 of all seven changed files matched tested snapshot. Runner reaps its direct aeat child; current login/status/logout leaves connect to existing runtime and spawn no descendants. No descendant containment proof. Non-Windows sign-in conservatively unsupported pending backend capability.

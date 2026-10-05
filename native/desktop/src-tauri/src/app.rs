@@ -129,6 +129,7 @@ pub fn run(launch: Launch) -> Result<i32> {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::sign_in::commands(),
         ],
         token,
         diagnostics.clone(),
@@ -184,6 +185,11 @@ pub fn run(launch: Launch) -> Result<i32> {
         .on_window_event(|window, event| {
             let state = window.state::<Arc<TerminalState>>();
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let sign_in = window.state::<Arc<shell::sign_in::SignIn>>();
+                if let Err(error) = sign_in.children.stop() {
+                    api.prevent_close();
+                    state.launch.diagnostics.failure(error);
+                }
                 if let Err(error) = state.stop() {
                     api.prevent_close();
                     state.launch.diagnostics.failure(error);
@@ -198,8 +204,12 @@ pub fn run(launch: Launch) -> Result<i32> {
         .map_err(|e| {
             ApplicationError::new(ErrorCode::WebviewFailed, Operation::Webview).caused_by(e)
         })?;
+    let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
     let code = app.run_return(|_, _| {});
-    state.stop()?;
+    let sign_in_cleanup = sign_in.children.stop();
+    let terminal_cleanup = state.stop();
+    sign_in_cleanup?;
+    terminal_cleanup?;
     Ok(code)
 }
 
@@ -224,6 +234,7 @@ mod tests {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::sign_in::commands(),
         ];
         let names: Vec<&str> = modules
             .iter()

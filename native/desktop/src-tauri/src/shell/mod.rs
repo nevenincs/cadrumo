@@ -4,6 +4,7 @@ mod external;
 mod interrupts;
 mod menu;
 pub mod navigation;
+pub mod sign_in;
 pub mod single_instance;
 pub mod token;
 #[cfg(windows)]
@@ -141,6 +142,7 @@ fn show<R: Runtime>(
 }
 
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
+    let sign_in = Arc::new(sign_in::SignIn::new(launch));
     let output_language = launch.output_language.clone();
     #[cfg(windows)]
     let diagnostics = launch.diagnostics.clone();
@@ -157,6 +159,7 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             interrupts::restore(&diagnostics);
             single_instance::verify(app.config())?;
             app.manage(Shell { output_language });
+            app.manage(sign_in);
             app.manage(popups);
             app.manage(channel::Deliveries::default());
             Ok(())
