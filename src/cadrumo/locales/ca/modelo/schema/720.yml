@@ -2,25 +2,17 @@ modelo:
   schema:
     '720':
       binding:
-        x-dlnm8pbcdsmjechg5pq7is35bsoisobgclm6oqb4dtpiqu9ddpnmqojickmmubbic5t6urhdednm6qb1dgmm8pbc5li6aorcc5p62rjkck:
-          label: Cognoms i nom o raó social del declarant
         x-dlnm8pbcdsmjechg5pq7is35bsoisp35cdm62sj1cdkmurhdcdnmqs3cclmmarjkc5p6io9ddsmn6tbjehkn8tbkd5r62:
           help: S'indica C si la declaració inclou registres omesos en una d'anterior
             del mateix exercici, o S si anul·la i substitueix una d'anterior del mateix
             exercici.
           label: Declaració complementària o substitutiva
-        x-dlnm8pbcdsmjechg5pq7is35bsoispbaclp66qb3d5ng:
-          label: Exercici
-        x-dlnm8pbcdsmjechg5pq7is35bsoisrhdd4mmcbb4clm2qp35cdm62sj1dpq6a:
-          label: NIF del declarant
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn0:
           label: Número identificatiu de la declaració
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn2qobeehin4qbfe8:
           label: Número identificatiu de la declaració anterior
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdehnn8obc5li6abbicljmisrke9nn6bb4clhmoobic5i6uso:
           label: Nombre total de registres declarats
-        x-dlnm8pbcdsmjechg5pq7is35bsoiss35e9pmurj15lhmurhde5qmipbe5lp6ar31cdkmurj1e9pma:
-          label: Persona de contacte
         ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qc9dedgmop3f5lniqtj1dhnn4bb15kpj2bb4ckmm8qb3d5imqojickmn6
         : help: Saldo o valor a 31 de desembre, saldo o valor en la data d'extinció,
             o valor d'adquisició.

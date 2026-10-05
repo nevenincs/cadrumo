@@ -2,25 +2,17 @@ modelo:
   schema:
     '720':
       binding:
-        x-dlnm8pbcdsmjechg5pq7is35bsoisobgclm6oqb4dtpiqu9ddpnmqojickmmubbic5t6urhdednm6qb1dgmm8pbc5li6aorcc5p62rjkck:
-          label: Apellidos y nombre o razón social del declarante
         x-dlnm8pbcdsmjechg5pq7is35bsoisp35cdm62sj1cdkmurhdcdnmqs3cclmmarjkc5p6io9ddsmn6tbjehkn8tbkd5r62:
           help: Se indica C si la declaración incluye registros omitidos en otra anterior
             del mismo ejercicio, o S si anula y sustituye a otra anterior del mismo
             ejercicio.
           label: Declaración complementaria o sustitutiva
-        x-dlnm8pbcdsmjechg5pq7is35bsoispbaclp66qb3d5ng:
-          label: Ejercicio
-        x-dlnm8pbcdsmjechg5pq7is35bsoisrhdd4mmcbb4clm2qp35cdm62sj1dpq6a:
-          label: NIF del declarante
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn0:
           label: Número identificativo de la declaración
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn2qobeehin4qbfe8:
           label: Número identificativo de la declaración anterior
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdehnn8obc5li6abbicljmisrke9nn6bb4clhmoobic5i6uso:
           label: Número total de registros declarados
-        x-dlnm8pbcdsmjechg5pq7is35bsoiss35e9pmurj15lhmurhde5qmipbe5lp6ar31cdkmurj1e9pma:
-          label: Persona con quien relacionarse
         ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qc9dedgmop3f5lniqtj1dhnn4bb15kpj2bb4ckmm8qb3d5imqojickmn6
         : help: Saldo o valor a 31 de diciembre, saldo o valor en la fecha de extinción,
             o valor de adquisición.
