@@ -38,6 +38,8 @@ import {
   type RecordFilters,
 } from "./components/RecordList";
 import { Settings } from "./components/Settings";
+import { Account, SignIn } from "./components/SignIn";
+import { useSignIn } from "./shell/signIn";
 import { Split } from "./components/Split";
 import {
   TerminalPane,
@@ -103,6 +105,7 @@ const exitCode = (status: TerminalStatus): number | null | undefined =>
   status.phase === "exited" ? status.code : undefined;
 
 export function App({ host }: { host: Host }) {
+  const account = useSignIn(host);
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
   const [layout, setLayout] = useState<Layout>(initial.layout);
@@ -1059,7 +1062,10 @@ export function App({ host }: { host: Host }) {
             )
       }
       isShellChord={isShellChord}
-      onStatus={(k, s) => setStatus((all) => ({ ...all, [k]: s }))}
+      onStatus={(k, s) => {
+        setStatus((all) => ({ ...all, [k]: s }));
+        if (k === "tui" && s.phase === "exited") account.tuiExited();
+      }}
       onMenu={terminalMenu}
       register={(k, api) => {
         terminals.current[k] = api;
@@ -1123,7 +1129,11 @@ export function App({ host }: { host: Host }) {
           },
         ]}
       />
-      {terminalPane("tui", tuiVisible, DARK_TERMINAL)}
+      {account.gated ? (
+        <SignIn account={account} />
+      ) : (
+        terminalPane("tui", tuiVisible, DARK_TERMINAL)
+      )}
     </div>
   );
   const panelMax = maximizeControl("panel", "desktop.pane.maximize_panel");
@@ -1262,6 +1272,7 @@ export function App({ host }: { host: Host }) {
 
         {settingsOpen && (
           <Settings
+            account={<Account account={account} />}
             prefs={prefs}
             setPrefs={setPrefs}
             close={() => setSettingsOpen(false)}

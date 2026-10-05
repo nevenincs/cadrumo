@@ -1,4 +1,4 @@
-import { Channel } from "@tauri-apps/api/core";
+import { Channel, invoke } from "@tauri-apps/api/core";
 import type { ContextMenuItem, LogBatch, ShellToken } from "../ipc/contract";
 import type { Host } from "./host";
 import { hostCall } from "./hostCall";
@@ -25,6 +25,14 @@ export function tauriHost(): Host {
     available: true,
     nativeMenus: true,
     environment: () => call("desktop_environment", {}),
+    signInStatus: () => call("sign_in_status", {}),
+    signOut: () => call("sign_out", {}),
+    signIn: (password) =>
+      token
+        ? invoke("sign_in_submit", password, {
+            headers: { "x-cadrumo-token": token },
+          })
+        : Promise.reject(new Error("Missing desktop launch token.")),
     openTerminal: (kind, size, listener) =>
       token
         ? openTauriTerminal(token, call, kind, size, listener)

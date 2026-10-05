@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ff67d4a4e969aae84618666d7f6075e3f7831a04c4899e524547e931949f5e8'
+body_hash: 'sha256:92f80f830f377131126c96983a4dc22ec005c7119ad3613de033afc73fbad6ca'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -439,6 +439,22 @@ related:
 - `S09` `verify:` `dev.locales status: 0 findings on desktop.toast.paste_* keys; exit 1 from pre-existing 23312 inventory violations` -> `pass`
 - `S09` `verify:` `npm run check` -> `pass`
 - `S09` `verify:` `npx playwright test (12)` -> `pass`
+- `S17` `A` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S17` `A` `native/desktop/frontend/src/shell/signIn.ts`
+- `S17` `M` `native/desktop/frontend/src/App.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S17` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S17` `M` `native/desktop/frontend/src/styles.css`
+- `S17` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S17` `M` `dev/locales/desktop_chrome.py`
+- `S17` `verify:` `npm run build` -> `pass`
+- `S17` `verify:` `npx playwright test (17 browser presentation tests)` -> `pass`
+- `S17` `verify:` `npm run check` -> `pass`
+- `S17` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16 tests)` -> `pass`
+- `S17` `verify:` `ruff check and format dev/locales/desktop_chrome.py` -> `pass`
+- `S17` `verify:` `ty check dev/locales/desktop_chrome.py` -> `pass`
 
 ## Notes
 
@@ -510,3 +526,4 @@ related:
 - `S13` docs ON stage proven with a synthetic four-language docs tree staged by the real `docs_stage` step and the desktop-host-build command run without its `user_docs` prerequisite; the bundle target was not built end to end with docs ON because the docs build is blocked by a stale authority
 - `S13` import boundary gate: 0 hard findings but status unavailable because `dev/quality/metadata/import_load_targets.json` is stale for src/cadrumo; pre-existing, no src module changed
 - `S13` Desktop subdirectory gated on a staged desktop image so docs-off source builds need neither Node.js nor npm, per CADRUMO-BUILD-RUNTIME review
+- `S17` Browser boundary fixtures verify presentation, not native package acceptance. Isolated build/d2-desktop uses ports 15370/15371. S16/S10 retain native/platform and packaged acceptance; S12 retains manager-start integration; S09 retains live desktop-host smoke. Canonical S18 translations reused, and 26 now-consumed keys removed from awaiting-consumer declaration.

@@ -467,7 +467,31 @@ export type DiagnosticsSnapshot = {
  * `HostFailure`. Commands that return nothing resolve with `null`.
  * `terminal_write` takes a raw body instead: see `TerminalWriteBody`.
  */
+export type SignInRefusal = { code: string; retryAfterSeconds: number | null };
+
+/** Presence only: reading this never resumes or extends a sign-in. */
+export type SignInStatus = {
+  supported: boolean;
+  state: "present" | "absent" | "unknown";
+  active_profile: string | null;
+  runtimeAvailable: boolean;
+  refusal: SignInRefusal | null;
+};
+
+/** sign_in_submit uses a raw UTF-8 password body and x-cadrumo-token header. */
+export type SignInResult =
+  { kind: "signed-in" } | ({ kind: "refused" } & SignInRefusal);
+
+export type SignOutResult = {
+  remainingAccess: {
+    automationEnabled: boolean | null;
+    automationRevoked: false;
+  };
+};
+
 export interface HostCommands {
+  sign_in_status: { args: Authorized; result: SignInStatus };
+  sign_out: { args: Authorized; result: SignOutResult };
   desktop_environment: {
     args: Authorized;
     result: DesktopEnvironment;

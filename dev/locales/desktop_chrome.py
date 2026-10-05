@@ -188,36 +188,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
 #: source and refuses any key here once the shell names it, so a key leaves
 #: this set when its view lands and the set only shrinks.
 DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset(
-    {
-        "desktop.account.remaining_access",
-        "desktop.account.sign_out",
-        "desktop.account.sign_out_hint",
-        "desktop.account.signed_in",
-        "desktop.account.signed_out",
-        "desktop.account.title",
-        "desktop.account.unknown",
-        "desktop.signin.checking",
-        "desktop.signin.lead",
-        "desktop.signin.open_tui",
-        "desktop.signin.open_tui_hint",
-        "desktop.signin.password",
-        "desktop.signin.refused.custody_changed",
-        "desktop.signin.refused.generation_changed",
-        "desktop.signin.refused.invalid",
-        "desktop.signin.refused.keyring_unavailable",
-        "desktop.signin.refused.login_mismatch",
-        "desktop.signin.refused.other",
-        "desktop.signin.refused.profile_locked",
-        "desktop.signin.refused.receipt_absent",
-        "desktop.signin.refused.receipt_expired",
-        "desktop.signin.refused.runtime_unavailable",
-        "desktop.signin.refused.throttled",
-        "desktop.signin.start_services",
-        "desktop.signin.submit",
-        "desktop.signin.submitting",
-        "desktop.signin.title",
-        "desktop.signin.unsupported",
-    }
+    {"desktop.signin.start_services", "desktop.signin.unsupported"}
 )
 
 #: Where the shell's build reads the generated strings.

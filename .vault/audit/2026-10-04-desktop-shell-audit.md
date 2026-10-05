@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:b00362c4884615bf085f4432ddaa42afd75d42e96f48d4fd3acdb31f4c5335ce'
+body_hash: 'sha256:f60613a10fbf26221a68e83f2c76a8f7050e9dc5709f0e5758134921d9cc18ea'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -122,6 +122,10 @@ The host inherits `WEBVIEW2_USER_DATA_FOLDER`, `WEBVIEW2_BROWSER_EXECUTABLE_FOLD
 ### contract-timestamp-comment | low | contract.ts misdescribes timestampMs for Python records
 
 `native/desktop/frontend/src/ipc/contract.ts:150` claims parsing; the host always sends null for Python records.
+
+### d2-sign-in-presentation | low | S17 passes presentation review and browser verification
+
+2026-10-05: root reviewed the S17 working-tree change against bcdce3f752, including raw UTF-8 password submission, buffer clearing, typed refusal/countdown, TUI admission presentation, explicit handover, global sign-out and refresh behavior. A review correction invalidates stale status reads at mutation start and suppresses focus reads during mutation; the browser test releases a stale present response after logout and proves it cannot relaunch the TUI. No critical or high finding remains in this scope. npm build and check pass; 17 browser presentation tests and a focused race rerun pass; 16 desktop-chrome locale tests, Ruff and ty pass. These tests run the React shell/Tauri adapter against a transport fixture, not a native sign-in acceptance environment. Build output: `build/d2-desktop`, ports 15370/15371. S17 is complete as a presentation Step; S16/S10 native and packaged verification, S12 manager-start integration and S09 live desktop smoke remain open.
 
 ## Recommendations
 

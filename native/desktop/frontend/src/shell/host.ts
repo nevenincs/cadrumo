@@ -10,6 +10,9 @@ import type {
   ContextMenuItem,
   DesktopEnvironment,
   LogBatch,
+  SignInStatus,
+  SignInResult,
+  SignOutResult,
 } from "../ipc/contract";
 
 export type TerminalKind = "console" | "python" | "tui";
@@ -35,6 +38,9 @@ export interface Host {
   /** Whether menus are drawn by the operating system. */
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
+  signInStatus(): Promise<SignInStatus>;
+  signIn(password: Uint8Array): Promise<SignInResult>;
+  signOut(): Promise<SignOutResult>;
   openTerminal(
     kind: TerminalKind,
     size: { cols: number; rows: number },
@@ -84,6 +90,9 @@ export function browserHost(location: Location): Host {
       });
     },
     openTerminal: unavailable,
+    signInStatus: unavailable,
+    signIn: unavailable,
+    signOut: unavailable,
     subscribeLogs: unavailable,
     readClipboard: () =>
       navigator.clipboard?.readText

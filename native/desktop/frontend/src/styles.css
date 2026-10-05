@@ -5,6 +5,38 @@
    every scheme boundary so nested areas resolve their own values. Length
    tokens (spacing, radii, type, control sizes) live in src/tokens.css. */
 
+.sign-in {
+  padding: var(--space-16);
+  overflow: auto;
+  color: var(--fg);
+}
+.sign-in form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+.sign-in input {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--fg);
+  background: var(--bg);
+  border: var(--hairline) solid var(--border-strong);
+  padding: var(--space-8);
+}
+.sign-in button,
+.account button {
+  color: var(--fg);
+  background: var(--chrome);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--radius-m);
+  padding: var(--space-8);
+}
+.account {
+  padding-block: var(--space-8);
+  border-bottom: var(--hairline) solid var(--border);
+}
+
 @font-face {
   font-family: "Hanken Grotesk";
   src: url("../../../../docs/_static/hanken-grotesk-var-latin.woff2")

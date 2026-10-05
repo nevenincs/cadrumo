@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
 import { terminalFontPx } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
@@ -57,18 +63,19 @@ function Choice<T extends string | number>({
   );
 }
 
-// Shell preferences only: nothing here writes product Settings or reaches the
-// backend. Language and storage come from the host and are not set here.
+// Layout preferences remain local; Account uses the dedicated sign-in commands.
 export function Settings({
   prefs,
   setPrefs,
   onReset,
   close,
+  account,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
   onReset: () => void;
   close: () => void;
+  account: ReactNode;
 }) {
   const t = useStrings();
   const ref = useRef<HTMLDivElement>(null);
@@ -105,6 +112,7 @@ export function Settings({
       }}
     >
       <h2>{t("desktop.settings.title")}</h2>
+      {account}
       <Choice
         label={t("desktop.settings.appearance")}
         value={prefs.appearance}

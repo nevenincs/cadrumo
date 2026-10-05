@@ -18,6 +18,323 @@ const english: Record<string, string> = existsSync(catalogue)
   : {};
 const label = (key: string) => english[key] ?? key;
 
+// A transport boundary fixture for presentation tests, never a live sign-in
+// acceptance claim. The actual Tauri adapter and React shell run unchanged.
+async function signInHost(target: Page, supported = true) {
+  await target.addInitScript(
+    ({ supported, docs }) => {
+      const state = {
+        presence: "absent",
+        supported,
+        runtimeAvailable: true,
+        refusal: null as null | {
+          code: string;
+          retryAfterSeconds: number | null;
+        },
+        submitCode: "CREDENTIAL_REJECTED",
+        retryAfterSeconds: null as number | null,
+        submissions: 0,
+        statusReads: 0,
+        tuiStarts: 0,
+        tuiCloses: 0,
+        rawPassword: false,
+        tokenHeader: false,
+        secretCleared: false,
+        deferStatus: false,
+        releaseStatus: null as (() => void) | null,
+        exitTui: null as (() => void) | null,
+      };
+      let id = 0;
+      Object.assign(window, {
+        isTauri: true,
+        __signInTest: state,
+        __CADRUMO_SHELL__: { token: "a".repeat(64) },
+        __TAURI_INTERNALS__: {
+          transformCallback: () => ++id,
+          unregisterCallback: () => undefined,
+          async invoke(
+            command: string,
+            args: Record<string, unknown> | Uint8Array,
+            options?: { headers?: Record<string, string> },
+          ) {
+            switch (command) {
+              case "desktop_environment":
+                return {
+                  outputLanguage: "en",
+                  docs: {
+                    origin: docs,
+                    languages: [{ code: "en", entry: `${docs}/index.html` }],
+                  },
+                };
+              case "sign_in_status": {
+                ++state.statusReads;
+                const snapshot = {
+                  supported: state.supported,
+                  state: state.presence,
+                  active_profile: "Test profile",
+                  runtimeAvailable: state.runtimeAvailable,
+                  refusal: state.refusal,
+                };
+                if (state.deferStatus) {
+                  state.deferStatus = false;
+                  await new Promise<void>((resolve) => {
+                    state.releaseStatus = resolve;
+                  });
+                }
+                return snapshot;
+              }
+              case "sign_in_submit": {
+                ++state.submissions;
+                state.rawPassword =
+                  args instanceof Uint8Array &&
+                  new TextDecoder().decode(args) === "secret á漢";
+                state.tokenHeader =
+                  options?.headers?.["x-cadrumo-token"] === "a".repeat(64);
+                setTimeout(() => {
+                  state.secretCleared =
+                    args instanceof Uint8Array &&
+                    args.every((byte) => byte === 0);
+                }, 0);
+                if (state.submitCode)
+                  return {
+                    kind: "refused",
+                    code: state.submitCode,
+                    retryAfterSeconds: state.retryAfterSeconds,
+                  };
+                state.presence = "present";
+                return { kind: "signed-in" };
+              }
+              case "sign_out":
+                state.presence = "absent";
+                return {
+                  remainingAccess: {
+                    automationEnabled: true,
+                    automationRevoked: false,
+                  },
+                };
+              case "terminal_open":
+                if (!(args instanceof Uint8Array) && args.kind === "tui") {
+                  ++state.tuiStarts;
+                  state.exitTui = () =>
+                    (
+                      args.frames as { onmessage: (data: ArrayBuffer) => void }
+                    ).onmessage(
+                      Uint8Array.from([
+                        2,
+                        ...new TextEncoder().encode('{"code":0}'),
+                      ]).buffer,
+                    );
+                }
+                return {
+                  session:
+                    !(args instanceof Uint8Array) && args.kind === "tui"
+                      ? 99
+                      : ++id,
+                };
+              case "terminal_close":
+                if (!(args instanceof Uint8Array) && args.session === 99)
+                  ++state.tuiCloses;
+                return {};
+              case "logs_subscribe":
+                return {
+                  subscription: 1,
+                  state: { kind: "missing", detail: "" },
+                };
+              default:
+                return null;
+            }
+          },
+        },
+      });
+    },
+    { supported, docs: DOCS },
+  );
+  await serveDocs(target);
+  await target.goto("/");
+}
+
+const signInState = (target: Page) =>
+  target.evaluate(
+    () =>
+      (window as unknown as { __signInTest: Record<string, unknown> })
+        .__signInTest,
+  );
+
+test("sign-in gates TUI, sends a raw secret once, clears it and refreshes refusal status", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  const password = target.getByLabel(label("desktop.signin.password"), {
+    exact: true,
+  });
+  await expect(password).toBeVisible();
+  expect((await signInState(target)).tuiStarts).toBe(0);
+  await password.fill("secret á漢");
+  await target
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(
+    target.getByText(label("desktop.signin.refused.invalid")),
+  ).toBeVisible();
+  await expect(password).toHaveValue("");
+  await expect
+    .poll(async () => (await signInState(target)).secretCleared)
+    .toBe(true);
+  expect(await signInState(target)).toMatchObject({
+    submissions: 1,
+    rawPassword: true,
+    tokenHeader: true,
+    statusReads: 2,
+    tuiStarts: 0,
+  });
+  expect(
+    await docsFrame(target).evaluate(() => document.body.textContent),
+  ).not.toContain("secret á漢");
+  expect(
+    await target.evaluate(() => JSON.stringify(localStorage)),
+  ).not.toContain("secret á漢");
+});
+
+test("throttling counts down without retry and a successful sign-in hands over to TUI", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await target.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { submitCode: "THROTTLED", retryAfterSeconds: 2 },
+    ),
+  );
+  await target
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  const submit = target.getByRole("button", {
+    name: label("desktop.signin.submit"),
+    exact: true,
+  });
+  await submit.click();
+  await expect(submit).toBeDisabled();
+  await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(submit).toBeEnabled({ timeout: 5000 });
+  expect((await signInState(target)).submissions).toBe(1);
+  await target.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { submitCode: "", retryAfterSeconds: null },
+    ),
+  );
+  await target
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  await submit.click();
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  expect((await signInState(target)).tuiStarts).toBe(1);
+  await target.getByRole("button", { name: /Settings/ }).click();
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { deferStatus: true },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await target
+    .getByRole("button", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(
+    target.getByText(label("desktop.account.remaining_access")),
+  ).toBeVisible();
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+  await expect.poll(async () => (await signInState(target)).tuiCloses).toBe(1);
+  await target.evaluate(async () => {
+    (
+      window as unknown as { __signInTest: { releaseStatus: () => void } }
+    ).__signInTest.releaseStatus();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  });
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+  expect((await signInState(target)).tuiStarts).toBe(1);
+});
+
+test("TUI handover remains available for locked profiles and refreshes on focus", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { refusal: { code: "PROFILE_LOCKED", retryAfterSeconds: null } },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect(
+    target.getByText(label("desktop.signin.refused.profile_locked")),
+  ).toBeVisible();
+  await target
+    .getByRole("button", {
+      name: label("desktop.signin.open_tui"),
+      exact: true,
+    })
+    .click();
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  expect((await signInState(target)).submissions).toBe(0);
+  const reads = (await signInState(target)).statusReads as number;
+  await target.evaluate(() =>
+    (
+      window as unknown as { __signInTest: { exitTui: () => void } }
+    ).__signInTest.exitTui(),
+  );
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
+  expect((await signInState(target)).statusReads).toBeGreaterThan(reads);
+});
+
+test("runtime-unavailable remains distinct from unknown presence", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await target.evaluate(() => {
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { presence: "unknown", runtimeAvailable: false },
+    );
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect(
+    target.getByText(label("desktop.signin.refused.runtime_unavailable")),
+  ).toBeVisible();
+  await expect(
+    target.getByRole("button", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  expect((await signInState(target)).tuiStarts).toBe(0);
+});
+
+test("unsupported platforms hide desktop sign-in and Account", async ({
+  page: target,
+}) => {
+  await signInHost(target, false);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(
+    target.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toHaveCount(0);
+  await target.getByRole("button", { name: /Settings/ }).click();
+  await expect(
+    target.getByRole("region", { name: label("desktop.account.title") }),
+  ).toHaveCount(0);
+});
+
 // A stand-in documentation origin. It is a different origin from the shell,
 // and its pages load the real desktop bridge script.
 const DOCS = "http://docs.cadrumo.test";
