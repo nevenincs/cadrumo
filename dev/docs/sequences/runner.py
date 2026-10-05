@@ -108,6 +108,7 @@ from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
+from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
 from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
 from .schema import (
     FrameKind,
@@ -797,14 +798,15 @@ def _absent_credential_vault() -> Generator[None]:
     unstable BY CONSTRUCTION — it encodes the capturing machine, and flips as
     soon as a differently-postured machine runs the gate.
 
-    Pinning absence resolves that without blocking the frames: every host now
+    Pinning absence resolves that without blocking ordinary frames: every host now
     executes the documented path a machine with no usable vault takes, so the
     frames stay executed truth and the golden is a property of the sandbox rather
-    than of the contributor's workstation. Absence — rather than a synthetic
-    working vault — is the only admissible pin here: the vault-bearing path
+    than of the contributor's workstation. Absence is the default: a native vault-bearing path
     WRITES a real wrapped session key into the operator's own credential store
     (measured: a ``cadrumo:profile-session`` entry under a per-run sandbox bucket
-    id, surviving the run), which a hermetic docs sandbox must never do.
+    id, surviving the run), which a hermetic docs sandbox must never do. The
+    explicit sign-out journeys layer an ephemeral synthetic shared receipt store
+    over this default; they never select the workstation's credential provider.
 
     Both resolution channels are closed, because both are live: the environment
     variable covers the subprocess execution paths, and
@@ -836,6 +838,7 @@ def sequence_sandbox(
     sequence_id: str,
     sandbox_root: Path,
     fixtures_root: Path | None = None,
+    enrolled_sequence_ids: Sequence[str] | None = None,
 ) -> Generator[SequenceSandbox]:
     """Open one hermetic per-sequence sandbox under ``sandbox_root``.
 
@@ -861,6 +864,9 @@ def sequence_sandbox(
         sandbox_root: An empty per-sequence directory the sandbox owns.
         fixtures_root: The committed fixtures tree to copy into the workdir;
             defaults to :func:`default_fixtures_root` (skipped when absent).
+        enrolled_sequence_ids: Executable scenarios sharing a cumulative page
+            sandbox. Their explicit sign-out enrollment selects receipt custody
+            before the worker starts; omitted for an isolated sequence.
 
     Yields:
         The open :class:`SequenceSandbox`.
@@ -874,6 +880,9 @@ def sequence_sandbox(
 
     ensure_isolated_storage_root()
     _refuse_live_opt_in(sequence_id)
+    persistent_sign_in = requires_persistent_sign_in(
+        (sequence_id,) if enrolled_sequence_ids is None else enrolled_sequence_ids
+    )
     workdir = sandbox_root / "workdir"
     workdir.mkdir(parents=True, exist_ok=True)
     fixtures = fixtures_root if fixtures_root is not None else default_fixtures_root()
@@ -919,7 +928,11 @@ def sequence_sandbox(
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
-        sequence_runtime(Path(load_settings().cadrumo_local_storage_root)),
+        sequence_receipt_store(Path(load_settings().cadrumo_local_storage_root), enabled=persistent_sign_in),
+        sequence_runtime(
+            Path(load_settings().cadrumo_local_storage_root),
+            signed_in_profile=UUID(SANDBOX_PROFILE_ID) if persistent_sign_in else None,
+        ),
     ):
         effective_settings = load_settings()
         try:
@@ -1446,6 +1459,7 @@ def _execute_page_in_root(
         sequence_id=label,
         sandbox_root=sandbox_root,
         fixtures_root=fixtures_root,
+        enrolled_sequence_ids=tuple(sequence.sequence_id for sequence in sequences if sequence.executed_frames),
     ) as sandbox:
         for sequence in sequences:
             transcript = _execute_page_sequence(sequence, label, sandbox, page_seeds, page_seed_signatures)

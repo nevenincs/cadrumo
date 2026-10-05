@@ -1,4 +1,4 @@
-@step Log out so the profile is no longer active before deletion.
+@step Close the selected profile's shared sign-in before deletion.
 aeat --format json config logout
 @expect status == "success"
 @expect exit_code == 0

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:106b4185625be0ae9935b55528492d29339a52e30bbd5e7fdbcfcdb92d2f8d76'
+body_hash: 'sha256:7cfb09ecae66f8f7df93a34c22d0deaa4ce0b6eb38938754d18ef0cb674c4f40'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
   - "[[2026-10-04-canonical-environment-plan]]"
@@ -150,6 +150,10 @@ The first final-source harness regression reproduced an EPERM browser-profile te
 ### selected-profile-signout-acceptance | low | 2026-10-05
 
 Reviewed scoped logout selection correction: successful global human sign-out leaves the non-authoritative selected profile pointer untouched, including concurrent selection. Four integration tests cover same-profile status, concurrent selection, absent proof refusal and corrupt pointer; Ruff and ty pass. Packaged assertions now require the same synthetic profile UUID before and after sign-out. Fixture profile enrollment alone allows 300 seconds for cold calibration and records timings; host production deadlines are unchanged. External B4 changes share custody.py, so that mixed file remains uncommitted. This does not establish actual WebView2 acceptance.
+
+### docs-signout-fixture-scope | medium | 2026-10-05
+
+Reviewed synthetic process-shared keyring confined to private docs sandbox, selected only from three explicitly enrolled sign-out scenarios before worker startup. Real runtime password login mints receipt; default no-vault behavior remains. Nine tests pass including child-write/parent-read/revoke and failure cleanup. Structural suite has 79 passes and one failure for five orphan Sheets contracts alongside externally modified pages; no unrelated edits or goldens were changed. Cumulative profile-setup still has two sign-outs without intervening login, and deletion refuses a selected profile after logout now retains selection. Keep docs gate and S10 open pending coherent owner resolution. Full four-language HTML assets rendered with sequence checking explicitly skipped only in GUI-test build root; they do not establish full package acceptance.
 
 ## Recommendations
 

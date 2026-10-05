@@ -1,12 +1,14 @@
 """Editable docs runtime host and its isolated, recorded profile-worker script.
 
 This fixture uses native transport and real encrypted profile workers. Its
-explicit login observation and unavailable secret store are test controls;
-it does not establish native credential-store or installed-wheel acceptance.
+explicit login observation and unavailable automation secret store are test
+controls. The three sign-out journeys additionally use synthetic shared receipt
+custody; none establish native credential-store or installed-wheel acceptance.
 """
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
@@ -16,7 +18,7 @@ from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import keyring
 import keyring.backends.null
@@ -49,6 +51,7 @@ from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.runtime.worker import run
 from cadrumo.tests.authority_run_snapshot import freeze_authority_root
+from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, SequenceReceiptKeyring
 
 SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
 """The canonical frozen instant for docs sequences and their profile workers."""
@@ -93,7 +96,10 @@ def _worker_composition() -> Generator[None]:
     """Compose recorded dependencies after the canonical worker verifies its parent."""
     root = Path(load_settings().cadrumo_local_storage_root)
     previous_backend = keyring.core._keyring_backend
-    keyring.set_keyring(keyring.backends.null.Keyring())
+    receipt_root = root / RECEIPT_FIXTURE_DIRECTORY
+    keyring.set_keyring(
+        SequenceReceiptKeyring(receipt_root) if receipt_root.is_dir() else keyring.backends.null.Keyring()
+    )
     try:
         with (
             override_settings(
@@ -114,7 +120,7 @@ def _worker_composition() -> Generator[None]:
 
 
 @contextmanager
-def sequence_runtime(root: Path) -> Generator[RetainedRuntimeTransportServer]:
+def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Generator[RetainedRuntimeTransportServer]:
     """Serve the sandbox's exact endpoint before any installed frontend connects."""
     from cadrumo.adapters.local_runtime.tests.profile_worker_support import NativeRuntimeFixtureOwner
 
@@ -176,12 +182,30 @@ def sequence_runtime(root: Path) -> Generator[RetainedRuntimeTransportServer]:
             if running.done():
                 running.result()
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
+        if signed_in_profile is not None:
+            _establish_synthetic_sign_in(signed_in_profile)
         yield server
     except BaseException as error:
         primary = error
         raise
     finally:
         owner.close_from_sync(task_name="docs-runtime-close", primary_error=primary)
+
+
+def _establish_synthetic_sign_in(profile_id: UUID) -> None:
+    """Mint real runtime-owned proof for the fixture's explicit sign-out scenario."""
+    from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+    from cadrumo.application.operations.registry import OperationFrontendProjection
+
+    client = asyncio.run(open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+    proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value(), "utf-8")
+    try:
+        admitted = client.login_password(proof, persist_receipt=True)
+        if admitted.human_login is None or not admitted.human_login.session_persisted:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    finally:
+        proof[:] = bytes(len(proof))
+        client.close()
 
 
 if __name__ == "__main__":

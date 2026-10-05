@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc02eb90d9d359164d715483a62c4bdf36af1dd0f322d18fd1bb7dd977db51b6'
+body_hash: 'sha256:0097aa67ff45bb2556eb211b8030fc8a5123ecbd3cdc7cb2c060ab1a920d7ded'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -496,6 +496,14 @@ related:
 - `S10` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
 - `S10` `verify:` `logout selection integration tests (4)` -> `pass`
 - `S10` `verify:` `logout Ruff and ty` -> `pass`
+- `S10` `A` `dev/docs/sequences/receipt_fixture.py`
+- `S10` `A` `dev/docs/sequences/tests/test_receipt_fixture.py`
+- `S10` `M` `dev/docs/sequences/runner.py`
+- `S10` `M` `dev/docs/sequences/runtime_fixture.py`
+- `S10` `M` `docs/_sequences/contracts/how-to/profile-setup/profile-setup-delete.seq`
+- `S10` `verify:` `scoped receipt fixture tests (9)` -> `pass`
+- `S10` `verify:` `receipt fixture Ruff check and format` -> `pass`
+- `S10` `verify:` `docs sequence structural tests (79 pass, 1 fail orphan Sheets contracts)` -> `fail`
 
 ## Notes
 
@@ -573,3 +581,4 @@ related:
 - `S10` Prepared real packaged profile/runtime/sign-in/status/logout checks, secret-isolation observation, palette exact-result navigation, localized Home and docs appearance flows. Actual acceptance not run: agent is Session 0; user agreed to run prepared command in active desktop. First harness regression exposed EPERM profile teardown and left handles open; corrected graceful browser close, all-release cleanup and bounded retries. Final 20 tests pass, zero failures; build/windows-x86-64/e2e-desktop/harness-tests-reviewed.log. These regression tests use stand-in pages and establish harness assertions only. S10 remains open; fresh full package and documentation sequence gate are still in progress.
 - `S10` Necessary backend corrections found by fresh docs prerequisite for packaged E2E: successful amount/narrative update changes transaction identity, so correlate against new authoritative `source_transaction_id` rather than resulting ID; preserve profile/result/effect/patch checks. Repeated merge CLI IDs now normalize list to tuple at strict request boundary. Root reviewed seven previously clean paths; 37 tests pass. Logs var/storage/development/.logs/test-runs/2026-10-05/{20261005T155911.682204Z-pytest-37640-be893697,20261005T160139.195827Z-pytest-29836-92f91dea,20261005T160216.305991Z-pytest-35060-8c83b635}/run.log. New result shape requires fresh worker/package snapshots. S10 remains open; broader docs gate still failed.
 - `S10` S10 remains open. Logout retains selected profile after human-access revocation; exact-profile packaged assertions prevent empty pointer falsely proving revocation. Mixed custody.py includes external B4 work and remains uncommitted. Synthetic cold profile setup bound 300s; other fixture commands and production host deadlines unchanged. Actual GUI acceptance pending interactive run.
+- `S10` Docs executable-example prerequisite remains failed; no goldens refreshed. Synthetic shared receipt custody is selected only for three explicit sign-out scenarios or cumulative pages enrolling them; default no-vault behavior remains. Profile-setup deletion is unresolved: accepted selected-profile deletion refusal conflicts with docs guidance to logout now that logout retains selection; no auth bypass or silent reauthentication added. Retained profile-setup-inspect run passed all four expected frame exits at unchanged deadlines after docs renders ended (41.77s); this is execution, not golden equality.
