@@ -1,86 +1,95 @@
-"""Native documentation build selectors remain owned by the packaging driver."""
+"""Native documentation build selectors remain owned by the documentation compile."""
 
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from dev.docs.build import DOCS_FLAVOR_ENV, docs_build_flavor, pagefind_index_mode
-from dev.docs.build_paths import docs_site_prefix
+from cadrumo.core.storage_environment import STORAGE_ROOT
+from dev.docs import compile_once
+from dev.docs.build import DOCS_FLAVOR_ENV
+from dev.docs.compile_once import main as compile_main
 
 from .. import docs_build
-from ..docs_build import _owner_environment
+from ..docs_build import compile_command, compile_environment
+from ..docs_stage import APEX_LANGUAGE, DocsPackagingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_LANGUAGES = ("en", "es", "ca", "hu")
 
-def test_owner_builds_pin_the_desktop_flavor_over_an_ambient_web_selection(
+
+def test_the_compile_carries_product_storage_and_no_documentation_selector(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv(DOCS_FLAVOR_ENV, "web")
-    environment = _owner_environment(
-        tmp_path / "build", tmp_path / "storage", language="en", check_sequences=True, jobs=1
-    )
-    assert docs_build_flavor(environment) == "desktop"
+    """The packaging driver owns where product state goes and nothing else.
 
-
-@pytest.mark.parametrize(("language", "prefix"), [("en", ""), ("es", "es/"), ("hu", "hu/")])
-def test_owner_builds_index_nothing_and_carry_their_place_in_the_staged_site(
-    tmp_path: Path, language: str, prefix: str
-) -> None:
-    """A root build writes no index and declares where the staged site serves it.
-
-    The packaged site has ONE index, built over every root once they are all
-    built, so a root that indexed itself would write one addressed to its build
-    directory instead of to the staged layout. The prefix is the other half: the
-    apex language is served at the top and the others under their own directory,
-    and a page resolves the one index and a shared result's destination against
-    it. Both are read back through the owners that consume them rather than by
-    comparing raw strings, so a renamed key cannot pass this.
+    Every documentation selector is the compile's own, so an ambient one must
+    not survive into its environment: a second authority for the flavour, the
+    search index or a root's place in the site is what one compile retires.
     """
-    environment = _owner_environment(
-        tmp_path / "build", tmp_path / "storage", language=language, check_sequences=True, jobs=1
-    )
+    monkeypatch.setenv(DOCS_FLAVOR_ENV, "web")
+    monkeypatch.setenv("CADRUMO_DOCS_PAGEFIND_MODE", "full")
+    environment = compile_environment(tmp_path / "storage")
 
-    assert pagefind_index_mode(environment) == "none"
-    assert docs_site_prefix(environment) == prefix
+    assert environment[STORAGE_ROOT.variable] == str(tmp_path / "storage")
+    carried = sorted(key for key in environment if key.startswith("CADRUMO_DOCS_"))
+    assert not carried, f"the packaging driver carried documentation selectors the compile owns: {carried}"
 
 
-@pytest.mark.parametrize("english_exit", [0, 1])
-def test_strict_english_gate_finishes_before_localized_owners(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, english_exit: int
+def test_the_compile_command_names_the_desktop_flavor_and_both_roots(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    runs = []
-    english_finished = False
-    monkeypatch.setattr(docs_build.os, "cpu_count", lambda: 16)
+    """The command is read back through the compile's own argument parser.
 
-    def owner(language: str, root: Path, storage: Path, **settings: object):
-        assert settings["check_sequences"] is (language == "en")
-        assert settings["jobs"] == (2 if language == "en" else 5)
-        return [language], {}
+    Asserting the flags through the parser that consumes them is what keeps a
+    renamed flag from passing: a raw string comparison would not notice.
+    """
+    html_root, build_root = tmp_path / "html", tmp_path / "build"
+    command = compile_command(html_root, build_root)
 
-    def execute(command: list[str], **settings: object):
-        nonlocal english_finished
-        language = command[0]
-        if language != "en":
-            assert english_finished
-        runs.append(language)
-        if language == "en":
-            english_finished = True
-        return SimpleNamespace(
-            returncode=english_exit if language == "en" else 0,
-            stdout="",
-            stderr="",
-            duration_seconds=0,
-        )
+    assert command[1:3] == ["-m", "dev.docs.compile_once"], f"the command does not run the compile: {command}"
+    recorded: dict[str, object] = {}
 
-    monkeypatch.setattr(docs_build, "owner_build", owner)
-    monkeypatch.setattr(docs_build, "run_command", execute)
-    if english_exit:
-        with pytest.raises(SystemExit, match="User documentation build failed: en"):
-            docs_build._run_owner_builds(tmp_path / "build", tmp_path / "work", ("en", "es", "ca", "hu"))
-        assert runs == ["en"]
-    else:
-        docs_build._run_owner_builds(tmp_path / "build", tmp_path / "work", ("en", "es", "ca", "hu"))
-        assert runs[0] == "en"
-        assert set(runs) == {"en", "es", "ca", "hu"}
+    def record(root: Path, **settings: object) -> object:
+        recorded.update(settings, html_root=root)
+        return SimpleNamespace(languages=_LANGUAGES, seconds=0.0, html_root=root)
+
+    monkeypatch.setattr(compile_once, "compile_language_roots", record)
+    assert compile_main(command[3:]) == 0
+
+    assert recorded["html_root"] == html_root
+    assert recorded["build_root"] == build_root
+    assert recorded["flavor"] == "desktop"
+
+
+def test_a_failed_compile_stops_the_packaging_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """One failing compile refuses, names its log, and leaves no root behind."""
+    monkeypatch.setattr(
+        docs_build,
+        "run_command",
+        lambda *_args, **_settings: SimpleNamespace(returncode=2, stdout="boom\n", stderr="", duration_seconds=0),
+    )
+    with pytest.raises(SystemExit, match="User documentation compile failed: exit 2"):
+        docs_build._compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
+    assert (tmp_path / "work" / "compile.log").read_text(encoding="utf-8") == "boom\n"
+
+
+def test_a_compile_that_wrote_no_root_for_a_declared_language_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A successful compile is not proof it wrote the roots the package declares."""
+    monkeypatch.setattr(
+        docs_build,
+        "run_command",
+        lambda *_args, **_settings: SimpleNamespace(returncode=0, stdout="", stderr="", duration_seconds=0),
+    )
+    with pytest.raises(DocsPackagingError, match="wrote no root for"):
+        docs_build._compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
+
+
+def test_the_apex_language_is_a_declared_root(tmp_path: Path) -> None:
+    """The HTML root is read off the apex language's root, so it must be one of them."""
+    roots = docs_build.language_roots(tmp_path / "build", _LANGUAGES)
+    assert APEX_LANGUAGE in roots
+    assert {root.parent for root in roots.values()} == {roots[APEX_LANGUAGE].parent}

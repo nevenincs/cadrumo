@@ -11,6 +11,8 @@ from cadrumo.core.storage_environment import configured_storage_root, resolve_st
 DOCS_BUILD_ROOT_ENV = "CADRUMO_DOCS_BUILD_ROOT"
 DEFAULT_DOCS_BUILD_ROOT = "development/build/docs"
 DOCS_SITE_PREFIX_ENV = "CADRUMO_DOCS_SITE_PREFIX"
+#: The address the site is served from, above the language directories.
+DOCS_BASE_URL_ENV = "CADRUMO_DOCS_BASE_URL"
 
 
 def docs_build_root(

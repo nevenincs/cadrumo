@@ -43,6 +43,7 @@ _DOCS_HTML_ROOT = import_module("dev.docs.build_paths").docs_html_root(_PROJECT_
 _DOCS_SITE_PREFIX = import_module("dev.docs.build_paths").docs_site_prefix(os.environ)
 _DOCS_SITE_PREFIXES = import_module("dev.docs.build_paths").docs_site_prefixes
 _LANGUAGE_SWITCHER = import_module("dev.docs.language_switcher")
+_UNTRANSLATED_TYPESETTING = import_module("dev.docs.untranslated_typesetting")
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
@@ -246,6 +247,14 @@ if _USER_SCOPE:
     exclude_patterns += ["api/**", "_modules/**", "technical/**"]
 
 _DOCS_ROOT = Path(__file__).resolve().parent
+
+# The committed generator-owned pages, which nobody translates and which are
+# therefore typeset in the language they are authored in rather than four ways
+# (:mod:`dev.docs.untranslated_typesetting`). Read here, before this build's own
+# generators write their pages into the source tree: those carry each language's
+# own strings and are translated prose.
+cadrumo_source_language_pages = _UNTRANSLATED_TYPESETTING.source_language_pages(_DOCS_ROOT)
+
 _ONLY_SOURCES = {
     Path(item).as_posix() for item in os.environ.get("CADRUMO_DOCS_ONLY", "").split(os.pathsep) if item.strip()
 }
@@ -1950,6 +1959,10 @@ def setup(app):
         app.add_transform(_MESSAGE_MARKS_TRANSFORM)
         app.add_post_transform(_MESSAGE_MARKS_POST_TRANSFORM)
     _LANGUAGE_SWITCHER.register(app)
+    # Every build, not only the one compile: a page no language translates is
+    # typeset in the language it is authored in wherever it is built, which is
+    # what makes one page in one compile the page every language publishes.
+    _UNTRANSLATED_TYPESETTING.register(app)
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)

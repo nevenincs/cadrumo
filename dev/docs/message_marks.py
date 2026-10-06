@@ -621,16 +621,22 @@ def prepare(
             authored = _SourceText(source.read_text(encoding=_UTF_8))
             for message in next(iter(catalogues.by_language.values())):
                 line = _extracted_from(catalogues.locations.get(message, ()), source)
+                authored_source = authored.unfolded(message, line)
+                # A message a language has not translated reaches that language's
+                # own page as the message itself, line breaks and all -- and that
+                # build still typesets it in its own language, educating its
+                # quotation marks, dashes and ellipses the way it educates every
+                # other text block. So the string recorded for such a language is
+                # the recovered source rather than nothing: left out, the message
+                # would reach the composed page as the compile's own language
+                # typeset it, which is a different page for every language whose
+                # quotation marks differ.
                 translations = [
-                    authored.unfolded(message, line)
+                    authored_source
                     if language == source_language
-                    else _one_line(catalogues.by_language[language].get(message, ""))
+                    else _one_line(catalogues.by_language[language].get(message, "")) or authored_source
                     for language in plan.languages
                 ]
-                # A message no language has translated yet is left English, which
-                # is what a single-language build of that language does with it.
-                if not all(translations):
-                    continue
                 _refuse_reserved(docname, translations)
                 mark = slots.reserve(Rendering.MESSAGE)
                 marked[message] = f"{mark}{_NOQA}"

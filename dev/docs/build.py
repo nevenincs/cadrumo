@@ -29,7 +29,7 @@ from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT
 
 from .apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
-from .build_paths import docs_build_root, docs_html_root, pin_docs_build_root
+from .build_paths import DOCS_BASE_URL_ENV, docs_build_root, docs_html_root, pin_docs_build_root
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path
 from .download_matrix import inject_download_matrix
@@ -797,7 +797,7 @@ def build_docs(
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
         html_root = html_output_root
-        base_url = os.environ.get("CADRUMO_DOCS_BASE_URL")
+        base_url = os.environ.get(DOCS_BASE_URL_ENV)
         if base_url and flavor == "web":
             sitemap_path = write_deployment_sitemap(html_root, base_url)
             print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)

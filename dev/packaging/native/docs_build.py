@@ -8,22 +8,17 @@ import os
 import re
 import shutil
 import sys
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
-from dev.docs.build import DOCS_FLAVOR_ENV
-from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV
-from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
-from dev.docs.serve_languages import language_build_command
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
 from .build_paths import build_paths
-from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
+from .docs_stage import APEX_LANGUAGE, DocsPackagingError, declared_languages, language_roots, package_prefix
 from .identity import identity
 from .layout import distribution_target, load_layout
 
@@ -39,42 +34,39 @@ _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
 PACKAGE_INDEX_ENVIRONMENT: dict[str, str] = {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}
 
 
-def _owner_environment(
-    build_root: Path, storage: Path, *, language: str, check_sequences: bool, jobs: int
-) -> dict[str, str]:
-    """Pin every documentation selector so ambient developer settings cannot reshape a root."""
+def compile_environment(storage: Path) -> dict[str, str]:
+    """Pin the compile's product storage, and carry no documentation selector of our own.
+
+    Every ``CADRUMO_DOCS_`` selector is dropped rather than set here: the one
+    compile pins its own (:func:`dev.docs.compile_once.compile_language_roots`),
+    so a second authority for the flavour, the search index or a root's place in
+    the site is exactly what must not exist. What the packaging driver still
+    owns is where the compile keeps product state, because the registry and the
+    live command tree it reads must come from scratch storage rather than from
+    the workstation's own.
+    """
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_DOCS_")}
-    environment.update(
-        {
-            DOCS_BUILD_ROOT_ENV: str(build_root),
-            DOCS_FLAVOR_ENV: "desktop",
-            "CADRUMO_DOCS_JOBS": str(jobs),
-            # The packaged site has ONE search index, built over every root once
-            # they are all built (:func:`_index_site`). A root that indexed
-            # itself would write an index addressed to its own build directory,
-            # which is not where the staged site puts its pages.
-            "CADRUMO_DOCS_PAGEFIND_MODE": "none",
-            # Where this root sits in the staged site: the apex language at the
-            # top, the others under their own directory. A page resolves the one
-            # index, and opens a result shared by every language, against this.
-            "CADRUMO_DOCS_SITE_PREFIX": package_prefix(language),
-            STORAGE_ROOT.variable: str(storage),
-            "PYTHONIOENCODING": "utf-8",
-        }
-    )
-    if not check_sequences:
-        environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
+    environment.update({STORAGE_ROOT.variable: str(storage), "PYTHONIOENCODING": "utf-8"})
     return environment
 
 
-def owner_build(
-    language: str, root: Path, storage: Path, *, build_root: Path, check_sequences: bool, jobs: int
-) -> tuple[list[str], dict[str, str]]:
-    """Return the owner command and pinned environment that build one language root."""
-    command = language_build_command(language, root.parent)
-    return command, _owner_environment(
-        build_root, storage, language=language, check_sequences=check_sequences, jobs=jobs
-    )
+def compile_command(html_root: Path, build_root: Path) -> list[str]:
+    """Return the command that writes every declared language root from ONE compile.
+
+    The compile's own flags carry what used to be an environment per root: the
+    flavour the package ships, where the roots go and where the compile works.
+    """
+    return [
+        sys.executable,
+        "-m",
+        "dev.docs.compile_once",
+        "--html-root",
+        str(html_root),
+        "--build-root",
+        str(build_root),
+        "--flavor",
+        "desktop",
+    ]
 
 
 def require_host_product_metadata(expected_version: str) -> None:
@@ -107,57 +99,59 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None
             return
         (build_root / "ready").unlink(missing_ok=True)
         languages = declared_languages(layout)
-        _run_owner_builds(build_root, paths["user_docs_work"], languages)
+        _compile_roots(build_root, paths["user_docs_work"], languages)
         _index_site(build_root, languages)
         completed(build_root, input_identity)
 
 
-def _run_owner_builds(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
-    """Run one owner build per language; the sequence gate runs on exactly the first root."""
+def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
+    """Write every declared language root from ONE compile of the documentation.
+
+    One compile replaces one Sphinx build per language, so the staged site costs
+    one read of the pages however many languages it ships. It also retires what
+    four concurrent builds needed: no root is built first to keep the strict
+    sequence gate off a loaded host, because there is one build for the gate to
+    run in, and no read parallelism is split between roots.
+    """
     roots = language_roots(build_root, languages)
     work.mkdir(parents=True, exist_ok=True)
     for root in roots.values():
-        # The owner regenerates the index on every successful full build. Removing it
-        # first means a failed or partial build can never pass staging with an old index.
+        # The search index is written over every root once they exist
+        # (:func:`_index_site`). Removing it first means a failed or partial
+        # compile can never pass staging with an old index.
         index = root / "pagefind"
         if index.exists():
             shutil.rmtree(index)
-
-    def run(language: str) -> tuple[str, int, Path]:
-        storage = work / language / "storage"
-        if storage.exists():
-            shutil.rmtree(storage)
-        storage.mkdir(parents=True)
-        command, environment = owner_build(
-            language,
-            roots[language],
-            storage,
-            build_root=build_root,
-            check_sequences=language == languages[0],
-            jobs=2 if language == languages[0] else max(1, (os.cpu_count() or 1) // max(1, len(languages) - 1)),
-        )
-        log = work / f"{language}.log"
-        print(f"Building {language} user documentation; log: {log}", flush=True)
-        result = run_command(command, cwd=REPO_ROOT, environment=environment, errors="replace")
-        log.write_text(result.stdout + result.stderr, encoding="utf-8")
-        print(f"Documentation {language}: exit {result.returncode} in {result.duration_seconds:.0f} s", flush=True)
-        return language, result.returncode, log
-
-    # The strict runtime gate owns the host first. Cold native workers must not
-    # compete with three Sphinx builds under the unchanged runtime deadlines.
-    results = [run(languages[0])]
-    if results[0][1] == 0 and len(languages) > 1:
-        with ThreadPoolExecutor(max_workers=len(languages) - 1) as pool:
-            results.extend(pool.map(run, languages[1:]))
-    failed = [(language, code, log) for language, code, log in results if code]
-    for language, code, log in failed:
+    storage = work / "storage"
+    if storage.exists():
+        shutil.rmtree(storage)
+    storage.mkdir(parents=True)
+    # Each root is a directory under the one HTML root the build-path owner
+    # resolves, which is where the compile writes them.
+    html_root = roots[APEX_LANGUAGE].parent
+    log = work / "compile.log"
+    print(f"Compiling the user documentation in {', '.join(languages)} once; log: {log}", flush=True)
+    result = run_command(
+        compile_command(html_root, build_root),
+        cwd=REPO_ROOT,
+        environment=compile_environment(storage),
+        errors="replace",
+    )
+    log.write_text(result.stdout + result.stderr, encoding="utf-8")
+    print(f"Documentation compile: exit {result.returncode} in {result.duration_seconds:.0f} s", flush=True)
+    if result.returncode:
         lines = log.read_text(encoding="utf-8").splitlines()
-        print(f"\nDocumentation build failed for {language} (exit {code}); log: {log}", file=sys.stderr)
+        print(f"\nThe one documentation compile failed (exit {result.returncode}); log: {log}", file=sys.stderr)
         print("\n".join(lines[-25:]), file=sys.stderr)
         causes = [match.group(1) for line in lines if (match := _RAISED.search(line))]
-        print(f"cause ({language}): {causes[-1] if causes else 'see the log above'}", file=sys.stderr, flush=True)
-    if failed:
-        raise SystemExit(f"User documentation build failed: {', '.join(language for language, _, _ in failed)}")
+        print(f"cause: {causes[-1] if causes else 'see the log above'}", file=sys.stderr, flush=True)
+        raise SystemExit(f"User documentation compile failed: exit {result.returncode}")
+    absent = sorted(language for language, root in roots.items() if not root.is_dir())
+    if absent:
+        raise DocsPackagingError(
+            f"The documentation compile wrote no root for {', '.join(absent)} under {html_root}; "
+            f"the package declares {len(languages)} language(s) and the compile carries its own set"
+        )
 
 
 def _index_site(build_root: Path, languages: tuple[str, ...]) -> None:

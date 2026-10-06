@@ -16,6 +16,14 @@ mechanism moves, instead of one gate that is red until the last of them does.
 
 A difference kept on purpose is declared in :data:`INTENDED_DIFFERENCES` with
 its reason and is reported apart from the rest, never folded into the count.
+
+There are two entries, and they differ only in what they keep.
+:func:`compile_language_roots` is the one every caller that wants the language
+roots uses -- the package build, the ``docs-langs`` recipe, the live preview --
+and it writes each language's root where a per-language build used to write it.
+:func:`compile_once` is the measuring one: it keeps the compiled site, the
+stored form and the composed roots side by side so :func:`compare` can read all
+three.
 """
 
 from __future__ import annotations
@@ -23,6 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 import time
 from collections import Counter
@@ -40,8 +49,9 @@ if not __package__:
 
 from .build import DOCS_FLAVOR_ENV
 from .build import main as build_documentation
-from .build_paths import DOCS_BUILD_ROOT_ENV
+from .build_paths import DOCS_BASE_URL_ENV, DOCS_BUILD_ROOT_ENV, DOCS_SITE_PREFIX_ENV
 from .compile_slots import SLOTS_FILE, context_at, markup_contexts, read_slots
+from .i18n import DEFAULT_SOURCE_LANGUAGE
 from .language_roots import compose_root, store_compiled_root
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from .shared_page_assets import CHROME_STRINGS_SCRIPT, language_chrome_strings
@@ -50,6 +60,24 @@ from .translations_js import TRANSLATIONS_SCRIPT, language_translations_js
 
 #: The environment key ``docs/conf.py`` reads to carry every language.
 MULTILINGUAL_ENV: Final[str] = "CADRUMO_DOCS_MULTILINGUAL"
+
+#: The Sphinx ``language`` the one compile builds in: the language the pages
+#: are authored in, whose messages every catalogue translates. It selects the
+#: scope and the catalogues, not the text the pages carry.
+COMPILE_LANGUAGE: Final[str] = DEFAULT_SOURCE_LANGUAGE
+
+#: The documentation settings a compile does not own, and therefore keeps from
+#: the environment it is run in: whether the network may be reached, where the
+#: repository stands, and whether the CLI tree the live command surface writes
+#: is emitted. A caller builds hermetically by setting these; everything else a
+#: ``CADRUMO_DOCS_`` key could say about the site is the compile's own
+#: (:func:`_pin_build_environment`).
+HOST_SELECTORS: Final[tuple[str, ...]] = (
+    "CADRUMO_DOCS_OFFLINE",
+    "CADRUMO_DOCS_PROJECT_ROOT",
+    "CADRUMO_DOCS_SKIP_CLI_TREE",
+    SEQUENCE_CHECK_SKIP_ENV,
+)
 
 #: Build state inside the compiled site that no reader is served.
 _BUILD_STATE: Final[frozenset[str]] = frozenset({".doctrees", ".buildinfo", "_sources", SLOTS_FILE})
@@ -195,6 +223,27 @@ class CompileOnceResult:
     seconds: float
 
 
+@dataclass(frozen=True)
+class CompiledLanguageRoots:
+    """The language roots one compile wrote.
+
+    Attributes:
+        html_root: The directory the roots sit under.
+        roots: Each language's own root, by language tag.
+        stored: The structure and each language's text the roots were composed
+            from, which is what a caller ships instead of the roots where it
+            can compose them later.
+        languages: The languages the compile carried, in the stored order.
+        seconds: Wall time of the Sphinx compile alone.
+    """
+
+    html_root: Path
+    roots: Mapping[str, Path]
+    stored: Path
+    languages: tuple[str, ...]
+    seconds: float
+
+
 def _site_files(root: Path) -> dict[str, Path]:
     """Return a built or composed site's reader-facing files by path inside it."""
     files: dict[str, Path] = {}
@@ -231,17 +280,37 @@ def _per_language_assets(files: dict[str, Path], languages: Sequence[str]) -> di
     return per_language
 
 
-def _pin_build_environment(build_root: Path, *, flavor: str, jobs: int | None) -> None:
+def _pin_build_environment(
+    build_root: Path,
+    *,
+    flavor: str,
+    jobs: int | None,
+    base_url: str | None = None,
+    check_sequences: bool | None = None,
+) -> None:
     """Pin the one compile's selectors so an ambient setting cannot reshape it.
 
     Set in this process rather than handed to a child, because the build driver
     is called here and spawns the Sphinx child itself: one authority for how a
     documentation build is run, which is also the only place the marks could be
     recorded from.
+
+    Args:
+        build_root: The documentation build root the compile works under.
+        flavor: Who the pages are for, as ``dev.docs.build`` means it.
+        jobs: Sphinx read parallelism, or None for the build's own default.
+        base_url: The site's address above the language directories, or None
+            for a site served from no address of its own.
+        check_sequences: Whether the CLI sequence gate runs, or None to leave
+            an ambient decision alone.
     """
-    kept = os.environ.get(SEQUENCE_CHECK_SKIP_ENV)
+    # Everything the compile does not decide is kept: whether the host may be
+    # reached and which optional generator runs are a caller's hermetic
+    # arrangement, not a selector that could reshape the site.
+    kept = {key: os.environ[key] for key in HOST_SELECTORS if key in os.environ}
     for key in [key for key in os.environ if key.startswith("CADRUMO_DOCS_")]:
         del os.environ[key]
+    os.environ.update(kept)
     os.environ.update(
         {
             MULTILINGUAL_ENV: "1",
@@ -256,32 +325,49 @@ def _pin_build_environment(build_root: Path, *, flavor: str, jobs: int | None) -
     )
     if jobs is not None:
         os.environ["CADRUMO_DOCS_JOBS"] = str(jobs)
-    if kept:
-        os.environ[SEQUENCE_CHECK_SKIP_ENV] = kept
+    if base_url is not None:
+        os.environ[DOCS_BASE_URL_ENV] = base_url
+        # A site with an address of its own serves every language under its own
+        # code, English included, so no language is at the apex of this layout:
+        # the compile says so by carrying a prefix itself, which is what
+        # :func:`dev.docs.build_paths.docs_site_prefixes` reads
+        # (the desktop package is the other layout, and carries none).
+        os.environ[DOCS_SITE_PREFIX_ENV] = f"{COMPILE_LANGUAGE}/"
+    if check_sequences is not None:
+        if check_sequences:
+            os.environ.pop(SEQUENCE_CHECK_SKIP_ENV, None)
+        else:
+            os.environ[SEQUENCE_CHECK_SKIP_ENV] = "1"
 
 
-def compile_once(
-    destination: Path,
+def _compile_and_compose(
+    compiled: Path,
+    stored: Path,
+    roots_in: Path,
     *,
-    flavor: str = "desktop",
-    jobs: int | None = None,
+    build_root: Path,
+    flavor: str,
+    jobs: int | None,
+    strict: bool,
+    check_sequences: bool | None,
+    base_url: str | None,
 ) -> CompileOnceResult:
-    """Compile the documentation once, store it, and compose every language back.
+    """Run the one compile, store what it wrote, and compose every language from the store.
 
-    Args:
-        destination: A directory to write the compiled site, the stored form
-            and the composed roots into.
-        flavor: Who the pages are for, as ``dev.docs.build`` means it.
-        jobs: Sphinx read parallelism, or None for the build's own default.
-
-    Returns:
-        What the compile produced.
+    Every directory written is cleared first. The compile's own doctree cache
+    lives inside the compiled site, which Sphinx puts it in for a build given
+    no cache of its own, so clearing that directory is what keeps a compile
+    from reading an earlier one's environment back: the marks are numbered per
+    compile, and a cached doctree would carry another compile's numbers into
+    this one's pages.
 
     Raises:
         SystemExit: If the Sphinx build fails, or wrote no record of its marks.
     """
-    compiled = destination / "compiled"
-    _pin_build_environment(destination / "build", flavor=flavor, jobs=jobs)
+    for directory in (compiled, stored):
+        if directory.exists():
+            shutil.rmtree(directory)
+    _pin_build_environment(build_root, flavor=flavor, jobs=jobs, base_url=base_url, check_sequences=check_sequences)
     started = time.monotonic()
     code = build_documentation(
         [
@@ -289,8 +375,9 @@ def compile_once(
             # a build has one Sphinx ``language``. It selects the user scope and
             # the catalogues; what it no longer selects is the text on the pages.
             "--language",
-            "en",
+            COMPILE_LANGUAGE,
             "--isolated-source",
+            *(["--strict"] if strict else []),
             "--out-dir",
             str(compiled),
         ]
@@ -305,13 +392,14 @@ def compile_once(
             f"it was not run with {MULTILINGUAL_ENV}=1, or docs/conf.py did not start recording"
         )
     slots = read_slots(record)
-    stored = destination / "stored"
     files = _site_files(compiled)
     language_files = _per_language_assets(files, slots.languages)
     store_compiled_root(files, slots, stored, language_files=language_files)
     roots: dict[str, Path] = {}
     for language in slots.languages:
-        roots[language] = destination / "roots" / language
+        roots[language] = roots_in / language
+        if roots[language].exists():
+            shutil.rmtree(roots[language])
         compose_root(stored, language, roots[language])
     return CompileOnceResult(
         compiled=compiled,
@@ -320,6 +408,115 @@ def compile_once(
         languages=slots.languages,
         marks=len(slots.values),
         seconds=seconds,
+    )
+
+
+def compile_once(
+    destination: Path,
+    *,
+    flavor: str = "desktop",
+    jobs: int | None = None,
+) -> CompileOnceResult:
+    """Compile the documentation once, store it, and compose every language back.
+
+    This is the measuring entry: it keeps the compiled site, the stored form and
+    the composed roots side by side under one directory so a comparison can read
+    all three. A caller that wants the roots themselves calls
+    :func:`compile_language_roots`.
+
+    Args:
+        destination: A directory to write the compiled site, the stored form
+            and the composed roots into.
+        flavor: Who the pages are for, as ``dev.docs.build`` means it.
+        jobs: Sphinx read parallelism, or None for the build's own default.
+
+    Returns:
+        What the compile produced.
+
+    Raises:
+        SystemExit: If the Sphinx build fails, or wrote no record of its marks.
+    """
+    return _compile_and_compose(
+        destination / "compiled",
+        destination / "stored",
+        destination / "roots",
+        build_root=destination / "build",
+        flavor=flavor,
+        jobs=jobs,
+        strict=False,
+        check_sequences=None,
+        base_url=None,
+    )
+
+
+def compile_language_roots(
+    html_root: Path,
+    *,
+    build_root: Path,
+    flavor: str = "desktop",
+    jobs: int | None = None,
+    strict: bool = True,
+    check_sequences: bool = True,
+    base_url: str | None = None,
+    stored: Path | None = None,
+) -> CompiledLanguageRoots:
+    """Write every language's documentation root from ONE compile.
+
+    This is the entry every caller uses to produce the language roots: the
+    package build, the ``docs-langs`` recipe and the live preview. It replaces
+    one Sphinx build per language, which is what the whole mechanism exists to
+    stop: the pages are read and written once no matter how many languages the
+    site publishes, and each root is composed from the structure plus that
+    language's own strings (:mod:`dev.docs.language_roots`).
+
+    Args:
+        html_root: The directory the language roots are written under, each at
+            ``<html_root>/<language>``. An existing root is replaced.
+        build_root: The documentation build root the compile works under. The
+            compiled site and the stored form are written beneath it, and
+            neither is a root a reader is served.
+        flavor: Who the pages are for, as ``dev.docs.build`` means it: ``web``
+            for the published site, ``desktop`` for the packaged copy.
+        jobs: Sphinx read parallelism, or None for the build's own default.
+        strict: Whether the compile refuses a warning (Sphinx ``-n -W``).
+        check_sequences: Whether the CLI sequence gate runs. One compile is one
+            build, so the gate runs once rather than on a chosen root.
+        base_url: The site's address above the language directories, such as
+            ``https://example.test/docs``; None for a site served from no
+            address of its own, which is what the packaged copy is.
+        stored: Where to keep the structure and each language's text, or None
+            to keep it beneath *build_root*. A caller that stages or ships the
+            stored form rather than the composed roots names it.
+
+    Returns:
+        The roots written, and what the compile cost.
+
+    Raises:
+        SystemExit: If the Sphinx build fails, or wrote no record of its marks.
+    """
+    result = _compile_and_compose(
+        build_root / "compiled",
+        stored if stored is not None else build_root / "compiled-text",
+        html_root,
+        build_root=build_root,
+        flavor=flavor,
+        jobs=jobs,
+        strict=strict,
+        check_sequences=check_sequences,
+        base_url=base_url,
+    )
+    # The compiled site is scaffolding here: it carries the marks, no reader is
+    # served it, and what the roots were composed from is the stored form beside
+    # them. It is removed so a caller that inventories its own build directory
+    # sees the roots and the text, not a third copy of the site and its doctree
+    # cache. The measuring entry keeps it, which is what it exists for.
+    shutil.rmtree(result.compiled)
+    return CompiledLanguageRoots(
+        html_root=html_root,
+        roots=result.roots,
+        stored=result.stored,
+        languages=result.languages,
+        seconds=result.seconds,
     )
 
 
@@ -384,7 +581,30 @@ def main(argv: list[str] | None = None) -> int:
     """Compile once, store, compose, and report what still differs."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--out", type=Path, required=True, help="Directory for the compile, the stored form and the roots."
+        "--out", type=Path, default=None, help="Directory for the compile, the stored form and the roots."
+    )
+    parser.add_argument(
+        "--html-root",
+        type=Path,
+        default=None,
+        help=(
+            "Write one documentation root per language under this directory, each at <html-root>/<language>, "
+            "and report nothing else. This is the publishing mode: --out is the measuring one."
+        ),
+    )
+    parser.add_argument(
+        "--build-root",
+        type=Path,
+        default=None,
+        help="Documentation build root for --html-root; the parent of the HTML root by default.",
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="Refuse a warning in the compile (Sphinx -n -W); --html-root only."
+    )
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        help="The address the site is served from, above the language directories; --html-root only.",
     )
     parser.add_argument(
         "--oracle",
@@ -401,6 +621,29 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--json", type=Path, default=None, help="Write the comparison counts here as well.")
     arguments = parser.parse_args(argv)
+
+    if (arguments.html_root is None) == (arguments.out is None):
+        parser.error("give exactly one of --html-root (publish the roots) and --out (compile and measure)")
+    if arguments.html_root is not None:
+        html_root = arguments.html_root
+        written = compile_language_roots(
+            html_root,
+            build_root=arguments.build_root if arguments.build_root is not None else html_root.parent,
+            flavor=arguments.flavor,
+            jobs=arguments.jobs,
+            strict=arguments.strict,
+            # The gate the environment already decides about: a caller that
+            # cannot run the live CLI sequences says so there, and this mode
+            # does not overrule it.
+            check_sequences=os.environ.get(SEQUENCE_CHECK_SKIP_ENV) != "1",
+            base_url=arguments.base_url,
+        )
+        print(
+            f"One compile of {len(written.languages)} language(s) in {written.seconds:.0f} s: "
+            f"{', '.join(written.languages)} under {written.html_root}",
+            flush=True,
+        )
+        return 0
 
     destination = arguments.out
     if arguments.compare_only:
