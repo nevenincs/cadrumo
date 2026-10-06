@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-05'
+modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b3231ef8ba613d48a6544808cafe91df74524d5f2c3ab0ec74914f77cc14892'
+body_hash: 'sha256:8f95855d2240065195f595c9b561ca5c8fb96caa0d8476a2bbb312e78795b987'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -178,6 +178,18 @@ The drawn span slid with the newest record, so a reader resting high in a large 
 ### Confirmation minor | low | focus after a press in the documentation, after signing in with the TUI hidden, and from a detail toggle
 
 Resolved in `f3ec3897b9`. A pending focus wish is dropped on the next press, which the confirmation pass measured at 0 of 24 overridden with the guard and 22 of 24 without. Left: with an unreadable source and records together in a panel at its floor, the banner leaves the list less than one row.
+
+### Log check span | medium | a reader off the end was eventually given the whole log to draw
+
+An independent check of `f3ec3897b9` measured the pinned span growing to the ring's ten thousand records, with frames of 50 milliseconds and more under a feed in the development build. Resolved in `17c72f803c`: the span holds at most five windows and moves a window at a time as the reader nears either end; the view is put back on the record at its top whenever what is drawn changes, which also covers the ring dropping records in an engine without scroll anchoring. The benchmark's new stage reads a full log streaming at the host's maximum: two thousand rows drawn, frames at 16.7 milliseconds median and 16.8 at the ninety-fifth percentile in the production build.
+
+### Log check leaving and returning | medium | a slow scroll never ended following, and End did not always resume it
+
+Upward movement was measured from the previous scroll, so a pixel at a time never counted, and under a feed a gentle wheel was undone by the next batch; End relied on a scroll report that a batch could overtake, failing 3 times in 64. Resolved in `17c72f803c`: movement adds up from the end, an upward wheel or a downward finger leaves the end at once, End asks for the end outright, and an opened detail at the end keeps the newest record in view. Five tests run against the live feed.
+
+### Log check left | low | what the check could not settle
+
+Whether the menu key is told from a pointer in engines other than Chromium, which Playwright's WebKit and Firefox do not let a test press; and returning to the end of a log growing at the host's maximum by ordinary wheel notches, which loses the race, where End and the Follow button are the way back.
 
 ## Recommendations
 

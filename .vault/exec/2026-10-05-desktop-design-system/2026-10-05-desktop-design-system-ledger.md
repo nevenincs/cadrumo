@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:f0f804685a89ef7bf8063e4e387234b86b76e87aa4386b8e121de1367c0403ab'
+body_hash: 'sha256:5aa406170b06565c450e45840a0609278ccc15a2b9f11048fa521bf4292e6bcd'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -240,6 +240,8 @@ related:
 - `S11` `M` `native/desktop/frontend/scripts/benchmark.mjs`
 - `S11` `verify:` `npm test (109 passed, twice)` -> `pass`
 - `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `verify:` `npm test (114 passed, twice)` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check (with the streaming-log stage)` -> `pass`
 
 ## Notes
 
