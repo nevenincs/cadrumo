@@ -464,6 +464,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.ATRIBUCION_MEMBER: "cli.app.modelo.bindings.readiness.miembro_atribucion",
         BindingSourceKind.GASTO193_CONTRIBUTOR: "cli.app.modelo.bindings.readiness.gasto193_contribuyente",
         BindingSourceKind.WITHHOLDING296: "cli.app.modelo.bindings.readiness.withholding296_perceptor",
+        BindingSourceKind.AFILIADO_COTIZACION: "cli.app.modelo.bindings.readiness.afiliado_cotizacion",
     },
 )
 """Total locale-key projection for the noun describing each binding source."""
@@ -505,6 +506,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.ATRIBUCION_MEMBER: OperatorActionAxis.SET_PROFILE_FACT,
         BindingSourceKind.GASTO193_CONTRIBUTOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.WITHHOLDING296: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.AFILIADO_COTIZACION: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
 )
 """Total action spine for a readiness ``missing_bindings`` source."""

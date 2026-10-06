@@ -803,6 +803,7 @@ cli:
           nyomtatványokhoz (036) használd: alta, modificacion vagy baja.'
         readiness:
           activo_extranjero: külföldi eszköz
+          afiliado_cotizacion: járulék-kimutatás biztosítottja
           borrador_aeat: AEAT-tervezet
           compensacion_iva_anual: éves IVA-kompenzáció
           constante_diseno: Rekordterv-állandó

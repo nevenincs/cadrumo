@@ -757,6 +757,7 @@ cli:
           modelos (036) use alta, modificacion, or baja.'
         readiness:
           activo_extranjero: foreign asset
+          afiliado_cotizacion: contributions-relationship affiliate
           borrador_aeat: AEAT draft
           compensacion_iva_anual: annual IVA compensation
           constante_diseno: Record design constant

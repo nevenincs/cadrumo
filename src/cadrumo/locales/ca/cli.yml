@@ -818,6 +818,7 @@ cli:
           a models censals (036) usa alta, modificacion o baja.'
         readiness:
           activo_extranjero: actiu estranger
+          afiliado_cotizacion: afiliat de la relació de cotitzacions
           borrador_aeat: esborrany de l’AEAT
           compensacion_iva_anual: compensació anual de l'IVA
           constante_diseno: Constant del disseny de registre

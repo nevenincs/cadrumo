@@ -823,6 +823,7 @@ cli:
           para modelos censales (036) usa alta, modificacion o baja.'
         readiness:
           activo_extranjero: activo extranjero
+          afiliado_cotizacion: afiliado de la relación de cotizaciones
           borrador_aeat: borrador de la AEAT
           compensacion_iva_anual: compensación anual del IVA
           constante_diseno: Constante del diseño de registro
