@@ -329,6 +329,40 @@ const SURFACES: {
       await expect(target.locator(".source-banner")).toBeVisible();
     },
   },
+  {
+    name: "the profile to choose, asked for",
+    scenario: "choose-profile",
+    reach: async (target) => {
+      await target.locator("#profile-password").fill("anything");
+      await target.keyboard.press("Enter");
+      await expect(target.locator("#profile-choice")).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      );
+    },
+  },
+  {
+    name: "the form that creates a profile, with what is wrong said",
+    scenario: "first-run",
+    reach: async (target) => {
+      await target.locator(".create-profile button[type=submit]").click();
+      await expect(
+        target.locator(".create-profile [data-slot=field-error]").first(),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: "a profile just created, to sign in to",
+    scenario: "first-run",
+    reach: async (target) => {
+      const fields = target.locator(".create-profile input");
+      await fields.nth(0).fill("Marta Ruiz Ferrer");
+      await fields.nth(1).fill("correct horse");
+      await fields.nth(2).fill("correct horse");
+      await target.locator(".create-profile button[type=submit]").click();
+      await expect(target.locator("#profile-password")).toBeFocused();
+    },
+  },
 ];
 
 for (const scheme of ["light", "dark"] as const)

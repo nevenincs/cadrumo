@@ -193,6 +193,8 @@ export function App({ host }: { host: Host }) {
   // The sign-in dialog opens by itself whenever the TUI becomes gated; a
   // person who dismisses it, or who has just signed out here, reopens it.
   const [signInDismissed, setSignInDismissed] = useState(false);
+  // The dialog as the form that creates a profile, where one was asked for.
+  const [creatingProfile, setCreatingProfile] = useState(false);
   const signInButton = useRef<HTMLButtonElement>(null);
   // The log ring and what it has lost, held together: a batch changes both.
   const [log, setLog] = useState<{
@@ -332,6 +334,12 @@ export function App({ host }: { host: Host }) {
     };
     setSignInDismissed(false);
   }, []);
+  const canCreateProfile = account.canCreate;
+  const askNewProfile = useCallback(() => {
+    setSettingsOpen(false);
+    askSignIn();
+    setCreatingProfile(true);
+  }, [askSignIn]);
   // Settings closes by more than one way; what it showed is settled by all.
   useEffect(() => {
     if (!settingsOpen) accountRef.current.settle();
@@ -1053,12 +1061,20 @@ export function App({ host }: { host: Host }) {
       },
       {
         id: "account.createProfile",
-        label: t("desktop.account.create_profile"),
+        // In the window where the host can make one, else in the TUI.
+        label: t(
+          canCreateProfile
+            ? "desktop.account.new_profile"
+            : "desktop.account.create_profile",
+        ),
         group: "account",
-        icon: "user",
-        keywords: "register new account",
-        enabled: () => phase === "no-profile",
-        run: continueInTui,
+        icon: canCreateProfile ? "userAdd" : "user",
+        keywords: "register new account add another",
+        enabled: () =>
+          canCreateProfile
+            ? phase === "no-profile" || mayEnterPassword
+            : phase === "no-profile",
+        run: canCreateProfile ? askNewProfile : continueInTui,
       },
       {
         id: "account.signOut",
@@ -1133,6 +1149,8 @@ export function App({ host }: { host: Host }) {
       calendarVisible,
       gated,
       askSignIn,
+      askNewProfile,
+      canCreateProfile,
       mayEnterPassword,
       continueInTui,
       signedIn,
@@ -2110,6 +2128,8 @@ export function App({ host }: { host: Host }) {
               if (!open) accountRef.current.settle();
             }}
             onOpenTui={continueInTui}
+            create={creatingProfile}
+            onCreateChange={setCreatingProfile}
             // Opened by the gate closing rather than by a press, the dialog
             // still took focus from somewhere: that is where it returns.
             onOpening={(from) => {

@@ -35,6 +35,7 @@ import {
   SquareTerminal,
   TriangleAlert,
   Unplug,
+  UserPlus,
   X,
   ZoomIn,
   ZoomOut,
@@ -106,6 +107,7 @@ const ICONS = {
   tui: PanelsTopLeft,
   unplug: Unplug,
   user: CircleUser,
+  userAdd: UserPlus,
   zoomIn: ZoomIn,
   zoomOut: ZoomOut,
 } satisfies Record<string, LucideIcon | typeof PythonMark>;

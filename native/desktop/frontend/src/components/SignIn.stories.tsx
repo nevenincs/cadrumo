@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
 import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
+import type { ProfileList } from "../shell/profiles";
 import type { SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
 import { Account, SignedOut, SignInDialog } from "./SignIn";
@@ -10,7 +11,13 @@ import { Account, SignedOut, SignInDialog } from "./SignIn";
 // can be looked at without a host. They prove presentation only.
 const controller = accountFixture;
 
-function Screen({ account }: { account: SignInController }) {
+type ScreenArgs = {
+  account: SignInController;
+  /** The dialog as the form that creates a profile. */
+  create?: boolean;
+};
+
+function Screen({ account, create = false }: ScreenArgs) {
   const button = useRef<HTMLButtonElement>(null);
   return (
     <div className="flex min-h-dvh bg-background" data-scheme="dark">
@@ -26,6 +33,7 @@ function Screen({ account }: { account: SignInController }) {
         onOpenChange={() => undefined}
         onClosed={() => button.current?.focus()}
         onOpenTui={() => undefined}
+        create={create}
       />
     </div>
   );
@@ -35,8 +43,8 @@ const meta = {
   title: "Shell/Sign-in",
   parameters: { fill: true },
   args: { account: controller() },
-  render: (args: { account: SignInController }) => <Screen {...args} />,
-} satisfies Meta<{ account: SignInController }>;
+  render: (args: ScreenArgs) => <Screen {...args} />,
+} satisfies Meta<ScreenArgs>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -81,6 +89,100 @@ const PRESENT = { ...SIGNED_OUT, state: "present" } as const;
 export const NoProfile: Story = {
   name: "No active profile",
   args: { account: controller({ status: NO_PROFILE }) },
+};
+
+// A host that lists and creates profiles. The names are made up.
+const profiles = (names: string[], active: number | null): ProfileList => ({
+  profiles: names.map((name, index) => ({
+    id: `profile-${index}`,
+    name,
+    active: index === active,
+  })),
+  complete: true,
+});
+const THREE = ["Ana Soler Vidal", "Demo profile", "Taller Ribera, S.L."];
+
+export const SeveralProfiles: Story = {
+  name: "Several profiles",
+  args: { account: controller({ profiles: profiles(THREE, 1) }) },
+};
+
+export const ProfileToChoose: Story = {
+  name: "Several profiles, none selected",
+  args: {
+    account: controller({
+      status: NO_PROFILE,
+      profiles: profiles(THREE, null),
+    }),
+  },
+};
+
+export const OneProfile: Story = {
+  name: "One profile",
+  args: { account: controller({ profiles: profiles(["Demo profile"], 0) }) },
+};
+
+export const ProfilesUnread: Story = {
+  name: "Profiles unreadable",
+  args: {
+    account: controller({ profiles: { profiles: [], complete: false } }),
+  },
+};
+
+export const FirstRun: Story = {
+  name: "First run: create a profile",
+  args: {
+    account: controller({ status: NO_PROFILE, profiles: profiles([], null) }),
+  },
+};
+
+export const NewProfile: Story = {
+  name: "New profile beside others",
+  args: { account: controller({ profiles: profiles(THREE, 1) }), create: true },
+};
+
+export const CreatingProfile: Story = {
+  name: "Creating a profile",
+  args: {
+    account: controller({
+      status: NO_PROFILE,
+      profiles: profiles([], null),
+      busy: true,
+    }),
+  },
+};
+
+export const ProfileNameTaken: Story = {
+  name: "Creation refused: name in use",
+  args: {
+    account: controller({
+      status: NO_PROFILE,
+      profiles: profiles([], null),
+      createRefusal: refused("profile_already_exists"),
+    }),
+  },
+};
+
+export const ProfileNotCreated: Story = {
+  name: "Creation refused: another reason",
+  args: {
+    account: controller({
+      status: NO_PROFILE,
+      profiles: profiles([], null),
+      createRefusal: refused("timed_out"),
+    }),
+  },
+};
+
+export const ProfileCreated: Story = {
+  name: "Profile created, not yet signed in",
+  args: {
+    account: controller({
+      status: { ...SIGNED_OUT, active_profile: "Marta Ruiz Ferrer" },
+      profiles: profiles(["Marta Ruiz Ferrer"], 0),
+      created: "Marta Ruiz Ferrer",
+    }),
+  },
 };
 
 export const RuntimeUnavailable: Story = {

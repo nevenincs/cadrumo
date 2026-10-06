@@ -14,6 +14,7 @@ import type {
   SignInResult,
   SignOutResult,
 } from "../ipc/contract";
+import type { ProfileAccounts } from "./profiles";
 import type { ProfileViews } from "./views";
 
 export type TerminalKind = "console" | "python" | "tui";
@@ -40,7 +41,9 @@ export interface Host {
   readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
   signInStatus(): Promise<SignInStatus>;
-  signIn(password: Uint8Array): Promise<SignInResult>;
+  /** Signs in to `profile`, by its identity, or to the profile the product
+   * has selected where none is named. */
+  signIn(password: Uint8Array, profile?: string): Promise<SignInResult>;
   signOut(): Promise<SignOutResult>;
   openTerminal(
     kind: TerminalKind,
@@ -57,6 +60,10 @@ export interface Host {
     at?: { x: number; y: number },
   ): Promise<string | null>;
   openExternal(url: string): Promise<void>;
+  /** The profiles on this computer, to choose from and to add to, where
+   * this host offers them. Without them the shell signs in to the one
+   * profile the status names. */
+  readonly profiles?: ProfileAccounts;
   /** Read-only views of the signed-in profile, where this host offers any.
    * Without them the shell shows no way into a view. */
   readonly views?: ProfileViews;

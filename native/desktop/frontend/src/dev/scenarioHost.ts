@@ -14,6 +14,7 @@ import type {
   SignInStatus,
 } from "../ipc/contract";
 import type { Host } from "../shell/host";
+import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
 import {
@@ -40,6 +41,13 @@ import { SCENARIO_HOST_MARKER } from "./marker";
 import type { Scenario } from "./scenarios";
 
 export const FIXTURE_PROFILE = "Demo profile";
+
+/** The other profiles of a computer that has several. Made-up names. */
+const OTHER_PROFILES = ["Ana Soler Vidal", "Taller Ribera, S.L."];
+
+/** Identities shaped like the product's, and plainly not one of them. */
+const fixtureId = (index: number) =>
+  `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
 
 export type ScenarioHostOptions = {
   /** The documentation fixture the environment reports, or null for none. */
@@ -89,14 +97,62 @@ export function scenarioHost(
   let presence = scenario.signIn.status.state;
   let clipboard = "";
 
+  // The profiles of this made-up computer, and the one that is selected.
+  // A host with no profile commands still has the one its status names.
+  const first = scenario.signIn.profile ?? FIXTURE_PROFILE;
+  const accounts: { id: string; name: string }[] =
+    scenario.profiles === "none" ||
+    (scenario.profiles === "absent" && scenario.signIn.profile === null)
+      ? []
+      : [first, ...(scenario.profiles === "several" ? OTHER_PROFILES : [])].map(
+          (name, index) => ({ id: fixtureId(index + 1), name }),
+        );
+  let active: string | null =
+    scenario.signIn.profile === null ? null : (accounts[0]?.id ?? null);
+
   const status = (): SignInStatus => ({
     ...scenario.signIn.status,
     state: presence,
-    active_profile:
-      scenario.signIn.profile === undefined
-        ? FIXTURE_PROFILE
-        : scenario.signIn.profile,
+    active_profile: accounts.find((a) => a.id === active)?.name ?? null,
   });
+
+  const profiles: ProfileAccounts = {
+    async list() {
+      say("profiles");
+      if (scenario.profiles === "unreadable") throw failure("timed_out", "cli");
+      return {
+        profiles: [...accounts]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((a) => ({ ...a, active: a.id === active })),
+        complete: true,
+      };
+    },
+    async create(name) {
+      // The name is the person's own text: reported by its length only.
+      say(`createProfile ${name.length} characters`);
+      const outcome = scenario.signIn.create ?? { kind: "accept" };
+      if (outcome.kind === "pending") return never();
+      await wait(options.latencyMs);
+      if (outcome.kind === "fail") throw failure(outcome.code, "cli");
+      const taken = accounts.some(
+        (a) => a.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+      );
+      if (outcome.kind === "refuse" || taken)
+        return {
+          kind: "refused",
+          code:
+            outcome.kind === "refuse" ? outcome.code : "profile_already_exists",
+          retryAfterSeconds:
+            outcome.kind === "refuse" ? outcome.retryAfterSeconds : null,
+        };
+      // As the product does: the new profile is selected, and signed out.
+      const made = { id: fixtureId(accounts.length + 1), name };
+      accounts.push(made);
+      active = made.id;
+      presence = "absent";
+      return { kind: "created", ...made };
+    },
+  };
 
   // A view belongs to a signed-in profile; without one it is refused.
   // Where the platform signs in inside the TUI the host cannot tell, and
@@ -127,6 +183,7 @@ export function scenarioHost(
   return {
     available: true,
     ...(scenario.views === "none" ? {} : { views }),
+    ...(scenario.profiles === "absent" ? {} : { profiles }),
     // The shell draws its own menu here; the native popup is not simulated.
     nativeMenus: false,
 
@@ -149,8 +206,11 @@ export function scenarioHost(
       return Promise.resolve(status());
     },
 
-    async signIn() {
+    async signIn(_password, profile) {
       say("signIn");
+      // Which profile, by its place in the list: never its name.
+      const named = accounts.findIndex((a) => a.id === profile);
+      if (profile !== undefined) say(`signInProfile ${named + 1}`);
       const outcome = scenario.signIn.submit;
       if (outcome.kind === "pending") return never();
       await wait(options.latencyMs);
@@ -161,6 +221,8 @@ export function scenarioHost(
           code: outcome.code,
           retryAfterSeconds: outcome.retryAfterSeconds,
         };
+      // A sign-in that is accepted is what selects the profile.
+      if (named >= 0) active = accounts[named]?.id ?? active;
       presence = "present";
       return { kind: "signed-in" };
     },

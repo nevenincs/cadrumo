@@ -33,7 +33,14 @@ export type Scenario = {
     signOutFailure?: HostErrorCode;
     /** The active profile's name; null when the host knows none. */
     profile?: string | null;
+    /** What creating a profile meets. Accepted where it is left out. */
+    create?: SubmitOutcome;
   };
+  /** The profiles the host can list: none, the one fixture profile, several,
+   * or a list that cannot be read; or a host with no profile commands at
+   * all, as the desktop host is today, where the shell knows only the one
+   * profile the status names. */
+  profiles: "none" | "one" | "several" | "unreadable" | "absent";
   /** The log subscription: fixture records, an available but empty source, a
    * missing or unreadable source, or a subscription that never answers. */
   logs: "records" | "empty" | "missing" | "unreadable" | "pending";
@@ -66,6 +73,7 @@ const base = {
   docsSearch: "results",
   services: "memory",
   views: "fixture",
+  profiles: "several",
 } as const satisfies Partial<Scenario>;
 
 export const SCENARIOS: readonly Scenario[] = [
@@ -141,10 +149,64 @@ export const SCENARIOS: readonly Scenario[] = [
   {
     ...base,
     id: "no-profile",
-    title: "No active profile",
+    title: "No active profile, no profile commands",
     summary:
-      "Nothing to sign in to: no profile was created, or none is chosen. The way on is the TUI.",
+      "A host that cannot list or create profiles, as the desktop host is today, and names none: the way on is the TUI.",
     signIn: { status: signedOut, submit: { kind: "accept" }, profile: null },
+    profiles: "absent",
+  },
+  {
+    ...base,
+    id: "first-run",
+    title: "First run",
+    summary:
+      "No profile exists on this computer: the dialog is the form that creates one. Any name and password are accepted.",
+    signIn: { status: signedOut, submit: { kind: "accept" }, profile: null },
+    profiles: "none",
+  },
+  {
+    ...base,
+    id: "create-refused",
+    title: "Profile creation refused",
+    summary:
+      "No profile exists, and every attempt to create one is refused by the product.",
+    signIn: {
+      status: signedOut,
+      submit: { kind: "accept" },
+      profile: null,
+      create: {
+        kind: "refuse",
+        code: "profile_already_exists",
+        retryAfterSeconds: null,
+      },
+    },
+    profiles: "none",
+  },
+  {
+    ...base,
+    id: "choose-profile",
+    title: "Several profiles, none selected",
+    summary:
+      "Profiles exist and the product has none selected: the person chooses one before a password can be sent.",
+    signIn: { status: signedOut, submit: { kind: "accept" }, profile: null },
+  },
+  {
+    ...base,
+    id: "one-profile",
+    title: "One profile",
+    summary:
+      "The only profile on this computer: it is named, with nothing to choose.",
+    signIn: { status: signedOut, submit: { kind: "accept" } },
+    profiles: "one",
+  },
+  {
+    ...base,
+    id: "profiles-unreadable",
+    title: "Profiles unreadable",
+    summary:
+      "The status names a profile but the list of profiles cannot be read: sign-in goes to the named one.",
+    signIn: { status: signedOut, submit: { kind: "accept" } },
+    profiles: "unreadable",
   },
   {
     ...base,

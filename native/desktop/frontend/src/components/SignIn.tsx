@@ -15,13 +15,28 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import type { SignInRefusal } from "../ipc/contract";
+import {
+  nameProblem,
+  passwordProblem,
+  PASSWORD_MIN,
+  type NameProblem,
+  type PasswordProblem,
+} from "../shell/profiles";
 import type { AccountPhase, SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
 import { accountLabel, GATES } from "./accountWords";
@@ -159,6 +174,8 @@ export function SignInDialog({
   onClosed,
   onOpening,
   onOpenTui,
+  create,
+  onCreateChange,
 }: {
   account: SignInController;
   open: boolean;
@@ -169,13 +186,32 @@ export function SignInDialog({
   onClosed: () => void;
   /** Carry on in the TUI's own flow. */
   onOpenTui: () => void;
+  /** The person asked to create a profile rather than sign in to one. */
+  create?: boolean;
+  onCreateChange?: (create: boolean) => void;
 }) {
   const t = useStrings();
   const input = useRef<HTMLInputElement>(null);
   const handover = useRef<HTMLButtonElement>(null);
+  const nameField = useRef<HTMLInputElement>(null);
+  const choice = useRef<HTMLSelectElement>(null);
   const [revealed, setRevealed] = useState(false);
+  const [unchosen, setUnchosen] = useState(false);
   const errorId = useId();
+  const choiceErrorId = useId();
   const status = account.status;
+  // With no profile on this computer the dialog is the form that makes
+  // one; with some, it is that form when the person asks for it.
+  const creating =
+    account.canCreate && (create === true || account.phase === "no-profile");
+  // Changing between the two forms moves the keyboard to the new one's
+  // first field: what held it is gone.
+  const wasCreating = useRef(creating);
+  useEffect(() => {
+    if (wasCreating.current !== creating && open)
+      (creating ? nameField.current : input.current)?.focus();
+    wasCreating.current = creating;
+  }, [creating, open]);
 
   // A refused submission returns the keyboard to the field for the next try.
   const busy = account.busy;
@@ -198,7 +234,7 @@ export function SignInDialog({
   // anew, so nothing would place focus in it: it is placed here, whenever
   // the dialog is opened.
   useEffect(() => {
-    if (open) (input.current ?? handover.current)?.focus();
+    if (open) (nameField.current ?? input.current ?? handover.current)?.focus();
   }, [open]);
 
   if (!status) return null;
@@ -208,30 +244,41 @@ export function SignInDialog({
   // Where a password cannot help, the form is not offered: with no profile
   // the dialog offers the way to set one up, and with no services running it
   // says so in its title, as the rest of the window does.
-  const creating = account.phase === "no-profile";
+  const setUpInTui = account.phase === "no-profile" && !creating;
   const servicesDown = account.phase === "services-down";
-  const answerable = status.runtimeAvailable && account.canSignIn;
+  const answerable = !creating && status.runtimeAvailable && account.canSignIn;
+  const choices = account.profiles?.profiles ?? [];
+  const named = account.target?.name ?? status.active_profile;
+  const mustChoose = choices.length > 0 && !account.target;
   // A refusal that hands over to the TUI is the explanation: no lead then
   // says it a second way.
   const lead = creating
-    ? t("desktop.account.no_profile_lead")
-    : servicesDown
-      ? null
-      : answerable
-        ? t("desktop.signin.lead")
-        : account.refusal
-          ? null
-          : t("desktop.signin.open_tui_hint");
+    ? t("desktop.account.create.lead")
+    : setUpInTui
+      ? t("desktop.account.no_profile_lead")
+      : servicesDown
+        ? null
+        : answerable
+          ? t("desktop.signin.lead")
+          : account.refusal
+            ? null
+            : t("desktop.signin.open_tui_hint");
   // Titled as a sign-in only where there is something to sign in with.
-  const title = answerable
-    ? "desktop.signin.title"
-    : (accountLabel(account.phase) ?? "desktop.signin.title");
+  const title = creating
+    ? "desktop.account.create.title"
+    : answerable
+      ? "desktop.signin.title"
+      : (accountLabel(account.phase) ?? "desktop.signin.title");
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) setRevealed(false);
+        if (!next) {
+          setRevealed(false);
+          setUnchosen(false);
+          onCreateChange?.(false);
+        }
         onOpenChange(next);
       }}
     >
@@ -241,8 +288,8 @@ export function SignInDialog({
         {...(lead ? {} : { "aria-describedby": undefined })}
         onOpenAutoFocus={(event) => {
           onOpening?.(document.activeElement);
-          // The password field where there is one, else the way on.
-          const target = input.current ?? handover.current;
+          // The first field where there is one, else the way on.
+          const target = nameField.current ?? input.current ?? handover.current;
           if (!target) return;
           event.preventDefault();
           target.focus();
@@ -260,15 +307,32 @@ export function SignInDialog({
           </div>
         </DialogHeader>
 
-        {status.active_profile && (
-          <Badge variant="soft">
-            <Icon name="user" />
-            <span className="sr-only">{t("desktop.signin.profile")}</span>
-            <span className="truncate">{status.active_profile}</span>
-          </Badge>
+        {account.profiles && !account.profiles.complete && (
+          <Alert tone="warning" role="status" icon={<Icon name="alert" />}>
+            {t("desktop.signin.profiles_unread")}
+          </Alert>
         )}
 
-        {answerable ? (
+        {creating ? (
+          <CreateProfile
+            account={account}
+            nameField={nameField}
+            onDone={() => onCreateChange?.(false)}
+            {...(choices.length > 0
+              ? { onBack: () => onCreateChange?.(false) }
+              : {})}
+          />
+        ) : choices.length > 1 && answerable ? null : (
+          named && <ProfileNamed name={named} />
+        )}
+
+        {!creating && account.created && (
+          <Alert tone="success" role="status" icon={<Icon name="check" />}>
+            {t("desktop.account.create.done", { name: account.created })}
+          </Alert>
+        )}
+
+        {creating ? null : answerable ? (
           <form
             className="grid gap-4"
             noValidate
@@ -276,6 +340,13 @@ export function SignInDialog({
               event.preventDefault();
               const field = input.current;
               if (!field || busy || seconds > 0) return;
+              // With several profiles and none chosen there is nothing to
+              // send a password to: the choice comes first.
+              if (mustChoose) {
+                setUnchosen(true);
+                choice.current?.focus();
+                return;
+              }
               // An empty field is not an attempt: nothing is sent.
               if (!field.value) {
                 field.focus();
@@ -289,15 +360,52 @@ export function SignInDialog({
           >
             {/* Not shown and not reachable: it tells a password manager
                 which account this password belongs to. */}
-            {status.active_profile && (
+            {named && (
               <input
                 type="text"
                 name="username"
                 autoComplete="username"
-                value={status.active_profile}
+                value={named}
                 readOnly
                 hidden
               />
+            )}
+            {choices.length > 1 && (
+              <Field data-invalid={unchosen && mustChoose}>
+                <FieldLabel htmlFor="profile-choice">
+                  {t("desktop.signin.profile")}
+                </FieldLabel>
+                <NativeSelect
+                  ref={choice}
+                  id="profile-choice"
+                  className="profile-choice"
+                  value={account.target?.id ?? ""}
+                  aria-invalid={(unchosen && mustChoose) || undefined}
+                  aria-describedby={
+                    unchosen && mustChoose ? choiceErrorId : undefined
+                  }
+                  onChange={(event) => {
+                    // Not while an answer is pending: it is that profile's.
+                    if (busy) return;
+                    setUnchosen(false);
+                    account.choose(event.target.value);
+                  }}
+                >
+                  {mustChoose && (
+                    <option value="" disabled>
+                      {t("desktop.signin.choose_profile")}
+                    </option>
+                  )}
+                  {choices.map((profile) => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+                <FieldError id={choiceErrorId}>
+                  {unchosen && mustChoose && t("desktop.signin.choose_profile")}
+                </FieldError>
+              </Field>
             )}
             <Field data-invalid={rejected}>
               <FieldLabel htmlFor="profile-password">
@@ -334,16 +442,32 @@ export function SignInDialog({
               {t(busy ? "desktop.signin.submitting" : "desktop.signin.submit")}
             </Button>
           </form>
-        ) : creating || servicesDown ? null : (
+        ) : setUpInTui || servicesDown ? null : (
           <Refusal refusal={account.refusal} seconds={seconds} />
         )}
 
-        {answerable ? (
+        {creating ? null : answerable ? (
           <>
             <Separator />
+            {account.canCreate && (
+              <Button
+                className="new-profile w-full"
+                variant="outline"
+                size="sm"
+                aria-disabled={busy || undefined}
+                onClick={busy ? undefined : () => onCreateChange?.(true)}
+              >
+                <Icon name="userAdd" />
+                {t("desktop.account.new_profile")}
+              </Button>
+            )}
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
               <p className="min-w-40 flex-1 text-sm text-muted-foreground">
-                {t("desktop.signin.open_tui_hint")}
+                {t(
+                  account.canCreate
+                    ? "desktop.signin.recovery_hint"
+                    : "desktop.signin.open_tui_hint",
+                )}
               </p>
               <Button
                 ref={handover}
@@ -359,7 +483,7 @@ export function SignInDialog({
         ) : (
           <Button ref={handover} className="w-full" onClick={onOpenTui}>
             {t(
-              creating
+              setUpInTui
                 ? "desktop.account.create_profile"
                 : "desktop.signin.open_tui",
             )}
@@ -367,6 +491,224 @@ export function SignInDialog({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** The profile a password is for, where there is nothing to choose: named
+ * under its own label, as a field is, so that it cannot be missed. */
+function ProfileNamed({ name }: { name: string }) {
+  const t = useStrings();
+  const id = useId();
+  return (
+    <div
+      className="profile-named grid gap-1.5"
+      role="group"
+      aria-labelledby={id}
+    >
+      <Label asChild>
+        <span id={id}>{t("desktop.signin.profile")}</span>
+      </Label>
+      <span className="flex min-w-0 items-center gap-2">
+        <Icon name="user" className="text-muted-foreground" />
+        <span className="truncate font-medium">{name}</span>
+      </span>
+    </div>
+  );
+}
+
+const NAME_PROBLEMS: Record<NameProblem, string> = {
+  missing: "desktop.account.create.name_missing",
+  long: "desktop.account.create.name_long",
+  taken: "desktop.account.create.name_taken",
+};
+
+const PASSWORD_PROBLEMS: Record<PasswordProblem, string> = {
+  short: "desktop.account.create.password_short",
+  long: "desktop.account.create.password_long",
+};
+
+/** The product's refusal of a name that is already a profile's, whatever
+ * prefix its code carries. */
+const nameTaken = (refusal: SignInRefusal | null) =>
+  refusalCode(refusal)?.endsWith("PROFILE_ALREADY_EXISTS") ?? false;
+
+/**
+ * The form that creates a profile: its name and its password, twice. Like
+ * the sign-in form it sends once and never again; both password fields are
+ * read when the form is submitted, handed over as bytes and cleared, and
+ * neither is held in state. What the product would refuse is said before
+ * anything is sent; the product still judges what is sent.
+ */
+function CreateProfile({
+  account,
+  nameField,
+  onDone,
+  onBack,
+}: {
+  account: SignInController;
+  nameField: RefObject<HTMLInputElement | null>;
+  /** The profile exists: the way on is signing in to it. */
+  onDone: () => void;
+  /** Back to signing in, where there is a profile to sign in to. */
+  onBack?: () => void;
+}) {
+  const t = useStrings();
+  const first = useRef<HTMLInputElement>(null);
+  const second = useRef<HTMLInputElement>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [problem, setProblem] = useState<{
+    name: NameProblem | null;
+    password: PasswordProblem | null;
+    mismatch: boolean;
+  }>({ name: null, password: null, mismatch: false });
+  const nameId = useId();
+  const nameErrorId = useId();
+  const passwordId = useId();
+  const policyId = useId();
+  const passwordErrorId = useId();
+  const confirmId = useId();
+  const confirmErrorId = useId();
+  const busy = account.busy;
+  const refused = account.createRefusal;
+  const taken = problem.name ?? (nameTaken(refused) ? "taken" : null);
+  return (
+    <form
+      className="create-profile grid gap-4"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        const name = nameField.current;
+        const password = first.current;
+        const again = second.current;
+        if (!name || !password || !again || busy) return;
+        const found = {
+          name: nameProblem(name.value, account.profiles),
+          password: passwordProblem(password.value),
+          mismatch: password.value !== again.value,
+        };
+        setProblem(found);
+        // Nothing is sent while something is known to be wrong: the
+        // keyboard goes to the first field that is.
+        const wrong = found.name
+          ? name
+          : found.password
+            ? password
+            : found.mismatch
+              ? again
+              : null;
+        if (wrong) {
+          wrong.focus();
+          return;
+        }
+        const bytes = new TextEncoder().encode(password.value);
+        password.value = "";
+        again.value = "";
+        setRevealed(false);
+        void account.create(name.value.trim(), bytes).then((made) => {
+          if (made) onDone();
+          // Refused: the passwords are gone, so the form resumes from its
+          // start, where the name that may have been refused is.
+          else (nameField.current ?? first.current)?.focus();
+        });
+      }}
+    >
+      <Field data-invalid={taken !== null}>
+        <FieldLabel htmlFor={nameId}>
+          {t("desktop.account.create.name")}
+        </FieldLabel>
+        <Input
+          ref={nameField}
+          id={nameId}
+          name="username"
+          autoComplete="username"
+          autoCapitalize="words"
+          spellCheck={false}
+          readOnly={busy}
+          aria-invalid={taken !== null || undefined}
+          aria-describedby={taken ? nameErrorId : undefined}
+        />
+        <FieldError id={nameErrorId}>
+          {taken && t(NAME_PROBLEMS[taken])}
+        </FieldError>
+      </Field>
+      <Field data-invalid={problem.password !== null}>
+        <FieldLabel htmlFor={passwordId}>
+          {t("desktop.signin.password")}
+        </FieldLabel>
+        <PasswordInput
+          ref={first}
+          id={passwordId}
+          name="new-password"
+          autoComplete="new-password"
+          readOnly={busy}
+          aria-invalid={problem.password !== null || undefined}
+          aria-describedby={problem.password ? passwordErrorId : policyId}
+          revealed={revealed}
+          onRevealedChange={setRevealed}
+          showLabel={t("desktop.signin.show_password")}
+          hideLabel={t("desktop.signin.hide_password")}
+        />
+        {problem.password ? (
+          <FieldError id={passwordErrorId}>
+            {t(PASSWORD_PROBLEMS[problem.password], { min: PASSWORD_MIN })}
+          </FieldError>
+        ) : (
+          <FieldDescription id={policyId}>
+            {t("desktop.account.create.policy", { min: PASSWORD_MIN })}
+          </FieldDescription>
+        )}
+      </Field>
+      <Field data-invalid={problem.mismatch}>
+        <FieldLabel htmlFor={confirmId}>
+          {t("desktop.account.create.confirm")}
+        </FieldLabel>
+        <PasswordInput
+          ref={second}
+          id={confirmId}
+          name="confirm-password"
+          autoComplete="new-password"
+          readOnly={busy}
+          aria-invalid={problem.mismatch || undefined}
+          aria-describedby={problem.mismatch ? confirmErrorId : undefined}
+          revealed={revealed}
+          onRevealedChange={setRevealed}
+          showLabel={t("desktop.signin.show_password")}
+          hideLabel={t("desktop.signin.hide_password")}
+        />
+        <FieldError id={confirmErrorId}>
+          {problem.mismatch && t("desktop.account.create.mismatch")}
+        </FieldError>
+      </Field>
+
+      <Alert icon={<Icon name="info" />} role="note">
+        {t("desktop.account.create.keep_safe")}
+      </Alert>
+
+      {refused && !nameTaken(refused) && (
+        <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
+          {t("desktop.account.create.refused", { code: refused.code })}
+        </Alert>
+      )}
+
+      <Button type="submit" className="w-full" pending={busy}>
+        {t(
+          busy
+            ? "desktop.account.create.submitting"
+            : "desktop.account.create.submit",
+        )}
+      </Button>
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full"
+          aria-disabled={busy || undefined}
+          onClick={busy ? undefined : onBack}
+        >
+          {t("desktop.account.create.back")}
+        </Button>
+      )}
+    </form>
   );
 }
 
@@ -406,6 +748,9 @@ export function SignedOut({
       </Empty>
     );
   const password = account.canSignIn;
+  // With no profile on this computer, and a host that can make one, the way
+  // on is the form that does: the dialog is that form in this phase.
+  const makes = account.phase === "no-profile" && account.canCreate;
   // A refusal no password can answer takes the lead's place: it is why the
   // only way on is the TUI.
   const refused =
@@ -419,7 +764,11 @@ export function SignedOut({
         <EmptyTitle>{t(gate.title)}</EmptyTitle>
         {gate.lead && !refused && (
           <EmptyDescription>
-            {password && lead ? lead : t(gate.lead)}
+            {makes
+              ? t("desktop.account.first_run_lead")
+              : password && lead
+                ? lead
+                : t(gate.lead)}
           </EmptyDescription>
         )}
       </div>
@@ -433,23 +782,23 @@ export function SignedOut({
         </div>
       )}
       <div className="flex flex-wrap justify-center gap-2">
-        {password && (
+        {(password || makes) && (
           <Button
             ref={signInButton}
             variant={quiet ? "outline" : "primary"}
             onClick={onSignIn}
           >
-            {t("desktop.signin.submit")}
+            {t(makes ? "desktop.account.new_profile" : "desktop.signin.submit")}
           </Button>
         )}
         <Button
-          ref={password ? undefined : signInButton}
-          variant={password ? "ghost" : quiet ? "outline" : "primary"}
+          ref={password || makes ? undefined : signInButton}
+          variant={password || makes ? "ghost" : quiet ? "outline" : "primary"}
           aria-disabled={account.busy || undefined}
           onClick={account.busy ? undefined : onOpenTui}
         >
           {t(
-            account.phase === "no-profile"
+            account.phase === "no-profile" && !makes
               ? "desktop.account.create_profile"
               : "desktop.signin.open_tui",
           )}
@@ -521,8 +870,16 @@ export function Account({
               </span>
             </span>
             {phase === "no-profile" && (
-              <Button variant="outline" size="sm" onClick={onOpenTui}>
-                {t("desktop.account.create_profile")}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={account.canCreate ? onSignIn : onOpenTui}
+              >
+                {t(
+                  account.canCreate
+                    ? "desktop.account.new_profile"
+                    : "desktop.account.create_profile",
+                )}
               </Button>
             )}
           </div>
@@ -565,6 +922,11 @@ export function Account({
         {phase === "signed-in" && (
           <p className="text-sm text-muted-foreground">
             {t("desktop.account.sign_out_hint")}
+          </p>
+        )}
+        {phase === "signed-in" && account.canCreate && (
+          <p className="switch-hint text-sm text-muted-foreground">
+            {t("desktop.account.switch_hint")}
           </p>
         )}
         {account.remaining &&

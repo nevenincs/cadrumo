@@ -476,8 +476,29 @@ core:
         code in text form.
 desktop:
   account:
+    create:
+      back: Back to sign in
+      confirm: Repeat the password
+      done: Profile “{name}” was created. Enter its password to sign in.
+      keep_safe: Keep this password safe. Nothing in this window can recover it.
+      lead: A profile holds one taxpayer's records on this computer, encrypted with
+        its password.
+      mismatch: The two passwords are not the same.
+      name: Profile name
+      name_long: Use a shorter name.
+      name_missing: Give the profile a name.
+      name_taken: A profile with this name already exists.
+      password_long: Use a shorter password.
+      password_short: Use at least {min} characters.
+      policy: At least {min} characters.
+      refused: The profile was not created ({code}).
+      submit: Create profile
+      submitting: Creating…
+      title: Create a profile
     create_profile: Set up a profile
+    first_run_lead: Create a profile to start.
     in_tui: Continuing in the TUI
+    new_profile: New profile
     no_profile: No active profile
     no_profile_lead: Create a profile, or choose one, in the TUI.
     remaining_access: Agent access you enabled stays on.
@@ -487,6 +508,7 @@ desktop:
     sign_out_hint: Signs you out of every Cadrumo window.
     signed_in: Signed in
     signed_out: Not signed in
+    switch_hint: To use another profile, sign out and choose it when you sign in.
     unknown: Sign-in state unknown
   action:
     docs_back: Back
@@ -650,6 +672,7 @@ desktop:
     window: Window
   signin:
     checking: Checking your sign-in…
+    choose_profile: Choose a profile
     dismiss: Not now
     hide_password: Hide password
     lead: Enter your profile password to open your workspace.
@@ -657,6 +680,8 @@ desktop:
     open_tui_hint: First-time setup, another profile or recovery? Use the TUI.
     password: Password
     profile: Profile
+    profiles_unread: The profiles on this computer could not be read.
+    recovery_hint: Lost the password, or the profile is locked? Use the TUI.
     refused:
       custody_changed: This profile's password or recovery settings changed. Sign
         in again.

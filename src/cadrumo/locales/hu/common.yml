@@ -483,8 +483,29 @@ core:
         lennie szöveges formában.
 desktop:
   account:
+    create:
+      back: Vissza a bejelentkezéshez
+      confirm: Jelszó újra
+      done: A(z) „{name}” profil létrejött. A bejelentkezéshez add meg a jelszavát.
+      keep_safe: Őrizd meg jól ezt a jelszót. Ebben az ablakban semmi sem tudja helyreállítani.
+      lead: Egy profil egy adózó adatait tárolja ezen a számítógépen, a jelszavával
+        titkosítva.
+      mismatch: A két jelszó nem egyezik.
+      name: Profil neve
+      name_long: Használj rövidebb nevet.
+      name_missing: Adj nevet a profilnak.
+      name_taken: Már van ilyen nevű profil.
+      password_long: Használj rövidebb jelszót.
+      password_short: Használj legalább {min} karaktert.
+      policy: Legalább {min} karakter.
+      refused: A profil nem jött létre ({code}).
+      submit: Profil létrehozása
+      submitting: Létrehozás…
+      title: Profil létrehozása
     create_profile: Profil beállítása
+    first_run_lead: A kezdéshez hozz létre egy profilt.
     in_tui: A TUI-ban folytatod
+    new_profile: Új profil
     no_profile: Nincs aktív profil
     no_profile_lead: Hozz létre vagy válassz egy profilt a TUI-ban.
     remaining_access: Az általad engedélyezett ügynöki hozzáférés bekapcsolva marad.
@@ -494,6 +515,8 @@ desktop:
     sign_out_hint: Minden Cadrumo-ablakból kijelentkeztet.
     signed_in: Bejelentkezve
     signed_out: Nincs bejelentkezve
+    switch_hint: Másik profil használatához jelentkezz ki, és bejelentkezéskor válaszd
+      ki.
     unknown: A bejelentkezés állapota ismeretlen
   action:
     docs_back: Vissza
@@ -658,6 +681,7 @@ desktop:
     window: Ablak
   signin:
     checking: A bejelentkezésed ellenőrzése…
+    choose_profile: Válassz profilt
     dismiss: Most nem
     hide_password: Jelszó elrejtése
     lead: Add meg a profilod jelszavát a munkaterületed megnyitásához.
@@ -665,6 +689,8 @@ desktop:
     open_tui_hint: Első beállítás, másik profil vagy helyreállítás? Használd a TUI-t.
     password: Jelszó
     profile: Profil
+    profiles_unread: A számítógépen lévő profilokat nem sikerült beolvasni.
+    recovery_hint: Elvesztetted a jelszót, vagy zárolva van a profil? Használd a TUI-t.
     refused:
       custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
         Jelentkezz be újra.

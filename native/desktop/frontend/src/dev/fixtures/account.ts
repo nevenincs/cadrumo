@@ -1,4 +1,5 @@
 import type { SignInRefusal, SignInStatus } from "../../ipc/contract";
+import { targetOf } from "../../shell/profiles";
 import {
   canSignIn,
   GATED,
@@ -31,7 +32,8 @@ export function accountFixture(
 ): SignInController {
   const { handover = false, ...rest } = change;
   const status = "status" in rest ? (rest.status ?? null) : SIGNED_OUT;
-  const phase = phaseOf(true, status, handover);
+  const profiles = rest.profiles ?? null;
+  const phase = phaseOf(true, status, handover, profiles);
   const refusal = rest.refusal ?? status?.refusal ?? null;
   return {
     refusal,
@@ -39,6 +41,12 @@ export function accountFixture(
     busy: false,
     remaining: null,
     signOutFailure: null,
+    createRefusal: null,
+    created: null,
+    canCreate: profiles !== null,
+    target: targetOf(profiles, null),
+    choose: () => undefined,
+    create: async () => false,
     submit: async () => undefined,
     signOut: async () => undefined,
     settle: () => undefined,
@@ -46,6 +54,7 @@ export function accountFixture(
     openTui: () => undefined,
     tuiExited: () => undefined,
     ...rest,
+    profiles,
     status,
     phase,
     gated: GATED.has(phase),

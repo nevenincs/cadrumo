@@ -432,3 +432,50 @@ test("the palette and settings fit the screen", async ({ page: target }) => {
     settings && settings.y >= 0 && settings.y + settings.height <= 844,
   ).toBe(true);
 });
+
+test("the profile choice and the form that creates one fit the screen under a finger", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  const dialog = target.locator(".sign-in");
+  // Measured once the dialog has finished arriving: it grows as it opens.
+  const settled = () =>
+    dialog.evaluate((element) =>
+      Promise.all(
+        element.getAnimations({ subtree: true }).map((a) => a.finished),
+      ).then(() => undefined),
+    );
+  await settled();
+  const tall = async (selector: string) =>
+    (await dialog.locator(selector).boundingBox())?.height ?? 0;
+  expect(await tall("#profile-choice")).toBeGreaterThanOrEqual(FINGER);
+  expect(await tall(".new-profile")).toBeGreaterThanOrEqual(FINGER);
+  await dialog.locator("#profile-choice").selectOption({ index: 2 });
+  await dialog.locator(".new-profile").tap();
+
+  const form = dialog.locator(".create-profile");
+  await expect(form).toBeVisible();
+  for (const control of await form.locator("input, button").all()) {
+    const box = await control.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(FINGER);
+    expect(box && box.x >= 0 && box.x + box.width <= 390).toBe(true);
+  }
+  const box = await dialog.boundingBox();
+  expect(box && box.x >= 0 && box.x + box.width <= 390).toBe(true);
+  expect(box && box.y >= 0 && box.y + box.height <= 844).toBe(true);
+  expect(await overflowing(target)).toBe(false);
+
+  const fields = form.locator("input");
+  await fields.nth(0).tap();
+  await target.keyboard.type("Marta Ruiz Ferrer");
+  await fields.nth(1).tap();
+  await target.keyboard.type("correct horse");
+  await fields.nth(2).tap();
+  await target.keyboard.type("correct horse");
+  await form.locator("button[type=submit]").tap();
+  // The submit button, under the keyboard's reach or not, is in the window.
+  await expect(target.locator("#profile-password")).toBeFocused();
+  await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
+    "Marta Ruiz Ferrer",
+  );
+});

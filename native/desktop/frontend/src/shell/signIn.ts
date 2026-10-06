@@ -5,6 +5,7 @@ import type {
   SignOutResult,
 } from "../ipc/contract";
 import type { Host } from "./host";
+import { targetOf, type ProfileList } from "./profiles";
 import { failureCode } from "../errors";
 
 const unknownStatus: SignInStatus = {
@@ -45,7 +46,7 @@ export type AccountPhase =
   | "services-down"
   /** The status read failed, or the runtime could not say. */
   | "unknown"
-  /** There is no profile to sign in to yet. */
+  /** There is no profile to sign in to yet, or none the shell can name. */
   | "no-profile"
   | "signed-out";
 
@@ -62,6 +63,7 @@ export function phaseOf(
   available: boolean,
   status: SignInStatus | null,
   handover: boolean,
+  profiles: ProfileList | null = null,
 ): AccountPhase {
   if (!available) return "no-host";
   if (!status) return "checking";
@@ -70,7 +72,10 @@ export function phaseOf(
   if (handover) return "in-tui";
   if (!status.runtimeAvailable) return "services-down";
   if (status.state === "unknown") return "unknown";
-  if (status.active_profile === null) return "no-profile";
+  // With none selected, the profiles that exist are still there to choose
+  // from: only where none is known is there nothing to sign in to.
+  if (status.active_profile === null && !profiles?.profiles.length)
+    return "no-profile";
   return "signed-out";
 }
 
@@ -122,6 +127,14 @@ export function useSignIn(host: Host) {
   const [refusal, setRefusal] = useState<SignInRefusal | null>(null);
   const [busy, setBusy] = useState(false);
   const [handover, setHandover] = useState(false);
+  // The profiles to choose from, where the host offers them; the one the
+  // person chose; and what became of the last attempt to create one.
+  const [profiles, setProfiles] = useState<ProfileList | null>(null);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [createRefusal, setCreateRefusal] = useState<SignInRefusal | null>(
+    null,
+  );
+  const [created, setCreated] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<SignOutResult | null>(null);
   // A sign-out that failed is its own fact: it is not a sign-in refusal.
   const [signOutFailure, setSignOutFailure] = useState<SignInRefusal | null>(
@@ -163,8 +176,19 @@ export function useSignIn(host: Host) {
       const generation = ++request.current;
       const promise = Promise.resolve().then(async () => {
         try {
-          const next = await host.signInStatus();
-          if (generation === request.current) setStatus(next);
+          // Read together, so that the form never shows a status beside
+          // a list that is older than it. A list that cannot be read is
+          // not an empty one.
+          const [next, list] = await Promise.all([
+            host.signInStatus(),
+            host.profiles ? host.profiles.list().catch(() => null) : null,
+          ]);
+          if (generation !== request.current) return;
+          setStatus(next);
+          if (host.profiles)
+            setProfiles(
+              (held) => list ?? held ?? { profiles: [], complete: false },
+            );
         } catch (error) {
           if (generation === request.current)
             setStatus({ ...unknownStatus, refusal: refusalFrom(error) });
@@ -191,8 +215,12 @@ export function useSignIn(host: Host) {
     };
   }, [refresh, invalidate]);
 
+  const target = targetOf(profiles, chosen);
+
   const submit = async (password: Uint8Array) => {
-    if (submitting.current) {
+    // Where there are several and none is chosen, there is nothing to send
+    // a password to.
+    if (submitting.current || (profiles?.profiles.length && !target)) {
       password.fill(0);
       return;
     }
@@ -200,11 +228,13 @@ export function useSignIn(host: Host) {
     invalidate();
     setBusy(true);
     setRefusal(null);
+    setCreateRefusal(null);
+    setCreated(null);
     setRemaining(null);
     setSignOutFailure(null);
     try {
       await statusRead.current?.promise;
-      const result = await host.signIn(password);
+      const result = await host.signIn(password, target?.id);
       if (result.kind === "refused") setRefusal(result);
     } catch (error) {
       setRefusal(refusalFrom(error));
@@ -214,6 +244,42 @@ export function useSignIn(host: Host) {
       submitting.current = false;
       setBusy(false);
     }
+  };
+
+  /** One attempt to create a profile. As with a sign-in, the password is
+   * consumed by the one call and nothing is tried again. */
+  const create = async (name: string, password: Uint8Array) => {
+    const accounts = host.profiles;
+    if (!accounts || submitting.current) {
+      password.fill(0);
+      return false;
+    }
+    submitting.current = true;
+    invalidate();
+    setBusy(true);
+    setRefusal(null);
+    setCreateRefusal(null);
+    setCreated(null);
+    setRemaining(null);
+    setSignOutFailure(null);
+    let made = false;
+    try {
+      await statusRead.current?.promise;
+      const result = await accounts.create(name, password);
+      if (result.kind === "created") {
+        setChosen(result.id);
+        setCreated(result.name);
+        made = true;
+      } else setCreateRefusal(result);
+    } catch (error) {
+      setCreateRefusal(refusalFrom(error));
+    } finally {
+      password.fill(0);
+      await refresh(true);
+      submitting.current = false;
+      setBusy(false);
+    }
+    return made;
   };
 
   const signOut = async () => {
@@ -236,10 +302,26 @@ export function useSignIn(host: Host) {
     }
   };
 
-  const phase = phaseOf(host.available, status, handover);
+  const phase = phaseOf(host.available, status, handover, profiles);
   return {
     status,
     phase,
+    /** The profiles on this computer, or null where the host offers none. */
+    profiles,
+    /** The profile a password would sign in to, where it is known. */
+    target,
+    /** Whether this host can create a profile. */
+    canCreate: host.profiles !== undefined,
+    createRefusal,
+    /** The name of a profile created a moment ago and not yet signed in to. */
+    created,
+    choose: (id: string) => {
+      setChosen(id);
+      // What another profile's attempt was refused for is not this one's.
+      setRefusal(null);
+      setCreated(null);
+    },
+    create,
     refusal: currentRefusal,
     retrySeconds,
     busy,
@@ -257,6 +339,7 @@ export function useSignIn(host: Host) {
         held && STANDING.has(held.code.toUpperCase()) ? held : null,
       );
       setSignOutFailure(null);
+      setCreateRefusal(null);
     },
     /** Read the status again: something else has shown it may be stale. */
     recheck: () => refresh(),

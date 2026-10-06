@@ -491,8 +491,30 @@ core:
         admès en forma de text.
 desktop:
   account:
+    create:
+      back: Torna a l'inici de sessió
+      confirm: Repeteix la contrasenya
+      done: S'ha creat el perfil «{name}». Escriu-ne la contrasenya per iniciar la
+        sessió.
+      keep_safe: Guarda bé aquesta contrasenya. Res en aquesta finestra la pot recuperar.
+      lead: Un perfil desa les dades d'un contribuent en aquest equip, xifrades amb
+        la seva contrasenya.
+      mismatch: Les dues contrasenyes no coincideixen.
+      name: Nom del perfil
+      name_long: Fes servir un nom més curt.
+      name_missing: Posa un nom al perfil.
+      name_taken: Ja hi ha un perfil amb aquest nom.
+      password_long: Fes servir una contrasenya més curta.
+      password_short: Fes servir almenys {min} caràcters.
+      policy: Almenys {min} caràcters.
+      refused: No s'ha creat el perfil ({code}).
+      submit: Crea el perfil
+      submitting: S'està creant…
+      title: Crea un perfil
     create_profile: Configura un perfil
+    first_run_lead: Crea un perfil per començar.
     in_tui: Continues a la TUI
+    new_profile: Perfil nou
     no_profile: Cap perfil actiu
     no_profile_lead: Crea un perfil o tria'n un a la TUI.
     remaining_access: L'accés d'agents que vas activar continua actiu.
@@ -502,6 +524,8 @@ desktop:
     sign_out_hint: Tanca la teva sessió a totes les finestres de Cadrumo.
     signed_in: Sessió iniciada
     signed_out: Sense sessió iniciada
+    switch_hint: Per fer servir un altre perfil, tanca la sessió i tria'l en iniciar
+      la sessió.
     unknown: Estat de la sessió desconegut
   action:
     docs_back: Enrere
@@ -666,6 +690,7 @@ desktop:
     window: Finestra
   signin:
     checking: S'està comprovant la teva sessió…
+    choose_profile: Tria un perfil
     dismiss: Ara no
     hide_password: Amaga la contrasenya
     lead: Escriu la contrasenya del teu perfil per obrir el teu espai de treball.
@@ -674,6 +699,9 @@ desktop:
       la TUI.
     password: Contrasenya
     profile: Perfil
+    profiles_unread: No s'han pogut llegir els perfils d'aquest equip.
+    recovery_hint: Has perdut la contrasenya o el perfil està bloquejat? Fes servir
+      la TUI.
     refused:
       custody_changed: La contrasenya o la configuració de recuperació d'aquest perfil
         ha canviat. Torna a iniciar la sessió.

@@ -498,8 +498,29 @@ core:
         admitido en formato texto.
 desktop:
   account:
+    create:
+      back: Volver a iniciar sesión
+      confirm: Repite la contraseña
+      done: Se ha creado el perfil «{name}». Escribe su contraseña para iniciar sesión.
+      keep_safe: Guarda bien esta contraseña. Nada en esta ventana puede recuperarla.
+      lead: Un perfil guarda los datos de un contribuyente en este equipo, cifrados
+        con su contraseña.
+      mismatch: Las dos contraseñas no coinciden.
+      name: Nombre del perfil
+      name_long: Usa un nombre más corto.
+      name_missing: Ponle un nombre al perfil.
+      name_taken: Ya existe un perfil con este nombre.
+      password_long: Usa una contraseña más corta.
+      password_short: Usa al menos {min} caracteres.
+      policy: Al menos {min} caracteres.
+      refused: No se ha creado el perfil ({code}).
+      submit: Crear perfil
+      submitting: Creando…
+      title: Crear un perfil
     create_profile: Configurar un perfil
+    first_run_lead: Crea un perfil para empezar.
     in_tui: Sigues en la TUI
+    new_profile: Nuevo perfil
     no_profile: Ningún perfil activo
     no_profile_lead: Crea un perfil o elige uno en la TUI.
     remaining_access: El acceso de agentes que activaste sigue activo.
@@ -509,6 +530,7 @@ desktop:
     sign_out_hint: Cierra tu sesión en todas las ventanas de Cadrumo.
     signed_in: Sesión iniciada
     signed_out: Sin sesión iniciada
+    switch_hint: Para usar otro perfil, cierra la sesión y elígelo al iniciar sesión.
     unknown: Estado de la sesión desconocido
   action:
     docs_back: Atrás
@@ -674,6 +696,7 @@ desktop:
     window: Ventana
   signin:
     checking: Comprobando tu sesión…
+    choose_profile: Elige un perfil
     dismiss: Ahora no
     hide_password: Ocultar la contraseña
     lead: Escribe la contraseña de tu perfil para abrir tu espacio de trabajo.
@@ -681,6 +704,8 @@ desktop:
     open_tui_hint: ¿Configuración inicial, otro perfil o recuperación? Usa la TUI.
     password: Contraseña
     profile: Perfil
+    profiles_unread: No se han podido leer los perfiles de este equipo.
+    recovery_hint: ¿Has perdido la contraseña o el perfil está bloqueado? Usa la TUI.
     refused:
       custody_changed: La contraseña o la configuración de recuperación de este perfil
         ha cambiado. Vuelve a iniciar sesión.
