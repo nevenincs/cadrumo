@@ -572,6 +572,7 @@ desktop:
     resize: Alsó panel átméretezése
     show: Alsó panel megjelenítése
   rail:
+    aeat: Az AEAT honlapja
     console: Konzol
     docs_home: Dokumentáció kezdőlapja
     label: Munkaterület
@@ -644,6 +645,7 @@ desktop:
   toast:
     copied: Másolva
     copy_failed: Nem sikerült a másolás.
+    open_failed: Nem sikerült megnyitni.
     paste_failed: Nem sikerült a beillesztés.
     paste_too_large: Ez túl sok szöveg egyszerre a beillesztéshez.
   tui:

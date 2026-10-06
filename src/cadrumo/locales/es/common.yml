@@ -587,6 +587,7 @@ desktop:
     resize: Cambiar el tamaño del panel inferior
     show: Mostrar el panel inferior
   rail:
+    aeat: Sede de la AEAT
     console: Consola
     docs_home: Inicio de la documentación
     label: Espacio de trabajo
@@ -661,6 +662,7 @@ desktop:
   toast:
     copied: Copiado
     copy_failed: No se ha podido copiar.
+    open_failed: No se ha podido abrir.
     paste_failed: No se ha podido pegar.
     paste_too_large: Es demasiado texto para pegar de una vez.
   tui:

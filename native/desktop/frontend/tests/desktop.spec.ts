@@ -518,7 +518,7 @@ test("without a host the shell lays out every area and invents nothing", async (
   const rail = target.getByRole("navigation", {
     name: label("desktop.rail.label"),
   });
-  await expect(rail.getByRole("button")).toHaveCount(7);
+  await expect(rail.getByRole("button")).toHaveCount(8);
   await expect(target.locator(".pane-docs")).toContainText(
     label("desktop.host.unavailable"),
   );

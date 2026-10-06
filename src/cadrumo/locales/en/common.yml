@@ -565,6 +565,7 @@ desktop:
     resize: Resize the bottom panel
     show: Show the bottom panel
   rail:
+    aeat: AEAT website
     console: Console
     docs_home: Docs home
     label: Workspace
@@ -637,6 +638,7 @@ desktop:
   toast:
     copied: Copied
     copy_failed: Couldn't copy that.
+    open_failed: Couldn't open that.
     paste_failed: Could not paste that.
     paste_too_large: That is too much text to paste at once.
   tui:

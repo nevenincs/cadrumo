@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-05'
+modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb78c6f6487c5cdfc0533ea6c7d346ebfffda95d17d81942158d39e61e45c162'
+body_hash: 'sha256:fdeb3c11b6a673c11ce9aa43a37e63436749d2981cd386b8fdd02c143dcc7481'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
@@ -46,7 +46,7 @@ Grounds the design-system decision for the desktop shell frontend in `native/des
 
 The packaged suite drives the real window by these hooks, and calls rail order and settings choice order locale-independent UI contracts (`native/desktop/tests/packaged/docs-ui.mjs:15`):
 
-- `.rail-group` first and last, with buttons in order search, docs home, TUI, console, python, logs, then settings (`docs-ui.mjs:16`, `:123`).
+- `.rail-group` first and last. The suite reaches search and docs home as the first group's first two buttons and settings as the last group's first (`docs-ui.mjs:16`, `:22`, `:102`, `:123`); the first group continues with TUI, the shortcuts, then console, python, logs.
 - `.palette`, its `combobox`, `.palette-results > section` holding `option` rows, `.palette-title`, `.palette-chord` (`docs-ui.mjs:23` to `:70`).
 - `.settings`, whose first `radiogroup` is appearance with radios in order follow, light, dark, read through `aria-checked`, closed by Escape (`docs-ui.mjs:129` to `:149`).
 - `#profile-password` and `.sign-in button[type=submit]` (`sign-in.mjs:192`, `:195`).

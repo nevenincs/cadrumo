@@ -70,7 +70,8 @@ for (const language of ["en", "hu"])
     await target.goto(
       `/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=${language}`,
     );
-    await target.getByRole("navigation").first().locator("button").nth(5).tap();
+    // By its tab, which no language renames.
+    await target.locator("#tab-logs").tap();
     const list = target.locator(".logview-list");
     // The newest record: the log follows its end.
     await expect(list.locator(".record").last()).toBeVisible();

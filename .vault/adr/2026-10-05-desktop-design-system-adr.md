@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-05'
+modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8dfb5d700a6c4a030a6bb0b129541e92de12e6aee4f4aa5381c9cd78993f609'
+body_hash: 'sha256:8c241d39b4e5648e3fd367da3418144d624265612729d7b9cc36525b639b7db1'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -127,3 +127,11 @@ A separate development entry makes the scenario host structurally absent from th
 - the documentation palette stops being the colour authority
 
 Acceptance (user, 2026-10-05: the frontend design handover brief, confirmed the same day by the stated goal of a complete design system on React, shadcn, Tailwind 4, Radix and Storybook 10) authorizes the direction and does not mean any part of it is implemented.
+
+### Amendment 2026-10-06: the rail gains a shortcuts group, and its order
+
+Authorized by the user on 2026-10-06, who asked for the side rail to read: search; a separator; the window's toggles; a separator; new shortcut elements; a separator; the bottom panel's toggles.
+
+The first rail group's order becomes search, docs home, TUI, then the shortcuts group, then console, Python and logs; settings stays alone in the last group. Search and docs home keep the first two positions, which are the only positions the packaged acceptance suite reaches by index (`native/desktop/tests/packaged/docs-ui.mjs:22`, `:102`), so no packaged assertion changes. The shortcuts group opens with one element that needs nothing from the host beyond `open_external`: the tax agency's electronic office, whose address is the product's own constant and is held to it by a test. Further shortcuts that need data or actions the host does not offer today (notifications, the profile's Drive folder, sync counts, the filing calendar) are not part of this amendment: each needs its own decision on how the shell may read profile data.
+
+The stable-hooks commitment is otherwise unchanged.

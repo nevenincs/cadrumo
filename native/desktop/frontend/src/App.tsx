@@ -70,6 +70,7 @@ import {
   type Prefs,
 } from "./shell/layout";
 import { useMetric, useTerminalFontSize } from "./shell/metrics";
+import { AEAT_SEDE } from "./shell/links";
 import { fromPointer } from "./shell/pointer";
 import {
   SOURCE_LOCALE,
@@ -354,6 +355,15 @@ export function App({ host }: { host: Host }) {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
+
+  // An address opened in the system browser. A refusal is said aloud: the
+  // person must not wait for a page that is not coming.
+  const openLink = useCallback(
+    (url: string) => {
+      host.openExternal(url).catch(() => say(t("desktop.toast.open_failed")));
+    },
+    [host, say, t],
+  );
 
   const copy = useCallback(
     (text: string) => {
@@ -800,6 +810,14 @@ export function App({ host }: { host: Host }) {
         run: () => setSettingsOpen((open) => !open),
       },
       {
+        id: "link.aeat",
+        label: t("desktop.rail.aeat"),
+        group: "links",
+        icon: "office",
+        keywords: "sede agencia tributaria hacienda tax agency",
+        run: () => openLink(AEAT_SEDE),
+      },
+      {
         id: "account.signIn",
         label: t("desktop.signin.submit"),
         group: "account",
@@ -885,6 +903,7 @@ export function App({ host }: { host: Host }) {
       signedIn,
       signOut,
       cycleFocus,
+      openLink,
       goHome,
       patch,
       focusView,
@@ -1271,6 +1290,15 @@ export function App({ host }: { host: Host }) {
       pressed: tuiVisible,
       onClick: () => runAction("tui.toggle"),
     },
+    // Shortcuts out of the window, between the window's own toggles and the
+    // bottom panel's.
+    {
+      id: "aeat",
+      icon: "office",
+      label: t("desktop.rail.aeat"),
+      divided: true,
+      onClick: () => runAction("link.aeat"),
+    },
     {
       id: "console",
       icon: "console",
@@ -1442,7 +1470,7 @@ export function App({ host }: { host: Host }) {
   return (
     <StringsContext.Provider value={t}>
       <TooltipProvider>
-        <div className="shell grid h-dvh grid-cols-[auto_1fr] bg-chrome">
+        <div className="shell grid h-dvh grid-cols-[auto_1fr] grid-rows-[minmax(0,1fr)] bg-chrome">
           <header className="sr-only">
             <h1>{identity.name}</h1>
           </header>

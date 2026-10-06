@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { buildPath } from "../../scripts/build-paths.mjs";
 import { developmentModules } from "../dev/product-boundary";
 import { SCENARIO_HOST_MARKER } from "../src/dev/marker";
+import { AEAT_SEDE } from "../src/shell/links";
 
 const local = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 const root = local("..");
@@ -78,6 +79,14 @@ test("the search finds the scenario marker where the scenario host lives", () =>
   expect(carrying(local("../src/dev"), SCENARIO_HOST_MARKER)).toContain(
     "marker.ts",
   );
+});
+
+test("the addresses the shell opens are the product's own constants", () => {
+  const constants = readFileSync(
+    local("../../../../src/cadrumo/core/external_constants.toml"),
+    "utf8",
+  );
+  expect(/^sede = "([^"]+)"$/m.exec(constants)?.[1]).toBe(AEAT_SEDE);
 });
 
 test("the production build contains no development scenario code", () => {

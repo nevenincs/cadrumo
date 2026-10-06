@@ -817,3 +817,57 @@ test("signing out leaves no running session showing in the TUI's header", async 
     label("desktop.account.signed_out"),
   );
 });
+
+test("the rail keeps its order: search, window toggles, shortcuts, panel toggles", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  const names = await target
+    .locator(".rail-group")
+    .first()
+    .getByRole("button")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => button.getAttribute("aria-label") ?? ""),
+    );
+  // The packaged run reaches search and docs home by these two positions.
+  expect(names.map((name) => name.split(",")[0])).toEqual(
+    [
+      "desktop.rail.search",
+      "desktop.rail.docs_home",
+      "desktop.rail.tui",
+      "desktop.rail.aeat",
+      "desktop.rail.console",
+      "desktop.rail.python",
+      "desktop.rail.logs",
+    ].map((key) => label(key)),
+  );
+});
+
+test("the AEAT shortcut opens the agency's site in the system browser", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await target
+    .getByRole("button", { name: label("desktop.rail.aeat") })
+    .click();
+  await expect
+    .poll(() =>
+      target.evaluate(() =>
+        (window.__scenarioHostCalls ?? []).filter((call) =>
+          call.startsWith("openExternal "),
+        ),
+      ),
+    )
+    .toEqual(["openExternal https://sede.agenciatributaria.gob.es"]);
+});
+
+test("a shortcut the host cannot open says so", async ({ page: target }) => {
+  await open(target, "error");
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.rail.aeat") })
+    .click();
+  await expect(
+    target.getByText(label("desktop.toast.open_failed")),
+  ).toBeVisible();
+});

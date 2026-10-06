@@ -65,7 +65,8 @@ function RailButton({ item }: { item: RailItem }) {
 /**
  * The icon rail: a vertical toolbar. It is one tab stop; the arrow keys,
  * Home and End move within it. Every item is named by its tooltip, which
- * also shows its shortcut.
+ * also shows its shortcut. In a window too short for all of it the rail
+ * scrolls inside itself: it never makes the window taller.
  */
 export function Rail({
   label,
@@ -77,12 +78,15 @@ export function Rail({
   bottom: RailItem[];
 }) {
   return (
-    <nav className="rail w-rail border-r bg-chrome" aria-label={label}>
+    <nav
+      className="rail min-h-0 w-rail overflow-y-auto border-r bg-chrome [scrollbar-width:none]"
+      aria-label={label}
+    >
       <Toolbar.Root
         orientation="vertical"
         // The side padding, not centring, places the buttons: the chosen
         // item's bar then sits exactly on the rail's outer edge.
-        className="flex h-full flex-col items-start justify-between px-1.5 py-2"
+        className="flex min-h-full flex-col items-start justify-between gap-1 px-1.5 py-2"
       >
         <div className="rail-group flex flex-col items-center gap-1">
           {top.map((item) => (

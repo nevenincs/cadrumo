@@ -284,18 +284,18 @@ they were taken on: compare runs, not hosts.
 The packaged acceptance run (`native/desktop/tests/`) drives the real window by
 these, so a redesign keeps them. They are contracts, not styling.
 
-| Hook                                                     | Contract                                                                          |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `.rail-group`                                            | The first holds search, docs home, TUI, console, Python, logs; the last, settings |
-| `.palette`, its `combobox`                               | The palette and its one input                                                     |
-| `.palette-results > section`                             | The first section is the documentation's while a query searches it                |
-| `.palette-title`, `.palette-chord`                       | A row's title; a chord is on action rows only                                     |
-| `.settings`                                              | Its first `radiogroup` is appearance: follow, light, dark; Escape closes it       |
-| `#profile-password`, `.sign-in button[type=submit]`      | The sign-in form                                                                  |
-| `#tab-<kind>`, `[data-terminal="<kind>"]`                | A panel tab and its terminal, `hidden` while not shown                            |
-| `.xterm-screen`, `.xterm-rows`, `.xterm-helper-textarea` | xterm's own elements                                                              |
-| `.docs-frame`, `.pane-docs .pane-title`                  | The documentation frame and its pane's title                                      |
-| `.panel-separator`, `.logview-list`                      | The bottom panel's handle and the log's list                                      |
+| Hook                                                     | Contract                                                                                                                         |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `.rail-group`                                            | The first starts with search, then docs home, and goes on with TUI, the shortcuts and the panel toggles; the last holds settings |
+| `.palette`, its `combobox`                               | The palette and its one input                                                                                                    |
+| `.palette-results > section`                             | The first section is the documentation's while a query searches it                                                               |
+| `.palette-title`, `.palette-chord`                       | A row's title; a chord is on action rows only                                                                                    |
+| `.settings`                                              | Its first `radiogroup` is appearance: follow, light, dark; Escape closes it                                                      |
+| `#profile-password`, `.sign-in button[type=submit]`      | The sign-in form                                                                                                                 |
+| `#tab-<kind>`, `[data-terminal="<kind>"]`                | A panel tab and its terminal, `hidden` while not shown                                                                           |
+| `.xterm-screen`, `.xterm-rows`, `.xterm-helper-textarea` | xterm's own elements                                                                                                             |
+| `.docs-frame`, `.pane-docs .pane-title`                  | The documentation frame and its pane's title                                                                                     |
+| `.panel-separator`, `.logview-list`                      | The bottom panel's handle and the log's list                                                                                     |
 
 The browser tests also select `.pane-tui`, `.pane-head`, `section.panel`,
 `.main-area`, `.tabstrip`, `.split` with `split-row` or `split-column`,
