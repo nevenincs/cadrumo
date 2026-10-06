@@ -170,6 +170,26 @@ export const ProfileNotCreated: Story = {
   },
 };
 
+export const ProfileCreationUnanswered: Story = {
+  name: "Creation unanswered: outcome not known",
+  args: {
+    account: controller({
+      status: NO_PROFILE,
+      profiles: profiles([], null),
+      createUnknown: refused("timed_out"),
+    }),
+  },
+};
+
+export const ProfileNotNameable: Story = {
+  name: "A profile the host will not name",
+  args: {
+    account: controller({
+      profiles: profiles(["Ana Soler Vidal", "Demo profile", "Rebajas 50%"], 1),
+    }),
+  },
+};
+
 export const ProfileCreated: Story = {
   name: "Profile created, not yet signed in",
   args: {
