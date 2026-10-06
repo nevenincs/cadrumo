@@ -16,6 +16,7 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
+from .....core.config_google_client import OAuthClient
 from ..errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientMetadataUnavailableError,
@@ -33,7 +34,6 @@ from ..records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
     DriveAppProperties,
-    OAuthClient,
     OAuthMetadata,
     OAuthToken,
 )

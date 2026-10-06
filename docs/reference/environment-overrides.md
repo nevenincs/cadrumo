@@ -87,6 +87,7 @@ value already present in your shell always wins.
 | `CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S` | int | `15` | Timeout (seconds) for one ECB Data Portal euro reference-rate lookup. A ledger import resolves one lookup per distinct currency/date, so this budget bounds a single observation query rather than the whole import. |
 | `CADRUMO_GNOME_EXTENSIONS_DIR` | Path | (derived) | Explicit GNOME extension publication directory. |
 | `CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME` | str | `cadrumo-vault` | Folder name created under the Google Drive root for the Cadrumo vault |
+| `CADRUMO_GOOGLE_OAUTH_CLIENT_JSON` | SecretStr | (secret) | Publisher Google Desktop OAuth client download as complete installed-envelope JSON. Provision through the development environment or CI secret; installed builds fall back to their bundled client metadata. Never use a web client or user token. |
 | `CADRUMO_INBOX_ALERT_LEAD_DAYS` | int | `7` | Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH notifications whose appeal_deadline falls within the next N days |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
 | `CADRUMO_IVA_COMPENSATION_HISTORY_DIR` | Path | (derived) | Directory for Modelo 303 compensation-history capture reports. Derived under cadrumo_local_storage_root unless explicitly set. |

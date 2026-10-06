@@ -2,22 +2,18 @@
 
 from __future__ import annotations
 
-import ast
-import inspect
 import json
-import tomllib
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
-from .....core.config import Settings
-from .....core.resources.bundled_data import packaged_data
-from .. import installation_client
+from .....core.config import Settings, override_settings, reset_settings_cache
+from .....core.config_google import GoogleOAuthClientSettings
 from ..errors import GoogleAuthClientMetadataUnavailableError, GoogleAuthPreconditionCondition
-from ..installation_client import INSTALLATION_CLIENT_DATA_PARTS, load_installation_client
+from ..installation_client import load_installation_client
 from .installation_client_support import (
     SYNTHETIC_CLIENT_CREDENTIAL,
-    SYNTHETIC_CLIENT_ID,
     synthetic_installation_client,
     use_absent_installation_client,
     use_installation_client,
@@ -25,8 +21,6 @@ from .installation_client_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[6]
 
 
 def _envelope() -> dict[str, dict[str, object]]:
@@ -162,44 +156,68 @@ def test_an_invalid_file_never_surfaces_its_contents(monkeypatch: pytest.MonkeyP
     assert "example.invalid" not in rendered
 
 
-def test_the_location_is_the_bundled_data_root_and_is_not_configurable() -> None:
-    """One location, read through the canonical bundled-data reader, with no operator override.
-
-    The suite redirects the location away from a developer's real file, so the
-    production resolver is checked in source rather than by calling it.
-    """
-    assert INSTALLATION_CLIENT_DATA_PARTS == ("google", "oauth_client.json")
-    resolver = next(
-        node
-        for node in ast.parse(inspect.getsource(installation_client)).body
-        if isinstance(node, ast.FunctionDef) and node.name == "installation_client_source"
-    )
-    assert [argument.arg for argument in resolver.args.args] == []
-    statements = [node for node in resolver.body if not isinstance(node, ast.Expr)]
-    assert [ast.unparse(node) for node in statements] == ["return packaged_data(*INSTALLATION_CLIENT_DATA_PARTS)"]
-    assert installation_client.packaged_data is packaged_data
-    assert sorted(name for name in Settings.model_fields if "google" in name and "client" in name) == []
+def test_environment_wins_over_bundled_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    use_installation_client(monkeypatch, tmp_path)
+    document = _envelope()
+    document["installed"]["client_id"] = "environment.apps.googleusercontent.com"
+    monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", json.dumps(document))
+    reset_settings_cache()
+    with override_settings(
+        cadrumo_google_oauth_client_json=GoogleOAuthClientSettings().cadrumo_google_oauth_client_json
+    ):
+        assert load_installation_client().client_id == "environment.apps.googleusercontent.com"
 
 
-def test_the_shipped_client_file_is_a_valid_desktop_client_carried_by_every_build(
-    monkeypatch: pytest.MonkeyPatch,
+def test_invalid_environment_does_not_fall_back_or_disclose_input(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """The publisher client is part of the application: present, readable, and excluded from no build."""
-    shipped = packaged_data(*INSTALLATION_CLIENT_DATA_PARTS)
-    assert shipped.is_file()
-    monkeypatch.setattr(installation_client, "installation_client_source", lambda: shipped)
+    use_installation_client(monkeypatch, tmp_path)
+    marker = "private-invalid-client-json"
+    monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", "{" + marker)
+    reset_settings_cache()
+    with (
+        override_settings(
+            cadrumo_google_oauth_client_json=GoogleOAuthClientSettings().cadrumo_google_oauth_client_json
+        ),
+        pytest.raises(GoogleAuthClientMetadataUnavailableError) as refused,
+    ):
+        load_installation_client()
+    assert marker not in str(refused.value)
+    assert refused.value.__context__ is None
+    assert refused.value.translated_message == "adapters.google.installation_client.errors.client_metadata_invalid"
 
-    client = load_installation_client()
 
-    # Shape only: the values themselves are never asserted on or printed.
-    assert client.client_id.endswith(".apps.googleusercontent.com")
-    assert client.client_id != SYNTHETIC_CLIENT_ID
+def test_blank_environment_uses_packaged_default(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    client = use_installation_client(monkeypatch, tmp_path)
+    monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", "")
+    assert load_installation_client() == client
 
-    directory = f"src/cadrumo/_data/{INSTALLATION_CLIENT_DATA_PARTS[0]}"
-    ignore_rules = (_REPOSITORY_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
-    assert not [rule for rule in ignore_rules if rule.strip().strip("/") == directory]
-    targets = tomllib.loads((_REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["tool"]["hatch"][
-        "build"
-    ]["targets"]
-    for target in ("sdist", "wheel"):
-        assert not [entry for entry in targets[target]["exclude"] if entry.startswith(directory)], target
+
+def test_core_settings_override_controls_the_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    use_absent_installation_client(monkeypatch, tmp_path)
+    with override_settings(cadrumo_google_oauth_client_json=SecretStr(json.dumps(_envelope()))):
+        assert load_installation_client() == synthetic_installation_client()
+
+
+def test_settings_serialization_redacts_credentials(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    use_installation_client(monkeypatch, tmp_path)
+    for settings in (GoogleOAuthClientSettings(), Settings()):
+        assert SYNTHETIC_CLIENT_CREDENTIAL not in repr(settings)
+        assert SYNTHETIC_CLIENT_CREDENTIAL not in settings.model_dump_json()
+        assert SYNTHETIC_CLIENT_CREDENTIAL not in repr(settings.model_dump())
+
+
+def test_explicit_build_dotenv_uses_process_environment_precedence(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    use_absent_installation_client(monkeypatch, tmp_path)
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON='" + json.dumps(_envelope()) + "'\n", encoding="utf-8")
+    assert GoogleOAuthClientSettings().cadrumo_google_oauth_client_json is None
+    from_file = GoogleOAuthClientSettings(_env_file=dotenv).cadrumo_google_oauth_client_json
+    assert from_file is not None
+    assert from_file.get_secret_value() == json.dumps(_envelope())
+    monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", "process-value")
+    from_process = GoogleOAuthClientSettings(_env_file=dotenv).cadrumo_google_oauth_client_json
+    assert from_process is not None
+    assert from_process.get_secret_value() == "process-value"

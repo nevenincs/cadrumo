@@ -1,6 +1,6 @@
 """Google OAuth Desktop login flow for per-profile Google sessions.
 
-Runs this installation's :class:`adapters.outbound.google.records.OAuthClient`
+Runs this installation's :class:`core.config_google_client.OAuthClient`
 through Google's loopback IP + PKCE Desktop flow using
 a bounded, single-use loopback receiver.
 The operating system picks an ephemeral loopback port and opens the
@@ -35,6 +35,7 @@ from ....application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationAcknowledgement,
     GoogleConfigurationHandoff,
 )
+from ....core.config_google_client import OAuthClient
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.time.clock import now
 from ....core.tty import stdin_is_tty
@@ -52,7 +53,7 @@ from .errors import (
     google_auth_no_action_verdict,
 )
 from .oauth_callback import LOOPBACK_HOST, OAuthCallbackBindError, OAuthConsentDeclinedError, receive_authorization_code
-from .records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
+from .records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import OAuthCredentials
@@ -182,7 +183,7 @@ def credentials_to_records(
         refresh_token: The refresh token returned by the consent screen.
         client_id: The client the consent was granted to, bound into the token.
         token_uri: The token endpoint URL mirrored from
-            :class:`adapters.outbound.google.records.OAuthClient`.
+            :class:`core.config_google_client.OAuthClient`.
         account_email: The Google account that completed the consent.
         granted_scopes: Scopes the consent screen actually granted.
         issued_at: Timestamp the credential was first issued.
@@ -248,7 +249,7 @@ def run_login_flow(
 
     Args:
         client: This installation's
-            :class:`adapters.outbound.google.records.OAuthClient` metadata.
+            :class:`core.config_google_client.OAuthClient` metadata.
         profile: Active profile UUID resolved by
             :func:`adapters.outbound.google.active_profile.resolve_active_profile`.
         operation: Retained authority pin for canonical profile-record admission.

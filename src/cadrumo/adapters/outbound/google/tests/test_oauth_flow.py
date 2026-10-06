@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from .....application.user_profile.capsule_record import ProfileRecordIntegrityError
 from .....core.config import override_settings
+from .....core.config_google_client import OAuthClient
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
 from .. import oauth_flow
 from ..errors import (
@@ -39,7 +40,7 @@ from ..oauth_flow import (
     require_resolvable_profile_record,
     run_login_flow,
 )
-from ..records import REQUIRED_SCOPES, OAuthClient
+from ..records import REQUIRED_SCOPES
 from .token_endpoint_server import token_endpoint
 
 if TYPE_CHECKING:

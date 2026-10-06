@@ -4,11 +4,9 @@ The owning native CLI fixture uses MemoryNativePort and synthetic OS-login
 evidence. This journey does not establish platform secret-store acceptance or
 exercise Google OAuth, browser consent, or remote provider traffic.
 
-The worker is a separate process and reads the Google client from the one
-installation location, which nothing can redirect, and the application ships
-that client. Sign-in would therefore open a browser, so consent is never
-started; the refusal for an installation without a client is covered where the
-location can be redirected, by the composition and conformance tests.
+The worker is a separate process. This journey exercises existing session
+records without starting browser consent; synthetic client validation is
+covered independently at the settings and Google adapter boundaries.
 """
 
 from __future__ import annotations
@@ -25,7 +23,6 @@ from pydantic import JsonValue
 
 from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from .....adapters.outbound.google.installation_client import INSTALLATION_CLIENT_DATA_PARTS
 from .....adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 from .....adapters.outbound.google.session_store import (
     load_drive_config,
@@ -60,7 +57,6 @@ from .....application.user_profile.login_session import login_profile, resolve_l
 from .....core.hashing import canonical_json_bytes
 from .....core.operations import OperationEffect, profile_operation_subject
 from .....core.redaction.rules import redact_structured_for_cli_output
-from .....core.resources.bundled_data import packaged_data
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.cli_envelope import unwrap_cli_result
 from ...runtime_registered_operation import run_registered_operation
@@ -111,9 +107,6 @@ def test_native_google_configuration_installation_client_and_exact_profile_recor
 ) -> None:
     """Retain complete local state through real CLI leaves; no leaf accepts a client from the operator."""
     refresh_value = "native-refresh-" + uuid4().hex
-    # The worker signs in with the client the application ships, so sign-in itself
-    # would open a browser and is never started here.
-    assert packaged_data(*INSTALLATION_CLIENT_DATA_PARTS).is_file()
     original_operation = RuntimeFrontendClient.operation
     original_result = RuntimeFrontendClient.read_result_document
     definitions: dict[str, str] = {}

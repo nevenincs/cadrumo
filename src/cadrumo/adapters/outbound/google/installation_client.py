@@ -1,56 +1,20 @@
-"""The Google OAuth Desktop client this installation signs in with.
+"""Validate the publisher Google Desktop client supplied by core settings.
 
-Cadrumo has one Google client, owned by its publisher. Its metadata is public
-installation data: it ships with the installation, is the same for every
-profile, and is read from one place by :func:`load_installation_client`.
-Nothing here is a profile record, and no command, setting or environment
-variable can supply a different client.
-
-The file is part of the application: it is committed with the source and
-carried by every build, so a development checkout and a deployed installation
-sign in with the same client through the same reader. Google does not treat
-the value it labels ``client_secret`` as confidential for an installed
-application; it is still kept out of command output, logs and errors.
+Development and CI provision the complete Google download through the secret
+setting; installed distributions carry its generated fallback resource. This
+is installation identity, never a profile credential or an operator prompt.
 """
 
 from __future__ import annotations
 
-import json
-from importlib.resources.abc import Traversable  # nosemgrep
-from typing import Any, Final
-
-from pydantic import BaseModel, ValidationError
-
-from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.config import load_settings
+from ....core.config_google_client import OAuthClient, decode_desktop_client
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.resources.bundled_data import packaged_data
 from .errors import (
     GoogleAuthClientMetadataUnavailableError,
     GoogleAuthPreconditionCondition,
     google_auth_no_action_verdict,
 )
-from .records import OAuthClient
-
-INSTALLATION_CLIENT_DATA_PARTS: Final[tuple[str, ...]] = ("google", "oauth_client.json")
-"""Location of the client file under the installation's bundled data root."""
-
-# Google's client download is a few hundred bytes. The bound keeps a misplaced
-# file from being read whole into memory before it is refused.
-_CLIENT_METADATA_MAX_BYTES: Final[int] = 65_536
-
-
-class _DesktopClientEnvelope(BaseModel):
-    """The ``installed`` wrapper Google puts around a Desktop client download."""
-
-    model_config = STRICT_FROZEN_CONFIG
-    # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Cloud Console JSON,
-    # narrowed through the canonical OAuthClient before credential use.
-    installed: dict[str, Any]
-
-
-def installation_client_source() -> Traversable:
-    """Return the one location this installation's client metadata is read from."""
-    return packaged_data(*INSTALLATION_CLIENT_DATA_PARTS)
 
 
 def load_installation_client() -> OAuthClient:
@@ -65,12 +29,8 @@ def load_installation_client() -> OAuthClient:
             is not a Google Desktop client. Neither is recoverable by the
             operator from inside the product.
     """
-    source = installation_client_source()
-    try:
-        present = source.is_file()
-    except OSError:
-        present = False
-    if not present:
+    configured = load_settings().cadrumo_google_oauth_client_json
+    if configured is None:
         raise GoogleAuthClientMetadataUnavailableError(
             "this installation carries no Google client metadata",
             precondition_verdict=google_auth_no_action_verdict(
@@ -80,7 +40,7 @@ def load_installation_client() -> OAuthClient:
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         )
-    client = _decode_desktop_client(source)
+    client = decode_desktop_client(configured.get_secret_value())
     if client is None:
         raise GoogleAuthClientMetadataUnavailableError(
             "this installation's Google client metadata is not a valid Desktop client",
@@ -93,36 +53,3 @@ def load_installation_client() -> OAuthClient:
             ),
         )
     return client
-
-
-def _decode_desktop_client(source: Traversable) -> OAuthClient | None:
-    """Decode a Desktop client download, or return ``None`` when it is not one.
-
-    The reason a file is refused is deliberately not carried out of here: the
-    file holds the client secret, and a parser message can quote its input.
-    """
-    try:
-        with source.open("rb") as stream:
-            encoded = stream.read(_CLIENT_METADATA_MAX_BYTES + 1)
-    except OSError:
-        return None
-    if len(encoded) > _CLIENT_METADATA_MAX_BYTES:
-        return None
-    try:
-        envelope = _DesktopClientEnvelope.model_validate(json.loads(encoded.decode("utf-8")))
-    except (UnicodeDecodeError, json.JSONDecodeError, ValidationError):
-        return None
-    fields = dict(envelope.installed)
-    if isinstance(fields.get("redirect_uris"), list):
-        fields["redirect_uris"] = tuple(fields["redirect_uris"])
-    try:
-        return OAuthClient.model_validate(fields)
-    except ValidationError:
-        return None
-
-
-__all__ = [
-    "INSTALLATION_CLIENT_DATA_PARTS",
-    "installation_client_source",
-    "load_installation_client",
-]

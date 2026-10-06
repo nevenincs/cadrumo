@@ -15,13 +15,14 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
+from ....core.config_google_client import OAuthClient
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import (
     GoogleAuthPreconditionCondition,
     GoogleAuthSignInRequiredError,
     google_auth_no_action_verdict,
 )
-from .records import OAuthClient, OAuthMetadata, OAuthToken
+from .records import OAuthMetadata, OAuthToken
 
 _ENDED_GRANT_ERROR = "invalid_grant"
 

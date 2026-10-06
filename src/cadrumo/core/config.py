@@ -38,6 +38,7 @@ from . import config_support as _config_support
 from .auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE as _DEFAULT_CLAVE_MOVIL_ROUTE
 from .auth_provider import AuthProviderKind as _AuthProviderKind
 from .auth_provider import ClaveMovilRoute as _ClaveMovilRoute
+from .config_google import GoogleOAuthClientSettings
 from .config_llm_fields import CadrumoLlmSettings
 from .config_state_root import (
     default_storage_root,
@@ -176,7 +177,7 @@ class AuthorityRootSettings(BaseSettings):
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
-class Settings(CadrumoLlmSettings, AuthorityRootSettings):
+class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSettings):
     """Application settings populated from process environment variables.
 
     Field names map directly to env var names (uppercased). For example,

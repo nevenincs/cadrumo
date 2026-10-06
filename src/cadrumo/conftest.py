@@ -457,11 +457,15 @@ def _keep_the_installation_google_client_out_of_tests(tmp_path_factory: pytest.T
     client, so every test starts from an installation without one; a test
     that needs a client binds a synthetic file through
     ``adapters.outbound.google.tests.installation_client_support``, and the
-    one test that checks the shipped file names its location itself.
+    settings tests provision only synthetic environment values and resources.
     """
-    from .adapters.outbound.google import installation_client
+    from .core import config_google
+    from .core.config import reset_settings_cache
 
     absent = tmp_path_factory.mktemp("installation-google-client") / "oauth_client.json"
     with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(installation_client, "installation_client_source", lambda: absent)
+        patch.setattr(config_google, "installation_client_source", lambda: absent)
+        patch.delenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", raising=False)
+        reset_settings_cache()
         yield
+        reset_settings_cache()

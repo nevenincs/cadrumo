@@ -8,7 +8,7 @@ active profile. :class:`core.config.Settings` drives the choice:
 - ``cadrumo_storage_provider_kind`` selects the backend.
 - ``cadrumo_local_storage_root`` chooses the root directory for the local
   backend.
-- The installation's :class:`~adapters.outbound.google.records.OAuthClient`,
+- The installation's :class:`~core.config_google_client.OAuthClient`,
   the profile's :class:`~adapters.outbound.google.records.OAuthToken` and the
   root folder created for the profile parameterise the Drive backend.
 
@@ -32,10 +32,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.config_google_client import OAuthClient
+
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
-    from ..google.records import OAuthClient, OAuthToken
+    from ..google.records import OAuthToken
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....application.user_profile.access_contracts import AccessDenialCode
@@ -98,7 +100,7 @@ def _parse_kind(raw: str) -> ProviderKind:
 def build_google_credentials(*, profile: str) -> Credentials:
     """Hydrate Google ``Credentials`` from the profile's desktop sign-in records.
 
-    Pairs this installation's :class:`~adapters.outbound.google.records.OAuthClient`,
+    Pairs this installation's :class:`~core.config_google_client.OAuthClient`,
     read by
     :func:`adapters.outbound.google.installation_client.load_installation_client`,
     with the profile's :class:`~adapters.outbound.google.records.OAuthToken` from
