@@ -505,6 +505,35 @@ desktop:
     zoom_in: Dokumentáció nagyítása
     zoom_out: Dokumentáció kicsinyítése
     zoom_reset: Dokumentáció nagyításának visszaállítása
+  calendar:
+    aeat:
+      accepted: Elfogadva
+      justificante_verified: Igazolás ellenőrizve
+      not_observed: Nincs megfigyelt igazolás
+      submitted_observed: Benyújtás megfigyelve
+    as_of: A helyi adatok alapján, {date} állapot szerint. Itt semmit nem kérdeztünk
+      le az AEAT-től.
+    empty: Ebben az időszakban nincs bevallási kötelezettség.
+    failed: A naptárat nem sikerült beolvasni ({code}).
+    loading: A naptár betöltése…
+    local:
+      external_baseline_imported: Korábbi bevallásból importálva
+      not_ready_to_file: Nincs előkészítve
+      ready_to_file: Benyújtásra kész
+    modelo: Modelo {modelo}
+    moved: 'Áthelyezve erről: {date}'
+    open_tui: Megnyitás a TUI-ban
+    payment_cutoff: 'Beszedési megbízás eddig: {date}'
+    refresh: Frissítés
+    signed_out: Jelentkezz be a bevallási naptárad megtekintéséhez.
+    state:
+      due: Esedékes
+      filed: Benyújtva
+      late: Lejárt
+      unknown: Ismeretlen
+    title: Bevallási naptár
+    undetermined: 'Nem sikerült megállapítani: {modelos}'
+    warnings: Hiányoznak profiladatok, ezért ezek a dátumok alapértékeket használnak.
   docs:
     frame_title: Cadrumo-dokumentáció
     loading: A dokumentáció betöltése…

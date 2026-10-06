@@ -498,6 +498,34 @@ desktop:
     zoom_in: Zoom docs in
     zoom_out: Zoom docs out
     zoom_reset: Reset docs zoom
+  calendar:
+    aeat:
+      accepted: Accepted
+      justificante_verified: Receipt verified
+      not_observed: No agency receipt seen
+      submitted_observed: Submission seen
+    as_of: From local records as of {date}. Nothing here was asked of the tax agency.
+    empty: No filing obligations in this period.
+    failed: The calendar couldn't be read ({code}).
+    loading: Loading the calendar…
+    local:
+      external_baseline_imported: Imported from an earlier filing
+      not_ready_to_file: Not ready to file
+      ready_to_file: Ready to file
+    modelo: Modelo {modelo}
+    moved: Moved from {date}
+    open_tui: Open in the TUI
+    payment_cutoff: Direct debit until {date}
+    refresh: Refresh
+    signed_out: Sign in to see your filing calendar.
+    state:
+      due: Due
+      filed: Filed
+      late: Late
+      unknown: Unknown
+    title: Filing calendar
+    undetermined: 'Could not be determined: {modelos}'
+    warnings: Some profile details are missing, so these dates use defaults.
   docs:
     frame_title: Cadrumo documentation
     loading: Loading the documentation…

@@ -47,8 +47,14 @@ DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
 #: Keys the shell composes at runtime, as ``prefix -> members``: a template
 #: such as ```desktop.example.kind_${kind}``` names ``desktop.example.kind_``
 #: here with every member it can produce, and each resulting key is also
-#: spelled out in :data:`DESKTOP_CHROME_KEYS`. The shell builds none today.
-DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]]({})
+#: spelled out in :data:`DESKTOP_CHROME_KEYS`.
+DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]](
+    {
+        "desktop.calendar.aeat.": ("accepted", "justificante_verified", "not_observed", "submitted_observed"),
+        "desktop.calendar.local.": ("external_baseline_imported", "not_ready_to_file", "ready_to_file"),
+        "desktop.calendar.state.": ("due", "filed", "late", "unknown"),
+    }
+)
 
 DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -73,6 +79,30 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.action.zoom_in",
         "desktop.action.zoom_out",
         "desktop.action.zoom_reset",
+        "desktop.calendar.aeat.accepted",
+        "desktop.calendar.aeat.justificante_verified",
+        "desktop.calendar.aeat.not_observed",
+        "desktop.calendar.aeat.submitted_observed",
+        "desktop.calendar.as_of",
+        "desktop.calendar.empty",
+        "desktop.calendar.failed",
+        "desktop.calendar.loading",
+        "desktop.calendar.local.external_baseline_imported",
+        "desktop.calendar.local.not_ready_to_file",
+        "desktop.calendar.local.ready_to_file",
+        "desktop.calendar.modelo",
+        "desktop.calendar.moved",
+        "desktop.calendar.open_tui",
+        "desktop.calendar.payment_cutoff",
+        "desktop.calendar.refresh",
+        "desktop.calendar.signed_out",
+        "desktop.calendar.state.due",
+        "desktop.calendar.state.filed",
+        "desktop.calendar.state.late",
+        "desktop.calendar.state.unknown",
+        "desktop.calendar.title",
+        "desktop.calendar.undetermined",
+        "desktop.calendar.warnings",
         "desktop.docs.frame_title",
         "desktop.docs.loading",
         "desktop.host.failed",

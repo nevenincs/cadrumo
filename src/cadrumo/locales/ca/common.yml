@@ -513,6 +513,34 @@ desktop:
     zoom_in: Amplia la documentació
     zoom_out: Redueix la documentació
     zoom_reset: Restableix el zoom de la documentació
+  calendar:
+    aeat:
+      accepted: Acceptada
+      justificante_verified: Justificant verificat
+      not_observed: Sense justificant observat
+      submitted_observed: Presentació observada
+    as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
+    empty: No hi ha obligacions de presentació en aquest període.
+    failed: No s'ha pogut llegir el calendari ({code}).
+    loading: S'està carregant el calendari…
+    local:
+      external_baseline_imported: Importat d'una presentació anterior
+      not_ready_to_file: Sense preparar
+      ready_to_file: A punt per presentar
+    modelo: Modelo {modelo}
+    moved: Traslladat des del {date}
+    open_tui: Obre a la TUI
+    payment_cutoff: Domiciliació fins al {date}
+    refresh: Actualitza
+    signed_out: Inicia la sessió per veure el teu calendari de presentacions.
+    state:
+      due: Pendent
+      filed: Presentat
+      late: Fora de termini
+      unknown: Desconegut
+    title: Calendari de presentacions
+    undetermined: 'No s''ha pogut determinar: {modelos}'
+    warnings: Falten dades del perfil; aquestes dates fan servir valors per defecte.
   docs:
     frame_title: Documentació de Cadrumo
     loading: S'està carregant la documentació…
