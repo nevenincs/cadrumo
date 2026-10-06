@@ -1,36 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
-import type { SignInRefusal } from "../ipc/contract";
+import { accountFixture, refused } from "@/dev/fixtures/account";
 import type { SignInController } from "../shell/signIn";
 import { Account, SignedOut, SignInDialog } from "./SignIn";
 
 // Stories take a controller in a fixed state, so every state of the screen
 // can be looked at without a host. They prove presentation only.
-function controller(change: Partial<SignInController> = {}): SignInController {
-  return {
-    status: {
-      supported: true,
-      state: "absent",
-      active_profile: "Demo profile",
-      runtimeAvailable: true,
-      refusal: null,
-    },
-    refusal: null,
-    retrySeconds: 0,
-    busy: false,
-    remaining: null,
-    signOutFailure: null,
-    gated: true,
-    submit: async () => undefined,
-    signOut: async () => undefined,
-    openTui: () => undefined,
-    tuiExited: () => undefined,
-    ...change,
-  };
-}
-
-const refused = (code: string, retryAfterSeconds: number | null = null) =>
-  ({ code, retryAfterSeconds }) satisfies SignInRefusal;
+const controller = accountFixture;
 
 function Screen({ account }: { account: SignInController }) {
   const button = useRef<HTMLButtonElement>(null);
@@ -129,7 +105,6 @@ export const Dismissed: Story = {
 };
 
 const present = controller({
-  gated: false,
   status: {
     supported: true,
     state: "present",
@@ -144,14 +119,18 @@ export const AccountSection: Story = {
   parameters: { fill: false, surface: "card" },
   render: () => (
     <div className="grid max-w-settings gap-6">
-      <Account account={present} onSignOut={() => undefined} />
+      <Account
+        account={present}
+        onSignIn={() => undefined}
+        onSignOut={() => undefined}
+      />
       <Account
         account={{ ...present, busy: true }}
+        onSignIn={() => undefined}
         onSignOut={() => undefined}
       />
       <Account
         account={controller({
-          gated: true,
           remaining: {
             remainingAccess: {
               automationEnabled: true,
@@ -159,10 +138,12 @@ export const AccountSection: Story = {
             },
           },
         })}
+        onSignIn={() => undefined}
         onSignOut={() => undefined}
       />
       <Account
         account={{ ...present, signOutFailure: refused("timed_out") }}
+        onSignIn={() => undefined}
         onSignOut={() => undefined}
       />
     </div>

@@ -26,6 +26,54 @@ function refusalFrom(error: unknown): SignInRefusal {
   };
 }
 
+/**
+ * The one reading of the account that every element shows: the sign-in
+ * dialog, the TUI pane and its header, settings, the rail and the actions.
+ * Nothing else derives a state of its own from the raw status.
+ */
+export type AccountPhase =
+  /** The page runs without a desktop host. */
+  | "no-host"
+  /** The first status read has not answered yet. */
+  | "checking"
+  /** This platform signs in inside the TUI; the shell offers nothing. */
+  | "unsupported"
+  | "signed-in"
+  /** The person chose to carry on in the TUI's own flow. */
+  | "in-tui"
+  /** There is no runtime to ask. */
+  | "services-down"
+  /** The status read failed, or the runtime could not say. */
+  | "unknown"
+  /** There is no profile to sign in to yet. */
+  | "no-profile"
+  | "signed-out";
+
+/** The phases in which the TUI is withheld until the account is settled. */
+export const GATED: ReadonlySet<AccountPhase> = new Set([
+  "checking",
+  "services-down",
+  "unknown",
+  "no-profile",
+  "signed-out",
+]);
+
+export function phaseOf(
+  available: boolean,
+  status: SignInStatus | null,
+  handover: boolean,
+): AccountPhase {
+  if (!available) return "no-host";
+  if (!status) return "checking";
+  if (!status.supported) return "unsupported";
+  if (status.state === "present") return "signed-in";
+  if (handover) return "in-tui";
+  if (!status.runtimeAvailable) return "services-down";
+  if (status.state === "unknown") return "unknown";
+  if (status.active_profile === null) return "no-profile";
+  return "signed-out";
+}
+
 const COUNTDOWN_TICK_MS = 250;
 
 /** The seconds left of a refusal's wait. No timer runs unless one is owed. */
@@ -167,17 +215,16 @@ export function useSignIn(host: Host) {
     }
   };
 
+  const phase = phaseOf(host.available, status, handover);
   return {
     status,
+    phase,
     refusal: currentRefusal,
     retrySeconds,
     busy,
     remaining,
     signOutFailure,
-    gated:
-      host.available &&
-      !handover &&
-      (!status || (status.supported && status.state !== "present")),
+    gated: GATED.has(phase),
     submit,
     signOut,
     openTui: () => setHandover(true),

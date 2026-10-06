@@ -22,7 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import type { SignInRefusal } from "../ipc/contract";
-import type { SignInController } from "../shell/signIn";
+import type { AccountPhase, SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
 import { Logo } from "./Logo";
 
@@ -94,6 +94,42 @@ const HANDED_OVER = new Set(["PROFILE_LOCKED", "KEYRING_UNAVAILABLE"]);
 
 const refusalCode = (refusal: SignInRefusal | null) =>
   refusal?.code.toUpperCase() ?? null;
+
+// How each phase that withholds the TUI is said, wherever it is said: in the
+// TUI pane, in its header, in the dialog and in settings.
+const GATES: Partial<
+  Record<AccountPhase, { icon: IconName; title: string; lead: string | null }>
+> = {
+  "signed-out": {
+    icon: "lock",
+    title: "desktop.account.signed_out",
+    lead: "desktop.signin.signed_out_lead",
+  },
+  "no-profile": {
+    icon: "user",
+    title: "desktop.account.no_profile",
+    lead: "desktop.account.no_profile_lead",
+  },
+  "services-down": {
+    icon: "unplug",
+    title: "desktop.account.services_down",
+    lead: "desktop.signin.open_tui_hint",
+  },
+  unknown: { icon: "alert", title: "desktop.account.unknown", lead: null },
+};
+
+/** The string that names an account phase in a line: a header's note, a
+ * badge. Null where the phase has nothing to say. */
+export function accountLabel(phase: AccountPhase): string | null {
+  if (phase === "checking") return "desktop.signin.checking";
+  if (phase === "signed-in") return "desktop.account.signed_in";
+  if (phase === "in-tui") return "desktop.account.in_tui";
+  return GATES[phase]?.title ?? null;
+}
+
+/** Whether a password can settle this phase. */
+const signsIn = (phase: AccountPhase) =>
+  phase === "signed-out" || phase === "unknown";
 
 /**
  * A refusal, said in the shell's own words. A throttle shows its wait as it
@@ -185,7 +221,10 @@ export function SignInDialog({
   const available = status.runtimeAvailable;
   // Where a password cannot help, the form is not offered.
   const handedOver = code !== null && HANDED_OVER.has(code);
-  const answerable = available && !handedOver;
+  // With no profile there is nothing to sign in to: the dialog offers the
+  // way to create one.
+  const creating = account.phase === "no-profile";
+  const answerable = available && !handedOver && !creating;
 
   return (
     <Dialog
@@ -213,11 +252,19 @@ export function SignInDialog({
         <DialogHeader className="gap-3 pr-0">
           <Logo className="pr-8" />
           <div className="grid gap-1">
-            <DialogTitle>{t("desktop.signin.title")}</DialogTitle>
+            <DialogTitle>
+              {t(
+                creating
+                  ? "desktop.account.no_profile"
+                  : "desktop.signin.title",
+              )}
+            </DialogTitle>
             <DialogDescription>
-              {answerable
-                ? t("desktop.signin.lead")
-                : t("desktop.signin.open_tui_hint")}
+              {creating
+                ? t("desktop.account.no_profile_lead")
+                : answerable
+                  ? t("desktop.signin.lead")
+                  : t("desktop.signin.open_tui_hint")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -296,7 +343,7 @@ export function SignInDialog({
               {t(busy ? "desktop.signin.submitting" : "desktop.signin.submit")}
             </Button>
           </form>
-        ) : account.refusal ? (
+        ) : creating ? null : account.refusal ? (
           <Refusal refusal={account.refusal} seconds={seconds} />
         ) : (
           <Alert tone="warning" icon={<Icon name="unplug" />}>
@@ -324,7 +371,11 @@ export function SignInDialog({
           </>
         ) : (
           <Button ref={handover} className="w-full" onClick={account.openTui}>
-            {t("desktop.signin.open_tui")}
+            {t(
+              creating
+                ? "desktop.account.create_profile"
+                : "desktop.signin.open_tui",
+            )}
           </Button>
         )}
       </DialogContent>
@@ -333,8 +384,9 @@ export function SignInDialog({
 }
 
 /**
- * What the TUI pane shows while it is gated: the status check in flight, or
- * the signed-out state with the ways forward.
+ * What the TUI pane shows while the account is not settled: the status check
+ * in flight, or what stands in the way with the ways forward. The primary
+ * action takes `signInButton`, so focus has somewhere to go in every phase.
  */
 export function SignedOut({
   account,
@@ -346,103 +398,146 @@ export function SignedOut({
   signInButton: RefObject<HTMLButtonElement | null>;
 }) {
   const t = useStrings();
-  if (!account.status)
+  const gate = GATES[account.phase];
+  if (!gate)
     return (
       <Empty role="status">
         <Spinner />
         <EmptyDescription>{t("desktop.signin.checking")}</EmptyDescription>
       </Empty>
     );
+  const password = signsIn(account.phase);
   return (
     <Empty>
       <EmptyMedia>
-        <Icon name="lock" />
+        <Icon name={gate.icon} />
       </EmptyMedia>
       <div className="grid gap-1">
-        <EmptyTitle>{t("desktop.account.signed_out")}</EmptyTitle>
-        <EmptyDescription>
-          {t("desktop.signin.signed_out_lead")}
-        </EmptyDescription>
+        <EmptyTitle>{t(gate.title)}</EmptyTitle>
+        {gate.lead && <EmptyDescription>{t(gate.lead)}</EmptyDescription>}
       </div>
       <div className="flex flex-wrap justify-center gap-2">
-        <Button ref={signInButton} onClick={onSignIn}>
-          {t("desktop.signin.submit")}
-        </Button>
+        {password && (
+          <Button ref={signInButton} onClick={onSignIn}>
+            {t("desktop.signin.submit")}
+          </Button>
+        )}
         <Button
-          variant="ghost"
+          ref={password ? undefined : signInButton}
+          variant={password ? "ghost" : "primary"}
           aria-disabled={account.busy || undefined}
           onClick={account.busy ? undefined : account.openTui}
         >
-          {t("desktop.signin.open_tui")}
+          {t(
+            account.phase === "no-profile"
+              ? "desktop.account.create_profile"
+              : "desktop.signin.open_tui",
+          )}
         </Button>
       </div>
     </Empty>
   );
 }
 
-/** The Account section of settings: who is signed in, and signing out. */
+const SESSION_TONE: Partial<
+  Record<AccountPhase, "success" | "warning" | "neutral">
+> = { "signed-in": "success", "services-down": "warning" };
+
+/**
+ * The account in settings, as two sections: which profile this window works
+ * in, and its sign-in. Each says the same phase the rest of the window shows.
+ */
 export function Account({
   account,
+  onSignIn,
   onSignOut,
 }: {
   account: SignInController;
+  onSignIn: () => void;
   onSignOut: () => void;
 }) {
   const t = useStrings();
-  const titleId = useId();
+  const profileId = useId();
+  const sessionId = useId();
   const status = account.status;
+  const phase = account.phase;
   if (!status?.supported) return null;
-  const present = status.state === "present";
+  const label = accountLabel(phase === "no-profile" ? "signed-out" : phase);
   return (
-    <section className="account grid gap-2" aria-labelledby={titleId}>
-      <h3 id={titleId} className="text-sm font-medium text-muted-foreground">
-        {t("desktop.account.title")}
-      </h3>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="flex min-w-0 items-center gap-2">
-          <Icon name="user" className="text-muted-foreground" />
-          {status.active_profile && (
-            <span className="truncate font-medium">
-              {status.active_profile}
-            </span>
-          )}
-          <Badge variant={present ? "success" : "neutral"}>
-            {t(
-              present
-                ? "desktop.account.signed_in"
-                : status.state === "absent"
-                  ? "desktop.account.signed_out"
-                  : "desktop.account.unknown",
-            )}
-          </Badge>
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          pending={account.busy}
-          disabled={!present}
-          onClick={onSignOut}
+    <>
+      <section className="grid gap-2" aria-labelledby={profileId}>
+        <h3
+          id={profileId}
+          className="text-sm font-medium text-muted-foreground"
         >
-          {!account.busy && <Icon name="signOut" />}
-          {t("desktop.account.sign_out")}
-        </Button>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        {t("desktop.account.sign_out_hint")}
-      </p>
-      {account.remaining &&
-        account.remaining.remainingAccess.automationEnabled !== false && (
-          <Alert icon={<Icon name="info" />}>
-            {t("desktop.account.remaining_access")}
+          {t("desktop.signin.profile")}
+        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="flex min-w-0 items-center gap-2">
+            <Icon name="user" className="text-muted-foreground" />
+            <span
+              className={
+                status.active_profile
+                  ? "truncate font-medium"
+                  : "text-muted-foreground"
+              }
+            >
+              {status.active_profile ?? t("desktop.account.no_profile")}
+            </span>
+          </span>
+          {phase === "no-profile" && (
+            <Button variant="outline" size="sm" onClick={account.openTui}>
+              {t("desktop.account.create_profile")}
+            </Button>
+          )}
+        </div>
+      </section>
+      <section className="account grid gap-2" aria-labelledby={sessionId}>
+        <h3
+          id={sessionId}
+          className="text-sm font-medium text-muted-foreground"
+        >
+          {t("desktop.settings.session")}
+        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {label && (
+            <Badge variant={SESSION_TONE[phase] ?? "neutral"}>{t(label)}</Badge>
+          )}
+          {phase === "signed-in" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              pending={account.busy}
+              onClick={onSignOut}
+            >
+              {!account.busy && <Icon name="signOut" />}
+              {t("desktop.account.sign_out")}
+            </Button>
+          ) : signsIn(phase) ? (
+            <Button variant="outline" size="sm" onClick={onSignIn}>
+              {t("desktop.signin.submit")}
+            </Button>
+          ) : null}
+        </div>
+        {phase === "signed-in" && (
+          <p className="text-sm text-muted-foreground">
+            {t("desktop.account.sign_out_hint")}
+          </p>
+        )}
+        {account.remaining &&
+          account.remaining.remainingAccess.automationEnabled !== false && (
+            <Alert icon={<Icon name="info" />}>
+              {t("desktop.account.remaining_access")}
+            </Alert>
+          )}
+        {account.signOutFailure && (
+          <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
+            {t("desktop.account.sign_out_failed", {
+              code: account.signOutFailure.code,
+            })}
           </Alert>
         )}
-      {account.signOutFailure && (
-        <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
-          {t("desktop.account.sign_out_failed", {
-            code: account.signOutFailure.code,
-          })}
-        </Alert>
-      )}
-    </section>
+      </section>
+    </>
   );
 }

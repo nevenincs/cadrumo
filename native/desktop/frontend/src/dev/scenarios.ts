@@ -134,6 +134,14 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "no-profile",
+    title: "No active profile",
+    summary:
+      "Nothing to sign in to: no profile was created, or none is chosen. The way on is the TUI.",
+    signIn: { status: signedOut, submit: { kind: "accept" }, profile: null },
+  },
+  {
+    ...base,
     id: "runtime-unavailable",
     title: "Runtime unavailable",
     summary:

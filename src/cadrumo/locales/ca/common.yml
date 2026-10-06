@@ -491,13 +491,17 @@ core:
         admès en forma de text.
 desktop:
   account:
+    create_profile: Configura un perfil
+    in_tui: Continues a la TUI
+    no_profile: Cap perfil actiu
+    no_profile_lead: Crea un perfil o tria'n un a la TUI.
     remaining_access: L'accés d'agents que vas activar continua actiu.
+    services_down: Els serveis en segon pla no estan en marxa
     sign_out: Tanca la sessió
     sign_out_failed: No s'ha pogut tancar la sessió ({code}).
     sign_out_hint: Tanca la teva sessió a totes les finestres de Cadrumo.
     signed_in: Sessió iniciada
     signed_out: Sense sessió iniciada
-    title: Compte
     unknown: Estat de la sessió desconegut
   action:
     docs_back: Enrere
@@ -603,11 +607,13 @@ desktop:
     light: Clar
     match_appearance: Segons l'aparença
     reset_layout: Restableix la disposició
+    session: Inici de sessió
     side_by_side: Una al costat de l'altra
     stacked: Apilades
     terminal_text: Text del terminal
     terminals: Terminals
     title: Configuració
+    window: Finestra
   signin:
     checking: S'està comprovant la teva sessió…
     dismiss: Ara no

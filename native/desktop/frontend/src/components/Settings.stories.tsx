@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import type { SignInController } from "../shell/signIn";
+import { accountFixture, SIGNED_OUT } from "@/dev/fixtures/account";
 import { DEFAULT_PREFS, type Prefs } from "../shell/layout";
 import { useStrings } from "../shell/strings";
 import { Rail } from "./Rail";
@@ -10,25 +10,9 @@ import { Account } from "./SignIn";
 // Settings beside the rail it opens from, over preferences held by the story.
 const noop = () => undefined;
 
-const account: SignInController = {
-  status: {
-    supported: true,
-    state: "present",
-    active_profile: "Demo profile",
-    runtimeAvailable: true,
-    refusal: null,
-  },
-  refusal: null,
-  retrySeconds: 0,
-  busy: false,
-  remaining: null,
-  signOutFailure: null,
-  gated: false,
-  submit: async () => undefined,
-  signOut: async () => undefined,
-  openTui: noop,
-  tuiExited: noop,
-};
+const account = accountFixture({
+  status: { ...SIGNED_OUT, state: "present" },
+});
 
 function Screen({
   initial,
@@ -68,7 +52,7 @@ function Screen({
         languages={languages}
         onReset={() => setPrefs(initial)}
         close={noop}
-        account={<Account account={account} onSignOut={noop} />}
+        account={<Account account={account} onSignIn={noop} onSignOut={noop} />}
       />
     </div>
   );

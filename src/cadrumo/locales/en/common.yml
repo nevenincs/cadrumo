@@ -476,13 +476,17 @@ core:
         code in text form.
 desktop:
   account:
+    create_profile: Set up a profile
+    in_tui: Continuing in the TUI
+    no_profile: No active profile
+    no_profile_lead: Create a profile, or choose one, in the TUI.
     remaining_access: Agent access you enabled stays on.
+    services_down: Background services aren't running
     sign_out: Sign out
     sign_out_failed: Signing out didn't work ({code}).
     sign_out_hint: Signs you out of every Cadrumo window.
     signed_in: Signed in
     signed_out: Not signed in
-    title: Account
     unknown: Sign-in state unknown
   action:
     docs_back: Back
@@ -587,11 +591,13 @@ desktop:
     light: Light
     match_appearance: Match appearance
     reset_layout: Reset layout
+    session: Sign-in
     side_by_side: Side by side
     stacked: Stacked
     terminal_text: Terminal text
     terminals: Terminals
     title: Settings
+    window: Window
   signin:
     checking: Checking your sign-in…
     dismiss: Not now

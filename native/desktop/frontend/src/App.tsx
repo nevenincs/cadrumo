@@ -36,7 +36,12 @@ import {
   type RecordMenuRequest,
 } from "./components/RecordList";
 import { Settings } from "./components/Settings";
-import { Account, SignedOut, SignInDialog } from "./components/SignIn";
+import {
+  Account,
+  accountLabel,
+  SignedOut,
+  SignInDialog,
+} from "./components/SignIn";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSignIn } from "./shell/signIn";
 import { Split } from "./components/Split";
@@ -220,7 +225,8 @@ export function App({ host }: { host: Host }) {
   }, []);
 
   const gated = account.gated;
-  const signedIn = !gated && account.status?.state === "present";
+  const phase = account.phase;
+  const signedIn = phase === "signed-in";
   const accountRef = useRef(account);
   accountRef.current = account;
   const signOut = useCallback(() => {
@@ -799,8 +805,17 @@ export function App({ host }: { host: Host }) {
         group: "account",
         icon: "lock",
         keywords: "login password",
-        enabled: () => gated,
+        enabled: () => phase === "signed-out" || phase === "unknown",
         run: () => setSignInDismissed(false),
+      },
+      {
+        id: "account.createProfile",
+        label: t("desktop.account.create_profile"),
+        group: "account",
+        icon: "user",
+        keywords: "register new account",
+        enabled: () => phase === "no-profile",
+        run: () => accountRef.current.openTui(),
       },
       {
         id: "account.signOut",
@@ -866,7 +881,7 @@ export function App({ host }: { host: Host }) {
       maximized,
       docsSearchReady,
       docsEntry,
-      gated,
+      phase,
       signedIn,
       signOut,
       cycleFocus,
@@ -1386,7 +1401,18 @@ export function App({ host }: { host: Host }) {
     <div className={cn(pane, "pane-tui")} data-scheme="dark">
       <PaneHeader
         title={t("desktop.pane.tui")}
-        status={{ phase: status.tui.phase, note: sessionNote("tui") }}
+        // While the account withholds the TUI there is no session: the
+        // header says the account's phase, not the last session's.
+        status={
+          account.gated
+            ? phase === "checking"
+              ? { phase: "starting" }
+              : {
+                  phase: "unavailable",
+                  note: t(accountLabel(phase) ?? "desktop.account.unknown"),
+                }
+            : { phase: status.tui.phase, note: sessionNote("tui") }
+        }
         onToggleMaximize={() => toggleMaximize("tui")}
         controls={[
           maximizeControl("tui", "desktop.pane.maximize_tui"),
@@ -1593,7 +1619,16 @@ export function App({ host }: { host: Host }) {
 
           {settingsOpen && (
             <Settings
-              account={<Account account={account} onSignOut={signOut} />}
+              account={
+                <Account
+                  account={account}
+                  onSignIn={() => {
+                    setSettingsOpen(false);
+                    setSignInDismissed(false);
+                  }}
+                  onSignOut={signOut}
+                />
+              }
               prefs={prefs}
               setPrefs={setPrefs}
               languages={languages}

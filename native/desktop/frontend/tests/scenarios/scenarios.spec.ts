@@ -259,7 +259,7 @@ test("sign-out refused: the sign-in stays and the failure shows", async ({
     .click();
   await expect.poll(calls(target, "signOut")).toBe(1);
   const account = target.getByRole("region", {
-    name: label("desktop.account.title"),
+    name: label("desktop.settings.session"),
   });
   await expect(account).toContainText("timed_out");
   await expect(
@@ -652,4 +652,168 @@ test("a reader far from the end is never given the whole log to draw", async ({
   await follow.click();
   await expect(follow).toHaveAttribute("aria-pressed", "true");
   await expect(list.locator(".record")).toHaveCount(400);
+});
+
+// Every element that says something about the account says the same thing:
+// the TUI pane and its header, settings, and the actions the palette offers.
+const ACCOUNT_STATES: {
+  scenario: string;
+  /** What the TUI pane's header and body say; null where the TUI runs. */
+  saying: string | null;
+  /** The header's session dot. */
+  dot: string;
+  badge: string;
+  /** Buttons the pane and settings offer, and actions the palette lists. */
+  offers: string[];
+  withholds: string[];
+}[] = [
+  {
+    scenario: "signed-out",
+    saying: "desktop.account.signed_out",
+    dot: "unavailable",
+    badge: "desktop.account.signed_out",
+    offers: ["desktop.signin.submit"],
+    withholds: ["desktop.account.sign_out", "desktop.account.create_profile"],
+  },
+  {
+    scenario: "signed-in",
+    saying: null,
+    dot: "running",
+    badge: "desktop.account.signed_in",
+    offers: ["desktop.account.sign_out"],
+    withholds: ["desktop.signin.submit", "desktop.account.create_profile"],
+  },
+  {
+    scenario: "no-profile",
+    saying: "desktop.account.no_profile",
+    dot: "unavailable",
+    badge: "desktop.account.signed_out",
+    offers: ["desktop.account.create_profile"],
+    withholds: ["desktop.signin.submit", "desktop.account.sign_out"],
+  },
+  {
+    scenario: "runtime-unavailable",
+    saying: "desktop.account.services_down",
+    dot: "unavailable",
+    badge: "desktop.account.services_down",
+    offers: [],
+    withholds: [
+      "desktop.signin.submit",
+      "desktop.account.sign_out",
+      "desktop.account.create_profile",
+    ],
+  },
+];
+
+for (const state of ACCOUNT_STATES)
+  test(`${state.scenario}: every element reads the same account state`, async ({
+    page: target,
+  }) => {
+    await open(target, state.scenario);
+    // The dialog, where there is one, is put aside to look at the window.
+    if (state.saying) {
+      await expect(target.locator(".sign-in")).toBeVisible();
+      await target.keyboard.press("Escape");
+      await expect(target.locator(".sign-in")).toHaveCount(0);
+    }
+    const pane = target.locator(".pane-tui");
+    await expect(pane.locator(".pane-head [data-phase]")).toHaveAttribute(
+      "data-phase",
+      state.dot,
+    );
+    if (state.saying) {
+      await expect(pane.locator(".pane-head")).toContainText(
+        label(state.saying),
+      );
+      await expect(pane.locator("[data-slot=empty]")).toContainText(
+        label(state.saying),
+      );
+    } else {
+      await expect(pane.locator(".xterm")).toHaveCount(1);
+    }
+    for (const key of state.offers.filter(
+      (offer) => offer !== "desktop.account.sign_out",
+    ))
+      await expect(
+        pane.getByRole("button", { name: label(key), exact: true }),
+      ).toBeVisible();
+    for (const key of state.withholds)
+      await expect(
+        pane.getByRole("button", { name: label(key), exact: true }),
+      ).toHaveCount(0);
+
+    // Settings: the session section says the same and offers the same.
+    await target
+      .getByRole("button", { name: label("desktop.rail.settings") })
+      .click();
+    const session = target.getByRole("region", {
+      name: label("desktop.settings.session"),
+    });
+    await expect(
+      session.getByText(label(state.badge), { exact: true }),
+    ).toBeVisible();
+    const settings = target.locator(".settings");
+    for (const key of state.offers)
+      await expect(
+        settings.getByRole("button", { name: label(key), exact: true }),
+      ).toBeVisible();
+    for (const key of state.withholds)
+      await expect(
+        settings.getByRole("button", { name: label(key), exact: true }),
+      ).toHaveCount(0);
+    await target.keyboard.press("Escape");
+
+    // The palette lists the same actions, and no others of the account's.
+    await target
+      .getByRole("button", { name: label("desktop.rail.search") })
+      .click();
+    const palette = target.locator(".palette");
+    for (const key of [...state.offers, ...state.withholds]) {
+      await palette.getByRole("combobox").fill(label(key));
+      const row = palette
+        .locator(".palette-title")
+        .filter({ hasText: new RegExp(`^${label(key)}$`) });
+      await expect(row).toHaveCount(state.offers.includes(key) ? 1 : 0);
+    }
+  });
+
+test("no-profile: the dialog offers the TUI's setup and no password field", async ({
+  page: target,
+}) => {
+  await open(target, "no-profile");
+  const dialog = target.locator(".sign-in");
+  await expect(dialog).toContainText(label("desktop.account.no_profile"));
+  await expect(dialog).toContainText(label("desktop.account.no_profile_lead"));
+  await expect(password(target)).toHaveCount(0);
+  const setUp = dialog.getByRole("button", {
+    name: label("desktop.account.create_profile"),
+    exact: true,
+  });
+  await expect(setUp).toBeFocused();
+  await setUp.click();
+  // The TUI takes over: its own flow creates or chooses the profile.
+  await expect(dialog).toHaveCount(0);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect.poll(calls(target, "signIn")).toBe(0);
+});
+
+test("signing out leaves no running session showing in the TUI's header", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  const dot = target.locator(".pane-tui .pane-head [data-phase]");
+  await expect(dot).toHaveAttribute("data-phase", "running");
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  await target
+    .getByRole("button", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(dot).toHaveAttribute("data-phase", "unavailable");
+  await expect(target.locator(".pane-tui .pane-head")).toContainText(
+    label("desktop.account.signed_out"),
+  );
 });

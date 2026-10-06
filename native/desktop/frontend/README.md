@@ -76,6 +76,7 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `wrong-password`      | Every submission refused with `CREDENTIAL_REJECTED`                      |
 | `throttled`           | Every submission refused with `THROTTLED` and a 30 second wait           |
 | `profile-locked`      | Status carrying `PROFILE_LOCKED`, which hands over to the TUI            |
+| `no-profile`          | No active profile: nothing to sign in to, so the TUI's setup is offered  |
 | `runtime-unavailable` | Unknown presence with no runtime to ask                                  |
 | `unsupported`         | A platform without sign-in: no sign-in view, no Account section          |
 | `loading`             | An environment, status, log subscription and sessions that never answer  |

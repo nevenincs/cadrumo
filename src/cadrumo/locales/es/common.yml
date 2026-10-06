@@ -498,13 +498,17 @@ core:
         admitido en formato texto.
 desktop:
   account:
+    create_profile: Configurar un perfil
+    in_tui: Sigues en la TUI
+    no_profile: Ningún perfil activo
+    no_profile_lead: Crea un perfil o elige uno en la TUI.
     remaining_access: El acceso de agentes que activaste sigue activo.
+    services_down: Los servicios en segundo plano no están en marcha
     sign_out: Cerrar sesión
     sign_out_failed: No se ha podido cerrar la sesión ({code}).
     sign_out_hint: Cierra tu sesión en todas las ventanas de Cadrumo.
     signed_in: Sesión iniciada
     signed_out: Sin sesión iniciada
-    title: Cuenta
     unknown: Estado de la sesión desconocido
   action:
     docs_back: Atrás
@@ -610,11 +614,13 @@ desktop:
     light: Claro
     match_appearance: Según la apariencia
     reset_layout: Restablecer la disposición
+    session: Inicio de sesión
     side_by_side: Lado a lado
     stacked: Apiladas
     terminal_text: Texto del terminal
     terminals: Terminales
     title: Ajustes
+    window: Ventana
   signin:
     checking: Comprobando tu sesión…
     dismiss: Ahora no

@@ -7,6 +7,7 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -126,6 +127,10 @@ export function Settings({
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
         {account}
+        {account && <Separator />}
+        <h3 className="text-sm font-medium text-muted-foreground">
+          {t("desktop.settings.window")}
+        </h3>
         <Choice
           label={t("desktop.settings.appearance")}
           value={prefs.appearance}

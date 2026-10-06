@@ -483,13 +483,17 @@ core:
         lennie szöveges formában.
 desktop:
   account:
+    create_profile: Profil beállítása
+    in_tui: A TUI-ban folytatod
+    no_profile: Nincs aktív profil
+    no_profile_lead: Hozz létre vagy válassz egy profilt a TUI-ban.
     remaining_access: Az általad engedélyezett ügynöki hozzáférés bekapcsolva marad.
+    services_down: A háttérszolgáltatások nem futnak
     sign_out: Kijelentkezés
     sign_out_failed: A kijelentkezés nem sikerült ({code}).
     sign_out_hint: Minden Cadrumo-ablakból kijelentkeztet.
     signed_in: Bejelentkezve
     signed_out: Nincs bejelentkezve
-    title: Fiók
     unknown: A bejelentkezés állapota ismeretlen
   action:
     docs_back: Vissza
@@ -594,11 +598,13 @@ desktop:
     light: Világos
     match_appearance: A megjelenés szerint
     reset_layout: Elrendezés alaphelyzetbe
+    session: Bejelentkezés
     side_by_side: Egymás mellett
     stacked: Egymás alatt
     terminal_text: Terminál szövegmérete
     terminals: Terminálok
     title: Beállítások
+    window: Ablak
   signin:
     checking: A bejelentkezésed ellenőrzése…
     dismiss: Most nem

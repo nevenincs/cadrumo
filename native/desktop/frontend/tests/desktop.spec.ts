@@ -450,7 +450,7 @@ test("unsupported platforms hide desktop sign-in and Account", async ({
   ).toHaveCount(0);
   await target.getByRole("button", { name: /Settings/ }).click();
   await expect(
-    target.getByRole("region", { name: label("desktop.account.title") }),
+    target.getByRole("region", { name: label("desktop.settings.session") }),
   ).toHaveCount(0);
 });
 
