@@ -79,7 +79,17 @@ for (const story of stories)
         );
         if (fonts.length) throw new Error(`fonts failed: ${fonts.join(", ")}`);
         if (refused.length) throw new Error(refused.splice(0).join("; "));
-        await page.screenshot({ path: file, fullPage: true });
+        // The story's frame scrolls inside the viewport, so a tall story is
+        // photographed in a viewport grown to its whole height.
+        const tall = await page.evaluate(() => {
+          const frame = document.querySelector("#storybook-root > *");
+          return frame ? frame.scrollHeight : 0;
+        });
+        const size = page.viewportSize();
+        if (size && tall > size.height)
+          await page.setViewportSize({ width: size.width, height: tall });
+        await page.screenshot({ path: file });
+        if (size) await page.setViewportSize(size);
         console.log(file);
       } catch (error) {
         failures += 1;

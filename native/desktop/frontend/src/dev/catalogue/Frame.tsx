@@ -15,6 +15,8 @@ const SURFACES: Record<Surface, string> = {
 /**
  * What surrounds every story: a shell surface and the providers the
  * application mounts at its root. `fill` gives the story the whole canvas.
+ * The application's window never scrolls, so the frame is what scrolls a
+ * story taller than the canvas.
  */
 export function Frame({
   surface,
@@ -33,7 +35,7 @@ export function Frame({
       <TooltipProvider>
         <div
           className={cn(
-            "min-h-dvh text-foreground",
+            "h-dvh overflow-auto text-foreground",
             SURFACES[surface],
             !fill && "p-6",
           )}

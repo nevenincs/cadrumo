@@ -37,7 +37,8 @@ function useRailItems(chosen: string, errors = 0) {
   const top: RailItem[] = [
     item("search", "search", "desktop.rail.search", "Ctrl+K"),
     item("docs", "book", "desktop.rail.docs_home", "Alt+Home"),
-    { ...item("tui", "tui", "desktop.rail.tui", "Ctrl+Shift+T") },
+    item("tui", "tui", "desktop.rail.tui", "Ctrl+Shift+T"),
+    { ...item("aeat", "office", "desktop.rail.aeat"), divided: true },
     {
       ...item("console", "console", "desktop.rail.console", "Ctrl+Shift+1"),
       divided: true,
@@ -69,7 +70,7 @@ export const RailStates: Story = {
   render: () => (
     <Specimen
       title="Rail"
-      note="One tab stop; the arrow keys, Home and End move within it. A chosen item carries a bar as well as its surface, and a count is said in its name."
+      note="One tab stop; the arrow keys, Home and End move within it. Search, the window's toggles, shortcuts, then the panel's toggles. A chosen item carries a bar as well as its surface, and a count is said in its name."
       className="items-start gap-8"
     >
       <RailSpecimen chosen="tui" />

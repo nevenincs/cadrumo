@@ -482,7 +482,12 @@ export function Account({
                   : "text-muted-foreground"
               }
             >
-              {status.active_profile ?? t("desktop.account.no_profile")}
+              {/* Unnamed is only "none" where that is known: with no runtime
+                  to ask, the profile is simply not known. */}
+              {status.active_profile ??
+                (phase === "no-profile"
+                  ? t("desktop.account.no_profile")
+                  : "—")}
             </span>
           </span>
           {phase === "no-profile" && (
