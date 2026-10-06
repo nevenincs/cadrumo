@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { calendarRange, deadlineDistance } from "../src/shell/calendar";
-import { calendarMonths, entrySpan } from "../src/shell/calendarGrid";
+import {
+  calendarMonths,
+  entrySpan,
+  weekStartOf,
+} from "../src/shell/calendarGrid";
 import type { CalendarEntry } from "../src/shell/views";
 
 // The calendar's pure rules, checked at their boundaries. No page is opened.
@@ -243,4 +247,194 @@ test("what was observed stands on its own day", () => {
   expect(withEvents?.map((day) => [day?.iso, day?.events.length])).toEqual([
     ["2026-10-02", 1],
   ]);
+});
+
+// The edges of the arithmetic: the ends of the range, of the year, and data
+// that is not as it should be.
+const bars = (months: ReturnType<typeof calendarMonths>) =>
+  months.flatMap((month) =>
+    month.weeks.flatMap((week) =>
+      week.bars.map((bar) => ({
+        month: month.key,
+        days: [
+          week.days[bar.from]?.day ?? null,
+          week.days[bar.to]?.day ?? null,
+        ],
+        lane: bar.lane,
+        opens: bar.opens,
+        closes: bar.closes,
+        first: bar.first,
+        modelo: bar.entry.modelo,
+      })),
+    ),
+  );
+
+test("a window that crosses the year's end is drawn in both years, and is first once", () => {
+  const drawn = bars(
+    calendarMonths(
+      { from_date: "2026-12-01", to_date: "2027-01-31" },
+      [obligation("303", "2026-12-28", "2027-01-05")],
+      [],
+      null,
+      1,
+    ),
+  );
+  // 28 December 2026 is a Monday; 1 January 2027 a Friday.
+  expect(drawn).toEqual([
+    {
+      month: "2026-12",
+      days: [28, 31],
+      lane: 0,
+      opens: true,
+      closes: false,
+      first: true,
+      modelo: "303",
+    },
+    {
+      month: "2027-01",
+      days: [1, 3],
+      lane: 0,
+      opens: false,
+      closes: false,
+      first: false,
+      modelo: "303",
+    },
+    {
+      month: "2027-01",
+      days: [4, 5],
+      lane: 0,
+      opens: false,
+      closes: true,
+      first: false,
+      modelo: "303",
+    },
+  ]);
+});
+
+test("a window wider than the range fills it, and one outside it is not drawn", () => {
+  const months = calendarMonths(
+    OCTOBER,
+    [
+      obligation("100", "2026-09-15", "2026-11-10"),
+      obligation("111", "2026-08-01", "2026-08-20"),
+      obligation("115", "2026-11-02", "2026-11-20"),
+    ],
+    [],
+    null,
+    1,
+  );
+  const drawn = bars(months);
+  // One segment for each of October's five weeks, each from the first to
+  // the last of that week's days in the month, none of them an end.
+  expect(drawn.map((bar) => bar.days)).toEqual([
+    [1, 4],
+    [5, 11],
+    [12, 18],
+    [19, 25],
+    [26, 31],
+  ]);
+  expect(drawn.every((bar) => bar.modelo === "100")).toBe(true);
+  expect(drawn.some((bar) => bar.opens || bar.closes)).toBe(false);
+  expect(drawn.filter((bar) => bar.first)).toHaveLength(1);
+  expect(drawn[0]?.first).toBe(true);
+});
+
+test("an opening after its close is not believed: the closing day alone is drawn", () => {
+  const entry = obligation("130", "2026-10-25", "2026-10-20");
+  expect(entrySpan(entry)).toEqual({ from: "2026-10-20", to: "2026-10-20" });
+  expect(bars(calendarMonths(OCTOBER, [entry], [], null, 1))).toEqual([
+    {
+      month: "2026-10",
+      days: [20, 20],
+      lane: 0,
+      opens: true,
+      closes: true,
+      first: true,
+      modelo: "130",
+    },
+  ]);
+});
+
+test("many windows over the same days each keep a row, and a row is taken again once free", () => {
+  const months = calendarMonths(
+    OCTOBER,
+    [
+      ...["111", "115", "123", "130", "303", "349"].map((modelo) =>
+        obligation(modelo, "2026-10-05", "2026-10-07"),
+      ),
+      // After the six have closed, in the same week.
+      obligation("216", "2026-10-09", "2026-10-11"),
+    ],
+    [],
+    null,
+    1,
+  );
+  const week = months[0]?.weeks[1];
+  expect(week?.lanes).toBe(6);
+  expect(week?.bars.map((bar) => [bar.entry.modelo, bar.lane])).toEqual([
+    ["111", 0],
+    ["115", 1],
+    ["123", 2],
+    ["130", 3],
+    ["303", 4],
+    ["349", 5],
+    ["216", 0],
+  ]);
+  // No two windows of a row share a day.
+  for (const lane of [0, 1, 2, 3, 4, 5]) {
+    const taken = (week?.bars ?? [])
+      .filter((bar) => bar.lane === lane)
+      .flatMap((bar) =>
+        Array.from(
+          { length: bar.to - bar.from + 1 },
+          (_, day) => bar.from + day,
+        ),
+      );
+    expect(new Set(taken).size).toBe(taken.length);
+  }
+});
+
+test("a leap February has its twenty-ninth day", () => {
+  const [february] = calendarMonths(
+    { from_date: "2028-02-01", to_date: "2028-02-29" },
+    [],
+    [],
+    null,
+    1,
+  );
+  const days = february?.weeks.flatMap((week) =>
+    week.days.filter((day) => day !== null).map((day) => day.day),
+  );
+  expect(days).toHaveLength(29);
+  expect(days?.at(-1)).toBe(29);
+  // 29 February 2028 is a Tuesday.
+  expect(february?.weeks.at(-1)?.days[1]?.iso).toBe("2028-02-29");
+});
+
+test("what was observed with a time of day stands on its date", () => {
+  const event = {
+    event_type: "filing" as const,
+    event_date: "2026-10-02T08:15:00Z",
+    source: "filed_declarations",
+    summary: "Filed",
+    reference_id: "a",
+    status: null,
+    aeat_submission_state: null,
+    aeat_submitted_at: null,
+    justificante_verified: null,
+  };
+  const [october] = calendarMonths(OCTOBER, [], [event], null, 1);
+  const on = october?.weeks.flatMap((week) =>
+    week.days.filter((day) => (day?.events.length ?? 0) > 0),
+  );
+  expect(on?.map((day) => day?.iso)).toEqual(["2026-10-02"]);
+});
+
+test("the week begins on the day the language begins it, and on Monday where it cannot say", () => {
+  expect(weekStartOf("en-US")).toBe(0);
+  expect(weekStartOf("es")).toBe(1);
+  expect(weekStartOf("ca")).toBe(1);
+  expect(weekStartOf("hu")).toBe(1);
+  expect(weekStartOf("ar-EG")).toBe(6);
+  expect(weekStartOf("not a locale")).toBe(1);
 });
