@@ -7,12 +7,17 @@ holds the operator's secrets.
 
 from __future__ import annotations
 
+import os
 import shutil
 from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.core import config_google
+from cadrumo.core.config import Settings
+from cadrumo.core.storage_environment import STORAGE_ROOT, ChildEnvironmentProfile, child_environment
 from dev.packaging.command_execution import run_command
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, GOOGLE_OAUTH_RESOURCE
 
 from .._dotenv import main_worktree, provision
 
@@ -186,3 +191,57 @@ def test_no_main_worktree_is_found_when_main_is_not_checked_out(tmp_path: Path) 
     _git(repository, "commit", "--allow-empty", "-m", "root")
 
     assert main_worktree(repository) is None
+
+
+def test_setup_materializes_client_for_a_worker_that_scrubs_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    synthetic = os.environ[GOOGLE_OAUTH_ENV]
+    root = _worktree(
+        tmp_path / "checkout",
+        template=GOOGLE_OAUTH_ENV + "=\n",
+        dotenv=GOOGLE_OAUTH_ENV + "='" + synthetic + "'\n",
+    )
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV)
+    assert provision(root, None) == 0
+    resource = root / GOOGLE_OAUTH_RESOURCE
+    assert resource.read_text(encoding="utf-8") == synthetic
+    worker = child_environment(
+        ChildEnvironmentProfile.OPERATOR,
+        tmp_path / "worker-storage",
+        received={GOOGLE_OAUTH_ENV: synthetic},
+        base={GOOGLE_OAUTH_ENV: synthetic},
+    )
+    assert GOOGLE_OAUTH_ENV not in worker
+    monkeypatch.setenv(STORAGE_ROOT.variable, worker[STORAGE_ROOT.variable])
+    monkeypatch.setattr(config_google, "installation_client_source", lambda: resource)
+    selected = Settings().cadrumo_google_oauth_client_json
+    assert selected is not None
+    assert selected.get_secret_value() == synthetic
+    assert synthetic not in _output(capsys)
+
+
+def test_setup_without_google_credentials_succeeds_without_a_resource(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV)
+    root = _worktree(tmp_path / "checkout", template=GOOGLE_OAUTH_ENV + "=\n")
+    assert provision(root, None) == 0
+    resource = root / GOOGLE_OAUTH_RESOURCE
+    assert not resource.exists()
+    monkeypatch.setattr(config_google, "installation_client_source", lambda: resource)
+    assert Settings().cadrumo_google_oauth_client_json is None
+
+
+def test_setup_refuses_malformed_google_credentials_without_disclosure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv(GOOGLE_OAUTH_ENV)
+    root = _worktree(
+        tmp_path / "checkout",
+        template=GOOGLE_OAUTH_ENV + "=\n",
+        dotenv=GOOGLE_OAUTH_ENV + "='{invalid-" + _MARKER + "}'\n",
+    )
+    assert provision(root, None) == 1
+    assert not (root / GOOGLE_OAUTH_RESOURCE).exists()
+    assert _MARKER not in _output(capsys)

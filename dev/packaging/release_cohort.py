@@ -22,6 +22,7 @@ from typing import Final
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]
@@ -510,6 +511,7 @@ def build_release_cohort(
         stage_published_authority(root, clean_root)
         staging = var / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}")
         env = os.environ.copy()
+        env[GOOGLE_OAUTH_ENV] = build_client_json(root).get_secret_value()
         env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
         argv = [
             sys.executable,

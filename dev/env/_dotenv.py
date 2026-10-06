@@ -183,7 +183,7 @@ def provision(root: Path, main: Path | None) -> int:
         print("Created env/.env from env/.env.example.", flush=True)
     if main is None or not (main / "env" / ".env").is_file():
         print("No separate main worktree with an env/.env - nothing to port.", flush=True)
-        return 0
+        return provision_google_client(root)
     source = main / "env" / ".env"
     try:
         result = port_values(
@@ -209,6 +209,29 @@ def provision(root: Path, main: Path | None) -> int:
     if result.skipped:
         skipped = ", ".join(result.skipped)
         print(f"Skipped {len(result.skipped)} multi-line value(s); copy by hand: {skipped}", flush=True)
+    return provision_google_client(root)
+
+
+def provision_google_client(root: Path) -> int:
+    """Materialize ignored development metadata for isolated profile workers.
+
+    Workers intentionally scrub publisher credentials from their environment.
+    A source checkout therefore needs the same resource that release builds
+    embed. Missing credentials leave a fresh checkout usable without Google;
+    malformed supplied credentials stop setup without revealing their value.
+    """
+    from dev.packaging.google_oauth import build_client_json, stage_build_client
+
+    try:
+        client = build_client_json(root, required=False)
+        if client is None:
+            print("Google Desktop client is unset - Google sign-in remains unavailable.", flush=True)
+            return 0
+        stage_build_client(root, client)
+    except (OSError, ValueError):
+        print("Could not provision Google Desktop client metadata; check the private configuration.", file=sys.stderr)
+        return 1
+    print("Provisioned ignored Google Desktop client resource for local profile workers.", flush=True)
     return 0
 
 

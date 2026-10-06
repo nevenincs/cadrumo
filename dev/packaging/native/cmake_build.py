@@ -14,6 +14,7 @@ from dev._paths import REPO_ROOT
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
+from ..google_oauth import build_client_json, client_build_identity
 from .action_cache import action_lock, completed, current, fingerprint
 from .assemble import assemble, image_artifact
 from .build_paths import build_paths
@@ -74,6 +75,8 @@ def main() -> None:
         extra = selected_published_authority(REPO_ROOT) if arguments.action == "product" else ()
         with action_lock(build, "shared-inputs"):
             identity = fingerprint(arguments.inputs, extra)
+            if arguments.action == "product":
+                identity = client_build_identity(identity, build_client_json(REPO_ROOT))
             if current(destination, identity):
                 print(f"Reusing {arguments.action}: inputs and output inventory unchanged")
                 return

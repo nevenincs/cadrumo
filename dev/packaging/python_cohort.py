@@ -21,6 +21,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.packaging.google_oauth import build_client_json, stage_build_client
 from dev.source_tree import content_digest, repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
@@ -413,6 +414,7 @@ def _build_python_cohort_from_snapshot(
         # the release builder has already verified its clean snapshot. The
         # retained archive is written from those same normalized source bytes.
         _archive_source_snapshot(build_root, source_files, archive)
+        stage_build_client(build_root, build_client_json(authority_source_root or build_root))
         if authority_source_root is not None:
             # The published authority is absent from the source archive but is
             # staged into the private build root after that archive is sealed.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:57afdd3aeb19666206174f9ad60712681f93f03fbd0a9ab6f5031c70fd6b1325'
+body_hash: 'sha256:a7e5491d4da27aa7e8ccc00e1b4bc822dd899434fae89f36a1807356ad0c52c7'
 related:
   - "[[2026-10-06-google-client-provisioning-plan]]"
 ---
@@ -58,7 +58,27 @@ related:
 - `S01` `M` `docs/reference/environment-overrides.md`
 - `S01` `verify:` `focused OAuth settings and environment-reference pytest suite (129 combined tests)` -> `pass`
 - `S01` `verify:` `scoped Ruff format and ty` -> `pass`
+- `S02` `M` `dev/env/_dotenv.py`
+- `S02` `M` `dev/env/tests/test_dotenv.py`
+- `S02` `M` `packaging/authority/hatch_build.py`
+- `S02` `M` `dev/packaging/native/product.py`
+- `S02` `M` `dev/packaging/native/cmake_build.py`
+- `S02` `M` `native/cmake/Packaging.cmake`
+- `S02` `M` `dev/packaging/python_cohort.py`
+- `S02` `M` `dev/packaging/release_cohort.py`
+- `S02` `M` `dev/packaging/tests/test_authority_build_hook.py`
+- `S02` `M` `.importlinter`
+- `S02` `A` `dev/conftest.py`
+- `S02` `A` `dev/packaging/google_oauth.py`
+- `S02` `A` `dev/packaging/tests/test_google_oauth_provisioning.py`
+- `S02` `verify:` `development environment and provisioning pytest (21 tests)` -> `pass`
+- `S02` `verify:` `packaging cohort and cache scoped pytest (56 applicable tests)` -> `pass`
+- `S02` `verify:` `scoped Ruff format ty and closed-dev-classification` -> `pass`
+- `S02` `verify:` `cmake preset windows-x64 docs enabled` -> `pass`
+- `S02` `verify:` `cmake build native_contract and rust_application Debug` -> `pass`
 
 ## Notes
 
 - `S01` Existing unrelated worktree changes are preserved; task-only staging uses pre-task snapshots.
+- `S02` Two pre-existing packaging failures (authority currency and interpreter patch pin) excluded from applicable packaging run.
+- `S02` Task checkpoint includes the CMake always-run product target needed to evaluate credential changes; other pre-existing native edits remain in working tree.

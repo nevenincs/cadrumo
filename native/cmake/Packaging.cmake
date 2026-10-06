@@ -27,11 +27,13 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${authority_input
 list(APPEND product_inputs ${authority_inputs} "${CADRUMO_PATH_RUNTIME}/ready")
 list(JOIN product_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
-add_custom_command(OUTPUT "${CADRUMO_PATH_PRODUCT}/ready"
+add_custom_target(python_product
+  # Always run the Python admission check: it loads env/.env or inherited CI
+  # credentials and binds cache reuse to their digest without CMake variables.
   COMMAND ${CADRUMO_HELPER} product --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-product.txt"
   DEPENDS ${product_inputs} "${PROJECT_BINARY_DIR}/inputs-product.txt"
+  BYPRODUCTS "${CADRUMO_PATH_PRODUCT}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
-add_custom_target(python_product DEPENDS "${CADRUMO_PATH_PRODUCT}/ready")
 add_dependencies(python_product python_dependencies)
 if(CADRUMO_INCLUDE_DEVELOPMENT_BINARY)
   set(development_args --development)

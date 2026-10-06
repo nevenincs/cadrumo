@@ -15,12 +15,14 @@ from dev.source_tree import repository_files, snapshot
 
 from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
+from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 from ..wheel_metadata import read_wheel_metadata
 from .hashing import digest
 
 
 def build_product(output: Path, python: Path, dependencies: Path) -> None:
     """Compose existing snapshot, build hooks and wheel metadata owners."""
+    client = build_client_json(REPO_ROOT)
     output = output.resolve()
     if output.exists():
         raise FileExistsError("Product build requires a fresh output directory")
@@ -43,6 +45,7 @@ def build_product(output: Path, python: Path, dependencies: Path) -> None:
     snapshot(REPO_ROOT, files, source)
     stage_published_authority(REPO_ROOT, source)
     environment = dict(os.environ)
+    environment[GOOGLE_OAUTH_ENV] = client.get_secret_value()
     environment[AUTHORITY_ROOT_ENV] = str(source / ".authority")
     project = parse_toml((source / "pyproject.toml").read_text(encoding="utf-8"))
     wheels = output / "wheels"

@@ -51,6 +51,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeGuard, cast, override
 
@@ -315,3 +316,26 @@ class CustomBuildHook(_CustomBuildHookBase):
             raise TypeError("hatch build_data force_include must map string paths to string destinations")
         for path in (descriptor, database):
             force_include[str(path)] = f"{destination}/{path.name}"
+        original_path = sys.path.copy()
+        try:
+            sys.path[:0] = (str(build_root), str(build_root / "src"))
+            from dev.packaging.google_oauth import build_client_json, stage_build_client
+
+            client = build_client_json(build_root)
+            self._oauth_stage = tempfile.TemporaryDirectory(prefix="cadrumo-oauth-build-")
+            staged = stage_build_client(Path(self._oauth_stage.name), client)
+        finally:
+            sys.path[:] = original_path
+        prefix = "src/" if self.target_name == "sdist" else ""
+        force_include[str(staged)] = f"{prefix}cadrumo/_data/google/oauth_client.json"
+        if self.target_name == "sdist":
+            # Only these build modules cross the existing dev/** exclusion;
+            # the wheel contains neither development tooling nor dotenv files.
+            for name in ("dev/__init__.py", "dev/packaging/__init__.py", "dev/packaging/google_oauth.py"):
+                force_include[str(build_root / name)] = name
+
+    @override
+    def finalize(self, version: str, build_data: dict[str, Any], artifact_path: str) -> None:
+        """Remove transient client staging once the archive owns its copy."""
+        if stage := getattr(self, "_oauth_stage", None):
+            stage.cleanup()

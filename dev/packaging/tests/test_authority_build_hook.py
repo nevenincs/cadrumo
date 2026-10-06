@@ -14,7 +14,14 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from .test_google_oauth_provisioning import client_document
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def synthetic_build_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", client_document())
 
 
 def _hook_module() -> ModuleType:
@@ -76,6 +83,28 @@ def test_a_real_distribution_ignores_the_editable_skip(
 
     assert resolved == [tmp_path]
     assert build_data["force_include"], "the wheel lost its authority payload"
+
+
+@pytest.mark.parametrize("target_name,prefix", [("wheel", ""), ("sdist", "src/")])
+def test_distributions_embed_selected_client_and_clean_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target_name: str, prefix: str
+) -> None:
+    hook = _hook_module()
+    _record_resolutions(hook, monkeypatch, tmp_path / "pair")
+    instance = hook.CustomBuildHook(str(tmp_path), {}, None, None, str(tmp_path), target_name)
+    build_data: dict[str, object] = {}
+    instance.initialize("standard", build_data)
+    mapping = build_data["force_include"]
+    assert isinstance(mapping, dict)
+    selected = {destination: Path(source) for source, destination in mapping.items()}
+    resource = selected[f"{prefix}cadrumo/_data/google/oauth_client.json"]
+    assert resource.read_text(encoding="utf-8") == client_document()
+    assert not resource.is_relative_to(tmp_path)
+    assert not any(name.endswith(".env") for name in selected)
+    if target_name == "sdist":
+        assert "dev/packaging/google_oauth.py" in selected
+    instance.finalize("standard", build_data, "unused-artifact")
+    assert not resource.exists()
 
 
 def test_an_editable_build_still_resolves_by_default(
