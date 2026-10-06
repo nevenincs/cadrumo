@@ -1019,12 +1019,205 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggles
       "desktop.rail.search",
       "desktop.rail.docs_home",
       "desktop.rail.tui",
+      "desktop.calendar.title",
       "desktop.rail.aeat",
       "desktop.rail.console",
       "desktop.rail.python",
       "desktop.rail.logs",
     ].map((key) => label(key)),
   );
+});
+
+const calendarButton = (target: Page) =>
+  target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.calendar.title") });
+
+/** How many times the shell has asked the host for the filing calendar. */
+const calendarReads = (target: Page) => () =>
+  target.evaluate(
+    () =>
+      (
+        window as unknown as { __scenarioHostCalls?: string[] }
+      ).__scenarioHostCalls?.filter((made) =>
+        made.startsWith("filingCalendar "),
+      ).length ?? 0,
+  );
+
+test("the filing calendar is a page of the first pane, read when it is shown", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  const pane = target.locator(".pane-docs");
+  await expect(pane.locator(".docs-frame")).toBeVisible();
+  // Nothing is read for a page nobody is looking at.
+  expect(await calendarReads(target)()).toBe(0);
+  await calendarButton(target).click();
+  await expect(calendarButton(target)).toHaveAttribute("aria-pressed", "true");
+  await expect(pane.locator(".pane-title")).toHaveText(
+    label("desktop.calendar.title"),
+  );
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page).toBeFocused();
+  // The obligations, by month, each with the product's own reading.
+  await expect(page.getByRole("heading", { level: 2 })).toHaveCount(4);
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "2026-3T" }),
+  ).toHaveCount(4);
+  const late = page
+    .getByRole("listitem")
+    .filter({ hasText: "2026-2T" })
+    .first();
+  await expect(late).toContainText(label("desktop.calendar.state.late"));
+  await expect(late).toContainText(label("desktop.calendar.aeat.not_observed"));
+  // What could not be determined is said, not left out.
+  await expect(page).toContainText("347");
+  await expect.poll(calendarReads(target)).toBe(1);
+  // A whole year is asked for, in whole months.
+  const asked = await target.evaluate(() =>
+    (
+      window as unknown as { __scenarioHostCalls: string[] }
+    ).__scenarioHostCalls.find((made) => made.startsWith("filingCalendar ")),
+  );
+  expect(asked).toMatch(
+    /^filingCalendar \d{4}-\d{2}-01 \d{4}-\d{2}-(28|29|30|31)$/,
+  );
+  // No row offers a way to a place the window cannot reach.
+  await expect(
+    page.getByRole("button", { name: label("desktop.calendar.open_tui") }),
+  ).toHaveCount(0);
+});
+
+test("the documentation keeps its place under the calendar", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  const frame = target.frameLocator(".docs-frame");
+  await frame.getByRole("link", { name: "Second page" }).click();
+  await expect(frame.getByRole("heading", { level: 1 })).not.toHaveText(
+    "Stand-in documentation",
+  );
+  const second = await frame.getByRole("heading", { level: 1 }).textContent();
+  await calendarButton(target).click();
+  await expect(target.locator(".docs-frame")).toBeHidden();
+  await expect(target.locator(".docs-frame")).toHaveCount(1);
+  // Put away by the same button, or by the pane's own way back.
+  await calendarButton(target).click();
+  await expect(target.locator(".docs-frame")).toBeVisible();
+  await expect(calendarButton(target)).toHaveAttribute("aria-pressed", "false");
+  await expect(frame.getByRole("heading", { level: 1 })).toHaveText(
+    second ?? "",
+  );
+  await calendarButton(target).click();
+  await target
+    .locator(".pane-docs .pane-head")
+    .getByRole("button", { name: label("desktop.pane.docs"), exact: true })
+    .click();
+  await expect(target.locator(".docs-frame")).toBeVisible();
+  await expect(target.locator(".pane-docs .pane-title")).toHaveText(
+    label("desktop.pane.docs"),
+  );
+});
+
+test("the calendar asks for a sign-in, then reads; a sign-out drops what was read", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await expect(target.locator(".sign-in")).toBeVisible();
+  await target.keyboard.press("Escape");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page).toContainText(label("desktop.calendar.signed_out"));
+  expect(await calendarReads(target)()).toBe(0);
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await password(target).fill("demo");
+  await submit(target).click();
+  await expect(page.getByRole("listitem").first()).toBeVisible();
+  await expect.poll(calendarReads(target)).toBe(1);
+  // Signed out again, nothing of the profile stays on screen.
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  await target
+    .locator(".settings")
+    .getByRole("button", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(page).toContainText(label("desktop.calendar.signed_out"));
+  await expect(page.getByRole("listitem")).toHaveCount(0);
+});
+
+test("views-refused: a read that fails is said, never drawn as an empty calendar", async ({
+  page: target,
+}) => {
+  await open(target, "views-refused");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page.getByRole("alert")).toContainText("timed_out");
+  await expect(page).not.toContainText(label("desktop.calendar.empty"));
+  await expect.poll(calendarReads(target)).toBe(1);
+  await page
+    .getByRole("button", { name: label("desktop.calendar.refresh") })
+    .click();
+  await expect.poll(calendarReads(target)).toBe(2);
+  await expect(page.getByRole("alert")).toContainText("timed_out");
+});
+
+test("empty: a calendar with nothing due says so", async ({ page: target }) => {
+  await open(target, "empty");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page).toContainText(label("desktop.calendar.empty"));
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("no-views: a host that offers no profile views shows no way into one", async ({
+  page: target,
+}) => {
+  await open(target, "no-views");
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(calendarButton(target)).toHaveCount(0);
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+  await expect(
+    palette
+      .locator(".palette-title")
+      .filter({ hasText: label("desktop.calendar.title") }),
+  ).toHaveCount(0);
+});
+
+test("the palette opens the calendar, and choosing it again keeps it open", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  for (let round = 0; round < 2; round++) {
+    await target
+      .getByRole("button", { name: label("desktop.rail.search") })
+      .click();
+    const palette = target.locator(".palette");
+    await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+    await target.keyboard.press("Enter");
+    await expect(palette).toHaveCount(0);
+    await expect(page).toBeFocused();
+  }
 });
 
 test("the AEAT shortcut opens the agency's site in the system browser", async ({

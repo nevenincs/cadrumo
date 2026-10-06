@@ -219,6 +219,28 @@ test("no chord reaches the shell from under the sign-in dialog", async ({
   await expect(focusedWithin(dialog)).toHaveCount(1);
 });
 
+test("F6 reaches the calendar where the documentation would be", async ({
+  page: target,
+}) => {
+  await open(target);
+  await rail(target)
+    .getByRole("button", { name: label("desktop.calendar.title") })
+    .click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page).toBeFocused();
+  await target.keyboard.press("F6");
+  await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
+  await target.keyboard.press("Shift+F6");
+  await expect(page).toBeFocused();
+  // Inside the page the keyboard reaches its controls in order.
+  await target.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: label("desktop.calendar.refresh") }),
+  ).toBeFocused();
+});
+
 test("F6 moves focus from area to area and back", async ({ page: target }) => {
   await open(target);
   await expect(target.locator(".docs-frame")).toBeVisible();

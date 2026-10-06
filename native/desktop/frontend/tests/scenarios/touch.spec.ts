@@ -94,6 +94,41 @@ for (const language of ["en", "hu"])
     expect(sizes.scrolledBy, language).toBe(0);
   });
 
+// In the source language and in the one with the longest words.
+for (const language of ["en", "hu"])
+  test(`the filing calendar fits a small screen under a finger (${language})`, async ({
+    page: target,
+  }) => {
+    await target.goto(
+      `/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=${language}`,
+    );
+    // By its place in the rail, which no language moves: after search, the
+    // documentation and the TUI.
+    await target.locator(".rail button").nth(3).tap();
+    const page = target.locator(".calendar-page");
+    await expect(page.getByRole("listitem").first()).toBeVisible();
+    expect(await overflowing(target)).toBe(false);
+    for (const control of await page.getByRole("button").all()) {
+      const box = await control.boundingBox();
+      expect(box?.height, language).toBeGreaterThanOrEqual(FINGER);
+      expect(box?.width, language).toBeGreaterThanOrEqual(FINGER);
+    }
+    // Every row keeps its text inside the page.
+    const edge = (await page.boundingBox())!;
+    for (const row of await page.getByRole("listitem").all()) {
+      const box = await row.boundingBox();
+      if (!box) continue;
+      expect(box.x + box.width, language).toBeLessThanOrEqual(
+        edge.x + edge.width + 1,
+      );
+    }
+    const wide = await page.evaluate((element) => {
+      const scroller = element.querySelector(".calendar");
+      return scroller ? scroller.scrollWidth > scroller.clientWidth : true;
+    });
+    expect(wide, language).toBe(false);
+  });
+
 test("the shell stacks its panes and never scrolls sideways", async ({
   page: target,
 }) => {

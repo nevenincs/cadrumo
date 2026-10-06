@@ -14,6 +14,8 @@ import type {
   SignInStatus,
 } from "../ipc/contract";
 import type { Host } from "../shell/host";
+import type { ProfileViews } from "../shell/views";
+import { EMPTY_CALENDAR, FIXTURE_CALENDAR } from "./fixtures/calendar";
 import {
   AVAILABLE,
   FIXTURE_DROPPED,
@@ -75,8 +77,20 @@ export function scenarioHost(
         : scenario.signIn.profile,
   });
 
+  const views: ProfileViews = {
+    async filingCalendar(range) {
+      say(`filingCalendar ${range.from} ${range.to}`);
+      await wait(options.latencyMs);
+      // A view belongs to a signed-in profile; without one it is refused.
+      if (presence !== "present" || scenario.views === "refused")
+        throw failure("timed_out", "cli");
+      return scenario.views === "empty" ? EMPTY_CALENDAR : FIXTURE_CALENDAR;
+    },
+  };
+
   return {
     available: true,
+    ...(scenario.views === "none" ? {} : { views }),
     // The shell draws its own menu here; the native popup is not simulated.
     nativeMenus: false,
 

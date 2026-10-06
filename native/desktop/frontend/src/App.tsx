@@ -43,7 +43,9 @@ import {
   SignInDialog,
 } from "./components/SignIn";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useFilingCalendar } from "./shell/calendar";
 import { useSignIn } from "./shell/signIn";
+import { FilingCalendarView } from "./components/FilingCalendar";
 import { Split } from "./components/Split";
 import {
   TerminalPane,
@@ -152,6 +154,10 @@ export function App({ host }: { host: Host }) {
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
   const [layout, setLayout] = useState<Layout>(initial.layout);
   const [maximized, setMaximized] = useState<Maximized>(null);
+  // What the first pane shows: the documentation, or a view of the profile
+  // where the host offers one. The documentation stays loaded underneath.
+  const [page, setPage] = useState<"docs" | "calendar">("docs");
+  const calendarPage = useRef<HTMLElement>(null);
   const [environment, setEnvironment] = useState<Environment>({
     state: "loading",
   });
@@ -247,6 +253,24 @@ export function App({ host }: { host: Host }) {
     if (signOutFailed) setSignInDismissed(false);
   }, [signOutFailed]);
   const mayEnterPassword = account.canSignIn;
+
+  const views = host.views;
+  const firstPaneShown = maximized !== "tui" && maximized !== "panel";
+  const calendarOn = views !== undefined && page === "calendar";
+  const calendar = useFilingCalendar(
+    views,
+    signedIn,
+    calendarOn && firstPaneShown,
+  );
+  // The keyboard goes with the page: into the calendar when it is shown,
+  // back to the documentation when it is put away.
+  const pageShown = useRef(page);
+  useEffect(() => {
+    if (pageShown.current === page) return;
+    pageShown.current = page;
+    if (page === "calendar") calendarPage.current?.focus();
+    else docs.current?.focus();
+  }, [page]);
 
   useEffect(() => {
     let current = true;
@@ -496,8 +520,10 @@ export function App({ host }: { host: Host }) {
       const stops: [Area | "rail", boolean, () => void][] = [
         [
           "docs",
-          maximized !== "tui" && maximized !== "panel" && !!docs.current,
-          () => docs.current?.focus(),
+          maximized !== "tui" &&
+            maximized !== "panel" &&
+            (calendarPage.current !== null || !!docs.current),
+          () => (calendarPage.current ?? docs.current)?.focus(),
         ],
         [
           "tui",
@@ -569,6 +595,7 @@ export function App({ host }: { host: Host }) {
   );
 
   const goHome = useCallback(() => {
+    setPage("docs");
     if (docs.current?.home()) return;
     // A documentation page without the home command still reloads its entry.
     const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
@@ -577,6 +604,7 @@ export function App({ host }: { host: Host }) {
 
   const openDoc = useCallback(
     (url: string) => {
+      setPage("docs");
       if (docs.current?.navigate(url)) return;
       const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
       if (!frame || environment.state !== "ready") return;
@@ -830,6 +858,29 @@ export function App({ host }: { host: Host }) {
         run: () => setSettingsOpen((open) => !open),
       },
       {
+        id: "view.calendar",
+        label: t("desktop.calendar.title"),
+        group: "views",
+        icon: "calendar",
+        keywords: "obligations deadlines modelo plazos",
+        // Only where the host offers the view: nothing leads to a page that
+        // could not load.
+        enabled: () => views !== undefined,
+        run: () => {
+          if (calendarOn && firstPaneShown) {
+            setPage("docs");
+            return;
+          }
+          setMaximized((area) => (area === "docs" ? area : null));
+          setPage("calendar");
+        },
+        choose: () => {
+          setMaximized((area) => (area === "docs" ? area : null));
+          setPage("calendar");
+          calendarPage.current?.focus();
+        },
+      },
+      {
         id: "link.aeat",
         label: t("desktop.rail.aeat"),
         group: "links",
@@ -920,6 +971,9 @@ export function App({ host }: { host: Host }) {
       docsSearchReady,
       docsEntry,
       phase,
+      views,
+      calendarOn,
+      firstPaneShown,
       mayEnterPassword,
       continueInTui,
       signedIn,
@@ -1312,13 +1366,26 @@ export function App({ host }: { host: Host }) {
       pressed: tuiVisible,
       onClick: () => runAction("tui.toggle"),
     },
-    // Shortcuts out of the window, between the window's own toggles and the
-    // bottom panel's.
+    // Shortcuts, between the window's own toggles and the bottom panel's:
+    // the profile's views where the host offers them, then the ways out of
+    // the window.
+    ...(views
+      ? [
+          {
+            id: "calendar",
+            icon: "calendar",
+            label: t("desktop.calendar.title"),
+            pressed: calendarOn && firstPaneShown,
+            divided: true,
+            onClick: () => runAction("view.calendar"),
+          } satisfies RailItem,
+        ]
+      : []),
     {
       id: "aeat",
       icon: "office",
       label: t("desktop.rail.aeat"),
-      divided: true,
+      divided: !views,
       onClick: () => runAction("link.aeat"),
     },
     {
@@ -1397,53 +1464,84 @@ export function App({ host }: { host: Host }) {
   const docsPane = (
     <div className={cn(pane, "pane-docs")}>
       <PaneHeader
-        title={t("desktop.pane.docs")}
+        title={t(calendarOn ? "desktop.calendar.title" : "desktop.pane.docs")}
         onToggleMaximize={() => toggleMaximize("docs")}
         controls={[
+          ...(calendarOn
+            ? [
+                {
+                  id: "docs",
+                  icon: "book",
+                  label: t("desktop.pane.docs"),
+                  run: () => setPage("docs"),
+                } satisfies PaneControl,
+              ]
+            : []),
           maximizeControl("docs", "desktop.pane.maximize_docs"),
           ...(tuiVisible ? splitControls : []),
         ]}
       />
-      {environment.state === "ready" && docsEntry ? (
-        <DocsFrame
-          ref={docs}
-          origin={environment.value.docs.origin}
-          entry={docsEntry.entry}
-          title={t("desktop.docs.frame_title")}
-          chords={chords}
-          zoom={layout.zoom}
-          appearance={prefs.appearance === "follow" ? null : prefs.appearance}
-          onReady={({ theme, features }) => {
-            setDocsTheme(theme);
-            setDocsSearchReady(features.includes("search"));
-          }}
-          onTheme={setDocsTheme}
-          onShortcut={runShortcut}
-          onOpenExternal={(url) =>
-            void host.openExternal(url).catch(() => undefined)
-          }
-          onMenu={docsMenu}
-        />
-      ) : environment.state === "unavailable" ? (
-        <Empty role="status">
-          <EmptyMedia>
-            <Icon name="unplug" />
-          </EmptyMedia>
-          <EmptyDescription>{t("desktop.host.unavailable")}</EmptyDescription>
-        </Empty>
-      ) : environment.state === "failed" ? (
-        <Empty role="alert">
-          <EmptyMedia>
-            <Icon name="alert" />
-          </EmptyMedia>
-          <EmptyDescription>{t("desktop.host.failed")}</EmptyDescription>
-        </Empty>
-      ) : (
-        <Empty role="status">
-          <Spinner />
-          <EmptyDescription>{t("desktop.docs.loading")}</EmptyDescription>
-        </Empty>
+      {calendarOn && (
+        <section
+          ref={calendarPage}
+          tabIndex={-1}
+          aria-label={t("desktop.calendar.title")}
+          className="calendar-page flex min-h-0 flex-1 flex-col focus-visible:-outline-offset-2"
+        >
+          <FilingCalendarView
+            state={calendar.state}
+            locale={locale}
+            refreshing={calendar.refreshing}
+            onRefresh={calendar.refresh}
+            onSignIn={
+              mayEnterPassword ? () => setSignInDismissed(false) : undefined
+            }
+          />
+        </section>
       )}
+      {/* Put aside, not unloaded: the page it was on is there on return. */}
+      <div className={calendarOn ? "hidden" : "contents"}>
+        {environment.state === "ready" && docsEntry ? (
+          <DocsFrame
+            ref={docs}
+            origin={environment.value.docs.origin}
+            entry={docsEntry.entry}
+            title={t("desktop.docs.frame_title")}
+            chords={chords}
+            zoom={layout.zoom}
+            appearance={prefs.appearance === "follow" ? null : prefs.appearance}
+            onReady={({ theme, features }) => {
+              setDocsTheme(theme);
+              setDocsSearchReady(features.includes("search"));
+            }}
+            onTheme={setDocsTheme}
+            onShortcut={runShortcut}
+            onOpenExternal={(url) =>
+              void host.openExternal(url).catch(() => undefined)
+            }
+            onMenu={docsMenu}
+          />
+        ) : environment.state === "unavailable" ? (
+          <Empty role="status">
+            <EmptyMedia>
+              <Icon name="unplug" />
+            </EmptyMedia>
+            <EmptyDescription>{t("desktop.host.unavailable")}</EmptyDescription>
+          </Empty>
+        ) : environment.state === "failed" ? (
+          <Empty role="alert">
+            <EmptyMedia>
+              <Icon name="alert" />
+            </EmptyMedia>
+            <EmptyDescription>{t("desktop.host.failed")}</EmptyDescription>
+          </Empty>
+        ) : (
+          <Empty role="status">
+            <Spinner />
+            <EmptyDescription>{t("desktop.docs.loading")}</EmptyDescription>
+          </Empty>
+        )}
+      </div>
     </div>
   );
   const tuiPane = (

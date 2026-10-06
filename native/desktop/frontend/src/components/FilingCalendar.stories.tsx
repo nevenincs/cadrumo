@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EMPTY_CALENDAR, FIXTURE_CALENDAR } from "@/dev/fixtures/calendar";
+import type { CalendarState } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
-import { FilingCalendarView, type CalendarState } from "./FilingCalendar";
+import { FilingCalendarView } from "./FilingCalendar";
 import { PaneHeader } from "./PaneHeader";
 
 // The filing calendar page in every state, over a fixed calendar in the

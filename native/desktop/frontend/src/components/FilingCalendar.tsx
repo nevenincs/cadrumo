@@ -7,20 +7,9 @@ import { Empty, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
+import type { CalendarState } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
-import type {
-  CalendarEntry,
-  CalendarUserState,
-  FilingCalendar,
-} from "../shell/views";
-
-/** What the page has to show: the read in flight, why there is nothing to
- * read, or the calendar. A failed read is never drawn as an empty calendar. */
-export type CalendarState =
-  | { kind: "loading" }
-  | { kind: "signed-out" }
-  | { kind: "failed"; code: string }
-  | { kind: "ready"; calendar: FilingCalendar };
+import type { CalendarEntry, CalendarUserState } from "../shell/views";
 
 const STATE_TONE: Record<
   CalendarUserState,
@@ -42,7 +31,7 @@ function Entry({
 }: {
   entry: CalendarEntry;
   locale: string;
-  onOpen: (entry: CalendarEntry) => void;
+  onOpen?: (entry: CalendarEntry) => void;
 }) {
   const t = useStrings();
   const closes = day(entry.adjusted_closes_on);
@@ -110,14 +99,16 @@ function Entry({
         <Badge variant={STATE_TONE[entry.user_state]} className="@md:hidden">
           {t(`desktop.calendar.state.${entry.user_state}`)}
         </Badge>
-        <IconButton
-          label={t("desktop.calendar.open_tui")}
-          accessibleName={`${t("desktop.calendar.open_tui")}: ${name} ${entry.period}`}
-          side="left"
-          onClick={() => onOpen(entry)}
-        >
-          <Icon name="arrow" />
-        </IconButton>
+        {onOpen && (
+          <IconButton
+            label={t("desktop.calendar.open_tui")}
+            accessibleName={`${t("desktop.calendar.open_tui")}: ${name} ${entry.period}`}
+            side="left"
+            onClick={() => onOpen(entry)}
+          >
+            <Icon name="arrow" />
+          </IconButton>
+        )}
       </div>
     </li>
   );
@@ -143,9 +134,11 @@ export function FilingCalendarView({
   /** A newer read is in flight over the one shown. */
   refreshing?: boolean;
   onRefresh: () => void;
-  onSignIn: () => void;
-  /** Take the person to where this obligation is worked on. */
-  onOpen: (entry: CalendarEntry) => void;
+  /** Left out where a password cannot settle the account as it stands. */
+  onSignIn?: () => void;
+  /** Take the person to where this obligation is worked on. Left out where
+   * the window cannot: no row then offers a way it does not have. */
+  onOpen?: (entry: CalendarEntry) => void;
 }) {
   const t = useStrings();
   const heading = useId();
@@ -190,7 +183,9 @@ export function FilingCalendarView({
           <Icon name="lock" />
         </EmptyMedia>
         <EmptyDescription>{t("desktop.calendar.signed_out")}</EmptyDescription>
-        <Button onClick={onSignIn}>{t("desktop.signin.submit")}</Button>
+        {onSignIn && (
+          <Button onClick={onSignIn}>{t("desktop.signin.submit")}</Button>
+        )}
       </Empty>
     );
   if (state.kind === "failed")
@@ -258,7 +253,7 @@ export function FilingCalendarView({
       ) : (
         months.map(([key, month]) => (
           <section key={key} aria-labelledby={`${heading}-${key}`}>
-            <h3
+            <h2
               id={`${heading}-${key}`}
               className={cn(
                 "sticky top-0 z-(--layer-separator) border-b bg-background px-4 pt-3 pb-1.5",
@@ -266,7 +261,7 @@ export function FilingCalendarView({
               )}
             >
               {month.title}
-            </h3>
+            </h2>
             <ul>
               {month.entries.map((entry) => (
                 <Entry

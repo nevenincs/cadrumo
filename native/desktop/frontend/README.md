@@ -85,6 +85,13 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `logs-missing`        | A log source that reports missing, which is not an empty log             |
 | `sign-out-refused`    | Signed in, with a sign-out command that fails                            |
 | `session-failure`     | Sessions that start, print a line, then fail and exit                    |
+| `views-refused`       | Signed in, with every profile view refused: not an empty calendar        |
+| `no-views`            | Signed in on a host with no profile views, as the desktop host is today  |
+
+Every scenario but `no-views` offers the profile views (the filing calendar)
+from a fixture; `empty` offers a calendar with nothing due. The desktop host
+offers none yet, so the product shows no way into one: the views are design
+evidence until a host provides them.
 
 Select one in the control or in the address:
 
@@ -219,18 +226,18 @@ already declared. The class merger is the local `@/components/ui/cn`.
 
 Every pointer path has a keyboard path through the same action.
 
-| Keys                                  | Does                                                               |
-| ------------------------------------- | ------------------------------------------------------------------ |
-| Ctrl+K, or Ctrl+Shift+K in a terminal | Open the palette: documentation search and every action            |
-| F6, Shift+F6                          | Move between the documentation, the TUI, the bottom panel and rail |
-| Ctrl+Shift+T                          | Show or hide the TUI                                               |
-| Ctrl+`                                | Show or hide the bottom panel                                      |
-| Ctrl+Shift+1, 2, 3                    | Console, Python shell, Logs                                        |
-| Ctrl+Shift+M                          | Maximize the focused area, or restore the layout                   |
-| Ctrl+,                                | Settings                                                           |
-| Alt+Home, Alt+Left, Alt+Right         | Documentation home, back and forward                               |
-| Ctrl+=, Ctrl+-, Ctrl+0                | Documentation zoom                                                 |
-| Ctrl+Shift+C, Ctrl+Shift+V            | Copy and paste in a terminal                                       |
+| Keys                                  | Does                                                                   |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| Ctrl+K, or Ctrl+Shift+K in a terminal | Open the palette: documentation search and every action                |
+| F6, Shift+F6                          | Move between the first pane's page, the TUI, the bottom panel and rail |
+| Ctrl+Shift+T                          | Show or hide the TUI                                                   |
+| Ctrl+`                                | Show or hide the bottom panel                                          |
+| Ctrl+Shift+1, 2, 3                    | Console, Python shell, Logs                                            |
+| Ctrl+Shift+M                          | Maximize the focused area, or restore the layout                       |
+| Ctrl+,                                | Settings                                                               |
+| Alt+Home, Alt+Left, Alt+Right         | Documentation home, back and forward                                   |
+| Ctrl+=, Ctrl+-, Ctrl+0                | Documentation zoom                                                     |
+| Ctrl+Shift+C, Ctrl+Shift+V            | Copy and paste in a terminal                                           |
 
 On macOS the primary modifier is Command. The rail and the tab row are one tab
 stop each, moved through with the arrow keys. A splitter takes the arrow keys,
@@ -300,7 +307,7 @@ these, so a redesign keeps them. They are contracts, not styling.
 The browser tests also select `.pane-tui`, `.pane-head`, `section.panel`,
 `.main-area`, `.tabstrip`, `.split` with `split-row` or `split-column`,
 `.split-separator`, `.logview`, `.filter-text`, `.record`, `.source-banner`,
-`.terminal-note`, `.terminal-host` and `.rail`.
+`.terminal-note`, `.terminal-host`, `.rail` and `.calendar-page`.
 
 ## What only the desktop window can show
 

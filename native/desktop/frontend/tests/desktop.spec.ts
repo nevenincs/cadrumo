@@ -468,6 +468,26 @@ test("unsupported platforms hide desktop sign-in and Account", async ({
   ).toHaveCount(0);
 });
 
+test("the desktop host offers no profile views, so nothing leads to one", async ({
+  page: target,
+}) => {
+  await signInHost(target, false);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(
+    target.getByRole("button", { name: label("desktop.calendar.title") }),
+  ).toHaveCount(0);
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+  await expect(
+    palette
+      .locator(".palette-title")
+      .filter({ hasText: label("desktop.calendar.title") }),
+  ).toHaveCount(0);
+});
+
 // A stand-in documentation origin. It is a different origin from the shell,
 // and its pages load the real desktop bridge script.
 const DOCS = "http://docs.cadrumo.test";

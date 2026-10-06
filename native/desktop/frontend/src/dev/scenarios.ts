@@ -45,6 +45,10 @@ export type Scenario = {
   docsSearch: "results" | "empty" | "slow" | "failed";
   /** Clipboard and external-link calls: served from memory, or refused. */
   services: "memory" | "refused";
+  /** The profile views: the fixture calendar, one with nothing due, a read
+   * that is refused, or a host that offers no views at all, as the desktop
+   * host does today. */
+  views: "fixture" | "empty" | "refused" | "none";
 };
 
 const signedOut: Scenario["signIn"]["status"] = {
@@ -60,6 +64,7 @@ const base = {
   terminals: "fixture",
   docsSearch: "results",
   services: "memory",
+  views: "fixture",
 } as const satisfies Partial<Scenario>;
 
 export const SCENARIOS: readonly Scenario[] = [
@@ -197,6 +202,7 @@ export const SCENARIOS: readonly Scenario[] = [
     logs: "empty",
     terminals: "silent",
     docsSearch: "empty",
+    views: "empty",
   },
   {
     ...base,
@@ -250,6 +256,30 @@ export const SCENARIOS: readonly Scenario[] = [
       submit: { kind: "accept" },
     },
     terminals: "failing",
+  },
+  {
+    ...base,
+    id: "views-refused",
+    title: "Profile views refused",
+    summary:
+      "Signed in; every read of a profile view fails, which is not an empty calendar.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    views: "refused",
+  },
+  {
+    ...base,
+    id: "no-views",
+    title: "No profile views",
+    summary:
+      "Signed in on a host that offers no profile views, as the desktop host does today: nothing leads to one.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
+    views: "none",
   },
 ];
 

@@ -14,6 +14,7 @@ import type {
   SignInResult,
   SignOutResult,
 } from "../ipc/contract";
+import type { ProfileViews } from "./views";
 
 export type TerminalKind = "console" | "python" | "tui";
 
@@ -56,6 +57,9 @@ export interface Host {
     at?: { x: number; y: number },
   ): Promise<string | null>;
   openExternal(url: string): Promise<void>;
+  /** Read-only views of the signed-in profile, where this host offers any.
+   * Without them the shell shows no way into a view. */
+  readonly views?: ProfileViews;
 }
 
 export class HostUnavailable extends Error {

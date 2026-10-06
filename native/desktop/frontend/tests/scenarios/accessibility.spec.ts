@@ -179,6 +179,37 @@ const SURFACES: {
     },
   },
   {
+    name: "the filing calendar",
+    scenario: "signed-in",
+    reach: async (target) => {
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.calendar.title") })
+        .click();
+      await expect(
+        target
+          .getByRole("region", { name: label("desktop.calendar.title") })
+          .getByRole("listitem")
+          .first(),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: "the filing calendar, signed out",
+    scenario: "signed-out",
+    reach: async (target) => {
+      await expect(target.locator(".sign-in")).toBeVisible();
+      await target.keyboard.press("Escape");
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.calendar.title") })
+        .click();
+      await expect(
+        target.getByRole("region", { name: label("desktop.calendar.title") }),
+      ).toContainText(label("desktop.calendar.signed_out"));
+    },
+  },
+  {
     name: "the log view",
     scenario: "signed-in",
     reach: async (target) => {
