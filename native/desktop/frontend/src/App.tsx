@@ -479,6 +479,9 @@ export function App({ host }: { host: Host }) {
       return;
     }
     if (wish.granted && document.activeElement !== document.body) return;
+    // The sign-in dialog holds the keyboard while it is up: nothing behind
+    // it is given focus, whatever was wished for before it opened.
+    if (document.querySelector(".sign-in")) return;
     // Withheld, the TUI's pane holds the way in instead of a terminal.
     const wayIn = signInButton.current;
     if (wish.view === "tui" && wayIn && wayIn.offsetParent !== null) {
@@ -541,9 +544,11 @@ export function App({ host }: { host: Host }) {
     setSettingsOpen(false);
     showTui();
   }, [showTui]);
-  // Whether the last render showed a gate the person could act on. The
-  // first status read is a gate too, but not one anybody was standing at:
-  // being let through it at startup moves no focus.
+  // Whether the last render showed a gate the person could act on, with
+  // the dialog put aside. The first status read is a gate too, but not one
+  // anybody was standing at: being let through it at startup moves no
+  // focus. And with the dialog still up, its own close decides where focus
+  // goes: this must not get there first.
   const stoodAtGate = useRef(false);
   useEffect(() => {
     // Admitted after the dialog was put aside: the way in that held focus
@@ -554,8 +559,8 @@ export function App({ host }: { host: Host }) {
       document.activeElement === document.body
     )
       focusView("tui");
-    stoodAtGate.current = gated && phase !== "checking";
-  }, [gated, phase, focusView]);
+    stoodAtGate.current = gated && phase !== "checking" && signInDismissed;
+  }, [gated, phase, signInDismissed, focusView]);
   useEffect(() => {
     // Signed out from here, no dialog follows. If the terminal that held
     // focus went with the session, the pane's way back in takes it.
@@ -1429,6 +1434,30 @@ export function App({ host }: { host: Host }) {
     (layout.tuiShown || maximized === "tui") && maximized !== "docs";
   const panelVisible =
     layout.panelOpen && maximized !== "docs" && maximized !== "tui";
+  // The TUI hidden from under the keyboard: focus goes to the first pane
+  // while that is shown, else to the rail, never to nothing.
+  const tuiWasVisible = useRef(tuiVisible);
+  useEffect(() => {
+    const hidden = tuiWasVisible.current && !tuiVisible;
+    tuiWasVisible.current = tuiVisible;
+    // Only when it has just been hidden: a window that starts without the
+    // TUI moves no focus. What held focus inside it is still named as the
+    // focused element for a moment after it stops being shown.
+    const held = document.activeElement;
+    if (
+      !hidden ||
+      (held !== null &&
+        held !== document.body &&
+        held.closest(".pane-tui") === null)
+    )
+      return;
+    const first = firstPaneShown
+      ? (calendarPage.current ?? docs.current)
+      : null;
+    (
+      first ?? document.querySelector<HTMLElement>(".rail [role=toolbar]")
+    )?.focus();
+  }, [tuiVisible, firstPaneShown]);
 
   // What a session's header says beside its state: how it ended, or why it
   // could not start.
@@ -1627,8 +1656,11 @@ export function App({ host }: { host: Host }) {
         if (k !== "tui") return;
         // The TUI's own flow has ended, or never began: the person is back
         // at the gate, and is told when it was because it could not start.
-        if (s.phase === "failed" && accountRef.current.phase === "in-tui")
+        if (s.phase === "failed" && accountRef.current.phase === "in-tui") {
           say(t("desktop.session.failed", { reason: s.message }));
+          // The focus asked for the TUI that did not start is not owed.
+          wanted.current = null;
+        }
         if (s.phase === "exited" || s.phase === "failed") account.tuiExited();
       }}
       onMenu={terminalMenu}

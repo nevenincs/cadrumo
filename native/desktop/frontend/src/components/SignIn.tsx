@@ -194,6 +194,13 @@ export function SignInDialog({
     wasBusy.current = busy;
   }, [busy, open]);
 
+  // Shown again before it had finished leaving, the dialog is never mounted
+  // anew, so nothing would place focus in it: it is placed here, whenever
+  // the dialog is opened.
+  useEffect(() => {
+    if (open) (input.current ?? handover.current)?.focus();
+  }, [open]);
+
   if (!status) return null;
 
   const seconds = account.retrySeconds;

@@ -199,6 +199,9 @@ export const RecordList = memo(function RecordList({
   // either end of it.
   const [first, setFirst] = useState<number | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
+  // The reader has scrolled the current record out of view with the keyboard
+  // elsewhere: Tab back into the list must not throw the view back to it.
+  const [strayed, setStrayed] = useState(false);
   // The record at the top of a reader's view, and where it sits. Whenever
   // what is drawn changes, the view is put back on it: an earlier or later
   // span comes in, the oldest records are dropped from the ring, and not
@@ -241,10 +244,27 @@ export const RecordList = memo(function RecordList({
   if (drawnFor !== filters) {
     setDrawnFor(filters);
     const kept = follow ? null : anchor.current;
-    const at =
+    let at =
       kept === null
         ? -1
         : visible.findIndex((record) => record.seq === kept.seq);
+    if (at < 0 && !follow && current !== null) {
+      // The record at the top is not in this view. The one the reader is
+      // on may be: a filter chosen from a record's own menu keeps it. The
+      // view stays on that record, where it was on screen.
+      at = visible.findIndex((record) => record.seq === current);
+      const el = list.current;
+      const row = el?.querySelector(`:scope > [data-seq="${current}"]`);
+      if (at >= 0 && el && row)
+        anchor.current = {
+          seq: current,
+          top: Math.max(
+            0,
+            row.getBoundingClientRect().top - el.getBoundingClientRect().top,
+          ),
+        };
+      else at = -1;
+    }
     if (at >= 0) {
       setFirst(visible[Math.max(0, at - WINDOW)]?.seq ?? null);
     } else {
@@ -423,7 +443,10 @@ export const RecordList = memo(function RecordList({
           if (!next.delete(seq)) next.add(seq);
           return next;
         }),
-      current: setCurrent,
+      current: (seq: number) => {
+        setCurrent(seq);
+        setStrayed(false);
+      },
       menu: (event: MouseEvent<HTMLElement>, record: LogRecord) => {
         setCurrent(record.seq);
         // A menu asked for by the menu key belongs at its row's edge, not
@@ -455,7 +478,9 @@ export const RecordList = memo(function RecordList({
   // end, on the list itself, which moves nothing: a row chosen for them
   // would scroll their place away.
   const tabStop =
-    current !== null && drawn.some((record) => record.seq === current)
+    current !== null &&
+    !strayed &&
+    drawn.some((record) => record.seq === current)
       ? current
       : follow
         ? drawn.at(-1)?.seq
@@ -541,13 +566,27 @@ export const RecordList = memo(function RecordList({
       if (["ArrowUp", "Home", "PageUp"].includes(event.key) && target !== row)
         leaveEnd();
       target.focus();
+      if (
+        !follow &&
+        ["ArrowDown", "PageDown"].includes(event.key) &&
+        Number(target.dataset.seq) === visible.at(-1)?.seq
+      ) {
+        // Back on the newest record of the log: following resumes, as it
+        // does for a scroll that reaches the end.
+        anchor.current = null;
+        setFirst(null);
+        setFollow(true);
+        return;
+      }
       // Where the view now is, before any batch can put it back.
       if (!follow || target !== row) captureAnchor();
     } else if (from === row && (event.key === "Enter" || event.key === " ")) {
       // Enter and Space on a control inside the row belong to that control.
+      // On the row they open its detail; where it has none, Space still
+      // does not scroll the list from under the keyboard.
+      event.preventDefault();
       const toggle = row.querySelector<HTMLElement>("[aria-expanded]");
       if (!toggle) return;
-      event.preventDefault();
       handlers.toggle(Number(row.dataset.seq));
     }
   };
@@ -600,7 +639,9 @@ export const RecordList = memo(function RecordList({
           <Button
             variant="outline"
             size="sm"
-            className={cn(chip, "@4xl:order-last")}
+            // In the one-row bar it leads: the bar scrolls sideways there,
+            // and the way back to the end must not be off its edge.
+            className={cn(chip, "@4xl:order-last panel-short:-order-1")}
             aria-pressed={follow}
             title={t("desktop.logs.follow_hint")}
             onClick={() => {
@@ -787,6 +828,15 @@ export const RecordList = memo(function RecordList({
           }
           if (!top) return;
           captureAnchor();
+          // Whether the record the keyboard was last on is still in view,
+          // asked only while the keyboard is not in the list.
+          if (current !== null && focused.current === null) {
+            const row = el.querySelector(`:scope > [data-seq="${current}"]`);
+            const at = row?.getBoundingClientRect();
+            const box = el.getBoundingClientRect();
+            const away = !at || at.bottom <= box.top || at.top >= box.bottom;
+            if (away !== strayed) setStrayed(away);
+          }
           const at = visible.indexOf(top);
           // The next span comes in a few views before the edge of this one,
           // so a fast scroll does not run into the edge first.

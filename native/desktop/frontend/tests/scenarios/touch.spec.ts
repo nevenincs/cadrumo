@@ -266,14 +266,31 @@ test("a finger drawn down the log leaves its end, and the bar is one row", async
     await touch("touchMove", from + step * 10);
   await touch("touchEnd", from + 80);
   await expect(follow).toHaveAttribute("aria-pressed", "false");
-  // The place holds while records arrive.
-  const gap = () =>
-    list.evaluate(
-      (element) =>
-        element.scrollHeight - element.scrollTop - element.clientHeight,
-    );
-  const before = await gap();
-  await expect.poll(gap).toBeGreaterThan(before);
+  // The place holds while records arrive: the same record at the top of
+  // the view, where it was, with the end moving away below.
+  const place = () =>
+    list.evaluate((element) => {
+      const edge = element.getBoundingClientRect().top;
+      const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
+        (candidate) => candidate.getBoundingClientRect().bottom > edge + 1,
+      );
+      return {
+        seq: row?.dataset.seq,
+        top: Math.round((row?.getBoundingClientRect().top ?? 0) - edge),
+        gap: element.scrollHeight - element.scrollTop - element.clientHeight,
+      };
+    });
+  const before = await place();
+  await expect
+    .poll(async () => (await place()).gap)
+    .toBeGreaterThan(before.gap + 200);
+  const after = await place();
+  expect(after.seq).toBe(before.seq);
+  expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(2);
+  // The way back to the end is on screen, not off the bar's edge.
+  const way = (await follow.boundingBox())!;
+  expect(way.x).toBeGreaterThanOrEqual(0);
+  expect(way.x + way.width).toBeLessThanOrEqual(390);
 });
 
 test("a touch drag resizes the panel", async ({ page: target }) => {

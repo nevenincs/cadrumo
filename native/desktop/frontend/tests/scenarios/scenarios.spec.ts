@@ -902,14 +902,151 @@ test("Home is the oldest record of the log, and stays there while records arrive
   await expect.poll(async () => (await oldest()).seq).toBe(1);
   expect((await oldest()).first).toBe(1);
   expect((await oldest()).scrollTop).toBe(0);
-  // Batches that arrive afterwards do not put the view back.
-  const drawnBefore = await list.locator(".record").count();
-  await expect
-    .poll(async () => list.locator(".record").count())
-    .toBeGreaterThanOrEqual(drawnBefore);
-  await target.waitForTimeout(600);
+  // Batches that arrive afterwards do not put the view back: some two
+  // hundred more records, by the errors among them.
+  const held = await errorsHeld(target)();
+  await expect.poll(errorsHeld(target)).toBeGreaterThan(held + 30);
   expect((await oldest()).seq).toBe(1);
   expect((await oldest()).scrollTop).toBe(0);
+});
+
+test("a filter chosen from a record's menu keeps the reader on that record", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000&feed=200",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await target.mouse.wheel(0, -1500);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // The third record in view, not the one at its top: the record at the
+  // top has another logger and will not be in the new view.
+  const chosen = await list.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const rows = [...element.querySelectorAll<HTMLElement>(".record")].filter(
+      (row) => row.getBoundingClientRect().top >= box.top,
+    );
+    return Number(rows[2]?.dataset.seq);
+  });
+  const row = list.locator(`.record[data-seq="${chosen}"]`);
+  await row.click({ button: "right" });
+  await target
+    .getByRole("menuitem", { name: label("desktop.menu.only_logger") })
+    .click();
+  await expect(
+    target.locator(".logview").getByRole("button", {
+      name: new RegExp(`^${label("desktop.logs.clear_logger")}: `),
+    }),
+  ).toBeVisible();
+  // Records go on arriving; the reader is still on the record they chose,
+  // in view, and the log has not gone back to following.
+  const held = await errorsHeld(target)();
+  await expect.poll(errorsHeld(target)).toBeGreaterThan(held + 10);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await expect(row).toBeVisible();
+  expect(
+    await list.evaluate((element, seq) => {
+      const at = element
+        .querySelector(`.record[data-seq="${seq}"]`)
+        ?.getBoundingClientRect();
+      const box = element.getBoundingClientRect();
+      return !!at && at.top >= box.top - 1 && at.bottom <= box.bottom + 1;
+    }, chosen),
+  ).toBe(true);
+});
+
+test("an arrow back down to the newest record resumes following", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await list.locator(".record").last().focus();
+  await target.keyboard.press("ArrowUp");
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await target.keyboard.press("ArrowDown");
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect(list.locator(".record").last()).toBeFocused();
+});
+
+test("Tab does not go back to a record the reader has scrolled away from", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  // The keyboard was on the newest record; then the reader scrolled far
+  // from it and went to the filter.
+  await list.locator(".record").last().focus();
+  await target.mouse.wheel(0, -3000);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await expect
+    .poll(async () => (await logPlace(target)).fromEnd)
+    .toBeGreaterThan(2000);
+  await target.locator(".logview .filter-text").focus();
+  await target.mouse.wheel(0, -40);
+  await expect
+    .poll(async () => (await logPlace(target)).fromEnd)
+    .toBeGreaterThan(3000);
+  const before = await logPlace(target);
+  for (let press = 0; press < 12; press++) {
+    await target.keyboard.press("Tab");
+    if (
+      await list.evaluate(
+        (element) =>
+          element === document.activeElement ||
+          element.contains(document.activeElement),
+      )
+    )
+      break;
+  }
+  await expect(list).toBeFocused();
+  expect((await logPlace(target)).scrollTop).toBe(before.scrollTop);
+});
+
+test("Space on a record with no detail does not scroll the log", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await target.mouse.wheel(0, -1500);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // A record in view that has no detail to open.
+  const plain = await list.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
+      (candidate) =>
+        candidate.getBoundingClientRect().top >= box.top &&
+        !candidate.querySelector("[aria-expanded]"),
+    );
+    return Number(row?.dataset.seq);
+  });
+  await list.locator(`.record[data-seq="${plain}"]`).focus();
+  const before = (await logPlace(target)).scrollTop;
+  await target.keyboard.press("Space");
+  await target.waitForTimeout(250);
+  expect((await logPlace(target)).scrollTop).toBe(before);
+});
+
+test("hiding the TUI from inside it leaves the keyboard in the window", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await expect(target.locator(".docs-frame")).toBeVisible();
+  await target.locator('[data-terminal="tui"] .xterm-screen').click();
+  await expect(tui(target)).toBeFocused();
+  await target.keyboard.press("ControlOrMeta+Shift+T");
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  // The pane that is left takes it: not the document, where no key works.
+  await expect(target.locator(".docs-frame")).toBeFocused();
 });
 
 test("a filter control that removes itself hands the keyboard to the filter field", async ({
@@ -2181,8 +2318,12 @@ test("tui-unavailable: a TUI that cannot start is not a way on", async ({
   await expect(target.locator("[data-slot=toast]")).toContainText(
     "spawn_failed",
   );
-  // Back at the gate, the dialog is offered again, as when a TUI exits.
+  // Back at the gate, the dialog is offered again, as when a TUI exits,
+  // and it holds the keyboard: nothing behind it has been given focus.
   await expect(dialog).toBeVisible();
+  await expect(password(target)).toBeFocused();
+  await target.keyboard.type("x");
+  await expect(password(target)).toHaveValue("x");
   await target.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(page).not.toContainText(label("desktop.account.in_tui"));
@@ -2193,6 +2334,49 @@ test("tui-unavailable: a TUI that cannot start is not a way on", async ({
       exact: true,
     }),
   ).toBeVisible();
+});
+
+test("tui-unavailable: the dialog's own way to the TUI comes back to a dialog that holds the keyboard", async ({
+  page: target,
+}) => {
+  await open(target, "tui-unavailable");
+  const dialog = target.locator(".sign-in");
+  await expect(password(target)).toBeFocused();
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.signin.open_tui"),
+      exact: true,
+    })
+    .click();
+  await expect(target.locator("[data-slot=toast]")).toContainText(
+    "spawn_failed",
+  );
+  await expect(dialog).toBeVisible();
+  // Past the moment in which a focus wished for the TUI could be granted.
+  await target.waitForTimeout(1300);
+  await expect(password(target)).toBeFocused();
+});
+
+test("signing in from the calendar keeps the keyboard in the calendar, with the TUI beside it", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await password(target).fill("demo");
+  await submit(target).click();
+  await expect(page.getByRole("listitem").first()).toBeVisible();
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  // The TUI has started beside it, and has not taken the keyboard.
+  await target.waitForTimeout(1300);
+  await expect(page).toBeFocused();
 });
 
 test("a calendar put away with no documentation behind it leaves the keyboard on the rail", async ({
