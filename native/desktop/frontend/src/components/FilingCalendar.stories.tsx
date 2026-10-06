@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useRef } from "react";
 import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
 import {
   AHEAD_CALENDAR,
@@ -11,7 +12,7 @@ import {
 import { BUSY_CALENDAR, BUSY_TODAY } from "@/dev/fixtures/calendarBusy";
 import type { CalendarState } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
-import { FilingCalendarView } from "./FilingCalendar";
+import { FilingCalendarView, type CalendarMemory } from "./FilingCalendar";
 import { PaneHeader } from "./PaneHeader";
 import { SignedOut } from "./SignIn";
 
@@ -30,6 +31,9 @@ type Args = {
   view?: "months" | "list";
   /** The local day; the fixture's own unless a story is about another. */
   today?: string;
+  /** What the reader had made of the page before it was shown: a choice,
+   * or crowded months asked for whole. */
+  left?: CalendarMemory;
   /** Why the calendar is withheld, as a phase of the account. */
   phase?: "signed-out" | "checking" | "locked" | "services-down";
 };
@@ -53,9 +57,11 @@ function Page({
   pane,
   view,
   today,
+  left,
   locale,
 }: Args & { locale: string }) {
   const t = useStrings();
+  const memory = useRef<CalendarMemory>(left ?? {});
   return (
     <div
       className={
@@ -74,6 +80,7 @@ function Page({
         locale={locale}
         refreshing={refreshing}
         defaultView={view}
+        memory={memory}
         // The fixture's day, so the catalogue reads the same on any day.
         today={today ?? FIXTURE_TODAY}
         withheld={
@@ -158,6 +165,27 @@ export const BusyPane: Story = {
     state: { kind: "ready", calendar: BUSY_CALENDAR },
     today: BUSY_TODAY,
     pane: true,
+  },
+};
+
+// What is chosen is drawn in place of what its week would keep last: the
+// month is no taller for it, and the list beside it marks the same one.
+export const BusyChosen: Story = {
+  name: "Many windows at once: one that was counted, chosen",
+  args: {
+    state: { kind: "ready", calendar: BUSY_CALENDAR },
+    today: BUSY_TODAY,
+    left: { selected: "390:2026" },
+  },
+};
+
+export const BusyWhole: Story = {
+  name: "Many windows at once: a month drawn whole",
+  args: {
+    state: { kind: "ready", calendar: BUSY_CALENDAR },
+    today: BUSY_TODAY,
+    pane: true,
+    left: { asked: new Set(["2027-01"]) },
   },
 };
 
