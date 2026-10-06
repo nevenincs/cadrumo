@@ -538,7 +538,6 @@ test("a week with more windows than it shows keeps the nearest deadlines and cou
 
 test("an obligation's one stop is the first of it that is drawn, not the first that is counted", () => {
   const months = crowd();
-  const january = months[0]!;
   const stops = (open: boolean) => {
     const drawn = drawnWeeks(months, () => open);
     return months.flatMap((month) =>
@@ -550,23 +549,18 @@ test("an obligation's one stop is the first of it that is drawn, not the first t
     );
   };
   // Left out of January's crowded weeks, the long windows are first drawn
-  // where the short ones have closed: the week of the twenty-fifth.
+  // where the short ones have closed: the week of the twenty-fifth. The
+  // window of three days in the month's second week closes soonest of all
+  // that cross it, and is drawn there.
   expect(stops(false)).toEqual([
     ["111", "2027-01", 1],
     ["115", "2027-01", 1],
     ["123", "2027-01", 1],
+    ["349", "2027-01", 2],
     ["130", "2027-01", 4],
     ["303", "2027-01", 4],
     ["390", "2027-01", 4],
   ]);
-  // A window that is never drawn has no stop among the months: the count
-  // in its week and the list are where it is found.
-  expect(stops(false).some(([modelo]) => modelo === "349")).toBe(false);
-  expect(
-    drawnWeeks(months, () => false)
-      .get(january.weeks[2]!)
-      ?.hidden.map((bar) => bar.entry.modelo),
-  ).toContain("349");
   // Drawn whole, every obligation stops where it opens.
   expect(stops(true)).toEqual([
     ["111", "2027-01", 1],
@@ -577,8 +571,169 @@ test("an obligation's one stop is the first of it that is drawn, not the first t
     ["390", "2027-01", 1],
     ["349", "2027-01", 2],
   ]);
-  // Every obligation has exactly one stop when all of it is drawn.
-  expect(new Set(stops(true).map(([modelo]) => modelo)).size).toBe(7);
+  // Every obligation has exactly one stop, counted or whole.
+  for (const open of [false, true])
+    expect(new Set(stops(open).map(([modelo]) => modelo)).size).toBe(7);
+});
+
+// What a crowded week keeps is what needs the person, whenever it opened.
+const reading = (
+  modelo: string,
+  opens: string,
+  closes: string,
+  state: CalendarEntry["user_state"],
+): CalendarEntry => ({
+  ...obligation(modelo, opens, closes),
+  user_state: state,
+});
+const staggered = () =>
+  calendarMonths(
+    { from_date: "2027-01-01", to_date: "2027-01-31" },
+    [
+      // Three that opened first and close last, one late that opened after
+      // them, one due sooner than they are, and one already filed that
+      // closes soonest of all.
+      reading("180", "2027-01-01", "2027-01-30", "due"),
+      reading("190", "2027-01-01", "2027-01-30", "due"),
+      reading("390", "2027-01-01", "2027-01-30", "due"),
+      reading("111", "2027-01-04", "2027-01-15", "late"),
+      reading("303", "2027-01-04", "2027-01-20", "due"),
+      reading("115", "2027-01-04", "2027-01-08", "filed"),
+    ],
+    [],
+    null,
+    1,
+  );
+const shownIn = (
+  months: ReturnType<typeof calendarMonths>,
+  week: number,
+  chosen: string | null = null,
+) => {
+  const drawn = drawnWeeks(months, () => false, chosen).get(
+    months[0]!.weeks[week]!,
+  );
+  return {
+    shown: (drawn?.bars ?? []).map(({ bar, lane }) => [bar.entry.modelo, lane]),
+    hidden: (drawn?.hidden ?? []).map((bar) => bar.entry.modelo),
+    stops: (drawn?.bars ?? [])
+      .filter(({ stop }) => stop)
+      .map(({ bar }) => bar.entry.modelo),
+  };
+};
+
+test("a crowded week keeps what is late, then what closes soonest, whenever each opened", () => {
+  const months = staggered();
+  // The week of the fourth has six windows. The late one and the one due
+  // on the twentieth are kept though they opened after the three that are
+  // due on the thirtieth, of which one keeps the last row; what is filed
+  // is the first given up, though it closes soonest.
+  expect(shownIn(months, 1)).toEqual({
+    shown: [
+      ["180", 0],
+      ["111", 1],
+      ["303", 2],
+    ],
+    hidden: ["190", "390", "115"],
+    stops: ["111", "303"],
+  });
+  // No row of what is shown is the count's: three rows of four.
+  expect(
+    shownIn(months, 1).shown.every(
+      ([, lane]) => Number(lane) < LANES_SHOWN - 1,
+    ),
+  ).toBe(true);
+  // The week before has three windows and room for all of them.
+  expect(shownIn(months, 0)).toEqual({
+    shown: [
+      ["180", 0],
+      ["190", 1],
+      ["390", 2],
+    ],
+    hidden: [],
+    stops: ["180", "190", "390"],
+  });
+});
+
+test("what is chosen is always drawn, in place of what the week would keep last, and keeps its stop", () => {
+  const months = staggered();
+  // Chosen, the obligation due on the thirtieth that the week left out is
+  // drawn, and the one of its kind that was kept is counted instead. The
+  // late one and the nearer deadline stay.
+  const chosen = shownIn(months, 1, "390:2026-3T");
+  expect(chosen.shown.map(([modelo]) => modelo).sort()).toEqual([
+    "111",
+    "303",
+    "390",
+  ]);
+  expect(chosen.hidden).toEqual(["180", "190", "115"]);
+  // Its stop is still where it is drawn anyway, the week before: choosing
+  // does not move the keyboard's place to a part drawn only for the choice.
+  expect(chosen.stops).not.toContain("390");
+  expect(shownIn(months, 0, "390:2026-3T").stops).toContain("390");
+  // One that is drawn nowhere unless chosen has its stop where it is
+  // first drawn for the choice.
+  expect(shownIn(months, 1).hidden).toContain("115");
+  const filed = shownIn(months, 1, "115:2026-3T");
+  expect(filed.shown.map(([modelo]) => modelo)).toContain("115");
+  expect(filed.stops).toContain("115");
+  // A window kept before it was chosen stays in its row when it is.
+  expect(shownIn(months, 1, "303:2026-3T").shown).toEqual(
+    shownIn(months, 1).shown,
+  );
+});
+
+test("windows that do not share a day share a row of what a crowded week keeps", () => {
+  const months = calendarMonths(
+    OCTOBER,
+    [
+      obligation("111", "2026-10-05", "2026-10-06"),
+      obligation("115", "2026-10-08", "2026-10-09"),
+      ...["130", "303", "349", "390"].map((modelo) =>
+        obligation(modelo, "2026-10-05", "2026-10-11"),
+      ),
+    ],
+    [],
+    null,
+    1,
+  );
+  // Five rows to draw them all; three are shown. The two short ones close
+  // first and take one row between them, so four windows are drawn.
+  expect(months[0]!.weeks[1]!.lanes).toBe(5);
+  expect(shownIn(months, 1)).toMatchObject({
+    shown: [
+      ["111", 0],
+      ["130", 1],
+      ["303", 2],
+      ["115", 0],
+    ],
+    hidden: ["349", "390"],
+  });
+});
+
+test("a window whose opening is not known and that closes after the range is drawn on its closing day", () => {
+  const months = calendarMonths(
+    { from_date: "2027-01-01", to_date: "2027-01-31" },
+    [obligation("349", null, "2027-03-30")],
+    [],
+    null,
+    1,
+  );
+  expect(months.map((month) => month.key)).toEqual([
+    "2027-01",
+    "2027-02",
+    "2027-03",
+  ]);
+  expect(bars(months)).toEqual([
+    {
+      month: "2027-03",
+      days: [30, 30],
+      lane: 0,
+      opens: true,
+      closes: true,
+      first: true,
+      modelo: "349",
+    },
+  ]);
 });
 
 test("a week with exactly as many windows as it shows leaves none out", () => {

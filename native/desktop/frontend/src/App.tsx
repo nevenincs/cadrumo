@@ -46,7 +46,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
 import { useMessages } from "./shell/messages";
 import { useSignIn } from "./shell/signIn";
-import { FilingCalendarView } from "./components/FilingCalendar";
+import {
+  FilingCalendarView,
+  type CalendarMemory,
+} from "./components/FilingCalendar";
 import { Button } from "@/components/ui/button";
 import { Split } from "./components/Split";
 import {
@@ -160,6 +163,9 @@ export function App({ host }: { host: Host }) {
   // where the host offers one. The documentation stays loaded underneath.
   const [page, setPage] = useState<"docs" | "calendar">("docs");
   const calendarPage = useRef<HTMLElement>(null);
+  // What the reader has made of the calendar, kept while its page is away:
+  // the page is taken down when it is put away, and comes back as it was.
+  const calendarMemory = useRef<CalendarMemory>({});
   // The calendar was asked for: it takes focus once it is laid out.
   const wantsCalendar = useRef(false);
   // What held focus when the sign-in dialog was asked for, and whether
@@ -275,6 +281,10 @@ export function App({ host }: { host: Host }) {
       ? (account.status?.active_profile ?? "")
       : null;
   const recheckAccount = useCallback(() => accountRef.current.recheck(), []);
+  // A calendar belongs to its profile, and so does what was made of it.
+  useEffect(() => {
+    calendarMemory.current = {};
+  }, [reader]);
   const [rechecking, setRechecking] = useState(false);
   const lookAgain = useCallback(() => {
     setRechecking(true);
@@ -1726,6 +1736,7 @@ export function App({ host }: { host: Host }) {
           state={calendar.state}
           attempt={calendar.attempt}
           today={calendar.today}
+          memory={calendarMemory}
           // Withheld, it says what the TUI pane says of the account, with
           // the same ways on. While the person carries on in the TUI the
           // window does not know how that went: it offers to look again.

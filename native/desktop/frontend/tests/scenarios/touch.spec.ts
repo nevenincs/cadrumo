@@ -102,9 +102,13 @@ for (const language of ["en", "hu"])
     await target.goto(
       `/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=${language}`,
     );
-    // By its place in the rail, which no language moves: after search, the
-    // documentation and the TUI.
-    await target.locator(".rail button").nth(3).tap();
+    // By its own name in the language shown.
+    await target
+      .getByRole("button", {
+        name: label("desktop.calendar.title", {}, language),
+        exact: true,
+      })
+      .tap();
     const page = target.locator(".calendar-page");
     // Each face in turn: the months, where every window is a control, a
     // window of one day among them; then the list.
@@ -187,7 +191,9 @@ test("a crowded month's controls fit a finger, and its count opens it", async ({
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&calendar=busy",
   );
-  await target.locator(".rail button").nth(3).tap();
+  await target
+    .getByRole("button", { name: label("desktop.calendar.title"), exact: true })
+    .tap();
   const page = target.locator(".calendar-page");
   const january = page.locator('.calendar-month[data-month="2027-01"]');
   const whole = january.locator(".calendar-whole");
@@ -228,7 +234,12 @@ test("a narrow header gives up a duplicate control before it cuts its title", as
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
   );
-  await target.locator(".rail button").nth(3).tap();
+  await target
+    .getByRole("button", {
+      name: label("desktop.calendar.title", {}, "es"),
+      exact: true,
+    })
+    .tap();
   await expect(target.locator(".calendar-page")).toBeVisible();
   const title = target.locator(".pane-docs .pane-title");
   expect(

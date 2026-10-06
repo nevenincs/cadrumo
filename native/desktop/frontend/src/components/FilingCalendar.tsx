@@ -64,6 +64,27 @@ const STATE_ORDER: readonly CalendarUserState[] = [
 
 const DAY_MS = 86_400_000;
 
+/** A reader's place in a face: what is at the top of their view, by its
+ * month or its obligation, and how far under the head it sits; or that
+ * they are at the very start. */
+type Place = { key: string; top: number; start: boolean };
+
+/**
+ * What the calendar keeps of a reader's use of it, held by whoever shows
+ * the page so that it outlives the page being put away: the face, the
+ * choice, the crowded months asked for whole, and the place in each face.
+ */
+export type CalendarMemory = {
+  view?: "months" | "list";
+  selected?: string | null;
+  asked?: ReadonlySet<string>;
+  months?: Place | null;
+  list?: Place | null;
+};
+
+const markKey = (mark: HTMLElement) =>
+  mark.dataset.month ?? mark.dataset.entry ?? "today";
+
 // The formats of a language, made once: a row needs four and there are
 // many rows.
 const FORMATS = new Map<string, ReturnType<typeof makeFormats>>();
@@ -246,6 +267,7 @@ export function FilingCalendarView({
   locale,
   today: localToday,
   defaultView = "months",
+  memory,
   refreshing = false,
   page,
   onRefresh,
@@ -265,6 +287,9 @@ export function FilingCalendarView({
   today?: string;
   /** The face a page too narrow for both shows first. */
   defaultView?: "months" | "list";
+  /** Where the reader's use of the page is kept while it is away. Left
+   * out, the page keeps it only for as long as it is shown. */
+  memory?: RefObject<CalendarMemory>;
   /** A newer read is in flight over what is shown. */
   refreshing?: boolean;
   /** The page's own element, for whoever sends focus to it. */
@@ -284,7 +309,35 @@ export function FilingCalendarView({
   // each obligation is drawn across the days its window is open, and the
   // list, which says where each stands. A wide page shows both side by
   // side; a narrower one shows one, the months first, with a switch.
-  const [view, setView] = useState<"months" | "list">(defaultView);
+  //
+  // What the reader has made of it is kept by whoever shows the page, so
+  // that putting the page away and bringing it back loses none of it: the
+  // face, the choice, the months asked for whole, and the place in each face.
+  const ownMemory = useRef<CalendarMemory>({});
+  const remembered = memory ?? ownMemory;
+  const [view, setViewNow] = useState<"months" | "list">(
+    () => remembered.current.view ?? defaultView,
+  );
+  const setView = (next: "months" | "list") => {
+    remembered.current.view = next;
+    setViewNow(next);
+  };
+  const [asked, setAsked] = useState<ReadonlySet<string>>(
+    () => remembered.current.asked ?? new Set(),
+  );
+  const onAsked = useCallback(
+    (month: string, whole: boolean) =>
+      setAsked((held) => {
+        const next = new Set(held);
+        if (whole) next.add(month);
+        else next.delete(month);
+        remembered.current.asked = next;
+        return next;
+      }),
+    [remembered],
+  );
+  const evaluatedOn = calendar ? evaluatedDay(calendar) : null;
+  const here = localToday ?? localDay();
   const splitAt = useMetric("--calendar-split", 896);
   const tallAt = useMetric("--calendar-tall", 352);
   // Only what changes the drawing is state: whether there is room for both
@@ -292,17 +345,120 @@ export function FilingCalendarView({
   // The sizes themselves go to the page's styles as they are measured, and
   // draw nothing again.
   const [room, setRoom] = useState({ wide: false, tall: true });
-  // The month at the top of the reader's view, and where it sits: the
-  // place the months are put back on whenever they are laid out anew.
-  const anchor = useRef<{ key: string; top: number } | null>(null);
+  const wide = room.wide;
   const widthWas = useRef<number | null>(null);
   const wideNow = useRef(false);
   // The row of controls stays at the top while the page scrolls under it.
   const head = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);
+  const aside = useRef<HTMLDivElement>(null);
   // How much of the page's top the head keeps: all of it, or its controls.
-  const kept = () =>
-    head.current?.offsetHeight || bar.current?.offsetHeight || 0;
+  const kept = useCallback(
+    () => head.current?.offsetHeight || bar.current?.offsetHeight || 0,
+    [],
+  );
+
+  // The reader's place in each face: the month, or the row of the list, at
+  // the top of their view and how far under the head it sits, or that they
+  // are at the very start. A face is put back on its place whenever it is
+  // laid out anew. Measured from under the head, because the head's own
+  // height changes with the page's width.
+  const place = useRef<{ months: Place | null; list: Place | null }>({
+    months: null,
+    list: null,
+  });
+  // The scroll position this page last set by itself, per scroller: the
+  // scroll event that reports it is not the reader's, and is not taken for
+  // a new place. Taken for one, a place would drift a little at each layout.
+  const ours = useRef(new WeakMap<Element, number>());
+  // Whether the chosen obligation was in view among the months when the
+  // reader last moved: if so it is kept in view when they are laid out anew.
+  const chosenSeen = useRef(false);
+
+  /** Where the months, or the list, are scrolled and what stays above them. */
+  const frame = useCallback(
+    (face: "months" | "list") => {
+      const el = root.current;
+      if (!el) return null;
+      const inAside = face === "list" && wideNow.current;
+      const scroller = inAside ? aside.current : el;
+      if (!scroller || !el.querySelector(`.calendar-${face}`)) return null;
+      // The list keeps a month's name above its rows as well.
+      const name =
+        face === "list"
+          ? (el.querySelector<HTMLElement>(".calendar-list h2")?.offsetHeight ??
+            0)
+          : 0;
+      return {
+        scroller,
+        under:
+          scroller.getBoundingClientRect().top + (inAside ? 0 : kept()) + name,
+        marks: [
+          ...el.querySelectorAll<HTMLElement>(
+            face === "months"
+              ? ".calendar-month"
+              : ".calendar-list :is(li[data-entry], .calendar-today)",
+          ),
+        ],
+      };
+    },
+    [root, kept],
+  );
+  const scrollTo = useCallback((scroller: HTMLElement, top: number) => {
+    scroller.scrollTop = top;
+    ours.current.set(scroller, scroller.scrollTop);
+  }, []);
+  const remember = useCallback(
+    (face: "months" | "list") => {
+      const at = frame(face);
+      if (!at) return;
+      let on: Place | null = null;
+      if (at.scroller.scrollTop <= 0) on = { key: "", top: 0, start: true };
+      else {
+        let row: number | null = null;
+        const current = evaluatedOn?.slice(0, 7);
+        for (const mark of at.marks) {
+          const top = mark.getBoundingClientRect().top;
+          // Past the first row in view: nothing further is nearer.
+          if (row !== null && top > row + 1) break;
+          // Of the months of that row, the current one where it is among
+          // them: a view left where it opened stays on the current month
+          // however its row is made up next.
+          if (row === null || (face === "months" && markKey(mark) === current))
+            on = { key: markKey(mark), top: top - at.under, start: false };
+          if (top >= at.under - 1) row ??= top;
+        }
+      }
+      if (!on) return;
+      place.current[face] = on;
+      remembered.current[face] = on;
+    },
+    [frame, evaluatedOn, remembered],
+  );
+  /** Puts a face back on the reader's place. False where it has none. */
+  const restore = useCallback(
+    (face: "months" | "list") => {
+      const at = frame(face);
+      const on = place.current[face];
+      if (!at || !on) return false;
+      if (on.start) {
+        scrollTo(at.scroller, 0);
+        return true;
+      }
+      const mark = at.marks.find((candidate) => markKey(candidate) === on.key);
+      if (!mark) return false;
+      scrollTo(
+        at.scroller,
+        at.scroller.scrollTop +
+          mark.getBoundingClientRect().top -
+          at.under -
+          on.top,
+      );
+      return true;
+    },
+    [frame, scrollTo],
+  );
+
   const shown = calendar !== null;
   useLayoutEffect(() => {
     const el = root.current;
@@ -322,30 +478,29 @@ export function FilingCalendarView({
       el.style.setProperty("--calendar-height", `${el.clientHeight}px`);
     };
     const resized = () => {
-      // A page made wider or narrower lays its months out in other rows.
-      // The month the reader was on is put back where it was, here, before
-      // the browser reports the scroll that the new layout caused.
+      measure();
       const width = el.clientWidth;
-      const left = anchor.current;
-      if (left && widthWas.current !== null && width !== widthWas.current) {
-        const month = el.querySelector(`[data-month="${left.key}"]`);
-        if (month)
-          el.scrollTop +=
-            month.getBoundingClientRect().top -
-            el.getBoundingClientRect().top -
-            left.top;
-      }
+      const changed = widthWas.current !== null && width !== widthWas.current;
       widthWas.current = width;
       // A change of face is drawn now, before the browser paints: a page
       // that has just become wide enough for both faces is never shown for
-      // a moment with one, laid out for the other. The face that comes to
-      // be shown is then placed by its own rule, which has the last word:
-      // on what is chosen, or on that same month. How much of the head
-      // stays can wait for the next frame, and has to: drawn here it would
-      // resize what is being observed, inside the observation.
-      if (el.clientWidth >= splitAt !== wideNow.current) flushSync(fit);
-      else fit();
-      measure();
+      // a moment with one, laid out for the other. The faces it shows are
+      // then placed by their own rule. How much of the head stays can wait
+      // for the next frame, and has to: drawn here it would resize what is
+      // being observed, inside the observation.
+      if (width >= splitAt !== wideNow.current) {
+        flushSync(fit);
+        measure();
+        return;
+      }
+      fit();
+      // The same faces at another width: their rows are made up anew, and
+      // each is put back on the reader's place, here, before the browser
+      // reports the scroll that the new layout caused.
+      if (changed) {
+        restore("months");
+        restore("list");
+      }
     };
     measure();
     fit();
@@ -355,17 +510,25 @@ export function FilingCalendarView({
     if (head.current) observer.observe(head.current);
     if (bar.current) observer.observe(bar.current);
     return () => observer.disconnect();
-  }, [root, splitAt, tallAt, shown]);
-  const wide = room.wide;
+  }, [root, splitAt, tallAt, shown, kept, restore]);
 
   // The obligation chosen, by Modelo and period, and which face it was
   // chosen in: the other face brings it into view.
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(
+    () => remembered.current.selected ?? null,
+  );
   const chosenIn = useRef<"months" | "list">("months");
-  const select = useCallback((key: string, from: "months" | "list") => {
-    chosenIn.current = from;
-    setSelected((held) => (held === key ? null : key));
-  }, []);
+  const select = useCallback(
+    (key: string, from: "months" | "list") => {
+      chosenIn.current = from;
+      setSelected((held) => {
+        const next = held === key ? null : key;
+        remembered.current.selected = next;
+        return next;
+      });
+    },
+    [remembered],
+  );
   const selectInList = useCallback(
     (key: string) => select(key, "list"),
     [select],
@@ -374,24 +537,47 @@ export function FilingCalendarView({
     (key: string) => select(key, "months"),
     [select],
   );
+  /** A scroll of one of the page's scrollers, as the reader's or not. */
+  const scrolled = (scroller: HTMLElement, faces: ("months" | "list")[]) => {
+    const el = root.current;
+    // Reported while the page is a width its faces have not yet been put
+    // back for: the new layout's doing, not the reader's.
+    if (!el || el.clientWidth !== widthWas.current) return;
+    // Reported for a position this page set by itself.
+    const set = ours.current.get(scroller);
+    ours.current.delete(scroller);
+    if (set !== undefined && Math.abs(set - scroller.scrollTop) < 1) return;
+    for (const face of faces) remember(face);
+    const chosen =
+      selected === null
+        ? null
+        : el.querySelector(
+            `.calendar-months [data-entry="${CSS.escape(selected)}"]`,
+          );
+    if (chosen) {
+      const box = chosen.getBoundingClientRect();
+      const page = el.getBoundingClientRect();
+      chosenSeen.current =
+        box.bottom > page.top + kept() && box.top < page.bottom;
+    }
+  };
 
-  // A face opens on where the person is: on the obligation they chose, or
-  // else the months on the month of the day the product evaluated and the
-  // list on its mark for today. Once for each time a face comes to be
-  // shown; after that the place is theirs: the months come back to the month
-  // that was at the top when they were last scrolled, where it was, in a
-  // pane or beside the list alike.
-  const aside = useRef<HTMLDivElement>(null);
+  // A face that comes to be shown opens on where the person is. One that
+  // was already shown, beside or without the other, and is only laid out
+  // anew goes back to the reader's place, with what they chose kept in
+  // view if it was. One shown afresh opens on what is chosen, or else on
+  // the place it was left at, or else where the calendar stands: the month
+  // of the day the product evaluated, and the list's mark for today.
   const placed = useRef<string | null>(null);
-  const evaluatedOn = calendar ? evaluatedDay(calendar) : null;
-  const here = localToday ?? localDay();
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
     if (evaluatedOn === null) {
       // Nothing is shown: a calendar read anew opens as a first one does.
       placed.current = null;
-      anchor.current = null;
+      place.current = { months: null, list: null };
+      remembered.current.months = null;
+      remembered.current.list = null;
       return;
     }
     const face = wide ? "both" : view;
@@ -400,75 +586,104 @@ export function FilingCalendarView({
       !el.querySelector(face === "list" ? ".calendar-list" : ".calendar-months")
     )
       return;
+    const before = placed.current;
+    // A page brought back has the places it was put away with.
+    if (before === null)
+      place.current = {
+        months: remembered.current.months ?? null,
+        list: remembered.current.list ?? null,
+      };
     placed.current = face;
-    // Its top to just under what stays at the top, with some air.
-    const bring = (scroller: HTMLElement, to: Element | null, air: number) => {
-      if (to)
-        scroller.scrollTop +=
-          to.getBoundingClientRect().top -
-          scroller.getBoundingClientRect().top -
-          air;
-    };
     const chosen = (within: string) =>
       selected === null
         ? null
-        : el.querySelector(`${within} [data-entry="${CSS.escape(selected)}"]`);
-    if (face !== "list") {
-      const bar = chosen(".calendar-months");
-      const left = anchor.current;
-      if (bar) bring(el, bar, kept() + 48);
-      else if (left)
-        bring(el, el.querySelector(`[data-month="${left.key}"]`), left.top);
-      else
-        bring(
-          el,
-          el.querySelector(`[data-month="${evaluatedOn.slice(0, 7)}"]`),
-          kept() + 12,
-        );
-    }
-    // The list keeps a month's name above its rows: exactly its room is
-    // left, so no sliver of the row before shows under it.
-    const list = wide ? aside.current : el;
-    const name =
-      el.querySelector<HTMLElement>(".calendar-list h2")?.offsetHeight ?? 0;
-    if (face !== "months" && list)
-      bring(
-        list,
-        chosen(".calendar-list") ??
-          el.querySelector(".calendar-list .calendar-today"),
-        (wide ? 0 : kept()) + name,
+        : el.querySelector<HTMLElement>(
+            `${within} [data-entry="${CSS.escape(selected)}"]`,
+          );
+    // Its top to just under what stays at the top, with some air.
+    const bring = (
+      of: "months" | "list",
+      to: Element | null,
+      air: number,
+    ): boolean => {
+      const at = frame(of);
+      if (!at || !to) return false;
+      scrollTo(
+        at.scroller,
+        at.scroller.scrollTop + to.getBoundingClientRect().top - at.under - air,
       );
-  }, [evaluatedOn, root, room, view, wide, selected]);
+      // A place the page chose is the reader's until they move.
+      remember(of);
+      return true;
+    };
+    const had = (of: "months" | "list") =>
+      before === of ||
+      before === "both" ||
+      (before === null && place.current[of] !== null);
+    if (face !== "list") {
+      const window = chosen(".calendar-months");
+      const stands = () =>
+        bring(
+          "months",
+          el.querySelector(`[data-month="${evaluatedOn.slice(0, 7)}"]`),
+          12,
+        );
+      if (had("months")) {
+        if (!restore("months")) stands();
+        if (window && chosenSeen.current) {
+          window.scrollIntoView({ block: "nearest" });
+          ours.current.set(el, el.scrollTop);
+        }
+      } else if (!(window && bring("months", window, 48)) && !restore("months"))
+        stands();
+    }
+    if (face !== "months") {
+      const row = chosen(".calendar-list");
+      const stands = () =>
+        bring("list", el.querySelector(".calendar-list .calendar-today"), 0);
+      if (had("list")) {
+        if (!restore("list")) stands();
+      } else if (!(row && bring("list", row, 0)) && !restore("list")) stands();
+    }
+  }, [
+    evaluatedOn,
+    root,
+    room,
+    view,
+    wide,
+    selected,
+    frame,
+    scrollTo,
+    remember,
+    restore,
+    remembered,
+  ]);
   // Back to where the calendar stands: the month of the evaluated day among
   // the months, and its mark in the list, each where a face first opens.
   const toToday = () => {
     const el = root.current;
     if (!el || evaluatedOn === null) return;
-    const bring = (
-      scroller: HTMLElement | null,
-      to: Element | null,
-      air: number,
-    ) => {
-      if (scroller && to)
-        scroller.scrollTop +=
-          to.getBoundingClientRect().top -
-          scroller.getBoundingClientRect().top -
-          air;
-    };
-    bring(
-      el,
-      el.querySelector(
-        `.calendar-months [data-month="${evaluatedOn.slice(0, 7)}"]`,
-      ),
-      kept() + 12,
-    );
-    bring(
-      wide ? aside.current : el,
-      el.querySelector(".calendar-list .calendar-today"),
-      (wide ? 0 : kept()) +
-        (el.querySelector<HTMLElement>(".calendar-list h2")?.offsetHeight ?? 0),
-    );
+    for (const [face, to, air] of [
+      [
+        "months",
+        el.querySelector(
+          `.calendar-months [data-month="${evaluatedOn.slice(0, 7)}"]`,
+        ),
+        12,
+      ],
+      ["list", el.querySelector(".calendar-list .calendar-today"), 0],
+    ] as const) {
+      const at = frame(face);
+      if (!at || !to) continue;
+      at.scroller.scrollTop += to.getBoundingClientRect().top - at.under - air;
+      remember(face);
+    }
   };
+  // Just chosen, an obligation is in view: it was pressed, or is brought
+  // into view below. Whether it still is, is the reader's scrolling to say.
+  useEffect(() => {
+    chosenSeen.current = selected !== null;
+  }, [selected]);
   useEffect(() => {
     if (selected === null) return;
     const other = chosenIn.current === "months" ? "list" : "months";
@@ -477,7 +692,7 @@ export function FilingCalendarView({
         `.calendar-${other} [data-entry="${CSS.escape(selected)}"]`,
       )
       ?.scrollIntoView({ block: "nearest" });
-  }, [selected, view, wide, root]);
+  }, [selected, root]);
 
   // Whether the last thing focused or pressed was in the page. Removing a
   // focused control reports nothing, so this is how its loss is known.
@@ -866,6 +1081,8 @@ export function FilingCalendarView({
               today={here}
               selected={selected}
               onSelect={selectInMonths}
+              asked={asked}
+              onAsked={onAsked}
             />
           ) : (
             list
@@ -877,6 +1094,7 @@ export function FilingCalendarView({
         {wide && !nothing && (
           <div
             ref={aside}
+            onScroll={(event) => scrolled(event.currentTarget, ["list"])}
             className="calendar-aside sticky top-0 h-(--calendar-height) overflow-y-auto border-l bg-background [--calendar-head:0px]"
           >
             {list}
@@ -893,37 +1111,10 @@ export function FilingCalendarView({
       aria-label={t("desktop.calendar.title")}
       aria-busy={refreshing || undefined}
       data-head={room.tall ? "whole" : "controls"}
-      // The month the reader is on, for when the months are laid out anew:
-      // the first whose name is in view under the head, or else the last
-      // that begins above it. A month that begins in view is still the
-      // first to do so when it is put back where it was, so what is kept
-      // does not drift from one layout to the next.
-      onScroll={(event) => {
-        const el = event.currentTarget;
-        // A scroll reported while the page is a width the months have not
-        // yet been put back for is the new layout's doing, not the
-        // reader's: where it left the view is not their place.
-        if (el.clientWidth !== widthWas.current) return;
-        const edge = el.getBoundingClientRect().top;
-        const under = edge + kept() - 1;
-        let on: { key: string; top: number } | null = null;
-        let row: number | null = null;
-        for (const month of el.querySelectorAll<HTMLElement>(
-          ".calendar-month",
-        )) {
-          const top = month.getBoundingClientRect().top;
-          // Past the first row in view: nothing further is nearer.
-          if (row !== null && top > row + 1) break;
-          const key = month.dataset.month ?? "";
-          // Of the months of that row, the current one where it is among
-          // them: a view left where it opened stays on the current month
-          // however its row is made up next.
-          if (row === null || key === evaluatedOn?.slice(0, 7))
-            on = { key, top: top - edge };
-          if (top >= under) row ??= top;
-        }
-        if (on) anchor.current = on;
-      }}
+      // Where the reader is, in the face or faces this page itself scrolls.
+      onScroll={(event) =>
+        scrolled(event.currentTarget, wide ? ["months"] : [view])
+      }
       className="group/calendar calendar-page @container flex min-h-0 flex-1 flex-col overflow-y-auto bg-background focus-visible:-outline-offset-2"
     >
       {body}

@@ -1,4 +1,4 @@
-import type { CalendarEntry, CalendarEvent } from "./views";
+import type { CalendarEntry, CalendarEvent, CalendarUserState } from "./views";
 
 // The filing calendar laid out as months of weeks. This is arithmetic on the
 // dates the product gave and nothing else: which day falls in which column,
@@ -58,6 +58,22 @@ const ordinal = (iso: string): number => {
 const isoOf = (year: number, month: number, day: number) =>
   `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+/** The product's readings in the order they need the person: what is late
+ * first, what is filed last. */
+export const STATE_ORDER: readonly CalendarUserState[] = [
+  "late",
+  "due",
+  "unknown",
+  "filed",
+];
+
+/** Which of two obligations needs the person first: by its reading, then by
+ * the day it binds, the sooner first. */
+const urgency = (a: CalendarEntry, b: CalendarEntry) =>
+  STATE_ORDER.indexOf(a.user_state) - STATE_ORDER.indexOf(b.user_state) ||
+  a.adjusted_closes_on.localeCompare(b.adjusted_closes_on) ||
+  entryKey(a).localeCompare(entryKey(b));
+
 /** The identity of an obligation: its Modelo and period. */
 export const entryKey = (entry: CalendarEntry) =>
   `${entry.modelo}:${entry.period}`;
@@ -92,15 +108,10 @@ export function calendarMonths(
       const span = entrySpan(entry);
       return { entry, from: ordinal(span.from), to: ordinal(span.to) };
     })
-    // Earlier first, and of two that open together the one that closes
-    // sooner first: the nearest deadline takes the first row, which is the
-    // last a crowded week gives up.
-    .sort(
-      (a, b) =>
-        a.from - b.from ||
-        a.to - b.to ||
-        entryKey(a.entry).localeCompare(entryKey(b.entry)),
-    );
+    // Earlier first, and of two that open together the one that needs the
+    // person first: what is late, then the nearest deadline, takes the
+    // first row.
+    .sort((a, b) => a.from - b.from || urgency(a.entry, b.entry));
   const observed = new Map<string, CalendarEvent[]>();
   for (const event of events) {
     const day = event.event_date.slice(0, 10);
@@ -115,8 +126,13 @@ export function calendarMonths(
   // calendar is for, and the list names that month. Never more than a year
   // past the range, whatever a date says.
   const rangeEnd = ordinal(range.to_date);
+  // A window whose opening is not known was returned for the range too:
+  // its closing day is all there is of it to draw.
   const latest = spans.reduce(
-    (far, span) => (span.from <= rangeEnd && span.to > far ? span.to : far),
+    (far, span) =>
+      (span.from <= rangeEnd || span.entry.opens_on === null) && span.to > far
+        ? span.to
+        : far,
     rangeEnd,
   );
   const until = new Date(Math.min(latest, rangeEnd + 366) * DAY_MS);
@@ -187,43 +203,108 @@ export const crowded = (month: GridMonth, cap: number = LANES_SHOWN) =>
 
 /** A week as it is drawn. */
 export type DrawnWeek = {
-  /** The windows drawn. `stop` marks the first drawn of its obligation in
-   * the whole calendar: one obligation crosses many weeks, and is one thing
-   * to reach and to hear. */
-  bars: { bar: GridBar; stop: boolean }[];
+  /** The windows drawn, each in its row. `stop` marks the one part of its
+   * obligation that the keyboard reaches and that is read aloud: one
+   * obligation crosses many weeks, and is one thing to reach and to hear. */
+  bars: { bar: GridBar; lane: number; stop: boolean }[];
   /** The windows left out, for the row that counts them. */
   hidden: GridBar[];
 };
 
+const overlap = (a: GridBar, b: GridBar) => a.from <= b.to && b.from <= a.to;
+
+/** The windows of `bars` in rows, none sharing a day with another of its
+ * row, as few rows as there can be: in the order they are given. */
+function rows(bars: readonly GridBar[]): { bar: GridBar; lane: number }[] {
+  const placed: { bar: GridBar; lane: number }[] = [];
+  for (const bar of bars) {
+    let lane = 0;
+    while (placed.some((at) => at.lane === lane && overlap(at.bar, bar)))
+      lane += 1;
+    placed.push({ bar, lane });
+  }
+  return placed;
+}
+
+/**
+ * What of a week with more windows than `cap` rows is drawn: as many as
+ * fit in one row fewer, the last being the count's. What needs the person
+ * most is kept first, and of those what closes soonest; what is `chosen`
+ * is kept before any of them.
+ */
+function kept(
+  week: GridWeek,
+  cap: number,
+  chosen: string | null,
+): { shown: { bar: GridBar; lane: number }[]; hidden: GridBar[] } {
+  const ranked = [...week.bars].sort(
+    (a, b) =>
+      Number(entryKey(b.entry) === chosen) -
+        Number(entryKey(a.entry) === chosen) || urgency(a.entry, b.entry),
+  );
+  const shown: GridBar[] = [];
+  const hidden: GridBar[] = [];
+  for (const bar of ranked) {
+    // A row is free for it where no window already kept shares its days.
+    const room = rows([...shown, bar]).every((at) => at.lane < cap - 1);
+    (room ? shown : hidden).push(bar);
+  }
+  // In the order the week is laid out in, whatever was kept first: a window
+  // that was drawn before it was chosen stays in its row.
+  const order = new Map(week.bars.map((bar, index) => [bar, index]));
+  const byOrder = (a: GridBar, b: GridBar) =>
+    (order.get(a) ?? 0) - (order.get(b) ?? 0);
+  return {
+    shown: rows(shown.sort(byOrder)),
+    hidden: hidden.sort(byOrder),
+  };
+}
+
 /**
  * What of each week is drawn when a week shows at most `cap` rows. A week
- * with more keeps its first rows, the nearest deadlines, and gives its last
- * row to the count of the rest; a month that is `open` is drawn whole.
+ * with more keeps what needs the person most and gives its last row to the
+ * count of the rest; a month that is `open` is drawn whole. The obligation
+ * that is `chosen`, by its key, is never among what is only counted.
  */
 export function drawnWeeks(
   months: readonly GridMonth[],
   open: (month: GridMonth) => boolean,
+  chosen: string | null = null,
   cap: number = LANES_SHOWN,
 ): Map<GridWeek, DrawnWeek> {
+  const all = (week: GridWeek) => ({
+    shown: week.bars.map((bar) => ({ bar, lane: bar.lane })),
+    hidden: [] as GridBar[],
+  });
+  const take = (month: GridMonth, week: GridWeek, key: string | null) =>
+    open(month) || week.lanes <= cap ? all(week) : kept(week, cap, key);
+  // The parts of the chosen obligation that are drawn whether or not it is
+  // chosen. Where it has any, the first of them is its stop, so choosing it
+  // does not move the keyboard's place to a part drawn only for the choice.
+  const anyway = new Set<GridBar>();
+  if (chosen !== null)
+    for (const month of months)
+      for (const week of month.weeks)
+        for (const { bar } of take(month, week, null).shown)
+          if (entryKey(bar.entry) === chosen) anyway.add(bar);
   const reached = new Set<CalendarEntry>();
   const drawn = new Map<GridWeek, DrawnWeek>();
-  for (const month of months) {
-    const whole = open(month);
+  for (const month of months)
     for (const week of month.weeks) {
-      const over = !whole && week.lanes > cap;
-      const bars: DrawnWeek["bars"] = [];
-      const hidden: GridBar[] = [];
-      for (const bar of week.bars) {
-        if (over && bar.lane >= cap - 1) {
-          hidden.push(bar);
-          continue;
-        }
-        bars.push({ bar, stop: !reached.has(bar.entry) });
-        reached.add(bar.entry);
-      }
-      drawn.set(week, { bars, hidden });
+      const { shown, hidden } = take(month, week, chosen);
+      drawn.set(week, {
+        bars: shown.map(({ bar, lane }) => {
+          const stop =
+            !reached.has(bar.entry) &&
+            (entryKey(bar.entry) !== chosen ||
+              anyway.size === 0 ||
+              anyway.has(bar));
+          if (stop) reached.add(bar.entry);
+          return { bar, lane, stop };
+        }),
+        hidden,
+      });
     }
-  }
   return drawn;
 }
 

@@ -1234,6 +1234,43 @@ test("an arrow from a record the following log has moved past takes the view to 
   ).toBe(true);
 });
 
+test("under a fast feed, every key from a record the log has passed takes the view with it", async ({
+  page: target,
+}) => {
+  // A batch every thirty milliseconds: one can land between a key and the
+  // scroll it causes, which is when the log used to carry on following.
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=30",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  const seq = await focusNewest(target);
+  await expect
+    .poll(async () =>
+      Number(await list.locator(".record").last().getAttribute("data-seq")),
+    )
+    .toBeGreaterThan(seq + 200);
+  for (let press = 0; press < 30; press++) {
+    await target.keyboard.press(press % 3 === 2 ? "PageDown" : "ArrowDown");
+    const at = await list.evaluate((element) => {
+      const row = document.activeElement as HTMLElement;
+      const box = element.getBoundingClientRect();
+      const rect = row.getBoundingClientRect();
+      return {
+        newest: row === element.querySelector(":scope > .record:last-of-type"),
+        inView: rect.bottom > box.top && rect.top < box.bottom,
+      };
+    });
+    // On the newest record the log follows again, as it should.
+    if (at.newest) break;
+    expect(at.inView, `press ${press}`).toBe(true);
+    await expect(follow, `press ${press}`).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  }
+});
+
 test("Follow keeps the keyboard when the bar changes shape under it", async ({
   page: target,
 }) => {
@@ -2788,6 +2825,225 @@ test("the months come back to the month the reader left them on, in a pane and b
   await expect(heading("2026-10")).not.toBeInViewport();
 });
 
+test("the reader's month does not drift however often the months are laid out anew", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const head = target.locator(".pane-docs .pane-head");
+  // How far under the head a month's name sits.
+  const under = (month: string) =>
+    page.evaluate((element, key) => {
+      const kept =
+        element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
+        element.querySelector<HTMLElement>(".calendar-controls")
+          ?.offsetHeight ||
+        0;
+      return Math.round(
+        (element.querySelector(`[data-month="${key}"]`)?.getBoundingClientRect()
+          .top ?? 0) -
+          element.getBoundingClientRect().top -
+          kept,
+      );
+    }, month);
+  const toMarch = () =>
+    page.evaluate((element) => {
+      const month = element.querySelector('[data-month="2027-03"]');
+      if (!month) throw new Error("no March");
+      element.scrollTop +=
+        month.getBoundingClientRect().top -
+        element.getBoundingClientRect().top -
+        140;
+    });
+  // The reader goes on to March. The place that is kept is the month that
+  // begins March's row, which need not be March: the months of a row are
+  // made up anew at every width, and that one month is what stays put.
+  const march = page.locator('.calendar-month[data-month="2027-03"]');
+  await toMarch();
+  await expect(march.locator("h2")).toBeInViewport();
+  const begins = await page.evaluate((element) => {
+    const months = [
+      ...element.querySelectorAll<HTMLElement>(".calendar-month"),
+    ];
+    const top = (month: Element) =>
+      Math.round(month.getBoundingClientRect().top);
+    const row = top(element.querySelector('[data-month="2027-03"]')!);
+    return months.find((month) => top(month) === row)?.dataset.month ?? "";
+  });
+  expect(begins).not.toBe("");
+  const left = { march: await under("2027-03"), begins: await under(begins) };
+  // Maximized and restored, three times over. Beside the list the month
+  // that began the row is where it was, to the pixel; back in a pane so is
+  // March. Nothing walks from one round to the next.
+  for (let round = 0; round < 3; round++) {
+    await head
+      .getByRole("button", { name: label("desktop.calendar.maximize") })
+      .click();
+    await expect(page.locator(".calendar-aside")).toBeVisible();
+    expect(
+      Math.abs((await under(begins)) - left.begins),
+      `maximized ${round}`,
+    ).toBeLessThanOrEqual(1);
+    await head
+      .getByRole("button", { name: label("desktop.pane.restore") })
+      .click();
+    await expect(page.locator(".calendar-aside")).toHaveCount(0);
+    expect(
+      Math.abs((await under("2027-03")) - left.march),
+      `restored ${round}`,
+    ).toBeLessThanOrEqual(1);
+  }
+  // Nor by the window narrowed and widened by a few pixels, and by a lot.
+  for (const width of [1598, 1600, 1300, 1000, 1300, 1598, 1600]) {
+    await target.setViewportSize({ width, height: 900 });
+    await expect
+      .poll(async () => Math.abs((await under(begins)) - left.begins), {
+        message: `at ${width}`,
+      })
+      .toBeLessThanOrEqual(1);
+  }
+  expect(Math.abs((await under("2027-03")) - left.march)).toBeLessThanOrEqual(
+    1,
+  );
+
+  // A reader at the very start stays at the very start, whatever the head
+  // above the months comes to measure at each width. The scroll is the
+  // reader's once the page has been told of it, a frame later.
+  await page.evaluate(
+    (element) =>
+      new Promise<void>((done) => {
+        element.addEventListener("scroll", () => done(), { once: true });
+        element.scrollTop = 0;
+      }),
+  );
+  for (const width of [1300, 900, 700, 1100, 1600]) {
+    await target.setViewportSize({ width, height: 900 });
+    await expect
+      .poll(() => page.evaluate((element) => element.scrollTop), {
+        message: `at ${width}`,
+      })
+      .toBe(0);
+  }
+
+  // The place is the reader's even with something chosen elsewhere: a
+  // window of October is chosen, and the reader goes on to March.
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await page.evaluate((element) => {
+    element
+      .querySelector('.calendar-bar[data-entry="303:2026-3T"]')
+      ?.scrollIntoView({ block: "center" });
+  });
+  await page.locator('.calendar-bar[data-entry="303:2026-3T"]').first().click();
+  await toMarch();
+  await expect(march.locator("h2")).toBeInViewport();
+  const chosenAt = {
+    march: await under("2027-03"),
+    begins: await under(begins),
+  };
+  await head
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  await expect(page.locator(".calendar-aside")).toBeVisible();
+  expect(Math.abs((await under(begins)) - chosenAt.begins)).toBeLessThanOrEqual(
+    1,
+  );
+  await head
+    .getByRole("button", { name: label("desktop.pane.restore") })
+    .click();
+  await expect(page.locator(".calendar-aside")).toHaveCount(0);
+  expect(
+    Math.abs((await under("2027-03")) - chosenAt.march),
+  ).toBeLessThanOrEqual(1);
+
+  // The list has its place too: left at its start in a pane, it is at its
+  // start beside the months, and back.
+  await page
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  await page.evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await head
+    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .click();
+  const aside = page.locator(".calendar-aside");
+  await expect(aside).toBeVisible();
+  expect(await aside.evaluate((element) => element.scrollTop)).toBe(0);
+  await head
+    .getByRole("button", { name: label("desktop.pane.restore") })
+    .click();
+  await expect(aside).toHaveCount(0);
+  expect(await page.evaluate((element) => element.scrollTop)).toBe(0);
+});
+
+test("a calendar put away and brought back is as it was left", async ({
+  page: target,
+}) => {
+  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await open(target, "signed-in", "&calendar=busy");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const whole = page.locator(
+    '.calendar-month[data-month="2027-01"] .calendar-whole',
+  );
+  // A month asked for whole, something chosen, and a place left on.
+  await whole.click();
+  await expect(whole).toHaveAttribute("aria-expanded", "true");
+  const chosen = page.locator(
+    '.calendar-bar[data-entry="347:2026"]:not([tabindex="-1"])',
+  );
+  await chosen.scrollIntoViewIfNeeded();
+  await chosen.click();
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
+  const where = () =>
+    page.evaluate((element) => {
+      const month = element.querySelector('[data-month="2027-02"]');
+      return Math.round(
+        (month?.getBoundingClientRect().top ?? 0) -
+          element.getBoundingClientRect().top,
+      );
+    });
+  await page.evaluate((element) => {
+    const month = element.querySelector('[data-month="2027-02"]');
+    if (!month) throw new Error("no February");
+    element.scrollTop +=
+      month.getBoundingClientRect().top -
+      element.getBoundingClientRect().top -
+      160;
+  });
+  await expect.poll(where).toBeGreaterThan(100);
+  const left = await where();
+  // Put away with the chord, and brought back with it.
+  await target.keyboard.press("Control+Shift+KeyD");
+  await expect(page).toHaveCount(0);
+  await target.keyboard.press("Control+Shift+KeyD");
+  await expect(page).toBeFocused();
+  await expect(whole).toHaveAttribute("aria-expanded", "true");
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
+  expect(Math.abs((await where()) - left)).toBeLessThanOrEqual(1);
+  // The face is kept as well.
+  await page
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  await target.keyboard.press("Control+Shift+KeyD");
+  await expect(page).toHaveCount(0);
+  await target.keyboard.press("Control+Shift+KeyD");
+  await expect(
+    page.getByRole("radio", { name: label("desktop.calendar.view_list") }),
+  ).toBeChecked();
+  await expect(
+    page.locator('.calendar-list li[data-entry="347:2026"]'),
+  ).toHaveAttribute("aria-current", "true");
+  // Nothing was read again for it.
+  expect(await calendarReads(target)()).toBe(1);
+});
+
 test("a short page keeps only the calendar's controls in view, a tall one its whole head", async ({
   page: target,
 }) => {
@@ -2899,9 +3155,16 @@ test("with the system's colours forced, the calendar still shows its day, its st
   expect(await style(due, "border-top-style")).toBe("solid");
   await expect(late.locator("[data-slot=icon]")).toBeVisible();
   await expect(due.locator("[data-slot=icon]")).toHaveCount(0);
-  await expect(
-    page.locator('.calendar-bar[data-state="filed"] [data-slot=icon]').first(),
-  ).toBeVisible();
+  // What is filed is the first a crowded week gives up: it is found with
+  // its month drawn whole, hollow where what is due is filled, and with a
+  // double edge here, where there is no fill to be hollow against.
+  await page
+    .locator('.calendar-month[data-month="2027-01"] .calendar-whole')
+    .click();
+  const filed = page.locator('.calendar-bar[data-state="filed"]').first();
+  await expect(filed.locator("[data-slot=icon]")).toBeVisible();
+  expect(await style(filed, "border-top-style")).toBe("double");
+  expect(await style(filed, "border-top-width")).toBe("3px");
   // The unknown window of the fixture is one day wide and is found whole.
   await page
     .locator('.calendar-month[data-month="2027-02"] .calendar-whole')
@@ -2991,16 +3254,18 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
     page.locator('.calendar-month[data-month="2026-12"] .calendar-whole'),
   ).toHaveCount(0);
 
-  // Eight windows cross the week of the third: the three that close on the
-  // twentieth are drawn, and the fourth row counts the five that close
-  // later. No week is more than four rows.
+  // Eight windows cross the week of the third. Three are drawn: the two
+  // still due on the twentieth, and the first of those due later. The one
+  // already filed is counted with the rest, though it closes as soon as
+  // any: the fourth row counts five. No week is more than four rows.
   const week = january.locator(":scope > div:last-child > div").nth(2);
   await expect(week.locator(".calendar-bar")).toHaveCount(3);
   await expect(week.locator(".calendar-bar")).toHaveText([
     /^111/,
-    /^115/,
     /^123/,
+    /^130/,
   ]);
+  await expect(week.locator('[data-state="filed"]')).toHaveCount(0);
   await expect(week.locator(".calendar-more")).toHaveText(
     label("desktop.calendar.more", { count: 5 }),
   );
@@ -3055,14 +3320,23 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
 
   // By the pointer, the count itself opens its month, and the keyboard is
   // left on the control that undoes it, not on nothing.
-  await week.locator(".calendar-more").click();
+  // The month grows above the week that was pressed, and that week stays
+  // where it was pressed: a later week, with crowded ones above it.
+  const later = january.locator(":scope > div:last-child > div").nth(4);
+  await later.locator(".calendar-more").scrollIntoViewIfNeeded();
+  const top = async () => Math.round((await later.boundingBox())!.y);
+  const pressedAt = await top();
+  await later.locator(".calendar-more").click();
   await expect(whole).toHaveAttribute("aria-expanded", "true");
   await expect(whole).toBeFocused();
+  expect(Math.abs((await top()) - pressedAt)).toBeLessThanOrEqual(1);
+  await expect(later).toBeInViewport();
   await whole.click();
   await expect(whole).toHaveAttribute("aria-expanded", "false");
 
   // What is chosen is never among what is only counted: chosen in the
-  // list, an obligation left out of its weeks has its months drawn whole.
+  // list, an obligation left out of its weeks is drawn in each of them, in
+  // place of what the week would keep last. The month is no taller for it.
   const view = page.getByRole("radiogroup", {
     name: label("desktop.calendar.view"),
   });
@@ -3079,12 +3353,50 @@ test("a crowded month shows each week's nearest deadlines and counts the rest, a
   const chosen = page.locator('.calendar-bar[data-entry="390:2026"]').first();
   await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(chosen).toBeInViewport();
-  await expect(whole).toHaveAttribute("aria-expanded", "true");
-  // Fewer, of a month the choice keeps whole, lets the choice go with it.
-  await whole.click();
   await expect(whole).toHaveAttribute("aria-expanded", "false");
-  await expect(page.locator("[data-selected]")).toHaveCount(0);
+  expect(await rows(january)).toBe(4);
+  expect((await january.boundingBox())!.height).toBe(collapsed);
+  await expect(week.locator(".calendar-bar")).toHaveText([
+    /^111/,
+    /^123/,
+    /^390/,
+  ]);
+  // Choosing one that is drawn does not redraw the month under the hand:
+  // the window pressed stays under the pointer, and stays the stop.
+  const drawnOne = january.locator(
+    '.calendar-bar[data-entry="123:2026-4T"]:not([tabindex="-1"])',
+  );
+  await drawnOne.scrollIntoViewIfNeeded();
+  await drawnOne.hover();
+  const at = (await drawnOne.boundingBox())!;
+  await drawnOne.click();
+  await expect(drawnOne).toHaveAttribute("aria-pressed", "true");
+  await expect(drawnOne).toBeFocused();
+  expect((await drawnOne.boundingBox())!.y).toBe(at.y);
+  // The one chosen before is counted again, now that it is not chosen.
   await expect(january.locator('[data-entry="390:2026"]')).toHaveCount(0);
+  // Let go with the keyboard on it, a window drawn only for being chosen
+  // stays until the keyboard leaves it, and then is counted again.
+  await view
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  await page
+    .locator('.calendar-list li[data-entry="390:2026"]')
+    .getByRole("button")
+    .click();
+  await view
+    .getByRole("radio", { name: label("desktop.calendar.view_months") })
+    .click();
+  await chosen.focus();
+  await target.keyboard.press("Enter");
+  await expect(page.locator("[data-selected]")).toHaveCount(0);
+  await expect(chosen).toBeFocused();
+  await target.keyboard.press("Tab");
+  await expect(january.locator('[data-entry="390:2026"]')).toHaveCount(0);
+  await expect(
+    target.locator(":focus"),
+    "the keyboard has gone on to something, not to nothing",
+  ).toHaveCount(1);
   expect(await calendarReads(target)()).toBe(1);
 });
 

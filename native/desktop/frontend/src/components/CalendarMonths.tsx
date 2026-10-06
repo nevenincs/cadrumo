@@ -1,4 +1,5 @@
 import { useId, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
@@ -24,13 +25,16 @@ import type { CalendarUserState, FilingCalendar } from "../shell/views";
 // and an edge in the reading's colour, with the words in ink, so the colour
 // never carries the text. Colour is not the only teller: the edge is drawn
 // differently for what is late and what is not known, and a window with
-// room for it carries the reading's mark. Where the system forces its own
-// colours the wash and the hue are gone, and the edge and the mark remain.
+// room for it carries the reading's mark. What is filed is drawn hollow,
+// what is still to do filled. Where the system forces its own colours the
+// wash and the hue are gone: the edge and the mark remain, and what is
+// filed takes a double edge in place of its hollow.
 const BAR_TONE: Record<CalendarUserState, string> = {
-  due: "border-border-strong bg-secondary",
-  late: "border-dashed border-destructive/60 bg-destructive/10",
-  filed: "border-success/60 bg-success/10",
-  unknown: "border-dotted border-warning/60 bg-warning/10",
+  due: "border-muted-foreground bg-secondary",
+  late: "border-dashed border-destructive bg-destructive/10",
+  filed:
+    "border-success bg-transparent forced-colors:border-y-[3px] forced-colors:border-double",
+  unknown: "border-dotted border-warning bg-warning/10",
 };
 
 function Month({
@@ -47,9 +51,8 @@ function Month({
   month: GridMonth;
   /** What of each of the month's weeks is drawn. */
   drawn: ReadonlyMap<GridWeek, DrawnWeek>;
-  /** Whether a crowded month is drawn whole, for having been asked for or
-   * for holding what is chosen; null where the month is not crowded and
-   * there is nothing to ask. */
+  /** Whether a crowded month is drawn whole, for having been asked for;
+   * null where the month is not crowded and there is nothing to ask. */
   whole: boolean | null;
   locale: string;
   /** The local day. */
@@ -199,7 +202,7 @@ function Month({
                 )}
               </div>
             ))}
-            {(drawn.get(week)?.bars ?? []).map(({ bar, stop }) => {
+            {(drawn.get(week)?.bars ?? []).map(({ bar, lane, stop }) => {
               const key = entryKey(bar.entry);
               const said = describe(bar);
               return (
@@ -220,7 +223,7 @@ function Month({
                   title={said}
                   style={{
                     gridColumn: `${bar.from + 1} / ${bar.to + 2}`,
-                    gridRow: bar.lane + 2,
+                    gridRow: lane + 2,
                   }}
                   className={cn(
                     "calendar-bar @container flex h-control-xs min-w-0 cursor-pointer items-center border-y px-1 text-xs font-medium text-foreground",
@@ -278,11 +281,19 @@ function Month({
                 title={(drawn.get(week)?.hidden ?? [])
                   .map((bar) => `${bar.entry.modelo} ${bar.entry.period}`)
                   .join(", ")}
-                onClick={() => {
-                  onWhole(true);
+                onClick={(event) => {
+                  // The month grows above and below this week. It is drawn
+                  // at once and the week put back where it was pressed, so
+                  // what was asked for opens under the pointer.
+                  const row = event.currentTarget.parentElement;
+                  const page = row?.closest<HTMLElement>(".calendar-page");
+                  const was = row?.getBoundingClientRect().top ?? 0;
+                  flushSync(() => onWhole(true));
+                  if (row && page)
+                    page.scrollTop += row.getBoundingClientRect().top - was;
                   // This row goes with what it counted: the keyboard goes to
-                  // the control that brings it back.
-                  wholeControl.current?.focus();
+                  // the control that brings it back, the view unmoved.
+                  wholeControl.current?.focus({ preventScroll: true });
                 }}
               >
                 {t("desktop.calendar.more", {
@@ -310,6 +321,8 @@ export function CalendarMonths({
   today,
   selected,
   onSelect,
+  asked,
+  onAsked,
 }: {
   calendar: FilingCalendar;
   /** The chrome language: for names, and for the day a week begins on. */
@@ -320,6 +333,9 @@ export function CalendarMonths({
   /** The obligation chosen, by its Modelo and period. */
   selected: string | null;
   onSelect: (key: string) => void;
+  /** The crowded months the person asked to see whole, by their keys. */
+  asked: ReadonlySet<string>;
+  onAsked: (month: string, whole: boolean) => void;
 }) {
   const weekStart = useMemo(() => weekStartOf(locale), [locale]);
   const months = useMemo(
@@ -333,42 +349,25 @@ export function CalendarMonths({
       ),
     [calendar, weekStart],
   );
-  // The crowded months the person asked to see whole. A month that holds a
-  // part of the chosen obligation that would be left out is drawn whole as
-  // well: what is chosen is never among what is only counted.
-  const [asked, setAsked] = useState<ReadonlySet<string>>(new Set());
-  const chosenIn = useMemo(
-    () =>
-      new Set(
-        months
-          .filter(
-            (month) =>
-              selected !== null &&
-              month.weeks.some(
-                (week) =>
-                  week.lanes > LANES_SHOWN &&
-                  week.bars.some(
-                    (bar) =>
-                      bar.lane >= LANES_SHOWN - 1 &&
-                      entryKey(bar.entry) === selected,
-                  ),
-              ),
-          )
-          .map((month) => month.key),
-      ),
-    [months, selected],
-  );
+  // A window deselected with the keyboard on it stays drawn until the
+  // keyboard leaves it: what was only drawn for being chosen would otherwise
+  // go from under the key that let it go.
+  const [lingering, setLingering] = useState<string | null>(null);
+  const kept = selected ?? lingering;
   const drawn = useMemo(
-    () =>
-      drawnWeeks(
-        months,
-        (month) => asked.has(month.key) || chosenIn.has(month.key),
-      ),
-    [months, asked, chosenIn],
+    () => drawnWeeks(months, (month) => asked.has(month.key), kept),
+    [months, asked, kept],
   );
   return (
     <div
       className="calendar-months grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-x-4 gap-y-5 p-2 @md:p-4"
+      onBlur={(event) => {
+        if (
+          lingering !== null &&
+          event.relatedTarget?.getAttribute?.("data-entry") !== lingering
+        )
+          setLingering(null);
+      }}
       // From one obligation the arrow keys go to the next and the one
       // before, and Home and End to the first and the last: each is one
       // stop, in the order of the days. Tab still goes through them all.
@@ -406,28 +405,22 @@ export function CalendarMonths({
           key={month.key}
           month={month}
           drawn={drawn}
-          whole={
-            crowded(month)
-              ? asked.has(month.key) || chosenIn.has(month.key)
-              : null
-          }
-          onWhole={(whole) => {
-            setAsked((held) => {
-              const next = new Set(held);
-              if (whole) next.add(month.key);
-              else next.delete(month.key);
-              return next;
-            });
-            // Fewer, of a month the choice is keeping whole: the choice is
-            // let go with it, since it would be among what is left out.
-            if (!whole && selected !== null && chosenIn.has(month.key))
-              onSelect(selected);
-          }}
+          whole={crowded(month) ? asked.has(month.key) : null}
+          onWhole={(whole) => onAsked(month.key, whole)}
           locale={locale}
           today={today}
           weekStart={weekStart}
           selected={selected}
-          onSelect={onSelect}
+          onSelect={(key) => {
+            // Let go with the keyboard on it: it stays until that leaves.
+            setLingering(
+              selected === key &&
+                document.activeElement?.getAttribute("data-entry") === key
+                ? key
+                : null,
+            );
+            onSelect(key);
+          }}
         />
       ))}
     </div>

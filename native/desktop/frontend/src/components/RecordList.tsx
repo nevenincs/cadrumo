@@ -585,8 +585,15 @@ export const RecordList = memo(function RecordList({
     if (target instanceof HTMLElement && target.classList.contains("record")) {
       event.preventDefault();
       // Moving up from the end is leaving it, whether or not the record
-      // moved to is already in view.
-      if (["ArrowUp", "Home", "PageUp"].includes(event.key) && target !== row)
+      // moved to is already in view. So is moving down to a record that is
+      // not the newest, from one the log has gone past: leaving is decided
+      // here, by the key, and not by the scroll that follows it, which a
+      // batch of records can arrive ahead of.
+      if (
+        target !== row &&
+        (["ArrowUp", "Home", "PageUp"].includes(event.key) ||
+          Number(target.dataset.seq) !== visible.at(-1)?.seq)
+      )
         leaveEnd();
       target.focus();
       if (

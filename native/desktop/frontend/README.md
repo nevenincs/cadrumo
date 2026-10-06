@@ -288,11 +288,13 @@ The calendar has two faces over the one read, in
   the mark, the day and an outline on what is chosen remain.
   A window whose opening is null is drawn on its closing day alone and says
   the opening was not reported: an opening is never guessed. A week shows
-  at most four rows: with more windows than that it keeps the three that
-  close soonest and gives the fourth to a count of the rest. Such a month
-  has a control beside its name that draws it whole and back, and a month
-  holding a part of the chosen obligation that would be left out is drawn
-  whole for as long as it is chosen. The week begins
+  at most four rows. With more windows than that it keeps three rows of
+  them and gives the fourth to a count of the rest: what is late first, then
+  what is due, what is not known and what is filed, and of each the one that
+  closes soonest, whenever it opened. Such a month has a control beside its
+  name that draws it whole and back. What is chosen is always drawn, in
+  place of what its week would keep last, so the month is no taller for a
+  choice and nothing moves under the hand that made it. The week begins
   on the day the chrome language begins it.
 - **The list** says where each obligation stands, by month, with what was
   observed in each month under its obligations.
@@ -303,9 +305,13 @@ itself. A narrower page shows one, the months first, with a switch that
 stays in reach as the page scrolls; a page at least `--calendar-tall` high
 keeps its whole head there, counts and all. Each face opens on where the
 person is: the current month, the list's mark for today, or the obligation
-chosen. After that the place is theirs: the month whose name was in view
-is put back where it was whenever the months are laid out anew, by a pane
-resized or maximized or by coming back from the list.
+chosen. After that the place is theirs, in each face: the month that begins
+the row at the top of the view, or the row at the top of the list, is put
+back where it was under the head whenever the face is laid out anew, by a
+pane resized or maximized or by coming back from the other face. A scroll
+the layout caused, or the page itself made, is not taken for the reader's.
+The shell keeps the face, the choice, the months drawn whole and both
+places while the page is put away, and lets them go with the profile.
 Choosing an obligation in one face marks it in the other and brings it into
 view. An obligation is one keyboard stop and one thing read aloud however
 many weeks its bar crosses; from one, the arrow keys go to the next and the
