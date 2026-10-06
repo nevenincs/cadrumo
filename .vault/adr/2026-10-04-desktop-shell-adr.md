@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:9dd36b6b02c3ff22d35bc58b31fc9feb9eb4b9271d5ecd694a93694f8667f7fd'
+body_hash: 'sha256:c5554fadd6b34dfa2f877e261264648ec5b8c963ae5fc7347f3415b50e05ca2f'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -80,10 +80,11 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 - The log reader expects rotation to be late, skipped or racing, because several processes share one `RotatingFileHandler` file and a rename on Windows fails while another process has the file open. It never infers that a process exited from a file event. It also doesn't assume that profile workers log to this file.
 - `source` on a log record is an open enumeration. A later runtime-manager source must not break the shell.
 - Terminal output is never dropped. Backpressure pauses the PTY reader instead.
-- The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control, with three exceptions from `2026-10-04-application-sign-in-adr`:
+- The shell holds no runtime connection and no runtime authority. It never opens the runtime endpoint, and it shows no runtime availability, authentication request, timeout or control, with these exceptions from `2026-10-04-application-sign-in-adr`:
   - the sign-in view's signed-in state, as `aeat config sign-in-status` reports it
   - that view's typed refusals
   - the manager-start path offered when the runtime is unavailable
+  - by that record's amendment of 2026-10-06, the profiles of the sign-in view: their labels and which is selected, as `aeat config profile list` reports them, the profile a sign-in names, and the creation of a profile through the canonical CLI
 - Following `2026-10-04-runtime-manager-architecture-adr` (desktop-shell plan S12), the desktop may start a missing `cadrumo-manager` by shell dispatch (Explorer on Windows, LaunchServices on macOS), never as its own child. It may ask the manager to `reveal` its own UI over the manager IPC. It never starts, stops or authenticates the runtime.
 - The desktop shell owns the cross-version GUI single instance:
   - The lock is per user, keyed by identity family and channel.

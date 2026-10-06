@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:272c1a01209a74e64b32cf6cf0b0122bec8c8d152bb96af6167acf301418a944'
+body_hash: 'sha256:68dfbd885a4862fbca20b653ba730ef1d57dd00b02cfb739ebedd8b00445a6cf'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-research]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -18,7 +18,7 @@ related:
 
 ## Problem Statement
 
-The user asked on 2026-10-06 for the desktop window to show a count of messages from the tax agency and a calendar of filing obligations. `2026-10-04-desktop-shell-adr` rules that the shell holds no runtime connection and no runtime authority, with three exceptions that all concern sign-in. Neither view can be built inside that ruling, so the ruling has to be widened deliberately or the views refused.
+The user asked on 2026-10-06 for the desktop window to show a count of messages from the tax agency and a calendar of filing obligations. `2026-10-04-desktop-shell-adr` rules that the shell holds no runtime connection and no runtime authority, with exceptions that all concern sign-in. Neither view can be built inside that ruling, so the ruling has to be widened deliberately or the views refused.
 
 ## Considerations
 
@@ -38,7 +38,7 @@ The user asked on 2026-10-06 for the desktop window to show a count of messages 
 
 ## Constraints
 
-- This widens the exceptions of `2026-10-04-desktop-shell-adr` by a fourth: named read-only views of the signed-in profile. That record's other rulings stand: the shell holds no session, receipt, credential or runtime connection, and shows no runtime control.
+- This widens the exceptions of `2026-10-04-desktop-shell-adr` by one more: named read-only views of the signed-in profile. That record's other rulings stand: the shell holds no session, receipt, credential or runtime connection, and shows no runtime control.
 - The host exposes a closed list of view commands. Each maps to exactly one product command with fixed arguments chosen by the host; the frontend supplies at most typed, validated parameters such as a date range. There is no command that takes a command.
 - Every product command so used is a registered read with no effect. It never starts a capture, a sync, a sign-in or any request to the tax agency.
 - A view is read only while the account is signed in, and is discarded on sign-out, on a change of profile and when the window closes. It is held in memory only: never in the window's storage, never in a log line, a diagnostic snapshot or an error message.

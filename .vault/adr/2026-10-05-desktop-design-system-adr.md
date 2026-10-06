@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c241d39b4e5648e3fd367da3418144d624265612729d7b9cc36525b639b7db1'
+body_hash: 'sha256:cc654c0302fe49fa5847361c4571d88eff9b80c84c96ee0029e683b9636adba8'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -83,7 +83,7 @@ On 2026-10-05 the user directed that the frontend keep React and Vite, adopt sha
 - The page labels itself as simulated. A scenario result is design and test evidence only; it is never evidence of authentication, of a native menu, or of any host contract.
 - It simulates only what `Host` publishes. A native window action without a host contract is not drawn as if it existed.
 
-**Sign-in presentation.** The sign-in view becomes a dialog in the shell origin, opened whenever the active profile has no live sign-in and the TUI pane would otherwise start. `2026-10-04-application-sign-in-adr` is unchanged: one dedicated submission, no automatic retry, status re-read after any failure, typed refusals shown undiminished, handover to the TUI for locked, first-run, other-profile and recovery cases, hidden where unsupported. The password is read from the field once, sent as bytes, cleared from the field and zeroed; it is never stored, logged or placed in component state.
+**Sign-in presentation.** The sign-in view becomes a dialog in the shell origin, opened whenever the active profile has no live sign-in and the TUI pane would otherwise start. The submission rules of `2026-10-04-application-sign-in-adr` are unchanged: one dedicated submission, no automatic retry, status re-read after any failure, typed refusals shown undiminished, handover to the TUI for locked and recovery cases, hidden where unsupported. By that record's amendment of 2026-10-06 the dialog also names the profile under a label, offers the choice between profiles and is the form that creates one; first run and other profiles hand over to the TUI only where the host offers no profile commands. The password is read from the field once, sent as bytes, cleared from the field and zeroed; it is never stored, logged or placed in component state.
 
 **Settings.** The settings surface keeps the items of `2026-10-04-desktop-shell-adr` and the Account section of the sign-in decision, and gains one item the user approved on 2026-10-05: a display-language choice for this window, following Cadrumo's output language by default. It is a frontend preference that selects among the languages `desktop_environment` reports; it writes no product Settings and reaches no backend.
 
