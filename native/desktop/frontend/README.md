@@ -232,6 +232,7 @@ Every pointer path has a keyboard path through the same action.
 | Ctrl+K, or Ctrl+Shift+K in a terminal | Open the palette: documentation search and every action                |
 | F6, Shift+F6                          | Move between the first pane's page, the TUI, the bottom panel and rail |
 | Ctrl+Shift+T                          | Show or hide the TUI                                                   |
+| Ctrl+Shift+D                          | Show or hide the filing calendar, where the host offers it             |
 | Ctrl+`                                | Show or hide the bottom panel                                          |
 | Ctrl+Shift+1, 2, 3                    | Console, Python shell, Logs                                            |
 | Ctrl+Shift+M                          | Maximize the focused area, or restore the layout                       |

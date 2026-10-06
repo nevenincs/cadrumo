@@ -28,6 +28,14 @@ const STATE_TONE: Record<
   "neutral" | "danger" | "success" | "warning"
 > = { due: "neutral", late: "danger", filed: "success", unknown: "warning" };
 
+// What needs the person first comes first.
+const STATE_ORDER: readonly CalendarUserState[] = [
+  "late",
+  "due",
+  "unknown",
+  "filed",
+];
+
 const DAY_MS = 86_400_000;
 
 /** An ISO date as a local calendar day: no time, so no zone can move it. */
@@ -296,19 +304,42 @@ export function FilingCalendarView({
           timeStyle: "short",
         }).format(new Date(generated_at))
       : "—";
+    // How the range stands, in the product's own four readings: counted,
+    // never combined into a verdict.
+    const standing = STATE_ORDER.map(
+      (kind) =>
+        [
+          kind,
+          state.calendar.entries.filter((entry) => entry.user_state === kind)
+            .length,
+        ] as const,
+    ).filter(([, count]) => count > 0);
     body = (
       <>
-        <div className="flex shrink-0 items-center gap-3 border-b px-4 py-1.5">
-          <p className="flex-1 text-sm text-muted-foreground">
-            {t("desktop.calendar.as_of", { date: asOf })}
-          </p>
+        {/* The button keeps the first row's end; with nothing to count,
+            the note takes the row beside it. */}
+        <div className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b px-4 py-2">
+          {standing.length > 0 && (
+            <p className="calendar-standing col-start-1 row-start-1 flex flex-wrap gap-1.5">
+              {standing.map(([kind, count]) => (
+                <Badge key={kind} variant={STATE_TONE[kind]}>
+                  {t(`desktop.calendar.state.${kind}`)}
+                  <span className="font-semibold tabular-nums">{count}</span>
+                </Badge>
+              ))}
+            </p>
+          )}
           <IconButton
             label={t("desktop.calendar.refresh")}
             pending={refreshing}
+            className="col-start-2 row-start-1"
             onClick={onRefresh}
           >
             {!refreshing && <Icon name="reset" />}
           </IconButton>
+          <p className="col-start-1 text-sm text-muted-foreground">
+            {t("desktop.calendar.as_of", { date: asOf })}
+          </p>
         </div>
         {warnings.length > 0 && (
           <Alert

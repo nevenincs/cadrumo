@@ -250,6 +250,40 @@ test("F6 reaches the calendar where the documentation would be", async ({
   ).toBeFocused();
 });
 
+test("the calendar's chord shows it from a terminal and puts it away again", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.locator('[data-terminal="tui"] .xterm-screen').click();
+  await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
+  await target.keyboard.press("ControlOrMeta+Shift+D");
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page).toBeFocused();
+  // The chord is on the button that does the same.
+  const button = rail(target).getByRole("button", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(button).toHaveAttribute("aria-pressed", "true");
+  await button.hover();
+  await expect(target.getByRole("tooltip")).toContainText("D");
+  await target.keyboard.press("ControlOrMeta+Shift+D");
+  await expect(page).toHaveCount(0);
+  await expect(target.locator(".docs-frame")).toBeVisible();
+});
+
+test("the calendar's chord does nothing on a host without profile views", async ({
+  page: target,
+}) => {
+  await open(target, "no-views");
+  await expect(target.locator(".docs-frame")).toBeVisible();
+  await rail(target).getByRole("button").first().focus();
+  await target.keyboard.press("ControlOrMeta+Shift+D");
+  await expect(target.locator(".calendar-page")).toHaveCount(0);
+  await expect(target.locator(".docs-frame")).toBeVisible();
+});
+
 test("F6 moves focus from area to area and back", async ({ page: target }) => {
   await open(target);
   await expect(target.locator(".docs-frame")).toBeVisible();

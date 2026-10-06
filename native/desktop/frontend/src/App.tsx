@@ -911,6 +911,9 @@ export function App({ host }: { host: Host }) {
         group: "views",
         icon: "calendar",
         keywords: "obligations deadlines modelo plazos",
+        chords: [
+          { mod: true, shift: true, code: "KeyD", key: "D", scope: "global" },
+        ],
         // Only where the host offers the view: nothing leads to a page that
         // could not load.
         enabled: () => views !== undefined,
@@ -1452,6 +1455,7 @@ export function App({ host }: { host: Host }) {
             id: "calendar",
             icon: "calendar",
             label: t("desktop.calendar.title"),
+            shortcut: primaryChord(byId("view.calendar")),
             pressed: calendarVisible,
             divided: true,
             onClick: () => runAction("view.calendar"),

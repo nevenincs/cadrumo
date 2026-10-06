@@ -1122,6 +1122,18 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
     .first();
   await expect(late).toContainText(label("desktop.calendar.state.late"));
   await expect(late).toContainText(label("desktop.calendar.aeat.not_observed"));
+  // How the range stands, in the product's four readings, the pressing
+  // ones first: one late, five due, one unknown, two filed.
+  await expect(page.locator(".calendar-standing [data-slot=badge]")).toHaveText(
+    [
+      ["late", 1],
+      ["due", 5],
+      ["unknown", 1],
+      ["filed", 2],
+    ].map(
+      ([kind, count]) => `${label(`desktop.calendar.state.${kind}`)}${count}`,
+    ),
+  );
   // What could not be determined is said, not left out.
   await expect(page).toContainText("347");
   await expect.poll(calendarReads(target)).toBe(1);

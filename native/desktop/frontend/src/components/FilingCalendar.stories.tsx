@@ -9,9 +9,14 @@ import { PaneHeader } from "./PaneHeader";
 // product's own shape. The toolbar's language also sets how dates are written.
 const noop = () => undefined;
 
-type Args = { state: CalendarState; refreshing?: boolean };
+type Args = {
+  state: CalendarState;
+  refreshing?: boolean;
+  /** Why the calendar is withheld, as a phase of the account. */
+  phase?: "checking" | "locked" | "services-down";
+};
 
-function Page({ state, refreshing }: Args) {
+function Page({ state, refreshing, phase }: Args) {
   const t = useStrings();
   return (
     <div className="flex h-dvh flex-col bg-background">
@@ -24,8 +29,17 @@ function Page({ state, refreshing }: Args) {
         state={state}
         locale={document.documentElement.lang || "en"}
         refreshing={refreshing}
+        gate={
+          phase === "checking"
+            ? { title: t("desktop.signin.checking"), pending: true }
+            : phase === "locked"
+              ? { title: t("desktop.account.signed_out") }
+              : phase === "services-down"
+                ? { title: t("desktop.account.services_down") }
+                : undefined
+        }
         onRefresh={noop}
-        onSignIn={noop}
+        onSignIn={phase ? undefined : noop}
         onOpen={noop}
       />
     </div>
@@ -53,6 +67,28 @@ export const NothingDue: Story = {
 export const Loading: Story = { args: { state: { kind: "loading" } } };
 
 export const SignedOut: Story = { args: { state: { kind: "withheld" } } };
+
+// Withheld for a reason no password answers: the page says what the rest of
+// the window says of the account, and offers nothing it cannot do.
+export const Checking: Story = {
+  name: "Withheld: checking the sign-in",
+  args: { state: { kind: "withheld" }, phase: "checking" },
+};
+
+export const Locked: Story = {
+  name: "Withheld: no password can answer",
+  args: { state: { kind: "withheld" }, phase: "locked" },
+};
+
+export const ServicesDown: Story = {
+  name: "Withheld: no services",
+  args: { state: { kind: "withheld" }, phase: "services-down" },
+};
+
+export const FailedRefreshing: Story = {
+  name: "Failed, reading again",
+  args: { state: { kind: "failed", code: "timed_out" }, refreshing: true },
+};
 
 export const Failed: Story = {
   args: { state: { kind: "failed", code: "timed_out" } },
