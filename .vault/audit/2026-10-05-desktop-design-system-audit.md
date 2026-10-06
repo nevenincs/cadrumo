@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:7010a5cb08f7411fcc6f3448c3b787dd780ce012847a23759e5c24dfb37f81cf'
+body_hash: 'sha256:ff986d43675504f4b189a34c39d4f7e12fbab0257de835d5517941d71928228f'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -454,6 +454,14 @@ A reader's scroll in the same frame as a change of width is taken for the layout
 ### Pane note | low | a pane's note was cut with nowhere to read the rest
 
 A sweep of the whole shell in four languages at three sizes, the calendar apart: the log's bar, the tabs, the pane heads, the palette, settings, the throttled dialog, the signed-out pane, the rail and the window itself. Everything found was by design, the sideways-scrolling log bar and the icon-only tabs on a phone, but one: at 200 percent in Spanish, Catalan and Hungarian the note beside a pane's title, which gives way first, was cut to a few letters, and a session that failed says why in that note. Resolved in `4c173862fb`: the note carries its whole text as its title. A test holds it in Hungarian at 200 percent.
+
+### Tall surfaces | medium | the keyboard could be on a control out of sight
+
+A keyboard pass through settings, the palette and the sign-in dialog at 200 percent and at phone width in Hungarian and Spanish. Focus stayed inside each surface and Escape gave it back, but in settings, which is taller than a window at 200 percent and scrolls inside itself, Tab past the last control went round to the first without scrolling to it: the focus trap moves focus without revealing it. Resolved in `c43f5e567d`: a popover and a dialog bring whatever takes focus inside them into view, at `native/desktop/frontend/src/components/ui/reveal.ts:10`. A test goes round every stop of settings in that window and requires each to be seen. The palette's field has no focus mark of its own, by design: it is the surface's only field and holds the caret.
+
+### Tenth review | medium | a stop the keyboard was handed to could be out of view, and a list brought back was pulled to the choice
+
+An independent review of the ninth review's fixes. The keyboard handed on to an obligation's new stop was left there with the view unmoved, and the stop could be several hundred pixels above; the test only asserted focus. A list shown in a pane was pulled back to the chosen row each time the calendar was brought back, because the rule that shows a choice in the other face ran whenever the page was shown. Resolved in `c43f5e567d`: the view goes to the stop for a keyboard and stays for a pointer, and the rule runs when a choice is made. The room kept for the page's scrollbar left an empty strip on a page with nothing to scroll and put its words off centre; it is kept only where there are months. The check of it asserted a style and not what the style is for; it now presses a week's count on a page that did not scroll and requires the same width and the week unmoved, which the suite can see because the scrollbars are styled and drawn. The places are started afresh with a new memory whether or not the page was without a calendar in between. Checked and found correct by the review: what a crowded week keeps over twenty thousand random weeks, the place over sixty-one positions with no drift, the width sweep, mounts at the threshold, first show, sign-out and sign-in. Not exercised: a switch between two profiles, which the scenario host cannot make.
 
 ## Recommendations
 

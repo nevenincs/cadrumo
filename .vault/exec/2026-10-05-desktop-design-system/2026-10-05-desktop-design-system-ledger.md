@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:03536343ae3e274bb6e5f12d6ca7feb0c9828e0076a8dcf1ab6f19e475ba7d30'
+body_hash: 'sha256:9c8e03369c4b11826b9faa6c12824eb71164e197583dae3145b466fd158fd29a'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -302,6 +302,10 @@ related:
 - `S11` `A` `native/desktop/frontend/src/components/calendarMarks.ts`
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
+- `S11` `A` `native/desktop/frontend/src/components/ui/reveal.ts`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `npm run benchmark -- --check` -> `pass`
 
 ## Notes
 
