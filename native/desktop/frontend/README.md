@@ -375,7 +375,10 @@ npm run benchmark -- --check
 The benchmark builds the product and a minified scenario page, then measures
 bundle size, start-up, idle memory, the palette, a splitter drag, a log of ten
 thousand records, and forty rounds of opening and closing the overlays to show
-that nothing accumulates. It writes `test-results/benchmark/benchmark.json`
+that nothing accumulates. It also measures the filing calendar over a
+fixture with nine windows open at once: how long it takes to be drawn, forty
+rounds of its faces, a month drawn whole and a choice, and a drag of the
+split out to where both faces fit and back. It writes `test-results/benchmark/benchmark.json`
 in the build directory. Each number has a loose budget in the script, and
 `--check` fails the run when one is exceeded. The numbers describe the machine
 they were taken on: compare runs, not hosts.

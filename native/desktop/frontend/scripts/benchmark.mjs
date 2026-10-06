@@ -396,6 +396,120 @@ try {
     },
   };
   await context.close();
+
+  // The filing calendar at the turn of a year, nine windows open at once:
+  // how long it takes to be drawn, what its faces and a month drawn whole
+  // leave behind when gone over many times, and what a drag of the split
+  // costs while its months are laid out anew at every step.
+  {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    const client = await context.newCDPSession(page);
+    await client.send("Performance.enable");
+    await page.goto(
+      `${origin}/scenarios.html?scenario=signed-in&bar=off&latency=0&calendar=busy`,
+    );
+    await page.locator('[data-terminal="console"] .xterm-rows').waitFor();
+    const months = page.locator(".calendar-months");
+    const show = () => page.keyboard.press("Control+Shift+KeyD");
+    const shown = [];
+    for (let run = 0; run < RUNS; run++) {
+      // Timed in the page, from the key to the frame after the months are
+      // in the document.
+      const drawn = page.evaluate(
+        () =>
+          new Promise((done) => {
+            let from = 0;
+            window.addEventListener(
+              "keydown",
+              () => (from = performance.now()),
+              { once: true, capture: true },
+            );
+            const seen = new MutationObserver(() => {
+              if (!document.querySelector(".calendar-month")) return;
+              seen.disconnect();
+              requestAnimationFrame(() => done(performance.now() - from));
+            });
+            seen.observe(document.body, { childList: true, subtree: true });
+          }),
+      );
+      await show();
+      shown.push(await drawn);
+      await show();
+      await months.waitFor({ state: "detached" });
+    }
+    const face = (index) =>
+      page.locator(".calendar-view [role=radio]").nth(index).click();
+    const whole = page.locator(".calendar-whole").first();
+    const churn = async (count) => {
+      for (let run = 0; run < count; run++) {
+        await show();
+        await months.waitFor();
+        await face(1);
+        await page.locator(".calendar-list").waitFor();
+        await face(0);
+        await months.waitFor();
+        await whole.click();
+        await page.locator('.calendar-whole[aria-expanded="true"]').waitFor();
+        await whole.click();
+        await page.locator(".calendar-bar").first().click();
+        await show();
+        await months.waitFor({ state: "detached" });
+      }
+      return metrics(client);
+    };
+    const settled = await churn(10);
+    const later = await churn(40);
+    await show();
+    await months.waitFor();
+    const held = await metrics(client);
+    const separator = page.locator(".split-separator").first();
+    const handle = await separator.boundingBox();
+    const drag = await frames(page, async () => {
+      await page.mouse.move(handle.x, handle.y + 200);
+      await page.mouse.down();
+      // Out to where both faces fit and back: every step lays the months
+      // out anew, and two of them change the face.
+      for (let step = 0; step <= 60; step++) {
+        await page.mouse.move(
+          handle.x + (step <= 30 ? step : 60 - step) * 12,
+          handle.y + 200,
+        );
+        await nextFrame(page);
+        // At its widest the page has both faces: a drag that never got
+        // there measured nothing that was asked.
+        if (
+          step === 30 &&
+          (await page.locator(".calendar-aside").count()) === 0
+        )
+          throw new Error("The drag did not widen the calendar to both faces.");
+      }
+      await page.mouse.up();
+    });
+    if ((await page.locator(".calendar-aside").count()) !== 0)
+      throw new Error("The drag did not bring the calendar back to one face.");
+    report.calendar = {
+      windows: await page.locator("li[data-entry], .calendar-bar").count(),
+      shownMs: {
+        first: round(shown[0]),
+        median: round(median(shown)),
+      },
+      heapMB: held.heapMB,
+      churn: {
+        cycles: 40,
+        nodesGrown: later.nodes - settled.nodes,
+        listenersGrown: later.listeners - settled.listeners,
+      },
+      splitDragFrameMs: {
+        median: round(median(drag)),
+        p95: round(percentile(drag, 0.95)),
+        worst: round(Math.max(...drag)),
+      },
+    };
+    await context.close();
+  }
 } finally {
   await browser.close();
   server.close();
@@ -429,6 +543,23 @@ const BUDGETS = [
     50,
   ],
   ["heap with the largest log MB", report.log.heapMB, 48],
+  ["calendar shown, median ms", report.calendar.shownMs.median, 150],
+  [
+    "nodes grown over 40 calendar cycles",
+    report.calendar.churn.nodesGrown,
+    1500,
+  ],
+  [
+    "listeners grown over 40 calendar cycles",
+    report.calendar.churn.listenersGrown,
+    300,
+  ],
+  [
+    "splitter drag frame with the calendar, p95 ms",
+    report.calendar.splitDragFrameMs.p95,
+    34,
+  ],
+  ["heap with the calendar MB", report.calendar.heapMB, 24],
 ];
 report.budgets = BUDGETS.map(([name, value, most]) => ({
   name,
