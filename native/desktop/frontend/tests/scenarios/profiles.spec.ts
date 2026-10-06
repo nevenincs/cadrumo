@@ -87,6 +87,54 @@ test("several profiles: the profile is a labelled choice with the selected one c
   expect(await everyCall(target)).toContain("signInProfile 1");
 });
 
+test("the password can be typed as soon as the status is known, before the profiles have been read", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=signed-out&latency=1500&bar=off");
+  // The status has answered and the list has not: the selected profile is
+  // named, and its password field has the keyboard.
+  await expect(password(target)).toBeFocused();
+  await expect(dialog(target).locator("select")).toHaveCount(0);
+  await expect(
+    dialog(target).getByRole("group", {
+      name: label("desktop.signin.profile"),
+    }),
+  ).toContainText("Demo profile");
+  await password(target).pressSequentially("typed early");
+  // The list arrives: the choice appears, and nothing typed is lost.
+  await expect(choice(target).locator("option")).toHaveCount(3);
+  await expect(choice(target).locator("option:checked")).toHaveText(
+    "Demo profile",
+  );
+  await expect(password(target)).toBeFocused();
+  await expect(password(target)).toHaveValue("typed early");
+});
+
+test("with no profile selected the window waits for the list before it says there is none", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=choose-profile&latency=1200&bar=off",
+  );
+  // Not the form that creates a profile, shown and then taken away.
+  await expect(target.locator(".pane-tui")).toContainText(
+    label("desktop.signin.checking"),
+  );
+  await expect(form(target)).toHaveCount(0);
+  await expect(choice(target).locator("option:not([disabled])")).toHaveCount(3);
+  await expect(form(target)).toHaveCount(0);
+});
+
+test("signed in, the window does not read the profiles it has no use for", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
+  await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect.poll(calls(target, "signInStatus")).toBeGreaterThan(1);
+  expect(await calls(target, "profiles")()).toBe(0);
+});
+
 test("another profile chosen is the one signed in to, and the one the window then names", async ({
   page: target,
 }) => {

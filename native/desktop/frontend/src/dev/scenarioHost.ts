@@ -114,6 +114,8 @@ export function scenarioHost(
   const profiles: ProfileAccounts = {
     async list() {
       say("profiles");
+      // A process of the product's, as every other read is.
+      await wait(options.latencyMs);
       if (scenario.profiles === "unreadable") throw failure("timed_out", "cli");
       return {
         profiles: [...accounts]

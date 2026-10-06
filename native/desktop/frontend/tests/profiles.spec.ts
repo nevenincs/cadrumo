@@ -77,6 +77,13 @@ test("with no profile selected, the profiles that exist are still there to sign 
   expect(phaseOf(true, none, false, list([]))).toBe("no-profile");
   expect(phaseOf(true, none, false, list(["Ana", "Berta"]))).toBe("signed-out");
   expect(canSignIn(phaseOf(true, none, false, list(["Ana"])), null)).toBe(true);
+  // Until a host that lists profiles has answered, none selected is not
+  // yet none at all: the window is still finding out.
+  expect(phaseOf(true, none, false, null, true)).toBe("checking");
+  expect(phaseOf(true, none, false, list([]), false)).toBe("no-profile");
+  expect(
+    phaseOf(true, status({ active_profile: "Ana" }), false, null, true),
+  ).toBe("signed-out");
   // What comes before it in the reading is not changed by a list.
   expect(
     phaseOf(true, status({ state: "present" }), false, list(["Ana"])),

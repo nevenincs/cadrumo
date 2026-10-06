@@ -65,6 +65,8 @@ export function phaseOf(
   status: SignInStatus | null,
   handover: boolean,
   profiles: ProfileList | null = null,
+  /** The host lists profiles and has not answered yet. */
+  listPending = false,
 ): AccountPhase {
   if (!available) return "no-host";
   if (!status) return "checking";
@@ -74,9 +76,10 @@ export function phaseOf(
   if (!status.runtimeAvailable) return "services-down";
   if (status.state === "unknown") return "unknown";
   // With none selected, the profiles that exist are still there to choose
-  // from: only where none is known is there nothing to sign in to.
+  // from: only where none is known is there nothing to sign in to. Until
+  // the list has been read that is not known either way.
   if (status.active_profile === null && !profiles?.profiles.length)
-    return "no-profile";
+    return listPending ? "checking" : "no-profile";
   return "signed-out";
 }
 
@@ -177,19 +180,19 @@ export function useSignIn(host: Host) {
       const generation = ++request.current;
       const promise = Promise.resolve().then(async () => {
         try {
-          // Read together, so that the form never shows a status beside
-          // a list that is older than it. A list that cannot be read is
-          // not an empty one.
-          const [next, list] = await Promise.all([
-            host.signInStatus(),
-            host.profiles ? host.profiles.list().catch(() => null) : null,
-          ]);
+          // Each read is a process of the product's, and takes seconds:
+          // the status is shown as soon as it is known. The profiles are
+          // read only while there is a sign-in to prepare, after it; a
+          // list that cannot be read is not an empty one.
+          const next = await host.signInStatus();
           if (generation !== request.current) return;
           setStatus(next);
-          if (host.profiles)
-            setProfiles(
-              (held) => list ?? held ?? { profiles: [], complete: false },
-            );
+          if (!host.profiles || next.state === "present") return;
+          const list = await host.profiles.list().catch(() => null);
+          if (generation !== request.current) return;
+          setProfiles(
+            (held) => list ?? held ?? { profiles: [], complete: false },
+          );
         } catch (error) {
           if (generation === request.current)
             setStatus({ ...unknownStatus, refusal: refusalFrom(error) });
@@ -303,7 +306,13 @@ export function useSignIn(host: Host) {
     }
   };
 
-  const phase = phaseOf(host.available, status, handover, profiles);
+  const phase = phaseOf(
+    host.available,
+    status,
+    handover,
+    profiles,
+    host.profiles !== undefined && profiles === null,
+  );
   return {
     status,
     phase,
