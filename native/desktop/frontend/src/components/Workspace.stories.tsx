@@ -19,7 +19,10 @@ const meta = { title: "Shell/Workspace" } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function useRailItems(chosen: string, errors = 0) {
+/** What the Messages button has to say: a count, or why there is none. */
+type Messages = number | "never" | "failed" | "unknown";
+
+function useRailItems(chosen: string, errors = 0, messages?: Messages) {
   const t = useStrings();
   const item = (
     id: string,
@@ -38,7 +41,41 @@ function useRailItems(chosen: string, errors = 0) {
     item("search", "search", "desktop.rail.search", "Ctrl+K"),
     item("docs", "book", "desktop.rail.docs_home", "Alt+Home"),
     item("tui", "tui", "desktop.rail.tui", "Ctrl+Shift+T"),
-    { ...item("aeat", "office", "desktop.rail.aeat"), divided: true },
+    // The profile's views, where the host offers them, lead the shortcuts.
+    ...(messages === undefined
+      ? []
+      : [
+          {
+            ...item("calendar", "calendar", "desktop.calendar.title"),
+            divided: true,
+          },
+          {
+            ...item("messages", "mail", "desktop.rail.messages"),
+            ...(typeof messages === "number"
+              ? messages > 0
+                ? {
+                    badge: messages,
+                    badgeLabel: t("desktop.messages.unread", {
+                      count: messages,
+                    }),
+                  }
+                : { hint: t("desktop.messages.none_unread") }
+              : messages === "never"
+                ? { hint: t("desktop.messages.never"), pin: "unknown" as const }
+                : messages === "failed"
+                  ? {
+                      hint: t("desktop.messages.failed", {
+                        code: "timed_out",
+                      }),
+                      pin: "failed" as const,
+                    }
+                  : {}),
+          },
+        ]),
+    {
+      ...item("aeat", "office", "desktop.rail.aeat"),
+      divided: messages === undefined,
+    },
     {
       ...item("console", "console", "desktop.rail.console", "Ctrl+Shift+1"),
       divided: true,
@@ -56,10 +93,18 @@ function useRailItems(chosen: string, errors = 0) {
   return { label: t("desktop.rail.label"), top, bottom };
 }
 
-function RailSpecimen({ chosen, errors }: { chosen: string; errors?: number }) {
+function RailSpecimen({
+  chosen,
+  errors,
+  messages,
+}: {
+  chosen: string;
+  errors?: number;
+  messages?: Messages;
+}) {
   return (
-    <div className="flex h-96 border bg-chrome">
-      <Rail {...useRailItems(chosen, errors)} />
+    <div className="flex h-120 border bg-chrome">
+      <Rail {...useRailItems(chosen, errors, messages)} />
     </div>
   );
 }
@@ -76,6 +121,25 @@ export const RailStates: Story = {
       <RailSpecimen chosen="tui" />
       <RailSpecimen chosen="console" errors={3} />
       <RailSpecimen chosen="logs" errors={128} />
+    </Specimen>
+  ),
+};
+
+export const RailViews: Story = {
+  name: "Rail with profile views",
+  parameters: { surface: "chrome" },
+  render: () => (
+    <Specimen
+      title="Rail with profile views"
+      note="Where the host offers the profile's views, the calendar and Messages lead the shortcuts. Messages shows what was unread at the last sync; none unread shows nothing more, while never synced and a failed read carry a hollow pin, not a zero, and say which in the tooltip and the name. Signed out, it says nothing."
+      className="items-start gap-8"
+    >
+      <RailSpecimen chosen="calendar" messages={3} />
+      <RailSpecimen chosen="tui" messages={128} errors={3} />
+      <RailSpecimen chosen="tui" messages={0} />
+      <RailSpecimen chosen="tui" messages="never" />
+      <RailSpecimen chosen="tui" messages="failed" />
+      <RailSpecimen chosen="tui" messages="unknown" />
     </Specimen>
   ),
 };

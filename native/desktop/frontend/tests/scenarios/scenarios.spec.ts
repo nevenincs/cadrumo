@@ -1225,6 +1225,7 @@ test("the messages button counts what is unread and opens the TUI", async ({
     named("desktop.messages.unread", { count: 3 }),
   );
   await expect(button.locator("[data-slot=badge]")).toHaveText("3");
+  await expect(button.locator("[data-pin]")).toHaveCount(0);
   await expect.poll(calls(target, "notifications")).toBe(1);
   await button.click();
   await expect(tui(target)).toBeFocused();
@@ -1299,10 +1300,19 @@ test("what is not known of the messages is said, never shown as none unread", as
   await expect(messagesButton(target).locator("[data-slot=badge]")).toHaveCount(
     0,
   );
+  // A hollow pin stands where a count would be: not a zero.
+  await expect(messagesButton(target).locator("[data-pin]")).toHaveAttribute(
+    "data-pin",
+    "unknown",
+  );
   // A read that failed says so, with its code.
   await open(target, "views-refused");
   await expect(messagesButton(target)).toHaveAccessibleName(
     named("desktop.messages.failed", { code: "timed_out" }),
+  );
+  await expect(messagesButton(target).locator("[data-pin]")).toHaveAttribute(
+    "data-pin",
+    "failed",
   );
   // The tooltip says what the name says.
   await messagesButton(target).hover();

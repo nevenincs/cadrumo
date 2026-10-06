@@ -1402,7 +1402,7 @@ export function App({ host }: { host: Host }) {
             label: t("desktop.rail.messages"),
             ...(messages.kind === "ready"
               ? messages.summary.captured_at === null
-                ? { hint: t("desktop.messages.never") }
+                ? { hint: t("desktop.messages.never"), pin: "unknown" }
                 : messages.summary.unread > 0
                   ? {
                       badge: messages.summary.unread,
@@ -1414,6 +1414,7 @@ export function App({ host }: { host: Host }) {
               : messages.kind === "failed"
                 ? {
                     hint: t("desktop.messages.failed", { code: messages.code }),
+                    pin: "failed",
                   }
                 : {}),
             onClick: () => runAction("view.messages"),

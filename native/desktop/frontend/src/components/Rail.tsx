@@ -1,5 +1,6 @@
 import { Toolbar } from "radix-ui";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Separator } from "@/components/ui/separator";
@@ -18,6 +19,9 @@ export type RailItem = {
   /** What the item has to say when it shows no count: a state, shown after
    * the label in the tooltip and in the accessible name. */
   hint?: string;
+  /** A hollow pin where a count would be: what the item counts is not
+   * known, or could not be read. Never drawn together with a count. */
+  pin?: "unknown" | "failed";
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
   onClick: () => void;
@@ -54,6 +58,17 @@ function RailButton({ item }: { item: RailItem }) {
             >
               {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}
             </Badge>
+          ) : item.pin ? (
+            // Hollow, as a session's dot is once there is nothing running:
+            // not a zero, an absence of an answer.
+            <span
+              data-pin={item.pin}
+              aria-hidden="true"
+              className={cn(
+                "absolute top-1 right-1 size-2 rounded-full bg-chrome ring-1 ring-inset",
+                item.pin === "failed" ? "ring-destructive" : "ring-faint",
+              )}
+            />
           ) : null}
         </IconButton>
       </Toolbar.Button>
