@@ -226,6 +226,56 @@ test("a tap reaches the rail, the tabs and the log filters", async ({
   expect(await overflowing(target)).toBe(false);
 });
 
+test("a finger drawn down the log leaves its end, and the bar is one row", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000&feed=200",
+  );
+  await target.locator("#tab-logs").tap();
+  const list = target.locator(".logview-list");
+  const follow = target.getByRole("button", {
+    name: label("desktop.logs.follow"),
+  });
+  await expect(list.locator(".record").last()).toBeVisible();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  // Under a finger, two rows of controls would leave the records two lines:
+  // the bar is one row, and the list has most of the panel.
+  const sizes = await target.evaluate(() => {
+    const bar = document.querySelector(".logview > div");
+    const rows = document.querySelector(".logview-list");
+    return {
+      bar: bar?.getBoundingClientRect().height ?? 0,
+      list: rows?.getBoundingClientRect().height ?? 0,
+    };
+  });
+  expect(sizes.bar).toBeLessThan(70);
+  expect(sizes.list).toBeGreaterThan(sizes.bar * 2);
+  // A real drag, sent as touch input.
+  const box = (await list.boundingBox())!;
+  const client = await target.context().newCDPSession(target);
+  const x = box.x + box.width / 2;
+  const from = box.y + 20;
+  const touch = (type: "touchStart" | "touchMove" | "touchEnd", y: number) =>
+    client.send("Input.dispatchTouchEvent", {
+      type,
+      touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+    });
+  await touch("touchStart", from);
+  for (let step = 1; step <= 8; step++)
+    await touch("touchMove", from + step * 10);
+  await touch("touchEnd", from + 80);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // The place holds while records arrive.
+  const gap = () =>
+    list.evaluate(
+      (element) =>
+        element.scrollHeight - element.scrollTop - element.clientHeight,
+    );
+  const before = await gap();
+  await expect.poll(gap).toBeGreaterThan(before);
+});
+
 test("a touch drag resizes the panel", async ({ page: target }) => {
   await open(target);
   const handle = target.getByRole("separator", {

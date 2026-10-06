@@ -434,6 +434,11 @@ test("a log record's detail opens and closes by keyboard", async ({
   await target.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(target.locator(".record pre")).toContainText("Traceback");
+  // And closes by the same key, with the keyboard still on it.
+  await target.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(target.locator(".record pre")).toHaveCount(0);
+  await expect(toggle).toBeFocused();
 });
 
 test("log records are reached, marked and given their menu by keyboard", async ({
@@ -448,7 +453,12 @@ test("log records are reached, marked and given their menu by keyboard", async (
   expect(count).toBeGreaterThan(3);
   // One tab stop: from the filter, Tab passes the bar's controls and lands
   // on the newest record.
-  await rows.last().focus();
+  await target.locator(".logview .filter-text").focus();
+  for (let press = 0; press < 12; press++) {
+    await target.keyboard.press("Tab");
+    if (await target.locator(".logview-list .record:focus").count()) break;
+  }
+  await expect(rows.last()).toBeFocused();
   await expect(rows.last()).toHaveAttribute("aria-current", "true");
   await target.keyboard.press("ArrowUp");
   await expect(rows.nth(count - 2)).toBeFocused();
@@ -487,6 +497,15 @@ test("log records are reached, marked and given their menu by keyboard", async (
     await expect(menu).toBeHidden();
     await expect(row).toBeFocused();
   }
+  // Shift+F10 is the same key by another name.
+  await target.keyboard.press("Shift+F10");
+  await expect(menu).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  // The log has a name of its own for a screen reader's list of regions.
+  await expect(
+    target.getByRole("log", { name: label("desktop.rail.logs") }),
+  ).toBeVisible();
 });
 
 test("Enter on a record opens its detail", async ({ page: target }) => {

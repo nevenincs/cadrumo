@@ -437,6 +437,7 @@ test("the smallest window keeps the newest record in view", async ({
   expect(boxes.list?.height ?? 0).toBeGreaterThanOrEqual(40);
   expect(boxes.list?.bottom ?? 0).toBeLessThanOrEqual(boxes.window);
   expect(boxes.newest).toBeLessThanOrEqual(boxes.window);
+  expect(boxes.newest).toBeLessThanOrEqual((boxes.list?.bottom ?? 0) + 1);
   expect(
     await target
       .locator(".logview")
@@ -643,11 +644,333 @@ test("End returns a reader to the newest record of a busy log", async ({
     await target.mouse.wheel(0, -900);
     await expect(follow).toHaveAttribute("aria-pressed", "false");
     await list.locator(".record").nth(5).focus();
+    // The newest record drawn before the key: whatever takes focus after it
+    // cannot be older than that.
+    const newestBefore = await list.evaluate((element) =>
+      Number((element.lastElementChild as HTMLElement | null)?.dataset.seq),
+    );
     await target.keyboard.press("End");
     await expect(follow).toHaveAttribute("aria-pressed", "true");
     await expect(list.locator(".record")).toHaveCount(400);
+    // The record that took focus is at least as new as anything there was
+    // before the key, and the view is at the end of the log.
     await expect(list.locator(".record:focus")).toHaveCount(1);
+    const landed = await list.evaluate((element) => ({
+      seq: Number(
+        element.querySelector<HTMLElement>(".record:focus")?.dataset.seq,
+      ),
+      fromEnd: element.scrollHeight - element.scrollTop - element.clientHeight,
+    }));
+    expect(landed.seq).toBeGreaterThanOrEqual(newestBefore);
+    expect(landed.fromEnd).toBeLessThan(40);
   }
+});
+
+// Where the top of the view is: the record there, and how far from the end.
+const logPlace = (target: Page) =>
+  target.locator(".logview-list").evaluate((element) => {
+    const edge = element.getBoundingClientRect().top;
+    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
+      (candidate) => candidate.getBoundingClientRect().bottom > edge + 1,
+    );
+    return {
+      seq: Number(row?.dataset.seq ?? Number.NaN),
+      top: Math.round((row?.getBoundingClientRect().top ?? 0) - edge),
+      fromEnd: Math.round(
+        element.scrollHeight - element.scrollTop - element.clientHeight,
+      ),
+      scrollTop: Math.round(element.scrollTop),
+    };
+  });
+
+test("a filter that still shows the reader's record keeps their place", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000",
+  );
+  await openLogs(target);
+  const { follow } = await overLog(target);
+  await target.mouse.wheel(0, -3000);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await expect
+    .poll(async () => (await logPlace(target)).fromEnd)
+    .toBeGreaterThan(2000);
+  const before = await logPlace(target);
+  // Every level: more records than before, the reader's among them.
+  await target
+    .getByLabel(label("desktop.logs.minimum_level"))
+    .selectOption("0");
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(async () => (await logPlace(target)).seq).toBe(before.seq);
+  expect(
+    Math.abs((await logPlace(target)).top - before.top),
+  ).toBeLessThanOrEqual(2);
+});
+
+test("a filter that hides the reader's record starts the new view at its end, and carries nothing over", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000",
+  );
+  await openLogs(target);
+  const { follow } = await overLog(target);
+  await target.mouse.wheel(0, -3000);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  const filter = target.locator(".logview .filter-text");
+  // Nothing matches: the reader's record is not in this view.
+  await filter.fill("no such record anywhere");
+  await expect(target.locator(".logview-list .record")).toHaveCount(0);
+  await filter.fill("");
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(async () => (await logPlace(target)).fromEnd)
+    .toBeLessThan(40);
+  // Leaving the end again leaves it from here: the place held in the old
+  // view, three thousand pixels up, is not come back to.
+  await overLog(target);
+  await target.mouse.wheel(0, -40);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await target.waitForTimeout(300);
+  expect((await logPlace(target)).fromEnd).toBeLessThan(400);
+  // The same by the Follow button, with no scroll at all.
+  await follow.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await follow.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await target.waitForTimeout(300);
+  expect((await logPlace(target)).fromEnd).toBeLessThan(400);
+});
+
+test("Tab into a log the reader has scrolled leaves their place alone", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await target.mouse.wheel(0, -3000);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await expect
+    .poll(async () => (await logPlace(target)).fromEnd)
+    .toBeGreaterThan(2000);
+  const before = await logPlace(target);
+  // From the bar, Tab by Tab, until focus is in the list.
+  await target.locator(".logview .filter-text").focus();
+  for (let press = 0; press < 12; press++) {
+    await target.keyboard.press("Tab");
+    if (
+      await list.evaluate(
+        (element) =>
+          element === document.activeElement ||
+          element.contains(document.activeElement),
+      )
+    )
+      break;
+  }
+  // The list itself takes it: no record is chosen for the reader.
+  await expect(list).toBeFocused();
+  expect((await logPlace(target)).scrollTop).toBe(before.scrollTop);
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // An arrow key goes to the record at the top of the view, which moves
+  // nothing either.
+  await target.keyboard.press("ArrowDown");
+  await expect(list.locator(".record:focus")).toHaveCount(1);
+  expect(
+    await list.evaluate((element) =>
+      Number(element.querySelector<HTMLElement>(".record:focus")?.dataset.seq),
+    ),
+  ).toBe(before.seq);
+  expect(
+    Math.abs((await logPlace(target)).scrollTop - before.scrollTop),
+  ).toBeLessThanOrEqual(2);
+});
+
+test("Page Up and Page Down move the record the keyboard is on", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  const focusedSeq = () =>
+    list.evaluate((element) =>
+      Number(element.querySelector<HTMLElement>(".record:focus")?.dataset.seq),
+    );
+  await list.locator(".record").last().focus();
+  const newest = await focusedSeq();
+  for (let press = 0; press < 3; press++) await target.keyboard.press("PageUp");
+  // Moving up from the end leaves it.
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  const up = await focusedSeq();
+  expect(up).toBeLessThan(newest - 20);
+  await expect(list.locator(".record:focus")).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  // The focused record is in view, and the next arrow goes on from it
+  // rather than back to where the keyboard used to be.
+  const inView = () =>
+    list.evaluate((element) => {
+      const row = element.querySelector<HTMLElement>(".record:focus");
+      const box = element.getBoundingClientRect();
+      const at = row?.getBoundingClientRect();
+      return !!at && at.bottom > box.top && at.top < box.bottom;
+    });
+  expect(await inView()).toBe(true);
+  await target.keyboard.press("ArrowUp");
+  const next = await focusedSeq();
+  expect(next).toBeLessThan(up);
+  expect(up - next).toBeLessThan(10);
+  await target.keyboard.press("PageDown");
+  expect(await focusedSeq()).toBeGreaterThan(next + 3);
+  expect(await inView()).toBe(true);
+});
+
+test("an arrow up from the newest record stops the log following", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000&feed=400",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await list.locator(".record").last().focus();
+  await target.keyboard.press("ArrowUp");
+  await target.keyboard.press("ArrowUp");
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  // Records go on arriving, and the record the keyboard is on stays in view.
+  const drawnSeq = () =>
+    list.evaluate((element) =>
+      Number(
+        (element.lastElementChild as HTMLElement | null)?.dataset.seq ?? 0,
+      ),
+    );
+  const then = await drawnSeq();
+  await expect.poll(drawnSeq).toBeGreaterThan(then + 40);
+  expect(
+    await list.evaluate((element) => {
+      const row = element.querySelector<HTMLElement>(".record:focus");
+      const box = element.getBoundingClientRect();
+      const at = row?.getBoundingClientRect();
+      return !!at && at.bottom > box.top && at.top < box.bottom;
+    }),
+  ).toBe(true);
+});
+
+test("Home is the oldest record of the log, and stays there while records arrive", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=5000&feed=40",
+  );
+  await openLogs(target);
+  const { list, follow } = await overLog(target);
+  await list.locator(".record").last().focus();
+  await target.keyboard.press("Home");
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  const oldest = () =>
+    list.evaluate((element) => {
+      const focused = element.querySelector<HTMLElement>(".record:focus");
+      return {
+        seq: Number(focused?.dataset.seq ?? Number.NaN),
+        first: Number(
+          element.querySelector<HTMLElement>(".record")?.dataset.seq,
+        ),
+        scrollTop: Math.round(element.scrollTop),
+      };
+    });
+  // One press: the first record of the whole log, at the top.
+  await expect.poll(async () => (await oldest()).seq).toBe(1);
+  expect((await oldest()).first).toBe(1);
+  expect((await oldest()).scrollTop).toBe(0);
+  // Batches that arrive afterwards do not put the view back.
+  const drawnBefore = await list.locator(".record").count();
+  await expect
+    .poll(async () => list.locator(".record").count())
+    .toBeGreaterThanOrEqual(drawnBefore);
+  await target.waitForTimeout(600);
+  expect((await oldest()).seq).toBe(1);
+  expect((await oldest()).scrollTop).toBe(0);
+});
+
+test("a filter control that removes itself hands the keyboard to the filter field", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await openLogs(target);
+  const filter = target.locator(".logview .filter-text");
+  await expect(target.locator(".logview-list .record").first()).toBeVisible();
+  // The reset offered when nothing matches.
+  await filter.fill("no such record anywhere");
+  const reset = target.locator(".logview-list").getByRole("button", {
+    name: label("desktop.action.logs_reset"),
+  });
+  await reset.focus();
+  await target.keyboard.press("Enter");
+  await expect(filter).toBeFocused();
+  await expect(filter).toHaveValue("");
+  // The chip of a logger filter, which names the logger it clears.
+  // A record that names its logger: the others have nothing to filter by.
+  const row = target.locator(".logview-list .record:has(span[title])").last();
+  await row.focus();
+  await target.keyboard.press("Shift+F10");
+  await target
+    .getByRole("menuitem", { name: label("desktop.menu.only_logger") })
+    .click();
+  const chip = target.locator(".logview").getByRole("button", {
+    name: new RegExp(`^${label("desktop.logs.clear_logger")}: .+`),
+  });
+  await expect(chip).toBeVisible();
+  await chip.focus();
+  await target.keyboard.press("Enter");
+  await expect(chip).toHaveCount(0);
+  await expect(filter).toBeFocused();
+});
+
+test("a sideways turn of the wheel does not stop the log following", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=2000",
+  );
+  await openLogs(target);
+  const { follow } = await overLog(target);
+  for (let turn = 0; turn < 5; turn++) await target.mouse.wheel(60, -1);
+  await target.waitForTimeout(200);
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the notice of dropped records stands at the start of the log only", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=10000&feed=30",
+  );
+  await openLogs(target);
+  const { list } = await overLog(target);
+  const notice = list.getByText(/dropped/i);
+  // Once the ring has let records go, the newest span says nothing of it:
+  // there are thousands of older records still to read above it.
+  await expect
+    .poll(
+      () =>
+        list.evaluate(
+          (element) =>
+            Number(element.querySelector<HTMLElement>(".record")?.dataset.seq) >
+            9700,
+        ),
+      { timeout: 15000 },
+    )
+    .toBe(true);
+  await expect(notice).toHaveCount(0);
+  // At the oldest record that is left, it does.
+  await list.locator(".record").last().focus();
+  await target.keyboard.press("Home");
+  await expect(notice).toBeVisible({ timeout: 10000 });
 });
 
 test("opening a detail at the end keeps the newest record in view", async ({

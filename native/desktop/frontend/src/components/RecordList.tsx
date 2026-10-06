@@ -47,6 +47,8 @@ const WINDOW = 400;
 // The most records drawn at once for a reader who has left the end. The span
 // moves with them a window at a time, so it never becomes the whole log.
 const MAX_SPAN = 5 * WINDOW;
+// How many views from an edge of the drawn span the next span is brought in.
+const SPAN_MARGIN = 3;
 
 const LEVEL_TONE: Partial<Record<LogLevel, string>> = {
   WARNING: "text-warning",
@@ -111,13 +113,19 @@ const Row = memo(function Row({
               "text-muted-foreground",
           )}
         >
-          {record.source === "host" ? sourceLabel : (record.level ?? "—")}
+          {/* A level is said in words wherever there is one; a host line
+              without one says where it came from instead. */}
+          {record.level ?? (record.source === "host" ? sourceLabel : "—")}
         </span>
         <span
           className="truncate text-muted-foreground @max-xl:hidden"
           title={record.logger ?? undefined}
         >
-          {record.logger ? shortLogger(record.logger) : sourceLabel}
+          {record.logger
+            ? shortLogger(record.logger)
+            : record.level || record.source !== "host"
+              ? sourceLabel
+              : ""}
         </span>
         <span
           className={cn(
@@ -195,21 +203,15 @@ export const RecordList = memo(function RecordList({
   // what is drawn changes, the view is put back on it: an earlier or later
   // span comes in, the oldest records are dropped from the ring, and not
   // every engine keeps the view anchored by itself.
-  const anchor = useRef<{ seq: string; top: number } | null>(null);
+  const anchor = useRef<{ seq: number; top: number } | null>(null);
   // End was pressed away from the end: the newest record takes focus once
-  // the newest span is drawn.
+  // the newest span is drawn. Home, likewise, for the oldest.
   const focusNewest = useRef(false);
+  const focusOldest = useRef(false);
+  const filterInput = useRef<HTMLInputElement>(null);
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
-
-  // Other filters are another view: it starts at its newest record again.
-  const [drawnFor, setDrawnFor] = useState(filters);
-  if (drawnFor !== filters) {
-    setDrawnFor(filters);
-    setFirst(null);
-    setFollow(true);
-  }
 
   const sources = useMemo(() => {
     const seen = new Set(["python", "host"]);
@@ -230,6 +232,27 @@ export const RecordList = memo(function RecordList({
             .includes(text)),
     );
   }, [all, filters]);
+
+  // Other filters are another view. A reader who has left the end keeps
+  // their place in it where the record at the top of their view is still
+  // shown; otherwise it starts at its newest record again, and nothing of
+  // the old view's place is carried into it.
+  const [drawnFor, setDrawnFor] = useState(filters);
+  if (drawnFor !== filters) {
+    setDrawnFor(filters);
+    const kept = follow ? null : anchor.current;
+    const at =
+      kept === null
+        ? -1
+        : visible.findIndex((record) => record.seq === kept.seq);
+    if (at >= 0) {
+      setFirst(visible[Math.max(0, at - WINDOW)]?.seq ?? null);
+    } else {
+      anchor.current = null;
+      setFirst(null);
+      setFollow(true);
+    }
+  }
 
   const drawn = useMemo(() => {
     const newest = visible.length > WINDOW ? visible.slice(-WINDOW) : visible;
@@ -254,6 +277,7 @@ export const RecordList = memo(function RecordList({
     if (!el || !keep || follow) return;
     const row = el.querySelector(`:scope > [data-seq="${keep.seq}"]`);
     if (!row) return;
+    if (focusOldest.current) return;
     const moved =
       row.getBoundingClientRect().top -
       el.getBoundingClientRect().top -
@@ -302,12 +326,52 @@ export const RecordList = memo(function RecordList({
       newest.focus({ preventScroll: true });
   }, [drawn, expanded, first, follow, shown]);
 
+  // The record at the top of the view and where it sits, to keep the view
+  // on. Taken when the view moves, and at once after anything that moves
+  // it by other means than a scroll the reader made: a batch that commits
+  // before the scroll is reported must not put the view back.
+  const captureAnchor = () => {
+    const el = list.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    const hit = document
+      .elementFromPoint(box.left + box.width / 2, box.top + 2)
+      ?.closest<HTMLElement>(".record");
+    const row =
+      hit && el.contains(hit)
+        ? hit
+        : [...el.querySelectorAll<HTMLElement>(":scope > .record")].find(
+            (candidate) => candidate.getBoundingClientRect().bottom > box.top,
+          );
+    anchor.current = row
+      ? {
+          seq: Number(row.dataset.seq),
+          top: row.getBoundingClientRect().top - box.top,
+        }
+      : null;
+    return row;
+  };
+
   // Leaving the end, by whatever means: the span stays on what it shows.
   const leaveEnd = () => {
     if (!follow) return;
+    captureAnchor();
     setFollow(false);
     setFirst(drawn[0]?.seq ?? null);
   };
+
+  // Home, away from the oldest record: the oldest span is drawn, and its
+  // first record takes focus at the top.
+  useLayoutEffect(() => {
+    const el = list.current;
+    if (!el || !focusOldest.current || drawn[0] !== visible[0]) return;
+    focusOldest.current = false;
+    el.scrollTop = 0;
+    lastTop.current = 0;
+    const oldest = el.querySelector<HTMLElement>(":scope > .record");
+    oldest?.focus({ preventScroll: true });
+    captureAnchor();
+  });
   const touchStart = useRef(0);
 
   // Following also holds when the list itself changes size: a narrower panel
@@ -366,10 +430,17 @@ export const RecordList = memo(function RecordList({
         // wherever the cursor was left.
         const pointer = fromPointer(event.nativeEvent);
         const row = event.currentTarget.getBoundingClientRect();
+        const time = event.currentTarget
+          .querySelector("time")
+          ?.getBoundingClientRect();
         live.current.onMenu({
           at: pointer
             ? { x: event.clientX, y: event.clientY }
-            : { x: row.left + row.height, y: row.top, height: row.height },
+            : {
+                x: time?.right ?? row.left,
+                y: row.top,
+                height: row.height,
+              },
           pointer,
           record,
           visible: live.current.visible,
@@ -379,30 +450,57 @@ export const RecordList = memo(function RecordList({
     [],
   );
 
-  // Tab lands on the current row while it is drawn, otherwise on the newest.
+  // Tab lands on the current row while it is drawn. Otherwise, while the
+  // log follows its end, on the newest; and for a reader who has left the
+  // end, on the list itself, which moves nothing: a row chosen for them
+  // would scroll their place away.
   const tabStop =
     current !== null && drawn.some((record) => record.seq === current)
       ? current
-      : drawn.at(-1)?.seq;
+      : follow
+        ? drawn.at(-1)?.seq
+        : undefined;
 
   const key = (event: KeyboardEvent<HTMLDivElement>) => {
     const from = event.target;
     if (!(from instanceof HTMLElement)) return;
     const box = event.currentTarget;
-    const moves = ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key);
-    // From the list itself, a movement key goes to the record Tab would reach.
+    const moves = [
+      "ArrowDown",
+      "ArrowUp",
+      "Home",
+      "End",
+      "PageUp",
+      "PageDown",
+    ].includes(event.key);
+    // From the list itself, a movement key goes to a record without moving
+    // the view: the one Tab would reach, or the one at the top of the view.
     if (from === box) {
-      const stop = box.querySelector<HTMLElement>(
-        ':scope > .record[tabindex="0"]',
-      );
-      if (!moves || !stop) return;
+      if (!moves) return;
+      const stop =
+        box.querySelector<HTMLElement>(':scope > .record[tabindex="0"]') ??
+        captureAnchor();
+      if (!stop) return;
       event.preventDefault();
-      stop.focus();
+      stop.focus({ preventScroll: true });
       return;
     }
     const row = from.closest<HTMLElement>(".record");
     if (!row) return;
     const rows = () => box.querySelectorAll<HTMLElement>(":scope > .record");
+    // The record about a page away, in the direction asked for.
+    const page = (step: 1 | -1) => {
+      let at: Element = row;
+      let far = 0;
+      for (;;) {
+        const next: Element | null =
+          step > 0 ? at.nextElementSibling : at.previousElementSibling;
+        if (!next?.classList.contains("record")) return at;
+        far += next.getBoundingClientRect().height;
+        at = next;
+        if (far >= box.clientHeight * 0.8) return at;
+      }
+    };
     // End, away from the newest record, is the way back to it: the log
     // follows again, and the newest record takes focus when it is drawn.
     if (event.key === "End" && (!follow || first !== null)) {
@@ -411,6 +509,14 @@ export const RecordList = memo(function RecordList({
       anchor.current = null;
       setFirst(null);
       setFollow(true);
+      return;
+    }
+    // Home is the oldest record of the log, not of the span that is drawn.
+    if (event.key === "Home" && drawn[0] !== visible[0]) {
+      event.preventDefault();
+      focusOldest.current = true;
+      setFollow(false);
+      setFirst(visible[0]?.seq ?? null);
       return;
     }
     // Movement keys work from a control inside a row as from the row.
@@ -423,10 +529,20 @@ export const RecordList = memo(function RecordList({
             ? rows()[0]
             : event.key === "End"
               ? rows()[rows().length - 1]
-              : null;
+              : event.key === "PageDown"
+                ? page(1)
+                : event.key === "PageUp"
+                  ? page(-1)
+                  : null;
     if (target instanceof HTMLElement && target.classList.contains("record")) {
       event.preventDefault();
+      // Moving up from the end is leaving it, whether or not the record
+      // moved to is already in view.
+      if (["ArrowUp", "Home", "PageUp"].includes(event.key) && target !== row)
+        leaveEnd();
       target.focus();
+      // Where the view now is, before any batch can put it back.
+      if (!follow || target !== row) captureAnchor();
     } else if (from === row && (event.key === "Enter" || event.key === " ")) {
       // Enter and Space on a control inside the row belong to that control.
       const toggle = row.querySelector<HTMLElement>("[aria-expanded]");
@@ -456,6 +572,7 @@ export const RecordList = memo(function RecordList({
       <div className="flex shrink-0 flex-col gap-1.5 border-b px-2.5 py-1.5 @4xl:flex-row @4xl:items-center panel-short:flex-row panel-short:items-center panel-short:scroll-cue-x panel-short:overflow-x-auto panel-short:[scrollbar-width:none] panel-short:[&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-0 items-center gap-1.5 @4xl:contents panel-short:contents panel-short:*:shrink-0">
           <Input
+            ref={filterInput}
             className="filter-text min-w-20 flex-1 @4xl:w-field @4xl:flex-none panel-short:w-field panel-short:flex-none"
             controlSize="sm"
             type="search"
@@ -530,9 +647,14 @@ export const RecordList = memo(function RecordList({
               size="sm"
               className={chip}
               aria-pressed="true"
-              aria-label={t("desktop.logs.clear_logger")}
+              aria-label={`${t("desktop.logs.clear_logger")}: ${shortLogger(filters.logger)}`}
               title={t("desktop.logs.clear_logger")}
-              onClick={() => setFilters({ ...filters, logger: null })}
+              onClick={() => {
+                setFilters({ ...filters, logger: null });
+                // The chip goes with its filter: the keyboard goes to the
+                // filter field, not to nothing.
+                filterInput.current?.focus();
+              }}
             >
               {shortLogger(filters.logger)}
               <Icon name="close" size="xs" />
@@ -594,9 +716,16 @@ export const RecordList = memo(function RecordList({
         className="logview-list min-h-0 flex-1 overflow-auto pt-1 pb-2 font-mono text-sm leading-relaxed select-text focus-visible:-outline-offset-2"
         ref={list}
         role="log"
+        aria-label={t("desktop.rail.logs")}
         aria-live="off"
-        tabIndex={-1}
+        tabIndex={tabStop === undefined && drawn.length > 0 ? 0 : -1}
         onKeyDown={key}
+        // A menu asked for off any record has no record to be about: none
+        // is shown, the browser's own included.
+        onContextMenu={(event) => {
+          if (!(event.target as HTMLElement).closest(".record"))
+            event.preventDefault();
+        }}
         onFocus={(event) => {
           focused.current =
             (event.target as HTMLElement).closest<HTMLElement>(".record")
@@ -612,7 +741,13 @@ export const RecordList = memo(function RecordList({
         // by the next records before it had gone anywhere.
         onWheel={(event) => {
           const el = event.currentTarget;
-          if (event.deltaY < 0 && el.scrollHeight > el.clientHeight) leaveEnd();
+          // A sideways turn with a trace of upward in it is not a scroll up.
+          if (
+            event.deltaY < 0 &&
+            Math.abs(event.deltaY) >= Math.abs(event.deltaX) &&
+            el.scrollHeight > el.clientHeight
+          )
+            leaveEnd();
         }}
         onTouchStart={(event) => {
           touchStart.current = event.touches[0]?.clientY ?? 0;
@@ -651,32 +786,15 @@ export const RecordList = memo(function RecordList({
             return;
           }
           if (!top) return;
-          // The record at the top of the view, to keep the view on.
-          const box = el.getBoundingClientRect();
-          const hit = document
-            .elementFromPoint(box.left + box.width / 2, box.top + 2)
-            ?.closest<HTMLElement>(".record");
-          const row =
-            hit && el.contains(hit)
-              ? hit
-              : [...el.querySelectorAll<HTMLElement>(":scope > .record")].find(
-                  (candidate) =>
-                    candidate.getBoundingClientRect().bottom > box.top,
-                );
-          anchor.current = row
-            ? {
-                seq: row.dataset.seq ?? "",
-                top: row.getBoundingClientRect().top - box.top,
-              }
-            : null;
+          captureAnchor();
           const at = visible.indexOf(top);
-          if (
-            el.scrollTop < el.clientHeight &&
-            top.seq > (visible[0]?.seq ?? top.seq)
-          )
+          // The next span comes in a few views before the edge of this one,
+          // so a fast scroll does not run into the edge first.
+          const margin = SPAN_MARGIN * el.clientHeight;
+          if (el.scrollTop < margin && top.seq > (visible[0]?.seq ?? top.seq))
             // Near the top of what is drawn, with earlier records to show.
             setFirst(visible[Math.max(0, at - WINDOW)]?.seq ?? top.seq);
-          else if (!newest && fromEnd < el.clientHeight)
+          else if (!newest && fromEnd < margin)
             // Near the bottom of a span that is not the newest: later
             // records come in and the earliest drawn are let go.
             setFirst(visible[at + WINDOW]?.seq ?? top.seq);
@@ -691,7 +809,7 @@ export const RecordList = memo(function RecordList({
             <EmptyDescription>{t("desktop.logs.loading")}</EmptyDescription>
           </Empty>
         )}
-        {dropped > 0 && drawn.length > 0 && (
+        {dropped > 0 && drawn.length > 0 && drawn[0] === visible[0] && (
           <p className="px-3 py-2 font-sans text-faint">
             {t("desktop.logs.dropped", { count: dropped })}
           </p>
@@ -710,7 +828,10 @@ export const RecordList = memo(function RecordList({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setFilters(DEFAULT_FILTERS)}
+                onClick={() => {
+                  setFilters(DEFAULT_FILTERS);
+                  filterInput.current?.focus();
+                }}
               >
                 {t("desktop.action.logs_reset")}
               </Button>

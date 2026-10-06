@@ -14,7 +14,16 @@
 @custom-variant dark (&:where([data-scheme="dark"], [data-scheme="dark"] *));
 /* The bottom panel at little more than its floor: what is inside gives up a
    row to keep its content. */
-@custom-variant panel-short (@container panel (height < 11rem));
+@custom-variant panel-short {
+  @container panel (height < 11rem) {
+    @slot;
+  }
+  @media (pointer: coarse) {
+    @container panel (height < 18rem) {
+      @slot;
+    }
+  }
+}
 
 /* A row that scrolls sideways with its scrollbar hidden fades at whichever
    edge has more beyond it, so it is seen to continue. The fade follows the

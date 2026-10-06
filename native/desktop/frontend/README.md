@@ -85,6 +85,7 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `logs-missing`        | A log source that reports missing, which is not an empty log             |
 | `sign-out-refused`    | Signed in, with a sign-out command that fails                            |
 | `session-failure`     | Sessions that start, print a line, then fail and exit                    |
+| `tui-unavailable`     | Signed out, with sessions that cannot start: the TUI is not a way on     |
 | `views-refused`       | Signed in, with every profile view refused: not an empty calendar        |
 | `no-views`            | Signed in on a host with no profile views, as the desktop host is today  |
 
