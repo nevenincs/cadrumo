@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8ba8a0a0f5fd6027c0946080d85e9a4b86fad8fd0150bc1f3e1102c17881380'
+body_hash: 'sha256:62549ff4e9482b9f61976542b7df8bf5ef2ff2b6a1ba28b4090dd19b30f46657'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -64,6 +64,23 @@ related:
 - `S04` `verify:` `cargo clippy --locked --all-targets -- -D warnings` -> `pass`
 - `S04` `verify:` `rustfmt --check src/docs` -> `pass`
 - `S04` `by:` `vaultspec-high-executor`
+- `S05` `M` `dev/deploy/docs_site_build.py`
+- `S05` `M` `dev/deploy/docs_site_languages.py`
+- `S05` `M` `dev/deploy/docs_site_preflight.py`
+- `S05` `M` `dev/deploy/docs_delivery_contracts.py`
+- `S05` `M` `dev/deploy/docs_asset_manifest.py`
+- `S05` `M` `dev/deploy/docs_delivery_probe.py`
+- `S05` `M` `dev/deploy/docs_health.py`
+- `S05` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S05` `M` `dev/deploy/tests/test_docs_asset_delivery.py`
+- `S05` `M` `dev/deploy/tests/test_publish_preflight_search_records.py`
+- `S05` `M` `dev/deploy/tests/test_published_delivery_content.py`
+- `S05` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S05` `verify:` `pytest dev/deploy (122 tests)` -> `pass`
+- `S05` `verify:` `pytest dev/docs/tests/test_deployment_search_parity.py (26 tests)` -> `pass`
+- `S05` `verify:` `compose the published layout over the four roots built 2026-10-06: one apex index, 25.5 MB in 16,713 files, preflight accepted` -> `pass`
+- `S05` `verify:` `ruff and ty on dev/deploy` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -72,3 +89,6 @@ related:
 - `S09` One stemmer serves every language, so plurals of languages other than Spanish no longer fold; exact and prefix matching is unaffected.
 - `S03` native/package-layout.json needed no change: its entry and search keys now name addresses.
 - `S04` The packaged end-to-end test and the live-package test were not run: both need an assembled package in the new form.
+- `S05` The publisher takes its pages from one producer function and still compiles each language there; composing them from the one compile is that function's change once S06 to S08 are proven.
+- `S05` No real web-flavour build and no network delivery were run; the English full-scope root under en/ is covered by a test over real built pages.
+- `S05` A release published before this change is refused by manual rollback and activate until the next successful publish; automatic recovery inside a publish is unaffected. Supporting both release shapes is left to the operator.

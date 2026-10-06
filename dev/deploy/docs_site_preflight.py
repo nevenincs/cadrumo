@@ -1,4 +1,4 @@
-"""Admit complete canonical documentation roots and record-bearing search indexes."""
+"""Admit complete canonical documentation roots and the site's record-bearing search index."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
 
-from .docs_delivery_contracts import _REQUIRED_ARTIFACTS
+from .docs_delivery_contracts import _REQUIRED_ROOT_ARTIFACTS, _REQUIRED_SITE_SEARCH_ARTIFACTS
 from .docs_site_languages import _language_site_url, localized_languages
 
 
@@ -27,8 +27,9 @@ def _require_sitemap_locations(locations: list[str], expected_base_url: str, roo
 
 
 def _validate_apex(html_root: Path) -> None:
-    """Require the apex entry, its error page, and a sitemap index of every root."""
-    missing = [name for name in ("index.html", "404.html", "sitemap.xml") if not (html_root / name).is_file()]
+    """Require the apex entry, its error page, a sitemap index and the one search bundle."""
+    required = ("index.html", "404.html", "sitemap.xml", *_REQUIRED_SITE_SEARCH_ARTIFACTS)
+    missing = [name for name in required if not (html_root / name).is_file()]
     if missing:
         raise SystemExit(f"The apex is not deployable; missing: {', '.join(missing)}")
     try:
@@ -42,13 +43,14 @@ def _validate_apex(html_root: Path) -> None:
 
 
 def _require_artifacts_present(html_root: Path, *, root_label: str) -> None:
-    """Require every artifact in :data:`_REQUIRED_ARTIFACTS` at ``html_root``.
+    """Require every artifact in :data:`_REQUIRED_ROOT_ARTIFACTS` at ``html_root``.
 
-    Shared by the English root and every localized root: the same page, error
-    page, sitemap, and Pagefind bundle are mandatory on every deployed root,
-    not only the English one.
+    Shared by every published root, English included: the same page, error page
+    and sitemap are mandatory on each of them, because each root's pages are
+    its own. The search bundle is the site's, not a root's, and is required at
+    the apex by :func:`_validate_apex`.
     """
-    missing = [artifact for artifact in _REQUIRED_ARTIFACTS if not (html_root / artifact).is_file()]
+    missing = [artifact for artifact in _REQUIRED_ROOT_ARTIFACTS if not (html_root / artifact).is_file()]
     if missing:
         joined = ", ".join(missing)
         raise SystemExit(f"{root_label} is not deployable; required artifacts are missing: {joined}")
@@ -77,7 +79,12 @@ def _require_valid_sitemap(html_root: Path, *, expected_base_url: str, root_labe
 
 
 def _require_search_index(site_root: Path, *, root_label: str) -> None:
-    """Refuse a site root whose Pagefind index is empty OR carries no records.
+    """Refuse a site whose Pagefind index is empty OR carries no records.
+
+    Read once, at the apex: the site has ONE index and every language's pages
+    load it, so one reading is the whole site's verdict rather than one root's.
+    It was four readings while there were four indexes; the check itself did not
+    change, only how many indexes there are to read.
 
     Two distinct failures, both fatal, checked in order. An index with no
     substantive chunks means the pass produced nothing. An index with chunks but
@@ -108,8 +115,8 @@ def _require_search_index(site_root: Path, *, root_label: str) -> None:
             f"{root_label} Pagefind index carries no records of kind(s) {', '.join(missing)} "
             f"(found: {', '.join(sorted(present)) or 'none'}). The index holds rendered pages only, "
             "so a reader could not search that surface at all. This is a pages-only index: confirm the "
-            "build ran with the record-injecting contract (CADRUMO_DOCS_PAGEFIND_MODE=full) for this "
-            f"root, then rebuild before publishing. Index read at {site_root / 'pagefind'}.",
+            "site index pass ran with the record-injecting contract (CADRUMO_DOCS_PAGEFIND_MODE=full), "
+            f"then rebuild before publishing. Index read at {site_root / 'pagefind'}.",
         )
 
 
@@ -121,11 +128,10 @@ def _validate_language_entry(html_root: Path) -> None:
     then absent from the entry is invisible to every reader who does not
     already know its URL, and nothing else in the pipeline would notice.
 
-    The apex's own artifact set -- its sitemap, 404 page and Pagefind bundle,
-    which it still carries as the English full-scope site -- is required by
-    :func:`_validate_site_artifacts` inside the shared composition, not here.
-    Every language root carries its own copies too, so neither check is the
-    other's substitute.
+    The apex's own artifact set -- its error page, its sitemap index and the
+    site's one Pagefind bundle -- is required by :func:`_validate_apex`, not
+    here. Neither check is the other's substitute: an entry that reaches every
+    root proves nothing about what those roots contain.
     """
     entry = html_root / "index.html"
     if not entry.is_file():
@@ -145,28 +151,29 @@ def _validate_language_entry(html_root: Path) -> None:
 
 
 def _validate_language_roots(html_root: Path) -> None:
-    """Require every localized site root to carry the complete required-artifact set.
+    """Require every published site root to carry the complete required-artifact set.
 
-    The same artifacts mandatory for the English root -- the rendered page,
-    the 404 error page, a canonically-rooted sitemap, and the full Pagefind
-    bundle -- are mandatory for every localized root too, not only its index
-    page and a non-empty Pagefind index.
+    The same artifacts mandatory for the English root -- the rendered page, the
+    404 error page and a canonically-rooted sitemap -- are mandatory for every
+    localized root too, not only its index page. These are checked per root
+    because a root's pages are its own; the search index is checked once, at the
+    apex, because the site has one.
     """
     for language in localized_languages():
         root = html_root / language
         label = f"Localized site root {language!r}"
         _require_artifacts_present(root, root_label=label)
         _require_valid_sitemap(root, expected_base_url=_language_site_url(language), root_label=label)
-        _require_search_index(root, root_label=label)
 
 
 def _validate_built_site(html_root: Path) -> None:
     """Run every validation a publish runs against the built tree before uploading.
 
-    Every language root must carry its complete artifact set and a record-bearing
-    search index before a byte moves, because a publish that cannot succeed
-    would otherwise write to the live destination first.
+    Every language root must carry its complete artifact set, and the site must
+    carry a record-bearing search index, before a byte moves: a publish that
+    cannot succeed would otherwise write to the live destination first.
     """
     _validate_apex(html_root)
     _validate_language_entry(html_root)
     _validate_language_roots(html_root)
+    _require_search_index(html_root, root_label="The documentation site")

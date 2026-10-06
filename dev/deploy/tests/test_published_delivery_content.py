@@ -123,18 +123,19 @@ def test_the_two_real_indexes_actually_differ(tmp_path: Path) -> None:
     assert total_with == total_without + 3, f"expected exactly the 3 injected records: {total_with} vs {total_without}"
 
 
-def test_every_published_root_is_checked_not_only_the_default(tmp_path: Path) -> None:
-    """The per-root sweep fetches each localized root's own entry, not just ``/``.
+def test_the_one_index_is_read_at_the_apex_not_inside_a_language_root(tmp_path: Path) -> None:
+    """The check fetches the site's one entry, above the language roots.
 
-    A localized root serving a record-free index was the second defect in this
-    family, so a check that only read the default root would repeat it.
+    The site has ONE index and every language's pages load it from the apex, so
+    the apex entry is what every reader of every language is served. A read
+    inside a language root would now reach nothing -- a root carries no index --
+    and would pass only because the comparison never ran.
     """
     built = _built_root(tmp_path, "root", with_records=True)
     html_root = tmp_path / "html"
     html_root.mkdir()
-    shutil.copytree(built, html_root / "site")
     for language in localized_languages():
-        shutil.copytree(built, html_root / language)
+        (html_root / language).mkdir()
     shutil.copytree(built / "pagefind", html_root / "pagefind")
 
     requested: list[str] = []
@@ -145,7 +146,8 @@ def test_every_published_root_is_checked_not_only_the_default(tmp_path: Path) ->
 
     _verify_published_search_index(html_root, base_url="https://example.invalid/docs", fetch=_fetch)
 
+    assert requested == ["https://example.invalid/docs/pagefind/pagefind-entry.json"], requested
     for language in localized_languages():
-        assert any(f"/{language}/pagefind/pagefind-entry.json" in url for url in requested), (
-            f"the {language!r} root's own published index was never read: {requested}"
+        assert not any(f"/{language}/pagefind/" in url for url in requested), (
+            f"the published index was read inside the {language!r} root, which carries none: {requested}"
         )

@@ -56,10 +56,21 @@ _CACHE_CONTROL = "public, max-age=300, must-revalidate"
 _UTF_8: Final[str] = UTF_8
 
 
-_REQUIRED_ARTIFACTS = (
+#: What one published language root must carry. The pages differ per language,
+#: so these are required per root; the search bundle is not among them because
+#: the site has one index and it lives at the apex
+#: (:data:`_REQUIRED_SITE_SEARCH_ARTIFACTS`).
+_REQUIRED_ROOT_ARTIFACTS = (
     "index.html",
     "404.html",
     "sitemap.xml",
+)
+
+
+#: What the site's apex must carry so any language's page can search. One copy
+#: for the whole site: every root's pages resolve the bundle here, so a missing
+#: file is every language's search gone, not one root's.
+_REQUIRED_SITE_SEARCH_ARTIFACTS = (
     "pagefind/pagefind-entry.json",
     "pagefind/pagefind.js",
     "pagefind/pagefind-ui.js",

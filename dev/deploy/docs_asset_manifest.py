@@ -38,15 +38,17 @@ def _release_path_contains_control_characters(key: str) -> bool:
 
 
 def _require_release_population(objects: dict[str, Any]) -> None:
-    """Require release population."""
-    required = {"index.html", "404.html"}
-    for language in LANGUAGES:
-        required.update(
-            {f"{language}/index.html", f"{language}/pagefind/pagefind.js", f"{language}/pagefind/pagefind-entry.json"}
-        )
-        for kind in ("fragment", "index"):
-            if not any(key.startswith(f"{language}/pagefind/{kind}/") for key in objects):
-                raise ValueError(f"Missing {language} search {kind}")
+    """Require release population.
+
+    A page is required per language, because the pages differ by language. The
+    search runtime is required once, at the apex: the site has ONE index and
+    every language's pages load it from there.
+    """
+    required = {"index.html", "404.html", "pagefind/pagefind.js", "pagefind/pagefind-entry.json"}
+    required.update(f"{language}/index.html" for language in LANGUAGES)
+    for kind in ("fragment", "index"):
+        if not any(key.startswith(f"pagefind/{kind}/") for key in objects):
+            raise ValueError(f"Missing site search {kind}")
     if not required.issubset(objects):
         raise ValueError("Release lacks required pages or search runtime")
 
@@ -64,9 +66,13 @@ def _require_mirror_error_pages(document: dict[str, Any], objects: dict[str, Any
 
 
 def search_payload(key: str) -> bool:
-    """Identify large generated search trees without moving the search runtime."""
+    """Identify the large generated search trees without moving the search runtime.
+
+    One pair of trees for the whole site, at the apex: the site has ONE index,
+    so these keys no longer begin with a language.
+    """
     parts = PurePosixPath(key).parts
-    return len(parts) == 4 and parts[0] in LANGUAGES and parts[1] == "pagefind" and parts[2] in {"fragment", "index"}
+    return len(parts) == 3 and parts[0] == "pagefind" and parts[1] in {"fragment", "index"}
 
 
 def validate_manifest(document: Any) -> dict[str, Any]:
@@ -195,8 +201,7 @@ def _append_mount_redirects(
     redirects.append(f"{mount} {mount}/ 301")
     for key in objects:
         _append_directory_redirects(mount, key, redirects)
-    for language in LANGUAGES:
-        _append_language_search_redirects(mount, language, document, objects, redirects)
+    _append_site_search_redirects(mount, document, objects, redirects)
     roots = sorted({key.split("/")[1] for key in objects if key.startswith("en/")})
     for root in roots:
         _append_english_root_redirects(mount, root, objects, redirects)
@@ -211,17 +216,20 @@ def _append_directory_redirects(mount: str, key: str, redirects: list[str]) -> N
             redirects.append(f"{mount}/{directory.rstrip('/')} {mount}/{directory} 301")
 
 
-def _append_language_search_redirects(
-    mount: str, language: str, document: dict[str, Any], objects: dict[str, Any], redirects: list[str]
+def _append_site_search_redirects(
+    mount: str, document: dict[str, Any], objects: dict[str, Any], redirects: list[str]
 ) -> None:
-    """Append language search redirects."""
+    """Send the site's one pair of search trees to the public bucket.
+
+    One rule per tree for the whole site, where there was one per tree per
+    language: the index these address is the site's, loaded from the apex by
+    every language's pages, so a language no longer names one of its own.
+    """
     for kind in ("fragment", "index"):
-        path = f"{language}/pagefind/{kind}"
+        path = f"pagefind/{kind}"
         redirects.append(f"{mount}/{path}/* https://{PUBLIC_HOST}/releases/{document['release']}/{path}/:splat 302")
         sample = min(key for key in objects if key.startswith(path + "/"))
-        redirects.append(
-            f"{mount}/_health/{language}/{kind} https://{PUBLIC_HOST}/releases/{document['release']}/{sample} 302"
-        )
+        redirects.append(f"{mount}/_health/{kind} https://{PUBLIC_HOST}/releases/{document['release']}/{sample} 302")
 
 
 def _append_english_root_redirects(mount: str, root: str, objects: dict[str, Any], redirects: list[str]) -> None:

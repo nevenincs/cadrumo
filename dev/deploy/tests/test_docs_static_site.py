@@ -1,4 +1,4 @@
-"""Per-language deploy-matrix contracts of the documentation publisher."""
+"""Per-language root contracts and the one-index site composition of the documentation publisher."""
 
 from __future__ import annotations
 
@@ -24,14 +24,19 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
 from dev._paths import REPO_ROOT
 from dev.docs.build import pagefind_index_mode
+from dev.docs.build_paths import docs_site_prefix
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
 
 from .. import docs_delivery_activation as _docs_delivery_activation
 from .. import docs_site_build as _docs_site_build
 from .. import docs_site_languages as _docs_site_languages
-from ..docs_delivery_contracts import _REQUIRED_ARTIFACTS, CANONICAL_DOCS_BASE_URL
-from ..docs_site_build import _build_language_roots, _clear_apex, _compose_apex
+from ..docs_delivery_contracts import (
+    _REQUIRED_ROOT_ARTIFACTS,
+    _REQUIRED_SITE_SEARCH_ARTIFACTS,
+    CANONICAL_DOCS_BASE_URL,
+)
+from ..docs_site_build import _build_language_roots, _clear_apex, _compose_apex, _indexed_roots
 from ..docs_site_download import _DOWNLOAD_LATEST_SCHEMA, _DOWNLOAD_LATEST_STATIC_PATH, _refresh_download_latest
 from ..docs_site_languages import (
     _language_build_environments,
@@ -43,16 +48,20 @@ from ..docs_site_languages import (
     root_build_jobs,
     site_build_environment,
 )
-from ..docs_site_preflight import _validate_language_entry, _validate_language_roots
+from ..docs_site_preflight import _validate_built_site, _validate_language_entry, _validate_language_roots
 from ..docs_static_site import _dry_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: An index page, an error page, a sitemap, and the four-file Pagefind
-#: bundle: the floor below which a published root is not a usable site.
-#: Asserted before the set equality so an emptied fixture and an emptied
-#: production tuple cannot satisfy each other.
-_MINIMUM_REQUIRED_ARTIFACTS: Final[int] = 7
+#: An index page, an error page and a sitemap: the floor below which a
+#: published root is not a usable site. Asserted before the set equality so
+#: an emptied fixture and an emptied production tuple cannot satisfy each
+#: other.
+_MINIMUM_REQUIRED_ROOT_ARTIFACTS: Final[int] = 3
+
+#: The four-file Pagefind bundle the site carries once, at its apex, for every
+#: language's pages to load. Asserted for the same reason as the floor above.
+_MINIMUM_REQUIRED_SEARCH_ARTIFACTS: Final[int] = 4
 
 #: Pagefind writes these two trees with generated, content-derived file
 #: names, so they are checked for substance rather than by name and are
@@ -72,35 +81,45 @@ def _replacing(target: object, name: str, value: object) -> Iterator[None]:
 
 
 def _materialise_language_root(html_root: Path, language: str) -> None:
-    """Write a minimal VALID localized site root satisfying the FULL artifact contract.
+    """Write a minimal VALID published site root satisfying the FULL artifact contract.
 
-    "Valid" now means what the publish contract means by it: not only the
-    index page and a non-empty, record-carrying Pagefind index, but every
-    artifact ``_REQUIRED_ARTIFACTS`` names -- the same complete set the
-    English root must carry -- plus a sitemap correctly rooted at the
-    language's own canonical sub-path. Before the fix a localized root was
-    accepted with none of these; the fragments below carry the decided
-    record kinds so a complete matrix is complete under the real contract.
+    "Valid" means what the publish contract means by it: every artifact
+    ``_REQUIRED_ROOT_ARTIFACTS`` names -- the same complete set the English root
+    must carry -- plus a sitemap correctly rooted at the language's own
+    canonical sub-path. Before the fix a localized root was accepted with none
+    of these.
 
-    These fragments are SYNTHESISED, in the real on-disk shape, because what
-    this module tests is the root-MATRIX logic: that every language is visited
-    and the failing one is named. The index READ itself is proven against real
-    Pagefind output in ``test_publish_preflight_search_records``, where a
-    genuine no-injection build is the subject.
+    The search index is deliberately NOT written here: the site carries one, at
+    its apex (:func:`_materialise_site_search_index`), and a root that carried
+    its own would be exactly the per-language index this layout replaced.
     """
     _materialise_site_root(html_root / language, canonical_base=_language_site_url(language))
 
 
 def _materialise_apex_root(html_root: Path) -> None:
-    """Compose the apex around the language roots exactly as a publish does."""
+    """Compose the apex around the language roots exactly as a publish does.
+
+    The one search index is part of what the apex owes, and the index pass that
+    writes it is the real Pagefind pass over the built roots; these tests supply
+    it in its real on-disk shape instead (:func:`_materialise_site_search_index`).
+    """
+    _materialise_site_search_index(html_root)
     _compose_apex(html_root)
 
 
 def _materialise_site_root(root: Path, *, canonical_base: str) -> None:
-    """Write one site root's complete required-artifact set, rooted at its own URL."""
+    """Write one site root's complete required-artifact set, rooted at its own URL.
+
+    The error page declares the root's own site prefix, as a built page does:
+    the apex copy of it is taken from the source-language root and has to be
+    given the apex's prefix instead.
+    """
     root.mkdir(parents=True, exist_ok=True)
     (root / "index.html").write_text("<html></html>", encoding="utf-8")
-    (root / "404.html").write_text("<html></html>", encoding="utf-8")
+    (root / "404.html").write_text(
+        f'<html><head><meta name="cadrumo-docs-site-prefix" content="{root.name}/"></head></html>',
+        encoding="utf-8",
+    )
     canonical_root = f"{canonical_base}/"
     (root / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -109,7 +128,19 @@ def _materialise_site_root(root: Path, *, canonical_base: str) -> None:
         "</urlset>\n",
         encoding="utf-8",
     )
-    pagefind_dir = root / "pagefind"
+
+
+def _materialise_site_search_index(html_root: Path) -> None:
+    """Write the site's ONE Pagefind bundle at the apex, carrying every decided kind.
+
+    These fragments are SYNTHESISED, in the real on-disk shape, because what
+    this module tests is the site-COMPOSITION logic: which roots are built,
+    what the apex owes, and which failure stops a publish. The index READ
+    itself is proven against real Pagefind output in
+    ``test_publish_preflight_search_records``, where a genuine no-injection
+    build is the subject.
+    """
+    pagefind_dir = html_root / "pagefind"
     pagefind_dir.mkdir(parents=True, exist_ok=True)
     (pagefind_dir / "pagefind-entry.json").write_text("{}", encoding="utf-8")
     (pagefind_dir / "pagefind.js").write_text("// pagefind", encoding="utf-8")
@@ -117,12 +148,12 @@ def _materialise_site_root(root: Path, *, canonical_base: str) -> None:
     (pagefind_dir / "pagefind-ui.css").write_text("/* pagefind-ui */", encoding="utf-8")
     index_dir = pagefind_dir / "index"
     index_dir.mkdir(parents=True, exist_ok=True)
-    (index_dir / "en_abc.pf_index").write_bytes(b"substantive-index-data")
+    (index_dir / "es_abc.pf_index").write_bytes(b"substantive-index-data")
     fragment_dir = pagefind_dir / "fragment"
     fragment_dir.mkdir(parents=True, exist_ok=True)
     for kind in sorted(DECIDED_INJECTED_RECORD_KINDS):
         payload = json.dumps({"url": f"/records/{kind}.html", "filters": {"kind": [kind]}})
-        (fragment_dir / f"en_{kind}.pf_fragment").write_bytes(gzip.compress(f"pagefind_dcd{payload}".encode()))
+        (fragment_dir / f"es_{kind}.pf_fragment").write_bytes(gzip.compress(f"pagefind_dcd{payload}".encode()))
 
 
 def test_every_language_is_a_published_root_including_english() -> None:
@@ -241,6 +272,64 @@ def test_the_language_roots_build_at_once_each_with_its_own_storage_and_every_fa
         assert f"built {language}" in output
 
 
+def test_a_previous_publishs_per_root_index_is_removed_before_the_build(tmp_path: Path) -> None:
+    """A root kept between publishes must not carry last release's index.
+
+    The roots survive a publish for their Sphinx environment, and a build that
+    writes no index of its own clears nothing. An index left inside a root would
+    upload as current and answer a reader with the previous release's site,
+    while every check stayed green because nothing asks a root for an index.
+    """
+    html_root = tmp_path / "html"
+    languages = localized_languages()
+    for language in languages:
+        stale = html_root / language / "pagefind" / "index"
+        stale.mkdir(parents=True)
+        (stale / "es_stale.pf_index").write_bytes(b"last release")
+
+    def stand_in(_language: str, out_dir: Path) -> list[str]:
+        return [sys.executable, "-c", _ROOT_STAND_IN, str(out_dir), str(len(languages))]
+
+    with pytest.raises(SystemExit, match="refusing to publish"):
+        _build_language_roots(REPO_ROOT, html_root, command_for=stand_in)
+
+    for language in languages:
+        assert not (html_root / language / "pagefind").exists(), f"the {language!r} root kept a stale index"
+
+
+def test_the_one_index_covers_every_root_at_its_served_address(tmp_path: Path) -> None:
+    """Every produced root is indexed under the directory it is served from.
+
+    The prefix is the whole mechanism by which one index addresses four roots:
+    a page's indexed URL becomes its address on the site, and the apex, which
+    carries the index, carries no pages of its own.
+    """
+    roots = {language: tmp_path / language for language in localized_languages()}
+
+    indexed = _indexed_roots(roots)
+
+    assert [root.language for root in indexed] == sorted(roots)
+    assert [root.url_prefix for root in indexed] == [f"{language}/" for language in sorted(roots)]
+    assert [root.html_root for root in indexed] == [roots[language] for language in sorted(roots)]
+    assert all(root.url_prefix for root in indexed), "no language holds the apex path on the published site"
+
+
+def test_the_publisher_produces_its_roots_in_one_place(tmp_path: Path) -> None:
+    """The build reaches its roots through one producer, and consumes what it returns.
+
+    The producer is about to be replaced: the roots will be composed from one
+    stored structure plus each language's text instead of built per language.
+    That is a change to this one function only as long as nothing downstream
+    reaches for the roots itself, which is what this pins.
+    """
+    calls = _direct_calls(_docs_site_build._build_site_roots)
+
+    assert calls.index("_produce_language_roots") < calls.index("_index_site") < calls.index("_compose_apex")
+    assert "_build_language_roots" not in calls, "the build bypasses its own root producer"
+    produced = _direct_calls(_docs_site_build._produce_language_roots)
+    assert "_build_language_roots" in produced, "the root producer no longer produces the roots"
+
+
 @pytest.mark.parametrize("cpus", [1, 2, 4, 12, 64])
 def test_concurrent_roots_share_the_cpus_the_full_scope_root_taking_half(cpus: int) -> None:
     """The roots never fork more workers than CPUs between them once each has one."""
@@ -257,31 +346,47 @@ def test_concurrent_roots_share_the_cpus_the_full_scope_root_taking_half(cpus: i
 
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
-    """Each localized build carries the full Pagefind contract and its own base URL."""
+    """Each root build carries its own base URL, its site prefix, and no index of its own."""
     env = language_build_environment("hu", check_sequences=True)
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
-    assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
+    assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "none"
     assert env["CADRUMO_DOCS_JOBS"] == "auto"
 
 
-def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> None:
-    """English and every localized root deploy the record-injected index, not pages alone.
+@pytest.mark.parametrize("language", localized_languages())
+def test_every_root_declares_the_directory_it_is_served_under(language: str) -> None:
+    """Each root's pages carry their own directory as the site prefix.
 
-    The deployed contract is ``full`` on every root. Read through
-    :func:`pagefind_index_mode` - the build's own resolver - rather than
-    comparing the raw string, so this pins the contract the build will actually
-    select rather than a value that merely looks right.
+    This is what makes a page resolve the site's one index one level up from its
+    own root, and what completes a shared record's destination inside the
+    language being read. Read through :func:`docs_site_prefix` -- the build's own
+    resolver -- so a value the build would refuse cannot pass here.
+    """
+    environment = language_build_environment(language, check_sequences=False)
 
-    An ambient ``pages`` in the publishing session must not narrow it either,
-    which is why the deploy layer pins the key explicitly instead of relying on
-    the build default; the hostile base below is the proof.
+    assert docs_site_prefix(environment) == f"{language}/"
+
+
+def test_the_site_pins_the_record_injected_contract_and_no_root_indexes_itself() -> None:
+    """The one index is record-injected; the roots that feed it write no index at all.
+
+    The deployed contract is ``full`` for the SITE, which is the environment the
+    one index pass resolves its injector from, and ``none`` for every root,
+    because the site's index spans them all and a root that indexed itself would
+    write one the served site never loads. Both are read through
+    :func:`pagefind_index_mode` - the build's own resolver - rather than compared
+    as raw strings, so this pins the contract the build will actually select.
+
+    An ambient ``pages`` in the publishing session must not narrow the site's
+    contract, which is why the deploy layer pins the key explicitly instead of
+    relying on the build default; the hostile base below is the proof.
     """
     hostile_base = {"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}
 
     assert pagefind_index_mode(site_build_environment(base_environment={})) == "full"
     assert pagefind_index_mode(site_build_environment(base_environment=hostile_base)) == "full"
     for language in localized_languages():
-        assert pagefind_index_mode(language_build_environment(language, check_sequences=False)) == "full"
+        assert pagefind_index_mode(language_build_environment(language, check_sequences=False)) == "none"
 
 
 def test_exactly_one_site_root_runs_the_cli_sequence_goldens_check() -> None:
@@ -341,13 +446,13 @@ def test_validate_language_roots_refuses_a_missing_index(tmp_path: Path) -> None
         _validate_language_roots(tmp_path)
 
 
-@pytest.mark.parametrize("missing_artifact", sorted(_REQUIRED_ARTIFACTS))
+@pytest.mark.parametrize("missing_artifact", sorted(_REQUIRED_ROOT_ARTIFACTS))
 def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path: Path, missing_artifact: str) -> None:
     """A localized root missing ANY required artifact fails validation, not only its index page.
 
     Reproduces the audit finding: before the fix, a localized root could pass
-    with no 404 page, no sitemap, and no Pagefind JS/CSS bundle at all -- only
-    ``index.html`` and a substantive Pagefind index chunk were mandatory.
+    with no 404 page and no sitemap at all -- only ``index.html`` and a
+    substantive Pagefind index chunk were mandatory.
     """
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
@@ -357,10 +462,10 @@ def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path
         _validate_language_roots(tmp_path)
 
 
-def test_every_artifact_a_valid_root_carries_is_a_required_artifact(tmp_path: Path) -> None:
+def test_every_artifact_a_valid_root_carries_is_a_required_root_artifact(tmp_path: Path) -> None:
     """The required-artifact tuple itself is pinned, not only the rule that reads it.
 
-    Every check above draws its cases FROM ``_REQUIRED_ARTIFACTS``: the
+    Every check above draws its cases FROM ``_REQUIRED_ROOT_ARTIFACTS``: the
     parametrized refusal iterates it, and the roots the fixture builds are
     accepted precisely because they carry it. That proves the rule and
     leaves the roster unverified -- dropping one entry deletes both the
@@ -377,10 +482,27 @@ def test_every_artifact_a_valid_root_carries_is_a_required_artifact(tmp_path: Pa
         path.relative_to(tmp_path).as_posix()
         for path in scan_directory(tmp_path, pattern="*", recursive=True, select=DirectoryEntryKind.FILES)
     }
+
+    assert len(carried) >= _MINIMUM_REQUIRED_ROOT_ARTIFACTS, carried
+    assert set(_REQUIRED_ROOT_ARTIFACTS) == carried
+
+
+def test_every_search_artifact_the_apex_carries_is_a_required_site_artifact(tmp_path: Path) -> None:
+    """The site search roster is pinned the same way, against the apex bundle.
+
+    The second half of the contract, and the half the roots no longer carry:
+    the bundle is the site's, written once, so a dropped entry would be every
+    language's search gone rather than one root's.
+    """
+    _materialise_site_search_index(tmp_path)
+    carried = {
+        path.relative_to(tmp_path).as_posix()
+        for path in scan_directory(tmp_path, pattern="*", recursive=True, select=DirectoryEntryKind.FILES)
+    }
     named = {artifact for artifact in carried if not artifact.startswith(_GENERATED_INDEX_PREFIXES)}
 
-    assert len(named) >= _MINIMUM_REQUIRED_ARTIFACTS, named
-    assert set(_REQUIRED_ARTIFACTS) == named
+    assert len(named) >= _MINIMUM_REQUIRED_SEARCH_ARTIFACTS, named
+    assert set(_REQUIRED_SITE_SEARCH_ARTIFACTS) == named
 
 
 def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_path: Path) -> None:
@@ -399,15 +521,49 @@ def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_p
         _validate_language_roots(tmp_path)
 
 
-def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path) -> None:
-    """A localized root whose Pagefind index has no substantive data fails validation."""
+def test_the_site_is_refused_when_its_one_pagefind_index_has_no_substantive_data(tmp_path: Path) -> None:
+    """An apex index with no substantive data fails validation for the whole site.
+
+    One index means one failure for every language at once, so the refusal
+    belongs to the site and not to a root. Before, four roots each carried one
+    and an emptied one named its own language.
+    """
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
-    empty = localized_languages()[0]
-    for chunk in scan_directory(tmp_path / empty / "pagefind" / "index", pattern="*.pf_index", recursive=True):
+    _materialise_apex_root(tmp_path)
+    for chunk in scan_directory(tmp_path / "pagefind" / "index", pattern="*.pf_index", recursive=True):
         chunk.write_bytes(b"")
+
     with pytest.raises(SystemExit, match="no substantive generated index data"):
-        _validate_language_roots(tmp_path)
+        _validate_built_site(tmp_path)
+
+
+def test_the_site_is_refused_when_the_apex_carries_no_search_bundle(tmp_path: Path) -> None:
+    """The apex owes the one bundle every language's pages load; a gap stops the publish."""
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _materialise_apex_root(tmp_path)
+    (tmp_path / "pagefind" / "pagefind.js").unlink()
+
+    with pytest.raises(SystemExit, match="apex is not deployable"):
+        _validate_built_site(tmp_path)
+
+
+def test_no_published_root_carries_a_search_index_of_its_own(tmp_path: Path) -> None:
+    """A valid published root has no ``pagefind/`` directory at all.
+
+    The point of one index is that the per-language ones are gone; a root that
+    still carried one would be uploaded, served and searched, and every check
+    above would stay green because nothing asks a root for an index any more.
+    """
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _materialise_apex_root(tmp_path)
+
+    _validate_built_site(tmp_path)
+
+    for language in localized_languages():
+        assert not (tmp_path / language / "pagefind").exists(), f"the {language!r} root carries its own index"
 
 
 def _direct_calls(function: Callable[..., object]) -> list[str]:
@@ -472,17 +628,53 @@ def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) ->
         _dry_run(tmp_path, build=lambda _: tmp_path)
 
 
-def test_the_apex_carries_only_the_entry_error_page_and_a_sitemap_index(tmp_path: Path) -> None:
-    """No site is built at the apex; it indexes every language root's sitemap."""
+def test_the_apex_carries_the_entry_error_page_sitemap_index_and_the_one_search_index(tmp_path: Path) -> None:
+    """No site is built at the apex; it indexes every root's sitemap and holds the one index."""
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
 
     apex_files = {entry.name for entry in tmp_path.iterdir() if entry.is_file()}
     assert apex_files == {"index.html", "404.html", "sitemap.xml"}
+    apex_directories = {entry.name for entry in tmp_path.iterdir() if entry.is_dir()}
+    assert apex_directories == {"pagefind", *localized_languages()}
     sitemap = (tmp_path / "sitemap.xml").read_text(encoding="utf-8")
     for language in localized_languages():
         assert f"<loc>{_language_site_url(language)}/sitemap.xml</loc>" in sitemap
+
+
+def test_the_apex_error_page_declares_the_apex_as_its_place_in_the_site(tmp_path: Path) -> None:
+    """The apex copy of the source-language error page carries no language prefix.
+
+    A page resolves the site's one index by walking back the prefix it declares.
+    The source-language root's error page declares that root, which is right at
+    ``/en/404.html`` and one level too far at ``/404.html``: the apex copy would
+    look for the index above the documentation mount. Its own root's copy keeps
+    its prefix, so this is a property of the copy, not of the page.
+    """
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _materialise_apex_root(tmp_path)
+
+    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    assert 'content=""' in (tmp_path / "404.html").read_text(encoding="utf-8")
+    assert f'content="{source}/"' in (tmp_path / source / "404.html").read_text(encoding="utf-8")
+
+
+def test_an_error_page_declaring_no_site_prefix_stops_the_publish(tmp_path: Path) -> None:
+    """A page the template stopped declaring a prefix on must not be copied blind.
+
+    The substitution would silently do nothing, which happens to be correct
+    while the apex is the site's root and is wrong the moment it is not. A
+    template change has to reach this composition.
+    """
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    source = tmp_path / _docs_i18n.DEFAULT_SOURCE_LANGUAGE / "404.html"
+    source.write_text("<html><head></head></html>", encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="declares no site prefix"):
+        _compose_apex(tmp_path)
 
 
 def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) -> None:
@@ -501,9 +693,15 @@ def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) ->
 
 
 def test_clearing_the_apex_keeps_only_the_language_roots(tmp_path: Path) -> None:
-    """A full site left at the apex by an earlier layout is never uploaded as current."""
+    """A full site or an index left at the apex by an earlier publish is never uploaded as current.
+
+    The apex now carries the site's one search index, so the clearing also has
+    to remove it: a previous release's index left in place would be uploaded
+    beside this release's pages and answer readers from the wrong corpus.
+    """
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
+    _materialise_site_search_index(tmp_path)
     (tmp_path / "api").mkdir()
     (tmp_path / "api" / "stale.html").write_text("x", encoding="utf-8")
     (tmp_path / "how-to.html").write_text("x", encoding="utf-8")

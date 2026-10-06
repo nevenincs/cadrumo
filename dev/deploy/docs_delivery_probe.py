@@ -155,25 +155,27 @@ def _verify_published_search_index(
     base_url: str = CANONICAL_DOCS_BASE_URL,
     fetch: Callable[[str], bytes] = _published_body,
 ) -> None:
-    """Require every published root to serve the search index its build produced.
+    """Require the published site to serve the search index its build produced.
+
+    One read, at the apex, because the site has ONE index and every language's
+    pages load it from there: the entry this fetches is the entry every reader
+    of every language gets. It was one read per language root while there were
+    four indexes, and reading only the default root was a defect then; with one
+    index there is no second entry a reader could be served instead.
 
     Args:
-        html_root: The built site root the publish uploaded from.
+        html_root: The built site root the publish uploaded from, which is the
+            site's apex.
         base_url: DI seam. Production uses the canonical docs URL.
         fetch: DI seam for the HTTPS body read, so the comparison can be proven
             against real built artefacts without standing up a TLS endpoint.
     """
-    roots: tuple[tuple[str, Path, str], ...] = tuple(
-        (f"{base_url}/{language}/", html_root / language, f"localized root {language!r}")
-        for language in localized_languages()
+    served = fetch(f"{base_url}/pagefind/pagefind-entry.json")
+    _assert_served_index_matches_build(
+        built=html_root / "pagefind" / "pagefind-entry.json",
+        served=served,
+        label="the documentation site",
     )
-    for root_url, built_root, label in roots:
-        served = fetch(f"{root_url}pagefind/pagefind-entry.json")
-        _assert_served_index_matches_build(
-            built=built_root / "pagefind" / "pagefind-entry.json",
-            served=served,
-            label=label,
-        )
 
 
 def _await_release_served(release: str) -> None:

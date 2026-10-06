@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
+from dev.docs.build_paths import DOCS_SITE_PREFIX_ENV
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 from .docs_delivery_contracts import CANONICAL_DOCS_BASE_URL
@@ -17,13 +18,17 @@ from .docs_delivery_contracts import CANONICAL_DOCS_BASE_URL
 def site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
     """Return the deployment-specific strict docs build environment.
 
-    The Pagefind contract is pinned to ``full`` on every deploy root, English
-    and localized alike: the deployed index carries the injected concept,
-    casilla, and CLI records, not the rendered pages alone. It is pinned
-    explicitly rather than left to the build default so an ambient
-    ``CADRUMO_DOCS_PAGEFIND_MODE`` in the publishing session cannot narrow the
-    shipped search contract — ``base`` is the real process environment in
-    production, and these keys are layered over it.
+    The Pagefind contract is pinned to ``full``: the deployed index carries the
+    injected concept, casilla, legal and CLI records, not the rendered pages
+    alone. This is the SITE's contract, and the site has one index -- so this is
+    the environment the one index pass resolves its injector from
+    (:func:`~dev.deploy.docs_site_build._index_site`), while one root's own
+    build narrows it to ``none`` (:func:`language_build_environment`) because a
+    root does not index itself. It is pinned explicitly rather than left to the
+    build default so an ambient ``CADRUMO_DOCS_PAGEFIND_MODE`` in the
+    publishing session cannot narrow the shipped search contract — ``base`` is
+    the real process environment in production, and these keys are layered over
+    it.
 
     The value is decided, not incidental: a ``pages`` value arrived here inside
     an unrelated env-key rename and silently discarded every injected record
@@ -84,13 +89,22 @@ def language_build_command(language: str, out_dir: Path) -> list[str]:
 
 
 def language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
-    """Return the deploy build environment for one localized site root.
+    """Return the deploy build environment for one published site root.
 
-    The shared deployment environment (parallel workers, full record-injected
-    Pagefind contract) with the canonical base URL pointed at the language's own
-    root so the per-language sitemap and canonical/OpenGraph URLs are correct.
-    Each localized root therefore carries the injected records too: a reader on
-    ``/es/`` searches the same record kinds as a reader on the English root.
+    The shared deployment environment (parallel workers) with the canonical base
+    URL pointed at the language's own root so the per-language sitemap and
+    canonical/OpenGraph URLs are correct, and two keys that place this root in a
+    site it does not own alone:
+
+    - ``CADRUMO_DOCS_PAGEFIND_MODE=none``, because the site has ONE search index
+      and it is built over every root once they are all built
+      (:func:`~dev.deploy.docs_site_build._index_site`). A root that indexed
+      itself would write a second index the served site never loads, addressed
+      to its own root rather than to the apex.
+    - ``CADRUMO_DOCS_SITE_PREFIX``, this root's own directory in the served
+      site. It is what makes a page resolve the apex index one level up from its
+      own root, and what completes a shared record's destination inside the
+      language being read.
 
     ``check_sequences`` selects whether this root runs the cli-sequence goldens
     gate. The check's verdict cannot vary by root -- its subprocess scrubs every
@@ -99,7 +113,12 @@ def language_build_environment(language: str, *, check_sequences: bool) -> dict[
     the documented opt-out; which root is decided by
     :func:`_language_build_environments`, never here.
     """
-    environment = {**site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
+    environment = {
+        **site_build_environment(),
+        "CADRUMO_DOCS_BASE_URL": _language_site_url(language),
+        "CADRUMO_DOCS_PAGEFIND_MODE": "none",
+        DOCS_SITE_PREFIX_ENV: language,
+    }
     if not check_sequences:
         environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
     return environment

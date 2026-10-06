@@ -19,19 +19,21 @@ RELEASE = "fixture-20260927T000000Z"
 
 
 def fixture_release(root: Path) -> dict[str, Any]:
-    """Build real files with separate search runtime and generated payloads."""
-    files = {"index.html": "language entry", "404.html": '<a href="/docs/en/">Docs</a>'}
+    """Build real files with separate search runtime and generated payloads.
+
+    The site's shape: a page per language, and ONE search index at the apex that
+    every language's pages load.
+    """
+    files = {
+        "index.html": "language entry",
+        "404.html": '<a href="/docs/en/">Docs</a>',
+        "pagefind/pagefind.js": "export default {};",
+        "pagefind/pagefind-entry.json": "{}",
+        "pagefind/fragment/a.pf_fragment": "fragment",
+        "pagefind/index/a.pf_index": "index",
+    }
     for language in LANGUAGES:
-        files.update(
-            {
-                f"{language}/index.html": language,
-                f"{language}/search.html": "Search",
-                f"{language}/pagefind/pagefind.js": "export default {};",
-                f"{language}/pagefind/pagefind-entry.json": "{}",
-                f"{language}/pagefind/fragment/a.pf_fragment": "fragment",
-                f"{language}/pagefind/index/a.pf_index": "index",
-            }
-        )
+        files.update({f"{language}/index.html": language, f"{language}/search.html": "Search"})
     for key, body in files.items():
         path = root / key
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,11 +47,18 @@ def test_static_delivery_preserves_both_mounts_and_local_search_runtime(tmp_path
     config = delivery_config(document)
     for mount in ("/docs", "/cadrumo/docs"):
         assert f"{mount}/en/search.html" in assets
-        assert f"{mount}/en/pagefind/pagefind.js" in assets
-        assert f"{mount}/en/pagefind/fragment/a.pf_fragment" not in assets
+        assert f"{mount}/pagefind/pagefind.js" in assets
+        assert f"{mount}/pagefind/fragment/a.pf_fragment" not in assets
         assert f"{mount}/en/ {mount}/en/index.html 200" in config["_redirects"]
         assert f"{mount}/search.html {mount}/en/search.html 301" in config["_redirects"]
-        assert f"{mount}/en/pagefind/index/* https://" in config["_redirects"]
+        assert f"{mount}/pagefind/index/* https://" in config["_redirects"]
+        # The site has one index, so the search trees cost one rule per tree
+        # rather than one per tree per language.
+        assert not any(
+            row.startswith(f"{mount}/{language}/pagefind/")
+            for language in LANGUAGES
+            for row in config["_redirects"].splitlines()
+        )
     assert assets["/docs/404.html"]["hash"] != assets["/cadrumo/docs/404.html"]["hash"]
     assert sources["/cadrumo/docs/404.html"] == "@mirror:404.html"
     assert 'href="/cadrumo/docs/en/"' in document["mirror_errors"]["404.html"]
@@ -66,8 +75,8 @@ def test_manifest_detects_changed_bytes_and_missing_search(tmp_path: Path) -> No
     document = fixture_release(tmp_path)
     with pytest.raises(ValueError, match="content differs"):
         verify_bytes(b"wrong", document["objects"]["index.html"], "index.html")
-    (tmp_path / "en/pagefind/index/a.pf_index").unlink()
-    with pytest.raises(ValueError, match="Missing en search index"):
+    (tmp_path / "pagefind/index/a.pf_index").unlink()
+    with pytest.raises(ValueError, match="Missing site search index"):
         build_manifest(tmp_path, RELEASE)
 
 

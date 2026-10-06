@@ -8,7 +8,7 @@ related:
   - '[[2026-10-06-user-docs-weight-adr]]'
 modified: '2026-10-06'
 body_schema: body-v2
-body_hash: 'sha256:445443b098916bfc19176fe9d4c76b71b2dc8f048bf3e7a4b5f9c9b0f6478875'
+body_hash: 'sha256:4c91201500395f04af081ea239a2833861fbc4157f217791c36dd1396c364bb0'
 ---
 
 # `user-docs-weight` plan
@@ -26,7 +26,7 @@ The plan reaches the decision's two commitments in its order D5. S01 to S05 chan
 - [x] `S09` - Build one search index for all languages at the site's apex: each page a record filtered by its language, each term, casilla, legal and CLI record indexed once, and the search controller filtering by the page's language and opening shared records inside it; `dev/docs/pagefind_index.py, dev/docs/pagefind_inject.py, dev/docs/build.py, dev/packaging/native/docs_build.py, docs/_static/cadrumo-docs.js, dev/docs/tests/`.
 - [x] `S03` - Stage the package as one structure and each language's text, with a manifest that says how each address is served; `dev/packaging/native/docs_stage.py, native/package-layout.json`.
 - [x] `S04` - Compose a page from its structure and the language's text in the documentation scheme handler, and state the layout in the contract; `native/desktop/src-tauri/src/docs/, native/CONTRACT.md`.
-- [ ] `S05` - Publish the site by composing each language's pages from the structure and the text; `dev/deploy/docs_static_site.py`.
+- [x] `S05` - Publish the site by composing each language's pages from the structure and the text; `dev/deploy/docs_static_site.py`.
 - [ ] `S06` - Emit every language's strings for the generated references from one projection and retire their per-language generation; `dev/docs/casilla_reference.py, dev/docs/legal_reference.py, dev/docs/glossary_reference.py, dev/docs/cli_reference.py`.
 - [ ] `S07` - Emit the site chrome's strings for every language from the catalogues; `dev/docs/site_chrome.py, docs/_templates/`.
 - [ ] `S08` - Emit the authored pages' strings from the gettext catalogues in the one compile, retire the per-language builds, and move the strict and completeness gates onto the composed pages; `dev/docs/build.py, dev/docs/i18n.py, dev/packaging/native/docs_build.py, dev/docs/tests/`.
