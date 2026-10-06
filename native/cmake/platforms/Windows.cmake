@@ -18,7 +18,7 @@ add_custom_command(OUTPUT "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/bu
     "${CONTRACT_DIR}/interpreter.rc" "${CONTRACT_DIR}/cadrumo.ico" ${entrypoint_resources}
   COMMAND ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
     --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
-    --channel "${CADRUMO_CHANNEL}"
+    --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
   DEPENDS ${native_helper_inputs} ${contract_inputs}
     "${CONTRACT_DIR}/identity.json"
     "${PROJECT_SOURCE_DIR}/docs/_static/cadrumo-favicon.svg" "${CADRUMO_PATH_TOOLS}/ready"

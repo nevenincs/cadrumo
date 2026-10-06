@@ -1,155 +1,975 @@
-[revisions."2019-y-siguientes"]
+[revisions.2019-y-siguientes]
 casilla_storage_baseline = "2016-2018"
-predecessor = { none = { reason = "No legal predecessor is declared: naming 2016-2018 would claim that the 2019 design continues the 2016 one, a separate continuity decision. The payload is stored against 2016-2018 through casilla_storage_baseline and family_storage_baseline: the two header casillas and the shared filing schedule, construct and application links carry only this edition's differences as overrides, and what this edition states itself (its liquidation and identification casillas, the export layout and its application link, the live cross-references and the record-design parity anchor) is not declared by the 2016-2018 edition. Storage reuse makes no continuity claim.", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2019"] } }
 casilla_source_refs = ["aeat-dr-308-2019"]
 live_cross_reference_source_refs = ["aeat-modelo-308-procedure"]
 application_link_source_refs = ["aeat-modelo-308-procedure"]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement:
-#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
-#     every cited source's corpus file is present on disk;
-#   - every formula targets a casilla of this revision;
-#   - every enrolled schema family resolves;
-#   - every cited source's applicability window overlaps this revision's own life;
-#   - and all 1 fixed-width record(s) of the DERIVED layout were paired to
-#     their design sheet and cover it: no design DATA position is left
-#     unaddressed, and none reaches past its declared record length.
-#
-# The coverage figure is measured on the layout AFTER binding derivation, which
-# is what the renderer and the completeness gate consume; the raw export_layouts
-# collection holds only inline fields and reading it understates coverage badly.
-#
-# This stamp claims no fresh-render reproduction evidence: that belongs to the
-# revisions enrolled in the generated-tree drift gate, and this one is not.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
 valid_from = 2019-01-01
-period_selector = { year_from = 2019, periods = ["AD-HOC"] }
-legal_refs = [
-    "ley-37-1992:art-21",
-    "rd-1624-1992:art-30-bis",
-    "orden-eha-3786-2008:art-2",
-    "orden-eha-3786-2008:art-11",
-    "ley-37-1992:art-161",
-]
-orden_aplicabilidad = [
-    "orden-eha-3786-2008:art-2",
-]
-source_refs = [
-    "aeat-dr-308-2019",
-    "aeat-modelo-308-procedure",
-    "boe-modelo-308-2008-form",
-]
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+orden_aplicabilidad = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
 family_storage_baseline = "2016-2018"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "completeness_manifest"]
 
-[revisions."2019-y-siguientes".family_dispositions.applicability]
+[revisions.2019-y-siguientes.predecessor.none]
+reason = "No legal predecessor is declared: naming 2016-2018 would claim that the 2019 design continues the 2016 one, a separate continuity decision. The payload is stored against 2016-2018 through casilla_storage_baseline and family_storage_baseline: the two header casillas and the shared filing schedule, construct and application links carry only this edition's differences as overrides, and what this edition states itself (its liquidation and identification casillas, the export layout and its application link, the live cross-references and the record-design parity anchor) is not declared by the 2016-2018 edition. Storage reuse makes no continuity claim."
+legal_refs = ["ley-37-1992:art-21"]
+source_refs = ["aeat-dr-308-2019"]
+
+[revisions.2019-y-siguientes.period_selector]
+year_from = 2019
+periods = ["AD-HOC"]
+
+[revisions.2019-y-siguientes.family_dispositions.applicability]
 reason = "Modelo 308 is filed AD-HOC, one declaration per settlement period as the intra-community operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state. The applicability family has no periodic condition to declare."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions."2019-y-siguientes".family_dispositions.bindings]
+[revisions.2019-y-siguientes.family_dispositions.bindings]
 reason = "Modelo 308's casillas are the operator's own per-operation values (the MTN and REQ liquidation figures, the acquirer identification); Cadrumo holds no store that projects them, so no binding source applies and the binding family is empty by the application's data shape rather than omitted."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions."2019-y-siguientes".family_dispositions.deadline_windows]
+[revisions.2019-y-siguientes.family_dispositions.deadline_windows]
 reason = "Modelo 308's AD-HOC filing models its obligation through filing_schedules; the deadline_windows family holds per-period presentation calendars for periodic modelos, and an AD-HOC declaration's presentation window is the settlement event itself, which the schedule already carries. Empty by the period shape, not by omission."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions."2019-y-siguientes".family_dispositions.dependency_classifications]
+[revisions.2019-y-siguientes.family_dispositions.dependency_classifications]
 reason = "Modelo 308 consumes no other modelo's filed output and no modelo consumes its output through the dependency engine: the recapitulativa stands alone per settlement period. The family is empty because no dependency exists to classify."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions."2019-y-siguientes".family_dispositions.extraction_profiles]
+[revisions.2019-y-siguientes.family_dispositions.extraction_profiles]
 reason = "An extraction profile names an AEAT artefact this application ingests and the parser that reads it. The application's pull surface for modelo 308 is the operator-entered AD-HOC declaration, not a periodic declaracion PDF replay, and no inbound parser for a 308 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions."2019-y-siguientes".family_dispositions.formulas]
-reason = "Modelo 308 computes nothing: every casilla is an operator-entered per-operation value (informational or manual), and no casilla declares a formula or a computed input kind. The formula family is empty by the modelo's calculation shape rather than omitted."
+[revisions.2019-y-siguientes.family_dispositions.parameters]
+reason = "The box17 formula adds the three declared refund quotas; it applies no regulatory rate or threshold parameter. The three rates and component quotas remain separately declared facts."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions."2019-y-siguientes".family_dispositions.parameters]
-reason = "A parameter holds a regulatory value a formula of this revision applies. Modelo 308 applies none: it declares zero formulas, and the liquidation figures are the operator's recorded values, not computed applications of a rate or threshold. Empty by the shape of the modelo's calculation."
-legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
-source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
-
-[revisions."2019-y-siguientes".family_dispositions.projection_endpoints]
+[revisions.2019-y-siguientes.family_dispositions.projection_endpoints]
 reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. Modelo 308's record design declares two fixed pages with no repeated projection record and no field of kind 'projection'. The family has no repeated endpoint to admit; authoring a projection row into the layout is what would make it apply."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
-[revisions."2019-y-siguientes".family_dispositions.verification_expectations]
-reason = "A verification expectation reconciles a FILED return against this application's engine. Modelo 308's AD-HOC filings carry only the operator's own entered values with no engine-computed figures to reconcile, and the application holds no justificante reconciliation surface for the recapitulativa. The family is empty until such a surface is authored, not by omission."
+
+[revisions.2019-y-siguientes.family_dispositions.verification_expectations]
+reason = "No filed-return reconciliation surface is enrolled for Modelo308. The local box17 sum is checked through its declared formula, but does not establish an AEAT-confirmed refund."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[revisions."2019-y-siguientes".family_dispositions.verification_predicates]
-reason = "A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. Modelo 308 calculates nothing: zero formulas, no computed casilla, and every liquidation figure is the operator's recorded value. The under-declaration risk these guard does not arise from an engine computation."
+[revisions.2019-y-siguientes.family_dispositions.verification_predicates]
+reason = "The current computation is the unconditional sum of three non-negative declared quota amounts in box17. Missing operands remain unresolved and operand constraints prohibit negative quotas. No separate conditional tax entitlement predicate is inferred from this arithmetic; entitlement verification remains outside this sum."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
-[[revisions."2019-y-siguientes".casilla_overrides]]
-selector = { revision = "2016-2018", id = "decl.ejercicio" }
-fields = { continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 both identify Ejercicio devengo (AAAA) in M30800 and Devengo - Ejercicio in M30801. The field continues to identify the refund declaration's tax year under Orden EHA/3786/2008 art. 2; broader legal references in this revision do not change that role.", continuidad_origin = "grounded", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"] }
+[[revisions.2019-y-siguientes.casilla_overrides]]
 removed_fields = []
 restate_provenance = true
 
-[[revisions."2019-y-siguientes".casilla_overrides]]
-selector = { revision = "2016-2018", id = "decl.periodo" }
-fields = { continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 identify the same settlement period in both record designs: M30800 Periodo (PP) at offset 11 length 2 and M30801 Devengo - Periodo at offset 107 length 2, under Orden EHA/3786/2008 art. 2. The 2019 registry surface is intentionally represented as number 11-12, text, and declaracion_periodo in the declarante/liquidacion section while the 2016 surface is period_code in the declaration header; this is an application representation change, not a label- or number-only inference and not a retirement. The 2019 M30801 design additionally admits 01-12 for the applicable Tipo Tributacion, while M30800 retains the quarter/annual codes.", continuidad_origin = "grounded", data_type = "text", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], number = "11-12", section = ["declarante", "liquidacion"], semantic_role = "declaracion_periodo" }
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.ejercicio"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 both identify Ejercicio devengo (AAAA) in M30800 and Devengo - Ejercicio in M30801. The field continues to identify the refund declaration's tax year under Orden EHA/3786/2008 art. 2; broader legal references in this revision do not change that role."
+continuidad_origin = "grounded"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
 removed_fields = ["input_kind", "required"]
 restate_provenance = true
 
-[[revisions."2019-y-siguientes".casilla_positions]]
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.periodo"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 identify the same settlement period in both record designs: M30800 Periodo (PP) at offset 11 length 2 and M30801 Devengo - Periodo at offset 107 length 2, under Orden EHA/3786/2008 art. 2. The 2019 registry surface is intentionally represented as number 11-12, text, and declaracion_periodo in the declarante/liquidacion section while the 2016 surface is period_code in the declaration header; this is an application representation change, not a label- or number-only inference and not a retirement. The 2019 M30801 design additionally admits 01-12 for the applicable Tipo Tributacion, while M30800 retains the quarter/annual codes."
+continuidad_origin = "grounded"
+data_type = "text"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+number = "11-12"
+section = ["declarante", "liquidacion"]
+semantic_role = "declaracion_periodo"
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.devolucion-iban"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.devolucion-iban at 932-965 with the same legal role devolucion_iban. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.devolucion-bic"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.devolucion-bic at 966-976 with the same legal role devolucion_bic. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.tipo-declaracion"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.tipo-declaracion at 13 with the same legal role declaracion_tipo. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.nombre"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.nombre at 83-102 with the same legal role declarante_nombre. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.tipo-tributacion"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.tipo-tributacion at 109 with the same legal role tipo_tributacion_sujeto_pasivo. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-adquirente-nif"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-adquirente-nif at 110-118 with the same legal role mtn_adquirente_nif. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-adquirente-apellidos"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-adquirente-apellidos at 119-178 with the same legal role mtn_adquirente_apellidos. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-adquirente-nombre"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-adquirente-nombre at 179-198 with the same legal role mtn_adquirente_nombre. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-adquirente-pais"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-adquirente-pais at 199-200 with the same legal role mtn_adquirente_pais. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-vehiculo-marca"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-vehiculo-marca at 201-240 with the same legal role mtn_vehiculo_marca. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-vehiculo-tipo"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-vehiculo-tipo at 241-280 with the same legal role mtn_vehiculo_tipo. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-vehiculo-modelo"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-vehiculo-modelo at 281-320 with the same legal role mtn_vehiculo_modelo. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-vehiculo-bastidor"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-vehiculo-bastidor at 321-342 with the same legal role mtn_vehiculo_bastidor. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-vehiculo-clasificacion"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-vehiculo-clasificacion at 343-348 with the same legal role mtn_vehiculo_clasificacion. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-embarcacion-fabricante"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-embarcacion-fabricante at 349-388 with the same legal role mtn_embarcacion_fabricante. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-embarcacion-tipo"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-embarcacion-tipo at 389-468 with the same legal role mtn_embarcacion_tipo. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-embarcacion-identificacion"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-embarcacion-identificacion at 469-490 with the same legal role mtn_embarcacion_identificacion. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-embarcacion-eslora"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-embarcacion-eslora at 491-495 with the same legal role mtn_embarcacion_eslora. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-aeronave-fabricante"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-aeronave-fabricante at 496-535 with the same legal role mtn_aeronave_fabricante. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-aeronave-marca"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-aeronave-marca at 536-615 with the same legal role mtn_aeronave_marca. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-aeronave-serie"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-aeronave-serie at 616-637 with the same legal role mtn_aeronave_serie. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-aeronave-ano"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-aeronave-ano at 638-641 with the same legal role mtn_aeronave_ano. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-aeronave-peso"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-aeronave-peso at 642-651 with the same legal role mtn_aeronave_peso. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-precio-adquisicion"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-precio-adquisicion at 652-668 with the same legal role mtn_precio_adquisicion. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-tipo-01"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-tipo-01 at 669-673 with the same legal role mtn_tipo_01. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-iva-soportado"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-iva-soportado at 674-690 with the same legal role mtn_iva_soportado. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-precio-venta"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-precio-venta at 691-707 with the same legal role mtn_precio_venta. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-tipo-04"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-tipo-04 at 708-712 with the same legal role mtn_tipo_04. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-maximo-devolver"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-maximo-devolver at 713-729 with the same legal role mtn_maximo_devolver. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-iva-devolver-eib"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-iva-devolver-eib at 730-746 with the same legal role mtn_iva_devolver_eib. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-iva-devolver-transporte"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-iva-devolver-transporte at 747-763 with the same legal role mtn_iva_devolver_transporte. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-iva-soportado-art21"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-iva-soportado-art21 at 764-780 with the same legal role mtn_iva_soportado_art21. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.mtn-iva-devolver-art21"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.mtn-iva-devolver-art21 at 781-797 with the same legal role mtn_iva_devolver_art21. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-base-08"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-base-08 at 798-814 with the same legal role req_base_08. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-tipo-09"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-tipo-09 at 815-819 with the same legal role req_tipo_09. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-cuota-10"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-cuota-10 at 820-836 with the same legal role req_cuota_10. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-base-11"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-base-11 at 837-853 with the same legal role req_base_11. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-tipo-12"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-tipo-12 at 854-858 with the same legal role req_tipo_12. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-cuota-13"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-cuota-13 at 859-875 with the same legal role req_cuota_13. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-base-14"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-base-14 at 876-892 with the same legal role req_base_14. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-tipo-15"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-tipo-15 at 893-897 with the same legal role req_tipo_15. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-cuota-16"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-cuota-16 at 898-914 with the same legal role req_cuota_16. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "decl.req-iva-devolver-17"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare decl.req-iva-devolver-17 at 915-931 with the same legal role req_iva_devolver_17. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["aeat-dr-308-2019"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "firma-lugar"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare firma-lugar at papel.firma-lugar with the same legal role papel_firma_lugar. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "firma-fecha"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare firma-fecha at papel.firma-fecha with the same legal role papel_firma_fecha. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[[revisions.2019-y-siguientes.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2019-y-siguientes.casilla_overrides.selector]
+revision = "2016-2018"
+id = "firma"
+
+[revisions.2019-y-siguientes.casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 M30801 both declare firma at papel.firma with the same legal role papel_firma. Compared official labels and meaning under Orden EHA/3786/2008 art2; record encoding differences do not change the concept. Paper signature fields are additionally grounded in BOE-A-2011-7479 Annex I apartado5."
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.ejercicio"
+position = 0
+
+[[revisions.2019-y-siguientes.casilla_positions]]
 id = "decl.tipo-solicitud"
 position = 1
 
-[[revisions."2019-y-siguientes".family_overrides]]
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.periodo"
+position = 2
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.devolucion-iban"
+position = 3
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.devolucion-bic"
+position = 4
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.tipo-declaracion"
+position = 5
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.nombre"
+position = 6
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.tipo-tributacion"
+position = 7
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-adquirente-nif"
+position = 8
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-adquirente-apellidos"
+position = 9
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-adquirente-nombre"
+position = 10
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-adquirente-pais"
+position = 11
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-vehiculo-marca"
+position = 12
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-vehiculo-tipo"
+position = 13
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-vehiculo-modelo"
+position = 14
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-vehiculo-bastidor"
+position = 15
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-vehiculo-clasificacion"
+position = 16
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-embarcacion-fabricante"
+position = 17
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-embarcacion-tipo"
+position = 18
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-embarcacion-identificacion"
+position = 19
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-embarcacion-eslora"
+position = 20
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-aeronave-fabricante"
+position = 21
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-aeronave-marca"
+position = 22
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-aeronave-serie"
+position = 23
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-aeronave-ano"
+position = 24
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-aeronave-peso"
+position = 25
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-precio-adquisicion"
+position = 26
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-tipo-01"
+position = 27
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-iva-soportado"
+position = 28
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-precio-venta"
+position = 29
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-tipo-04"
+position = 30
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-maximo-devolver"
+position = 31
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-iva-devolver-eib"
+position = 32
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-iva-devolver-transporte"
+position = 33
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-iva-soportado-art21"
+position = 34
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.mtn-iva-devolver-art21"
+position = 35
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-base-08"
+position = 36
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-tipo-09"
+position = 37
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-cuota-10"
+position = 38
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-base-11"
+position = 39
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-tipo-12"
+position = 40
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-cuota-13"
+position = 41
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-base-14"
+position = 42
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-tipo-15"
+position = 43
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-cuota-16"
+position = 44
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "decl.req-iva-devolver-17"
+position = 45
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "firma-lugar"
+position = 46
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "firma-fecha"
+position = 47
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "firma"
+position = 48
+
+[[revisions.2019-y-siguientes.casilla_positions]]
+id = "papel-importe-devolucion"
+position = 49
+
+[[revisions.2019-y-siguientes.family_overrides]]
 family = "filing_schedules"
-selector = {revision = "2016-2018", id = "modelo-308-ad-hoc"}
-sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
-sequence_order = {legal_refs = [1, 2, 0, 3]}
 
-[[revisions."2019-y-siguientes".family_overrides]]
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-ad-hoc"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+legal_refs = [1, 2, 0, 3]
+
+[[revisions.2019-y-siguientes.family_overrides]]
 family = "constructs"
-selector = {revision = "2016-2018", id = "modelo-308-iva-solicitud-devolucion"}
-fields = {export_layouts = ["generated-modelo-308-2019-y-siguientes-fichero"], live_cross_references = ["modelo-308-static-documentation", "modelo-308-filed-declarations-read"]}
-sequence_additions = {casilla_ids = ["decl.tipo-solicitud", "decl.devolucion-iban", "decl.devolucion-bic", "decl.tipo-declaracion", "decl.nombre", "decl.tipo-tributacion", "decl.mtn-adquirente-nif", "decl.mtn-adquirente-apellidos", "decl.mtn-adquirente-nombre", "decl.mtn-adquirente-pais", "decl.mtn-vehiculo-marca", "decl.mtn-vehiculo-tipo", "decl.mtn-vehiculo-modelo", "decl.mtn-vehiculo-bastidor", "decl.mtn-vehiculo-clasificacion", "decl.mtn-embarcacion-fabricante", "decl.mtn-embarcacion-tipo", "decl.mtn-embarcacion-identificacion", "decl.mtn-embarcacion-eslora", "decl.mtn-aeronave-fabricante", "decl.mtn-aeronave-marca", "decl.mtn-aeronave-serie", "decl.mtn-aeronave-ano", "decl.mtn-aeronave-peso", "decl.mtn-precio-adquisicion", "decl.mtn-tipo-01", "decl.mtn-iva-soportado", "decl.mtn-precio-venta", "decl.mtn-tipo-04", "decl.mtn-maximo-devolver", "decl.mtn-iva-devolver-eib", "decl.mtn-iva-devolver-transporte", "decl.mtn-iva-soportado-art21", "decl.mtn-iva-devolver-art21", "decl.req-base-08", "decl.req-tipo-09", "decl.req-cuota-10", "decl.req-base-11", "decl.req-tipo-12", "decl.req-cuota-13", "decl.req-base-14", "decl.req-tipo-15", "decl.req-cuota-16", "decl.req-iva-devolver-17"], application_links = ["modelo-308-export"], legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"], workbook_parity_refs = ["modelo-308-dr"]}
-sequence_removals = {source_refs = [0], workbook_parity_refs = [0]}
-sequence_order = {legal_refs = [2, 3, 0, 1, 4], source_refs = [2, 0, 1]}
 
-[[revisions."2019-y-siguientes".family_overrides]]
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-iva-solicitud-devolucion"
+
+[revisions.2019-y-siguientes.family_overrides.fields]
+export_layouts = ["generated-modelo-308-2019-y-siguientes-fichero"]
+live_cross_references = ["modelo-308-static-documentation", "modelo-308-filed-declarations-read"]
+casilla_ids = ["decl.ejercicio", "decl.tipo-solicitud", "decl.periodo", "decl.devolucion-iban", "decl.devolucion-bic", "decl.tipo-declaracion", "decl.nombre", "decl.tipo-tributacion", "decl.mtn-adquirente-nif", "decl.mtn-adquirente-apellidos", "decl.mtn-adquirente-nombre", "decl.mtn-adquirente-pais", "decl.mtn-vehiculo-marca", "decl.mtn-vehiculo-tipo", "decl.mtn-vehiculo-modelo", "decl.mtn-vehiculo-bastidor", "decl.mtn-vehiculo-clasificacion", "decl.mtn-embarcacion-fabricante", "decl.mtn-embarcacion-tipo", "decl.mtn-embarcacion-identificacion", "decl.mtn-embarcacion-eslora", "decl.mtn-aeronave-fabricante", "decl.mtn-aeronave-marca", "decl.mtn-aeronave-serie", "decl.mtn-aeronave-ano", "decl.mtn-aeronave-peso", "decl.mtn-precio-adquisicion", "decl.mtn-tipo-01", "decl.mtn-iva-soportado", "decl.mtn-precio-venta", "decl.mtn-tipo-04", "decl.mtn-maximo-devolver", "decl.mtn-iva-devolver-eib", "decl.mtn-iva-devolver-transporte", "decl.mtn-iva-soportado-art21", "decl.mtn-iva-devolver-art21", "decl.req-base-08", "decl.req-tipo-09", "decl.req-cuota-10", "decl.req-base-11", "decl.req-tipo-12", "decl.req-cuota-13", "decl.req-base-14", "decl.req-tipo-15", "decl.req-cuota-16", "decl.req-iva-devolver-17", "firma-lugar", "firma-fecha", "firma", "papel-importe-devolucion"]
+source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form", "boe-modelo-308-2011-form-pdf"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+application_links = ["modelo-308-export"]
+workbook_parity_refs = ["modelo-308-dr"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_removals]
+workbook_parity_refs = [0]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+
+[[revisions.2019-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2016-2018", id = "modelo-308-deadline"}
-sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
-sequence_order = {legal_refs = [1, 2, 0, 3]}
 
-[[revisions."2019-y-siguientes".family_overrides]]
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-deadline"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+legal_refs = [1, 2, 0, 3]
+
+[[revisions.2019-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2016-2018", id = "modelo-308-filing"}
-sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
-sequence_order = {legal_refs = [1, 2, 0, 3]}
 
-[[revisions."2019-y-siguientes".family_overrides]]
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-filing"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+legal_refs = [1, 2, 0, 3]
+
+[[revisions.2019-y-siguientes.family_overrides]]
 family = "application_links"
-selector = {revision = "2016-2018", id = "modelo-308-portal"}
-sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
-sequence_order = {legal_refs = [1, 2, 0, 3]}
 
-[[revisions."2019-y-siguientes".family_removals]]
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-portal"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+legal_refs = [1, 2, 0, 3]
+
+[[revisions.2019-y-siguientes.family_overrides]]
+family = "formulas"
+
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-recargo-total"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-308-2019"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_removals]
+source_refs = [1]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+source_refs = [0, 2, 1]
+
+[[revisions.2019-y-siguientes.family_overrides]]
+family = "completeness_manifest"
+replacement_id = "aeat-dr-308-2019"
+
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "aeat-dr-308-2016"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-308-2019"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions.2019-y-siguientes.family_removals]]
 family = "workbook_parity_refs"
-selector = {revision = "2016-2018", id = "modelo-308-dr-static-layout"}
+
+[revisions.2019-y-siguientes.family_removals.selector]
+revision = "2016-2018"
+id = "modelo-308-dr-static-layout"
+
+[[revisions.2019-y-siguientes.casilla_removals]]
+[revisions.2019-y-siguientes.casilla_removals.selector]
+revision = "2016-2018"
+id = "papel-nif"
+
+[[revisions.2019-y-siguientes.casilla_removals]]
+[revisions.2019-y-siguientes.casilla_removals.selector]
+revision = "2016-2018"
+id = "papel-apellidos"

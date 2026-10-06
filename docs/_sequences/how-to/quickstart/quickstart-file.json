@@ -229,19 +229,27 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.file",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "aeat_accepted": false,
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "3a61188424119a738f36405a23757e455ca1f9aeeb4f6ee401f92bffd3fbe8ba",
+          "calculation_revision_id": "08f48fef1c6fc0616f7b782bbab3061b420815dcb75177c8720596499a123158",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "a135a1553dea32fe3cf2d58fa8150e74706492ff4e42505de63fcc731b05e661",
+          "filing_record_id": "98b0e448e50598c9b52ff9784ae0a32642a751a699c71b17eb4cbc232d777b01",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -260,7 +268,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

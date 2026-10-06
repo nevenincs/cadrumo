@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 from threading import Event, RLock
 from typing import override
 from uuid import UUID, uuid4
@@ -137,3 +139,60 @@ def test_control_reply_keeps_its_short_budget() -> None:
 
     assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
     assert worker.contained
+
+
+@pytest.mark.parametrize("reentrant", [False, True])
+def test_expired_free_or_reentrant_exchange_sends_nothing_and_keeps_worker(reentrant: bool) -> None:
+    worker = _worker(latency=0)
+    channel = worker._channel
+    assert isinstance(channel, _SlowWorkerChannel)
+
+    with (
+        worker._lock if reentrant else nullcontext(),
+        pytest.raises(RuntimeRefusalError) as refused,
+    ):
+        worker.prepare_api_admission(deadline=time.monotonic() - 1)
+
+    assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    assert not channel.pending and not channel.awaiting_reply
+    assert not worker.contained and not worker._stopping.is_set()
+    with pytest.raises(ProfileAccessRefusedError) as available:
+        worker.status()
+    assert available.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert not worker.contained
+
+
+def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    worker = _worker(latency=0)
+    channel = worker._channel
+    assert isinstance(channel, _SlowWorkerChannel)
+    budget_checked = Event()
+    instant = 100.0
+
+    def monotonic() -> float:
+        observed = instant
+        budget_checked.set()
+        return observed
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    monkeypatch.setattr(time, "monotonic", monotonic)
+    try:
+        with worker._lock:
+            response = pool.submit(worker.prepare_api_admission, deadline=105.0)
+            assert budget_checked.wait(2), "queued caller did not check its original budget"
+            instant = 106.0
+        with pytest.raises(RuntimeRefusalError) as refused:
+            response.result(timeout=2)
+        assert refused.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+        assert not channel.pending and not channel.awaiting_reply
+        assert not worker.contained and not worker._stopping.is_set()
+        assert worker._lock.acquire(blocking=False), "expired borrower retained the exchange lock"
+        worker._lock.release()
+        with pytest.raises(ProfileAccessRefusedError) as available:
+            worker.status()
+        assert available.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+        assert not worker.contained
+    finally:
+        pool.shutdown(wait=True)

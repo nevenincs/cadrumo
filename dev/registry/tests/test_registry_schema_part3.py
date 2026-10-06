@@ -394,7 +394,8 @@ def test_validator_accepts_known_verification_predicate_operators() -> None:
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
-def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predicates() -> None:
+@pytest.mark.parametrize("operator", ["casilla_equals_implies_nonzero", "casilla_equals_implies_zero"])
+def test_validator_rejects_casilla_equals_implies_numeric_malformed_m130_predicates(operator: str) -> None:
     """M130 categorical-conditional predicate authoring errors are rejected."""
 
     modelo, catalogues = _committed_modelo("130")
@@ -428,6 +429,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predica
         ),
     )
     for case_id, expression, match in cases:
+        expression = expression.replace("casilla_equals_implies_nonzero", operator)
         predicate = VerificationPredicateDefinition(
             id=f"casilla-equals-implies-nonzero:{case_id}",
             predicate_id=f"modelo-130-casilla-equals-implies-nonzero-{case_id}",
@@ -446,7 +448,8 @@ def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predica
             raise AssertionError(case_id) from exc
 
 
-def test_validator_rejects_casilla_equals_implies_nonzero_text_consequent() -> None:
+@pytest.mark.parametrize("operator", ["casilla_equals_implies_nonzero", "casilla_equals_implies_zero"])
+def test_validator_rejects_casilla_equals_implies_numeric_text_consequent(operator: str) -> None:
     """The consequent must resolve through the Decimal casilla-values projection."""
 
     modelo, catalogues = _committed_modelo("210")
@@ -455,7 +458,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_text_consequent() -> N
         id="casilla-equals-implies-nonzero:casilla-equals-implies-nonzero-text-consequent",
         predicate_id="modelo-210-casilla-equals-implies-nonzero-text-consequent",
         legal_refs=("trlirnr-rdleg-5-2004:art-24",),
-        expression='casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "tipo_renta"])',
+        expression=f'{operator}(["tipo_renta", "inmobiliaria", "tipo_renta"])',
         finding_kind="ADVISORY",
     )
     mutated = revision.model_copy(

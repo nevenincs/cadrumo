@@ -8,6 +8,8 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
+
 from ..custody.acceleration_receipt import ProfileSessionResumeOutcome, profile_session_path
 from ..custody.acceleration_receipt_crypto import PersistedProfileSession
 from ..custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody
@@ -91,13 +93,19 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
         assert minted.idle_deadline == _NOW + timedelta(minutes=15)
         assert minted.absolute_deadline == _NOW + timedelta(hours=4)
 
-        resumed, key_buffer = port.resume_acceleration_receipt(
+        borrowed, proof = port.borrow_acceleration_receipt_key(storage_root=tmp_path, profile_id=_PROFILE_ID)
+        assert borrowed.resumed and proof is not None
+        resumed, key_buffer = port.resume_acceleration_receipt_with_key(
             storage_root=tmp_path,
             profile_id=_PROFILE_ID,
             custody_generation=3,
             dek_epoch="epoch-3",
             now=_NOW + timedelta(minutes=1),
+            receipt_key=proof,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in_binding=sign_in.binding,
         )
+        port.zeroise_owned_buffer(proof)
         assert isinstance(resumed, ProfileSessionResumeOutcome)
         assert resumed.resumed is True
         assert resumed.refusal is None
@@ -107,33 +115,23 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
         port.zeroise_owned_buffer(key_buffer)
         assert key_buffer == bytearray(32)
 
-        renewed = port.advance_acceleration_idle_deadline(
-            storage_root=tmp_path,
-            profile_id=_PROFILE_ID,
-            record=minted,
-            new_idle_deadline=_NOW + timedelta(minutes=20),
-        )
-        assert isinstance(renewed, PersistedProfileSession)
-        assert renewed.session_id == minted.session_id
-        assert renewed.issued_at == minted.issued_at
-        assert renewed.idle_deadline == _NOW + timedelta(minutes=20)
-        assert renewed.absolute_deadline == minted.absolute_deadline
-
-        resumed_after_renewal, renewed_key_buffer = port.resume_acceleration_receipt(
+        # Reading a receipt cannot extend its lifetime; the original expiry wins.
+        borrowed, proof = port.borrow_acceleration_receipt_key(storage_root=tmp_path, profile_id=_PROFILE_ID)
+        assert borrowed.resumed and proof is not None
+        expired, expired_key = port.resume_acceleration_receipt_with_key(
             storage_root=tmp_path,
             profile_id=_PROFILE_ID,
             custody_generation=3,
             dek_epoch="epoch-3",
             now=_NOW + timedelta(minutes=16),
+            receipt_key=proof,
+            login_id=RECEIPT_LOGIN_ID,
+            sign_in_binding=sign_in.binding,
         )
-        assert isinstance(resumed_after_renewal, ProfileSessionResumeOutcome)
-        assert resumed_after_renewal.resumed is True
-        assert resumed_after_renewal.record == renewed
-        assert isinstance(renewed_key_buffer, bytearray)
-        assert renewed_key_buffer == _DEK
-        port.zeroise_owned_buffer(renewed_key_buffer)
-        assert renewed_key_buffer == bytearray(32)
-        assert port.is_persisted_receipt(renewed) is True
+        port.zeroise_owned_buffer(proof)
+        assert not expired.resumed and expired_key is None
+        assert expired.refusal is ProfileSessionRefusalReason.EXPIRED_IDLE
+        assert port.is_persisted_receipt(minted) is True
         assert port.is_persisted_receipt(object()) is False
     finally:
         port.delete_acceleration_receipt(storage_root=tmp_path, profile_id=_PROFILE_ID)

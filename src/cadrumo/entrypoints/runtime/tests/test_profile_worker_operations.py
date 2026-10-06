@@ -19,6 +19,7 @@ from pydantic import SecretBytes
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.frontend_requests import (
@@ -26,6 +27,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.worker_authorization import (
     WorkerAuthorityRequest,
@@ -165,6 +167,18 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
                 idempotency_key="profile-language-mutation",
             )
             receipt = worker.submit(admitted.session_id, request, frontend=OperationFrontendProjection.MCP).receipt
+            observed_lease = asyncio.run(
+                OperationLeaseFilesystemRepository(storage_root=root).inspect(
+                    operation_conflict_scope_reference(
+                        definition_id=request.definition_id, subject_ref=request.subject_ref
+                    ),
+                    receipt.operation_id,
+                    observed_at=now(),
+                )
+            )
+            assert observed_lease.current is not None
+            assert observed_lease.current.owner_id == identity.operation_owner_id
+            assert worker.status().in_flight_operations == 1
             with pytest.raises(ProfileAccessRefusedError):
                 worker.start(uuid4(), receipt.operation_id)
             worker.retire(admitted.session_id)

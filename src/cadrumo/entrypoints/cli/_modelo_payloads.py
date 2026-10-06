@@ -44,6 +44,7 @@ from ...application.modelo.calculation_report_verification import (
     CalculationSummaryVerificationOutcome,
     CalculationSummaryVerificationReason,
 )
+from ...application.modelo.export_projection import ModeloIvaWalletDecisionPublicProvenance
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
@@ -1316,6 +1317,7 @@ class ModeloExportPayload(OutputSchema):
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElectionProjection
     software_identity_grade: AeatSoftwareIdentityGrade | None = None
+    iva_wallet_decision_provenance: ModeloIvaWalletDecisionPublicProvenance | None = None
 
     @classmethod
     def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
@@ -1344,6 +1346,11 @@ class ModeloExportPayload(OutputSchema):
             refund_election=result.refund_election,
             prior_domiciliation_election=result.prior_domiciliation_election,
             software_identity_grade=result.software_identity_grade,
+            iva_wallet_decision_provenance=(
+                ModeloIvaWalletDecisionPublicProvenance.from_provenance(result.iva_wallet_decision_provenance)
+                if result.iva_wallet_decision_provenance is not None
+                else None
+            ),
         )
 
 

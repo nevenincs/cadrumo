@@ -26,6 +26,7 @@ from ...application.user_profile.login_session import (
     authenticate_profile_candidate,
     resume_profile_candidate,
 )
+from ...application.user_profile.sign_in_refusals import SignInRefusal
 from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
@@ -87,7 +88,13 @@ class ProfileWorkerHumanLogin:
                 identity = uuid4()
                 self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
                 return identity, candidate.outcome
-            except (UnicodeError, ProfileAuthenticationRefusedError, ProfileLoginThrottledError):
+            except ProfileLoginThrottledError as error:
+                self.cancel()
+                raise ProfileAccessRefusedError(
+                    AccessDenialCode.AUTHENTICATION_REQUIRED,
+                    sign_in=SignInRefusal(reason="throttled", remaining_seconds=error.remaining_seconds),
+                ) from None
+            except (UnicodeError, ProfileAuthenticationRefusedError):
                 self.cancel()
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED) from None
             except BaseException:
@@ -122,7 +129,10 @@ class ProfileWorkerHumanLogin:
                 return identity, candidate.outcome
             except ProfileReceiptRefusedError as error:
                 self.cancel()
-                raise ProfileAccessRefusedError(_RECEIPT_DENIALS.get(error.reason, _RECEIPT_DENIAL)) from None
+                raise ProfileAccessRefusedError(
+                    _RECEIPT_DENIALS.get(error.reason, _RECEIPT_DENIAL),
+                    sign_in=SignInRefusal(reason=error.reason, binding=error.binding),
+                ) from None
             except BaseException:
                 self.cancel()
                 raise

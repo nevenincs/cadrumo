@@ -11,10 +11,10 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Final, Literal
 
 from ....application.storage.calc_sheets.records import (
+    AnySheetExportPlan,
     SheetAutoFilter,
     SheetCellConstraint,
     SheetColumnWidth,
-    SheetExportPlan,
     SheetFrozenView,
     SheetProtectedRange,
     TabName,
@@ -25,6 +25,7 @@ from ....application.storage.calc_sheets.theme import (
     WORKBOOK_FONT_FAMILY,
     hex_to_rgb_floats,
 )
+from ....application.storage.calc_sheets.workbook_cells import validate_merged_content
 
 if TYPE_CHECKING:
     from googleapiclient._apis.sheets.v4.schemas import (
@@ -38,10 +39,13 @@ if TYPE_CHECKING:
 
 #: Sheets number-format types, spelled as the literals the API accepts so an
 #: unsupported value is refused here rather than at the wire.
-_NUMBER_FORMAT_TYPE: Final[Mapping[str, Literal["NUMBER", "PERCENT"]]] = {
+_NUMBER_FORMAT_TYPE: Final[Mapping[str, Literal["NUMBER", "PERCENT", "DATE", "TEXT"]]] = {
     "money": "NUMBER",
     "integer": "NUMBER",
     "percentage": "PERCENT",
+    "decimal": "NUMBER",
+    "text": "TEXT",
+    "date": "DATE",
 }
 
 
@@ -56,7 +60,7 @@ def _sheets_color(hex_value: str) -> Color:
 
 
 def build_number_format_requests(
-    plan: SheetExportPlan,
+    plan: AnySheetExportPlan,
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
@@ -96,7 +100,7 @@ def build_number_format_requests(
 
 
 def build_emphasis_format_requests(
-    plan: SheetExportPlan,
+    plan: AnySheetExportPlan,
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
@@ -144,7 +148,7 @@ _PIXELS_PER_WIDTH_UNIT: Final[int] = 7
 
 
 def build_base_font_requests(
-    plan: SheetExportPlan,
+    plan: AnySheetExportPlan,
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
@@ -173,7 +177,7 @@ def build_base_font_requests(
 
 
 def build_styled_range_requests(
-    plan: SheetExportPlan,
+    plan: AnySheetExportPlan,
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
@@ -211,6 +215,14 @@ def build_styled_range_requests(
         if style.fill_hex is not None:
             user_format["backgroundColor"] = _sheets_color(style.fill_hex)
             fields.append("userEnteredFormat.backgroundColor")
+        if styled.boxed:
+            user_format["borders"] = {
+                "top": {"style": "SOLID"},
+                "bottom": {"style": "SOLID"},
+                "left": {"style": "SOLID"},
+                "right": {"style": "SOLID"},
+            }
+            fields.append("userEnteredFormat.borders")
         requests.append(
             {
                 "repeatCell": {
@@ -225,6 +237,47 @@ def build_styled_range_requests(
                     "fields": ",".join(fields),
                 },
             },
+        )
+    return requests
+
+
+def build_form_geometry_requests(
+    plan: AnySheetExportPlan,
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[Request]:
+    """Apply declared merged regions and explicit row heights."""
+    validate_merged_content(plan)
+    requests: list[Request] = []
+    for region in plan.merged_ranges:
+        requests.append(
+            {
+                "mergeCells": {
+                    "range": {
+                        "sheetId": sheet_id_by_tab[region.tab.value],
+                        "startRowIndex": region.start_row - 1,
+                        "endRowIndex": region.end_row,
+                        "startColumnIndex": region.start_column - 1,
+                        "endColumnIndex": region.end_column,
+                    },
+                    "mergeType": "MERGE_ALL",
+                }
+            }
+        )
+    for height in plan.row_heights:
+        requests.append(
+            {
+                "updateDimensionProperties": {
+                    "range": {
+                        "sheetId": sheet_id_by_tab[height.tab.value],
+                        "dimension": "ROWS",
+                        "startIndex": height.row - 1,
+                        "endIndex": height.row,
+                    },
+                    "properties": {"pixelSize": height.height_pixels},
+                    "fields": "pixelSize",
+                }
+            }
         )
     return requests
 
@@ -315,7 +368,7 @@ def build_auto_filter_requests(
 
 
 def build_grid_resize_requests(
-    plan: SheetExportPlan,
+    plan: AnySheetExportPlan,
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
@@ -340,6 +393,10 @@ def build_grid_resize_requests(
         bump(vcell.address.tab.value, vcell.address.row, vcell.address.column)
     for fcell in plan.formula_cells:
         bump(fcell.address.tab.value, fcell.address.row, fcell.address.column)
+    for region in plan.merged_ranges:
+        bump(region.tab.value, region.end_row, region.end_column)
+    for height in plan.row_heights:
+        bump(height.tab.value, height.row, 1)
     bump("Guía", 1 + len(plan.guide.paragraphs) + 10, 4)
     for row_set in plan.row_sets:
         bump(row_set.tab.value, row_set.first_data_row + 50, len(row_set.columns))
@@ -446,6 +503,9 @@ def build_cell_constraint_requests(
 
 def _condition_for_constraint(constraint: SheetCellConstraint) -> BooleanCondition | None:
     """Render the constraint's resolved bounds as a Sheets BooleanCondition."""
+    choices = constraint.text_validation_formula()
+    if choices is not None:
+        return {"type": "CUSTOM_FORMULA", "values": [{"userEnteredValue": "=" + choices}]}
     lower, upper = constraint.resolved_bounds()
     if lower is not None and upper is not None:
         return {

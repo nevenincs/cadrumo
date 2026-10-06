@@ -10,6 +10,7 @@ from ...tests.env_scope import isolated_aeat_env
 from .. import storage_environment as storage_environment_module
 from ..config import Settings
 from ..config_state_root import default_storage_root, live_state_root_inputs, platform_user_data_root
+from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import (
     PROCESS_ENVIRONMENT,
     STORAGE_ROOT,
@@ -247,3 +248,43 @@ def test_pinned_names_and_precedence_come_from_the_declaration() -> None:
     assert STORAGE_ROOT.precedence == ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT")
     assert STORAGE_ROOT.root_variables(StorageMode.INSTALLED) == ("CADRUMO_LOCAL_STORAGE_ROOT",)
     assert STORAGE_ROOT_SETTINGS_FIELD == "cadrumo_local_storage_root"
+
+
+@pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
+def test_child_refuses_relative_pin_without_creating_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, profile: ChildEnvironmentProfile
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(CoreValidationError, match="absolute storage root pin"):
+        child_environment(profile, Path("relative-state"), received={})
+    assert not (tmp_path / "relative-state").exists()
+
+
+@pytest.mark.parametrize("platform", ["win32", "linux", "darwin"])
+def test_child_environment_uses_platform_variable_case_rules(tmp_path: Path, platform: str) -> None:
+    root = tmp_path / "state"
+    received = {
+        "Path": "ambient",
+        "pythonpath": "lower-case-value",
+        "dyld_insert_libraries": "lower-case-loader",
+        "DYLD_INSERT_LIBRARIES": "blocked-loader",
+        STORAGE_ROOT.variable.lower(): "must-not-replace-pin",
+        "CADRUMO_TEMP_DIR".lower(): "alternate-temp",
+        "CADRUMO_AUTHORITY_ROOT".lower(): str(tmp_path / "authority-pin"),
+    }
+    environment = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform=platform)
+    assert environment[STORAGE_ROOT.variable] == str(root.resolve())
+    assert "DYLD_INSERT_LIBRARIES" not in environment
+    if platform == "win32":
+        assert "pythonpath" not in environment and "PYTHONPATH" not in environment
+        assert "DYLD_INSERT_LIBRARIES" not in environment
+        assert environment["PATH"] == "ambient"
+        assert environment["CADRUMO_AUTHORITY_ROOT"] == str(tmp_path / "authority-pin")
+        assert environment["TEMP"] == str(root / "alternate-temp")
+        assert STORAGE_ROOT.variable.lower() not in environment
+    else:
+        assert environment["pythonpath"] == "lower-case-value"
+        assert environment["dyld_insert_libraries"] == "lower-case-loader"
+        assert environment["Path"] == "ambient"
+        assert "CADRUMO_AUTHORITY_ROOT" not in environment
+        assert environment["TEMP"] == str(root / "tmp")

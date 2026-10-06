@@ -52,8 +52,6 @@ from .profile_operation_contracts import (
     PROFILE_DESCENDANTS_PHASES,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_PHASES,
-    PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-    PROFILE_LOGOUT_PHASES,
     PROFILE_PATCH_OPERATION_DEFINITION_ID,
     PROFILE_PATCH_PHASES,
     PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
@@ -73,7 +71,6 @@ from .profile_operation_contracts import (
     ProfileDescendantsOperationRequest,
     ProfileDescendantsOperationResult,
     ProfileFieldMutationOperationRequest,
-    ProfileLogoutOperationRequest,
     ProfileMutationOperationProjection,
     ProfileMutationOperationResult,
     ProfilePatchOperationProjection,
@@ -97,7 +94,6 @@ from .profile_operation_execution import (
     ProfileCompleteSetupOperationExecutor,
     ProfileDescendantsOperationExecutor,
     ProfileFieldMutationOperationExecutor,
-    ProfileLogoutOperationExecutor,
     ProfilePatchOperationExecutor,
     ProfilePlantillaMediaOperationExecutor,
     ProfileRepeatableRowMutationOperationExecutor,
@@ -230,13 +226,6 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
             secret_kind=PROFILE_BUNDLE_EXPORT_INPUT_KIND,
             lifetime=timedelta(minutes=5),
         ),
-    ),
-    _definition(
-        definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-        request_type=ProfileLogoutOperationRequest,
-        result_type=None,
-        executor_type=ProfileLogoutOperationExecutor,
-        phase_codes=PROFILE_LOGOUT_PHASES,
     ),
 )
 

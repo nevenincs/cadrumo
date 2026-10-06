@@ -130,7 +130,7 @@ ordinal = "3"
 [[entries]]
 export_field_id = "modelo-190-decl-nif"
 kind = "header"
-producer_key = "presenter.tax_id"
+producer_key = "taxpayer.tax_id"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
@@ -399,7 +399,7 @@ ordinal = "3"
 [[entries]]
 export_field_id = "modelo-190-perc-declarante-nif"
 kind = "header"
-producer_key = "presenter.tax_id"
+producer_key = "taxpayer.tax_id"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025"]
 

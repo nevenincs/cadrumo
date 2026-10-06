@@ -14,6 +14,8 @@ backend's temporary storage root and never the operator's default store.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 from click.testing import Result
@@ -24,10 +26,18 @@ from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from ...tests.cli_runner import invoke_cached_cli
+from ...tests.runtime_profile_cli_fixture import native_cli_profile_server
 
 __all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _runtime_delete_owner(_isolated_cli_backend: Path) -> Iterator[None]:
+    _isolated_cli_backend.mkdir(parents=True, exist_ok=True)
+    with native_cli_profile_server(_isolated_cli_backend):
+        yield
 
 
 def _register(label: str, tax_id: str) -> str:
@@ -121,6 +131,9 @@ def test_deleting_the_active_profile_is_refused_and_the_profile_survives() -> No
 
     assert result.exit_code != 0, result.output
     assert active in _registered_labels()
+    action = json.loads(result.output)["error"]["action"]
+    assert action["action"]["action_id"] == "operator.profile.login"
+    assert action["missing_argument_names"] == ["name"]
 
 
 def test_unknown_profile_is_refused_by_name() -> None:

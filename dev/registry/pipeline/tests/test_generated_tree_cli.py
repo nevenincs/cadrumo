@@ -71,6 +71,38 @@ def _republish_invocation(expected_manifest_sha256: str) -> GeneratedTreeInvocat
     return GeneratedTreeInvocation("190", "2024", "aeat-dr-190-2024", 2024, "0A", expected_manifest_sha256)
 
 
+def test_row_binding_republication_routes_to_the_explicit_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = []
+
+    def capture(invocation, **kwargs):
+        calls.append((invocation, kwargs))
+
+    monkeypatch.setattr(cli_module, "_run", capture)
+    result = CliRunner().invoke(
+        app,
+        [
+            "republish-target",
+            "156",
+            "2003-y-siguientes",
+            "enrolled-modelo-156-layout",
+            "2025",
+            "0A",
+            "a" * 64,
+            "--reconcile-row-bindings",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert len(calls) == 1
+    invocation, options = calls[0]
+    assert invocation.expected_manifest_sha256 == "a" * 64
+    assert options == {
+        "action": "republish",
+        "reconcile_authored_form": False,
+        "reconcile_casilla_splits": False,
+        "reconcile_row_bindings": True,
+    }
+
+
 def _republish_comparison(*, differing: tuple[str, ...]) -> RenderComparison:
     return RenderComparison(
         modelo="190",
@@ -531,7 +563,6 @@ def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_autho
         ),
     )
     monkeypatch.setattr(cli_module, "stage_generated_export_candidate", lambda *_args, **_kwargs: target_root)
-    monkeypatch.setattr(cli_module, "stage_continuity_metadata", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(cli_module, "stage_published_modelo", lambda *_args, **_kwargs: None)
     real_prepare = cli_module.prepare_generated_tree_invocation
     prepared_authorities: list[object] = []

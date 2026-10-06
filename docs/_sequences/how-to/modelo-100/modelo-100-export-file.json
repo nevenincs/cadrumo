@@ -151,17 +151,18 @@
           }
         ],
         "result": {
-          "bucket_event_id": "3141c4224b8a1b3842be015d2e253bd962a77e78f69eeea2d8b35f12c8ac1d3d",
+          "bucket_event_id": "cdc2b1937a0f3d9cb16a482d2dcad2553eb1b78fa7786ad6f51c21dc2c66491f",
           "bucket_id": "<bucket-id>",
           "byte_size": 2207,
-          "calculation_revision_id": "8e5b7e8082734e452e76076252a876ae56fdf3cea59f0a93ae2756ef3b7f32e8",
-          "file_sha256": "4618cb51361b6ad71421b598d01db00fa144ec973c1d983a66b291cf156cc80f",
+          "calculation_revision_id": "6a5e470235d89993eb16b7b6f0f9e10f8cb11ba6814607e7c7f577b8fcdab90c",
+          "file_sha256": "82da6c9e049f044ef2f884c74cfc9b6493afec742c3f596bbb1cd5f79c259c11",
           "filing_year": 2025,
           "format": "xml-dictionary",
+          "iva_wallet_decision_provenance": null,
           "modelo": "100",
           "operation": "modelo.export",
           "output_path": "<sandbox-workdir>/modelo-100.boe",
-          "payment_election": "ingreso",
+          "payment_election": null,
           "period": {
             "code": "0A",
             "filing_year": 2025
@@ -174,7 +175,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": "I",
+          "resolved_result_disposition": null,
           "software_identity_grade": null,
           "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },

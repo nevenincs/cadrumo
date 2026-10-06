@@ -558,6 +558,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyLockContendedError",
+        ErrorCode(
+            code="LOCKED_STORAGE_PROFILE_CUSTODY_LOCK_CONTENDED",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_lock_acquisition",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyConcurrentCapsuleChangeError",
         ErrorCode(
             code="LOCKED_STORAGE_PROFILE_CUSTODY_CAPSULE_GENERATION",

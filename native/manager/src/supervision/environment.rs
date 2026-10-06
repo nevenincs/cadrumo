@@ -27,8 +27,7 @@ impl ManagedLocations {
             ));
         }
         let evidence = storage::detect_mode(executable).map_err(io::Error::other)?;
-        let resolved = storage::resolve_storage_root(&evidence)
-            .map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error.message))?;
+        let resolved = storage::resolve_storage_root(&evidence).map_err(io::Error::from)?;
         Self::from_resolved(evidence, resolved)
     }
 
@@ -75,7 +74,8 @@ pub fn runtime_environment(
     let inherited = inherited.into_iter().filter(|(name, _)| {
         !HOST_INHERITED_ENV.iter().any(|pin| {
             if cfg!(windows) {
-                name.to_string_lossy().eq_ignore_ascii_case(pin)
+                name.to_str()
+                    .is_some_and(|name| name.to_uppercase() == *pin)
             } else {
                 name == pin
             }

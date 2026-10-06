@@ -41,8 +41,7 @@ modelo:
               éves bevallásán bevallott adat.
             label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
           contraparte-clave-operacion:
-            label: A partnerrel végzett ügylet kódja (A=értékesítések, B=beszerzések,
-              ...)
+            label: 'Ügyletkód (A: beszerzések; B: termékértékesítések és szolgáltatásnyújtások)'
           contraparte-importe-q1:
             label: A partnerrel végzett ügyletek összege az első negyedévben
           contraparte-importe-q2:
@@ -119,6 +118,12 @@ modelo:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
             label: BIZTOSÍTÁSI ÜGYLET
+          papel-firma-cargo:
+            label: Beosztás vagy munkakör
+          papel-firma-fecha:
+            label: Dátum
+          papel-firma-nombre:
+            label: Aláíró neve
           persona-con-quien-relacionarse:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
@@ -135,6 +140,14 @@ modelo:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
             label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
+          resumen-importe-arrendamientos:
+            label: null
+          resumen-importe-operaciones:
+            label: null
+          resumen-inmuebles:
+            label: null
+          resumen-personas-entidades:
+            label: null
           situacion-inmueble:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
@@ -150,6 +163,62 @@ modelo:
         official_name: Modelo 347. A harmadik személyekkel folytatott ügyletek éves
           bevallása.
         title: Harmadik személyekkel folytatott ügyletek (éves adatszolgáltatás)
+      form:
+        column:
+          operaciones:
+            heading: Ügyletek összege
+          transmisiones:
+            heading: Áfaköteles ingatlanátruházások
+        context:
+          anterior:
+            heading: Előző bevallás bizonylatszáma
+          nif:
+            heading: Bevalló adóazonosítója
+          nombre:
+            heading: Teljes név vagy cégnév
+        page:
+          m347-declarado:
+            heading: Személyek és szervezetek
+          m347-declarante:
+            heading: Összesítő lap
+          m347-inmueble:
+            heading: Üzlethelyiségek bérbeadása
+        row:
+          trimestre-1:
+            heading: 1. negyedév
+          trimestre-2:
+            heading: 2. negyedév
+          trimestre-3:
+            heading: 3. negyedév
+          trimestre-4:
+            heading: 4. negyedév
+        section:
+          contacto:
+            heading: Kapcsolattartó
+          declaracion:
+            heading: Bevallás adatai
+          firma:
+            heading: Dátum és aláírás
+          identificacion:
+            heading: Bevalló azonosítása
+          resumen:
+            heading: A bevallásban szereplő adatok összesítése
+        signature:
+          administracion:
+            heading: A hatóság számára fenntartott hely
+          paper:
+            heading: Papírnyomtatvány rovata
+          space:
+            heading: Kézi aláírás
+        summary:
+          arrendamientos:
+            heading: Üzlethelyiségek bérbeadásának összege
+          inmuebles:
+            heading: Ingatlanok száma
+          operaciones:
+            heading: Ügyletek éves összege
+          personas:
+            heading: Személyek és szervezetek száma
       revision:
         2011-2024:
           casilla:

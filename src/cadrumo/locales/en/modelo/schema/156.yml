@@ -11,6 +11,80 @@ modelo:
           informative return.
         title: Contributions by members and mutual-society members for the purposes
           of the maternity deduction (annual informative return)
+      form:
+        choice:
+          complementaria:
+            heading: Supplementary return
+          sustitutiva:
+            heading: Replacement return
+        column:
+          importe:
+            heading: Accrued contribution (€)
+          situacion:
+            heading: Monthly status (S/N)
+        context:
+          ejercicio:
+            heading: Tax year
+          nif:
+            heading: Declarant tax ID
+          nombre:
+            heading: Contact name
+          telefono:
+            heading: Contact telephone
+        month:
+          abril:
+            heading: April
+          agosto:
+            heading: August
+          diciembre:
+            heading: December
+          enero:
+            heading: January
+          febrero:
+            heading: February
+          julio:
+            heading: July
+          junio:
+            heading: June
+          marzo:
+            heading: March
+          mayo:
+            heading: May
+          noviembre:
+            heading: November
+          octubre:
+            heading: October
+          septiembre:
+            heading: September
+        page:
+          afiliado:
+            heading: Member · partial implementation
+          resumen:
+            heading: Summary · partial implementation
+        section:
+          afiliado:
+            heading: Member identification
+          contacto:
+            heading: Contact person
+          cotizaciones:
+            heading: Monthly contributions
+          declaracion:
+            heading: Supplementary or replacement return
+          domicilio:
+            heading: Tax address
+          firma:
+            heading: Date and signature
+          identificacion:
+            heading: Declarant and tax year
+          resumen:
+            heading: Summary of reported records
+        signature:
+          administracion:
+            heading: Reserved for the administration
+          paper:
+            heading: Paper signature
+          space:
+            heading: Space for handwritten signature
       revision:
         2003-y-siguientes:
           casilla:
@@ -19,33 +93,125 @@ modelo:
             afiliado-nombre:
               label: Surnames and given name of the member or mutualist
             cotizacion-abril:
-              label: 'April contribution: monthly status and accrued premium amount'
+              label: April · Accrued contribution
+            cotizacion-abril-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: April · Contributed for at least one day
             cotizacion-agosto:
-              label: 'August contribution: monthly status and accrued premium amount'
+              label: August · Accrued contribution
+            cotizacion-agosto-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: August · Contributed for at least one day
             cotizacion-diciembre:
-              label: 'December contribution: monthly status and accrued premium amount'
+              label: December · Accrued contribution
+            cotizacion-diciembre-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: December · Contributed for at least one day
             cotizacion-enero:
-              label: 'January contribution: monthly status and accrued premium amount'
+              label: January · Accrued contribution
+            cotizacion-enero-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: January · Contributed for at least one day
             cotizacion-febrero:
-              label: 'February contribution: monthly status and accrued premium amount'
+              label: February · Accrued contribution
+            cotizacion-febrero-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: February · Contributed for at least one day
             cotizacion-julio:
-              label: 'July contribution: monthly status and accrued premium amount'
+              label: July · Accrued contribution
+            cotizacion-julio-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: July · Contributed for at least one day
             cotizacion-junio:
-              label: 'June contribution: monthly status and accrued premium amount'
+              label: June · Accrued contribution
+            cotizacion-junio-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: June · Contributed for at least one day
             cotizacion-marzo:
-              label: 'March contribution: monthly status and accrued premium amount'
+              label: March · Accrued contribution
+            cotizacion-marzo-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: March · Contributed for at least one day
             cotizacion-mayo:
-              label: 'May contribution: monthly status and accrued premium amount'
+              label: May · Accrued contribution
+            cotizacion-mayo-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: May · Contributed for at least one day
             cotizacion-noviembre:
-              label: 'November contribution: monthly status and accrued premium amount'
+              label: November · Accrued contribution
+            cotizacion-noviembre-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: November · Contributed for at least one day
             cotizacion-octubre:
-              label: 'October contribution: monthly status and accrued premium amount'
+              label: October · Accrued contribution
+            cotizacion-octubre-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: October · Contributed for at least one day
             cotizacion-septiembre:
-              label: 'September contribution: monthly status and accrued premium amount'
+              label: September · Accrued contribution
+            cotizacion-septiembre-situacion:
+              help: 'S: contributed for at least one day in the month. N: no contribution
+                days. The amount is declared separately.'
+              label: September · Contributed for at least one day
             declaracion-complementaria-sustitutiva:
               label: Supplementary or replacement return
             declarante-razon-social:
               label: Business name of the filer
+            domicilio-codigo-postal:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Postal code
+            domicilio-escalera:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Staircase
+            domicilio-municipio:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Municipality
+            domicilio-numero:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Number
+            domicilio-piso:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Floor
+            domicilio-provincia:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Province
+            domicilio-puerta:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Door
+            domicilio-via:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Street / square / avenue
+            firma-cargo:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Role or position
+            firma-fecha:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Date
+            firma-nombre:
+              help: Paper-form information; not included in the electronic file. It
+                does not establish a signature or a filing.
+              label: Signatory name
             numero-afiliacion:
               label: Membership number
             numero-identificativo-anterior:

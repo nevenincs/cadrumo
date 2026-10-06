@@ -959,7 +959,10 @@ export function FilingCalendarView({
                   nothing to count, the sentence takes their place. */}
               {standing.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 pt-2.5 @md:group-data-[head=whole]/calendar:p-0">
-                  <ul className="calendar-standing flex flex-wrap gap-1.5">
+                  <ul
+                    className="calendar-standing flex flex-wrap gap-1.5"
+                    aria-label={t("desktop.calendar.standing")}
+                  >
                     {standing.map(([kind, count]) => (
                       <li key={kind} className="flex">
                         <Badge variant={STATE_TONE[kind]}>

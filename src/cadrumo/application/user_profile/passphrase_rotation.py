@@ -257,6 +257,7 @@ def rewrap_profile_passphrase_under_lock(
     # the old credential goes first.
     # Denial must survive an unavailable optional native store and a crash in
     # the subsequent envelope transition. Password custody remains independent.
+    profile_custody_port().fence_human_sign_in(profile_id=profile_id, root=storage_root)
     profile_custody_port().retire_automation(profile_id=profile_id, root=storage_root)
     occurred_at = _now()
     old_session = ProfileRecordSession.from_envelope(

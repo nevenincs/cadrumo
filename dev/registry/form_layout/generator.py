@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -246,17 +247,25 @@ def generate_modelo_layouts(
     sources: Mapping[str, SourceReference],
     data_root: Path,
 ) -> dict[str, LayoutGeneration]:
-    """Generate every revision of a modelo whose layout is not reviewed, each after its declared predecessor.
+    """Generate unowned drafts, each after its declared predecessor.
 
     A revision may follow its predecessor's layout, so the predecessor is
     generated first and its fresh layout is the one followed; a reviewed
-    layout is never regenerated and is followed as declared.
+    layout is never regenerated and is followed as declared. Authored drafts
+    are also preserved: authorship does not imply completed human review.
+    Stale authored drafts require explicit reconciliation, not regeneration.
     """
     outcomes: dict[str, LayoutGeneration] = {}
 
     def current(revision_id: str, visiting: frozenset[str]) -> FormLayoutDefinition | None:
         revision = modelo.revisions[revision_id]
         existing = revision.form_layouts[0] if revision.form_layouts else None
+        if existing is not None and existing.seed_source is FormLayoutSeedSource.AUTHORED:
+            if existing.source_state_digest != form_layout_source_digest(revision):
+                raise RegistryValidationError(
+                    f"{modelo.id} {revision_id}: authored form layout is stale; reconcile its declarations"
+                )
+            return existing
         if existing is not None and existing.review.state is FormLayoutReviewState.REVIEWED:
             return existing
         if revision_id not in outcomes:

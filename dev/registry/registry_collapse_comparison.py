@@ -27,14 +27,57 @@ def _typed_projection(value: object) -> object:
     if callable(dump):
         return _typed_projection(dump(mode="python"))
     if isinstance(value, Mapping):
-        return {
+        projected = {
             str(key): _typed_projection(child) for key, child in value.items() if str(key) not in _REPRESENTATION_ONLY
         }
+        attestations = _distinct_lineage_evidence(value)
+        if attestations:
+            projected["lineage_attestations"] = _typed_projection(attestations)
+        return projected
     if isinstance(value, set | frozenset):
         return sorted((_typed_projection(child) for child in value), key=canonical_json_bytes)
     if isinstance(value, list | tuple):
         return [_typed_projection(child) for child in value]
     return to_jsonable_python(value)
+
+
+def _distinct_lineage_evidence(revision: Mapping[object, object]) -> list[object]:
+    """Keep sidecars whose complete provenance is not already present on a row.
+
+    Hydration projects origin and evidence, not the attestation's citations:
+    continuity can cite historical sources outside the current row's scope.
+    Only an exactly redundant casilla claim is representation-only.
+    """
+    attestations = revision.get("lineage_attestations", ())
+    casillas = revision.get("casillas", ())
+    if not isinstance(attestations, list | tuple) or not isinstance(casillas, list | tuple):
+        return []
+    retained: list[object] = []
+    for attestation in attestations:
+        if not isinstance(attestation, Mapping):
+            retained.append(attestation)
+            continue
+        matches = [
+            row
+            for row in casillas
+            if isinstance(row, Mapping)
+            and row.get("continuidad_id") == attestation.get("continuidad_id")
+            and attestation.get("continuidad_id") is not None
+        ]
+        if attestation.get("family") != "casillas" or len(matches) != 1:
+            retained.append(attestation)
+            continue
+        row = matches[0]
+        row_claim = {
+            "origin": row.get("continuidad_origin"),
+            "evidence": row.get("continuidad_evidence"),
+            "legal_refs": row.get("legal_refs"),
+            "source_refs": row.get("source_refs"),
+        }
+        sidecar_claim = {key: attestation.get(key) for key in row_claim}
+        if _typed_projection(row_claim) != _typed_projection(sidecar_claim):
+            retained.append(attestation)
+    return retained
 
 
 def _first_difference(left: object, right: object, path: str = "$") -> Mapping[str, object] | None:
@@ -96,7 +139,7 @@ def compare_modelos(before: ModeloDefinition, after: ModeloDefinition) -> Compar
 
 
 def _lineage_attestation_projection_gaps(modelo: ModeloDefinition) -> tuple[Mapping[str, object], ...]:
-    """Require every excluded lineage sidecar to repeat its effective casilla provenance."""
+    """Require the loader's origin/evidence projection; citations remain edge-local."""
     gaps: list[Mapping[str, object]] = []
     for revision_id, revision in modelo.revisions.items():
         by_lineage: dict[str, list[CasillaDefinition]] = {}
@@ -127,14 +170,10 @@ def _lineage_attestation_projection_gaps(modelo: ModeloDefinition) -> tuple[Mapp
             projected = {
                 "origin": casilla.continuidad_origin,
                 "evidence": casilla.continuidad_evidence,
-                "legal_refs": casilla.legal_refs,
-                "source_refs": casilla.source_refs,
             }
             authored = {
                 "origin": attestation.origin,
                 "evidence": attestation.evidence,
-                "legal_refs": attestation.legal_refs,
-                "source_refs": attestation.source_refs,
             }
             if _typed_projection(projected) != _typed_projection(authored):
                 gaps.append(

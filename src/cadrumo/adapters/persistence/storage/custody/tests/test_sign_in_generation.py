@@ -32,6 +32,7 @@ from ..sign_in_generation import (
     SignInGenerationObservation,
     SignInGenerationRecord,
     SignInGenerationState,
+    fence_profile_sign_in_for_custody_transition,
     sign_in_generation_path,
 )
 
@@ -338,3 +339,27 @@ def test_the_record_is_a_protected_keystore_member_of_the_storage_taxonomy(tmp_p
     )
     declared = {definition.key: definition for definition in STORAGE_NAMESPACE_REGISTRY.paths}
     assert declared["sign_in_generation"].owner == "cadrumo.adapters.persistence.storage.custody"
+
+
+def test_custody_transition_fences_a_captured_generation_without_touching_receipts(root: Path) -> None:
+    custody = _custody(root)
+    captured = custody.establish().current
+    fence_profile_sign_in_for_custody_transition(root=root, profile_id=_PROFILE_ID)
+    assert custody.observe().current == SignInGeneration(lineage=captured.lineage, generation=2)
+    with pytest.raises(AutomationCustodyError):
+        custody.require_current(captured)
+
+
+def test_custody_transition_without_sign_in_creates_no_generation(root: Path) -> None:
+    custody = _custody(root)
+    fence_profile_sign_in_for_custody_transition(root=root, profile_id=_PROFILE_ID)
+    assert not custody.path.parent.exists()
+
+
+def test_custody_transition_refuses_unreadable_generation(root: Path) -> None:
+    custody = _custody(root)
+    custody.establish()
+    custody.path.write_bytes(b"unreadable")
+    with pytest.raises(AutomationCustodyError):
+        fence_profile_sign_in_for_custody_transition(root=root, profile_id=_PROFILE_ID)
+    assert custody.path.read_bytes() == b"unreadable"

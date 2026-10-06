@@ -222,6 +222,18 @@ def compute_styling(
         value_role=StyleRole.COMPUTED,
         section_headers=section_headers,
     )
+    styled.extend(
+        SheetStyledRange(
+            tab=row.tab,
+            start_row=row.row,
+            end_row=row.row,
+            start_column=_COL_VALUE,
+            end_column=_COL_VALUE,
+            role=StyleRole.COMPUTED,
+        )
+        for row in layout.binding_rows
+        if row.readonly
+    )
     # Provenance header band + wrapped concepto / legal / source columns.
     styled.append(
         SheetStyledRange(

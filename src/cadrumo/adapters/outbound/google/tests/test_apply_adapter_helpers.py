@@ -90,15 +90,15 @@ def test_coerce_cell_value_preserves_bool() -> None:
     assert coerce_cell_value(False) is False
 
 
-def test_coerce_cell_value_decimal_renders_as_fixed_string() -> None:
+def test_coerce_cell_value_decimal_renders_as_numeric_display() -> None:
     """Very large / very small Decimals must not round through float."""
-    assert coerce_cell_value(Decimal("1500.55")) == "1500.55"
-    assert coerce_cell_value(Decimal("0.00000001")) == "0.00000001"
-    assert coerce_cell_value(Decimal("1234567890.99")) == "1234567890.99"
+    assert coerce_cell_value(Decimal("1500.55")) == 1500.55
+    assert coerce_cell_value(Decimal("0.00000001")) == 0.00000001
+    assert coerce_cell_value(Decimal("1234567890.99")) == 1234567890.99
 
 
 def test_coerce_cell_value_negative_decimal_preserved() -> None:
-    assert coerce_cell_value(Decimal("-500")) == "-500"
+    assert coerce_cell_value(Decimal("-500")) == -500
 
 
 def test_coerce_cell_value_passes_string_through() -> None:

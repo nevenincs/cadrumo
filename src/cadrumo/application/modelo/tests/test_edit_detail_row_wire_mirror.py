@@ -23,6 +23,7 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
@@ -38,6 +39,8 @@ from ..edit_apply_contracts import (
     ModeloEditApplySubmissionV1,
 )
 from ..edit_apply_row_contracts import (
+    Modelo156AfiliadoRowWireV1,
+    Modelo156MonthlyContributionWireV1,
     Modelo184MemberRowWireV1,
     Modelo210AgrupacionRentaRowWireV1,
     Modelo232VinculadaRowWireV1,
@@ -186,7 +189,38 @@ def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210Agrupacion
     return mirror, row
 
 
+def _m156_pair() -> tuple[Modelo156AfiliadoRowWireV1, Modelo156AfiliadoRow]:
+    mirror = Modelo156AfiliadoRowWireV1(
+        nif="12345678Z",
+        nombre="Persona ficticia",
+        numero_afiliacion="001234567890",
+        cotizaciones=tuple(
+            Modelo156MonthlyContributionWireV1(
+                month=month,
+                status="S" if month == 1 else None,
+                amount="10.50" if month == 1 else None,
+            )
+            for month in range(1, 13)
+        ),
+    )
+    expected = Modelo156AfiliadoRow(
+        nif="12345678Z",
+        nombre="Persona ficticia",
+        numero_afiliacion="001234567890",
+        cotizaciones=tuple(
+            Modelo156MonthlyContribution(
+                month=month,
+                status="S" if month == 1 else None,
+                amount=Decimal("10.50") if month == 1 else None,
+            )
+            for month in range(1, 13)
+        ),
+    )
+    return mirror, expected
+
+
 _PAIRS = {
+    "m156_afiliado": _m156_pair,
     "m184_miembro": _m184_pair,
     "m232_vinculada": _m232_pair,
     "m349_operador": _m349_operador_pair,

@@ -122,6 +122,7 @@ class ProfileWorkerOperationHost:
             with validating_governed_facts(self._pinned()):
                 self._services = compose_operation_dependencies(
                     authority_operation=self._pinned(),
+                    operation_owner_id=self.custody.identity.operation_owner_id,
                     execution_authority_factory=self._bind_execution,
                     automation_inventory_reader=self._automation_inventory,
                     automation_administration_factory=self._automation_administration,
@@ -130,6 +131,11 @@ class ProfileWorkerOperationHost:
                     modelo_profile_resolver=self._modelo_profile,
                 )
         return self._services
+
+    def in_flight_operation_count(self) -> int:
+        """Read the owning supervisor without creating services or touching custody."""
+        services = self._services
+        return 0 if services is None else services.submission.supervisor.in_flight_operation_count()
 
     def prepare(self) -> None:
         """Finish cold registry composition before any admitted lease is published.

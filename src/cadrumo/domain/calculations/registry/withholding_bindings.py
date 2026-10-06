@@ -12,7 +12,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
@@ -48,7 +48,9 @@ __all__ = [
 # provider remains generic so adding a governed row field does not require a
 # second catalogue in this mechanics module.
 _WithholdingRowField = str
-WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo"]
+WithholdingGrouping = Literal[
+    "per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo", "per_source_allocation"
+]
 
 # These fields carry an economic amount for a repeated payment.  A Modelo 190
 # type-2 record is annual and keyed by the recipient/clave/subclave, so every
@@ -438,6 +440,28 @@ class WithholdingObservation(BaseModel):
     codigo_cuenta: str | None = Field(default=None, max_length=20)
     """Modelo 193 codigo cuenta valores / numero operacion prestamo (positions
     97-116), recorded only when a financial entity manages the valores."""
+    financial_asset_origin: Literal["A", "B", "C", "D", "E"] | None = None
+    """Modelo 194 origin at position 78, supplied by the transaction evidence.
+
+    A transfer, B redemption, C exchange/conversion, D the specified pre-coupon
+    transfer, or E a temporary transfer with repurchase. Never inferred from
+    whether the transaction generated a gain or loss.
+    """
+    financial_asset_acquisition_value: Decimal | None = Field(default=None, ge=0, allow_inf_nan=False)
+    """Modelo 194 acquisition/subscription value (118-130), before incidental costs.
+
+    Unknown and inapplicable remain absent. In particular, origin D does not
+    supply this field; its filing zero is a transport rule, not an observed
+    acquisition at zero cost. This transaction detail is not an annual sum.
+    """
+    financial_asset_disposal_value: Decimal | None = Field(default=None, ge=0, allow_inf_nan=False)
+    """Modelo 194 transfer/redemption/exchange value (131-143), before incidental costs.
+
+    This is supplied independently from acquisition value and the declared tax
+    base. The source's special cases preclude inferring one from the other two.
+    """
+    financial_asset_related_entity: Literal["V", ""] | None = None
+    """Modelo 194 related-entity indicator at 187: V, explicitly blank, or unknown."""
     pendiente_flag: str | None = Field(default=None, max_length=1)
     """Modelo 193 'X' flag (position 117) marking percepciones devengadas but
     not yet paid because the holder did not claim them."""
@@ -447,7 +471,7 @@ class WithholdingObservation(BaseModel):
     reducciones: Decimal = Decimal("0")
     """Modelo 193 art. 26.2 reductions (positions 139-151) applied when the
     perceptor is an IRPF contribuyente; the design's own zeros when none."""
-    base_retenciones: Decimal
+    base_retenciones: Decimal = Field(allow_inf_nan=False)
     porcentaje_retencion: Percentage = PERCENTAGE_MIN
     """Modelo 193 retention/ingreso-a-cuenta percentage applied (positions
     165-168), generally 19 with the design's clave-naturaleza specific rates;
@@ -526,7 +550,6 @@ class WithholdingObservation(BaseModel):
         "foral_retention_gipuzkoa",
         "foral_retention_bizkaia",
         "reducciones",
-        "base_retenciones",
         "penalizaciones",
         "compensaciones",
         "garantias",
@@ -537,6 +560,31 @@ class WithholdingObservation(BaseModel):
         if value < Decimal("0"):
             raise RegistryValidationError("withholding amounts must be non-negative")
         return value
+
+    @field_validator("base_retenciones")
+    @classmethod
+    @pydantic_validation_boundary
+    def _withholding_base(cls, value: Decimal, info: ValidationInfo) -> Decimal:
+        """Only an identified financial-asset operation may carry a signed base.
+
+        Modelo 194 type 2 positions 157-169 explicitly encode negative bases.
+        Other withholding observations retain their nonnegative contract.
+        """
+        if value < 0 and info.data.get("financial_asset_origin") is None:
+            raise RegistryValidationError("negative withholding base requires a financial-asset origin")
+        return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _financial_asset_conditions(self) -> WithholdingObservation:
+        """Preserve the source design's absent amounts and negative-base rule."""
+        if self.financial_asset_origin == "D" and (
+            self.financial_asset_acquisition_value is not None or self.financial_asset_disposal_value is not None
+        ):
+            raise RegistryValidationError("financial-asset origin D requires absent acquisition and disposal values")
+        if self.financial_asset_origin is not None and self.base_retenciones < 0 and self.retencion_practicada != 0:
+            raise RegistryValidationError("a negative financial-asset withholding base requires zero withholding")
+        return self
 
 
 class WithholdingProvider(BaseModel):
@@ -554,6 +602,8 @@ class WithholdingProvider(BaseModel):
     claves: tuple[str, ...] = ()
     row_field: _WithholdingRowField | None = None
     grouping: WithholdingGrouping | None = None
+    base_sign: Literal["positive", "nonpositive"] | None = None
+    """Select emitted records by their resolved base, after grouping observations."""
     record: str | None = Field(default=None, min_length=1, max_length=64)
     data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
@@ -585,6 +635,11 @@ def validate_withholding_binding_selector_shape(binding: BindingDefinition) -> l
 
 def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingProvider:
     selector = _withholding_selector(binding)
+    if selector.base_sign is not None and selector.fact not in {
+        _WithholdingFactKind.GROUPED_ROW_COUNT,
+        _WithholdingFactKind.GROUPED_ROW_SUM,
+    }:
+        raise RegistryValidationError(f"binding {binding.id!r} base_sign requires a grouped scalar fact")
     if selector.fact not in _WITHHOLDING_FACTS:
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
     op = binding_aggregation_op(binding)
@@ -941,6 +996,11 @@ def _withholding_row_group_key(
     """Return the registry-declared annual record identity for one observation."""
     if grouping == "per_perceptor":
         return (str(observation.perceptor_tax_id),)
+    if grouping == "per_source_allocation":
+        # A transaction-oriented record preserves source identity even when
+        # its recipient, security and amounts happen to match another record.
+        # The selected registry declares when this grouping is appropriate.
+        return (str(observation.perceptor_tax_id), observation.source_id, observation.source_allocation_id)
     perceptor, clave, subclave = _percepcion_key(observation)
     if grouping == "per_perceptor_clave":
         # Exactly the ``distinct_percepcion_keys`` key.  The Modelo 190 header
@@ -968,7 +1028,13 @@ def _group_withholding_observations(
     """Group active observations into deterministic annual record cohorts."""
     grouped: dict[tuple[str, ...], list[WithholdingObservation]] = {}
     for observation in observations:
-        grouped.setdefault(_withholding_row_group_key(grouping, observation), []).append(observation)
+        key = _withholding_row_group_key(grouping, observation)
+        if grouping == "per_source_allocation" and key in grouped:
+            raise RegistryValidationError(
+                "withholding transaction row repeats its source allocation; "
+                "resolve duplicate evidence before materialising the return",
+            )
+        grouped.setdefault(key, []).append(observation)
     return tuple(
         tuple(
             sorted(
@@ -1037,7 +1103,25 @@ def _grouped_row_count(
     observations: Iterable[WithholdingObservation],
 ) -> Decimal:
     """Count the rows the selector's grouping emits: one per type-2 record, not per NIF."""
-    return Decimal(len(_group_withholding_observations(_selector_grouping(selector), observations)))
+    return Decimal(len(_selected_grouped_rows(selector, observations)))
+
+
+def _selected_grouped_rows(
+    selector: WithholdingProvider,
+    observations: Iterable[WithholdingObservation],
+) -> tuple[tuple[WithholdingObservation, ...], ...]:
+    """Partition actual emitted rows, preserving duplicate and grouping refusals."""
+    rows = _group_withholding_observations(_selector_grouping(selector), observations)
+    if selector.base_sign is None:
+        return rows
+    selected = []
+    for row in rows:
+        base = _resolve_withholding_row_field(row, row_field="base_retenciones")
+        if not isinstance(base, Decimal):
+            raise RegistryValidationError("withholding base-sign selection requires a monetary base")
+        if (base > 0) == (selector.base_sign == "positive"):
+            selected.append(row)
+    return tuple(selected)
 
 
 def _grouped_row_sum(
@@ -1056,7 +1140,7 @@ def _grouped_row_sum(
             f"withholding fact {selector.fact!r} requires an additive monetary 'row_field', not {row_field!r}",
         )
     total = Decimal("0")
-    for row in _group_withholding_observations(_selector_grouping(selector), observations):
+    for row in _selected_grouped_rows(selector, observations):
         amount = _resolve_withholding_row_field(row, row_field=row_field)
         if not isinstance(amount, Decimal):
             raise RegistryValidationError(f"withholding row amount field {row_field!r} is not monetary evidence")

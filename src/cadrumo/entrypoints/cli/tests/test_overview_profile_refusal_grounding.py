@@ -34,7 +34,6 @@ from ._overview_native_support import invoke_native_overview
 from .runtime_profile_cli_fixture import NativeCliProfileFixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-pytest_plugins = ("cadrumo.entrypoints.cli.tests._overview_native_support",)
 _ENTITY_TYPE_SELECTOR = "taxpayer.entity_type"
 _IRPF_INCOME_CATEGORIES_SELECTOR = "taxpayer.irpf_income_categories"
 

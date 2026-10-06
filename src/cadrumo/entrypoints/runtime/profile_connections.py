@@ -11,6 +11,7 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 
+from ...adapters.local_runtime.installation import read_runtime_installation
 from ...adapters.local_runtime.login import capture_runtime_login
 from ...application.operations.registry import OperationRegistry
 from ...application.runtime.contracts import (
@@ -24,9 +25,12 @@ from ...application.runtime.login import RuntimeLoginEvidence, RuntimeLoginInven
 from ...application.runtime.profile_access import (
     RuntimeProfileDrainResult,
 )
+from ...application.runtime.session_events import RuntimeSessionEvent
+from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import (
     Availability,
     LoginEligibility,
+    OsLoginContext,
 )
 from ...application.user_profile.automation_custody_port import (
     AutomationCustodyCode,
@@ -37,6 +41,8 @@ from ...core.logging import get_logger
 from ...core.time.clock import now
 from ..operation_composition import build_production_operation_registry
 from .access_management import RuntimeAccessManagement
+from .bootstrap_delete import RuntimeBootstrapDeleteMixin
+from .bootstrap_reset import RuntimeBootstrapMixin
 from .enrollment_connections import RuntimeEnrollmentConnections
 from .profile_connection_access import ProfileConnectionAccessMixin
 from .profile_connection_admission import ProfileConnectionAdmissionMixin
@@ -44,12 +50,16 @@ from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainR
 from .profile_connection_operations import ProfileConnectionOperationMixin
 from .profile_connection_sessions import ProfileConnectionSessionMixin
 from .profile_host import ProfileConnection, RuntimeProfileHost
+from .session_events import RuntimeSessionEvents
 from .shutdown import request_runtime_stop
+from .sign_in_sweep import sweep_saved_sign_ins
 
 _LOGGER = get_logger(__name__)
 
 
 class RuntimeProfileConnections(
+    RuntimeBootstrapMixin,
+    RuntimeBootstrapDeleteMixin,
     ProfileConnectionAdmissionMixin,
     ProfileConnectionAccessMixin,
     ProfileConnectionSessionMixin,
@@ -70,11 +80,13 @@ class RuntimeProfileConnections(
         secret_store: Callable[[], AutomationSecretStore] = installed_automation_secret_store,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
+        os_owner_id: str | None = None,
     ) -> None:
         """Defer installation/profile/store access until an eligible peer requests login."""
         self.root, self.storage_identity, self.boot, self.stop = storage_root, storage_identity, runtime_boot_id, stop
         self._capture, self._secret_store = capture_login, secret_store
         self._login_inventory = login_inventory
+        self._os_owner_id = os_owner_id
         self._eligible_login_seen = False
         self._login_lifecycle_available = False
         self._worker_script, self._wall_clock = worker_script, wall_clock
@@ -85,11 +97,14 @@ class RuntimeProfileConnections(
         self._installation: RuntimeInstallation | None = None
         self._registry: OperationRegistry | None = None
         self._profiles: dict[UUID, RuntimeProfileHost] = {}
+        self._custody_mutations: set[UUID] = set()
         self._submission_slots = BoundedSemaphore(4)
         self._connections: dict[UUID, ProfileConnection] = {}
+        self._events = RuntimeSessionEvents()
         self._logins: dict[str, RuntimeLoginEvidence] = {}
         self._closed = False
         self._last_poll = 0.0
+        self._last_sign_in_sweep = 0.0
         self._enrollments = RuntimeEnrollmentConnections(prepare=self._prepare_enrollment, admitting=self._admitting)
         self._management = RuntimeAccessManagement(
             resolve=self._resolve_access_management,
@@ -97,6 +112,14 @@ class RuntimeProfileConnections(
             lock_changed=self._profile_lock_changed,
             synchronize=self._synchronize_profile_sessions,
         )
+
+    def connect_events(self, context: RuntimeConnectionContext) -> None:
+        """Register a native-verified connection without admitting profile access."""
+        self._events.connect(context)
+
+    def take_events(self, context: RuntimeConnectionContext) -> tuple[RuntimeSessionEvent, ...]:
+        """Let the connection's sole writer drain its bounded event queue."""
+        return self._events.take(context)
 
     def _connected(self, connection_id: UUID) -> ProfileConnection:
         with self._guard:
@@ -117,6 +140,10 @@ class RuntimeProfileConnections(
         logins.update((login.login_id, login) for login in peers)
         observed = tuple(login.observe(credential_facilities=Availability.UNAVAILABLE) for login in logins.values())
         eligible = any(login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed)
+        instant = time.monotonic()
+        if not eligible or instant - self._last_sign_in_sweep >= 1.0:
+            self._sweep_sign_ins(observed, complete=inventory.complete, include_hosted=not eligible)
+            self._last_sign_in_sweep = instant
         with self._guard:
             self._login_lifecycle_available = eligible
             if eligible:
@@ -129,6 +156,29 @@ class RuntimeProfileConnections(
                 _LOGGER.warning("no eligible login witness remains; stopping the runtime")
                 request_runtime_stop(self.stop, RuntimeExitReason.LOGIN_WITNESS_LOSS)
         return tuple(logins.values())
+
+    def _sweep_sign_ins(self, logins: tuple[OsLoginContext, ...], *, complete: bool, include_hosted: bool) -> None:
+        owner = self._os_owner_id
+        if owner is None and self._installation is not None:
+            owner = self._installation.os_owner_id
+        if owner is None:
+            return
+        try:
+            installation = read_runtime_installation(
+                storage_root=self.root, os_owner_id=owner, storage_identity=self.storage_identity
+            )
+        except RuntimeRefusalError:
+            # No validated installation means no saved receipt can be attributed.
+            return
+        with self._guard:
+            hosted = frozenset() if include_hosted else frozenset(self._profiles)
+        sweep_saved_sign_ins(
+            root=self.root,
+            installation=installation,
+            logins=logins,
+            inventory_complete=complete,
+            hosted_profiles=hosted,
+        )
 
     def _private_work_available(self) -> bool:
         return self._admitting() and (self._login_inventory is None or self._login_lifecycle_available)
@@ -153,7 +203,7 @@ class RuntimeProfileConnections(
         if not self._guard.acquire(timeout=timeout):
             return False
         try:
-            if self._profiles:
+            if self._profiles or self._custody_mutations:
                 return False
             request_runtime_stop(self.stop, reason)
             return True
@@ -181,6 +231,15 @@ class RuntimeProfileConnections(
             return registry
 
     def poll(self) -> None:
+        """Do not race custody-owned containment or a retained shutdown attempt."""
+        if not self._drain_guard.acquire(blocking=False):
+            return
+        try:
+            self._poll_profiles()
+        finally:
+            self._drain_guard.release()
+
+    def _poll_profiles(self) -> None:
         """Fence idle leases on expiry, native logout/lock or unavailable custody."""
         instant = time.monotonic()
         if instant - self._last_poll < 0.5:
@@ -193,7 +252,7 @@ class RuntimeProfileConnections(
         with self._guard:
             if not self._admitting():
                 return
-            hosts = tuple(self._profiles.values())
+            hosts = tuple(host for identity, host in self._profiles.items() if identity not in self._custody_mutations)
         for host in hosts:
             retired = host.retire_replaced_binding(deadline=time.monotonic() + 15)
             if retired is None:
@@ -202,6 +261,7 @@ class RuntimeProfileConnections(
                 self._remove_retired_host(host)
                 continue
             host.approvals.expire()
+            self._retired(host.observe_human_lock_down())
             self._retired(host.authority.revalidate_sessions())
             if host.owner.lost:
                 host.close()

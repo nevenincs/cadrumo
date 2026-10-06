@@ -6,7 +6,8 @@
  * A zeroed buffer is valid to release. Never copy ownership or free with a CRT.
  * Calls require valid pointers; contexts are process-local and not thread-safe.
  * 0 success, 1 incompatible ABI, 2 invalid argument, 3 platform/policy failure.
- * No unwinding crosses this boundary. All errors have provider-owned text.
+ * No unwinding crosses this boundary. Create/prepare error text is provider
+ * owned. Path conversion/key failures clear out.
  */
 typedef struct cadrumo_context cadrumo_context;
 typedef struct { uint8_t *data; uint64_t len; } cadrumo_buffer;

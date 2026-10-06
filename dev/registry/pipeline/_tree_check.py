@@ -153,6 +153,7 @@ def check_generated_export_tree(
         baseline_layout=(
             context.validation.inheritance.baseline_layout if context.validation.inheritance is not None else None
         ),
+        source_chain_revisions=context.validation.source_chain_revisions,
     )
     published_manifest = verify_export_fragment_provenance_manifest(
         export_root=published_export_root,
@@ -264,6 +265,7 @@ def _load_exact_published_layout(
     target: ExportFragmentTarget,
     baseline_revisions: tuple[str, ...] = (),
     baseline_layout: ExportLayoutDefinition | None = None,
+    source_chain_revisions: tuple[str, ...] = (),
 ) -> ExportLayoutDefinition:
     """Load exactly one target layout from a published single-revision staging."""
     modelo_id = str(target.modelo)
@@ -278,7 +280,7 @@ def _load_exact_published_layout(
         raise RegistryValidationError(
             f"generated check published modelo loads {definition.id!r}, expected {modelo_id!r}",
         )
-    expected = (*baseline_revisions, revision_id)
+    expected = source_chain_revisions or (*baseline_revisions, revision_id)
     if tuple(definition.revisions) != expected:
         raise RegistryValidationError(
             f"generated check published modelo must load exactly revisions {expected!r}, "

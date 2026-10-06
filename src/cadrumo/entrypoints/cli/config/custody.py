@@ -179,6 +179,9 @@ def _login_through_the_prompt(
     from ._profile_support import unknown_profile_refusal
     from .secure_input import prompt_secret_no_echo, read_machine_secret_payload, terminal_can_prompt_for_secrets
 
+    interactive = terminal_can_prompt_for_secrets()
+    if machine_secret is None and not interactive:
+        raise CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent")
     captured = observe_active_profile_pointer()
     target_name = name or captured.bucket_id
     if target_name is None:
@@ -193,7 +196,7 @@ def _login_through_the_prompt(
     )
     try:
         admitted = None
-        if machine_secret is None:
+        if machine_secret is None and interactive:
             with suppress(ProfileReceiptRefusedError):
                 admitted = client.resume_receipt()
         if admitted is None:
@@ -203,7 +206,7 @@ def _login_through_the_prompt(
                     proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
                 finally:
                     del payload
-            elif terminal_can_prompt_for_secrets():
+            elif interactive:
                 proof = bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")), "utf-8")
             else:
                 raise CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent")
@@ -229,7 +232,7 @@ def _login_through_the_prompt(
             already_authenticated=receipt.resumed,
         )
     except RuntimeFrontendRefusedError as error:
-        raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason}) from None
+        raise CliRefusedBoundaryError(error.reason, context=error.context) from None
     finally:
         client.close()
 
@@ -283,24 +286,73 @@ def config_login(
     )
 
 
+def config_sign_in_status(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Observe the active profile without borrowing proof or extending sign-in."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+
+    from ....application.operations.registry import OperationFrontendProjection
+    from ....application.runtime.sign_in import SignInPresence, SignInStatus
+    from ....application.user_profile.profile_pointer import observe_active_profile_pointer
+    from ..config_payloads import ConfigSignInStatusResult
+
+    captured = observe_active_profile_pointer()
+    status = SignInStatus(presence=SignInPresence.ABSENT)
+    if captured.bucket_id is not None:
+        client = asyncio.run(
+            open_installed_runtime_client(profile_id=UUID(captured.bucket_id), frontend=OperationFrontendProjection.CLI)
+        )
+        try:
+            status = client.sign_in_status().status
+        finally:
+            client.close()
+    result = ConfigSignInStatusResult(profile_id=captured.bucket_id, status=status)
+    emit_envelope(
+        ctx,
+        command="config.sign-in-status",
+        result=result,
+        lines=(
+            f"presence\t{status.presence.value}",
+            f"idle_deadline\t{status.idle_deadline.isoformat() if status.idle_deadline is not None else '<none>'}",
+            "absolute_deadline\t"
+            f"{status.absolute_deadline.isoformat() if status.absolute_deadline is not None else '<none>'}",
+        ),
+    )
+
+
 def config_logout(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Clear this CLI context's default without revoking independent access.
-
-    Each CLI command owns and closes its own runtime connection. A later
-    logout therefore has no earlier connection to retire; it clears only
-    the captured default selection and reports retained acceleration.
-    """
+    """Revoke the selected profile's human sign-in through the runtime owner."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.profile_pointer import active_profile_pointer_transaction
-    from ....application.workflow.profile_bucket_scan import read_profile_bucket
+    from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 
-    with active_profile_pointer_transaction() as selection:
-        captured = selection.read()
-        target = read_profile_bucket(captured.bucket_id) if captured.bucket_id is not None else None
-        selection.compare_and_clear(expected=captured)
+    from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+    from ....application.operations.registry import OperationFrontendProjection
+    from ....application.user_profile.login_session import ProfileReceiptRefusedError
+    from ....application.user_profile.profile_pointer import observe_active_profile_pointer
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
+    from ..errors import CliRefusedBoundaryError
+
+    captured = observe_active_profile_pointer()
+    target = read_profile_bucket(captured.bucket_id) if captured.bucket_id is not None else None
+    outcome = None
+    if captured.bucket_id is not None:
+        client = asyncio.run(
+            open_installed_runtime_client(profile_id=UUID(captured.bucket_id), frontend=OperationFrontendProjection.CLI)
+        )
+        try:
+            outcome = client.human_sign_out()
+        except (RuntimeFrontendRefusedError, ProfileReceiptRefusedError) as error:
+            raise CliRefusedBoundaryError(str(error.reason), context={"reason": str(error.reason)}) from None
+        finally:
+            client.close()
+    # Selection is a non-authoritative login target, not human access. Keep it
+    # available for the next exact login; never overwrite a concurrent selection.
     signed_out = captured.bucket_id
     logged_out_profile = target.label if target is not None else signed_out
 
@@ -309,14 +361,12 @@ def config_logout(
     result = ConfigLogoutResult(
         logged_out_profile=logged_out_profile,
         already_logged_out=signed_out is None,
+        human_receipt_revoked=outcome is not None,
+        receipt_removed=None if outcome is None else outcome.receipt_removed,
+        keychain_removed=None if outcome is None else outcome.keychain_removed,
+        automation_enabled=None if outcome is None else outcome.automation_enabled,
     )
-    notices = (
-        Notice(
-            severity=NoticeSeverity.INFO,
-            code="config.logout.remaining_access",
-            message=tr("cli.config.logout.notices.remaining_access"),
-        ),
-    )
+    notices: tuple[Notice, ...] = ()
     if signed_out is None:
         notices += (
             Notice(
@@ -331,13 +381,17 @@ def config_logout(
         result=result,
         lines=(
             f"logged_out_profile\t{logged_out_profile or '<none>'}",
+            f"human_receipt_revoked\t{result.human_receipt_revoked}",
+            f"receipt_removed\t{result.receipt_removed}",
+            f"keychain_removed\t{result.keychain_removed}",
+            f"automation_enabled\t{result.automation_enabled}",
             *(notice.message for notice in notices),
         ),
         notices=notices,
     )
 
 
-__all__ = ["config_login", "config_logout"]
+__all__ = ["config_login", "config_logout", "config_sign_in_status"]
 
 
 def _require_current_profile_login(client: RuntimeFrontendClient) -> None:

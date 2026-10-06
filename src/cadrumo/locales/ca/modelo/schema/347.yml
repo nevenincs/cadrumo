@@ -41,8 +41,8 @@ modelo:
               persones.
             label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
           contraparte-clave-operacion:
-            label: Clau d'operació amb la contrapart (A=lliuraments/prestacions, B=adquisicions/recepcions,
-              ...)
+            label: 'Clau d’operació (A: adquisicions; B: lliuraments de béns i prestacions
+              de serveis)'
           contraparte-importe-q1:
             label: Import d'operacions amb la contrapart en el primer trimestre
           contraparte-importe-q2:
@@ -124,6 +124,12 @@ modelo:
             help: Dada declarada al model 347, declaració anual d'operacions amb terceres
               persones.
             label: OPERACIÓ D'ASSEGURANÇA
+          papel-firma-cargo:
+            label: Càrrec o ocupació
+          papel-firma-fecha:
+            label: Data
+          papel-firma-nombre:
+            label: Nom de qui signa
           persona-con-quien-relacionarse:
             help: Dada declarada al model 347, declaració anual d'operacions amb terceres
               persones.
@@ -140,6 +146,14 @@ modelo:
             help: Dada declarada al model 347, declaració anual d'operacions amb terceres
               persones.
             label: NIF DEL REPRESENTANT LEGAL
+          resumen-importe-arrendamientos:
+            label: null
+          resumen-importe-operaciones:
+            label: null
+          resumen-inmuebles:
+            label: null
+          resumen-personas-entidades:
+            label: null
           situacion-inmueble:
             help: Dada declarada al model 347, declaració anual d'operacions amb terceres
               persones.
@@ -153,6 +167,62 @@ modelo:
       field:
         official_name: Modelo 347. Declaració anual d'operacions amb terceres persones.
         title: Operacions amb terceres persones (informativa anual)
+      form:
+        column:
+          operaciones:
+            heading: Import de les operacions
+          transmisiones:
+            heading: Transmissions d’immobles subjectes a IVA
+        context:
+          anterior:
+            heading: Número de justificant de la declaració anterior
+          nif:
+            heading: NIF del declarant
+          nombre:
+            heading: Cognoms i nom o raó social
+        page:
+          m347-declarado:
+            heading: Relació de persones i entitats
+          m347-declarante:
+            heading: Full resum
+          m347-inmueble:
+            heading: Arrendaments de locals de negoci
+        row:
+          trimestre-1:
+            heading: 1T
+          trimestre-2:
+            heading: 2T
+          trimestre-3:
+            heading: 3T
+          trimestre-4:
+            heading: 4T
+        section:
+          contacto:
+            heading: Persona de contacte
+          declaracion:
+            heading: Dades de la declaració
+          firma:
+            heading: Data i signatura
+          identificacion:
+            heading: Identificació del declarant
+          resumen:
+            heading: Resum de les dades incloses a la declaració
+        signature:
+          administracion:
+            heading: Espai reservat per a l’Administració
+          paper:
+            heading: Espai del formulari en paper
+          space:
+            heading: Signatura manuscrita
+        summary:
+          arrendamientos:
+            heading: Import total d’arrendaments de locals de negoci
+          inmuebles:
+            heading: Nombre total d’immobles
+          operaciones:
+            heading: Import total anual de les operacions
+          personas:
+            heading: Nombre total de persones i entitats
       revision:
         2011-2024:
           casilla:

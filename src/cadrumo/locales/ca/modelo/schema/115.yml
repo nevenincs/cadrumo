@@ -11,9 +11,29 @@ modelo:
           de l'arrendament o subarrendament d'immobles urbans.
         title: IRPF retencions sobre arrendaments urbans
       form:
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Declaració complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de la declaració anterior
+          nif: NIF
+          nombre: Nom
+          periodo: Període
         page:
           dr-11501:
-            heading: Pàgina 1 · Retencions per arrendaments d'immobles urbans
+            heading: Retencions per arrendament d’immobles urbans
+        section:
+          complementaria:
+            heading: Complementària (4)
+          devengo:
+            heading: Meritació (2)
+          identificacion:
+            heading: Identificació (1)
+          ingreso:
+            heading: Ingrés (5)
+          liquidacion:
+            heading: Liquidació (3)
       revision:
         2019-y-siguientes:
           casilla:

@@ -27,18 +27,20 @@ from cadrumo.core.tests.checkout import project_root
 from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
-from ..storage_vectors import StorageRootVector, storage_root_vectors
+from ..storage_vectors import StorageRootVector, invalid_native_path_value, storage_root_vectors
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _replay(vector: StorageRootVector) -> tuple[str | None, StorageRootRefusal | None]:
+    environment = dict(vector.environment)
+    environment.update({name: invalid_native_path_value(vector.platform) for name in vector.invalid_environment})
     try:
         root = resolve_storage_root(
             platform=vector.platform,
             mode=vector.mode,
-            environ=dict(vector.environment),
-            checkout=vector.checkout,
+            environ=environment,
+            checkout=invalid_native_path_value(vector.platform) if vector.invalid_checkout else vector.checkout,
             channel=vector.channel,
         )
     except CoreValidationError as error:
@@ -85,6 +87,9 @@ def test_vectors_project_onto_json() -> None:
         "channel": "stable",
         "expected_root": r"C:\Users\ada\AppData\Local\cadrumo",
         "refusal": None,
+        "invalid_environment": [],
+        "invalid_checkout": False,
+        "invalid_known_folder": False,
     }
 
 
@@ -262,7 +267,7 @@ def test_a_checkout_resolves_on_an_undeclared_platform(tmp_path: Path) -> None:
     assert storage_root_for({}, checkout, sys_platform="plan9") == (tmp_path / "var" / "storage").resolve()
     relative = {STORAGE_ROOT.variable: "var/alternate"}
     assert storage_root_for(relative, checkout, sys_platform="plan9") == (tmp_path / "var" / "alternate").resolve()
-    assert resolve_storage_root(platform=None, mode=StorageMode.DEVELOPMENT, environ={}, checkout="/src/checkout")
+    assert resolve_storage_root(platform=None, mode=StorageMode.DEVELOPMENT, environ={}, checkout=tmp_path)
     environment = child_environment(
         ChildEnvironmentProfile.STRICT, tmp_path / "root", received={}, base={}, sys_platform="plan9"
     )

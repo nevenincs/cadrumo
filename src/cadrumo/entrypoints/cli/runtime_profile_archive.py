@@ -45,6 +45,10 @@ def _run_archive_operation[ProjectionT: BaseModel](
         request_version=1,
         result_version=1,
         timeout=120,
+        # A contained mirror re-admits each provider request and verifies all
+        # ciphertext before publishing its manifest. Keep individual exchanges
+        # bounded while allowing the admitted upload to finish before disconnect.
+        settlement_timeout=600 if isinstance(request, ProfileArchivePushRequest) and not request.dry_run else None,
     )
     if (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED

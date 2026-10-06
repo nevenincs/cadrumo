@@ -23,6 +23,13 @@ def require(condition: bool, message: str) -> None:
 
 root = Path(sys.argv[1]).resolve(strict=True)
 manifest = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+entrypoint_smoke = runpy.run_path(str(Path(__file__).with_name("entrypoint_smoke.py")))
+entrypoint_smoke["verify_entrypoints"](
+    root,
+    manifest["layout"]["entrypoints"],
+    manifest["layout"]["paths"]["native"],
+    manifest["layout"]["entrypoint_suffix"],
+)
 native_manifest = json.loads((root / manifest["layout"]["files"]["native_manifest"]).read_text(encoding="utf-8"))
 for module in sorted(native_manifest["modules"]):
     try:
@@ -67,7 +74,8 @@ authority_root = configured_authority_root()
 if authority_root is None:
     raise AssertionError("Bundled authority root is unavailable")
 require_authority_store_available(authority_root / "authority.current.json")
-runpy.run_path(str(Path(__file__).with_name(manifest["layout"]["smoke_test"])))
+if specialized_smoke := manifest["layout"].get("smoke_test"):
+    runpy.run_path(str(Path(__file__).with_name(specialized_smoke)))
 with pikepdf.Pdf.new() as document:
     document.add_blank_page()
 require(

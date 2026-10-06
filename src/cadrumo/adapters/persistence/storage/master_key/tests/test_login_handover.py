@@ -29,7 +29,6 @@ from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 from cadrumo.adapters.persistence.storage.custody import filesystem as custody_filesystem
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     profile_session_path,
-    resume_profile_session,
 )
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
@@ -37,6 +36,7 @@ from cadrumo.adapters.persistence.storage.custody.filesystem import (
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import persist_signed_in_receipt
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
@@ -70,7 +70,6 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core import config as config_module
 from cadrumo.core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from cadrumo.core.config import Settings
-from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.core.time.clock import now as _now
@@ -521,7 +520,7 @@ def _resume_probe_child(
     _ = settings
     try:
         material = load_committed_profile_password_material(UUID(profile), root=storage_root)
-        outcome, dek = resume_profile_session(
+        outcome, dek = resume_receipt_as_runtime(
             storage_root=storage_root,
             profile_id=UUID(profile),
             custody_generation=material.envelope.password_generation,
@@ -583,14 +582,12 @@ def _probe_resumable_session(storage_root: Path, profile: str) -> _ResumeProbeRe
             child.join(timeout=30)
 
 
-def _assert_no_resumable_material(storage_root: Path, profile: str, *, after: str) -> None:
-    """Refuse every route by which a retired profile's DEK is still recoverable."""
+def _assert_runtime_receipt_survives(storage_root: Path, profile: str, *, after: str) -> None:
+    """Local selection changes preserve proof admitted by the runtime reader."""
     probe = _probe_resumable_session(storage_root, profile)
-    assert probe["dek_length"] == 0, (
-        f"after {after}: the retired profile's DEK is still recoverable without its passphrase"
-    )
-    assert probe["resumed"] is False
-    assert probe["refusal"] == ProfileSessionRefusalReason.ABSENT.value
+    assert probe["dek_length"] == 32, f"runtime receipt lost after {after}"
+    assert probe["resumed"] is True
+    assert probe["refusal"] is None
 
 
 def _crash_at_handover_phase_child(
@@ -1143,6 +1140,9 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
                 profile_decode_context=_profile_decode_context_for_test,
             )
             active_a = current_active_bucket_session()
+            receipt = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a))
+            receipt.parent.mkdir(parents=True, exist_ok=True)
+            receipt.write_bytes(b"runtime-owned-receipt-witness")
 
             result = login_profile(
                 name=profile_b,
@@ -1161,32 +1161,15 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
                 profile_b, profile_decode_context=_profile_decode_context_for_test
             ).profile_id.hex == profile_b.replace("-", "")
             assert read_pointer(storage_root).bucket_id is not None
-            assert profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a)).exists() is False
+            assert active_a is not None and active_a.sealed
+            assert receipt.read_bytes() == b"runtime-owned-receipt-witness"
         finally:
             _close_live_login()
 
 
 @pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
-def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(tmp_path: Path) -> None:
-    """A retired profile's acceleration receipt must not still yield its DEK.
-
-    The receipt wraps A's 32-byte bucket DEK under a key the OS keychain holds,
-    and a handover rotates neither A's custody generation nor its DEK epoch, so
-    a receipt that outlives the retirement stays resumable: it hands the DEK
-    back with no passphrase. That is the profile-A resurrection this phase
-    exists to refuse.
-
-    Every login here runs in its own interpreter, because that is what the
-    operator flow is: one process per command, with no session live from the
-    previous one. A handover measured with both logins inside a single process
-    exercises only the configuration in which a live in-process session is
-    available to identify the profile being retired, so it can confirm the
-    property exactly where its precondition already holds and nowhere else.
-
-    The assertion is on the recovered material rather than on the file, because
-    a variant that unlinks the receipt while leaving the key recoverable by any
-    other route would satisfy a file-absence check and still be the same defect.
-    """
+def test_handover_preserves_runtime_receipt_for_the_previous_profile(tmp_path: Path) -> None:
+    """A local cross-process handover does not globally sign out another profile."""
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
@@ -1205,10 +1188,8 @@ def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(t
         second = _login_in_separate_process(storage_root, profile_b, _CREDENTIAL_B)
         assert second["bucket_id"] == profile_b
 
-        # The recovered material is the property, so it is measured before the
-        # reported outcome: a run that lost the retirement must fail here, on
-        # the recoverable DEK, rather than on how the login described itself.
-        _assert_no_resumable_material(storage_root, profile_a, after="a cross-process handover")
+        # The runtime reader still admits the original receipt after selection.
+        _assert_runtime_receipt_survives(storage_root, profile_a, after="a cross-process handover")
         assert second["closed_previous"] == profile_a
 
 
@@ -1462,15 +1443,7 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
     phase: HandoverPhase,
     _registered_handover_profiles: tuple[Path, str, str],
 ) -> None:
-    """A real process death at every published phase has one B recovery result.
-
-    Recovery is also where the retirement of A must land. The crash always
-    predates the operator's next command, so the recovering process is a new
-    one with no session live from the crashed handover, and A's acceleration
-    receipt survives every phase whose retirement had not yet run. Measuring
-    only that B comes back would leave the retired profile's DEK recoverable
-    with no passphrase at four of the five phases.
-    """
+    """Recover local selection at every phase without changing shared sign-in."""
     require_os_credential_store()
     template_root, profile_a, profile_b = _registered_handover_profiles
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
@@ -1490,30 +1463,8 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
             assert current_pointer.bucket_id == profile_b
             assert handover_journal_path(storage_root).is_file()
 
-            # Anti-tautology, phase by phase: the refusal after recovery is only
-            # evidence where there was something to refuse. Every phase before
-            # the terminal receipt crashed with A's receipt still resumable; the
-            # terminal one crashed after retirement had already run.
-            crashed = _probe_resumable_session(storage_root, profile_a)
-            if phase is HandoverPhase.A_RETIRED:
-                # `resumed is False` alone is satisfied by ANY refusal, including
-                # one that has nothing to do with retirement: on a host whose
-                # credential store is unreachable no receipt can be minted, so
-                # nothing is resumable and this branch holds for the wrong
-                # reason. Naming the refusal is what separates "retirement ran"
-                # from "there was never anything to resume", which is the whole
-                # claim this phase makes. `_assert_no_resumable_material` already
-                # discriminates this way; this guard did not.
-                assert crashed["resumed"] is False
-                assert crashed["dek_length"] == 0
-                assert crashed["refusal"] == ProfileSessionRefusalReason.ABSENT.value, (
-                    "the retired profile refused for a reason other than absence "
-                    f"({crashed['refusal']!r}); this phase proves retirement ran, and any "
-                    "other refusal means the probe never had a receipt to lose"
-                )
-            else:
-                assert crashed["resumed"] is True
-                assert crashed["dek_length"] == 32
+            # Every local handover phase preserves the runtime receipt.
+            _assert_runtime_receipt_survives(storage_root, profile_a, after=f"crash at {phase.value}")
 
             result_queue: Queue[_RecoveryResult] = Queue(ctx=context)
             recovery_child = context.Process(
@@ -1532,7 +1483,7 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
                     "record_profile": profile_b,
                 }
                 _assert_journal_settled_for(phase, storage_root=storage_root)
-                _assert_no_resumable_material(
+                _assert_runtime_receipt_survives(
                     storage_root,
                     profile_a,
                     after=f"recovery from a crash at {phase.value}",

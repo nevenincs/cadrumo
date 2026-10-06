@@ -472,10 +472,10 @@ def _shippable_files(root: Path) -> list[Path]:
     return sorted(files)
 
 
-def stage_roots(build: Path) -> None:
+def stage_roots(build: Path, *, target: str | None = None) -> None:
     """Copy each declared root's shippable subset and write the manifest the package consumes."""
     paths = build_paths(build)
-    layout = load_layout()
+    layout = load_layout(target)
     declaration = layout["user_docs"]
     languages = declared_languages(layout)
     roots = language_roots(paths["user_docs_build"], languages)
@@ -532,10 +532,10 @@ def stage_roots(build: Path) -> None:
                 checked_member(relative)
             except ValueError as error:
                 raise DocsPackagingError(str(error)) from None
-            target = payload / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-            inventory[relative] = digest(target)
+            output_file = payload / relative
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, output_file)
+            inventory[relative] = digest(output_file)
         size = sum(source.stat().st_size for source in files)
         print(f"Staged {language} user documentation: {len(files)} files, {size / 1_000_000:.1f} MB", flush=True)
     manifest = {
@@ -574,9 +574,10 @@ def main() -> None:
     """Stage the built roots for the CMake documentation target."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, required=True)
+    parser.add_argument("--target")
     arguments = parser.parse_args()
     try:
-        stage_roots(arguments.build.resolve(strict=True))
+        stage_roots(arguments.build.resolve(strict=True), target=arguments.target)
     except DocsPackagingError as error:
         raise SystemExit(str(error)) from None
 

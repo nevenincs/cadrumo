@@ -63,7 +63,14 @@ pub(crate) fn digest(path: &Path) -> Result<Sha256Digest, Error> {
 }
 
 pub(crate) fn json_file<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, Error> {
+    Ok(serde_json::from_slice(&json_bytes(path)?)?)
+}
+
+pub(crate) fn json_bytes(path: &Path) -> Result<Vec<u8>, Error> {
     refuse_links(path)?;
+    if !fs::metadata(path)?.is_file() {
+        return Err(Error::Integrity("expected a regular JSON file".into()));
+    }
     let mut bytes = Vec::new();
     File::open(path)?
         .take(16 * 1024 * 1024 + 1)
@@ -71,7 +78,7 @@ pub(crate) fn json_file<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T
     if bytes.len() > 16 * 1024 * 1024 {
         return Err(Error::LimitExceeded);
     }
-    Ok(serde_json::from_slice(&bytes)?)
+    Ok(bytes)
 }
 
 pub(crate) fn write_json<T: serde::Serialize>(path: &Path, value: &T) -> Result<(), Error> {

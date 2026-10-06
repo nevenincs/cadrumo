@@ -1,6 +1,51 @@
 modelo:
   schema:
     '190':
+      binding:
+        modelo-190-111-actividades-dinerario-importe-anual:
+          label: Gazdasági tevékenységből származó pénzbeli jövedelem · éves összeg
+            a 111-es nyomtatvány 08. mezőjéből
+        modelo-190-111-actividades-especie-importe-anual:
+          label: Gazdasági tevékenységből származó természetbeni jövedelem · éves
+            összeg a 111-es nyomtatvány 11. mezőjéből
+        modelo-190-111-derechos-imagen-importe-anual:
+          label: Képmáshoz való jog átengedésének ellenértéke · éves összeg a 111-es
+            nyomtatvány 26. mezőjéből
+        modelo-190-111-ganancias-dinerario-importe-anual:
+          label: Erdészeti hasznosításból származó pénzbeli vagyoni nyereség · éves
+            összeg a 111-es nyomtatvány 20. mezőjéből
+        modelo-190-111-ganancias-especie-importe-anual:
+          label: Erdészeti hasznosításból származó természetbeni vagyoni nyereség
+            · éves összeg a 111-es nyomtatvány 23. mezőjéből
+        modelo-190-111-premios-dinerario-importe-anual:
+          label: Pénzbeli nyeremények · éves összeg a 111-es nyomtatvány 14. mezőjéből
+        modelo-190-111-premios-especie-importe-anual:
+          label: Természetbeni nyeremények · éves összeg a 111-es nyomtatvány 17.
+            mezőjéből
+        modelo-190-111-retenciones-anual:
+          label: Adólevonások és adóelőlegek · éves összeg a 111-es nyomtatvány 28.
+            mezőjéből
+        modelo-190-111-trabajo-dinerario-importe-anual:
+          label: Pénzbeli munkajövedelem · éves összeg a 111-es nyomtatvány 02. mezőjéből
+        modelo-190-111-trabajo-especie-importe-anual:
+          label: Természetbeni munkajövedelem · éves összeg a 111-es nyomtatvány 05.
+            mezőjéből
+        modelo-190-perceptor-rows-incapacidad-dineraria-total:
+          label: Munkaképtelenség miatti pénzbeli juttatások összesen
+        modelo-190-perceptor-rows-incapacidad-especie-total:
+          label: Munkaképtelenség miatti természetbeni juttatások értéke összesen
+        modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total:
+          label: Munkaképtelenség miatti természetbeni juttatások adóelőlegei összesen
+        modelo-190-perceptor-rows-incapacidad-retencion-total:
+          label: Munkaképtelenségi juttatásokból levont adók összesen
+        modelo-190-perceptor-rows-ingreso-a-cuenta-total:
+          label: Adóelőlegek összesen
+        modelo-190-perceptor-rows-percepcion-dineraria-total:
+          label: Pénzbeli juttatások összesen
+        modelo-190-perceptor-rows-percepcion-especie-total:
+          label: Természetbeni juttatások összesen
+        modelo-190-perceptor-rows-retencion-practicada-total:
+          label: Levont adók összesen
       casilla:
         continuidad:
           devengo-year:

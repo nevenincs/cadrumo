@@ -9,6 +9,9 @@ import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
+
+from .build_toolchain import sysroot_inventory
 
 
 @contextmanager
@@ -60,19 +63,22 @@ def current(destination: Path, identity: str) -> bool:
         return False
     try:
         state = json.loads(marker.read_text(encoding="utf-8"))
-        return bool(state["inputs"] == identity) and all(
-            (destination / name).is_file() and (destination / name).stat().st_size == size
-            for name, size in state["outputs"].items()
+        return bool(
+            state["schema"] == 3 and state["inputs"] == identity and state["outputs"] == _inventory(destination)
         )
-    except (ValueError, KeyError, OSError):
+    except (ValueError, KeyError, TypeError, OSError):
         return False
 
 
+def _inventory(destination: Path) -> dict[str, Any]:
+    marker = destination / "ready"
+    if destination.is_symlink() or destination.is_junction() or marker.is_symlink() or marker.is_junction():
+        raise ValueError("Build cache root and completion marker must not be linked")
+    inventory = sysroot_inventory(destination, excluded=frozenset({"ready"}))
+    return {"files": inventory["files"], "links": inventory["links"]}
+
+
 def completed(destination: Path, identity: str) -> None:
-    """Publish a completion marker only after all shared outputs exist."""
-    outputs = {
-        p.relative_to(destination).as_posix(): p.stat().st_size
-        for p in destination.rglob("*")
-        if p.is_file() and p.name != "ready" and "__pycache__" not in p.parts
-    }
-    (destination / "ready").write_text(json.dumps({"inputs": identity, "outputs": outputs}), encoding="utf-8")
+    """Publish a completion marker binding the complete output inventory to its bytes."""
+    state = {"schema": 3, "inputs": identity, "outputs": _inventory(destination)}
+    (destination / "ready").write_text(json.dumps(state), encoding="utf-8")

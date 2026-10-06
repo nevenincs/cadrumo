@@ -17,6 +17,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
+    FormAliasPosition,
     FormFieldBlock,
     FormGridBlock,
     FormLayoutDefinition,
@@ -98,6 +99,44 @@ def test_a_casilla_shown_twice_is_refused() -> None:
     duplicated = _add_block(layout, FormFieldBlock(id="duplicate", casilla_id=on_form))
     failures = form_layout_failures(_with_layout(revision, duplicated))
     assert f"shows on-form casilla {on_form!r} in 2 positions; it belongs in exactly one" in " ".join(failures)
+
+
+@pytest.mark.parametrize("fault", [None, "undeclared", "same-section"])
+def test_a_declared_alias_allows_one_repeat_at_its_exact_section(fault: str | None) -> None:
+    revision = _revision("303", "2025")
+    layout = revision.form_layouts[0]
+    placement = next(item for item in layout.placements if item.kind is FormPlacementKind.ON_FORM)
+    last_page = layout.pages[-1]
+    alias_section = FormSectionDefinition(
+        id="payment-copy",
+        heading_key="modelo.form.section.payment",
+        blocks=(FormFieldBlock(id="amount", casilla_id=placement.casilla_id),),
+    )
+    if fault == "same-section":
+        alias_section = alias_section.model_copy(
+            update={
+                "blocks": (*alias_section.blocks, FormFieldBlock(id="second-amount", casilla_id=placement.casilla_id))
+            }
+        )
+    last_page = last_page.model_copy(update={"sections": (*last_page.sections, alias_section)})
+    changed = layout.model_copy(
+        update={
+            "pages": (*layout.pages[:-1], last_page),
+            "placements": tuple(
+                item.model_copy(
+                    update={"aliases": (FormAliasPosition(page_id=last_page.id, section_id=alias_section.id),)}
+                )
+                if item.casilla_id == placement.casilla_id and fault != "undeclared"
+                else item
+                for item in layout.placements
+            ),
+        }
+    )
+    failures = form_layout_failures(_with_layout(revision, changed))
+    if fault is None:
+        assert failures == ()
+    else:
+        assert any(f"shows on-form casilla {placement.casilla_id!r}" in failure for failure in failures)
 
 
 def test_a_working_figure_shown_on_the_form_is_refused() -> None:

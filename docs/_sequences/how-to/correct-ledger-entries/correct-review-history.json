@@ -76,7 +76,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nID\t1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570\nEvent count\t2\n2026-04-01T09:00:00+00:00\tledger.transaction.split\t0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f\n2026-04-01T09:00:00+00:00\tledger.transaction.created\t808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388\n"
+      "text": "Bucket\t<profile-id>\nID\t1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570\nEvent count\t2\n2026-04-01T09:00:00+00:00\tledger.transaction.split\t0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f\n2026-04-01T09:00:00+00:00\tledger.transaction.created\t808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -93,7 +93,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.history",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "event_count": 2,
@@ -135,7 +143,7 @@
           "transaction_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

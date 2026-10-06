@@ -63,6 +63,7 @@ source_refs = [
     "aeat-calendario-contribuyente-2025",
     "aeat-calendario-contribuyente-2026",
 ]
+scoped_families = ["completeness_manifest"]
 
 [revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -112,18 +113,6 @@ source_refs = [
 family = "constructs"
 selector = {revision = "2020-2023", id = "modelo-216-liquidacion"}
 
-[[revisions."2024-y-siguientes".family_positions]]
-family = "application_links"
-id = "modelo-216-calculation"
-position = 0
-
-# This revision's period_selector declares ONLY the four quarterly periods, so
-# the quarterly schedule is the whole of what it can express. The AEAT
-# instructions bundled for this revision do describe a monthly regime for grandes
-# empresas, and it is deliberately NOT declared here: authoring a monthly schedule
-# against a selector that admits no monthly period would assert a filing this
-# revision cannot resolve. Modelling that regime is a revision-scope change, not
-# a schedule fragment.
 [[revisions."2024-y-siguientes".family_overrides]]
 family = "filing_schedules"
 selector = {revision = "2020-2023", id = "modelo-216-trimestral"}
@@ -141,3 +130,26 @@ family = "application_links"
 selector = {revision = "2020-2023", id = "modelo-216-filing"}
 sequence_additions = {source_refs = ["aeat-modelo-216-procedure"]}
 sequence_removals = {source_refs = [0, 1]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2020-2023", id = "modelo-216-resultado"}
+fields = {target_casilla_id = "21"}
+sequence_additions = {"expression.args" = [{casilla_id = "13"}, {casilla_id = "20"}], legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_citations = [{source_ref = "aeat-modelo-216-procedure", required_text = ["el importe correspondiente a la resta de las casillas 13 y 20"]}], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {"expression.args" = [0, 1], source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-calculation"}
+sequence_additions = {legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-export"}
+sequence_additions = {legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-216-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2020-2023", id = "aeat-dr-216-2020-2023"}
+replacement_id = "boe-modelo-216-form-layout"
+sequence_additions = {casillas = [{casilla_id = "10", number = "10"}, {casilla_id = "08", number = "08"}, {casilla_id = "09", number = "09"}, {casilla_id = "13", number = "13"}, {casilla_id = "11", number = "11"}, {casilla_id = "12", number = "12"}, {casilla_id = "21", number = "21"}, {casilla_id = "20", number = "20"}, {casilla_id = "05", number = "05"}, {casilla_id = "06", number = "06"}, {casilla_id = "07", number = "07"}, {casilla_id = "14", number = "14"}, {casilla_id = "15", number = "15"}, {casilla_id = "16", number = "16"}, {casilla_id = "17", number = "17"}, {casilla_id = "18", number = "18"}, {casilla_id = "19", number = "19"}], legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-216-form-layout"]}
+sequence_removals = {casillas = [0, 1, 2], source_refs = [0, 1]}

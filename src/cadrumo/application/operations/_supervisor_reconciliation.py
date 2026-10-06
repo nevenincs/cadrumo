@@ -200,6 +200,12 @@ class SupervisorReconciliationMixin(SupervisorHost):
             outcome=OperationReconciliationOutcome.RESUMED,
             lease_evidence_ref=lease_evidence_ref,
         )
+        if isinstance(resume_checkpoint, OperationConsumedInteraction):
+            # Recovery acknowledges durable takeover before an already-approved
+            # continuation waits on external input. The existing supervisor task
+            # owns execution, lease renewal, settlement and shutdown.
+            self._schedule_continuation(resumed, definition, resume_checkpoint)
+            return resumed
         return await self._resume_from_checkpoint(resumed, definition, resume_checkpoint)
 
     @staticmethod

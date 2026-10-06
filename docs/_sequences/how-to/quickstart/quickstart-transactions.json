@@ -51,7 +51,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303\nDate\t2026-02-10\nAmount\t1210\nDescription\tventa\nReview status\treviewed\n"
+      "text": "ID\t5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303\nDate\t2026-02-10\nAmount\t1210\nDescription\tventa\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -88,7 +88,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.evidence.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "bucket_event_ids": [
@@ -110,7 +118,7 @@
           "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -153,7 +161,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\te28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\n"
+      "text": "ID\te28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -168,7 +176,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.list",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "limit": null,
@@ -264,7 +280,7 @@
           "truncated": false
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

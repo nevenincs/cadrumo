@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:61555433d428ffc778d900771f107ea620e40d4914cb1fa8263eb32f8125895c'
+body_hash: 'sha256:eac53fd594b06f24f196f08249dd058c1bb4d38fc384887ed3f988b87cff20a9'
 related:
   - "[[2026-10-04-application-sign-in-plan]]"
 ---
@@ -195,6 +195,19 @@ related:
 - `S14` `M` `src/cadrumo/locales/ca/cli.yml`
 - `S14` `M` `src/cadrumo/locales/hu/cli.yml`
 - `S14` `verify:` `dev.locales set-batch and canonical authored readback for cli.config.sign_in_status.help in en es ca hu` -> `pass`
+- `S14` `verify:` `uv run --no-sync python scratch/provisioning-state-map/verify-principal-locales.py` -> `pass`
+- `S15` `M` `src/cadrumo/locales/en/common.yml`
+- `S15` `M` `src/cadrumo/locales/es/common.yml`
+- `S15` `M` `src/cadrumo/locales/ca/common.yml`
+- `S15` `M` `src/cadrumo/locales/hu/common.yml`
+- `S15` `verify:` `uv run --no-sync python scratch/provisioning-state-map/verify-principal-locales.py` -> `pass`
+- `S12` `M` `src/cadrumo/entrypoints/cli/_profile_session_gate.py`
+- `S12` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_registration_retires_displaced_profile.py`
+- `S12` `M` `dev/quality/metadata/import_load_targets.json`
+- `S12` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S12` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S12` `verify:` `principal-import-boundaries-final 20261005T173955.188479Z-principal-import-boundaries-final-44480-f3f817e0` -> `pass`
+- `S12` `verify:` `registration integration 20261005T173251.115363Z-pytest-524-88363ecb` -> `pass`
 
 ## Notes
 
@@ -204,3 +217,7 @@ related:
 - `S04` Mint now runs after publication under the admission guard with the generation captured at publication; `require_current` refuses a moved record before any write. The worker holds the password proof as a pending receipt from bind to mint (a DEK copy for that window). Remaining failures predate this Step in earlier run logs `(runtime_unavailable` resume tests, modelo revision lifecycle, automation approval renew, operation secret tui export, worker drain) or pass alone under less load. `os_keychain` tests not run (Credential Manager error 1312 in this logon session). New internal runtime-worker request `mint_human_receipt;` scope corrected in the plan.
 - `S05` Carries the reachability-burndown S07 receipt API move (verify/classify API to `tests/receipt_binding_probe.py` and its two rewritten tests), already logged in that ledger, because it is intertwined with this Step and was verified together. Remaining failures: one `runtime_unavailable` test failing before this Step, one intermittent OpenProcess 87, one leaked-patch failure seen in earlier runs. Login and generation refusals reach clients coarsely until S09. Remaining non-runtime unwrap callers `(bind_resumed_profile_session,` `_resume_for_idempotent_login` via `_profile_session_gate` and `session_admission)` are for P03.S12. S07 must recheck the generation at publication against a sign-out between the worker check and publication.
 - `S14` D2 locale-only handover: added the confirmed missing `cli.config.sign_in_status.help` through dev.locales, preserving concurrent unrelated catalogue changes. B4 retains CLI implementation, generated references and full Step verification; S14 stays open.
+- `S14` Principal D2 subset only: corrected global human sign-out help, no-selection notice, removed retired remaining-access notice. Existing sign-in-status help preserved. Runtime behavior and generated CLI reference remain with active lanes; Step stays open.
+- `S15` Principal supplied translated `tui.runtime_login.stay_signed_in` in all four locales through dev.locales. Default-off checkbox and persistence request integration remain B4-owned; Step stays open.
+- `S12` Principal integration: corrected defining-module import and retired stale selection-revokes-receipt assertions. Two real-storage cases passed; three native-keyring cases skipped because Windows refused this logon. Entire stable import gate passed with no hard findings. Step remains open for runtime custody cleanup and real-keyring acceptance; shared B4 changes remain uncommitted.
+- `S14` B4 revision 9 reset notice correction applied through dev.locales in all four languages: saved human sign-in ends; recovery code and prior archive passphrases retain their existing scope. Strict rendering and fresh CLI logout help pass. Overall Step stays open.

@@ -106,7 +106,7 @@ def passphrase_change(
             try:
                 client.login_password(proof)
             except RuntimeFrontendRefusedError as error:
-                raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason}) from error
+                raise CliRefusedBoundaryError(error.reason, context=error.context) from error
             finally:
                 proof[:] = bytes(len(proof))
             completion = run_profile_password_rotation(
@@ -178,27 +178,44 @@ def passphrase_reset(
     """Replace a forgotten passphrase by proving the profile's recovery code."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile.login_session import resolve_login_target
-    from ....application.user_profile.recovery_custody import reset_profile_passphrase_with_recovery
-    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..config_payloads import ConfigPassphraseResetResult
 
     # Resolve the exact target before consuming any secret source: an unknown
     # name refuses without a prompt and without reading a machine payload.
     profile_id = UUID(resolve_login_target(name).bucket_id)
-    secrets = _collect_reset_secrets(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-
-    # Bootstrap-exempt by construction: the profile whose passphrase is lost is
-    # the one nobody can log in to, so the authority is opened here directly.
-    with bundled_indexed_authority().operation() as operation:
-        outcome = reset_profile_passphrase_with_recovery(
-            profile_id=profile_id,
-            recovery_code=secrets.recovery_code.get_secret_value(),
-            new_passphrase=secrets.new_passphrase.get_secret_value(),
-            new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
-            profile_decode_context=operation.profile_decode_context(),
-        )
-    # A reset re-wraps the same data key, so it revokes nothing the key already
-    # protects; an operator resetting out of suspicion must learn that here.
+    code, replacement, confirmation = bytearray(), bytearray(), bytearray()
+    try:
+        secrets = _collect_reset_secrets(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+        try:
+            code.extend(secrets.recovery_code.get_secret_value().encode("utf-8"))
+            replacement.extend(secrets.new_passphrase.get_secret_value().encode("utf-8"))
+            confirmation.extend(secrets.new_passphrase_confirmation.get_secret_value().encode("utf-8"))
+        finally:
+            del secrets
+        client = _open_rotation_client(profile_id)
+        try:
+            completion = client.reset_password(
+                recovery_code=code,
+                new_passphrase=replacement,
+                new_passphrase_confirmation=confirmation,
+            )
+            outcome = completion.outcome
+        except BaseException as primary:
+            try:
+                client.close()
+            except Exception:
+                primary.add_note("Runtime connection cleanup did not complete.")
+            if isinstance(primary, RuntimeFrontendRefusedError):
+                raise CliRefusedBoundaryError(primary.reason, context=primary.context) from primary
+            raise
+        else:
+            client.close()
+    finally:
+        code[:] = bytes(len(code))
+        replacement[:] = bytes(len(replacement))
+        confirmation[:] = bytes(len(confirmation))
+    # Reset fences saved human sign-in, but re-wraps the same data key.
+    # Recovery codes and previously exported archives retain their own scope.
     notices = (
         Notice(
             code="config.passphrase.reset_scope",
@@ -212,11 +229,19 @@ def passphrase_reset(
         result=ConfigPassphraseResetResult(
             profile_id=outcome.profile_id,
             changed=True,
+            human_receipt_revoked=True,
+            receipt_removed=completion.human_sign_in_revocation.receipt_removed,
+            keychain_removed=completion.human_sign_in_revocation.keychain_removed,
             password_generation=outcome.password_generation,
             dek_epoch_preserved=outcome.dek_epoch_preserved,
             recovery_enrollment_retained=outcome.recovery_enrollment_retained,
         ),
-        lines=[*notice_lines(notices), *_reset_lines(outcome)],
+        lines=[
+            *notice_lines(notices),
+            *_reset_lines(outcome),
+            f"receipt_removed\t{str(completion.human_sign_in_revocation.receipt_removed).lower()}",
+            f"keychain_removed\t{str(completion.human_sign_in_revocation.keychain_removed).lower()}",
+        ],
         notices=notices,
     )
 

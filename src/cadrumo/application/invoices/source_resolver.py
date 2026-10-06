@@ -241,6 +241,10 @@ def _invoice_resolution_from_observations(
         effective_date=_filing_period_date(context),
     )
     row_values = _invoice_row_values(context=context, observations=observations)
+    resolved_binding_ids = binding_values.keys() | {binding_id for binding_id, _ in row_values}
+    resolved_sources = frozenset(
+        binding.source for binding in context.revision.bindings if binding.id in resolved_binding_ids
+    )
     declared_invoices = tuple(invoice for invoice, _ in observed_items)
     diagnostics = _m349_incoherence_diagnostics(incoherent, resolver_id=resolver_id)
     diagnostics += _unconverted_foreign_diagnostics(
@@ -286,7 +290,11 @@ def _invoice_resolution_from_observations(
             ),
         ),
         diagnostics=diagnostics,
-        provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in observed_items),
+        provenance=tuple(
+            row
+            for invoice, observation in observed_items
+            for row in _invoice_provenance(invoice, observation, resolved_sources=resolved_sources)
+        ),
     )
 
 
@@ -1973,19 +1981,35 @@ def _m349_operador_rows_from_values(
     )
 
 
-def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> CalculationSourceProvenance:
+def _invoice_provenance(
+    invoice: Invoice,
+    observation: InvoiceObservation,
+    *,
+    resolved_sources: frozenset[BindingSourceKind],
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Attribute the selected binding families to their real directional invoice."""
     payload = observation.model_dump_json()
-    source_kind = _invoice_source_kind(invoice)
-    return CalculationSourceProvenance(
-        resolver_id=InvoiceCatalogueSourceResolver.resolver_id,
-        resolved_binding_source=BindingSourceKind(source_kind),
-        contributor_source_kind=source_kind,
-        contributor_binding_source=BindingSourceKind(source_kind),
-        lineage_role=CalculationSourceLineageRole.PRIMARY,
-        source_ref=f"{source_kind}:{observation.invoice_id}",
-        parent_source_ref=None,
-        terminal_origin=TerminalOriginClass.INVOICE_CATALOGUE,
-        fingerprint=prefixed_digest(payload.encode("utf-8")),
+    source_kind = invoice_direction_to_source_kind(invoice.kind)
+    families = tuple(
+        family
+        for family in _OWNED_SOURCES
+        if family in resolved_sources and (family is source_kind or family in _COMBINED_DIRECTION_SOURCES)
+    )
+    source_ref = f"{source_kind}:{observation.invoice_id}"
+    fingerprint = prefixed_digest(payload.encode("utf-8"))
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=InvoiceCatalogueSourceResolver.resolver_id,
+            resolved_binding_source=family,
+            contributor_source_kind=source_kind.value,
+            contributor_binding_source=source_kind,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=source_ref if len(families) == 1 else f"{family}:{source_ref}",
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.INVOICE_CATALOGUE,
+            fingerprint=fingerprint,
+        )
+        for family in families
     )
 
 

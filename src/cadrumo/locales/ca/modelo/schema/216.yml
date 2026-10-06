@@ -13,23 +13,64 @@ modelo:
           sense mediació d'establiment permanent. Retencions i ingressos a compte.
           Declaració-document d'ingrés.
         title: IRNR retencions i ingressos a compte
+      form:
+        column:
+          base: Base de retencions i ingressos a compte
+          numero-rentas: Nombre de rendes
+          retenciones: Retencions i ingressos a compte
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          nombre-completo: Cognoms i nom o raó social
+          periodo: Període
+        page:
+          pag-1:
+            heading: Impost sobre la renda de no residents · Retencions i ingressos
+              a compte
+        row:
+          base-historica: Base de retencions i ingressos a compte / Import de les
+            rendes
+          dividendos: Dividends i altres rendes de participació en fons propis d’entitats
+          otras-rentas: Resta de rendes
+          totales: Totals
+        section:
+          complementaria:
+            heading: Complementària
+          devengo:
+            heading: Meritació
+          identificacion:
+            heading: Identificació
+          ingreso:
+            heading: Ingrés
+          liquidacion:
+            heading: Liquidació
+          no-sometidas:
+            heading: II. Rendes no sotmeses a retenció o ingrés a compte
+          sometidas:
+            heading: I. Rendes sotmeses a retenció o ingrés a compte
       revision:
         2020-2023:
           casilla:
             '1':
-              label: Liquidació. Partida 1. Nombre de rendes
+              label: Nombre de rendes subjectes a retenció
             '2':
-              label: Liquidació. Partida 2. Base de retencions i ingressos a compte
+              label: Base de retencions i ingressos a compte
             '3':
-              label: Liquidació. Partida 3. Retencions i ingressos a compte
+              label: Retencions i ingressos a compte
             '4':
-              label: Liquidació. Partida 4. Nombre de rendes
+              label: Nombre de rendes no subjectes a retenció
             '5':
-              label: Liquidació. Partida 5. Base de retencions i ingressos a compte
+              label: Import de les rendes no subjectes a retenció
             '6':
-              label: Liquidació. Partida 6. Resultat a ingressar de declaracions anteriors
+              label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
+                exercici i període
             '7':
-              label: Liquidació. Partida 7. Resultat a ingressar
+              label: Resultat a ingressar
           field:
             label: Ordre EHA/3290/2008, exercicis 2020 a 2023
         2024-y-siguientes:

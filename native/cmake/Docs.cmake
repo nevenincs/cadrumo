@@ -5,6 +5,10 @@ include_guard(GLOBAL)
 # subset into the published layout and writes the docs manifest that the package delegates to.
 set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
   "${CADRUMO_DEV_PYTHON}" -B -m)
+set(docs_target_args)
+if(DEFINED CADRUMO_TARGET)
+  set(docs_target_args --target "${CADRUMO_TARGET}")
+endif()
 file(GLOB_RECURSE user_docs_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/docs/*" "${CADRUMO_SOURCE_ROOT}/dev/docs/*" "${CADRUMO_SOURCE_ROOT}/src/*"
   "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
@@ -14,7 +18,8 @@ foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py d
     dev/packaging/__init__.py dev/packaging/command_execution.py dev/packaging/authority_staging.py
     dev/packaging/native/__init__.py dev/packaging/native/docs_build.py dev/packaging/native/docs_stage.py
     dev/packaging/native/package_inventory.py dev/packaging/native/build_paths.py dev/packaging/native/hashing.py
-    dev/packaging/native/layout.py dev/packaging/native/action_cache.py dev/packaging/native/cmake_build.py)
+    dev/packaging/native/layout.py dev/packaging/native/identity.py dev/packaging/native/action_cache.py
+    dev/packaging/native/cmake_build.py dev/packaging/runtime_wheelhouse_contract.py)
   list(APPEND user_docs_inputs "${CADRUMO_SOURCE_ROOT}/${name}")
 endforeach()
 # The cli-sequence gate executes against the published authority the build selects.
@@ -30,10 +35,12 @@ list(JOIN user_docs_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/inputs-user-docs.txt" CONTENT "${input_lines}\n")
 add_custom_command(OUTPUT "${CADRUMO_PATH_USER_DOCS_BUILD}/ready"
   COMMAND ${docs_helper} dev.packaging.native.docs_build --build "${CMAKE_BINARY_DIR}" --inputs "${CMAKE_BINARY_DIR}/inputs-user-docs.txt"
+    ${docs_target_args}
   DEPENDS ${user_docs_inputs} "${CMAKE_BINARY_DIR}/inputs-user-docs.txt"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
 add_custom_command(OUTPUT "${CADRUMO_PATH_USER_DOCS_STAGE}/ready"
   COMMAND ${docs_helper} dev.packaging.native.docs_stage --build "${CMAKE_BINARY_DIR}"
+    ${docs_target_args}
   DEPENDS "${CADRUMO_PATH_USER_DOCS_BUILD}/ready" "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_stage.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/package_inventory.py"

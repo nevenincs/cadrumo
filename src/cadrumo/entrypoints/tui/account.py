@@ -16,6 +16,7 @@ from functools import partial
 from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.command import DiscoveryHit, Hit, Hits, Provider
+from textual.message import Message
 
 from ...core.errors.hierarchy import CadrumoError
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
@@ -42,6 +43,10 @@ type AccountSessionReaderV1 = Callable[[], Awaitable[HomeAccountSession]]
 
 class AccountSessionExpiredError(CadrumoError):
     """Signal that the current non-secret account session must be recomposed."""
+
+
+class AccountSessionRetired(Message):
+    """Ask the owning UI thread to clear private views after a runtime event."""
 
 
 class AccountRecomposeReasonV1(StrEnum):
@@ -94,6 +99,7 @@ class AccountFactoriesV1:
     access: AccountAccessFactoryV1 | None = None
     onboarding_pending: bool = False
     """Whether the profile still needs setup, so the session opens on the setup walk."""
+    subscribe_retirement: Callable[[Callable[[], None]], Callable[[], None]] | None = None
 
 
 class WorkbenchAccountProviderV1(Provider):

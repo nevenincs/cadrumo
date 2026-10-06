@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from threading import Event
 from typing import override
@@ -35,11 +36,28 @@ from ..runtime_session import RuntimeRestrictedSessionApp
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+@pytest.mark.asyncio
+async def test_pushed_retirement_clears_private_view_without_waiting_for_status_poll() -> None:
+    client = _Client()
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile")
+    async with app.run_test() as pilot:
+        await _shown(app, pilot)
+        reads = client.status_calls
+        assert client.retirement_callback is not None
+        client.retirement_callback()
+        await pilot.pause()
+        assert app._cleared
+        assert str(app.query_one("#restricted-profile", Static).render()) == ""
+        assert client.status_calls == reads
+    assert client.retirement_callback is None
+
+
 class _Client(RuntimeFrontendClient):
     def __init__(self) -> None:
         self._profile_id = uuid4()
         self._session_id = uuid4()
         self._frontend = OperationFrontendProjection.TUI
+        self.retirement_callback: Callable[[], None] | None = None
         self.status_calls = 0
         self.lock_calls = 0
         self.close_calls = 0
@@ -60,6 +78,15 @@ class _Client(RuntimeFrontendClient):
             allow_period_independent=False,
             allow_delegation=False,
         )
+
+    @override
+    def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
+        self.retirement_callback = receive
+
+        def unsubscribe() -> None:
+            self.retirement_callback = None
+
+        return unsubscribe
 
     @override
     def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:

@@ -40,7 +40,7 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.aeat_box import AeatBoxNumber
 from .errors import RegistryValidationError
-from .ids import BindingId, RecordId, RevisionId, SourceRefId
+from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, RevisionId, SourceRefId
 from .schema_base import RegistryModel, coerce_enum_member
 
 __all__ = [
@@ -50,8 +50,10 @@ __all__ = [
     "FormBlockDefinition",
     "FormCell",
     "FormCellKind",
+    "FormContextFieldBlock",
     "FormDesignSource",
     "FormFieldBlock",
+    "FormFieldChoice",
     "FormGridBlock",
     "FormGridColumn",
     "FormGridRow",
@@ -280,6 +282,14 @@ class FormGridRow(RegistryModel):
     cells: tuple[FormCell, ...] = Field(min_length=1)
 
 
+class FormFieldChoice(RegistryModel):
+    """One printed selection marker for an exact value of a single casilla."""
+
+    value: str = Field(min_length=1, max_length=64)
+    heading_key: FormHeadingKey
+    official_heading: OfficialHeading | None = None
+
+
 class FormFieldBlock(RegistryModel):
     """One vertical label/value line addressing a casilla or a binding.
 
@@ -293,6 +303,7 @@ class FormFieldBlock(RegistryModel):
     binding_id: BindingId | None = None
     design_constant: str | None = Field(default=None, min_length=1, max_length=64)
     literal_decimals: int | None = Field(default=None, ge=0)
+    choices: tuple[FormFieldChoice, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -301,6 +312,10 @@ class FormFieldBlock(RegistryModel):
             raise RegistryValidationError(f"form field block {self.id!r} addresses exactly one casilla or binding")
         if self.design_constant is not None and self.casilla_id is None:
             raise RegistryValidationError(f"form field block {self.id!r} fixes a design constant on no casilla")
+        if self.choices:
+            if self.casilla_id is None or self.design_constant is not None:
+                raise RegistryValidationError("form choices require one variable casilla")
+            _require_unique(str(self.id), "choice values", tuple(choice.value for choice in self.choices))
         _validate_literal_scale(self.design_constant, self.literal_decimals)
         return self
 
@@ -349,6 +364,7 @@ class FormRepeatingGroupBlock(RegistryModel):
     min_rows: int = Field(default=0, ge=0)
     max_rows: int | None = Field(default=None, ge=1)
     columns: tuple[FormRepeatingColumn, ...] = ()
+    grids: tuple[FormGridBlock, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -361,6 +377,17 @@ class FormRepeatingGroupBlock(RegistryModel):
         if self.max_rows is not None and self.max_rows < self.min_rows:
             raise RegistryValidationError(f"{owner} declares max_rows below min_rows")
         _require_unique(owner, "column keys", tuple(column.key for column in self.columns))
+        if self.grids:
+            if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
+                raise RegistryValidationError(f"{owner} grids require an export-record row source")
+            targets = tuple(column.casilla_id for column in self.columns)
+            if any(target is None for target in targets) or len(targets) != len(set(targets)):
+                raise RegistryValidationError(f"{owner} grids require uniquely addressed columns")
+            _require_unique(owner, "grid ids", tuple(grid.id for grid in self.grids))
+            cells = tuple(cell for grid in self.grids for row in grid.rows for cell in row.cells)
+            if any(cell.kind is not FormCellKind.CASILLA or cell.casilla_id not in targets for cell in cells):
+                raise RegistryValidationError(f"{owner} grid cells must address declared member columns")
+            _require_unique(owner, "grid casillas", tuple(str(cell.casilla_id) for cell in cells))
         return self
 
 
@@ -378,8 +405,28 @@ class FormBindingInputsBlock(RegistryModel):
         return self
 
 
+class FormContextFieldBlock(RegistryModel):
+    """A read-only filing fact addressed through an exact declared export field.
+
+    Its value owner stays in the export declaration. This block supplies only
+    placement and a grounded human heading, never a second producer mapping.
+    A scalar binding owner displays its entire semantic value, even when the
+    selected wire field emits only integer digits, fractional digits or a sign.
+    The optional box number belongs to the paper form, never the wire offset.
+    """
+
+    box_number: AeatBoxNumber | None = None
+    kind: Literal["context_field"] = "context_field"
+    id: FormNodeId
+    export_layout_id: ExportLayoutId
+    export_record_id: RecordId
+    export_field_id: ExportFieldId
+    heading_key: FormHeadingKey
+    official_heading: OfficialHeading | None = None
+
+
 FormBlockDefinition = Annotated[
-    FormFieldBlock | FormGridBlock | FormRepeatingGroupBlock | FormBindingInputsBlock,
+    FormFieldBlock | FormGridBlock | FormRepeatingGroupBlock | FormBindingInputsBlock | FormContextFieldBlock,
     Field(discriminator="kind"),
 ]
 """Closed union of the blocks a section may hold, discriminated on ``kind``."""
@@ -443,6 +490,8 @@ class FormPlacementDefinition(RegistryModel):
     unplaced_reason: FormUnplacedReasonField | None = None
     box_number: AeatBoxNumber | None = None
     aliases: tuple[FormAliasPosition, ...] = ()
+    workbook_exclusion: Literal["transport_control"] | None = None
+    workbook_exclusion_reason: str | None = Field(default=None, min_length=1, max_length=1000)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -453,6 +502,12 @@ class FormPlacementDefinition(RegistryModel):
             raise RegistryValidationError(f"{owner}: an unplaced reason belongs to, and only to, the unplaced arm")
         if self.aliases and self.kind is not FormPlacementKind.ON_FORM:
             raise RegistryValidationError(f"{owner}: only an on-form placement has alias positions")
+        if (self.workbook_exclusion is None) != (self.workbook_exclusion_reason is None):
+            raise RegistryValidationError(f"{owner}: workbook exclusion requires its grounded reason")
+        if self.workbook_exclusion is not None and (
+            self.kind is not FormPlacementKind.WORKING_FIGURE or self.box_number is not None
+        ):
+            raise RegistryValidationError(f"{owner}: transport controls must be unnumbered working figures")
         return self
 
 

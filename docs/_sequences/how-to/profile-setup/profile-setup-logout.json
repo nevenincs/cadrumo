@@ -12,7 +12,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "logged_out_profile\t<profile-id>\nThe CLI selection is cleared. Other sessions, bounded human resume and enrolled API keys retain their own authority. Use session or profile controls to revoke access.\nnotice\tconfig.logout.remaining_access\tThe CLI selection is cleared. Other sessions, bounded human resume and enrolled API keys retain their own authority. Use session or profile controls to revoke access.\n"
+      "text": "logged_out_profile\t<profile-id>\nhuman_receipt_revoked\tTrue\nreceipt_removed\tTrue\nkeychain_removed\tTrue\nautomation_enabled\tNone\n"
     },
     {
       "argv": [
@@ -31,47 +31,27 @@
         "command": "config.profile.status",
         "error": {
           "action": {
-            "action": {
-              "action_id": "operator.profile.login",
-              "cli_path": [
-                "config",
-                "login"
-              ],
-              "target_command_key": "config.login"
-            },
-            "argument_bindings": [
-              {
-                "argument_name": "name",
-                "source": "operator_action.verdict_context",
-                "source_evidence_id": null,
-                "source_key": "name",
-                "status": "resolved",
-                "value": "<profile-id>"
-              }
-            ],
-            "conditionality": "immediate",
+            "action": null,
+            "argument_bindings": [],
+            "conditionality": "not_applicable",
             "evidence": [
               {
-                "condition_id": "profile.session.logged_in",
-                "evidence_id": "profile.session.resume",
-                "provenance": "persisted_state",
+                "condition_id": "cli.refusal.completed",
+                "evidence_id": "cli.refusal.completed.observation",
+                "provenance": "runtime_observation",
                 "values": {
-                  "profile_name": "<profile-id>",
-                  "session_refusal_reason": "absent",
-                  "session_resumed": false
+                  "boundary_error_type": "CliRefusedBoundaryError"
                 }
               }
             ],
-            "failed_condition_id": "profile.session.logged_in",
+            "failed_condition_id": "cli.refusal.completed",
             "missing_argument_names": [],
-            "no_recovery_outcome": null
+            "no_recovery_outcome": "operator_decision"
           },
           "category": "REFUSED",
           "code": "REFUSED_CLI_BOUNDARY",
-          "context": {
-            "reason": "absent"
-          },
-          "message": "You are not logged in. Run `aeat config login` to unlock your profile.",
+          "context": null,
+          "message": "No profile passphrase channel is available. Run this command at a terminal, or pass --profile-secrets-stdin or --profile-secrets-fd.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null

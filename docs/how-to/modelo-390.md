@@ -199,10 +199,7 @@ Compare the annual totals with the 303 reconciliation values:
 - `iva.anual.resultado-regimen-general` should be reviewed against
   `iva.anual.reconciliacion.resultado-303`.
 
-If the annual totals from your records and the reconciliation values taken from 303 diverge, do not force the 390 to pass first. Review the annual period's records, each 303 calculation, any AEAT receipts, and the values you supplied for the 390. Use the spreadsheet review loop when you need a wider view of the calculation, then run `work calculate` and `work verify` again on the same target. `spreadsheet push` reaches Google, so it is shown as an example that is not run:
-
-```{cli-sequence} modelo-390-sheets-export
-```
+If the annual totals from your records and the reconciliation values taken from 303 diverge, review the annual period's records, each 303 calculation, any AEAT receipts, and the values you supplied for the 390. Correct local inputs, then run `work calculate` and `work verify` again on the same target. Google spreadsheet edits are not calculation inputs; the former template `spreadsheet push` is disabled pending saved-revision publication integration.
 
 To review without Google, run `aeat app modelo spreadsheet export` for the
 same modelo, year, and period, with the workbook path in `--output`. It writes a local

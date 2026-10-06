@@ -16,5 +16,7 @@ else()
   set(development true)
 endif()
 get_filename_component(archive_name "${archive}" NAME)
+file(READ "@CADRUMO_PATH_GENERATED@/contract.json" configured_contract)
+string(JSON release_expectation GET "${configured_contract}" release)
 file(WRITE "@PROJECT_BINARY_DIR@/artifacts-${CPACK_BUILD_CONFIG}.json"
-  "{\"archive\":\"${CPACK_PACKAGE_DIRECTORY}/${archive_name}\",\"archive_sha256\":\"${archive_hash}\",\"manifest_sha256\":\"${manifest_hash}\",\"configuration\":\"${CPACK_BUILD_CONFIG}\",\"development_binary\":${development}}\n")
+  "{\"archive\":\"${CPACK_PACKAGE_DIRECTORY}/${archive_name}\",\"archive_sha256\":\"${archive_hash}\",\"manifest_sha256\":\"${manifest_hash}\",\"target\":\"@CADRUMO_TARGET@\",\"release\":${release_expectation},\"configuration\":\"${CPACK_BUILD_CONFIG}\",\"development_binary\":${development}}\n")

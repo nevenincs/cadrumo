@@ -488,3 +488,60 @@ def test_an_ordinary_rotation_after_enrolment_keeps_the_code_working(tmp_path: P
         for retired in (_CURRENT, _REPLACEMENT):
             with pytest.raises(ProfileCustodyPasswordError):
                 unlock_profile_custody_password(material, password=retired)
+
+
+def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from datetime import timedelta
+
+    from cadrumo.application.user_profile import recovery_custody
+    from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+    from cadrumo.core.time.clock import now
+
+    _, decode = _profile_contexts_for_test()
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register()
+        code = _enroll(profile_id)
+        logout_active_profile()
+        before = load_committed_profile_password_material(profile_id).envelope
+        retired: list[str] = []
+        with pytest.raises(ProfileRecoveryError):
+            reset_profile_passphrase_with_recovery(
+                profile_id=profile_id,
+                recovery_code=_mismatching_proof(code),
+                new_passphrase=_REPLACEMENT,
+                new_passphrase_confirmation=_REPLACEMENT,
+                profile_decode_context=decode,
+                expected_envelope_digest=before.self_digest,
+                before_replace=lambda: retired.append("retired"),
+            )
+        assert not retired
+        assert load_committed_profile_password_material(profile_id).envelope == before
+        # Advance only the explicit recovery clock past the real shared throttle.
+        later = now() + timedelta(minutes=1)
+        monkeypatch.setattr(recovery_custody, "_now", lambda: later)
+        reset_profile_passphrase_with_recovery(
+            profile_id=profile_id,
+            recovery_code=code,
+            new_passphrase=_REPLACEMENT,
+            new_passphrase_confirmation=_REPLACEMENT,
+            profile_decode_context=decode,
+            expected_envelope_digest=before.self_digest,
+            before_replace=lambda: retired.append("retired"),
+        )
+        committed = load_committed_profile_password_material(profile_id).envelope
+        assert retired == ["retired"]
+        with pytest.raises(AutomationCustodyError) as error:
+            reset_profile_passphrase_with_recovery(
+                profile_id=profile_id,
+                recovery_code=code,
+                new_passphrase=_CURRENT,
+                new_passphrase_confirmation=_CURRENT,
+                profile_decode_context=decode,
+                expected_envelope_digest=before.self_digest,
+                before_replace=lambda: retired.append("replayed"),
+            )
+        assert error.value.reason is AutomationCustodyCode.CONFLICT
+        assert retired == ["retired"]
+        assert load_committed_profile_password_material(profile_id).envelope == committed

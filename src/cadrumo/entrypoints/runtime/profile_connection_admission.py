@@ -16,6 +16,7 @@ from ...application.runtime.access_management import (
     RuntimeProfileResume,
     RuntimeSessionInventory,
 )
+from ...application.runtime.bootstrap import RuntimePasswordResetPrepare
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -55,7 +56,7 @@ class ProfileConnectionAdmissionMixin:
         deadline = time.monotonic() + 15
         while True:
             with self._guard:
-                if not self._admitting():
+                if not self._admitting() or profile_id in self._custody_mutations:
                     raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
                 if self._installation is None:
                     self._installation = runtime_installation(
@@ -93,10 +94,11 @@ class ProfileConnectionAdmissionMixin:
                         registry=registry,
                         connected=self._connected,
                         logins=self._login_contexts,
-                        admitting=self._private_work_available,
+                        admitting=lambda: self._private_work_available() and profile_id not in self._custody_mutations,
                         recipient=self._enrollments.recipient,
                         worker_script=self._worker_script,
                         wall_clock=self._wall_clock,
+                        retired=self._events.publish,
                     )
                     if not self._admitting():
                         raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
@@ -155,7 +157,7 @@ class ProfileConnectionAdmissionMixin:
                 previous.context != context
                 or previous.profile_id != request.profile_id
                 or previous.frontend != request.frontend
-                or previous.method == "enrollment"
+                or previous.method in {"enrollment", "bootstrap-reset", "bootstrap-delete"}
             ):
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
             return previous
@@ -238,7 +240,7 @@ class ProfileConnectionAdmissionMixin:
         self: RuntimeProfileConnections,
         context: RuntimeConnectionContext,
         channel: RuntimeByteChannel,
-        request: RuntimeEnrollmentPrepare | RuntimeProfileRecoveryPrepare,
+        request: RuntimeEnrollmentPrepare | RuntimeProfileRecoveryPrepare | RuntimePasswordResetPrepare,
         *,
         method: str,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:

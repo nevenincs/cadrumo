@@ -44,14 +44,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import (
-    bind_resumed_profile_session,
     login_profile,
     logout_active_profile,
 )
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.bucket_pointer import read_pointer
-from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now as _now
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -86,36 +84,20 @@ def _register_and_login(storage_root: Path) -> str:
     return outcome.profile_id
 
 
-def test_logout_clears_the_live_session_the_pointer_and_the_persisted_acceleration(
-    tmp_path: Path,
-) -> None:
-    """Every artefact logout destroys, and the negative that makes it matter.
-
-    The security-load-bearing claim is the last one: once the durable
-    acceleration receipt is gone, ``bind_resumed_profile_session`` can no
-    longer reconstruct the DEK and refuses ``ABSENT``. That refusal is
-    decided before the resume path reaches the credential store, which is
-    why this case needs no keychain precondition.
-    """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+def test_local_logout_closes_custody_and_pointer_without_mutating_shared_receipt(tmp_path: Path) -> None:
+    """Local lifecycle cleanup cannot globally sign out a runtime-owned profile."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
             session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_id))
-
+            session_path.parent.mkdir(parents=True, exist_ok=True)
+            payload = b"synthetic runtime-owned receipt; local logout must not inspect it"
+            session_path.write_bytes(payload)
             signed_out = logout_active_profile()
-
             assert signed_out == profile_id
             assert current_active_bucket_session() is None
-            assert not session_path.exists()
             assert read_pointer(storage_root).bucket_id is None
-            assert (
-                bind_resumed_profile_session(
-                    bucket_id=profile_id, profile_decode_context=_profile_decode_context_for_test
-                )
-                is ProfileSessionRefusalReason.ABSENT
-            )
-            assert current_active_bucket_session() is None
+            assert session_path.read_bytes() == payload
         finally:
             _close_live_login()
 

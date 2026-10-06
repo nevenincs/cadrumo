@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 
-import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -20,8 +20,8 @@ from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_pro
 _EARLIEST_ACTIVITY_START = f"{min(PublishedGovernedFactSource().supported_filing_years().years)}-01-01"
 
 
-@pytest.fixture
-def native_overview_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+@contextmanager
+def registered_overview_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
     """Register a readiness-complete synthetic profile before worker login."""
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(
@@ -64,4 +64,4 @@ def invoke_native_overview(fixture: NativeCliProfileFixture, args: Sequence[str]
     return result
 
 
-__all__ = ["invoke_native_overview", "native_overview_profile"]
+__all__ = ["invoke_native_overview", "registered_overview_profile"]

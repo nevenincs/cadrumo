@@ -59,7 +59,10 @@ def compose_runtime_account_factories(
         async def complete() -> AccountRecomposeRequiredV1:
             require_binding()
             acknowledgement = await await_cancellation_complete(
-                asyncio.to_thread(client.lock), task_name="tui-runtime-account-lock"
+                asyncio.to_thread(
+                    client.human_sign_out if reason is AccountRecomposeReasonV1.SIGNED_OUT else client.lock
+                ),
+                task_name="tui-runtime-account-close",
             )
             if session_id not in acknowledgement.session_ids:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -115,4 +118,5 @@ def compose_runtime_account_factories(
         sign_out=lambda: close_for(AccountRecomposeReasonV1.SIGNED_OUT),
         access=access,
         onboarding_pending=onboarding_pending,
+        subscribe_retirement=client.subscribe_session_retirement,
     )

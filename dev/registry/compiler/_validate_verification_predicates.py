@@ -26,7 +26,7 @@ __all__ = [
     "_CASILLA_LIST_OPERATORS",
     "_advisory_when_ratio_ge_predicate_failures",
     "_casilla_equals_implies_diverges_predicate_failures",
-    "_casilla_equals_implies_nonzero_predicate_failures",
+    "_casilla_equals_implies_numeric_predicate_failures",
     "_casilla_equals_implies_profile_flag_predicate_failures",
     "_casilla_list_predicate_failures",
     "_deduccion_requires_adquisicion_before_predicate_failures",
@@ -109,19 +109,20 @@ def _casilla_list_predicate_failures(
     return failures
 
 
-def _casilla_equals_implies_nonzero_predicate_failures(
+def _casilla_equals_implies_numeric_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+    *,
+    operator: VerificationPredicateOperator,
 ) -> list[str]:
-    operator = VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
         return [
             f"{_malformed_expression_failure(prefix, owner, expression, operator)}; expected "
-            'casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal", "consequent_casilla_id"])',
+            f'{operator.value}(["antecedent_casilla_id", "literal", "consequent_casilla_id"])',
         ]
     if len(parsed.arguments) != 3:
         return [

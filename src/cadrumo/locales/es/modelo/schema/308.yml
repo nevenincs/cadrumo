@@ -8,6 +8,11 @@ modelo:
             label: Devengo. Periodo
           filing-year:
             label: Ejercicio al que se refiere la solicitud
+          papel-importe-devolucion:
+            help: Importe que solicitas recibir por transferencia en el apartado 6
+              del formulario. Comprueba que corresponde a tu solicitud; no se suman
+              automáticamente las distintas modalidades de devolución.
+            label: Importe D · Devolución solicitada
       construct:
         modelo-308-iva-solicitud-devolucion:
           field:
@@ -18,153 +23,814 @@ modelo:
           IVA, artículo 21.4 de la Ley del IVA y sujetos pasivos ocasionales.'
         title: IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis,
           sujetos pasivos ocasionales)
+      form:
+        choice:
+          devolucion:
+            heading: Devolución
+          ocasional:
+            heading: Entregas intracomunitarias ocasionales de medios de transporte
+              nuevos
+          recargo:
+            heading: Actividades exclusivamente en recargo de equivalencia
+          social:
+            heading: Ente público o establecimiento privado de carácter social (art.
+              21.4 LIVA)
+          transporte:
+            heading: Transporte de viajeros o mercancías por carretera
+        column:
+          iva:
+            heading: IVA / máximo a devolver
+          precio:
+            heading: Precio
+        context:
+          nif:
+            heading: NIF del solicitante
+          nombre:
+            heading: Apellidos o razón social
+        row:
+          adquisicion:
+            heading: Adquisición
+          recargo-1:
+            heading: Línea 1
+          recargo-2:
+            heading: Línea 2
+          recargo-3:
+            heading: Línea 3
+          venta:
+            heading: Venta
+        section:
+          adquirente:
+            heading: Adquirente del medio de transporte
+          aeronave:
+            heading: Aeronaves
+          articulo21:
+            heading: Entregas del artículo 21.4 de la Ley del IVA
+          embarcacion:
+            heading: Embarcaciones
+          firma:
+            heading: 'Sujeto pasivo: fecha y firma'
+          identificacion:
+            heading: Identificación
+          liquidacion-transporte:
+            heading: Liquidación de medios de transporte
+          recargo:
+            heading: Régimen especial del recargo de equivalencia
+          solicitud:
+            heading: Solicitud de devolución
+          vehiculo:
+            heading: Vehículos terrestres
       revision:
         2009-2011-junio:
+          casilla:
+            firma:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Firma (formulario en papel)
+            firma-fecha:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Fecha de firma
+            firma-lugar:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Lugar de firma
+            papel-nif:
+              label: NIF del solicitante
+            papel-nombre-completo:
+              help: Apellidos y nombre o razón social del solicitante
+              label: Apellidos y nombre o razón social del solicitante
+            x-chim6r1echincrrcelhmirre5lhm6oo:
+              help: Código de cuenta de cliente de 20 dígitos de esta edición histórica.
+                Conserva los ceros iniciales.
+              label: Cuenta para la devolución (CCC)
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Ejercicio al que se refiere la solicitud
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: NIF del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009.
+              label: NIF del adquirente
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojickmm6rrde1m6at3f:
+              help: Apellidos y nombre o razón social del adquirente
+              label: Apellidos y nombre o razón social del adquirente
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Nombre del país del adquirente, según el diseño oficial de 2009.
+              label: País del adquirente
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Año de fabricación de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2009.
+              label: Año de fabricación de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Fabricante de la aeronave. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009.
+              label: Fabricante de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Marca de la aeronave. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009.
+              label: Marca de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Peso máximo de despegue (kg). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2009.
+              label: Peso máximo de despegue (kg)
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Número de serie de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2009.
+              label: Número de serie de la aeronave
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Eslora máxima. Dato de la solicitud del modelo 308, según el diseño
+                oficial de 2009.
+              label: Eslora máxima
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Fabricante de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2009.
+              label: Fabricante de la embarcación
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Identificación de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2009.
+              label: Identificación de la embarcación
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Tipo de embarcación. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009.
+              label: Tipo de embarcación
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: IVA a devolver por entregas intracomunitarias. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2009.
+              label: IVA a devolver por entregas intracomunitarias
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: IVA a devolver por la actividad de transporte. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2009.
+              label: IVA a devolver por la actividad de transporte
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: IVA soportado en la adquisición. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2009.
+              label: IVA soportado en la adquisición
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Importe máximo a devolver. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009.
+              label: Importe máximo a devolver
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Precio de adquisición. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009.
+              label: Precio de adquisición
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Precio de venta. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2009.
+              label: Precio de venta
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Tipo de IVA en la adquisición (%). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2009. Casilla 02 del formulario.
+              label: Tipo de IVA en la adquisición (%)
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Tipo de IVA en la venta (%). Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009. Casilla 05 del formulario.
+              label: Tipo de IVA en la venta (%)
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Número de bastidor. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009.
+              label: Número de bastidor
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Clasificación del vehículo. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009.
+              label: Clasificación del vehículo
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Marca del vehículo. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009.
+              label: Marca del vehículo
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Modelo del vehículo (denominación comercial). Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2009.
+              label: Modelo del vehículo (denominación comercial)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Tipo de vehículo. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2009.
+              label: Tipo de vehículo
+            x-chim6r1edth76pbiepgm6qbfdpin6:
+              help: Observaciones
+              label: Observaciones
+            x-chim6r1ee1in4qbfchng:
+              help: Dato declarado en el modelo 308, tomado del diseño de registro
+                oficial.
+              label: Devengo. Periodo
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkds:
+              help: Persona de contacto
+              label: Persona de contacto
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Base imponible · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009. Casilla 08 del formulario.
+              label: Base imponible · línea 1
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Base imponible · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009. Casilla 11 del formulario.
+              label: Base imponible · línea 2
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Base imponible · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009. Casilla 14 del formulario.
+              label: Base imponible · línea 3
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Cuota de IVA · línea 1. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009. Casilla 10 del formulario.
+              label: Cuota de IVA · línea 1
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Cuota de IVA · línea 2. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009. Casilla 13 del formulario.
+              label: Cuota de IVA · línea 2
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Cuota de IVA · línea 3. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009. Casilla 16 del formulario.
+              label: Cuota de IVA · línea 3
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: IVA a devolver por recargo de equivalencia. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2009. Casilla 17 del formulario.
+              label: IVA a devolver por recargo de equivalencia
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Tipo de IVA (%) · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009. Casilla 09 del formulario.
+              label: Tipo de IVA (%) · línea 1
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Tipo de IVA (%) · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009. Casilla 12 del formulario.
+              label: Tipo de IVA (%) · línea 2
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Tipo de IVA (%) · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2009. Casilla 15 del formulario.
+              label: Tipo de IVA (%) · línea 3
+            x-chim6r1eehimopb6dtn6ubb3dtn78ob3ehng:
+              help: Teléfono de contacto
+              label: Teléfono de contacto
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Tipo de declaración. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2009.
+              label: Tipo de declaración
           field:
             label: Modelo 308, ejercicios 2009 a 2011, hasta junio de 2011
         2011-julio-2015:
+          casilla:
+            firma:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Firma (formulario en papel)
+            firma-fecha:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Fecha de firma
+            firma-lugar:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Lugar de firma
+            papel-nif:
+              label: NIF del solicitante
+            papel-nombre-completo:
+              help: Apellidos y nombre o razón social del solicitante
+              label: Apellidos y nombre o razón social del solicitante
+            x-chim6r1echincrrcelhmirre5lhm6oo:
+              help: Código de cuenta de cliente de 20 dígitos de esta edición histórica.
+                Conserva los ceros iniciales.
+              label: Cuenta para la devolución (CCC)
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Ejercicio al que se refiere la solicitud
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: NIF del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011.
+              label: NIF del adquirente
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojickmm6rrde1m6at3f:
+              help: Apellidos y nombre o razón social del adquirente
+              label: Apellidos y nombre o razón social del adquirente
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Nombre del país del adquirente, según el diseño oficial de 2011.
+              label: País del adquirente
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Año de fabricación de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2011.
+              label: Año de fabricación de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Fabricante de la aeronave. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011.
+              label: Fabricante de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Marca de la aeronave. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011.
+              label: Marca de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Peso máximo de despegue (kg). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2011.
+              label: Peso máximo de despegue (kg)
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Número de serie de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2011.
+              label: Número de serie de la aeronave
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Eslora máxima. Dato de la solicitud del modelo 308, según el diseño
+                oficial de 2011.
+              label: Eslora máxima
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Fabricante de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2011.
+              label: Fabricante de la embarcación
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Identificación de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2011.
+              label: Identificación de la embarcación
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Tipo de embarcación. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011.
+              label: Tipo de embarcación
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: 'IVA a devolver: artículo 21.4 de la Ley del IVA. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2011.'
+              label: 'IVA a devolver: artículo 21.4 de la Ley del IVA'
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: IVA a devolver por entregas intracomunitarias. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2011.
+              label: IVA a devolver por entregas intracomunitarias
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: IVA a devolver por la actividad de transporte. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2011.
+              label: IVA a devolver por la actividad de transporte
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: IVA soportado en la adquisición. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2011.
+              label: IVA soportado en la adquisición
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: 'IVA soportado: artículo 21.4 de la Ley del IVA. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2011.'
+              label: 'IVA soportado: artículo 21.4 de la Ley del IVA'
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Importe máximo a devolver. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011.
+              label: Importe máximo a devolver
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Precio de adquisición. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011.
+              label: Precio de adquisición
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Precio de venta. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2011.
+              label: Precio de venta
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Tipo de IVA en la adquisición (%). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2011. Casilla 02 del formulario.
+              label: Tipo de IVA en la adquisición (%)
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Tipo de IVA en la venta (%). Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011. Casilla 05 del formulario.
+              label: Tipo de IVA en la venta (%)
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Número de bastidor. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011.
+              label: Número de bastidor
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Clasificación del vehículo. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011.
+              label: Clasificación del vehículo
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Marca del vehículo. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011.
+              label: Marca del vehículo
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Modelo del vehículo (denominación comercial). Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2011.
+              label: Modelo del vehículo (denominación comercial)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Tipo de vehículo. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2011.
+              label: Tipo de vehículo
+            x-chim6r1edth76pbiepgm6qbfdpin6:
+              help: Observaciones
+              label: Observaciones
+            x-chim6r1ee1in4qbfchng:
+              help: Dato declarado en el modelo 308, tomado del diseño de registro
+                oficial.
+              label: Devengo. Periodo
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkds:
+              help: Persona de contacto
+              label: Persona de contacto
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Base imponible · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011. Casilla 08 del formulario.
+              label: Base imponible · línea 1
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Base imponible · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011. Casilla 11 del formulario.
+              label: Base imponible · línea 2
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Base imponible · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011. Casilla 14 del formulario.
+              label: Base imponible · línea 3
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Cuota de IVA · línea 1. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011. Casilla 10 del formulario.
+              label: Cuota de IVA · línea 1
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Cuota de IVA · línea 2. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011. Casilla 13 del formulario.
+              label: Cuota de IVA · línea 2
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Cuota de IVA · línea 3. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011. Casilla 16 del formulario.
+              label: Cuota de IVA · línea 3
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: IVA a devolver por recargo de equivalencia. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2011. Casilla 17 del formulario.
+              label: IVA a devolver por recargo de equivalencia
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Tipo de IVA (%) · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011. Casilla 09 del formulario.
+              label: Tipo de IVA (%) · línea 1
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Tipo de IVA (%) · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011. Casilla 12 del formulario.
+              label: Tipo de IVA (%) · línea 2
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Tipo de IVA (%) · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2011. Casilla 15 del formulario.
+              label: Tipo de IVA (%) · línea 3
+            x-chim6r1eehimopb6dtn6ubb3dtn78ob3ehng:
+              help: Teléfono de contacto
+              label: Teléfono de contacto
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Tipo de declaración. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2011.
+              label: Tipo de declaración
           field:
             label: Modelo 308, ejercicios 2011 a 2015, desde julio de 2011
         2016-2018:
+          casilla:
+            firma:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Firma (formulario en papel)
+            firma-fecha:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Fecha de firma
+            firma-lugar:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Lugar de firma
+            papel-apellidos:
+              label: Apellidos o razón social
+            papel-nif:
+              label: NIF del solicitante
+            x-chim6r1echincrrcelhmirre5lh6ioo:
+              help: Código BIC / SWIFT. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Código BIC / SWIFT
+            x-chim6r1echincrrcelhmirre5lkm4obe:
+              help: Cuenta para la devolución (IBAN). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016.
+              label: Cuenta para la devolución (IBAN)
+            x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              help: Apellidos o razón social del adquirente. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016.
+              label: Apellidos o razón social del adquirente
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: NIF del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: NIF del adquirente
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              help: Nombre del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Nombre del adquirente
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: País del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: País del adquirente
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Año de fabricación de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016.
+              label: Año de fabricación de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Fabricante de la aeronave. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016.
+              label: Fabricante de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Marca de la aeronave. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Marca de la aeronave
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Peso máximo de despegue (kg). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016.
+              label: Peso máximo de despegue (kg)
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Número de serie de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016.
+              label: Número de serie de la aeronave
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Eslora máxima. Dato de la solicitud del modelo 308, según el diseño
+                oficial de 2016.
+              label: Eslora máxima
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Fabricante de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016.
+              label: Fabricante de la embarcación
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Identificación de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016.
+              label: Identificación de la embarcación
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Tipo de embarcación. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Tipo de embarcación
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: 'IVA a devolver: artículo 21.4 de la Ley del IVA. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016.'
+              label: 'IVA a devolver: artículo 21.4 de la Ley del IVA'
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: IVA a devolver por entregas intracomunitarias. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016.
+              label: IVA a devolver por entregas intracomunitarias
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: IVA a devolver por la actividad de transporte. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016.
+              label: IVA a devolver por la actividad de transporte
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: IVA soportado en la adquisición. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016.
+              label: IVA soportado en la adquisición
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: 'IVA soportado: artículo 21.4 de la Ley del IVA. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016.'
+              label: 'IVA soportado: artículo 21.4 de la Ley del IVA'
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Importe máximo a devolver. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016.
+              label: Importe máximo a devolver
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Precio de adquisición. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Precio de adquisición
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Precio de venta. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2016.
+              label: Precio de venta
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Tipo de IVA en la adquisición (%). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2016. Casilla 02 del formulario.
+              label: Tipo de IVA en la adquisición (%)
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Tipo de IVA en la venta (%). Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016. Casilla 05 del formulario.
+              label: Tipo de IVA en la venta (%)
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Número de bastidor. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Número de bastidor
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Clasificación del vehículo. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016.
+              label: Clasificación del vehículo
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Marca del vehículo. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Marca del vehículo
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Modelo del vehículo (denominación comercial). Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016.
+              label: Modelo del vehículo (denominación comercial)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Tipo de vehículo. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2016.
+              label: Tipo de vehículo
+            x-chim6r1edpnmqojick:
+              help: Nombre del solicitante. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Nombre del solicitante
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Base imponible · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016. Casilla 08 del formulario.
+              label: Base imponible · línea 1
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Base imponible · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016. Casilla 11 del formulario.
+              label: Base imponible · línea 2
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Base imponible · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016. Casilla 14 del formulario.
+              label: Base imponible · línea 3
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Cuota de IVA · línea 1. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016. Casilla 10 del formulario.
+              label: Cuota de IVA · línea 1
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Cuota de IVA · línea 2. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016. Casilla 13 del formulario.
+              label: Cuota de IVA · línea 2
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Cuota de IVA · línea 3. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016. Casilla 16 del formulario.
+              label: Cuota de IVA · línea 3
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: IVA a devolver por recargo de equivalencia. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016. Casilla 17 del formulario.
+              label: IVA a devolver por recargo de equivalencia
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Tipo de IVA (%) · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016. Casilla 09 del formulario.
+              label: Tipo de IVA (%) · línea 1
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Tipo de IVA (%) · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016. Casilla 12 del formulario.
+              label: Tipo de IVA (%) · línea 2
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Tipo de IVA (%) · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2016. Casilla 15 del formulario.
+              label: Tipo de IVA (%) · línea 3
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Tipo de declaración. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2016.
+              label: Tipo de declaración
+            x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              help: Tipo de tributación según el sujeto pasivo. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2016.
+              label: Tipo de tributación según el sujeto pasivo
           field:
             label: Modelo 308, ejercicios 2016 a 2018
         2019-y-siguientes:
           casilla:
+            firma:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Firma (formulario en papel)
+            firma-fecha:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Fecha de firma
+            firma-lugar:
+              help: Contexto del apartado 5 del formulario en papel. No acredita una
+                firma electrónica ni la presentación de la solicitud.
+              label: Lugar de firma
             x-chim6r1echincrrcelhmirre5lh6ioo:
-              help: Casilla 966-976 del modelo 308, ejercicio 2009.
-              label: Devolución - SWIFT-BIC
+              help: Código BIC / SWIFT. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Código BIC / SWIFT
             x-chim6r1echincrrcelhmirre5lkm4obe:
-              help: Casilla 932-965 del modelo 308, ejercicio 2009.
-              label: Devolución - IBAN
+              help: Cuenta para la devolución (IBAN). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019.
+              label: Cuenta para la devolución (IBAN)
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
-              help: Casilla 119-178 del modelo 308, ejercicio 2009.
-              label: MTN - Adquirente - Apellidos ó Razón social
+              help: Apellidos o razón social del adquirente. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019.
+              label: Apellidos o razón social del adquirente
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
-              help: Casilla 110-118 del modelo 308, ejercicio 2009.
-              label: Medios transporte nuevos (MTN) - Adquirente - NIF
+              help: NIF del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: NIF del adquirente
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
-              help: Casilla 179-198 del modelo 308, ejercicio 2009.
-              label: MTN - Adquirente - Nombre
+              help: Nombre del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Nombre del adquirente
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
-              help: Casilla 199-200 del modelo 308, ejercicio 2009.
-              label: MTN - Adquirente - País
+              help: País del adquirente. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: País del adquirente
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
-              help: Casilla 638-641 del modelo 308, ejercicio 2009.
-              label: MTN - Aeronaves - Año fabricación
+              help: Año de fabricación de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019.
+              label: Año de fabricación de la aeronave
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
-              help: Casilla 496-535 del modelo 308, ejercicio 2009.
-              label: MTN - Aeronaves - Fabricante
+              help: Fabricante de la aeronave. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019.
+              label: Fabricante de la aeronave
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
-              help: Casilla 536-615 del modelo 308, ejercicio 2009.
-              label: MTN - Aeronaves - Marca
+              help: Marca de la aeronave. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Marca de la aeronave
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
-              help: Casilla 642-651 del modelo 308, ejercicio 2009.
-              label: MTN - Aeronaves - Peso máximo despegue
+              help: Peso máximo de despegue (kg). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019.
+              label: Peso máximo de despegue (kg)
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
-              help: Casilla 616-637 del modelo 308, ejercicio 2009.
-              label: MTN - Aeronaves - Nº serie
+              help: Número de serie de la aeronave. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019.
+              label: Número de serie de la aeronave
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
-              help: Casilla 491-495 del modelo 308, ejercicio 2009.
-              label: MTN - Embarcaciones - Eslora máxima
+              help: Eslora máxima. Dato de la solicitud del modelo 308, según el diseño
+                oficial de 2019.
+              label: Eslora máxima
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
-              help: Casilla 349-388 del modelo 308, ejercicio 2009.
-              label: MTN - Embarcaciones - Fabricante
+              help: Fabricante de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019.
+              label: Fabricante de la embarcación
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
-              help: Casilla 469-490 del modelo 308, ejercicio 2009.
-              label: MTN - Embarcaciones - Identificación
+              help: Identificación de la embarcación. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019.
+              label: Identificación de la embarcación
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
-              help: Casilla 389-468 del modelo 308, ejercicio 2009.
-              label: MTN - Embarcaciones - Tipo
+              help: Tipo de embarcación. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Tipo de embarcación
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
-              help: Casilla 781-797 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - IVA a devolver art. 21.4º, párrafo 2º LIVA
-                [20]
+              help: 'IVA a devolver: artículo 21.4 de la Ley del IVA. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019.'
+              label: 'IVA a devolver: artículo 21.4 de la Ley del IVA'
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
-              help: Casilla 730-746 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - IVA a devolver por entregas intracomunitarias
-                [07]
+              help: IVA a devolver por entregas intracomunitarias. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019.
+              label: IVA a devolver por entregas intracomunitarias
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
-              help: Casilla 747-763 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - IVA a devolver actividad de transporte[18]
+              help: IVA a devolver por la actividad de transporte. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019.
+              label: IVA a devolver por la actividad de transporte
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
-              help: Casilla 674-690 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - IVA soportado [03]
+              help: IVA soportado en la adquisición. Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019.
+              label: IVA soportado en la adquisición
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
-              help: Casilla 764-780 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - IVA soportado art. 21.4º, párrafo 2º LIVA
-                [19]
+              help: 'IVA soportado: artículo 21.4 de la Ley del IVA. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019.'
+              label: 'IVA soportado: artículo 21.4 de la Ley del IVA'
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
-              help: Casilla 713-729 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - Máximo a devolver [06]
+              help: Importe máximo a devolver. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019.
+              label: Importe máximo a devolver
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
-              help: Casilla 652-668 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - Precio Adquisición [01]
+              help: Precio de adquisición. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Precio de adquisición
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
-              help: Casilla 691-707 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - Precio de venta [04]
+              help: Precio de venta. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2019.
+              label: Precio de venta
             x-chim6r1edlq6sbbkd5o6ub9g64:
-              help: Casilla 669-673 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - Tipo (%) [02]
+              help: Tipo de IVA en la adquisición (%). Dato de la solicitud del modelo
+                308, según el diseño oficial de 2019. Casilla 02 del formulario.
+              label: Tipo de IVA en la adquisición (%)
             x-chim6r1edlq6sbbkd5o6ub9g6g:
-              help: Casilla 708-712 del modelo 308, ejercicio 2009.
-              label: MTN - Liquidación - Tipo (%) [05]
+              help: Tipo de IVA en la venta (%). Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019. Casilla 05 del formulario.
+              label: Tipo de IVA en la venta (%)
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
-              help: Casilla 321-342 del modelo 308, ejercicio 2009.
-              label: MTN - Vehículos - Nº Id. Bastidor
+              help: Número de bastidor. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Número de bastidor
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
-              help: Casilla 343-348 del modelo 308, ejercicio 2009.
-              label: MTN - Vehículos - Clasificación
+              help: Clasificación del vehículo. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019.
+              label: Clasificación del vehículo
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
-              help: Casilla 201-240 del modelo 308, ejercicio 2009.
-              label: MTN - Vehículos - Marca
+              help: Marca del vehículo. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Marca del vehículo
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
-              help: Casilla 281-320 del modelo 308, ejercicio 2009.
-              label: MTN - Vehículos - Modelo (denominación comercial)
+              help: Modelo del vehículo (denominación comercial). Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019.
+              label: Modelo del vehículo (denominación comercial)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
-              help: Casilla 241-280 del modelo 308, ejercicio 2009.
-              label: MTN - Vehículos - Tipo
+              help: Tipo de vehículo. Dato de la solicitud del modelo 308, según el
+                diseño oficial de 2019.
+              label: Tipo de vehículo
             x-chim6r1edpnmqojick:
-              help: Casilla 83-102 del modelo 308, ejercicio 2009.
-              label: Identificación - Nombre
+              help: Nombre del solicitante. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
+              label: Nombre del solicitante
             x-chim6r1ee9in2bb2c5pmab9g70:
-              help: Casilla 798-814 del modelo 308, ejercicio 2009.
-              label: Rég. Espec. recargo equival. (REQ) - Liquidación - Base Imponible
-                [08]
+              help: Base imponible · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019. Casilla 08 del formulario.
+              label: Base imponible · línea 1
             x-chim6r1ee9in2bb2c5pmab9h64:
-              help: Casilla 837-853 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Base Imponible [11]
+              help: Base imponible · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019. Casilla 11 del formulario.
+              label: Base imponible · línea 2
             x-chim6r1ee9in2bb2c5pmab9h6g:
-              help: Casilla 876-892 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Base Imponible [14]
+              help: Base imponible · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019. Casilla 14 del formulario.
+              label: Base imponible · línea 3
             x-chim6r1ee9in2bb3elnn8o9d64o0:
-              help: Casilla 820-836 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Cuota [10]
+              help: Cuota de IVA · línea 1. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019. Casilla 10 del formulario.
+              label: Cuota de IVA · línea 1
             x-chim6r1ee9in2bb3elnn8o9d64pg:
-              help: Casilla 859-875 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Cuota [13]
+              help: Cuota de IVA · línea 2. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019. Casilla 13 del formulario.
+              label: Cuota de IVA · línea 2
             x-chim6r1ee9in2bb3elnn8o9d64r0:
-              help: Casilla 898-914 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Cuota [16]
+              help: Cuota de IVA · línea 3. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019. Casilla 16 del formulario.
+              label: Cuota de IVA · línea 3
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
-              help: Casilla 915-931 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - IVA a devolver [17]
+              help: IVA a devolver por recargo de equivalencia. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019. Casilla 17 del formulario.
+              label: IVA a devolver por recargo de equivalencia
             x-chim6r1ee9in2bbkd5o6ub9g74:
-              help: Casilla 815-819 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Tipo (%) [09]
+              help: Tipo de IVA (%) · línea 1. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019. Casilla 09 del formulario.
+              label: Tipo de IVA (%) · línea 1
             x-chim6r1ee9in2bbkd5o6ub9h68:
-              help: Casilla 854-858 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Tipo (%) [12]
+              help: Tipo de IVA (%) · línea 2. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019. Casilla 12 del formulario.
+              label: Tipo de IVA (%) · línea 2
             x-chim6r1ee9in2bbkd5o6ub9h6k:
-              help: Casilla 893-897 del modelo 308, ejercicio 2009.
-              label: REQ - Liquidación - Tipo (%) [15]
+              help: Tipo de IVA (%) · línea 3. Dato de la solicitud del modelo 308,
+                según el diseño oficial de 2019. Casilla 15 del formulario.
+              label: Tipo de IVA (%) · línea 3
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla 13 del modelo 308, ejercicio 2009.
+              help: Tipo de declaración. Dato de la solicitud del modelo 308, según
+                el diseño oficial de 2019.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              label: Tipo de solicitud (recargo de equivalencia / art 30 bis / art
-                21.4 / sujeto pasivo ocasional / régimen simplificado transporte)
+              label: Motivo de la solicitud
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
-              help: Casilla 109 del modelo 308, ejercicio 2009.
+              help: Tipo de tributación según el sujeto pasivo. Dato de la solicitud
+                del modelo 308, según el diseño oficial de 2019.
               label: Tipo de tributación según el sujeto pasivo
           field:
             label: Modelo 308, ejercicios 2019 y siguientes

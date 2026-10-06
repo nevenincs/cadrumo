@@ -10,7 +10,11 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_program(CADRUMO_NPM NAMES npm.cmd npm REQUIRED)
+find_program(CADRUMO_NODE NAMES node REQUIRED)
 set(desktop_frontend "${CMAKE_CURRENT_SOURCE_DIR}/frontend")
+include("${CMAKE_CURRENT_LIST_DIR}/../cmake/DesktopTools.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../cmake/DesktopRust.cmake")
+cadrumo_desktop_rust_environment(desktop_rust_environment)
 set(desktop_environment "CADRUMO_CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}")
 set(desktop_configuration "CADRUMO_BUILD_CONFIG=$<CONFIG>")
 set(CADRUMO_DESKTOP_BIND_ADDRESS "0.0.0.0" CACHE STRING "Frontend development bind address")
@@ -44,14 +48,20 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
 endif()
 
+# Every binary directory shares the one node_modules, and a clean install deletes it under
+# whatever runs from it. The script runs the install only when the installed tree differs
+# from the lockfile.
 add_custom_target(desktop-frontend-install
-  COMMAND "${CADRUMO_NPM}" ci --no-audit --no-fund
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_node_path_arguments}
+    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/frontend-install.mjs"
+    "${CADRUMO_NPM_CLI}" ci --include=dev --no-audit --no-fund
   WORKING_DIRECTORY "${desktop_frontend}" VERBATIM)
 foreach(action IN ITEMS build check test)
   add_custom_target(desktop-frontend-${action}
-    COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
-      "${CADRUMO_NPM}" run ${action}
+    COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" ${desktop_node_path_arguments}
+      "${CADRUMO_NODE}" "${CADRUMO_NPM_CLI}" run ${action}
     WORKING_DIRECTORY "${desktop_frontend}" VERBATIM)
+  add_dependencies(desktop-frontend-${action} desktop-frontend-install)
 endforeach()
 
 # Shell inputs generated from their canonical sources: the chrome strings from the
@@ -81,7 +91,6 @@ foreach(action IN ITEMS build test)
 endforeach()
 
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/Docs.cmake")
-find_program(CADRUMO_NODE NAMES node REQUIRED)
 add_custom_target(desktop-paths-test
   COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}"
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/build-paths.test.mjs"
@@ -91,7 +100,8 @@ add_custom_target(desktop-configuration-test
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/configuration.test.mjs"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 add_custom_target(desktop-host-build
-  COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+  COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
+    "${desktop_environment}" "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_HOST_EXECUTABLE=${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs"
@@ -105,7 +115,8 @@ endif()
 
 foreach(action IN ITEMS test clippy)
   add_custom_target(desktop-host-${action}
-    COMMAND "${CMAKE_COMMAND}" -E env "${desktop_environment}" "${desktop_configuration}"
+    COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
+      "${desktop_environment}" "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
       "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"

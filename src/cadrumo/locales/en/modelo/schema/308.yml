@@ -8,6 +8,11 @@ modelo:
             label: Accrual. Period
           filing-year:
             label: Filing year to which the request relates
+          papel-importe-devolucion:
+            help: Amount you request by bank transfer in section 6 of the form. Check
+              that it matches your request; the different refund categories are not
+              automatically added together.
+            label: Amount D · Refund requested
       construct:
         modelo-308-iva-solicitud-devolucion:
           field:
@@ -18,152 +23,810 @@ modelo:
           Act, and occasional taxable persons.'
         title: VAT. Refund application (equivalence surcharge, Article 30 bis, occasional
           taxable persons)
+      form:
+        choice:
+          devolucion:
+            heading: Refund
+          ocasional:
+            heading: Occasional intra-Community supplies of new means of transport
+          recargo:
+            heading: Activities exclusively under the equivalence surcharge scheme
+          social:
+            heading: Public body or private social establishment (VAT Act Art. 21.4)
+          transporte:
+            heading: Road passenger or goods transport
+        column:
+          iva:
+            heading: VAT / maximum refund
+          precio:
+            heading: Price
+        context:
+          nif:
+            heading: Applicant tax ID
+          nombre:
+            heading: Surnames or legal name
+        row:
+          adquisicion:
+            heading: Purchase
+          recargo-1:
+            heading: Line 1
+          recargo-2:
+            heading: Line 2
+          recargo-3:
+            heading: Line 3
+          venta:
+            heading: Sale
+        section:
+          adquirente:
+            heading: Purchaser of the means of transport
+          aeronave:
+            heading: Aircraft
+          articulo21:
+            heading: Supplies under VAT Act Article 21.4
+          embarcacion:
+            heading: Vessels
+          firma:
+            heading: 'Taxpayer: date and signature'
+          identificacion:
+            heading: Identification
+          liquidacion-transporte:
+            heading: Means of transport refund calculation
+          recargo:
+            heading: Equivalence surcharge scheme
+          solicitud:
+            heading: Refund application
+          vehiculo:
+            heading: Land vehicles
       revision:
         2009-2011-junio:
+          casilla:
+            firma:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Signature (paper form)
+            firma-fecha:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Date of signature
+            firma-lugar:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Place of signature
+            papel-nif:
+              label: Applicant tax ID
+            papel-nombre-completo:
+              help: Applicant’s full name or business name
+              label: Applicant’s full name or business name
+            x-chim6r1echincrrcelhmirre5lhm6oo:
+              help: 20-digit bank account code used by this historical edition. Keep
+                leading zeroes.
+              label: Refund bank account (CCC)
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Filing year to which the request relates
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: Purchaser tax ID. Modelo 308 application field in the official
+                2009 record design.
+              label: Purchaser tax ID
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojickmm6rrde1m6at3f:
+              help: Buyer’s full name or business name
+              label: Buyer’s full name or business name
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Buyer’s country name, as specified in the official 2009 design.
+              label: Purchaser country
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Aircraft year of manufacture. Modelo 308 application field in
+                the official 2009 record design.
+              label: Aircraft year of manufacture
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Aircraft manufacturer. Modelo 308 application field in the official
+                2009 record design.
+              label: Aircraft manufacturer
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Aircraft make. Modelo 308 application field in the official 2009
+                record design.
+              label: Aircraft make
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Maximum take-off weight (kg). Modelo 308 application field in
+                the official 2009 record design.
+              label: Maximum take-off weight (kg)
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Aircraft serial number. Modelo 308 application field in the official
+                2009 record design.
+              label: Aircraft serial number
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Maximum vessel length. Modelo 308 application field in the official
+                2009 record design.
+              label: Maximum vessel length
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Vessel manufacturer. Modelo 308 application field in the official
+                2009 record design.
+              label: Vessel manufacturer
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Vessel identification. Modelo 308 application field in the official
+                2009 record design.
+              label: Vessel identification
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Vessel type. Modelo 308 application field in the official 2009
+                record design.
+              label: Vessel type
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: VAT refund for intra-Community supplies. Modelo 308 application
+                field in the official 2009 record design.
+              label: VAT refund for intra-Community supplies
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: VAT refund for transport activity. Modelo 308 application field
+                in the official 2009 record design.
+              label: VAT refund for transport activity
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: Input VAT on purchase. Modelo 308 application field in the official
+                2009 record design.
+              label: Input VAT on purchase
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Maximum refund. Modelo 308 application field in the official 2009
+                record design.
+              label: Maximum refund
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Purchase price. Modelo 308 application field in the official 2009
+                record design.
+              label: Purchase price
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Sale price. Modelo 308 application field in the official 2009
+                record design.
+              label: Sale price
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: VAT rate on purchase (%). Modelo 308 application field in the
+                official 2009 record design. Form box 02.
+              label: VAT rate on purchase (%)
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: VAT rate on sale (%). Modelo 308 application field in the official
+                2009 record design. Form box 05.
+              label: VAT rate on sale (%)
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Vehicle identification number. Modelo 308 application field in
+                the official 2009 record design.
+              label: Vehicle identification number
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Vehicle classification. Modelo 308 application field in the official
+                2009 record design.
+              label: Vehicle classification
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Vehicle make. Modelo 308 application field in the official 2009
+                record design.
+              label: Vehicle make
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Vehicle model (commercial name). Modelo 308 application field
+                in the official 2009 record design.
+              label: Vehicle model (commercial name)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Vehicle type. Modelo 308 application field in the official 2009
+                record design.
+              label: Vehicle type
+            x-chim6r1edth76pbiepgm6qbfdpin6:
+              help: Remarks
+              label: Remarks
+            x-chim6r1ee1in4qbfchng:
+              help: Field declared on modelo 308, taken from the official record design.
+              label: Accrual. Period
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkds:
+              help: Contact person
+              label: Contact person
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Taxable base · line 1. Modelo 308 application field in the official
+                2009 record design. Form box 08.
+              label: Taxable base · line 1
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Taxable base · line 2. Modelo 308 application field in the official
+                2009 record design. Form box 11.
+              label: Taxable base · line 2
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Taxable base · line 3. Modelo 308 application field in the official
+                2009 record design. Form box 14.
+              label: Taxable base · line 3
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: VAT amount · line 1. Modelo 308 application field in the official
+                2009 record design. Form box 10.
+              label: VAT amount · line 1
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: VAT amount · line 2. Modelo 308 application field in the official
+                2009 record design. Form box 13.
+              label: VAT amount · line 2
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: VAT amount · line 3. Modelo 308 application field in the official
+                2009 record design. Form box 16.
+              label: VAT amount · line 3
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: VAT refund under the equivalence surcharge scheme. Modelo 308
+                application field in the official 2009 record design. Form box 17.
+              label: VAT refund under the equivalence surcharge scheme
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: VAT rate (%) · line 1. Modelo 308 application field in the official
+                2009 record design. Form box 09.
+              label: VAT rate (%) · line 1
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: VAT rate (%) · line 2. Modelo 308 application field in the official
+                2009 record design. Form box 12.
+              label: VAT rate (%) · line 2
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: VAT rate (%) · line 3. Modelo 308 application field in the official
+                2009 record design. Form box 15.
+              label: VAT rate (%) · line 3
+            x-chim6r1eehimopb6dtn6ubb3dtn78ob3ehng:
+              help: Contact telephone
+              label: Contact telephone
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Return type. Modelo 308 application field in the official 2009
+                record design.
+              label: Return type
           field:
             label: Modelo 308, tax years 2009 to 2011, to June 2011
         2011-julio-2015:
+          casilla:
+            firma:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Signature (paper form)
+            firma-fecha:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Date of signature
+            firma-lugar:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Place of signature
+            papel-nif:
+              label: Applicant tax ID
+            papel-nombre-completo:
+              help: Applicant’s full name or business name
+              label: Applicant’s full name or business name
+            x-chim6r1echincrrcelhmirre5lhm6oo:
+              help: 20-digit bank account code used by this historical edition. Keep
+                leading zeroes.
+              label: Refund bank account (CCC)
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Filing year to which the request relates
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: Purchaser tax ID. Modelo 308 application field in the official
+                2011 record design.
+              label: Purchaser tax ID
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojickmm6rrde1m6at3f:
+              help: Buyer’s full name or business name
+              label: Buyer’s full name or business name
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Buyer’s country name, as specified in the official 2011 design.
+              label: Purchaser country
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Aircraft year of manufacture. Modelo 308 application field in
+                the official 2011 record design.
+              label: Aircraft year of manufacture
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Aircraft manufacturer. Modelo 308 application field in the official
+                2011 record design.
+              label: Aircraft manufacturer
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Aircraft make. Modelo 308 application field in the official 2011
+                record design.
+              label: Aircraft make
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Maximum take-off weight (kg). Modelo 308 application field in
+                the official 2011 record design.
+              label: Maximum take-off weight (kg)
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Aircraft serial number. Modelo 308 application field in the official
+                2011 record design.
+              label: Aircraft serial number
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Maximum vessel length. Modelo 308 application field in the official
+                2011 record design.
+              label: Maximum vessel length
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Vessel manufacturer. Modelo 308 application field in the official
+                2011 record design.
+              label: Vessel manufacturer
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Vessel identification. Modelo 308 application field in the official
+                2011 record design.
+              label: Vessel identification
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Vessel type. Modelo 308 application field in the official 2011
+                record design.
+              label: Vessel type
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: 'VAT refund: VAT Act Article 21.4. Modelo 308 application field
+                in the official 2011 record design.'
+              label: 'VAT refund: VAT Act Article 21.4'
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: VAT refund for intra-Community supplies. Modelo 308 application
+                field in the official 2011 record design.
+              label: VAT refund for intra-Community supplies
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: VAT refund for transport activity. Modelo 308 application field
+                in the official 2011 record design.
+              label: VAT refund for transport activity
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: Input VAT on purchase. Modelo 308 application field in the official
+                2011 record design.
+              label: Input VAT on purchase
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: 'Input VAT: VAT Act Article 21.4. Modelo 308 application field
+                in the official 2011 record design.'
+              label: 'Input VAT: VAT Act Article 21.4'
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Maximum refund. Modelo 308 application field in the official 2011
+                record design.
+              label: Maximum refund
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Purchase price. Modelo 308 application field in the official 2011
+                record design.
+              label: Purchase price
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Sale price. Modelo 308 application field in the official 2011
+                record design.
+              label: Sale price
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: VAT rate on purchase (%). Modelo 308 application field in the
+                official 2011 record design. Form box 02.
+              label: VAT rate on purchase (%)
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: VAT rate on sale (%). Modelo 308 application field in the official
+                2011 record design. Form box 05.
+              label: VAT rate on sale (%)
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Vehicle identification number. Modelo 308 application field in
+                the official 2011 record design.
+              label: Vehicle identification number
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Vehicle classification. Modelo 308 application field in the official
+                2011 record design.
+              label: Vehicle classification
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Vehicle make. Modelo 308 application field in the official 2011
+                record design.
+              label: Vehicle make
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Vehicle model (commercial name). Modelo 308 application field
+                in the official 2011 record design.
+              label: Vehicle model (commercial name)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Vehicle type. Modelo 308 application field in the official 2011
+                record design.
+              label: Vehicle type
+            x-chim6r1edth76pbiepgm6qbfdpin6:
+              help: Remarks
+              label: Remarks
+            x-chim6r1ee1in4qbfchng:
+              help: Field declared on modelo 308, taken from the official record design.
+              label: Accrual. Period
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkds:
+              help: Contact person
+              label: Contact person
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Taxable base · line 1. Modelo 308 application field in the official
+                2011 record design. Form box 08.
+              label: Taxable base · line 1
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Taxable base · line 2. Modelo 308 application field in the official
+                2011 record design. Form box 11.
+              label: Taxable base · line 2
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Taxable base · line 3. Modelo 308 application field in the official
+                2011 record design. Form box 14.
+              label: Taxable base · line 3
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: VAT amount · line 1. Modelo 308 application field in the official
+                2011 record design. Form box 10.
+              label: VAT amount · line 1
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: VAT amount · line 2. Modelo 308 application field in the official
+                2011 record design. Form box 13.
+              label: VAT amount · line 2
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: VAT amount · line 3. Modelo 308 application field in the official
+                2011 record design. Form box 16.
+              label: VAT amount · line 3
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: VAT refund under the equivalence surcharge scheme. Modelo 308
+                application field in the official 2011 record design. Form box 17.
+              label: VAT refund under the equivalence surcharge scheme
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: VAT rate (%) · line 1. Modelo 308 application field in the official
+                2011 record design. Form box 09.
+              label: VAT rate (%) · line 1
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: VAT rate (%) · line 2. Modelo 308 application field in the official
+                2011 record design. Form box 12.
+              label: VAT rate (%) · line 2
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: VAT rate (%) · line 3. Modelo 308 application field in the official
+                2011 record design. Form box 15.
+              label: VAT rate (%) · line 3
+            x-chim6r1eehimopb6dtn6ubb3dtn78ob3ehng:
+              help: Contact telephone
+              label: Contact telephone
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Return type. Modelo 308 application field in the official 2011
+                record design.
+              label: Return type
           field:
             label: Modelo 308, tax years 2011 to 2015, from July 2011
         2016-2018:
+          casilla:
+            firma:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Signature (paper form)
+            firma-fecha:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Date of signature
+            firma-lugar:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Place of signature
+            papel-apellidos:
+              label: Surnames or legal name
+            papel-nif:
+              label: Applicant tax ID
+            x-chim6r1echincrrcelhmirre5lh6ioo:
+              help: BIC / SWIFT code. Modelo 308 application field in the official
+                2016 record design.
+              label: BIC / SWIFT code
+            x-chim6r1echincrrcelhmirre5lkm4obe:
+              help: Refund account (IBAN). Modelo 308 application field in the official
+                2016 record design.
+              label: Refund account (IBAN)
+            x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              help: Purchaser surnames or legal name. Modelo 308 application field
+                in the official 2016 record design.
+              label: Purchaser surnames or legal name
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: Purchaser tax ID. Modelo 308 application field in the official
+                2016 record design.
+              label: Purchaser tax ID
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              help: Purchaser given name. Modelo 308 application field in the official
+                2016 record design.
+              label: Purchaser given name
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Purchaser country. Modelo 308 application field in the official
+                2016 record design.
+              label: Purchaser country
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Aircraft year of manufacture. Modelo 308 application field in
+                the official 2016 record design.
+              label: Aircraft year of manufacture
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Aircraft manufacturer. Modelo 308 application field in the official
+                2016 record design.
+              label: Aircraft manufacturer
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Aircraft make. Modelo 308 application field in the official 2016
+                record design.
+              label: Aircraft make
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Maximum take-off weight (kg). Modelo 308 application field in
+                the official 2016 record design.
+              label: Maximum take-off weight (kg)
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Aircraft serial number. Modelo 308 application field in the official
+                2016 record design.
+              label: Aircraft serial number
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Maximum vessel length. Modelo 308 application field in the official
+                2016 record design.
+              label: Maximum vessel length
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Vessel manufacturer. Modelo 308 application field in the official
+                2016 record design.
+              label: Vessel manufacturer
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Vessel identification. Modelo 308 application field in the official
+                2016 record design.
+              label: Vessel identification
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Vessel type. Modelo 308 application field in the official 2016
+                record design.
+              label: Vessel type
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: 'VAT refund: VAT Act Article 21.4. Modelo 308 application field
+                in the official 2016 record design.'
+              label: 'VAT refund: VAT Act Article 21.4'
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: VAT refund for intra-Community supplies. Modelo 308 application
+                field in the official 2016 record design.
+              label: VAT refund for intra-Community supplies
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: VAT refund for transport activity. Modelo 308 application field
+                in the official 2016 record design.
+              label: VAT refund for transport activity
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: Input VAT on purchase. Modelo 308 application field in the official
+                2016 record design.
+              label: Input VAT on purchase
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: 'Input VAT: VAT Act Article 21.4. Modelo 308 application field
+                in the official 2016 record design.'
+              label: 'Input VAT: VAT Act Article 21.4'
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Maximum refund. Modelo 308 application field in the official 2016
+                record design.
+              label: Maximum refund
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Purchase price. Modelo 308 application field in the official 2016
+                record design.
+              label: Purchase price
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Sale price. Modelo 308 application field in the official 2016
+                record design.
+              label: Sale price
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: VAT rate on purchase (%). Modelo 308 application field in the
+                official 2016 record design. Form box 02.
+              label: VAT rate on purchase (%)
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: VAT rate on sale (%). Modelo 308 application field in the official
+                2016 record design. Form box 05.
+              label: VAT rate on sale (%)
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Vehicle identification number. Modelo 308 application field in
+                the official 2016 record design.
+              label: Vehicle identification number
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Vehicle classification. Modelo 308 application field in the official
+                2016 record design.
+              label: Vehicle classification
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Vehicle make. Modelo 308 application field in the official 2016
+                record design.
+              label: Vehicle make
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Vehicle model (commercial name). Modelo 308 application field
+                in the official 2016 record design.
+              label: Vehicle model (commercial name)
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Vehicle type. Modelo 308 application field in the official 2016
+                record design.
+              label: Vehicle type
+            x-chim6r1edpnmqojick:
+              help: Applicant given name. Modelo 308 application field in the official
+                2016 record design.
+              label: Applicant given name
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Taxable base · line 1. Modelo 308 application field in the official
+                2016 record design. Form box 08.
+              label: Taxable base · line 1
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Taxable base · line 2. Modelo 308 application field in the official
+                2016 record design. Form box 11.
+              label: Taxable base · line 2
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Taxable base · line 3. Modelo 308 application field in the official
+                2016 record design. Form box 14.
+              label: Taxable base · line 3
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: VAT amount · line 1. Modelo 308 application field in the official
+                2016 record design. Form box 10.
+              label: VAT amount · line 1
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: VAT amount · line 2. Modelo 308 application field in the official
+                2016 record design. Form box 13.
+              label: VAT amount · line 2
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: VAT amount · line 3. Modelo 308 application field in the official
+                2016 record design. Form box 16.
+              label: VAT amount · line 3
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: VAT refund under the equivalence surcharge scheme. Modelo 308
+                application field in the official 2016 record design. Form box 17.
+              label: VAT refund under the equivalence surcharge scheme
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: VAT rate (%) · line 1. Modelo 308 application field in the official
+                2016 record design. Form box 09.
+              label: VAT rate (%) · line 1
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: VAT rate (%) · line 2. Modelo 308 application field in the official
+                2016 record design. Form box 12.
+              label: VAT rate (%) · line 2
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: VAT rate (%) · line 3. Modelo 308 application field in the official
+                2016 record design. Form box 15.
+              label: VAT rate (%) · line 3
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Return type. Modelo 308 application field in the official 2016
+                record design.
+              label: Return type
+            x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              help: Taxation type by taxable person. Modelo 308 application field
+                in the official 2016 record design.
+              label: Taxation type by taxable person
           field:
             label: Modelo 308, tax years 2016 to 2018
         2019-y-siguientes:
           casilla:
+            firma:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Signature (paper form)
+            firma-fecha:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Date of signature
+            firma-lugar:
+              help: Context from section5 of the paper form. It does not establish
+                an electronic signature or submission.
+              label: Place of signature
             x-chim6r1echincrrcelhmirre5lh6ioo:
-              help: Box 966-976 of modelo 308, tax year 2009.
-              label: Refund - SWIFT-BIC
+              help: BIC / SWIFT code. Modelo 308 application field in the official
+                2019 record design.
+              label: BIC / SWIFT code
             x-chim6r1echincrrcelhmirre5lkm4obe:
-              help: Box 932-965 of modelo 308, tax year 2009.
-              label: Refund - IBAN
+              help: Refund account (IBAN). Modelo 308 application field in the official
+                2019 record design.
+              label: Refund account (IBAN)
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
-              help: Box 119-178 of modelo 308, tax year 2009.
-              label: NMT - Acquirer - Surnames or company name
+              help: Purchaser surnames or legal name. Modelo 308 application field
+                in the official 2019 record design.
+              label: Purchaser surnames or legal name
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
-              help: Box 110-118 of modelo 308, tax year 2009.
-              label: New means of transport (NMT) - Acquirer - NIF
+              help: Purchaser tax ID. Modelo 308 application field in the official
+                2019 record design.
+              label: Purchaser tax ID
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
-              help: Box 179-198 of modelo 308, tax year 2009.
-              label: NMT - Acquirer - Given name
+              help: Purchaser given name. Modelo 308 application field in the official
+                2019 record design.
+              label: Purchaser given name
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
-              help: Box 199-200 of modelo 308, tax year 2009.
-              label: NMT - Acquirer - Country
+              help: Purchaser country. Modelo 308 application field in the official
+                2019 record design.
+              label: Purchaser country
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
-              help: Box 638-641 of modelo 308, tax year 2009.
-              label: NMT - Aircraft - Year of manufacture
+              help: Aircraft year of manufacture. Modelo 308 application field in
+                the official 2019 record design.
+              label: Aircraft year of manufacture
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
-              help: Box 496-535 of modelo 308, tax year 2009.
-              label: NMT - Aircraft - Manufacturer
+              help: Aircraft manufacturer. Modelo 308 application field in the official
+                2019 record design.
+              label: Aircraft manufacturer
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
-              help: Box 536-615 of modelo 308, tax year 2009.
-              label: NMT - Aircraft - Make
+              help: Aircraft make. Modelo 308 application field in the official 2019
+                record design.
+              label: Aircraft make
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
-              help: Box 642-651 of modelo 308, tax year 2009.
-              label: NMT - Aircraft - Maximum take-off weight
+              help: Maximum take-off weight (kg). Modelo 308 application field in
+                the official 2019 record design.
+              label: Maximum take-off weight (kg)
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
-              help: Box 616-637 of modelo 308, tax year 2009.
-              label: NMT - Aircraft - Serial no.
+              help: Aircraft serial number. Modelo 308 application field in the official
+                2019 record design.
+              label: Aircraft serial number
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
-              help: Box 491-495 of modelo 308, tax year 2009.
-              label: NMT - Vessels - Maximum length
+              help: Maximum vessel length. Modelo 308 application field in the official
+                2019 record design.
+              label: Maximum vessel length
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
-              help: Box 349-388 of modelo 308, tax year 2009.
-              label: NMT - Vessels - Manufacturer
+              help: Vessel manufacturer. Modelo 308 application field in the official
+                2019 record design.
+              label: Vessel manufacturer
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
-              help: Box 469-490 of modelo 308, tax year 2009.
-              label: NMT - Vessels - Identification
+              help: Vessel identification. Modelo 308 application field in the official
+                2019 record design.
+              label: Vessel identification
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
-              help: Box 389-468 of modelo 308, tax year 2009.
-              label: NMT - Vessels - Type
+              help: Vessel type. Modelo 308 application field in the official 2019
+                record design.
+              label: Vessel type
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
-              help: Box 781-797 of modelo 308, tax year 2009.
-              label: NMT - Settlement - VAT to refund art. 21.4º, párrafo 2º LIVA
-                [20]
+              help: 'VAT refund: VAT Act Article 21.4. Modelo 308 application field
+                in the official 2019 record design.'
+              label: 'VAT refund: VAT Act Article 21.4'
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
-              help: Box 730-746 of modelo 308, tax year 2009.
-              label: NMT - Settlement - VAT to refund on intra-Community supplies
-                [07]
+              help: VAT refund for intra-Community supplies. Modelo 308 application
+                field in the official 2019 record design.
+              label: VAT refund for intra-Community supplies
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
-              help: Box 747-763 of modelo 308, tax year 2009.
-              label: NMT - Settlement - VAT to refund on transport activity [18]
+              help: VAT refund for transport activity. Modelo 308 application field
+                in the official 2019 record design.
+              label: VAT refund for transport activity
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
-              help: Box 674-690 of modelo 308, tax year 2009.
-              label: NMT - Settlement - Input VAT [03]
+              help: Input VAT on purchase. Modelo 308 application field in the official
+                2019 record design.
+              label: Input VAT on purchase
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
-              help: Box 764-780 of modelo 308, tax year 2009.
-              label: NMT - Settlement - Input VAT art. 21.4º, párrafo 2º LIVA [19]
+              help: 'Input VAT: VAT Act Article 21.4. Modelo 308 application field
+                in the official 2019 record design.'
+              label: 'Input VAT: VAT Act Article 21.4'
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
-              help: Box 713-729 of modelo 308, tax year 2009.
-              label: NMT - Settlement - Maximum refundable [06]
+              help: Maximum refund. Modelo 308 application field in the official 2019
+                record design.
+              label: Maximum refund
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
-              help: Box 652-668 of modelo 308, tax year 2009.
-              label: NMT - Settlement - Acquisition price [01]
+              help: Purchase price. Modelo 308 application field in the official 2019
+                record design.
+              label: Purchase price
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
-              help: Box 691-707 of modelo 308, tax year 2009.
-              label: NMT - Settlement - Sale price [04]
+              help: Sale price. Modelo 308 application field in the official 2019
+                record design.
+              label: Sale price
             x-chim6r1edlq6sbbkd5o6ub9g64:
-              help: Box 669-673 of modelo 308, tax year 2009.
-              label: NMT - Settlement - Rate (%) [02]
+              help: VAT rate on purchase (%). Modelo 308 application field in the
+                official 2019 record design. Form box 02.
+              label: VAT rate on purchase (%)
             x-chim6r1edlq6sbbkd5o6ub9g6g:
-              help: Box 708-712 of modelo 308, tax year 2009.
-              label: NMT - Settlement - Rate (%) [05]
+              help: VAT rate on sale (%). Modelo 308 application field in the official
+                2019 record design. Form box 05.
+              label: VAT rate on sale (%)
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
-              help: Box 321-342 of modelo 308, tax year 2009.
-              label: NMT - Vehicles - Chassis id. no.
+              help: Vehicle identification number. Modelo 308 application field in
+                the official 2019 record design.
+              label: Vehicle identification number
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
-              help: Box 343-348 of modelo 308, tax year 2009.
-              label: NMT - Vehicles - Classification
+              help: Vehicle classification. Modelo 308 application field in the official
+                2019 record design.
+              label: Vehicle classification
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
-              help: Box 201-240 of modelo 308, tax year 2009.
-              label: NMT - Vehicles - Make
+              help: Vehicle make. Modelo 308 application field in the official 2019
+                record design.
+              label: Vehicle make
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
-              help: Box 281-320 of modelo 308, tax year 2009.
-              label: NMT - Vehicles - Model (commercial name)
+              help: Vehicle model (commercial name). Modelo 308 application field
+                in the official 2019 record design.
+              label: Vehicle model (commercial name)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
-              help: Box 241-280 of modelo 308, tax year 2009.
-              label: NMT - Vehicles - Type
+              help: Vehicle type. Modelo 308 application field in the official 2019
+                record design.
+              label: Vehicle type
             x-chim6r1edpnmqojick:
-              help: Box 83-102 of modelo 308, tax year 2009.
-              label: Identification - Given name
+              help: Applicant given name. Modelo 308 application field in the official
+                2019 record design.
+              label: Applicant given name
             x-chim6r1ee9in2bb2c5pmab9g70:
-              help: Box 798-814 of modelo 308, tax year 2009.
-              label: Special equivalence surcharge regime (SESR) - Settlement - Taxable
-                base [08]
+              help: Taxable base · line 1. Modelo 308 application field in the official
+                2019 record design. Form box 08.
+              label: Taxable base · line 1
             x-chim6r1ee9in2bb2c5pmab9h64:
-              help: Box 837-853 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Taxable base [11]
+              help: Taxable base · line 2. Modelo 308 application field in the official
+                2019 record design. Form box 11.
+              label: Taxable base · line 2
             x-chim6r1ee9in2bb2c5pmab9h6g:
-              help: Box 876-892 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Taxable base [14]
+              help: Taxable base · line 3. Modelo 308 application field in the official
+                2019 record design. Form box 14.
+              label: Taxable base · line 3
             x-chim6r1ee9in2bb3elnn8o9d64o0:
-              help: Box 820-836 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Tax amount [10]
+              help: VAT amount · line 1. Modelo 308 application field in the official
+                2019 record design. Form box 10.
+              label: VAT amount · line 1
             x-chim6r1ee9in2bb3elnn8o9d64pg:
-              help: Box 859-875 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Tax amount [13]
+              help: VAT amount · line 2. Modelo 308 application field in the official
+                2019 record design. Form box 13.
+              label: VAT amount · line 2
             x-chim6r1ee9in2bb3elnn8o9d64r0:
-              help: Box 898-914 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Tax amount [16]
+              help: VAT amount · line 3. Modelo 308 application field in the official
+                2019 record design. Form box 16.
+              label: VAT amount · line 3
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
-              help: Box 915-931 of modelo 308, tax year 2009.
-              label: SESR - Settlement - VAT to refund [17]
+              help: VAT refund under the equivalence surcharge scheme. Modelo 308
+                application field in the official 2019 record design. Form box 17.
+              label: VAT refund under the equivalence surcharge scheme
             x-chim6r1ee9in2bbkd5o6ub9g74:
-              help: Box 815-819 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Rate (%) [09]
+              help: VAT rate (%) · line 1. Modelo 308 application field in the official
+                2019 record design. Form box 09.
+              label: VAT rate (%) · line 1
             x-chim6r1ee9in2bbkd5o6ub9h68:
-              help: Box 854-858 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Rate (%) [12]
+              help: VAT rate (%) · line 2. Modelo 308 application field in the official
+                2019 record design. Form box 12.
+              label: VAT rate (%) · line 2
             x-chim6r1ee9in2bbkd5o6ub9h6k:
-              help: Box 893-897 of modelo 308, tax year 2009.
-              label: SESR - Settlement - Rate (%) [15]
+              help: VAT rate (%) · line 3. Modelo 308 application field in the official
+                2019 record design. Form box 15.
+              label: VAT rate (%) · line 3
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Box 13 of modelo 308, tax year 2009.
+              help: Return type. Modelo 308 application field in the official 2019
+                record design.
               label: Return type
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              label: Request type (equivalence surcharge / art 30 bis / art 21.4 /
-                occasional taxable person / simplified transport regime)
+              label: Reason for the application
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
-              help: Box 109 of modelo 308, tax year 2009.
+              help: Taxation type by taxable person. Modelo 308 application field
+                in the official 2019 record design.
               label: Taxation type by taxable person
           field:
             label: Modelo 308, tax years 2019 onwards

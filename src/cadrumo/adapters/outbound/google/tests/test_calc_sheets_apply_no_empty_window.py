@@ -1,19 +1,8 @@
-"""The apply cycle never leaves the operator's workbook empty.
+"""Pure payload and historical stale-address helpers.
 
-The adapter used to clear every managed tab and then write, as two
-unprotected Sheets calls. Sheets offers no transaction spanning
-``values.batchClear`` and ``values.batchUpdate``, so an interruption between
-them emptied the operator's workbook outright: the mirror holds no system
-data, but the artefact the operator works in was destroyed and nothing
-warned. The fix is ordering — write first, then clear only what the write
-did not replace — so a run interrupted at any point leaves either the old
-content or the new, never nothing.
-
-These are offline request-pipeline tests, matching the sibling integration
-module: write-shaped online tests against a real account are
-project-forbidden, so what is gated here is that the assembled request set
-carries the property, driven off a REAL modelo plan rather than a
-hand-built fixture.
+Fresh publication and preservation of external edits are exercised through the
+receipt-bound HTTP integration tests in test_review_publication.py. These local
+tests do not establish real Google acceptance.
 """
 
 from __future__ import annotations

@@ -34,6 +34,45 @@ modelo:
           Corporate Income Tax and Non-Resident Income Tax (permanent establishments).
           Certain income from movable capital or certain income.
         title: Withholdings on income from movable capital
+      form:
+        column:
+          base: Withholding and payments-on-account base
+          dividendos: Dividends and other income from equity interests
+          ingresos-anteriores: Payments from previous tax years
+          numero-perceptores: Number of recipients
+          otras-rentas: Other income
+          regularizacion: Adjustment
+          retenciones: Withholdings and payments on account
+          totales: Totals
+        context:
+          apellidos: Surname or registered business name
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          nombre-completo: Full name or registered business name
+          periodo: Period
+        page:
+          dr-12301:
+            heading: Withholding on investment income and certain other income
+        row:
+          base: Withholding and payments-on-account base
+          numero-rentas: Number of income items
+          periodificacion: Accrual allocation
+          retenciones: Withholdings and payments on account
+        section:
+          complementaria:
+            heading: Supplementary return (6)
+          devengo:
+            heading: Tax period (2)
+          identificacion:
+            heading: Identification (1)
+          ingreso:
+            heading: Payment (4)
+          liquidacion:
+            heading: Tax calculation (3)
       revision:
         2019-2023:
           casilla:

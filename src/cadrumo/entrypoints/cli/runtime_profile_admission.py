@@ -116,12 +116,14 @@ def _authenticate(
             )
         _api_key(client, selection=root_selection)
         return
+    if root_selection is not None:
+        _password(client, selection=root_selection)
+        return
+    if not terminal_can_prompt_for_secrets():
+        raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_passphrase_channel_absent")
     try:
         client.resume_receipt()
     except ProfileReceiptRefusedError as error:
-        if root_selection is not None:
-            _password(client, selection=root_selection)
-            return
         refusal = error.reason
         if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
             if terminal_can_prompt_for_secrets():
@@ -135,8 +137,6 @@ def _authenticate(
             verdict=profile_session_failure_verdict(refusal, profile_name=profile_label or str(client.profile_id)),
             requested_leaf=requested_cli_leaf(ctx),
         ) from None
-    if root_selection is not None:
-        raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused")
 
 
 def activate_runtime_profile(
@@ -171,7 +171,7 @@ def activate_runtime_profile(
         bind_profile_client(ctx, client, profile_id=UUID(bucket_id))
     except RuntimeFrontendRefusedError as error:
         client.close()
-        raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason}) from None
+        raise CliRefusedBoundaryError(error.reason, context=error.context) from None
     except BaseException:
         client.close()
         raise

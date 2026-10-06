@@ -79,7 +79,7 @@ def _snapshot(modelo: str, year: int, period: str, on: date):
 _FORMAT_BY_REGISTRY_TYPE = {
     "money": ("money", "#,##0.00"),
     "integer": ("integer", "0"),
-    "ratio": ("percentage", "0.00%"),
+    "ratio": ("decimal", "0.00####"),
 }
 
 
@@ -110,7 +110,7 @@ def test_export_plan_mirrors_registry_manifest_formulas_and_formats(
     by_id = {c.id: c for c in revision.casillas}
     plan = build_export_plan(snapshot)
     emitted_ids = {cell.casilla_id for cell in plan.value_cells if cell.casilla_id is not None}
-    emitted_ids.update(cell.casilla_id for cell in plan.formula_cells)
+    emitted_ids.update(cell.casilla_id for cell in plan.formula_cells if cell.casilla_id is not None)
 
     required = {(c.number, c.segmento) for c in manifest.casillas}
     emitted = {(by_id[cid].number, by_id[cid].segmento) for cid in emitted_ids if cid in by_id}

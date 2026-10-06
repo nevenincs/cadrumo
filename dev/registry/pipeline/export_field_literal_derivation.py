@@ -18,6 +18,7 @@ from .export_field_derivation import (
 from .export_field_literal_source_pins import (
     _source_pinned_165_transport_constant,
     _source_pinned_190_transport_constant,
+    _source_pinned_194_transport_constant,
     _source_pinned_270_transport_constant,
     _source_pinned_280_transport_without_parsed_content,
     _source_pinned_341_pdf_constant,
@@ -56,6 +57,31 @@ def _literal_derivation(
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
     literal_notes: tuple[NoteLiteralDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
+    parser_field = joined_field.parser_field
+    if (
+        parser_field.source_cell is None
+        and parser_field.aeat_type == "Blancos"
+        and parser_field.normalized_description == "CEROS."
+        and parser_field.content is None
+    ):
+        # In a PDF a dashed naturaleza is parsed as a reserved run. The
+        # complete description CEROS explicitly fixes its bytes to zeros;
+        # it neither supplies an amount nor authorizes space padding.
+        literal = joined_field.semantic_entry.literal
+        expected = "0" * parser_field.length
+        if literal is None:
+            raise RegistryValidationError("reserved zero run has no mapped literal")
+        _validate_literal_bytes(joined_field, literal, expected, encoding, False)
+        return _schema_field(
+            joined_field,
+            data_type="text",
+            required=True,
+            padding=ExportPadding.NONE,
+            justification=ExportJustification.NONE,
+            signed=False,
+            export_record_id=export_record_id,
+            derivation_code="literal-exact-v1",
+        )
     missing_content_literal = _source_pinned_280_transport_without_parsed_content(joined_field, render_profile)
     if missing_content_literal is not None:
         _validate_literal_bytes(joined_field, missing_content_literal, missing_content_literal, encoding, False)
@@ -134,6 +160,7 @@ def _source_pinned_literal_constant(
     for source_reader in (
         _source_pinned_349_constant,
         _source_pinned_190_transport_constant,
+        _source_pinned_194_transport_constant,
         _source_pinned_345_transport_constant,
         _source_pinned_270_transport_constant,
         _source_pinned_165_transport_constant,

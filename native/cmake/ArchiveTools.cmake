@@ -1,0 +1,18 @@
+# SDK archives are target inputs; their decoder executes only on the builder.
+string(JSON sdk_archive_format ERROR_VARIABLE archive_format_error
+  GET "${toolchain}" targets "${CADRUMO_TARGET}" cpython_archive_format)
+if(NOT archive_format_error AND sdk_archive_format STREQUAL "tar.zst")
+  set(CADRUMO_ZSTD "" CACHE FILEPATH "Reviewed absolute builder zstd executable")
+  if(NOT IS_ABSOLUTE "${CADRUMO_ZSTD}" OR NOT EXISTS "${CADRUMO_ZSTD}" OR IS_DIRECTORY "${CADRUMO_ZSTD}")
+    message(FATAL_ERROR "Supply CADRUMO_ZSTD as an absolute existing SDK archive decoder")
+  endif()
+  file(TO_CMAKE_PATH "${CADRUMO_ZSTD}" decoder_path)
+  file(SHA256 "${CADRUMO_ZSTD}" decoder_hash)
+  string(JSON decoder_provenance GET "${toolchain}" cpython_archive_decoder_provenance)
+  set(archive_decoder "{}")
+  string(JSON archive_decoder SET "${archive_decoder}" executable "\"${decoder_path}\"")
+  string(JSON archive_decoder SET "${archive_decoder}" sha256 "\"${decoder_hash}\"")
+  string(JSON archive_decoder SET "${archive_decoder}" provenance "${decoder_provenance}")
+  string(JSON build_toolchain SET "${build_toolchain}" cpython_archive_decoder "${archive_decoder}")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CADRUMO_ZSTD}")
+endif()

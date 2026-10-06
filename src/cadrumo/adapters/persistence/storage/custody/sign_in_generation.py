@@ -34,7 +34,7 @@ from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..bucket.keystore_paths import keystore_sidecar_path
 from ..storage_path_definitions import SIGN_IN_GENERATION_FILENAME
 from .automation_crypto import canonical_record, parse_record
-from .automation_profile import validate_automation_profile_binding
+from .automation_profile import current_automation_profile_binding, validate_automation_profile_binding
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     profile_custody_root_lock,
@@ -241,3 +241,36 @@ class SignInGenerationCustody:
         ensure_profile_custody_local_directory(self.path.parent)
         raw = canonical_record(SignInGenerationRecord(binding=self.binding, current=current))
         write_profile_custody_local_record(self.path, raw, publish_once=once)
+
+
+def fence_profile_sign_in_for_custody_transition(*, root: Path, profile_id: UUID) -> None:
+    """Fence existing sign-in authority before an authenticated custody change.
+
+    The lifecycle caller holds the root transaction lock through its envelope
+    replacement or deletion. No receipt or optional native credential is touched.
+    Missing generation already denies every receipt. An unreadable generation
+    refuses the transition rather than silently reporting revocation completed.
+    Stored installation metadata selects denial only; it never admits a session.
+    """
+    path = sign_in_generation_path(storage_root=root, profile_id=profile_id)
+    with profile_custody_root_lock(root):
+        # The anchored reader requires existing parents. Only positive absence
+        # may skip the fence; permission failures and malformed paths propagate.
+        for directory in (path.parent.parent, path.parent):
+            try:
+                directory.lstat()
+            except FileNotFoundError:
+                return
+        raw = read_optional_profile_custody_local_record(path, maximum_bytes=MAX_SIGN_IN_GENERATION_BYTES)
+        if raw is None:
+            return
+        record = parse_record(SignInGenerationRecord, raw)
+        if record.binding.profile_id != profile_id:
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID)
+        binding = current_automation_profile_binding(
+            root=root,
+            profile_id=profile_id,
+            installation_id=record.binding.installation_id,
+            os_owner_id=record.binding.os_owner_id,
+        )
+        SignInGenerationCustody(root=root, binding=binding).advance()

@@ -438,9 +438,10 @@ cloud upload. A capability whose package extra is missing needs that extra
 installed; see [Install Cadrumo](../workstation-setup.md) for the extras.
 
 Sign out without deleting the profile using `aeat config logout` after the
-login-gated maintenance and capability checks above. Logout closes the active
-storage session, discards its in-memory keys, closes the storage connections,
-and clears the local active-profile pointer:
+login-gated maintenance and capability checks above. Logout revokes this
+profile's shared human sign-in and closes its human sessions. The profile stays
+selected; subsequent commands require fresh authentication. Enrolled API
+credentials keep their separate authority:
 
 ```{cli-sequence} profile-setup-logout
 :verify: Confirm logout closes the active session without deleting the profile.
@@ -465,14 +466,16 @@ discover the vocabulary.
 
 ## Delete a profile permanently
 
-Delete a profile for good only after closing its active session. Cadrumo refuses
-to delete the active profile, so log out first and then confirm the irreversible
-deletion of that exact named profile. This terminal example comes after every
-profile operation in this guide because the deleted profile cannot be used
-again:
+Close the profile's sign-in before deleting it. Logout keeps that profile
+selected, and Cadrumo refuses to delete the selected profile. Log in to another
+existing profile to change the default selection, then confirm the irreversible
+deletion of the original named profile. The example assumes
+`docs-sequence-replacement` already exists; login asks for its passphrase.
+It comes after every operation on the original profile because that profile
+cannot be used again:
 
 ```{cli-sequence} profile-setup-delete
-:verify: Confirm logout makes the sandbox profile inactive before deleting only that exact profile.
+:verify: Confirm another profile is selected before deleting only the original named profile.
 ```
 
 ## If setup looks wrong

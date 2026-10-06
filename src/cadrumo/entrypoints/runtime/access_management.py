@@ -11,6 +11,7 @@ from uuid import UUID
 from pydantic import SecretBytes
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document, write_session_inventory
+from ...adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from ...adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ...application.runtime.access_management import (
     RuntimeAccessManagementRequest,
@@ -29,8 +30,13 @@ from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...application.user_profile.automation_enrollment import AdministrationFacts
 from ...application.user_profile.automation_lifecycle import AutomationDenial
-from ...application.user_profile.automation_lifecycle_service import AutomationLifecycleService, AutomationResumeRequest
+from ...application.user_profile.automation_lifecycle_service import (
+    AutomationLifecycleService,
+    AutomationResumeRequest,
+    HumanSignInRevocationResult,
+)
 from ...application.user_profile.custody_ports import bind_profile_custody_port
+from ...application.user_profile.session_retirement import SessionRetirementKind
 from .profile_host import ProfileConnection, RuntimeProfileHost
 
 
@@ -66,6 +72,14 @@ class RuntimeLifecycleOwner:
             context=facts.context,
             originating_login_id=connection.login.login_id,
             session=None,
+        )
+
+    def revoke_human_sign_in(self) -> HumanSignInRevocationResult:
+        """Use the runtime's generation-first retirement after fresh recovery proof."""
+        deletion, _ = self.host.revoke_human_sign_in(kind=SessionRetirementKind.REVOKED)
+        return HumanSignInRevocationResult(
+            receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
+            keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
         )
 
     def set_profile_lock(self, *, generation: int, locked: bool) -> None:
@@ -151,15 +165,18 @@ class RuntimeAccessManagement:
                     read_secret(channel, deadline=time.monotonic() + 10) as secret,
                     bind_profile_custody_port(build_profile_custody_port()),
                 ):
-                    resumed = service.resume(
-                        AutomationResumeRequest(
-                            request_id=request.request_id,
-                            profile_id=request.profile_id,
-                            lock_generation=request.lock_generation,
-                            grants=request.grants,
-                        ),
-                        password=SecretBytes(bytes(secret)),
-                    )
+                    try:
+                        resumed = service.resume(
+                            AutomationResumeRequest(
+                                request_id=request.request_id,
+                                profile_id=request.profile_id,
+                                lock_generation=request.lock_generation,
+                                grants=request.grants,
+                            ),
+                            password=SecretBytes(bytes(secret)),
+                        )
+                    finally:
+                        self._synchronize(host)
                 result = RuntimeProfileResumed(
                     request_id=request.request_id,
                     runtime_boot_id=context.runtime_boot_id,
@@ -188,6 +205,7 @@ class RuntimeAccessManagement:
                 runtime_boot_id=context.runtime_boot_id,
                 connection_id=context.connection_id,
                 code=error.reason,
+                sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
             )
         # A successful global lock intentionally ends its caller's lease. This
         # exact nonsecret effect acknowledgement cannot require surviving access.

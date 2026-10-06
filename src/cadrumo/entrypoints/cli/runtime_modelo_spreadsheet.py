@@ -1,4 +1,4 @@
-"""Submit the four registered spreadsheet operations for one bound profile."""
+"""Submit local XLSX export for one bound profile."""
 
 from __future__ import annotations
 
@@ -9,11 +9,8 @@ import typer
 from pydantic import BaseModel
 
 from ...application.modelo.modelo_spreadsheet_operation_contracts import (
-    MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
-    MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE,
-    MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
     ModeloSpreadsheetCalculateOutcome,
     ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetExportOutcome,
@@ -22,22 +19,17 @@ from ...application.modelo.modelo_spreadsheet_operation_contracts import (
     ModeloSpreadsheetPullRequest,
     ModeloSpreadsheetRequest,
     ModeloSpreadsheetVerifyOutcome,
-    ModeloSpreadsheetVerifyRequest,
     SpreadsheetOutputPathRefusal,
     SpreadsheetRefusal,
     SpreadsheetRowIngressRefusal,
     SpreadsheetSnapshotMismatchRefusal,
 )
 from ...application.modelo.modelo_spreadsheet_operation_projections import (
-    ModeloSpreadsheetCalculateProjection,
     ModeloSpreadsheetExportProjection,
     ModeloSpreadsheetProjection,
-    ModeloSpreadsheetPullProjection,
-    ModeloSpreadsheetVerifyProjection,
 )
 from ...application.operations.public_period import PublicPeriod
 from ...application.runtime.contracts import RuntimeRefusalCode
-from ...core.hashing import sha256_file
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .errors import CliRecordedOperationError
 from .registered_operation_contracts import RegisteredOperationCompletion
@@ -239,119 +231,8 @@ def export_modelo_spreadsheet(
     return projection
 
 
-def pull_modelo_spreadsheet(
-    ctx: typer.Context,
-    *,
-    modelo: str,
-    period: PublicPeriod,
-    spreadsheet_id: str,
-    assemble_observations: bool,
-) -> ModeloSpreadsheetPullProjection:
-    """Read and normalize workbook edits through the exact-profile worker."""
-    client = bound_profile_client(ctx)
-    request = ModeloSpreadsheetPullRequest(
-        profile_id=client.profile_id,
-        modelo=modelo,
-        period=period,
-        spreadsheet_id=spreadsheet_id,
-        assemble_observations=assemble_observations,
-    )
-    completed = _submit(
-        ctx,
-        request,
-        definition_id=MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID,
-        result_type=ModeloSpreadsheetPullOutcome,
-    )
-    projection = _correlate(
-        completed,
-        request=request,
-        operation="pull",
-        projection_type=ModeloSpreadsheetPullProjection,
-        expected_effect=OperationEffect.NONE,
-    )
-    if (
-        projection.spreadsheet_id != request.spreadsheet_id
-        or (
-            not request.assemble_observations
-            and (projection.assembled_groupings or projection.assembled_observation_count)
-        )
-        or _contains_empty_spreadsheet_edits(projection)
-    ):
-        raise invalid_completion_error(completed)
-    return projection
-
-
-def calculate_modelo_spreadsheet(
-    ctx: typer.Context,
-    *,
-    modelo: str,
-    period: PublicPeriod,
-    spreadsheet_id: str,
-) -> ModeloSpreadsheetCalculateProjection:
-    """Run the matching-workbook calculation through the exact-profile worker."""
-    client = bound_profile_client(ctx)
-    request = ModeloSpreadsheetCalculateRequest(
-        profile_id=client.profile_id,
-        modelo=modelo,
-        period=period,
-        spreadsheet_id=spreadsheet_id,
-    )
-    completed = _submit(
-        ctx,
-        request,
-        definition_id=MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
-        result_type=ModeloSpreadsheetCalculateOutcome,
-    )
-    projection = _correlate(
-        completed,
-        request=request,
-        operation="calculate",
-        projection_type=ModeloSpreadsheetCalculateProjection,
-        expected_effect=OperationEffect.NONE,
-    )
-    if projection.spreadsheet_id != request.spreadsheet_id:
-        raise invalid_completion_error(completed)
-    return projection
-
-
-def verify_modelo_spreadsheet(
-    ctx: typer.Context,
-    *,
-    modelo: str,
-    period: PublicPeriod,
-    scenario_path: Path | None,
-) -> ModeloSpreadsheetVerifyProjection:
-    """Run the parity harness through the exact-profile worker."""
-    client = bound_profile_client(ctx)
-    absolute_scenario = scenario_path.absolute() if scenario_path is not None else None
-    scenario_digest = sha256_file(absolute_scenario) if absolute_scenario is not None else None
-    request = ModeloSpreadsheetVerifyRequest(
-        profile_id=client.profile_id,
-        modelo=modelo,
-        period=period,
-        scenario_path=str(absolute_scenario) if absolute_scenario is not None else None,
-        scenario_sha256=scenario_digest,
-    )
-    completed = _submit(
-        ctx,
-        request,
-        definition_id=MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
-        result_type=ModeloSpreadsheetVerifyOutcome,
-    )
-    return _correlate(
-        completed,
-        request=request,
-        operation="verify",
-        projection_type=ModeloSpreadsheetVerifyProjection,
-        expected_effect=OperationEffect.UPDATED,
-    )
-
-
 __all__ = [
-    "calculate_modelo_spreadsheet",
     "export_modelo_spreadsheet",
-    "pull_modelo_spreadsheet",
-    "verify_modelo_spreadsheet",
 ]
 
 
@@ -469,13 +350,3 @@ def _require_spreadsheet_refusal[OutcomeT: ModeloSpreadsheetRegisteredOutcome](
         _require_snapshot_refusal(completed, request, operation, refusal)
     else:
         raise invalid_completion_error(completed)
-
-
-def _contains_empty_spreadsheet_edits(projection: ModeloSpreadsheetPullProjection) -> bool:
-    """Detect absent values in any imported edit or row-set cell."""
-    return (
-        any(edit.value is None for edit in projection.operator_edits)
-        or any(edit.value is None for edit in projection.binding_edits)
-        or any(edit.value is None for edit in projection.relation_edits)
-        or any(cell.value is None for row in projection.row_set_edits for cell in row.cells)
-    )

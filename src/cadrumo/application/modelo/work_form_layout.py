@@ -8,10 +8,12 @@ if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.form_context import resolve_form_context_field
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
     FormCellKind,
+    FormContextFieldBlock,
     FormFieldBlock,
     FormGridBlock,
     FormLayoutDefinition,
@@ -22,6 +24,8 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormRepeatingGroupBlock,
     FormSectionDefinition,
 )
+from ..filing.producer_snapshot import FilingProducerSnapshot
+from .work_form_context_values import form_context_value
 from .work_form_counts import count_work_form_fields
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_binding_field, project_casilla_field
@@ -29,6 +33,7 @@ from .work_form_localization import localized_heading, localized_text
 from .work_form_models import (
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
+    ModeloFormContextFieldBlock,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormFieldBlock,
@@ -57,10 +62,17 @@ from .work_form_sources import FIXED_BY_THE_FORM
 class LayoutWalker:
     """Turn a declared layout into form pages while accounting for every placement."""
 
-    def __init__(self, layout: FormLayoutDefinition, context: WorkFormContext) -> None:
+    def __init__(
+        self,
+        layout: FormLayoutDefinition,
+        context: WorkFormContext,
+        *,
+        producer_snapshot: FilingProducerSnapshot | None = None,
+    ) -> None:
         """Prepare placement indexes and an empty set of casillas encountered on pages."""
         self.layout = layout
         self.context = context
+        self.producer_snapshot = producer_snapshot
         self.placements: dict[str, FormPlacementDefinition] = {str(item.casilla_id): item for item in layout.placements}
         self.aliases: dict[str, tuple[str, ...]] = {
             str(item.casilla_id): tuple(alias.official_ref or alias.page_id for alias in item.aliases)
@@ -133,10 +145,26 @@ class LayoutWalker:
         )
 
     def block(
-        self, block: FormFieldBlock | FormGridBlock | FormRepeatingGroupBlock | FormBindingInputsBlock
+        self,
+        block: FormFieldBlock
+        | FormGridBlock
+        | FormRepeatingGroupBlock
+        | FormBindingInputsBlock
+        | FormContextFieldBlock,
     ) -> ModeloFormBlock:
         """Project one declared field, grid, repeating group, or binding-input block."""
         language = self.context.language
+        if isinstance(block, FormContextFieldBlock):
+            owner = resolve_form_context_field(self.context.snapshot.revision, block)
+            label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
+            if block.box_number is not None:
+                label = label.model_copy(update={"text": f"[{block.box_number}] {label.text}"})
+            value = (
+                project_binding_field(str(owner.binding), self.context).value
+                if owner.binding is not None
+                else form_context_value(self.context.snapshot, block, producer_snapshot=self.producer_snapshot)
+            )
+            return ModeloFormContextFieldBlock(id=block.id, label=label, value=value)
         if isinstance(block, FormFieldBlock):
             field = (
                 self.casilla(

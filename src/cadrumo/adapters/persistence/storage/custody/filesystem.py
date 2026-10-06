@@ -19,7 +19,7 @@ from .....core.windows_contention import is_windows_contention
 from ._capsule_filesystem import (
     windows_mark_handle_for_deletion as _windows_mark_handle_for_deletion,
 )
-from .errors import ProfileCustodyPathAbsentError, ProfileCustodyRecordError
+from .errors import ProfileCustodyLockContendedError, ProfileCustodyPathAbsentError, ProfileCustodyRecordError
 from .filesystem_primitives import ProfileCustodyPasswordReadOperation, ensure_profile_custody_local_directory
 from .filesystem_primitives import anchor_directory as _anchor_directory
 from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
@@ -160,8 +160,10 @@ def _profile_custody_posix_lock(path: Path, *, timeout_seconds: float) -> Genera
                     flock(descriptor, lock_ex | lock_nb)
                     break
                 except OSError as exc:
-                    if exc.errno not in {errno.EACCES, errno.EAGAIN} or time.monotonic() >= deadline:
+                    if exc.errno not in {errno.EACCES, errno.EAGAIN}:
                         raise ProfileCustodyRecordError("local custody lock cannot be exclusively opened") from exc
+                    if time.monotonic() >= deadline:
+                        raise ProfileCustodyLockContendedError("local custody lock remains held") from exc
                     time.sleep(0.025)
             yield
         finally:
@@ -190,8 +192,10 @@ def _profile_custody_windows_lock(path: Path, *, timeout_seconds: float) -> Gene
             if handle != invalid_handle:
                 break
             error = ctypes.get_last_error()
-            if error not in {32, 33} or time.monotonic() >= deadline:  # sharing/lock violation
+            if error not in {32, 33}:  # sharing/lock violation
                 raise ProfileCustodyRecordError("local custody lock cannot be exclusively opened")
+            if time.monotonic() >= deadline:
+                raise ProfileCustodyLockContendedError("local custody lock remains held")
             time.sleep(0.025)
         try:
             info = file_information_type()

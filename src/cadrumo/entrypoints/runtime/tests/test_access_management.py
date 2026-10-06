@@ -16,6 +16,7 @@ from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     AdministrationSubject,
@@ -233,6 +234,9 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
                     assert isinstance(prepared, RuntimeProfileRecoveryPrepared)
                     assert prepared.globally_locked and prepared.lock_generation == generation
 
+                    sign_in = SignInGenerationCustody(root=subject.store.root, binding=subject.store.binding)
+                    before_sign_in = sign_in.observe().current
+                    assert before_sign_in is not None
                     wrong_password = bytearray(b"wrong-synthetic-password")
                     wrong = recovery.resume_profile(
                         RuntimeProfileResume(
@@ -247,6 +251,7 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
                     )
                     assert wrong_password == bytes(len(b"wrong-synthetic-password"))
                     assert isinstance(wrong, RuntimeAccessRefusal)
+                    assert sign_in.observe().current == before_sign_in
                     assert subject.store.profile_lock_state().globally_locked
 
                     password = bytearray(PROFILE_INPUT.encode())
@@ -263,6 +268,9 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
                     )
                     assert password == bytes(len(PROFILE_INPUT.encode()))
                     assert isinstance(resumed, RuntimeProfileResumed)
+                    assert resumed.receipt.human_sign_in_revocation is not None
+                    after_sign_in = sign_in.observe().current
+                    assert after_sign_in is not None and after_sign_in.generation == before_sign_in.generation + 1
                     assert resumed.receipt.reactivated_grants == frozenset({selected_grant})
                     assert not subject.store.profile_lock_state().globally_locked
                     grants = {grant.grant_id: grant for grant in subject.store.snapshot().grants}

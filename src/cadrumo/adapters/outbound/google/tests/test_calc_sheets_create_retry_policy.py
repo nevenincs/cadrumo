@@ -10,6 +10,7 @@ from googleapiclient.errors import HttpError
 
 from ...storage.errors import OutboundStorageNetworkError
 from ..calc_sheets_apply import _create_folder, _create_spreadsheet, _find_folder
+from ..drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -35,6 +36,7 @@ class _Resource:
 
     def __init__(self, *, fail: frozenset[str] = frozenset()) -> None:
         self.calls: list[tuple[str, int]] = []
+        self.creates: list[dict[str, object]] = []
         self._fail = fail
 
     def _request(self, name: str, result: dict[str, Any]) -> _Request:
@@ -46,7 +48,8 @@ class _Resource:
     def spreadsheets(self) -> _Resource:
         return self
 
-    def create(self, **_kwargs: object) -> _Request:
+    def create(self, **kwargs: object) -> _Request:
+        self.creates.append(kwargs)
         return self._request("create", {"id": "created", "spreadsheetId": "sheet-1"})
 
     def list(self, **_kwargs: object) -> _Request:
@@ -70,25 +73,36 @@ def test_folder_create_is_sent_once_and_a_transient_failure_is_uncertain() -> No
 
 
 def test_spreadsheet_create_is_sent_once_and_a_transient_failure_is_uncertain() -> None:
-    drive = _Resource()
-    sheets = _Resource(fail=frozenset({"create"}))
+    drive = _Resource(fail=frozenset({"create"}))
+    sheets = _Resource()
 
     with pytest.raises(OutboundStorageNetworkError) as raised:
-        _create_spreadsheet(cast(Any, drive), cast(Any, sheets), parent_id="parent", title="book", tab_names=("a",))
+        _create_spreadsheet(cast(Any, drive), cast(Any, sheets), parent_id="parent", title="book")
 
-    assert sheets.calls == [("create", 0)]
-    assert drive.calls == []
-    assert raised.value.context == {"action": "sheets.spreadsheets.create", "effect_uncertain": True}
+    assert drive.calls == [("create", 0)]
+    assert sheets.calls == []
+    assert raised.value.context == {"action": "drive.files.create.spreadsheet", "effect_uncertain": True}
 
 
-def test_move_and_stamp_after_a_create_keep_client_retries() -> None:
+def test_spreadsheet_creation_includes_destination_and_marker_in_one_request() -> None:
     drive = _Resource()
     sheets = _Resource()
 
-    _create_spreadsheet(cast(Any, drive), cast(Any, sheets), parent_id="parent", title="book", tab_names=("a",))
+    _create_spreadsheet(cast(Any, drive), cast(Any, sheets), parent_id="parent", title="book")
 
-    assert sheets.calls == [("create", 0)]
-    assert drive.calls == [("get", _CLIENT_RETRIES), ("update", _CLIENT_RETRIES)]
+    assert drive.calls == [("create", 0)]
+    assert drive.creates == [
+        {
+            "body": {
+                "name": "book",
+                "mimeType": "application/vnd.google-apps.spreadsheet",
+                "parents": ["parent"],
+                "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
+            },
+            "fields": "id",
+        }
+    ]
+    assert sheets.calls == [("get", _CLIENT_RETRIES)]
 
 
 def test_folder_lookup_keeps_client_retries() -> None:

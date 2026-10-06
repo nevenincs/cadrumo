@@ -11,10 +11,23 @@ modelo:
           e imputaciones de renta.
         title: IRPF retenciones e ingresos a cuenta
       form:
+        column:
+          contraprestaciones_satisfechas: Contraprestaciones satisfechas
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
         page:
           dr-m11101:
             heading: Página 1 · Retenciones e ingresos a cuenta
         row:
+          contraprestaciones:
+            heading: Contraprestaciones dinerarias o en especie
           percep-dinerarias:
             heading: Percepciones dinerarias
           percep-en-especie:
@@ -28,16 +41,27 @@ modelo:
           rendimientos-en-especie:
             heading: Rendimientos en especie
         section:
+          complementaria:
+            heading: Complementaria (6)
           contraprest-cesion-dchos-imagen:
-            heading: Contraprestaciones por la cesión de derechos de imagen
+            heading: 'V. Contraprestaciones por la cesión de derechos de imagen: ingresos
+              a cuenta previstos en el artículo 92.8 de la Ley del Impuesto'
+          devengo:
+            heading: Devengo (2)
           ganancias-patrim-aprovecham-forestales:
-            heading: Ganancias patrimoniales derivadas de aprovechamientos forestales
+            heading: IV. Ganancias patrimoniales derivadas de los aprovechamientos
+              forestales de los vecinos en montes públicos
+          identificacion:
+            heading: Declarante (1)
+          ingreso:
+            heading: Ingreso (4)
           premios:
-            heading: Premios
+            heading: III. Premios por la participación en juegos, concursos, rifas
+              o combinaciones aleatorias
           rendim-actividades-economicas:
-            heading: Rendimientos de actividades económicas
+            heading: II. Rendimientos de actividades económicas
           rendim-del-trabajo:
-            heading: Rendimientos del trabajo
+            heading: I. Rendimientos del trabajo
           total-liquidacion:
             heading: Total liquidación
       revision:

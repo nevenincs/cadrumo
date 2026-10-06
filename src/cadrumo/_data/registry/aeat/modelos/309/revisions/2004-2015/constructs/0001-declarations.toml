@@ -1,7 +1,7 @@
 [[revisions."2004-2015".constructs]]
 id = "modelo-309-iva-no-periodica"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-procedure"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form-pdf"]
 casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",
@@ -61,6 +61,10 @@ casilla_ids = [
     "decl.resultado-24",
     "decl.justificante-anterior",
     "wire.observaciones",
+    "firma-lugar",
+    "firma-fecha",
+    "firma",
+    "papel-forma-pago",
 ]
 export_layouts = ["modelo-309-fichero"]
 application_links = ["modelo-309-filing", "modelo-309-export"]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from uuid import UUID
 
@@ -49,7 +50,12 @@ def build_profile_archive_operation_ports(
         return export_profile_capsule_archive(profile_id=profile_id, target=target, write=write)
 
     def push(
-        *, namespace_filter: str | None, limit: int | None, dry_run: bool, before_handoff: ArchiveProviderHandoff
+        *,
+        namespace_filter: str | None,
+        limit: int | None,
+        dry_run: bool,
+        before_handoff: ArchiveProviderHandoff,
+        write: ArchiveLocalWriter,
     ) -> ProfileArchivePushReport:
         require_profile()
         settings = load_settings().model_copy(update={"cadrumo_storage_provider_kind": "google_drive"})
@@ -59,9 +65,17 @@ def build_profile_archive_operation_ports(
             raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
         root_folder_id = resolve_required_drive_root_folder_id(profile=str(profile_id))
 
+        def commit[ResultT](save: Callable[[], ResultT], *, changed: Callable[[ResultT], bool]) -> ResultT:
+            results: list[ResultT] = []
+            write(lambda: results.append(save()))
+            return results[0]
+
+        def provider_handoff(action: str, *, writes: bool = False) -> None:
+            before_handoff()
+
         def provider_factory() -> StorageProvider:
             require_profile()
-            provider = get_storage_provider(settings=settings)
+            provider = get_storage_provider(settings=settings, before_handoff=provider_handoff, commit=commit)
             require_profile()
             return provider
 

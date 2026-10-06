@@ -127,6 +127,7 @@ literals would be free to drift into addressing different rows.
 """
 
 _DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
+    "afiliado": ("nif", "numero_afiliacion"),
     "miembro": ("nif", "clave", "subclave"),
     "vinculada": ("nif",),
     "operador": ("nif_comunitario", "clave_operacion"),

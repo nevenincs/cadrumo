@@ -426,6 +426,42 @@ fields = { continuidad_evidence = "Same printed box [24]: 2004-2015 number 24 eq
 removed_fields = []
 restate_provenance = true
 
+[[revisions."2016-2017".casilla_overrides]]
+[revisions."2016-2017".casilla_overrides.selector]
+revision = "2004-2015"
+id = "firma-lugar"
+
+[revisions."2016-2017".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2003-23809 Annex I printed46407 contains signature place/date/signature and payment method. The annex remains the approved form until replaced for2018 by BOE-A-2017-15190 Article1 and final provision2; the2016 record design does not represent these paper-only fields."
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+[[revisions."2016-2017".casilla_overrides]]
+[revisions."2016-2017".casilla_overrides.selector]
+revision = "2004-2015"
+id = "firma-fecha"
+
+[revisions."2016-2017".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2003-23809 Annex I printed46407 contains signature place/date/signature and payment method. The annex remains the approved form until replaced for2018 by BOE-A-2017-15190 Article1 and final provision2; the2016 record design does not represent these paper-only fields."
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+[[revisions."2016-2017".casilla_overrides]]
+[revisions."2016-2017".casilla_overrides.selector]
+revision = "2004-2015"
+id = "firma"
+
+[revisions."2016-2017".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2003-23809 Annex I printed46407 contains signature place/date/signature and payment method. The annex remains the approved form until replaced for2018 by BOE-A-2017-15190 Article1 and final provision2; the2016 record design does not represent these paper-only fields."
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+[[revisions."2016-2017".casilla_overrides]]
+[revisions."2016-2017".casilla_overrides.selector]
+revision = "2004-2015"
+id = "papel-forma-pago"
+
+[revisions."2016-2017".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2003-23809 Annex I printed46407 contains signature place/date/signature and payment method. The annex remains the approved form until replaced for2018 by BOE-A-2017-15190 Article1 and final provision2; the2016 record design does not represent these paper-only fields."
+source_refs = ["boe-modelo-309-2003-form-pdf"]
 [[revisions."2016-2017".family_overrides]]
 family = "constructs"
 selector = {revision = "2004-2015", id = "modelo-309-iva-no-periodica"}
@@ -433,7 +469,7 @@ fields = {bindings = ["modelo-309-iva-autorepercutido-intracomunitaria-cuota", "
 removed_fields = ["export_layouts"]
 sequence_additions = {application_links = ["modelo-309-portal", "modelo-309-review", "modelo-309-approval", "modelo-309-reconciliation", "modelo-309-workflow", "modelo-309-deadline", "modelo-309-calculation"], casilla_ids = ["iva.autorepercutido.intracomunitaria", "iva.soportado.recargo-equivalencia", "iva.cuota-no-periodica-total", "decl.tipo-trigger"], legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "boe-modelo-309-2003-form"], workbook_parity_refs = ["modelo-309-dr"]}
 sequence_removals = {application_links = [1], casilla_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57], source_refs = [0], workbook_parity_refs = [0]}
-sequence_order = {application_links = [1, 0, 2, 3, 4, 5, 6, 7], casilla_ids = [1, 2, 3, 0, 4], legal_refs = [1, 0, 2, 3, 4, 5], source_refs = [1, 2, 0, 3]}
+sequence_order = {application_links = [1, 0, 2, 3, 4, 5, 6, 7], casilla_ids = [5, 6, 7, 0, 8, 1, 2, 3, 4], legal_refs = [1, 0, 2, 3, 4, 5], source_refs = [2, 3, 0, 4, 1]}
 
 [[revisions."2016-2017".family_overrides]]
 family = "application_links"

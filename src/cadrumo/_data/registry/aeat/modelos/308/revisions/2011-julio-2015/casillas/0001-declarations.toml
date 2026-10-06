@@ -1,0 +1,27 @@
+[[revisions.2011-julio-2015.casillas]]
+id = "decl.mtn-iva-soportado-art21"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "BOE-A-2011-7479 Annex I adds the article 21.4 VAT fields 19 and 20; they are absent from BOE-A-2008-20953 Annex II and the 2009 record design."
+number = "744-756"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_iva_soportado_art21"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "mtn-iva-soportado-art21"
+
+[revisions.2011-julio-2015.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions.2011-julio-2015.casillas]]
+id = "decl.mtn-iva-devolver-art21"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "BOE-A-2011-7479 Annex I adds the article 21.4 VAT fields 19 and 20; they are absent from BOE-A-2008-20953 Annex II and the 2009 record design."
+number = "757-769"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_iva_devolver_art21"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "mtn-iva-devolver-art21"
+
+[revisions.2011-julio-2015.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]

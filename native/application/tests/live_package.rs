@@ -3,11 +3,11 @@
 use cadrumo_application::{
     child::ChildConfiguration,
     component::Cancellation,
-    package::{PackageManifest, Readiness},
+    package::Readiness,
     python::{self, BrowserQuery, PythonExpectation},
     value::RelativePath,
 };
-use std::{collections::BTreeMap, path::PathBuf, time::Duration};
+use std::{path::PathBuf, time::Duration};
 
 #[tokio::test]
 async fn manifest_cohort_matches_selected_packaged_interpreter() {
@@ -28,41 +28,38 @@ async fn manifest_cohort_matches_selected_packaged_interpreter() {
             .expect("projected executable path"),
     )
     .unwrap();
-    let manifest = PackageManifest::read(&root, &manifest_path).unwrap();
     let platform = std::env::var("CADRUMO_TEST_PACKAGE_PLATFORM")
         .expect("CADRUMO_TEST_PACKAGE_PLATFORM is required from the selected layout");
     let abi = std::env::var("CADRUMO_TEST_PACKAGE_ABI")
         .expect("CADRUMO_TEST_PACKAGE_ABI is required from the selected layout")
         .parse()
         .expect("package ABI must be an integer");
-    let inspection = manifest
+    #[cfg(feature = "live-release-tests")]
+    let inspection = {
+        use cadrumo_application::package::release::{ReleaseExpectation, inspect_release};
+        let expectations = std::env::var_os("CADRUMO_TEST_RELEASE_EXPECTATION").expect(
+            "CADRUMO_TEST_RELEASE_EXPECTATION must name verifier-supplied release expectations",
+        );
+        let expected: ReleaseExpectation =
+            serde_json::from_slice(&std::fs::read(expectations).unwrap()).unwrap();
+        assert_eq!(expected.platform, platform);
+        assert_eq!(expected.abi, abi);
+        inspect_release(&root, &manifest_path, &expected).unwrap()
+    };
+    #[cfg(not(feature = "live-release-tests"))]
+    let inspection = cadrumo_application::package::PackageManifest::read(&root, &manifest_path)
+        .unwrap()
         .inspect(&root, &manifest_path, &platform, abi)
         .unwrap();
     assert_eq!(inspection.readiness, Readiness::Ready);
     let expected = PythonExpectation::from_manifest(&inspection.manifest, &executable).unwrap();
     let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
-    let mut environment = BTreeMap::new();
-    for key in ["SystemRoot", "WINDIR", "COMSPEC"] {
-        if let Some(value) = std::env::var_os(key) {
-            environment.insert(key.into(), value);
-        }
-    }
-    for key in [
-        "HOME",
-        "USERPROFILE",
-        "LOCALAPPDATA",
-        "APPDATA",
-        "TEMP",
-        "TMP",
-        "CADRUMO_LOCAL_STORAGE_ROOT",
-        "CADRUMO_STORAGE_ROOT",
-    ] {
-        environment.insert(key.into(), directory.path().as_os_str().to_owned());
-    }
-    let configuration = ChildConfiguration::new(
+    let configuration = ChildConfiguration::from_platform(
         executable.under(&root),
         directory.path().to_owned(),
-        environment,
+        directory.path(),
+        cadrumo_platform::storage::Profile::Strict,
+        std::env::vars_os(),
     )
     .unwrap();
     let browser = BrowserQuery {

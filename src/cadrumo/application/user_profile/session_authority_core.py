@@ -8,7 +8,7 @@ Durable grants remain in the existing automation control store.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from uuid import UUID
 
@@ -27,6 +27,7 @@ from .automation_custody_port import AutomationCustodyError, AutomationCustodyPo
 from .automation_enrollment import AutomationKeyIssuer
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
 from .session_authority_policy import evaluate_session_authority
+from .session_retirement import SessionRetirement, SessionRetirementKind
 
 
 class SessionAuthorityCore:
@@ -40,6 +41,7 @@ class SessionAuthorityCore:
         owner: SessionAuthorityOwner,
         custody: AutomationCustodyPort,
         issuer: AutomationKeyIssuer,
+        retired: Callable[[SessionRetirement], None] | None = None,
     ) -> None:
         """Bind trusted collaborators; construction grants no session authority."""
         self.binding = binding
@@ -51,6 +53,8 @@ class SessionAuthorityCore:
         self._pending_retirements: set[UUID] = set()
         self._last_observation: tuple[UtcInstant, float] | None = None
         self._closed = False
+        self._human_admission_generation = 0
+        self._retired = retired
 
     def _facts(self, connection_id: UUID) -> SessionAuthorityFacts | AccessDenied:
         if self._closed:
@@ -60,7 +64,7 @@ class SessionAuthorityCore:
         if mismatch is not None:
             return mismatch
         if self._clock_rollback_detected(facts):
-            self._retire(set(self._sessions))
+            self._retire(set(self._sessions), reason=AccessDenialCode.CLOCK_INVALID)
             return AccessDenied(code=AccessDenialCode.CLOCK_INVALID)
         self._retire_sessions_without_live_login(facts)
         return facts
@@ -93,7 +97,8 @@ class SessionAuthorityCore:
                 session.session_id
                 for session in self._sessions.values()
                 if session.originating_login_id is not None and session.originating_login_id not in live_logins
-            }
+            },
+            reason=AccessDenialCode.OS_SESSION_UNAVAILABLE,
         )
 
     def _snapshot(self, facts: SessionAuthorityFacts) -> AutomationCustodySnapshot | AccessDenied:
@@ -149,7 +154,7 @@ class SessionAuthorityCore:
             and session.session_id in self._sessions
             and decision.code not in {AccessDenialCode.CONNECTION_MISMATCH, AccessDenialCode.CLIENT_MISMATCH}
         ):
-            self._retire({session.session_id})
+            self._retire({session.session_id}, reason=decision.code)
         return decision
 
     @contextmanager
@@ -175,17 +180,43 @@ class SessionAuthorityCore:
             return None
         return None if isinstance(snapshot, AccessDenied) else snapshot
 
-    def _retire(self: SessionAuthorityCore, retired: set[UUID]) -> None:
+    def _retire(
+        self: SessionAuthorityCore,
+        retired: set[UUID],
+        *,
+        reason: AccessDenialCode = AccessDenialCode.SESSION_INACTIVE,
+        kind: SessionRetirementKind = SessionRetirementKind.REVOKED,
+    ) -> None:
         while True:
             dependents = {s.session_id for s in self._sessions.values() if s.parent_session_id in retired}
             if dependents <= retired:
                 break
             retired |= dependents
         # Remove authority for the entire cascade before fallible physical cleanup.
-        for session_id in retired:
-            self._sessions.pop(session_id, None)
+        published = tuple(self._sessions.pop(identity) for identity in retired if identity in self._sessions)
         self._pending_retirements.update(retired)
         failures: list[Exception] = []
+        if kind is SessionRetirementKind.REVOKED:
+            if reason is AccessDenialCode.PROFILE_LOCKED:
+                kind = SessionRetirementKind.PROFILE_LOCKED
+            elif reason is AccessDenialCode.CUSTODY_CHANGED:
+                kind = SessionRetirementKind.CUSTODY_CHANGED
+        # Delivery is a nonblocking owner queue. Only actually published leases
+        # emit; retries of failed physical cleanup never emit a second event.
+        if self._retired is not None:
+            for session in published:
+                try:
+                    self._retired(
+                        SessionRetirement(
+                            profile_id=self.binding.profile_id,
+                            connection_id=session.connection_id,
+                            session_id=session.session_id,
+                            reason=reason,
+                            kind=kind,
+                        )
+                    )
+                except Exception as error:
+                    failures.append(error)
         for session_id in retired:
             try:
                 self.owner.retire(session_id)
@@ -205,10 +236,10 @@ class SessionAuthorityCore:
         try:
             facts = self._facts(connection_id)
         except AutomationCustodyError:
-            self._retire(connected)
+            self._retire(connected, reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
             return
         if isinstance(facts, AccessDenied):
-            self._retire(connected)
+            self._retire(connected, reason=facts.code)
             return
         current = tuple(item for item in self._sessions.values() if item.connection_id == connection_id)
         snapshot = self._automation_snapshot_for_sweep(facts, current)
@@ -227,7 +258,7 @@ class SessionAuthorityCore:
             self._evaluate(session, facts, None, None)
             return
         if snapshot is None:
-            self._retire({session.session_id})
+            self._retire({session.session_id}, reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
             return
         grant, key = self._records(snapshot, key_id=session.key_id, grant_id=session.grant_id)
         self._evaluate(session, facts, grant, key)

@@ -235,6 +235,7 @@ def _execute_archive_work[T: BaseModel](
             limit=payload.limit,
             dry_run=payload.dry_run,
             before_handoff=before_handoff,
+            write=tracker.call_writer,
         )
         return ProfileArchivePushExecutionResult(
             projection=ProfileArchivePushProjection(profile_id=payload.profile_id, report=report)
@@ -277,10 +278,7 @@ async def _settle_archive_work(
     effect: Callable[[bool], OperationEffect],
 ) -> str:
     try:
-        if isinstance(payload, ProfileArchivePushRequest):
-            result = await asyncio.to_thread(work)
-        else:
-            result = await run_with_ledger_commit_fence(work, tracker=tracker, context=context, task_name=expected)
+        result = await run_with_ledger_commit_fence(work, tracker=tracker, context=context, task_name=expected)
     except BaseException:
         await context.events.effect(effect(isinstance(payload, ProfileArchiveReconcileRequest)))
         raise
@@ -534,7 +532,11 @@ def build_profile_archive_operation_definitions(
             result_type=ProfileArchivePushExecutionResult,
             executor_type=ProfileArchivePushExecutor,
             build=lambda: ProfileArchivePushExecutor(factory),
-            capabilities=_capabilities(frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})),
+            # Creation receipts are real local writes. Their intermediate
+            # acknowledgement does not establish remote mirror completion.
+            capabilities=_capabilities(
+                frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
+            ),
             permitted_frontends=_FRONTENDS,
         ),
         build_single_phase_definition(

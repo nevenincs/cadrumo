@@ -77,10 +77,11 @@ def _create_profile(name: str = _PROFILE) -> Result:
     return created
 
 
-def _logout() -> None:
-    """Close the process-scoped session so a later login proves the passphrase afresh."""
-    result = invoke_cached_cli(("--format", "json", "config", "logout"))
-    assert result.exit_code == 0, result.output
+def _close_local_session() -> None:
+    """Drop only fixture-local custody before proving the next explicit password."""
+    from .....application.user_profile.login_session import logout_active_profile
+
+    logout_active_profile()
 
 
 def _status() -> dict[str, Any]:
@@ -445,6 +446,9 @@ def test_reset_replaces_a_forgotten_passphrase_with_the_captured_code(tmp_path: 
         assert document["result"]["dek_epoch_preserved"] is True
         assert document["result"]["recovery_enrollment_retained"] is True
         assert document["result"]["password_generation"] == 2
+        assert document["result"]["human_receipt_revoked"] is True
+        assert document["result"]["receipt_removed"] is True
+        assert isinstance(document["result"]["keychain_removed"], bool)
         # The reset says what it did not do: the code survives it and older
         # archives still open under the old passphrase.
         assert [(notice["code"], notice["message"]) for notice in document["notices"]] == [
@@ -457,13 +461,13 @@ def test_reset_replaces_a_forgotten_passphrase_with_the_captured_code(tmp_path: 
         # The successful login comes first: a deliberate failed login arms the
         # login throttle, which would then refuse the new passphrase for a
         # reason unrelated to the reset.
-        _logout()
+        _close_local_session()
         fresh = _login(_PROFILE, credential=_ROTATED_CREDENTIAL_INPUT)
         assert fresh.exit_code == 0, fresh.output
         assert json.loads(fresh.stdout)["command"] == "config.login"
         assert _status()["enrolled"] is True
 
-        _logout()
+        _close_local_session()
         stale = _login(_PROFILE, credential=_CREDENTIAL_INPUT)
         assert stale.exit_code != 0, stale.output
 
@@ -477,7 +481,7 @@ def test_reset_accepts_the_code_with_cosmetic_spacing_and_case_differences(tmp_p
 
         reset = _reset(_PROFILE, code=typed)
         assert reset.exit_code == 0, reset.output
-        _logout()
+        _close_local_session()
         assert _login(_PROFILE, credential=_ROTATED_CREDENTIAL_INPUT).exit_code == 0
 
 
@@ -521,7 +525,7 @@ def test_reset_refuses_a_profile_without_recovery(tmp_path: Path) -> None:
         assert json.loads(refused.stderr)["error"]["message"] == tr(
             "application.user_profile.errors.recovery_not_enrolled"
         )
-        _logout()
+        _close_local_session()
         assert _login(_PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
 
 
@@ -545,7 +549,7 @@ def test_reset_refuses_a_mismatched_confirmation_without_consulting_the_code(tmp
         assert json.loads(refused.stderr)["error"]["message"] == tr(
             "application.user_profile.errors.passphrase_confirmation_mismatch"
         )
-        _logout()
+        _close_local_session()
         assert _login(_PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
 
 

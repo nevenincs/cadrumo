@@ -1,7 +1,7 @@
 """Google Sheets value-write payload builders for calc sheet exports.
 
-:mod:`adapters.outbound.google.calc_sheets_apply` clears the workbook
-tabs and passes these payloads to the shared
+:mod:`adapters.outbound.google.calc_sheets_apply` creates a fresh workbook
+and passes these payloads to the shared
 :func:`adapters.outbound.google.api.execute_request` boundary for a
 Sheets ``values.batchUpdate`` call. This module stays pure: it renders the
 addressed cell blocks
@@ -11,8 +11,9 @@ plus row values, and never opens a Google service object itself.
 Which cell holds which value is the plan's business, so every builder here maps
 one shared block onto one payload entry rather than computing an address of its
 own. What stays transport-specific is the wire coercion: Sheets is sent
-``USER_ENTERED`` text, so a ``Decimal`` is rendered fixed-point rather than as a
-binary float.
+RAW values: text stays literal and decimals become numeric display cells.
+The review plan separately carries exact decimal text. Only explicitly
+generated formula cells use USER_ENTERED in a separate request.
 
 See Also:
     :func:`application.storage.calc_sheets.workbook_cells.plan_value_blocks`
@@ -21,14 +22,15 @@ See Also:
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from ....application.storage.calc_sheets.records import (
+    AnySheetExportPlan,
     SheetCellAddress,
-    SheetExportPlan,
     SheetFormulaCell,
     SheetRowSet,
     SheetValueCell,
@@ -59,17 +61,18 @@ def coerce_cell_value(value: Decimal | str | bool | None) -> object:
     """Convert a :class:`application.storage.calc_sheets.records.SheetValueCell` value.
 
     ``None`` becomes an empty cell, booleans stay native, and
-    :class:`~decimal.Decimal` values are rendered with fixed-point text so
-    Sheets does not receive rounded binary floats.
+    :class:`~decimal.Decimal` values become finite numeric display values.
+    Exact decimal text is a separate literal cell supplied by the review plan.
     """
     if value is None:
         return ""
     if isinstance(value, bool):
         return value
     if isinstance(value, Decimal):
-        # Sheets accepts plain floats; render the Decimal as a fixed
-        # decimal string so very small/very large values do not round.
-        return format(value, "f")
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError("Sheets numeric display is outside its finite range")
+        return number
     return str(value)
 
 
@@ -101,7 +104,7 @@ def build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[ValueRang
     return [_value_range(block) for block in row_set_header_blocks(row_sets)]
 
 
-def build_evidence_value_data(plan: SheetExportPlan) -> list[ValueRange]:
+def build_evidence_value_data(plan: AnySheetExportPlan) -> list[ValueRange]:
     """Build Evidencia-tab value writes for ``plan``.
 
     Renders :func:`application.storage.calc_sheets.workbook_cells.evidence_cell_blocks`,
@@ -111,7 +114,7 @@ def build_evidence_value_data(plan: SheetExportPlan) -> list[ValueRange]:
     return [_value_range(block) for block in evidence_cell_blocks(plan)]
 
 
-def build_guide_value_data(plan: SheetExportPlan) -> list[ValueRange]:
+def build_guide_value_data(plan: AnySheetExportPlan) -> list[ValueRange]:
     """Build Guide-tab title, paragraph, and export-stamp rows for ``plan``."""
     return [_value_range(block) for block in guide_cell_blocks(plan)]
 
@@ -234,7 +237,7 @@ def _cell_values_match(current: object, target: object) -> bool:
         return target == ""
     if isinstance(current, bool) or isinstance(target, bool):
         return current == target
-    target_decimal = coerce_decimal(target) if isinstance(target, str) else None
+    target_decimal = coerce_decimal(target) if isinstance(target, (str, int, float, Decimal)) else None
     current_decimal = coerce_decimal(current) if isinstance(current, (str, int, float, Decimal)) else None
     if target_decimal is not None and current_decimal is not None:
         return target_decimal == current_decimal

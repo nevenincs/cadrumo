@@ -1,0 +1,20 @@
+[revisions.2009-2011-junio.completeness_manifest]
+source_ref = "aeat-dr-308-2009"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["aeat-dr-308-2009", "boe-modelo-308-2008-form-pdf"]
+
+[[revisions.2009-2011-junio.completeness_manifest.casillas]]
+casilla_id = "decl.req-cuota-10"
+number = "643-655"
+
+[[revisions.2009-2011-junio.completeness_manifest.casillas]]
+casilla_id = "decl.req-cuota-13"
+number = "674-686"
+
+[[revisions.2009-2011-junio.completeness_manifest.casillas]]
+casilla_id = "decl.req-cuota-16"
+number = "705-717"
+
+[[revisions.2009-2011-junio.completeness_manifest.casillas]]
+casilla_id = "decl.req-iva-devolver-17"
+number = "718-730"

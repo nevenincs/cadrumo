@@ -19,14 +19,18 @@ non-deterministic surface of this chain is empty (trivially within the central
 from __future__ import annotations
 
 import asyncio
+import shutil
+from collections.abc import Generator
 from pathlib import Path
 from uuid import UUID
 
 import pytest
+from click.testing import Result
 from pydantic import JsonValue, SecretStr
 
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -40,12 +44,19 @@ from cadrumo.core.bucket_pointer import read_pointer_selection
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER, redact_structured_for_cli_output
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.env_scope import scoped_env_var
+from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
 
 from ..errors import SequenceExecutionError
 from ..parser import parse_sequence
-from ..runner import SANDBOX_PROFILE_ID, SequenceTranscript, execute_page_sequences, execute_sequence, sequence_sandbox
+from ..runner import (
+    SANDBOX_PROFILE_ID,
+    SANDBOX_REPLACEMENT_PROFILE_ID,
+    SequenceTranscript,
+    execute_page_sequences,
+    execute_sequence,
+    sequence_sandbox,
+)
 from ..runtime_fixture import SANDBOX_INSTANT
 from ..schema import FrameKind, ParsedSequence
 
@@ -268,24 +279,143 @@ def test_sandbox_template_tracks_current_scoped_password_and_rejects_previous_pa
     assert envelope_digests[0] == envelope_digests[2]
 
 
-def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_path: Path) -> None:
-    """The exact delete leaf can remove only the logged-out synthetic profile."""
+@pytest.fixture
+def profile_selection_storage(tmp_path: Path) -> Generator[None]:
+    """Derive isolated category roots while retaining the selected authority."""
+    authority_root = load_settings().cadrumo_authority_root
+    with (
+        derived_storage_settings(tmp_path / "selection-storage"),
+        override_settings(cadrumo_authority_root=authority_root),
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("profile_selection_storage")
+def test_delete_preserves_the_authenticated_replacement_selection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Real login changes selection before destruction of the original capsule."""
+    from .. import runner as sequence_runner
+
+    invoke = sequence_runner._invoke_frame
+    observations: list[bool] = []
+
+    def observe_first_logout(args: tuple[str, ...]) -> Result:
+        if args[-2:] == ("config", "logout"):
+            root = Path(load_settings().cadrumo_local_storage_root)
+            assert read_pointer_selection(root).bucket_id == SANDBOX_PROFILE_ID
+            assert profile_session_path(storage_root=root, profile_id=UUID(SANDBOX_PROFILE_ID)).is_file()
+            observations.append(True)
+        return invoke(args)
+
+    monkeypatch.setattr(sequence_runner, "_invoke_frame", observe_first_logout)
     sequence = _result_sequence(
         "aeat --format json config logout\n"
         '@expect status == "success"\n'
+        "aeat --format json config login docs-sequence-replacement\n"
+        '@expect result.active_profile == "docs-sequence-replacement"\n'
+        "@expect exit_code == 0\n"
         "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
         "@expect result.deleted == true\n"
         "@expect exit_code == 0\n",
-        sequence_id="runner-logout-delete",
+        sequence_id="profile-setup-delete",
     )
 
     transcript = execute_sequence(sequence, sandbox_root=tmp_path / "delete")
 
+    assert observations == [True]
     assert _envelope_result(transcript.frames[0].envelope)["logged_out_profile"] == CLI_PROFILE_ID_PLACEHOLDER
     assert _envelope_result(transcript.frames[0].envelope)["already_logged_out"] is False
     assert _envelope_result(transcript.result_frame.envelope)["deleted"] is True
-    assert read_pointer_selection(Path(transcript.storage_root)).bucket_id is None
+    assert read_pointer_selection(Path(transcript.storage_root)).bucket_id == SANDBOX_REPLACEMENT_PROFILE_ID
     assert not (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).exists()
+    assert (Path(transcript.storage_root) / "buckets" / SANDBOX_REPLACEMENT_PROFILE_ID).is_dir()
+
+
+@pytest.mark.parametrize("lifetime_change", ["root_changed", "template_removed"])
+def test_sandbox_template_respects_temporary_root_lifetime(tmp_path: Path, lifetime_change: str) -> None:
+    """Canonical provisioning owns both initial and replacement cached state."""
+    from .. import runner as sequence_runner
+
+    authority_root = load_settings().cadrumo_authority_root
+    first_root = tmp_path / "first-lifetime"
+    second_root = tmp_path / "second-lifetime" if lifetime_change == "root_changed" else first_root
+    with derived_storage_settings(first_root), override_settings(cadrumo_authority_root=authority_root):
+        first = sequence_runner._sandbox_template()
+        assert first.is_relative_to(first_root.resolve())
+        assert sequence_runner._sandbox_template() == first
+    if lifetime_change == "template_removed":
+        assert first.resolve(strict=True).is_relative_to(tmp_path.resolve(strict=True))
+        shutil.rmtree(first)
+    with derived_storage_settings(second_root), override_settings(cadrumo_authority_root=authority_root):
+        second = sequence_runner._sandbox_template()
+        assert second != first
+        assert second.is_relative_to(second_root.resolve())
+        assert (second / "cadrumo-storage" / "buckets" / SANDBOX_PROFILE_ID).is_dir()
+        assert sequence_runner._sandbox_template() == second
+
+
+@pytest.mark.parametrize("attempt_other_login", [False, True])
+@pytest.mark.usefixtures("profile_selection_storage")
+def test_logout_and_failed_login_do_not_admit_selected_profile_deletion(
+    tmp_path: Path, attempt_other_login: bool
+) -> None:
+    """Logout and an unknown login target leave both capsules and selection intact."""
+    login = "aeat --format json config login missing-profile\n@expect exit_code == 2\n" if attempt_other_login else ""
+    sequence = _result_sequence(
+        "aeat --format json config logout\n"
+        '@expect status == "success"\n'
+        + login
+        + "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
+        '@expect error.code == "REFUSED_CLI_BOUNDARY"\n'
+        "@expect error.action.evidence[0].values.target_is_selected_profile == true\n"
+        '@expect error.action.action.action_id == "operator.profile.login"\n'
+        '@expect error.action.missing_argument_names[0] == "name"\n'
+        '@expect error.action.conditionality == "requires_arguments"\n'
+        "@expect exit_code == 2\n",
+        sequence_id="profile-setup-delete",
+    )
+
+    transcript = execute_sequence(sequence, sandbox_root=tmp_path / "refused-delete")
+
+    assert transcript.result_frame.envelope is not None
+    error = transcript.result_frame.envelope["error"]
+    assert isinstance(error, dict)
+    message = error["message"]
+    assert isinstance(message, str)
+    assert "aeat config login NAME" in message
+    assert "Logout preserves the selected profile" in message
+    assert read_pointer_selection(Path(transcript.storage_root)).bucket_id == SANDBOX_PROFILE_ID
+    assert (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).is_dir()
+    assert (Path(transcript.storage_root) / "buckets" / SANDBOX_REPLACEMENT_PROFILE_ID).is_dir()
+
+
+@pytest.mark.usefixtures("profile_selection_storage")
+def test_cumulative_profile_list_precedes_replacement_provisioning(tmp_path: Path) -> None:
+    """The existing list expectation holds before the terminal delete recipe."""
+    from ..checks import discover_sequences
+    from ..compare import evaluate_expectations
+
+    enrolled, problems = discover_sequences(page="how-to/profile-setup")
+    assert not problems
+    by_id = {item.sequence_id: item for item in enrolled}
+    items = (by_id["profile-setup-multiple"], by_id["profile-setup-delete"])
+
+    transcripts = execute_page_sequences(
+        tuple(item.sequence for item in items),
+        label="how-to/profile-setup",
+        sandbox_root=tmp_path / "cumulative-delete",
+    )
+
+    for item, transcript in zip(items, transcripts, strict=True):
+        assert not evaluate_expectations(item.sequence, transcript, page=item.page)
+    profiles = _envelope_result(transcripts[0].result_frame.envelope)["profiles"]
+    assert isinstance(profiles, list) and len(profiles) == 1
+    assert _envelope_result(transcripts[1].result_frame.envelope)["deleted"] is True
+    storage_root = Path(transcripts[1].storage_root)
+    assert read_pointer_selection(storage_root).bucket_id == SANDBOX_REPLACEMENT_PROFILE_ID
+    assert not (storage_root / "buckets" / SANDBOX_PROFILE_ID).exists()
+    assert (storage_root / "buckets" / SANDBOX_REPLACEMENT_PROFILE_ID).is_dir()
 
 
 class TestPageSeedLifecycle:

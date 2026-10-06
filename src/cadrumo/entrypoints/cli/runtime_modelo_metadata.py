@@ -108,7 +108,7 @@ def _refuse(error: Exception) -> CliRefusedBoundaryError:
     if isinstance(error, ModeloMetadataRunError):
         return CliRefusedBoundaryError(error.reason, context=error.context)
     if isinstance(error, RuntimeFrontendRefusedError):
-        return CliRefusedBoundaryError(error.reason, context={"reason": error.reason})
+        return CliRefusedBoundaryError(error.reason, context=error.context)
     if isinstance(error, RuntimeRefusalError):
         return CliRefusedBoundaryError(error.reason.value, context={"reason": error.reason.value})
     raise TypeError("unsupported modelo metadata refusal")

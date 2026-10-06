@@ -499,7 +499,43 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 id = "decl.resultado-24"
 number = "24"
 section = ["declarante","liquidacion"]
-semantic_role = "resultado_24"
-continuidad_id = "resultado-24"
+semantic_role = "cuota_a_ingresar"
+continuidad_id = "cuota-a-ingresar"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+[[revisions."2004-2015".casillas]]
+id = "firma-lugar"
+continuidad_id = "papel-firma-lugar"
+number = "papel.firma-lugar"
+section = ["firma"]
+data_type = "text"
+semantic_role = "papel_firma_lugar"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+[[revisions."2004-2015".casillas]]
+id = "firma-fecha"
+continuidad_id = "papel-firma-fecha"
+number = "papel.firma-fecha"
+section = ["firma"]
+data_type = "date"
+semantic_role = "papel_firma_fecha"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+[[revisions."2004-2015".casillas]]
+id = "firma"
+continuidad_id = "papel-firma"
+number = "papel.firma"
+section = ["firma"]
+data_type = "text"
+semantic_role = "papel_firma"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]
+[[revisions."2004-2015".casillas]]
+id = "papel-forma-pago"
+continuidad_id = "papel-forma-pago"
+number = "papel.papel-forma-pago"
+section = ["ingreso"]
+data_type = "text"
+semantic_role = "papel_forma_pago"
+input_kind = "informational"
+source_refs = ["boe-modelo-309-2003-form-pdf"]

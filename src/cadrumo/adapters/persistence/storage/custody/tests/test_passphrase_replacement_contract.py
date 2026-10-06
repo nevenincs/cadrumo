@@ -24,10 +24,10 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
-    resume_profile_session,
 )
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import (
     evaluate_login_throttle,
@@ -54,6 +54,7 @@ from cadrumo.application.user_profile.login_session import (
 )
 from cadrumo.application.user_profile.passphrase_rotation import (
     ProfilePassphraseReplacementProof,
+    ProfilePassphraseRotationError,
     rotate_profile_passphrase,
 )
 from cadrumo.application.user_profile.profile_record_repository import require_profile_record_session
@@ -320,7 +321,7 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
         try:
             # The control: before the reset the same receipt resumes, so the
             # refusal below is the reset's doing and nothing else's.
-            control, control_dek = resume_profile_session(
+            control, control_dek = resume_receipt_as_runtime(
                 storage_root=storage_root,
                 profile_id=profile_id,
                 custody_generation=material.envelope.password_generation,
@@ -333,7 +334,7 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
             _reset(profile_id, code)
             current = load_committed_profile_password_material(profile_id).envelope
 
-            outcome, resumed = resume_profile_session(
+            outcome, resumed = resume_receipt_as_runtime(
                 storage_root=storage_root,
                 profile_id=profile_id,
                 custody_generation=current.password_generation,
@@ -419,3 +420,36 @@ def test_logging_out_leaves_the_failed_attempt_backoff_in_place(tmp_path: Path) 
             )
         with pytest.raises(ProfileLoginThrottledError):
             _reset(profile_id, code)
+
+
+@pytest.mark.parametrize("proof", ["password", "recovery"])
+def test_replacement_fences_sign_in_only_after_successful_proof(tmp_path: Path, proof: str) -> None:
+    """Both real lifecycle doors preserve failed proof and durably revoke success."""
+    _, decode = _profile_contexts_for_test()
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        profile_id = _register()
+        code = _enroll(profile_id)
+        custody = committed_sign_in(root, profile_id)
+        captured = custody.establish().current
+        if proof == "password":
+            with pytest.raises(ProfilePassphraseRotationError):
+                rotate_profile_passphrase(
+                    profile_id=profile_id,
+                    current_passphrase=_CURRENT + "-wrong",
+                    new_passphrase=_REPLACEMENT,
+                    new_passphrase_confirmation=_REPLACEMENT,
+                    profile_decode_context=decode,
+                )
+        else:
+            with pytest.raises((ProfileRecoveryError, ProfileAuthenticationRefusedError)):
+                _reset(profile_id, _wrong(code))
+        assert custody.observe().current == captured
+        if proof == "password":
+            _rotate(profile_id)
+        else:
+            with frozen_clock(_now() + timedelta(minutes=2)):
+                _reset(profile_id, code)
+        advanced = custody.observe().current
+        assert advanced is not None
+        assert advanced.lineage == captured.lineage
+        assert advanced.generation == captured.generation + 1

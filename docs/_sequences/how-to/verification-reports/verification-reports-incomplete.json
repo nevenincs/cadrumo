@@ -473,6 +473,13 @@
             },
             "message": "The value in box 44 is the one you entered, not the one Cadrumo worked out.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
@@ -705,7 +712,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [],
           "filed_at": null,

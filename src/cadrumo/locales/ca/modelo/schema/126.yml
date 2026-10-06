@@ -11,6 +11,40 @@ modelo:
           en institucions financeres.
         title: Retencions i ingressos a compte - rendiments del capital mobiliari
           de comptes en institucions financeres
+      form:
+        column:
+          base: Base de retencions i ingressos a compte
+          ingresos-anteriores: Ingressos d’exercicis anteriors
+          regularizacion: Regularització
+          retenciones: Retencions i ingressos a compte
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          periodo: Període
+        page:
+          modelo-126-page-01:
+            heading: Retencions sobre rendiments de comptes en entitats financeres
+        row:
+          periodificacion: Periodificació
+          periodificacion-1: Periodificació · primera línia
+          periodificacion-2: Periodificació · segona línia
+          retenciones: Retencions i ingressos a compte
+        section:
+          complementaria:
+            heading: Complementària (6)
+          devengo:
+            heading: Meritació (2)
+          identificacion:
+            heading: Identificació (1)
+          ingreso:
+            heading: Ingrés (4)
+          liquidacion:
+            heading: Liquidació (3)
       revision:
         2019-y-siguientes:
           casilla:

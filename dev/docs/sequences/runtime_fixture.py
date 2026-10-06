@@ -23,6 +23,8 @@ from uuid import UUID, uuid4
 import keyring
 import keyring.backends.null
 import keyring.core
+import pytest
+from pydantic import BaseModel, Field, field_validator
 
 from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.tests.retained_server import RetainedRuntimeTransportServer
@@ -45,16 +47,61 @@ from cadrumo.application.user_profile.automation_custody_port import (
     NativeSecretBackend,
 )
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.filing import software_identity
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.runtime.profile_connections import RuntimeProfileConnections
 from cadrumo.entrypoints.runtime.worker import run
 from cadrumo.tests.authority_run_snapshot import freeze_authority_root
+
+# The native worker runs this trusted fixture as a bare script with ``-I``.
+# Isolated mode omits the checkout root, so its dev-only sibling needs the
+# same explicit bootstrap as the other standalone development entrypoints.
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
 from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, SequenceReceiptKeyring
 
 SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
 """The canonical frozen instant for docs sequences and their profile workers."""
+
+_EXPORT_VERSION_FILE = "docs-export-version.json"
+_EXPORT_VERSION_BYTES = 256
+
+
+class _RecordedExportVersion(BaseModel):
+    """A public export control for this trusted fixture, never installed metadata."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    package_version: str = Field(min_length=1, max_length=32)
+
+    @field_validator("package_version")
+    @classmethod
+    def _canonical_aux_version(cls, value: str) -> str:
+        with pytest.MonkeyPatch.context() as selected:
+            selected.setattr(software_identity, "PACKAGE_VERSION", value)
+            software_identity.aeat_aux_version()
+        return value
+
+
+def _publish_export_version(sandbox_root: Path) -> None:
+    recorded = _RecordedExportVersion(package_version=software_identity.PACKAGE_VERSION)
+    with (sandbox_root / _EXPORT_VERSION_FILE).open("x", encoding="utf-8") as destination:
+        destination.write(recorded.model_dump_json())
+
+
+@contextmanager
+def _recorded_export_version(sandbox_root: Path) -> Generator[None]:
+    with (sandbox_root / _EXPORT_VERSION_FILE).open("rb") as source:
+        raw = source.read(_EXPORT_VERSION_BYTES + 1)
+    if len(raw) > _EXPORT_VERSION_BYTES:
+        raise ValueError("recorded documentation export version exceeds its finite limit")
+    recorded = _RecordedExportVersion.model_validate_json(raw)
+    with pytest.MonkeyPatch.context() as selected:
+        selected.setattr(software_identity, "PACKAGE_VERSION", recorded.package_version)
+        yield
 
 
 class _UnavailableSecretStore:
@@ -102,6 +149,7 @@ def _worker_composition() -> Generator[None]:
     )
     try:
         with (
+            _recorded_export_version(root.parent),
             override_settings(
                 cadrumo_authority_root=root.parent / "docs-authority",
                 cadrumo_output_language="en",
@@ -141,6 +189,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
     ):
         raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
     staged.rename(authority_root)
+    _publish_export_version(sandbox_root)
     endpoint = (
         WindowsRuntimeEndpoint(storage_root=root)
         if sys.platform == "win32"

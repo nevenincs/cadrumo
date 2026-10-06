@@ -12,7 +12,13 @@ from decimal import Decimal
 from typing import Final
 
 from ....core.decimal.formatting import format_decimal
-from .records import SheetEvidenceContributorRow, SheetEvidenceManualEntry, SheetExportPlan
+from .records import (
+    AnySheetExportPlan,
+    SheetEvidenceContributorRow,
+    SheetEvidenceManualEntry,
+    SheetReviewMetadata,
+    SheetTemplatePreviewMetadata,
+)
 
 _EVIDENCE_HEADERS: tuple[str, ...] = (
     "Tipo",
@@ -34,7 +40,7 @@ _EVIDENCE_HEADERS: tuple[str, ...] = (
 )
 
 
-def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[tuple[str, ...], ...]]:
+def evidence_table(plan: AnySheetExportPlan) -> tuple[str, tuple[str, ...], tuple[tuple[str, ...], ...]]:
     """Return the value table written to the Evidencia sheet of every transport."""
     body = tuple(
         tuple(str(value) for value in _contributor_values(row)) for row in plan.evidence.contributor_rows
@@ -42,9 +48,13 @@ def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[t
     return (plan.evidence.snapshot_fingerprint or "", _EVIDENCE_HEADERS, body)
 
 
-def guide_stamps(plan: SheetExportPlan) -> tuple[tuple[str, str], ...]:
+def guide_stamps(plan: AnySheetExportPlan) -> tuple[tuple[str, str], ...]:
     """Return the Guide sheet's operator-visible ``(label, value)`` export stamps."""
     metadata = plan.metadata
+    if isinstance(metadata, SheetTemplatePreviewMetadata):
+        return ()
+    if isinstance(metadata, SheetReviewMetadata):
+        return (("Snapshot", metadata.snapshot_digest), ("Publication", str(metadata.publication_id)))
     return (
         ("Modelo", metadata.modelo_id),
         ("Revisión", metadata.revision_id),
@@ -70,7 +80,7 @@ RELATION_STAMP_PREFIX: Final[str] = "cadrumo_relation:"
 """Key prefix of one mirrored cross-revision relation's grounding stamp."""
 
 
-def export_identity_stamps(plan: SheetExportPlan) -> tuple[tuple[str, str], ...]:
+def export_identity_stamps(plan: AnySheetExportPlan) -> tuple[tuple[str, str], ...]:
     """Return the machine-readable ``(key, value)`` stamps identifying one export.
 
     The registry and engine identity comes first, in :data:`IDENTITY_STAMP_KEYS`
@@ -90,7 +100,25 @@ def export_identity_stamps(plan: SheetExportPlan) -> tuple[tuple[str, str], ...]
     Returns:
         tuple[tuple[str, str], ...]: Key/value stamps in write order.
     """
+    if plan.human_presentation:
+        return ()
     metadata = plan.metadata
+    if isinstance(metadata, SheetTemplatePreviewMetadata):
+        return (
+            ("cadrumo_preview_kind", metadata.kind),
+            ("cadrumo_preview_template_digest", metadata.template_digest),
+            ("cadrumo_preview_modelo", metadata.modelo_id),
+            ("cadrumo_preview_revision", metadata.revision_id),
+            ("cadrumo_preview_year", str(metadata.preview_year)),
+            ("cadrumo_preview_period", metadata.preview_period),
+        )
+    if isinstance(metadata, SheetReviewMetadata):
+        return (
+            ("cadrumo_review_kind", metadata.kind),
+            ("cadrumo_snapshot_digest", metadata.snapshot_digest),
+            ("cadrumo_publication_id", str(metadata.publication_id)),
+            ("cadrumo_exported_at", metadata.exported_at.isoformat()),
+        )
     values = (
         metadata.engine_version,
         metadata.registry_sha,

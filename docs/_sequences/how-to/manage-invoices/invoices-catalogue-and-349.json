@@ -38,7 +38,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.invoice.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "base_total": "2000.00",
           "base_total_eur": "2000.00",
@@ -88,7 +96,7 @@
           "source_sha256": null
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -110,7 +118,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t1\n5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17\tissued\tsha256:a9224776\tEU-CAT-001\t2026-02-10\t2000.00\n"
+      "text": "bucket\t<profile-id>\ncount\t1\n5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17\tissued\tsha256:a9224776\tEU-CAT-001\t2026-02-10\t2000.00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -127,7 +135,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.invoice.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "base_total": "2000.00",
           "base_total_eur": "2000.00",
@@ -177,7 +193,7 @@
           "source_sha256": null
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -211,7 +227,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -243,7 +267,7 @@
           "work_unit_id": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -278,9 +302,18 @@
               "conditional_recargo_preview_pct": "1.00",
               "conditional_recargo_preview_reference_on": "2026-04-01",
               "days_overdue": "12",
-              "legal_refs": "ley-58-2003:art-27.2"
+              "holiday_coverage": "national_only",
+              "legal_refs": "ley-58-2003:art-27.2",
+              "nominal_closes_on": "2026-03-20"
             },
             "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
@@ -288,16 +321,11 @@
           "authorization_state": null,
           "binding_overrides": {
             "iva-349-declarante-importe-operaciones": "2000",
-            "iva-349-declarante-importe-operaciones-adquisicion": "0",
             "iva-349-declarante-importe-rectificaciones": "0",
-            "iva-349-declarante-importe-rectificaciones-adquisicion": "0",
             "iva-349-declarante-numero-operadores": "1",
-            "iva-349-declarante-numero-operadores-adquisicion": "0",
-            "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
-            "modelo-349-ledger-intracommunity-guard": "0"
+            "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "a38757e48ef79f0d0973db8886eee059b82cf1ab9617993925184e784519e589",
+          "calculation_revision_id": "a58ee012a439e30e95c276d61b4e93c1ddd552194264fc1313dc3da9876eff71",
           "casilla_values": {
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
@@ -316,7 +344,9 @@
               "surcharge_pct": "1.00"
             },
             "days_overdue": 12,
-            "days_remaining": null
+            "days_remaining": null,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-03-20"
           },
           "detail_rows": [
             {
@@ -442,16 +472,16 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a38757e48ef79f0d0973db8886eee059b82cf1ab9617993925184e784519e589 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision a58ee012a439e30e95c276d61b4e93c1ddd552194264fc1313dc3da9876eff71 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:72748ea0133a321a0f267c1a26c97cb74e46e173732201ddd72a3c2edfd3c890",
+              "fingerprint": "sha256:2b96092339e4d76c23148db61a715564d59ec3dff80540647213e353cca609c4",
               "lineage_role": "primary",
               "parent_source_ref": null,
-              "resolved_binding_source": "collectible_invoice",
+              "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
               "source_ref": "collectible_invoice:5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
             }

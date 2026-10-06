@@ -5,8 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
+
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
@@ -17,20 +21,34 @@ from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
 from ..google_oauth import GOOGLE_OAUTH_ENV, build_client_json
 from ..wheel_metadata import read_wheel_metadata
+from .build_toolchain import selected_uv
 from .hashing import digest
+from .target import uv_environment, uv_platform
 
 
-def build_product(output: Path, python: Path, dependencies: Path) -> None:
+def build_product(
+    output: Path,
+    python: Path,
+    dependencies: Path,
+    target: str,
+    *,
+    build_toolchain: Mapping[str, Any] | None = None,
+    uv_executable: Path | None = None,
+) -> None:
     """Compose existing snapshot, build hooks and wheel metadata owners."""
     client = build_client_json(REPO_ROOT)
     output = output.resolve()
     if output.exists():
         raise FileExistsError("Product build requires a fresh output directory")
     python = python.resolve(strict=True)
+    pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
+    observed = run_command(
+        [str(python), "-I", "-c", "import platform; print(platform.python_version())"], cwd=REPO_ROOT
+    )
+    if observed.returncode or observed.stdout.strip() != pin:
+        raise ValueError(f"Product construction requires host CPython {pin}: {observed.stdout.strip()}")
     dependencies = dependencies.resolve(strict=True)
-    uv = shutil.which("uv")
-    if uv is None:
-        raise FileNotFoundError("uv is required")
+    uv = selected_uv(build_toolchain, executable=uv_executable)
     source = output / "source"
     files = tuple(
         name
@@ -68,6 +86,19 @@ def build_product(output: Path, python: Path, dependencies: Path) -> None:
         raise ValueError("Incomplete product wheel cohort")
     if {item["Version"] for item in metadata} != {project["project"]["version"]}:
         raise ValueError("Product cohort versions differ")
+    root_metadata = next(item for item in metadata if item["Name"] == PRODUCT_IDENTITY.distribution)
+    companion_pins = {}
+    for value in root_metadata.get_all("Requires-Dist", []):
+        requirement = Requirement(value)
+        name = canonicalize_name(requirement.name)
+        if name in PRODUCT_IDENTITY.companion_distributions:
+            if requirement.marker is not None or requirement.url is not None or name in companion_pins:
+                raise ValueError(f"Companion requirement is not one unconditional exact pin: {value}")
+            companion_pins[name] = str(requirement.specifier)
+    if companion_pins != {
+        name: f"=={project['project']['version']}" for name in PRODUCT_IDENTITY.companion_distributions
+    }:
+        raise ValueError("Product companion requirements must match the exact cohort version")
     result = run_command(
         [
             uv,
@@ -75,6 +106,11 @@ def build_product(output: Path, python: Path, dependencies: Path) -> None:
             "install",
             "--python",
             str(python),
+            "--python-version",
+            pin,
+            "--python-platform",
+            uv_platform(target),
+            "--no-config",
             "--no-deps",
             "--link-mode",
             "copy",
@@ -83,6 +119,7 @@ def build_product(output: Path, python: Path, dependencies: Path) -> None:
             *map(str, artifacts),
         ],
         cwd=REPO_ROOT,
+        environment=uv_environment(target),
     )
     if result.returncode:
         raise RuntimeError(result.stderr)
@@ -98,5 +135,15 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
     parser.add_argument("--dependencies", type=Path, required=True)
+    parser.add_argument("--target", required=True)
+    parser.add_argument("--uv", type=Path, help="Explicit uv executable for a standalone invocation")
+    parser.add_argument("--build-toolchain", type=Path, help="Explicit admitted builder toolchain JSON")
     args = parser.parse_args()
-    build_product(args.output, args.python, args.dependencies)
+    configured = None
+    if args.build_toolchain is not None:
+        configured = json.loads(args.build_toolchain.read_text(encoding="utf-8"))
+        if not isinstance(configured, dict):
+            parser.error("build toolchain must be a JSON object")
+    build_product(
+        args.output, args.python, args.dependencies, args.target, build_toolchain=configured, uv_executable=args.uv
+    )

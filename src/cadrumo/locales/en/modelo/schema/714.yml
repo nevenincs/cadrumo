@@ -2,6 +2,14 @@ modelo:
   schema:
     '714':
       binding:
+        m714-m100-base-imponible-ahorro:
+          label: Savings personal income tax base · Form 100, box 0460
+        m714-m100-base-imponible-general:
+          label: General personal income tax base · Form 100, box 0435
+        m714-m100-cuota-integra-autonomica:
+          label: Gross regional personal income tax liability · Form 100, box 0546
+        m714-m100-cuota-integra-estatal:
+          label: Gross State personal income tax liability · Form 100, box 0545
         ? x-dlnm8pbcdsmjec9k5orj2d1d60p2soj9cln6aspdf4mm8pbiclhmgrrj5lgj2bb2d5imspbj5lkmsrblclh6opbj5ln62t3le9gmopbqc4mnasj2c5n62bbmd5r6ipbechgiqq31c9kn8tb1dgmm6r31epiiqc8
         : label: 'Main home 1: key code'
         ? x-dlnm8pbcdsmjec9k5orj2d1d60p2soj9cln6aspdf4mm8pbiclhmgrrj5lgj2bb2d5imspbj5lkmsrblclh6opbj5ln62t3le9gmopbqc4mnasj2c5n62bbmd5r6ipbechgiqq31c9kn8tb1dgmm6r31epiiqcg

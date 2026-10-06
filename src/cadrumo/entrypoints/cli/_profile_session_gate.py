@@ -362,7 +362,11 @@ def _resume_or_authenticate(
         return
     refusal = admission.resume_refusal
     if refusal is None:
-        raise InternalInvariantError("a refused profile admission carries no typed reason")
+        if _interactive_authentication(ctx, bucket_id=bucket_id, refusal=None):
+            return
+        from ...application.user_profile.custody_ports import refuse_profile_login_without_password_channel
+
+        refuse_profile_login_without_password_channel()
     if _interactive_authentication(ctx, bucket_id=bucket_id, refusal=refusal):
         return
     _raise_profile_resume_refusal(refusal, target_profile_label, bucket_id, requested_leaf)
@@ -372,17 +376,14 @@ def _interactive_authentication(
     ctx: typer.Context,
     *,
     bucket_id: str,
-    refusal: ProfileSessionRefusalReason,
+    refusal: ProfileSessionRefusalReason | None,
 ) -> bool:
-    """Prompt for the passphrase only where no session could ever be resumed.
+    """Offer explicit local credentials only at an interactive terminal.
 
-    A parsed invocation otherwise stays non-interactive: an absent or expired
-    session is answered with the login action. A host without a usable keychain
-    can never hold a resumable session, so refusing there would leave an
-    operator at a terminal no way forward short of piping the passphrase; the
-    prompt authenticates this invocation only, as the root secret channel does.
+    No receipt observation is inferred from missing local custody. Runtime
+    clients perform automatic proof presentation through their own admission.
     """
-    if refusal is not ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+    if refusal not in {None, ProfileSessionRefusalReason.KEYRING_UNAVAILABLE}:
         return False
     from .config.secure_input import terminal_can_prompt_for_secrets
 

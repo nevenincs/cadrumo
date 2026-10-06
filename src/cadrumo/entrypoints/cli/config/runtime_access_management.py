@@ -66,7 +66,7 @@ def _client(ctx: typer.Context, *, requested_language: OutputLanguage | None) ->
 
 
 def _refused(error: RuntimeFrontendRefusedError) -> CliRefusedBoundaryError:
-    return CliRefusedBoundaryError(context={"reason": error.reason})
+    return CliRefusedBoundaryError(context=error.context)
 
 
 def _session_payload(session: PublicAccessSession, *, instant: datetime) -> RuntimeSessionPayload:
@@ -425,6 +425,7 @@ def profile_resume(
             raise _refused(error) from error
     finally:
         password[:] = bytes(len(password))
+    revocation = receipt.human_sign_in_revocation
     emit_envelope(
         ctx,
         command="config.profile.resume",
@@ -432,6 +433,8 @@ def profile_resume(
         lines=(
             f"profile_id\t{client.profile_id}",
             f"lock_generation\t{receipt.lock_generation}",
+            f"human_receipt_removed\t{None if revocation is None else revocation.receipt_removed}",
+            f"human_keychain_removed\t{None if revocation is None else revocation.keychain_removed}",
             *(f"reactivated_grant\t{item}" for item in sorted(receipt.reactivated_grants)),
         ),
     )

@@ -8,15 +8,16 @@ import json
 import os
 import shutil
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from typing import Any
 
-from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT
 
-from ..uv_constraints import export_runtime_constraints
+from ..runtime_wheel_selection import active_requirements
+from ..runtime_wheelhouse_contract import target_platform
 from .docs_stage import verified_stage
 from .hashing import digest
 from .layout import ApplicationImage, backend, entrypoint_files, load_layout, staged_application_images
@@ -57,6 +58,71 @@ def stage_application_images(
     return staged
 
 
+def _license_member(value: object) -> PurePosixPath:
+    if not isinstance(value, str) or not value:
+        raise ValueError("SDK license paths must be nonempty relative strings")
+    member = PurePosixPath(value)
+    if member.is_absolute() or ".." in member.parts or "\\" in value or ":" in value or not member.parts:
+        raise ValueError(f"SDK license path is not package-relative: {value!r}")
+    return member
+
+
+def stage_sdk_licenses(root: Path, sdk: Path, contract: Mapping[str, Any]) -> None:
+    """Retain CPython's canonical notice and all declared embedded SDK notices."""
+    declarations = dict(contract["sdk"].get("licenses", {}))
+    declarations[contract["sdk"]["license"]] = contract["files"]["python_license"]
+    for source_name, destination_name in declarations.items():
+        source_member = _license_member(source_name)
+        source = sdk
+        for part in source_member.parts:
+            source /= part
+            if source.is_symlink() or source.is_junction():
+                raise ValueError(f"SDK license source is linked: {source}")
+        destination = root / _license_member(destination_name)
+        if not source.resolve(strict=True).is_relative_to(sdk.resolve(strict=True)):
+            raise ValueError(f"SDK license source escapes the SDK: {source}")
+        members = [source, *sorted(source.rglob("*"))] if source.is_dir() else [source]
+        for member in members:
+            if member.is_symlink() or member.is_junction() or not (member.is_dir() or member.is_file()):
+                raise ValueError(f"SDK license source is linked or special: {member}")
+        if destination.exists():
+            raise FileExistsError(f"SDK license collides with a staged file: {destination}")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if source.is_dir():
+            shutil.copytree(source, destination)
+        else:
+            shutil.copy2(source, destination)
+
+
+def native_assembly_layout(contract: dict[str, Any], provenance: Mapping[str, Any]) -> dict[str, Any]:
+    """Bind binary rewriting to the exact tools selected and hashed by CMake."""
+    required = {
+        "windows": (),
+        "linux": ("readelf", "patchelf"),
+        "macos": ("install_name_tool", "codesign"),
+    }[contract["backend"]]
+    if not required:
+        return contract
+    toolchain = provenance.get("build_toolchain", {})
+    tools = toolchain.get("native_tools", {})
+    hashes = toolchain.get("native_tool_sha256", {})
+    selected = {}
+    for name in required:
+        value = tools.get(name)
+        if not isinstance(value, str) or not Path(value).is_absolute() or not Path(value).is_file():
+            raise ValueError(f"Native assembly requires an explicit absolute {name} tool")
+        if digest(Path(value)) != hashes.get(name):
+            raise ValueError(f"Native assembly tool differs from CMake provenance: {name}")
+        selected[name] = value
+    projected = dict(contract, native_tools=selected)
+    if contract["backend"] == "macos":
+        identity = toolchain.get("native_signing_identity")
+        if not isinstance(identity, str) or not identity:
+            raise ValueError("Native macOS assembly requires an explicit signing identity")
+        projected["native_signing_identity"] = identity
+    return projected
+
+
 def assemble(
     python: Path,
     dependencies: Path,
@@ -68,30 +134,34 @@ def assemble(
     images: Mapping[str, Path],
     binary_dir: Path,
     development: bool = False,
+    target: str,
+    provenance: Mapping[str, object] | None = None,
 ) -> None:
     """Relocate native modules while retaining their qualified import names."""
     root = destination.resolve()
     if root.exists():
         raise FileExistsError(f"Assembly requires a fresh destination: {root}")
-    contract = load_layout()
+    contract = load_layout(target)
+    build_identity = json.loads(metadata.read_text(encoding="utf-8"))
+    if build_identity["target"] != target or build_identity["layout_abi"] != contract["abi"]:
+        raise ValueError("Build metadata target/layout ABI differs from assembly")
     layout, files = contract["paths"], contract["files"]
     allowed = set(PRODUCT_IDENTITY.cohort_distributions)
-    requirements = {}
-    for pin in export_runtime_constraints(repo_root=REPO_ROOT):
-        requirement = Requirement(pin)
-        if requirement.marker is None or requirement.marker.evaluate():
-            name = canonicalize_name(requirement.name)
-            allowed.add(name)
-            requirements[name] = requirement.specifier
+    requirements = active_requirements(REPO_ROOT, target_platform(target), build_identity["python"])
+    allowed.update(requirements)
     installed = list(importlib.metadata.distributions(path=[str(dependencies)]))
-    distributions = {
+    distributions: dict[str, str] = {
         canonicalize_name(distribution.metadata["Name"]): distribution.version for distribution in installed
     }
+    if len(distributions) != len(installed):
+        raise ValueError("Duplicate installed distribution metadata")
     if set(distributions) != allowed:
         raise ValueError(f"Production dependency closure mismatch: {set(distributions) ^ allowed}")
-    for name, specifier in requirements.items():
-        if distributions[name] not in specifier:
+    for name, requirement in requirements.items():
+        if distributions[name] not in requirement.specifier:
             raise ValueError(f"Production dependency version differs from lock: {name} {distributions[name]}")
+    if {distributions[name] for name in PRODUCT_IDENTITY.cohort_distributions} != {build_identity["version"]}:
+        raise ValueError("Product cohort versions differ from build metadata")
     smoke_modules = {}
     for distribution in installed:
         name = canonicalize_name(distribution.metadata["Name"])
@@ -124,7 +194,6 @@ def assemble(
     if bootstrap.count("LAYOUT = {}") != 1:
         raise ValueError("Missing bootstrap layout projection marker")
     bootstrap = bootstrap.replace("LAYOUT = {}", f"LAYOUT = {contract!r}")
-    build_identity = json.loads(metadata.read_text(encoding="utf-8"))
     bundle_stdlib(
         python / contract["sdk"]["stdlib"],
         lib,
@@ -170,7 +239,9 @@ def assemble(
         development_executable.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(build / development_executable.name, development_executable)
     shutil.copy2(build / files["bridge"], native)
-    native_manifest = backend(contract).assemble_native(python, packages, native, root, contract)
+    native_manifest = backend(contract).assemble_native(
+        python, packages, native, root, native_assembly_layout(contract, provenance or {})
+    )
     modules = native_manifest["modules"]
     paths = native_manifest["python_paths"]
     relocation = native_manifest.pop("relocation")
@@ -198,9 +269,7 @@ def assemble(
         + "\n",
         encoding="utf-8",
     )
-    license_file = root / files["python_license"]
-    license_file.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(python / contract["sdk"]["license"], license_file)
+    stage_sdk_licenses(root, python, contract)
     shutil.copy2(metadata, root / files["build_metadata"])
     startup_files = [
         layout["executable"],
@@ -225,6 +294,7 @@ def assemble(
         "smoke_modules": smoke_modules,
         "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip(),
         "lock_sha256": digest(REPO_ROOT / "uv.lock"),
+        "inputs": dict(provenance or {}),
         "relocation": relocation,
         "patches": patches,
         "pruned": pruned,
@@ -258,6 +328,7 @@ if __name__ == "__main__":
     parser.add_argument("--development", action="store_true")
     parser.add_argument("--image", action="append", default=[], help="FILE=ARTIFACT for each staged application image")
     parser.add_argument("--binary-dir", type=Path, required=True)
+    parser.add_argument("--target", required=True)
     args = parser.parse_args()
     assemble(
         args.python,
@@ -269,4 +340,5 @@ if __name__ == "__main__":
         images=dict(image_artifact(item) for item in args.image),
         binary_dir=args.binary_dir,
         development=args.development,
+        target=args.target,
     )

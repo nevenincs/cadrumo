@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
     OperationInteractionKind,
@@ -27,6 +28,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.interactions import OperationApplyResponse, OperationInteractionRequest, OperationPendingInteraction
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
+from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from .. import google_configuration_operation as worker
@@ -97,7 +99,7 @@ class _Operands:
         return "d" * 64
 
     async def resolve(self, reference: str, model_type: type[BaseModel]) -> BaseModel:
-        assert self.proposal is not None and reference == self.proposal.digest
+        assert self.proposal is not None and reference == sha256_hex(serialize_operation_operand(self.proposal))
         assert model_type is contracts.GoogleConsentProposal
         return self.proposal
 
@@ -135,7 +137,7 @@ class _Interactions:
                 expires_at=expires_at,
             ),
             response_token="e" * 64,
-            reviewed_proposal_digest=reviewed_operand.digest,
+            reviewed_proposal_digest=sha256_hex(serialize_operation_operand(reviewed_operand)),
             baseline_digest=baseline_digest,
             proposed_effect_digest=proposed_effect_digest,
         )
@@ -184,13 +186,14 @@ def _refusal() -> GoogleConfigurationRefusalProjection:
     )
 
 
-def test_all_five_public_contracts_compile_and_require_human_dual_whole_profile_access(
+def test_all_public_contracts_compile_and_require_human_dual_whole_profile_access(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     def unused(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> GoogleConfigurationOperationPorts:
         pytest.fail("compiling Google contracts constructed credential capabilities")
 
     payloads: tuple[contracts.GoogleConfigurationRequest, ...] = (
+        contracts.GoogleFolderOrganizeRequest(profile_id=_PROFILE),
         contracts.GoogleFolderViewRequest(profile_id=_PROFILE),
         contracts.GoogleLoginRequest(profile_id=_PROFILE),
         contracts.GoogleLogoutRequest(profile_id=_PROFILE),
@@ -198,7 +201,7 @@ def test_all_five_public_contracts_compile_and_require_human_dual_whole_profile_
         contracts.GoogleStatusRequest(profile_id=_PROFILE),
     )
     definitions = worker.build_google_configuration_definitions(unused)
-    assert len(definitions) == 5
+    assert len(definitions) == 6
     for definition, payload in zip(definitions, payloads, strict=True):
         registration = worker.build_google_configuration_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))

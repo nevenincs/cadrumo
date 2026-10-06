@@ -51,8 +51,10 @@ def load_layout(name: str | None = None, *, root: Path = REPO_ROOT) -> dict[str,
     """Combine shared locations with one implemented platform's physical mapping."""
     if name is None:
         machine = platform.machine().lower()
-        architecture = {"amd64": "x64", "x86_64": "x64"}.get(machine, machine)
+        architecture = {"amd64": "x86-64", "x86_64": "x86-64"}.get(machine, machine)
         name = f"{ {'win32': 'windows', 'darwin': 'macos'}.get(sys.platform, sys.platform) }-{architecture}"
+    if name == "windows-x86-64":
+        name = "windows-x64"
     shared = json.loads((root / "native/package-layout.json").read_text(encoding="utf-8"))
     mapping = shared.pop("platforms")
     if name not in mapping:
@@ -156,6 +158,10 @@ def desktop_image(layout: dict[str, Any]) -> ApplicationImage | None:
 def backend(contract: dict[str, Any]) -> ModuleType:
     """Select only an enrolled backend from the canonical contract."""
     name = contract["backend"]
-    if name != "windows":
-        raise ValueError("Native backend has no implemented enrollment")
-    return importlib.import_module("dev.packaging.native.platforms.windows")
+    if name == "windows":
+        return importlib.import_module("dev.packaging.native.platforms.windows")
+    if name == "linux":
+        return importlib.import_module("dev.packaging.native.platforms.linux")
+    if name == "macos":
+        return importlib.import_module("dev.packaging.native.platforms.macos")
+    raise ValueError("Native backend has no implemented enrollment")

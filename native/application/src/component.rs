@@ -112,6 +112,16 @@ struct ActivePointer {
     version: RelativePath,
 }
 
+struct WriterLock(File);
+
+impl Drop for WriterLock {
+    fn drop(&mut self) {
+        // Closing alone can leave the lock held by a descriptor inherited during an
+        // unrelated thread's fork. Release the shared lock before closing our handle.
+        let _ = self.0.unlock();
+    }
+}
+
 impl ComponentStore {
     pub fn new(root: PathBuf, target: String) -> Result<Self, Error> {
         filesystem::absolute_root(&root)?;
@@ -207,6 +217,7 @@ impl ComponentStore {
             std::fs::TryLockError::WouldBlock => Error::Busy,
             std::fs::TryLockError::Error(e) => Error::Io(e),
         })?;
+        let _writer = WriterLock(lock);
         let stage = directory.join("staging");
         remove_staging(&stage, &directory)?;
         let next_pointer = directory.join("active.next.json");
@@ -528,4 +539,33 @@ fn reusable_or_fresh_version(versions: &Path, artifact: &Artifact) -> Result<Pat
         }
     }
     Err(Error::LimitExceeded)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn writer_scope_releases_lock_even_with_a_duplicated_descriptor() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("writer.lock");
+        let file = File::options()
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .unwrap();
+        file.try_lock().unwrap();
+        let duplicate = file.try_clone().unwrap();
+        let guard = WriterLock(file);
+        let next = File::options().read(true).write(true).open(&path).unwrap();
+        assert!(matches!(
+            next.try_lock(),
+            Err(std::fs::TryLockError::WouldBlock)
+        ));
+        drop(guard);
+        next.try_lock()
+            .expect("completed writer left its lock held through a duplicate descriptor");
+        drop(duplicate);
+    }
 }

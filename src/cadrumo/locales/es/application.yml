@@ -1726,6 +1726,10 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      selected_option_requires_nonzero: La opción seleccionada exige un valor distinto
+        de cero en este campo.
+      selected_option_requires_zero: La opción seleccionada exige un cero explícito
+        en este campo.
       suffered_retencion_capital_mobiliario_uncredited: Esta declaración recoge rendimientos
         del capital mobiliario del ahorro, pero no consta ninguna retención soportada.
         Introduce el importe del certificado de retenciones e ingresos a cuenta de
@@ -1966,6 +1970,13 @@ application:
           guide: Guía - protegido
           provenance: Origen / pista de auditoría - protegido
           tariffs: Tarifas / parámetros vigentes - protegido
+      form:
+        communication_caption: Formulario de datos · cambia las entradas en sus hojas
+          de origen
+        communication_guide: Cambia los datos en Entradas. Modelo muestra la comunicación;
+          no calcula retenciones.
+        reported_data_caption: Datos declarados · edita las entradas en las hojas
+          de origen
       layout:
         errors:
           undeclared_reference: El diseño de la hoja de cálculo referencia un elemento
@@ -1992,6 +2003,151 @@ application:
             no son válidas.
           range_malformed: Los límites del rango de la hoja de cálculo no son válidos.
           tariff_shape_invalid: La forma de la tabla de tarifas no es válida.
+      review:
+        labels:
+          amount: Importe (visualización numérica)
+          amount_id: Identificador del resultado
+          art_104_tres_exclusion: Exclusión del artículo 104.Tres
+          attachments: Identificadores de adjuntos
+          attribution_notice: Solo la atribución capturada conecta las fuentes con
+            los resultados guardados. La proximidad entre filas no acredita una contribución.
+          authority: Generación de la autoridad normativa
+          availability: Selección y disponibilidad de evidencia
+          baseline_notice: Datos locales guardados. Esta copia sirve para revisar;
+            no certifica una presentación ni una verificación.
+          booked_date: Fecha contable
+          business_pct: Proporción empresarial registrada
+          byte_length: Tamaño original en bytes
+          calculation_revision: Revisión del cálculo
+          casilla: Casilla
+          category_id: Identificador de categoría
+          classification: Clasificación empresarial
+          contribution: Identificador de contribución
+          contribution_count: Número de contribuciones capturadas
+          counterparty: Contraparte
+          counterparty_country: País de la contraparte
+          currency: Moneda
+          deduction_fact_kind: Tipo de dato de deducción
+          description: Descripción capturada
+          detail: Detalle de atribución capturado
+          digest: Huella registrada
+          direction: Sentido del movimiento registrado
+          disposition: Código de selección de evidencia registrado
+          document_links: Identificadores de vínculos documentales
+          eur_value: Valor en EUR (visualización numérica)
+          evidence: Índice de evidencias
+          evidence_count: Número de evidencias inventariadas
+          evidence_excluded: Excluida de la selección de archivos
+          evidence_id: Identificador de evidencia
+          evidence_included: Seleccionada para el paquete separado de archivos
+          evidence_missing: Archivo histórico ausente
+          evidence_scope: Alcance de las evidencias
+          evidence_unavailable: Archivo histórico no disponible
+          exact_amount: Importe exacto (texto)
+          exact_business_pct: Proporción empresarial exacta (texto)
+          exact_decimal_notice: Las celdas numéricas son valores de visualización.
+            El texto decimal exacto conserva el valor guardado y su escala; aquí no
+            se redondea ni se recalcula.
+          exact_eur_value: Valor exacto en EUR (texto)
+          exact_fx_rate: Tipo de cambio exacto (texto)
+          exact_iva_amount: Cuota exacta de IVA (texto)
+          exact_iva_rate: Tipo exacto de IVA (texto)
+          exact_m210_applicable_rate: Tipo exacto del Modelo 210 (texto)
+          exact_m210_gross_income_amount: Ingresos íntegros exactos del Modelo 210
+            (texto)
+          exact_recargo_amount: Cuota exacta de recargo (texto)
+          exact_taxable_base: Base imponible exacta (texto)
+          exact_value: Valor decimal exacto (texto)
+          exported_at: Fecha de exportación
+          external_notes_notice: Escribe aquí tus hallazgos y escenarios. Cadrumo
+            nunca importa tus cambios. Los datos locales guardados se mantienen aparte.
+          field: Campo
+          finding: Hallazgo
+          finding_count: Número de hallazgos
+          formula: Referencia de fórmula registrada
+          fx_rate: Tipo de cambio registrado
+          index_only_notice: Este índice no contiene archivos originales. Los archivos
+            seleccionados requieren un paquete separado. Los archivos históricos ausentes
+            siguen ausentes.
+          input_classification: Clasificación de la entrada
+          invoice: Identificador de factura vinculada
+          irpf_category: Categoría de IRPF registrada
+          iva_amount: Cuota de IVA (visualización numérica)
+          iva_category: Categoría de IVA registrada
+          iva_rate: Tipo de IVA registrado
+          kind: Código de tipo de fuente registrado
+          ledger: Libro capturado
+          ledger_notice: Filas del libro capturadas. Los importes son magnitudes;
+            el sentido se registra aparte. El texto decimal exacto acompaña a la visualización
+            numérica. Las columnas adicionales conservan los datos fiscales capturados.
+          ledger_row_count: Número de filas del libro capturadas
+          ledger_scope_notice: Instantánea explícita del libro. No implica que las
+            filas contribuyan a un cálculo.
+          ledger_snapshot: Instantánea del libro
+          legal_refs: Referencias legales
+          lifecycle_state: Estado del ciclo de vida registrado
+          m210_applicable_rate: Tipo aplicable del Modelo 210
+          m210_asset_or_right_id: Identificador de bien o derecho del Modelo 210
+          m210_gross_income_amount: Ingresos íntegros del Modelo 210
+          m210_official_tipo_renta_code: Código de tipo de renta del Modelo 210
+          m210_payer_id: Identificador de pagador del Modelo 210
+          m210_payer_mode: Modalidad de pagador del Modelo 210
+          media_type: Tipo de archivo
+          missing_data: Datos ausentes
+          modelo: Modelo
+          no_captured_rows: Esta instantánea no contiene filas para esta sección.
+          no_inventory_reference: Sin referencia de inventario capturada
+          not_captured: No capturado
+          not_captured_notice: No capturado significa que la instantánea seleccionada
+            no tiene un valor para ese dato. No significa cero ni no aplicable.
+          not_ledger_source: La fuente no es una fila del libro
+          numeric_notice: Visualización numérica
+          overview: Resumen de la revisión
+          period: Año y período
+          prorrata_reference: Referencia de prorrata
+          prorrata_sector_id: Identificador de sector de prorrata
+          publication: Identificador de publicación
+          purchase_invoice_evidence: Identificador de evidencia de factura de compra
+          reason: Motivo de disponibilidad capturado
+          recargo_amount: Cuota de recargo de equivalencia
+          reference: Referencia de datos guardados / coordenada de celda
+          registry_digest: Huella del registro normativo
+          registry_revision: Revisión del registro normativo
+          result_count: Número de resultados guardados
+          results: Resultados guardados
+          review: Tus notas de revisión
+          review_date: Fecha de revisión
+          review_quality: Estado de la revisión
+          review_status: Estado de tu revisión
+          reviewer: Revisor
+          rounding: Regla de redondeo registrada
+          row_id: Coordenada de fila
+          scenario: Tu escenario
+          scope: Alcance de la selección
+          snapshot: Huella de la instantánea
+          source_id: Identificador de fuente
+          source_jurisdiction: Jurisdicción de origen
+          source_kind: Tipo de fuente
+          source_kind_adjustment: Ajuste
+          source_kind_invoice: Factura
+          source_kind_ledger_row: Fila del libro
+          source_kind_manual_input: Entrada manual
+          source_kind_unavailable: Fuente histórica no disponible
+          source_refs: Referencias de fuentes
+          source_revision: Revisión de la fuente
+          sources: Atribución de fuentes
+          status: Código de estado registrado
+          status_incomplete: Incompleto
+          status_provisional: Provisional
+          status_verified: Datos locales verificados
+          taxable_base: Base imponible (visualización numérica)
+          transaction: Identificador del movimiento
+          unattributed: Sin atribución de cálculo capturada
+          unit: Unidad registrada
+          usage_ratio_id: Identificador de proporción de uso
+          value: Valor guardado / visualización numérica
+          value_date: Fecha valor
+          work_unit: Unidad de trabajo
       translator:
         errors:
           translation_failed: La fórmula de las definiciones del modelo no se puede

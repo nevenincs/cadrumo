@@ -11,6 +11,47 @@ modelo:
           Regularització del dret a la deducció per contribuents no obligats a presentar
           declaració.
         title: IRPF regularització de la deducció per família nombrosa / discapacitat
+      form:
+        context:
+          complementaria-justificante:
+            heading: Número de justificant
+          complementaria-marca:
+            heading: Autoliquidació complementària
+          contribuyente-apellidos:
+            heading: Cognoms
+          contribuyente-nif:
+            heading: NIF
+          contribuyente-nombre:
+            heading: Nom
+          ingreso-iban:
+            heading: Número de compte (IBAN)
+        page:
+          pag-1:
+            heading: Regularització de deduccions · disseny de 2018
+        section:
+          ascendiente-dos-hijos:
+            heading: Ascendent amb dos fills sense dret a anualitats per aliments
+          ascendientes:
+            heading: Ascendents amb discapacitat a càrrec
+          complementaria:
+            heading: 5. Autoliquidació complementària
+          contribuyente:
+            heading: 1. Contribuent no obligat a presentar declaració
+          conyuge:
+            heading: Cònjuge no separat amb discapacitat
+          descendientes:
+            heading: 2. Regularització per percepció indeguda de l’abonament anticipat
+              de les deduccions · Descendents amb discapacitat a càrrec
+          ejercicio:
+            heading: Exercici
+          familia-numerosa:
+            heading: Família nombrosa
+          ingreso:
+            heading: 4. Ingrés
+          liquidacion:
+            heading: 3. Liquidació
+          representante:
+            heading: 6. Representant
       revision:
         2017-y-siguientes:
           casilla:

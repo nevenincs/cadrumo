@@ -7,23 +7,25 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from ..adapters.outbound.google import errors as google_errors
+from ..adapters.outbound.google.api import drive_v3_service
+from ..adapters.outbound.google.artifact_receipt_store import GoogleArtifactReceiptStore
 from ..adapters.outbound.google.errors import GoogleAuthError
 from ..adapters.outbound.google.google_configuration_refusal import GOOGLE_CONFIGURATION_ERROR_TYPES
 from ..adapters.outbound.google.installation_client import load_installation_client
 from ..adapters.outbound.google.oauth_flow import require_resolvable_profile_record, run_login_flow
 from ..adapters.outbound.google.records import DriveConfig
 from ..adapters.outbound.google.root_folder import ensure_profile_root_folder
+from ..adapters.outbound.google.root_layout import GoogleRootLayout
 from ..adapters.outbound.google.session_store import (
     delete_session,
     load_drive_config,
-    save_drive_config,
-    save_metadata,
-    save_token,
+    save_session,
 )
 from ..adapters.outbound.google.sign_in_state import load_sign_in_record
 from ..adapters.outbound.storage import errors as storage_errors
 from ..adapters.outbound.storage.errors import OutboundStorageError
-from ..adapters.outbound.storage.factory import get_storage_provider, google_credentials_for
+from ..adapters.outbound.storage.factory import build_google_credentials, get_storage_provider, google_credentials_for
+from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..application.operator_actions.models import PreconditionVerdict
 from ..application.operator_actions.projection import PreconditionVerdictSnapshot
 from ..application.user_profile.access_contracts import AccessDenialCode
@@ -34,6 +36,7 @@ from ..application.user_profile.google_configuration_operation_contracts import 
     GoogleConfigurationExportDisabledError,
     GoogleConfigurationProjection,
     GoogleConfigurationRequest,
+    GoogleFolderOrganizeRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
     GoogleLoginProjection,
@@ -274,15 +277,17 @@ def _dispatch_google_login(
         before_handoff=before_handoff,
         acknowledged=acknowledged,
     )
-    # The root folder is created before anything is stored, so a sign-in whose
-    # folder could not be created leaves no half-configured profile behind.
-    before_handoff("drive.root-folder.ensure", writes=True)
-    root_folder_id = ensure_profile_root_folder(google_credentials_for(client, consent_token), profile=profile)
-    acknowledged("drive.root-folder.ensure", writes=True)
+    # Creation intent survives an uncertain provider response. Token/config
+    # custody follows acknowledged root creation and fresh admission.
+    root_folder_id = ensure_profile_root_folder(
+        google_credentials_for(client, consent_token),
+        profile=profile,
+        commit=commit,
+        before_handoff=before_handoff,
+        acknowledged=acknowledged,
+    )
     created_root = DriveConfig(root_folder_id=root_folder_id)
-    commit(lambda: save_token(profile, consent_token), changed=lambda _result: True)
-    commit(lambda: save_metadata(profile, consent_metadata), changed=lambda _result: True)
-    commit(lambda: save_drive_config(profile, created_root), changed=lambda _result: True)
+    commit(lambda: save_session(profile, consent_token, consent_metadata, created_root), changed=lambda _result: True)
     return GoogleLoginProjection(
         profile_id=profile_id,
         account_email=consent_metadata.account_email,
@@ -316,6 +321,7 @@ def _dispatch_google_probe(
     profile: str,
     profile_id: UUID,
     operation: PinnedAuthorityOperation,
+    commit: GoogleConfigurationCommit,
     before_handoff: GoogleConfigurationHandoff,
     acknowledged: GoogleConfigurationAcknowledgement,
     local: _LocalFacts,
@@ -331,7 +337,7 @@ def _dispatch_google_probe(
                 translated_message="cli.config.google.export_capability_disabled"
             )
     provider = get_storage_provider(
-        settings=settings, profile=profile, before_handoff=before_handoff, acknowledged=acknowledged
+        settings=settings, profile=profile, before_handoff=before_handoff, acknowledged=acknowledged, commit=commit
     )
     report = provider.probe(read_only=request.read_only)
     return GoogleProbeProjection(
@@ -369,6 +375,24 @@ def _dispatch_google_configuration(
 ) -> GoogleConfigurationProjection:
     """Dispatch one admitted request to its typed owner without changing branch priority."""
     _require_google_request_profile(request, profile_id, require_profile)
+    if isinstance(request, GoogleFolderOrganizeRequest):
+        repository = secure_object_repository_for_active_bucket()
+        receipts = GoogleArtifactReceiptStore(repository, profile_id=profile_id, commit=commit)
+        config = load_drive_config(profile)
+        root = receipts.load(config.root_folder_id) if config is not None else None
+        if root is None:
+            raise storage_errors.OutboundStorageConflictError("profile folder has no retained creation receipt")
+        credentials = build_google_credentials(profile=profile)
+        drive = drive_v3_service(credentials, unavailable_condition_id="google.root_folder.api_client_available")
+        GoogleRootLayout(
+            drive,
+            repository,
+            root=root,
+            commit=commit,
+            before_handoff=before_handoff,
+            acknowledged=acknowledged,
+        ).organize()
+        return GoogleFolderViewProjection(profile_id=profile_id, configured=True, root_folder_id=root.artifact_id)
     if isinstance(request, GoogleFolderViewRequest):
         return _dispatch_google_folder_view(request, profile, profile_id)
     if isinstance(request, GoogleLoginRequest):
@@ -382,5 +406,7 @@ def _dispatch_google_configuration(
     if isinstance(request, GoogleStatusRequest):
         return _dispatch_google_status(request, profile, profile_id)
     if isinstance(request, GoogleProbeRequest):
-        return _dispatch_google_probe(request, profile, profile_id, operation, before_handoff, acknowledged, local)
+        return _dispatch_google_probe(
+            request, profile, profile_id, operation, commit, before_handoff, acknowledged, local
+        )
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)

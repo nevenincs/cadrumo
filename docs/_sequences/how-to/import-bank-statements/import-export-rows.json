@@ -38,10 +38,18 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.export",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
-            "3f4e376fed2b2a3b4551b17953cc6df59b5c83a183429381e4281659bab3f9ca"
+            "01c8644810a7fb5d1c134f393f183a001634c1957335bef1038f1e88b71e5f97"
           ],
           "bucket_id": "<bucket-id>",
           "byte_size": 963,
@@ -158,7 +166,7 @@
           "sha256": "c9d6904d7dceedccb2b593b557ae33d29d9338d2bb36ac05a225f2a6ad7ced0b"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

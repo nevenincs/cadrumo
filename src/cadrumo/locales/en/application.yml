@@ -1606,6 +1606,10 @@ application:
         enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      selected_option_requires_nonzero: The selected option requires a nonzero value
+        in this field.
+      selected_option_requires_zero: The selected option requires an explicit zero
+        in this field.
       suffered_retencion_capital_mobiliario_uncredited: This declaration includes
         savings income from movable capital (rendimientos del capital mobiliario del
         ahorro), but no withholding (retención) is credited against it. Enter the
@@ -1847,6 +1851,11 @@ application:
           guide: Guide - protected
           provenance: Origin / audit trail - protected
           tariffs: Tariffs / active parameters - protected
+      form:
+        communication_caption: Information form · change inputs in their source sheets
+        communication_guide: Change the data in Entradas. Modelo displays the communication;
+          it does not calculate withholding.
+        reported_data_caption: Reported data · edit the inputs in the source sheets
       layout:
         errors:
           undeclared_reference: The spreadsheet layout references an item not declared
@@ -1872,6 +1881,149 @@ application:
           invalid_column_letters: The spreadsheet record column letters are invalid.
           range_malformed: The spreadsheet range boundaries are invalid.
           tariff_shape_invalid: The spreadsheet tariff-table record shape is invalid.
+      review:
+        labels:
+          amount: Amount (numeric display)
+          amount_id: Result identifier
+          art_104_tres_exclusion: Article 104.Tres exclusion
+          attachments: Attachment identifiers
+          attribution_notice: Only captured attribution connects sources to saved
+            results. Row proximity does not establish contribution.
+          authority: Authority generation
+          availability: Evidence selection and availability
+          baseline_notice: Saved local baseline. This copy is for review; it does
+            not certify a filing or verification.
+          booked_date: Booking date
+          business_pct: Recorded business proportion
+          byte_length: Original byte length
+          calculation_revision: Calculation revision
+          casilla: Casilla
+          category_id: Category identifier
+          classification: Business classification
+          contribution: Contribution identifier
+          contribution_count: Captured contribution count
+          counterparty: Counterparty
+          counterparty_country: Counterparty country
+          currency: Currency
+          deduction_fact_kind: Deduction fact kind
+          description: Captured description
+          detail: Captured attribution detail
+          digest: Recorded digest
+          direction: Recorded flow direction
+          disposition: Recorded evidence disposition code
+          document_links: Document link identifiers
+          eur_value: EUR value (numeric display)
+          evidence: Evidence index
+          evidence_count: Evidence inventory count
+          evidence_excluded: Excluded from payload selection
+          evidence_id: Evidence identifier
+          evidence_included: Selected for separate payload package
+          evidence_missing: Missing historical payload
+          evidence_scope: Evidence scope
+          evidence_unavailable: Historical payload unavailable
+          exact_amount: Exact amount (text)
+          exact_business_pct: Exact business proportion (text)
+          exact_decimal_notice: Numeric cells are display values. Exact decimal text
+            preserves the saved value and scale; no rounding or recalculation is applied
+            here.
+          exact_eur_value: Exact EUR value (text)
+          exact_fx_rate: Exact exchange rate (text)
+          exact_iva_amount: Exact IVA amount (text)
+          exact_iva_rate: Exact IVA rate (text)
+          exact_m210_applicable_rate: Exact Modelo 210 rate (text)
+          exact_m210_gross_income_amount: Exact Modelo 210 gross income (text)
+          exact_recargo_amount: Exact recargo amount (text)
+          exact_taxable_base: Exact taxable base (text)
+          exact_value: Exact decimal value (text)
+          exported_at: Exported at
+          external_notes_notice: Edit your findings and scenarios here. Cadrumo never
+            imports your edits. The saved local baseline stays separate.
+          field: Field
+          finding: Finding
+          finding_count: Finding count
+          formula: Recorded formula reference
+          fx_rate: Recorded exchange rate
+          index_only_notice: This index contains no original files. Selected payloads
+            require a separate package. Missing historical files remain missing.
+          input_classification: Input classification
+          invoice: Linked invoice identifier
+          irpf_category: Recorded IRPF category
+          iva_amount: IVA amount (numeric display)
+          iva_category: Recorded IVA category
+          iva_rate: Recorded IVA rate
+          kind: Recorded source kind code
+          ledger: Captured ledger
+          ledger_notice: Captured ledger rows. Amounts are magnitudes; direction is
+            recorded separately. Exact decimal text accompanies numeric display. Additional
+            columns retain captured tax facts.
+          ledger_row_count: Captured ledger row count
+          ledger_scope_notice: Explicit ledger snapshot. No calculation contribution
+            is implied.
+          ledger_snapshot: Ledger snapshot
+          legal_refs: Legal references
+          lifecycle_state: Recorded lifecycle state
+          m210_applicable_rate: Modelo 210 applicable rate
+          m210_asset_or_right_id: Modelo 210 asset or right identifier
+          m210_gross_income_amount: Modelo 210 gross income
+          m210_official_tipo_renta_code: Modelo 210 income type code
+          m210_payer_id: Modelo 210 payer identifier
+          m210_payer_mode: Modelo 210 payer mode
+          media_type: Media type
+          missing_data: Missing data
+          modelo: Modelo
+          no_captured_rows: This snapshot contains no rows for this section.
+          no_inventory_reference: No captured inventory reference
+          not_captured: Not captured
+          not_captured_notice: Not captured means the selected snapshot has no value
+            for that fact. It does not mean zero or not applicable.
+          not_ledger_source: Source is not a ledger row
+          numeric_notice: Numeric display
+          overview: Review overview
+          period: Year and period
+          prorrata_reference: Prorrata reference
+          prorrata_sector_id: Prorrata sector identifier
+          publication: Publication identifier
+          purchase_invoice_evidence: Purchase invoice evidence identifier
+          reason: Captured availability reason
+          recargo_amount: Recargo de equivalencia amount
+          reference: Baseline reference / cell coordinate
+          registry_digest: Registry digest
+          registry_revision: Registry revision
+          result_count: Saved result count
+          results: Saved results
+          review: Your review notes
+          review_date: Review date
+          review_quality: Review status
+          review_status: Your review status
+          reviewer: Reviewer
+          rounding: Recorded rounding rule
+          row_id: Row coordinate
+          scenario: Your scenario
+          scope: Selection scope
+          snapshot: Snapshot digest
+          source_id: Source identifier
+          source_jurisdiction: Source jurisdiction
+          source_kind: Source kind
+          source_kind_adjustment: Adjustment
+          source_kind_invoice: Invoice
+          source_kind_ledger_row: Ledger row
+          source_kind_manual_input: Manual input
+          source_kind_unavailable: Unavailable historical source
+          source_refs: Source references
+          source_revision: Source revision
+          sources: Source attribution
+          status: Recorded status code
+          status_incomplete: Incomplete
+          status_provisional: Provisional
+          status_verified: Verified local baseline
+          taxable_base: Taxable base (numeric display)
+          transaction: Transaction identifier
+          unattributed: No captured calculation attribution
+          unit: Recorded unit
+          usage_ratio_id: Usage ratio identifier
+          value: Saved value / numeric display
+          value_date: Value date
+          work_unit: Work unit
       translator:
         errors:
           translation_failed: The formula in the modelo definitions cannot be translated

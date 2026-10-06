@@ -1,6 +1,5 @@
-[revisions."2011-julio-2015"]
+[revisions.2011-julio-2015]
 casilla_storage_baseline = "2009-2011-junio"
-predecessor = { none = { reason = "No legal predecessor is declared: naming 2009-2011-junio would claim that the July 2011 design continues the 2009 one, a separate continuity decision. The two editions do not overlap (2009-2011-junio ends on 2011-06-30 and this edition starts on 2011-07-01), and the payload is stored against 2009-2011-junio through casilla_storage_baseline and family_storage_baseline, with overrides stating only this edition's differences: the orden-eha-1033-2011 references, the aeat-dr-308-2011-july citations and the seeded period lineage. Storage reuse makes no continuity claim.", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2011-july"] } }
 casilla_source_refs = ["aeat-dr-308-2011-july"]
 application_link_source_refs = ["aeat-modelo-308-procedure"]
 authority_grade = "applicability"
@@ -10,67 +9,926 @@ reviewed_at = 2026-08-26
 id = "2011-julio-2015"
 valid_from = 2011-07-01
 valid_to = 2015-12-31
-period_selector = { year_from = 2011, year_to = 2015, periods = ["AD-HOC"] }
 orden_aplicabilidad = ["orden-eha-3786-2008:art-2", "orden-eha-1033-2011:articulo-unico", "orden-eha-1033-2011:disposicion-final-unica"]
-legal_refs = [
-    "ley-37-1992:art-21",
-    "rd-1624-1992:art-30-bis",
-    "orden-eha-3786-2008:art-2",
-    "orden-eha-3786-2008:art-11",
-    "orden-eha-1033-2011:articulo-unico",
-    "orden-eha-1033-2011:disposicion-final-unica",
-    "ley-37-1992:art-161",
-]
-source_refs = [
-    "aeat-dr-308-2011-july",
-    "aeat-modelo-308-procedure",
-    "boe-modelo-308-2008-form",
-]
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "orden-eha-1033-2011:articulo-unico", "orden-eha-1033-2011:disposicion-final-unica", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2011-july", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
 family_storage_baseline = "2009-2011-junio"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "completeness_manifest"]
 
-[[revisions."2011-julio-2015".casilla_overrides]]
-selector = { revision = "2009-2011-junio", id = "decl.ejercicio" }
-fields = { legal_refs = ["orden-eha-3786-2008:art-2"] }
+[revisions.2011-julio-2015.predecessor.none]
+reason = "No legal predecessor is declared: naming 2009-2011-junio would claim that the July 2011 design continues the 2009 one, a separate continuity decision. The two editions do not overlap (2009-2011-junio ends on 2011-06-30 and this edition starts on 2011-07-01), and the payload is stored against 2009-2011-junio through casilla_storage_baseline and family_storage_baseline, with overrides stating only this edition's differences: the orden-eha-1033-2011 references, the aeat-dr-308-2011-july citations and the seeded period lineage. Storage reuse makes no continuity claim."
+legal_refs = ["ley-37-1992:art-21"]
+source_refs = ["aeat-dr-308-2011-july"]
+
+[revisions.2011-julio-2015.period_selector]
+year_from = 2011
+year_to = 2015
+periods = ["AD-HOC"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
 removed_fields = []
 
-[[revisions."2011-julio-2015".casilla_overrides]]
-selector = { revision = "2009-2011-junio", id = "decl.periodo" }
-fields = { continuidad_origin = "seeded", legal_refs = ["orden-eha-3786-2008:art-2"] }
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.ejercicio"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+legal_refs = ["orden-eha-3786-2008:art-2"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
 removed_fields = []
 restate_provenance = true
 
-[[revisions."2011-julio-2015".family_overrides]]
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.periodo"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_origin = "seeded"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.tipo-declaracion"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-adquirente-nif"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-adquirente-pais"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-vehiculo-marca"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-vehiculo-tipo"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-vehiculo-modelo"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-vehiculo-bastidor"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-vehiculo-clasificacion"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-embarcacion-fabricante"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-embarcacion-tipo"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-embarcacion-identificacion"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-embarcacion-eslora"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-aeronave-fabricante"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-aeronave-marca"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-aeronave-serie"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-aeronave-ano"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-aeronave-peso"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-precio-adquisicion"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-tipo-01"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-iva-soportado"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-precio-venta"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-tipo-04"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-maximo-devolver"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-iva-devolver-eib"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-iva-devolver-transporte"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-base-08"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-tipo-09"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-cuota-10"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-base-11"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-tipo-12"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-cuota-13"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-base-14"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-tipo-15"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-cuota-16"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.req-iva-devolver-17"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "firma-lugar"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "firma-fecha"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "firma"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = ["source_refs"]
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "papel-nif"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.devolucion-ccc"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+number = "770-789"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.mtn-adquirente-nombre-completo"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "papel-nombre-completo"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.persona-contacto"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+number = "790-889"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.telefono-contacto"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+number = "890-909"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+removed_fields = []
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "decl.observaciones"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+continuidad_evidence = "Compared BOE-A-2008-20953 Annex II printed 52365 and AEAT 2009 record rows 8-51 with BOE-A-2011-7479 Annex I and AEAT 2011 record: the named applicant, buyer, transport, recargo, signature, bank-account or contact concept is preserved. The CCC/contact offsets move after the new fields 19 and 20."
+continuidad_origin = "grounded"
+legal_refs = ["orden-eha-3786-2008:art-2"]
+number = "910-1259"
+
+[[revisions.2011-julio-2015.casilla_overrides]]
+restate_provenance = true
+
+[revisions.2011-julio-2015.casilla_overrides.selector]
+revision = "2009-2011-junio"
+id = "papel-importe-devolucion"
+
+[revisions.2011-julio-2015.casilla_overrides.fields]
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2008-20953 Annex II printed52365 and BOE-A-2011-7479 Annex I printed42701 both have section6 Importe D, the amount requested by bank transfer. No universal arithmetic across the distinct refund categories is asserted."
+legal_refs = ["orden-eha-3786-2008:art-2"]
+
+[revisions.2011-julio-2015.casilla_overrides.fields.constraints]
+legal_refs = ["orden-eha-3786-2008:art-2"]
+[[revisions.2011-julio-2015.family_overrides]]
 family = "filing_schedules"
-selector = {revision = "2009-2011-junio", id = "modelo-308-ad-hoc"}
-sequence_additions = {legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]}
 
-[[revisions."2011-julio-2015".family_overrides]]
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-ad-hoc"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]
+
+[[revisions.2011-julio-2015.family_overrides]]
 family = "constructs"
-selector = {revision = "2009-2011-junio", id = "modelo-308-iva-solicitud-devolucion"}
-sequence_additions = {legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"], source_refs = ["aeat-dr-308-2011-july"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {source_refs = [2, 0, 1]}
 
-[[revisions."2011-julio-2015".family_overrides]]
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-iva-solicitud-devolucion"
+
+[revisions.2011-julio-2015.family_overrides.fields]
+casilla_ids = ["decl.ejercicio", "decl.periodo", "decl.tipo-declaracion", "decl.mtn-adquirente-nif", "decl.mtn-adquirente-pais", "decl.mtn-vehiculo-marca", "decl.mtn-vehiculo-tipo", "decl.mtn-vehiculo-modelo", "decl.mtn-vehiculo-bastidor", "decl.mtn-vehiculo-clasificacion", "decl.mtn-embarcacion-fabricante", "decl.mtn-embarcacion-tipo", "decl.mtn-embarcacion-identificacion", "decl.mtn-embarcacion-eslora", "decl.mtn-aeronave-fabricante", "decl.mtn-aeronave-marca", "decl.mtn-aeronave-serie", "decl.mtn-aeronave-ano", "decl.mtn-aeronave-peso", "decl.mtn-precio-adquisicion", "decl.mtn-tipo-01", "decl.mtn-iva-soportado", "decl.mtn-precio-venta", "decl.mtn-tipo-04", "decl.mtn-maximo-devolver", "decl.mtn-iva-devolver-eib", "decl.mtn-iva-devolver-transporte", "decl.mtn-iva-soportado-art21", "decl.mtn-iva-devolver-art21", "decl.req-base-08", "decl.req-tipo-09", "decl.req-cuota-10", "decl.req-base-11", "decl.req-tipo-12", "decl.req-cuota-13", "decl.req-base-14", "decl.req-tipo-15", "decl.req-cuota-16", "decl.req-iva-devolver-17", "firma-lugar", "firma-fecha", "firma", "papel-nif", "decl.devolucion-ccc", "decl.mtn-adquirente-nombre-completo", "papel-nombre-completo", "decl.persona-contacto", "decl.telefono-contacto", "decl.observaciones", "papel-importe-devolucion"]
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "orden-eha-1033-2011:articulo-unico", "orden-eha-1033-2011:disposicion-final-unica", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2011-july", "aeat-modelo-308-procedure", "boe-modelo-308-2011-form-pdf", "boe-modelo-308-2008-form"]
+
+[[revisions.2011-julio-2015.family_overrides]]
 family = "application_links"
-selector = {revision = "2009-2011-junio", id = "modelo-308-deadline"}
-sequence_additions = {legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]}
 
-[[revisions."2011-julio-2015".family_overrides]]
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-deadline"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]
+
+[[revisions.2011-julio-2015.family_overrides]]
 family = "application_links"
-selector = {revision = "2009-2011-junio", id = "modelo-308-filing"}
-sequence_additions = {legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]}
-sequence_removals = {legal_refs = [0]}
 
-[[revisions."2011-julio-2015".family_overrides]]
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-filing"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]
+
+[revisions.2011-julio-2015.family_overrides.sequence_removals]
+legal_refs = [0]
+
+[[revisions.2011-julio-2015.family_overrides]]
 family = "application_links"
-selector = {revision = "2009-2011-junio", id = "modelo-308-portal"}
-sequence_additions = {legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]}
 
-[[revisions."2011-julio-2015".family_overrides]]
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-portal"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]
+
+[[revisions.2011-julio-2015.family_overrides]]
 family = "workbook_parity_refs"
-selector = {revision = "2009-2011-junio", id = "modelo-308-dr-static-layout"}
-fields = {fixture_id = "modelo-308-2011-julio-2015-record-design", workbook_source = "aeat-dr-308-2011-july"}
-sequence_additions = {legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"], source_refs = ["aeat-dr-308-2011-july"]}
-sequence_removals = {legal_refs = [0], source_refs = [0]}
+
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-dr-static-layout"
+
+[revisions.2011-julio-2015.family_overrides.fields]
+fixture_id = "modelo-308-2011-julio-2015-record-design"
+workbook_source = "aeat-dr-308-2011-july"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]
+source_refs = ["aeat-dr-308-2011-july"]
+
+[revisions.2011-julio-2015.family_overrides.sequence_removals]
+legal_refs = [0]
+source_refs = [0]
+
+[[revisions.2011-julio-2015.family_overrides]]
+family = "formulas"
+
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-recargo-total"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+source_refs = ["boe-modelo-308-2011-form-pdf", "aeat-dr-308-2011-july"]
+
+[revisions.2011-julio-2015.family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[revisions.2011-julio-2015.family_overrides.sequence_order]
+source_refs = [1, 2, 0]
+
+[[revisions.2011-julio-2015.family_overrides]]
+family = "application_links"
+
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "modelo-308-calculation"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+source_refs = ["boe-modelo-308-2011-form-pdf"]
+
+[revisions.2011-julio-2015.family_overrides.sequence_removals]
+source_refs = [1]
+
+[[revisions.2011-julio-2015.family_overrides]]
+family = "completeness_manifest"
+replacement_id = "aeat-dr-308-2011-july"
+
+[revisions.2011-julio-2015.family_overrides.selector]
+revision = "2009-2011-junio"
+id = "aeat-dr-308-2009"
+
+[revisions.2011-julio-2015.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-308-2011-july", "boe-modelo-308-2011-form-pdf"]
+
+[revisions.2011-julio-2015.family_overrides.sequence_removals]
+source_refs = [0, 1]
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.ejercicio"
+position = 0
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.periodo"
+position = 1
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.tipo-declaracion"
+position = 2
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-adquirente-nif"
+position = 3
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-adquirente-pais"
+position = 4
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-vehiculo-marca"
+position = 5
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-vehiculo-tipo"
+position = 6
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-vehiculo-modelo"
+position = 7
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-vehiculo-bastidor"
+position = 8
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-vehiculo-clasificacion"
+position = 9
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-embarcacion-fabricante"
+position = 10
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-embarcacion-tipo"
+position = 11
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-embarcacion-identificacion"
+position = 12
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-embarcacion-eslora"
+position = 13
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-aeronave-fabricante"
+position = 14
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-aeronave-marca"
+position = 15
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-aeronave-serie"
+position = 16
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-aeronave-ano"
+position = 17
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-aeronave-peso"
+position = 18
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-precio-adquisicion"
+position = 19
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-tipo-01"
+position = 20
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-iva-soportado"
+position = 21
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-precio-venta"
+position = 22
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-tipo-04"
+position = 23
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-maximo-devolver"
+position = 24
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-iva-devolver-eib"
+position = 25
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-iva-devolver-transporte"
+position = 26
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-iva-soportado-art21"
+position = 27
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-iva-devolver-art21"
+position = 28
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-base-08"
+position = 29
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-tipo-09"
+position = 30
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-cuota-10"
+position = 31
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-base-11"
+position = 32
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-tipo-12"
+position = 33
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-cuota-13"
+position = 34
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-base-14"
+position = 35
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-tipo-15"
+position = 36
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-cuota-16"
+position = 37
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.req-iva-devolver-17"
+position = 38
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "firma-lugar"
+position = 39
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "firma-fecha"
+position = 40
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "firma"
+position = 41
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "papel-nif"
+position = 42
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.devolucion-ccc"
+position = 43
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.mtn-adquirente-nombre-completo"
+position = 44
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "papel-nombre-completo"
+position = 45
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.persona-contacto"
+position = 46
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.telefono-contacto"
+position = 47
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "decl.observaciones"
+position = 48
+
+[[revisions.2011-julio-2015.casilla_positions]]
+id = "papel-importe-devolucion"
+position = 49

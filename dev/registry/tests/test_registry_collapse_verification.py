@@ -279,6 +279,55 @@ def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_proven
     altered_modelo = loaded.model_copy(update={"revisions": {**loaded.revisions, "2025": altered_revision}})
     result = _collapse_comparison.compare_modelos(inline, altered_modelo)
     assert result.status is _collapse_models.CheckStatus.FAILED
+    assert result.differences[0]["reason"] == "mapping_keys_changed"
+    assert (
+        _collapse_comparison.compare_modelos(altered_modelo, altered_modelo).status
+        is _collapse_models.CheckStatus.PASSED
+    )
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("source_refs", ("other-source",)),
+        ("legal_refs", ("other:article",)),
+        ("from_revision", "2021"),
+        ("to_revision", "2024"),
+    ],
+)
+def test_distinct_lineage_citations_and_edges_survive_typed_comparison(field: str, value: object) -> None:
+    modelo = load_modelo_directory(REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/188")
+    revision = modelo.revisions["2023-y-siguientes"]
+    assert revision.lineage_attestations
+    assert _collapse_comparison.compare_modelos(modelo, modelo).status is _collapse_models.CheckStatus.PASSED
+    rows = {c.continuidad_id: c for c in revision.casillas}
+    index = next(
+        index
+        for index, attestation in enumerate(revision.lineage_attestations)
+        if attestation.source_refs != rows[attestation.continuidad_id].source_refs
+    )
+    changed = revision.lineage_attestations[index].model_copy(update={field: value})
+    attestations = (*revision.lineage_attestations[:index], changed, *revision.lineage_attestations[index + 1 :])
+    changed_revision = revision.model_copy(update={"lineage_attestations": attestations})
+    after = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: changed_revision}})
+    result = _collapse_comparison.compare_modelos(modelo, after)
+    assert result.status is _collapse_models.CheckStatus.FAILED
+    assert "lineage_attestations" in str(result.differences[0]["location"])
+    removed_revision = revision.model_copy(update={"lineage_attestations": ()})
+    removed = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: removed_revision}})
+    assert _collapse_comparison.compare_modelos(modelo, removed).status is _collapse_models.CheckStatus.FAILED
+
+
+def test_lineage_claim_projection_still_refuses_an_unhydrated_origin() -> None:
+    modelo = load_modelo_directory(REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/188")
+    revision = modelo.revisions["2023-y-siguientes"]
+    changed = revision.lineage_attestations[0].model_copy(update={"origin": CasillaLineageOrigin.SEEDED})
+    changed_revision = revision.model_copy(
+        update={"lineage_attestations": (changed, *revision.lineage_attestations[1:])}
+    )
+    after = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: changed_revision}})
+    result = _collapse_comparison.compare_modelos(after, after)
+    assert result.status is _collapse_models.CheckStatus.FAILED
     assert result.differences[0]["reason"] == "lineage_attestation_provenance_differs_from_hydrated_casilla"
 
 
@@ -788,7 +837,21 @@ def test_real_modelo_131_snapshot_parity_preserves_raw_and_effective_export_layo
     indexed_declared_counts = layout_field_counts(indexed_model_revision)
     indexed_effective_counts = layout_field_counts(indexed_effective_revision)
 
-    assert source_declared_counts != source_effective_counts
+    # The authored 131 layout now explicitly includes all producer fields, so
+    # derivation need not increase the field count. Compare each representation
+    # to its owner rather than requiring an incomplete declared layout.
+    from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+
+    declared_revision = next(modelo for modelo in registry_authority.modelos if modelo.id == "131").revisions[
+        "2019-2023"
+    ]
+    assert source_declared_counts == tuple(
+        tuple(len(record.fields) for record in layout.records) for layout in declared_revision.export_layouts
+    )
+    assert source_effective_counts == tuple(
+        tuple(len(record.fields) for record in layout.records)
+        for layout in derive_export_layouts_from_bindings(declared_revision)
+    )
     assert indexed_declared_counts == source_declared_counts
     assert indexed_effective_counts == source_effective_counts
     assert source_effective_revision["form_layouts"]

@@ -1,0 +1,39 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "216"
+design_epoch = "2020"
+source_ref = "aeat-dr-216-2020-2023"
+source_sha256 = "a68460b791ed6c14d698eb0aef3752eda9d407c4fc9b3249d0e4053887f9fee8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m216-2020-year-yyyy"
+decision_statement = "Ejercicio is the four-digit filing year in the historical 2020-2023 record design."
+justification = "Page 1, row 15 declares four Num positions for Ejercicio. The revision selector separately limits the applicable years to 2020-2023."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Pág. 1"

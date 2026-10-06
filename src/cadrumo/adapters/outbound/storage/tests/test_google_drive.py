@@ -19,10 +19,15 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from .....tests.google_credentials import unused_google_credentials
-from ...google.tests.drive_list_server import drive_files_list_endpoint
 from .._google_drive import GoogleDriveProvider
 from .._google_drive_metadata import drive_storage_content_hash
-from ..errors import OutboundStorageIntegrityError, OutboundStorageNetworkError, OutboundStorageValidationError
+from ..errors import (
+    OutboundStorageConflictError,
+    OutboundStorageIntegrityError,
+    OutboundStorageNetworkError,
+    OutboundStorageValidationError,
+)
+from .managed_drive_fixture import current_drive_receipts, drive_files_list_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -51,7 +56,10 @@ def _assert_drive_verdict(
 
 def _provider() -> GoogleDriveProvider:
     return GoogleDriveProvider(
-        credentials=unused_google_credentials(), root_folder_id="drive-root", vault_folder_name="cadrumo-vault"
+        credentials=unused_google_credentials(),
+        root_folder_id="drive-root",
+        vault_folder_name="cadrumo-vault",
+        receipts=current_drive_receipts(),
     )
 
 
@@ -202,16 +210,13 @@ def test_vault_resolution_refuses_a_vault_name_entry_that_is_not_a_folder() -> N
     ) as endpoint:
         provider = _provider()
         provider._service = endpoint.service
-        with pytest.raises(OutboundStorageValidationError) as raised:
+        with pytest.raises(OutboundStorageConflictError) as raised:
             provider._resolve_vault_folder()
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.google_drive.errors.vault_entry_not_folder"
-    _assert_drive_verdict(
-        exc,
-        "storage.google_drive.vault_entry.folder",
-        {"backend": "google_drive", "field": "vault_folder_entry", "valid": False},
-    )
+    assert exc.context is not None and exc.context["reason"] == "kind_identity_or_trash"
+    assert exc.terminal_precondition_verdict is not None
+    assert exc.terminal_precondition_verdict.failed_condition_id == "google.managed_artifact.admitted"
 
 
 def test_namespace_resolution_follows_page_token_to_an_owned_folder() -> None:
@@ -272,12 +277,14 @@ def test_iter_objects_escapes_configured_query_values_at_the_provider_boundary()
             },
             {"files": [{"id": "namespace-id", "name": namespace, "appProperties": app_properties}]},
             {"files": []},
-        )
+        ),
+        root_folder_id=root_folder_id,
     ) as endpoint:
         provider = GoogleDriveProvider(
             credentials=unused_google_credentials(),
             root_folder_id=root_folder_id,
             vault_folder_name=vault_folder_name,
+            receipts=current_drive_receipts(),
         )
         provider._service = endpoint.service
 
@@ -378,8 +385,14 @@ def test_iter_objects_refuses_malformed_storage_app_properties(
         provider = _provider()
         provider._service = endpoint.service
 
-        with pytest.raises(OutboundStorageIntegrityError, match="appProperties"):
-            list(provider.iter_objects("ledger_transaction"))
+        if app_properties.get("cadrumo_vault_app") != "cadrumo":
+            with pytest.raises(OutboundStorageConflictError) as refused:
+                list(provider.iter_objects("ledger_transaction"))
+            assert refused.value.context is not None
+            assert refused.value.context["reason"] == "ownership_identity_mismatch"
+        else:
+            with pytest.raises(OutboundStorageIntegrityError, match="appProperties"):
+                list(provider.iter_objects("ledger_transaction"))
 
     assert len(endpoint.requested_queries) == 3
 
@@ -453,10 +466,11 @@ def test_google_drive_provider_rejects_forbidden_namespace_before_service_constr
 
 
 def test_google_drive_execute_redacts_untyped_upstream_exception() -> None:
-    provider = _provider()
-
-    with pytest.raises(OutboundStorageNetworkError) as raised:
-        provider._execute(object(), action="files.list")
+    with drive_files_list_endpoint(pages=()) as endpoint:
+        provider = _provider()
+        provider._service = endpoint.service
+        with pytest.raises(OutboundStorageNetworkError) as raised:
+            provider._execute(object(), action="files.list", target_id="drive-root")
 
     exc = raised.value
     assert exc.__cause__ is None

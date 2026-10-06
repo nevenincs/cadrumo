@@ -157,28 +157,28 @@ modelo:
           irpf-pf-modulos-2-unidades:
             label: 'Módulo 2 (Personal no asalariado): número de unidades'
           irpf-pf-modulos-3-unidades:
-            label: 'Módulo 3 (unidad activity-específica: superficie, distancia recorrida
-              o carga): número de unidades'
+            label: 'Módulo 3: unidades según la actividad (superficie, distancia o
+              carga)'
           irpf-pf-modulos-4-unidades:
-            label: 'Módulo 4 (unidad activity-específica: consumo de energía eléctrica
-              u otra): número de unidades'
+            label: 'Módulo 4: unidades según la actividad (consumo eléctrico u otra
+              unidad)'
           irpf-pf-modulos-5-unidades:
-            label: 'Módulo 5 (unidad activity-específica, p.ej. resto de superficie
-              del local independiente o mesas): número de unidades'
+            label: 'Módulo 5: unidades según la actividad (superficie del local independiente
+              o mesas)'
           irpf-pf-modulos-6-unidades:
-            label: 'Módulo 6 (unidad activity-específica, p.ej. resto de superficie
-              del local no independiente o máquinas tipo A): número de unidades'
+            label: 'Módulo 6: unidades según la actividad (superficie del local no
+              independiente o máquinas tipo A)'
           irpf-pf-modulos-7-unidades:
-            label: 'Módulo 7 (unidad activity-específica, p.ej. superficie del horno
-              o máquinas tipo B): número de unidades'
+            label: 'Módulo 7: unidades según la actividad (superficie del horno o
+              máquinas tipo B)'
           irpf-pf-modulos-diferencia:
             label: Diferencia
           irpf-pf-modulos-epigrafe-iae:
-            label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
-              Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
-              bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-              según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
-              para la asignación exacta.
+            help: Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
+              bajo un mismo código, usa el sufijo «a» o «b» (por ejemplo, «659.4a»
+              o «691.9b») según la actividad. Consulta los coeficientes de la actividad
+              para elegir la opción correspondiente.
+            label: Epígrafe IAE de la actividad en estimación objetiva
           irpf-pf-modulos-rendimiento-neto-actividad:
             label: 'Rendimiento neto de la actividad (Fase 4ª: módulos − reducción
               general que la orden de módulos fija para el ejercicio)'
@@ -227,6 +227,22 @@ modelo:
         official_name: Modelo 131. IRPF. Empresarios y profesionales en Estimación
           Objetiva. Pago fraccionado.
         title: IRPF pago fraccionado estimación objetiva
+      form:
+        context:
+          apellidos: Apellidos
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
+        section:
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Declarante (1)
+          ingreso:
+            heading: Ingreso (4)
       revision:
         2019-2023:
           casilla:

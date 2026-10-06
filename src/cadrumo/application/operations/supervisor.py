@@ -222,6 +222,22 @@ class OperationSupervisor(
         if self._typed_financial_operands is not None:
             await self._typed_financial_operands.settle_operation(operation_id)
 
+    def in_flight_operation_count(self) -> int:
+        """Observe distinct admitted operations until all local settlement completes.
+
+        Called on the owning event loop without yielding. Pending admissions,
+        durable leases and unfinished executor/cleanup/settlement tasks overlap;
+        an operation contributes once. Observation does not renew any lease.
+        """
+        identifiers = set(self._leases_by_operation)
+        identifiers.update(operation_id for task, operation_id in self._admissions.items() if not task.done())
+        for mapping in (self._executor_tasks, self._cleanup_tasks, self._continuation_tasks, self._settlement_tasks):
+            identifiers.update(operation_id for operation_id, task in mapping.items() if not task.done())
+        identifiers.update(
+            operation_id for operation_id, tasks in self._drain_tasks.items() if any(not task.done() for task in tasks)
+        )
+        return len(identifiers)
+
     async def bind_typed_financial_operand(self, operation_id: OperationId, operand: BaseModel) -> None:
         """Transfer a complete batch only after its amount-free invocation was admitted."""
         if not self._accepting_admissions:

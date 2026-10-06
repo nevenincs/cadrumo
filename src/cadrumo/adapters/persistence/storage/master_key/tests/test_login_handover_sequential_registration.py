@@ -41,7 +41,7 @@ from cadrumo.core.time.clock import now as _now
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 from .test_login_handover import (
-    _assert_no_resumable_material,
+    _assert_runtime_receipt_survives,
     _close_live_login,
     _login_in_separate_process,
     _probe_resumable_session,
@@ -177,23 +177,10 @@ def test_a_completed_handover_receipt_is_retired_by_the_next_login_after_a_point
 
 
 @pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
-def test_registration_displaced_profile_keeps_no_resumable_material_after_the_next_login(
+def test_registration_preserves_previous_runtime_receipt_after_the_next_login(
     tmp_path: Path,
 ) -> None:
-    """The profile a registration displaced must not stay resumable without its passphrase.
-
-    Every login runs in its own interpreter, because that is the operator flow
-    and the only configuration in which no live in-process session can name the
-    profile being moved away from. The registration between the two logins
-    moves the durable pointer onto the new capsule, so the pointer captured at
-    the second login names the profile being logged INTO rather than the one
-    being left -- which is precisely the observation gap that lets a surviving
-    acceleration receipt hand back a 32-byte bucket key with no passphrase.
-
-    The recovered material is measured rather than the receipt file, because a
-    variant that unlinks the receipt while leaving the key recoverable by any
-    other route would satisfy a file-absence check and be the same defect.
-    """
+    """Registration and later local login preserve another profile's runtime receipt."""
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         first = _register("Displaced One", _CREDENTIAL_FIRST)
@@ -215,7 +202,7 @@ def test_registration_displaced_profile_keeps_no_resumable_material_after_the_ne
         entered = _login_in_separate_process(storage_root, second, _CREDENTIAL_SECOND)
         assert entered["bucket_id"] == second
 
-        _assert_no_resumable_material(
+        _assert_runtime_receipt_survives(
             storage_root,
             first,
             after="a login that followed a registration-displaced pointer",
@@ -274,16 +261,10 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
 
 
 @pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
-def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_retired_profile(
+def test_completed_handover_recovery_preserves_runtime_receipt(
     tmp_path: Path,
 ) -> None:
-    """Classifying a terminal receipt still runs the retirement it records.
-
-    Recognising the completed receipt must not become a route that merely drops
-    it. The retirement it witnesses is a durable delete needing no key, so
-    replaying it is idempotent, and running it is what keeps the classification
-    fail-closed rather than merely permissive.
-    """
+    """Settling a terminal local handover does not replay shared sign-out."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
@@ -303,15 +284,8 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
             )
             _close_live_login()
 
-            # The second login retired the first profile and left the terminal
-            # receipt naming it. Re-mint that profile's receipt behind the
-            # journal's back so the classification has something real to revoke.
-            login_profile(
-                name=first,
-                passphrase_callback=lambda: _CREDENTIAL_FIRST,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-            _close_live_login()
+            # Publish a real runtime receipt, then replay an older local journal.
+            _login_in_separate_process(storage_root, first, _CREDENTIAL_FIRST)
             assert _probe_resumable_session(storage_root, first)["dek_length"] == 32
 
             witness = ProfileLoginHandoverJournal.prepare(
@@ -341,6 +315,6 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
                 profile_decode_context=_profile_decode_context_for_test,
             )
 
-            assert _probe_resumable_session(storage_root, first)["dek_length"] == 0
+            assert _probe_resumable_session(storage_root, first)["dek_length"] == 32
         finally:
             _close_live_login()

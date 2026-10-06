@@ -8,7 +8,7 @@ after real CLI commands and after the resume door displaces or fails.
 The resume door needs an acceleration receipt, and a receipt needs an OS
 keychain that test hosts refuse. The resume cases therefore compose the real
 login-session adapter and replace only the keychain-backed receipt: its
-resume supplies the genuine DEK that the passphrase unlocks, and its renewal
+resume supplies the genuine DEK that the passphrase unlocks, and binding
 can be made to fail after the resumed session is bound.
 """
 
@@ -132,15 +132,16 @@ class _ResumedOutcome:
     resumed: bool
     refusal: ProfileSessionRefusalReason | None
     record: ProfilePersistedSessionPort | None
+    binding: None = None
 
 
 class _ReceiptResumingPort:
     """The real login-session adapter with only the keychain-backed receipt replaced."""
 
-    def __init__(self, real: ProfileLoginSessionPort, dek: bytes, *, refuse_renewal: bool = False) -> None:
+    def __init__(self, real: ProfileLoginSessionPort, dek: bytes, *, refuse_binding: bool = False) -> None:
         self._real = real
         self._dek = dek
-        self._refuse_renewal = refuse_renewal
+        self._refuse_binding = refuse_binding
 
     def load_handover_journal(self, *, storage_root: Path) -> ProfileLoginHandoverJournal | None:
         return self._real.load_handover_journal(storage_root=storage_root)
@@ -177,6 +178,8 @@ class _ReceiptResumingPort:
 
     def bind_session(self, session: ProfileBucketSessionPort) -> None:
         self._real.bind_session(session)
+        if self._refuse_binding:
+            raise RuntimeError("session binding refused")
 
     def close_active_session(self) -> None:
         self._real.close_active_session()
@@ -282,26 +285,7 @@ class _ReceiptResumingPort:
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         self._real.delete_acceleration_receipt(storage_root=storage_root, profile_id=profile_id)
 
-    def advance_acceleration_idle_deadline(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        record: ProfilePersistedSessionPort,
-        new_idle_deadline: datetime,
-    ) -> ProfilePersistedSessionPort:
-        if self._refuse_renewal:
-            raise RuntimeError("receipt renewal refused")
-        return self._real.advance_acceleration_idle_deadline(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            record=record,
-            new_idle_deadline=new_idle_deadline,
-        )
-
     def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        if self._refuse_renewal and isinstance(record, _ResumedRecord):
-            return True
         return self._real.is_persisted_receipt(record)
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:
@@ -355,10 +339,10 @@ def test_a_resume_that_fails_after_opening_leaves_no_key_holder_and_nothing_boun
     assert displaced is not None
     assert displaced.bucket_id == second
 
-    # The session opens, binds and activates record authority before the
-    # receipt renewal fails with an error the renewal does not tolerate.
-    port = _ReceiptResumingPort(build_profile_login_session_port(), _unlocked_dek(first), refuse_renewal=True)
-    with bind_profile_login_session_port(port), pytest.raises(RuntimeError, match="receipt renewal refused"):
+    # Binding publishes the session before the injected failure; cleanup must
+    # still retire both it and the displaced key holder.
+    port = _ReceiptResumingPort(build_profile_login_session_port(), _unlocked_dek(first), refuse_binding=True)
+    with bind_profile_login_session_port(port), pytest.raises(RuntimeError, match="session binding refused"):
         admit_profile_session(bucket_id=first, profile_decode_context=decode_context, now=now())
 
     assert displaced.sealed

@@ -1,6 +1,19 @@
 modelo:
   schema:
     '200':
+      binding:
+        modelo-200-pagos-fraccionados-anuales:
+          label: Éves adóelőleg-részletek · 202-es nyomtatvány, 40.3. cikk, 34. mező
+        modelo-200-pagos-fraccionados-anuales-40-2:
+          label: Éves adóelőleg-részletek · 202-es nyomtatvány, 40.2. cikk, 03. mező
+        modelo-200-profile-incn-prior-12-months:
+          label: Az előző 12 hónap nettó árbevétele
+        modelo-200-profile-legal-entity-form:
+          label: Jogi forma
+        modelo-200-profile-new-entity-flag:
+          label: Újonnan alapított szervezet az első két nyereséges adóidőszak egyikében
+        modelo-200-profile-tributacion-estado-porcentaje:
+          label: Az államot megillető adó százalékos aránya
       casilla:
         continuidad:
           '00042':

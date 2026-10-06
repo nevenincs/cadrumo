@@ -277,6 +277,14 @@ class StorageCategory(StrEnum):
     # Distinct from ``RUNTIME_SOCKETS``: that directory holds POSIX endpoints;
     # these records sit beside the installation identity in ``.runtime/``.
     RUNTIME_BOOT_RECORD = "runtime-boot-record"
+    RUNTIME_COORDINATION = "runtime-coordination"
+    RUNTIME_INSTALLATION_RECORD = "runtime-installation-record"
+    RUNTIME_INSTALLATION_LOCK = "runtime-installation-lock"
+    MANAGER_START_CLAIM = "manager-start-claim"
+    MANAGER_QUIT_RECORD = "manager-quit-record"
+    MANAGER_FAILED_VERSIONS = "manager-failed-versions"
+    MANAGER_PREFERENCES = "manager-preferences"
+    MANAGER_LOG_FILE = "manager-log-file"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"
@@ -324,6 +332,13 @@ class StorageLocation(BaseModel):
     lifecycle: StorageLifecycle
     grouping: StorageGrouping
     fingerprint_participation: FingerprintParticipation
+
+    create_explicit_directory: bool = False
+    """Preparation may create a missing explicit temporary-files override.
+
+    This narrow exception does not authorize creating other explicit members.
+    New directories use the root's private mode; existing modes remain unchanged.
+    """
 
     settings_field: str | None = None
     """Flat :class:`~core.config.Settings` attribute holding the resolved path.
@@ -373,6 +388,18 @@ class StorageLocation(BaseModel):
     be rediscovered by an audit. Exactly one of this and
     :attr:`consumer_module` is set.
     """
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _temporary_creation_exception(self) -> StorageLocation:
+        """Limit missing explicit-directory preparation to the temporary member."""
+        if self.create_explicit_directory and (
+            self.category is not StorageCategory.TEMPORARY_FILES
+            or self.node_kind is not StorageNodeKind.DIRECTORY
+            or self.override_policy is not StorageOverridePolicy.OPERATOR_OVERRIDABLE
+        ):
+            raise ValueError("Explicit directory creation is the temporary-files preparation exception only")
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

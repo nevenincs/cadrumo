@@ -40,6 +40,14 @@ class AutomationLifecycleCustody(EnrollmentCustodyPort, AutomationDenialCustody,
     """The existing protected store, with its reduction-only denial capability."""
 
 
+class HumanSignInRevocationResult(BaseModel):
+    """Physical cleanup after a durable human-sign-in fence, never a bearer."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    receipt_removed: bool
+    keychain_removed: bool
+
+
 class AutomationLifecycleOwner(Protocol):
     """Trusted connection and profile owner; shared with live session authority."""
 
@@ -49,6 +57,10 @@ class AutomationLifecycleOwner(Protocol):
 
     def administration_guard(self) -> AbstractContextManager[None]:
         """Hold the same fence as session admission and private effects."""
+        ...
+
+    def revoke_human_sign_in(self) -> HumanSignInRevocationResult:
+        """Fence saved human proof and retire human/attended sessions before recovery."""
         ...
 
     def set_profile_lock(self, *, generation: int, locked: bool) -> None:
@@ -75,6 +87,7 @@ class AutomationResumeReceipt(BaseModel):
     revision: Annotated[int, Field(ge=1)] | None
     lock_generation: Annotated[int, Field(ge=0)]
     reactivated_grants: frozenset[UUID]
+    human_sign_in_revocation: HumanSignInRevocationResult | None = None
 
 
 def _changed[T: BaseModel](value: T, **changes: object) -> T:
@@ -197,11 +210,27 @@ def _reactivated_enrollment_grant(
     lock_generation: int,
 ) -> EnrollmentGrant:
     grant = entry.grant
-    if grant.state is not AuthorityState.SUSPENDED or not grant.valid_from <= now < grant.expires_at:
+    if (
+        grant.state not in {AuthorityState.SUSPENDED, AuthorityState.ACTIVE}
+        or not grant.valid_from <= now < grant.expires_at
+    ):
         raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
-    keys = tuple(_changed(item, key=_resume_suspended_key(item.key, now=now)) for item in entry.keys)
-    if grant.unattended and not any(item.key.state is AuthorityState.ACTIVE for item in keys):
+    # Enrollment publication and unlock are separate durable writes. Retry may
+    # observe already-published grants for this exact lock generation. Preserve
+    # their authority; fresh password and current generation were checked first.
+    if grant.state is AuthorityState.ACTIVE and grant.profile_lock_generation != lock_generation:
         raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+    keys = (
+        entry.keys
+        if grant.state is AuthorityState.ACTIVE
+        else tuple(_changed(item, key=_resume_suspended_key(item.key, now=now)) for item in entry.keys)
+    )
+    if grant.unattended and not any(
+        item.key.state is AuthorityState.ACTIVE and item.key.valid_from <= now < item.key.expires_at for item in keys
+    ):
+        raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+    if grant.state is AuthorityState.ACTIVE:
+        return entry
     return _changed(
         entry,
         keys=keys,
@@ -295,20 +324,25 @@ def _finish_resume(
             proof=proof,
         )
         if not selection.grants:
-            return _unlock_without_automation(custody, owner, selection)
+            revocation = owner.revoke_human_sign_in()
+            return _changed(_unlock_without_automation(custody, owner, selection), human_sign_in_revocation=revocation)
         state = _selected_enrollment_state(
             custody,
             selection,
             binding=proof.binding,
             now=current.context.now,
         )
-        return _publish_selected_resume(
+        # Validate the requested grants before revoking any human sign-in.
+        # Publication follows the durable fence under this same admission guard.
+        revocation = owner.revoke_human_sign_in()
+        result = _publish_selected_resume(
             custody=custody,
             owner=owner,
             selection=selection,
             state=state,
             dek=dek,
         )
+        return _changed(result, human_sign_in_revocation=revocation)
 
 
 class AutomationLifecycleService:

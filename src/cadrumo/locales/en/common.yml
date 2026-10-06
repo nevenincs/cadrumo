@@ -527,6 +527,7 @@ desktop:
     show_all: Show all
     show_fewer: Show fewer
     signed_out: Sign in to see your filing calendar.
+    standing: Obligations by state
     state:
       due: Due
       filed: Filed
@@ -3229,6 +3230,7 @@ tui:
     progress: Signing in…
     reference_invalid: Enter a valid credential reference UUID.
     refused: Sign-in was refused.
+    stay_signed_in: Stay signed in
     submit: Sign in
     title: Sign in to a profile
   search:

@@ -178,6 +178,7 @@ from ...application.ledger.evidence_read_operation import (
     LedgerEvidenceListRequest,
     LedgerEvidenceViewProjection,
     LedgerEvidenceViewRequest,
+    LedgerEvidenceViewSuccess,
 )
 from ...application.ledger.history_operation import LedgerHistoryProjection, LedgerHistoryRequest
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
@@ -662,9 +663,6 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             for definition in build_automation_operation_definitions()
         ),
         RegisteredExecutorConformanceCase(
-            "auth.profile.login", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-        ),
-        RegisteredExecutorConformanceCase(
             "auth.profile.passphrase-rotate", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
@@ -765,9 +763,6 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
         ),
         RegisteredExecutorConformanceCase(
             "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
-        ),
-        RegisteredExecutorConformanceCase(
-            "user-profile.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
             # The composed provider preflight refuses before discovery: the
@@ -3695,15 +3690,13 @@ def _runtime(
             profile_decode_context=_profile_decode_context_for_test,
         )
         profile_id = UUID(enrolled.profile_id)
-        initial_login = login_profile(
+        login_profile(
             name=enrolled.profile_id,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         registry = build_production_operation_registry(
-            auth_definitions=build_auth_operation_definitions(
-                ports=build_auth_operation_ports(), profile_login=lambda **_kwargs: initial_login
-            ),
+            auth_definitions=build_auth_operation_definitions(ports=build_auth_operation_ports()),
             censal_definition=build_censal_operation_definition(
                 certificate_secret_backend_factory=build_certificate_secret_backend,
                 browser_session_factory=default_browser_session_factory,
@@ -5275,8 +5268,9 @@ def _run_registered_executor_conformance_case(
             )
             assert isinstance(viewed, LedgerEvidenceViewProjection)
             assert viewed.profile_id == profile_id
-            assert viewed.record.bucket_id == str(profile_id)
-            assert viewed.record.evidence_id == payload.evidence_id
+            assert isinstance(viewed.outcome, LedgerEvidenceViewSuccess)
+            assert viewed.outcome.record.bucket_id == str(profile_id)
+            assert viewed.outcome.record.evidence_id == payload.evidence_id
         if case.definition_id == "ledger.evidence.update":
             assert isinstance(payload, LedgerEvidenceUpdateRequest)
             updated_evidence = _resolve_result_projection(

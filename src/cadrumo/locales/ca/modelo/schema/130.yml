@@ -10,10 +10,27 @@ modelo:
           econòmiques en estimació directa. Pagament fraccionat.
         title: IRPF pagament fraccionat estimació directa
       form:
+        context:
+          apellidos: Cognoms
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          periodo: Període
         page:
           dr-13001:
             heading: Pàgina 1 · Pagament fraccionat
         section:
+          complementaria:
+            heading: Complementària (7)
+          devengo:
+            heading: Meritació (2)
+          identificacion:
+            heading: Declarant (1)
+          ingreso:
+            heading: Ingrés (4)
           liquidacion-3-i-actividades-econ-estim-directa:
             heading: I. Activitats econòmiques en estimació directa
           liquidacion-3-ii-actividades-agricolas-ga-829910:

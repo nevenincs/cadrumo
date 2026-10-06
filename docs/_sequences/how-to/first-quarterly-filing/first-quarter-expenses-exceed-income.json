@@ -218,7 +218,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\tcb48924c8761416c4eb7ea9796238a6785217fcc019e96ecf4f2743e7ac1d52b\nDate\t2026-03-10\nAmount\t1210\nDescription\tmaterial de oficina\nReview status\treviewed\n"
+      "text": "ID\tcb48924c8761416c4eb7ea9796238a6785217fcc019e96ecf4f2743e7ac1d52b\nDate\t2026-03-10\nAmount\t1210\nDescription\tmaterial de oficina\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -246,7 +246,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -278,7 +286,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -307,26 +315,32 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "0f430f714376f2ece1d8b3b2fc9386d1ae8231dac8421e102e736b98c8e99e8c"
+          "value": "656eba50b8cc8363592094602c61a7fb622c3cabb6af2e03400c0b8f4948ba8b"
         }
       ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
             "modelo-130-actividad-economica-gastos-cumulative": "1500",
             "modelo-130-actividad-economica-ingresos-cumulative": "1000",
-            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "0f430f714376f2ece1d8b3b2fc9386d1ae8231dac8421e102e736b98c8e99e8c",
+          "calculation_revision_id": "656eba50b8cc8363592094602c61a7fb622c3cabb6af2e03400c0b8f4948ba8b",
           "casilla_values": {
             "01": "1000",
             "02": "1500",
@@ -354,7 +368,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -460,7 +476,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 0f430f714376f2ece1d8b3b2fc9386d1ae8231dac8421e102e736b98c8e99e8c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 656eba50b8cc8363592094602c61a7fb622c3cabb6af2e03400c0b8f4948ba8b (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -515,7 +531,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -532,7 +548,7 @@
         "modelo",
         "work",
         "verify",
-        "0f430f714376f2ece1d8b3b2fc9386d1ae8231dac8421e102e736b98c8e99e8c"
+        "656eba50b8cc8363592094602c61a7fb622c3cabb6af2e03400c0b8f4948ba8b"
       ],
       "captures": [],
       "envelope": {
@@ -570,10 +586,17 @@
             },
             "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "0f430f714376f2ece1d8b3b2fc9386d1ae8231dac8421e102e736b98c8e99e8c",
+          "calculation_revision_id": "656eba50b8cc8363592094602c61a7fb622c3cabb6af2e03400c0b8f4948ba8b",
           "completeness_status": "complete",
           "findings": [
             {
@@ -619,7 +642,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "4ab3a3a6a5b3642ad269edaf58d636689dea153b242aa35d6494ac41561460de",
+          "verification_report_id": "cfd7d6a05545abc474cb99f844e2fa77b84490091c8b0e4dcef226e01734690c",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

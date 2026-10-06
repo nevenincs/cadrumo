@@ -11,10 +11,23 @@ modelo:
           vagyoni nyereségek és jövedelem-hozzárendelések.
         title: IRPF adóelőleg-levonások és -befizetések
       form:
+        column:
+          contraprestaciones_satisfechas: Kifizetett ellenérték
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          periodo: Időszak
         page:
           dr-m11101:
             heading: 1. oldal · Visszatartások és előlegek
         row:
+          contraprestaciones:
+            heading: Pénzbeli vagy természetbeni ellenérték
           percep-dinerarias:
             heading: Pénzbeli kifizetések
           percep-en-especie:
@@ -28,10 +41,18 @@ modelo:
           rendimientos-en-especie:
             heading: Természetbeni jövedelmek
         section:
+          complementaria:
+            heading: Kiegészítő bevallás (6)
           contraprest-cesion-dchos-imagen:
             heading: Képmáshoz fűződő jogok átengedésének ellenértéke
+          devengo:
+            heading: Adómegállapítási időszak (2)
           ganancias-patrim-aprovecham-forestales:
             heading: Erdőhasznosításból származó vagyonnyereség
+          identificacion:
+            heading: Bevalló (1)
+          ingreso:
+            heading: Befizetés (4)
           premios:
             heading: Nyeremények
           rendim-actividades-economicas:

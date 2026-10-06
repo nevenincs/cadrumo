@@ -42,7 +42,9 @@ if TYPE_CHECKING:
 import io
 from collections.abc import Iterator
 from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
+from ....application.export.managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationAcknowledgement,
@@ -59,6 +61,8 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.type_guards import is_object_dict, is_object_list, is_object_mapping, is_str_keyed_dict
+from ..google.artifact_admission import GoogleArtifactAdmission, creation_properties, managed_artifact_refusal
+from ..google.artifact_receipt_store import GoogleArtifactReceiptStore
 from ..google.drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE, is_app_owned
 from ..google.sign_in_state import ended_grant_refusal
 from ._google_drive_metadata import (
@@ -82,6 +86,7 @@ from .errors import (
     OutboundStorageUnavailableError,
     OutboundStorageValidationError,
 )
+from .mirror_manifest import REMOTE_MIRROR_MANIFEST_NAMESPACE
 from .records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _FILE_EXTENSION = ".bin"
@@ -317,6 +322,7 @@ class GoogleDriveProvider:
         vault_folder_name: str | None = None,
         before_handoff: GoogleConfigurationHandoff | None = None,
         acknowledged: GoogleConfigurationAcknowledgement | None = None,
+        receipts: GoogleArtifactReceiptStore | None = None,
     ) -> None:
         """Initialise the provider with credentials and the root Drive folder.
 
@@ -327,6 +333,7 @@ class GoogleDriveProvider:
                 to the centralized settings value.
             before_handoff: Optional admission check before each provider request.
             acknowledged: Optional acknowledgement of a completed provider request.
+            receipts: Exact-profile encrypted creation custody, required before any provider access.
 
         Raises:
             :class:`OutboundStorageValidationError`: When ``root_folder_id`` or
@@ -385,6 +392,23 @@ class GoogleDriveProvider:
         self._namespace_folder_ids: dict[str, str] = {}
         self._before_handoff = before_handoff
         self._acknowledged = acknowledged
+        self._receipts = receipts
+
+    def _admit(self, artifact_id: str) -> ArtifactCreationReceipt:
+        """A cached locator confers no authority; exact custody and ancestry must hold."""
+        if self._receipts is None:
+            raise managed_artifact_refusal("creation_custody_required")
+        root = self._receipts.load(self._root_folder_id)
+        if root is None:
+            raise managed_artifact_refusal("root_creation_missing")
+        return GoogleArtifactAdmission(
+            self._get_service(),
+            profile_id=root.profile_id,
+            root=root,
+            receipts=self._receipts,
+            before_handoff=self._before_handoff,
+            acknowledged=self._acknowledged,
+        ).require(artifact_id)
 
     @property
     def root_folder_id(self) -> str:
@@ -406,7 +430,10 @@ class GoogleDriveProvider:
     # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
     # googleapiclient.discovery.build() returns an untyped Resource object; no
     # stub narrows the concrete type.
-    def _execute(self, request: Any, *, action: str) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
+    def _execute(
+        self, request: Any, *, action: str, target_id: str
+    ) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
+        self._admit(target_id)
         writes = action in {"files.create", "files.update", "files.delete"} or action.startswith("create_")
         if self._before_handoff is not None:
             self._before_handoff(action, writes=writes)
@@ -445,23 +472,28 @@ class GoogleDriveProvider:
         fields: str,
         page_size: int,
         action: str,
+        parent_id: str,
     ) -> dict[str, object] | None:
         """Return the first listed entry, following Drive pagination in order."""
         page_token: str | None = None
         seen_tokens: set[str] = set()
+        found: dict[str, object] | None = None
         while True:
             kwargs = _drive_list_kwargs(query, fields, page_size, page_token)
-            response = self._execute(service.files().list(**kwargs), action=action)
+            response = self._execute(service.files().list(**kwargs), action=action, target_id=parent_id)
             entries = _listed_drive_files(response)
-            if entries:
-                return entries[0]
+            for entry in entries:
+                self._admit(str(entry.get("id", "")))
+                if found is not None:
+                    raise managed_artifact_refusal("ambiguous_folder")
+                found = entry
             page_token = next_drive_page_token(
                 response.get("nextPageToken") if is_object_dict(response) else None,
                 seen_tokens=seen_tokens,
                 action=action,
             )
             if page_token is None:
-                return None
+                return found
 
     def _create_owned_folder(
         self,
@@ -472,16 +504,46 @@ class GoogleDriveProvider:
         action: str,
     ) -> object:
         """Create an owned folder and return the raw Drive response."""
+        parent = self._admit(parent_id)
+        if self._receipts is None:
+            raise InternalInvariantError("admitted Drive parent lost creation custody")
+        attempt = self._receipts.begin_creation(
+            parent=parent,
+            name=name,
+            kind=ManagedArtifactKind.FOLDER,
+            publication_id=uuid5(NAMESPACE_URL, f"{parent.root_folder_id}/{parent_id}/folder/{name}"),
+        )
         body = {
             "name": name,
             "mimeType": GOOGLE_DRIVE_FOLDER_MIME_TYPE,
             "parents": [parent_id],
-            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
+            "appProperties": creation_properties(
+                profile_id=parent.profile_id,
+                creation_id=attempt.creation_id,
+                kind=attempt.kind,
+                root_folder_id=parent.root_folder_id,
+                publication_id=attempt.publication_id,
+            ),
         }
         created = self._execute(
             service.files().create(body=body, fields="id,appProperties"),
             action=action,
+            target_id=parent_id,
         )
+        identifier = created.get("id") if is_object_dict(created) else None
+        if not isinstance(identifier, str) or not identifier.strip():
+            raise managed_artifact_refusal("folder_creation_unknown", uncertain=True)
+        receipt = ArtifactCreationReceipt(
+            profile_id=parent.profile_id,
+            root_folder_id=parent.root_folder_id,
+            artifact_id=identifier,
+            parent_id=parent_id,
+            creation_id=attempt.creation_id,
+            kind=attempt.kind,
+            publication_id=attempt.publication_id,
+        )
+        self._receipts.complete_creation(attempt, receipt)
+        self._admit(receipt.artifact_id)
         return created
 
     def _resolve_vault_folder(self) -> str:
@@ -510,6 +572,7 @@ class GoogleDriveProvider:
             fields="files(id,name,mimeType,appProperties),nextPageToken",
             page_size=10,
             action="resolve_vault_folder",
+            parent_id=self._root_folder_id,
         )
         if entry is not None:
             if entry.get("mimeType") != GOOGLE_DRIVE_FOLDER_MIME_TYPE:
@@ -611,6 +674,7 @@ class GoogleDriveProvider:
             fields="files(id,name,appProperties),nextPageToken",
             page_size=10,
             action=action,
+            parent_id=vault_id,
         )
         if entry is not None:
             self._require_owned_folder(entry)
@@ -665,6 +729,7 @@ class GoogleDriveProvider:
         query = f"'{safe_namespace_folder_id}' in parents and name contains '{safe_name_prefix}' and trashed=false"
         page_token: str | None = None
         seen_tokens: set[str] = set()
+        found: dict[str, Any] | None = None
         while True:
             kwargs: dict[str, Any] = {
                 "q": query,
@@ -673,17 +738,20 @@ class GoogleDriveProvider:
             }
             if page_token is not None:
                 kwargs["pageToken"] = page_token
-            response = self._execute(service.files().list(**kwargs), action="find_file")
+            response = self._execute(service.files().list(**kwargs), action="find_file", target_id=namespace_folder_id)
             for entry in _listed_drive_files(response):
                 if _is_owned_drive_match(entry, prefix=prefix, object_key_hmac=object_key_hmac):
-                    return entry
+                    self._admit(str(entry.get("id", "")))
+                    if found is not None:
+                        raise managed_artifact_refusal("ambiguous_object")
+                    found = entry
             page_token = next_drive_page_token(
                 response.get("nextPageToken") if is_object_dict(response) else None,
                 seen_tokens=seen_tokens,
                 action="find_file",
             )
             if page_token is None:
-                return None
+                return found
 
     def _put_drive_file(
         self,
@@ -709,6 +777,43 @@ class GoogleDriveProvider:
             object_key_hmac=object_key_hmac,
             content_hash=content_hash,
         ).model_dump(by_alias=True)
+        parent = self._admit(namespace_folder_id)
+        if self._receipts is None:
+            raise InternalInvariantError("admitted Drive parent lost creation custody")
+        attempt = None
+        if existing is None:
+            attempt = self._receipts.begin_creation(
+                parent=parent,
+                name=object_key_hmac,
+                kind=(
+                    ManagedArtifactKind.MIRROR_MANIFEST
+                    if namespace == REMOTE_MIRROR_MANIFEST_NAMESPACE
+                    else ManagedArtifactKind.PROBE
+                    if namespace == _PROBE_NAMESPACE
+                    else ManagedArtifactKind.CIPHERTEXT
+                ),
+                publication_id=uuid5(NAMESPACE_URL, f"{parent.root_folder_id}/{namespace_folder_id}/{object_key_hmac}"),
+            )
+            app_properties.update(
+                creation_properties(
+                    profile_id=parent.profile_id,
+                    creation_id=attempt.creation_id,
+                    kind=attempt.kind,
+                    root_folder_id=parent.root_folder_id,
+                    publication_id=attempt.publication_id,
+                )
+            )
+        else:
+            prior = self._admit(str(existing["id"]))
+            app_properties.update(
+                creation_properties(
+                    profile_id=prior.profile_id,
+                    creation_id=prior.creation_id,
+                    kind=prior.kind,
+                    root_folder_id=prior.root_folder_id,
+                    publication_id=prior.publication_id,
+                )
+            )
         # ``dict[str, Any]`` here is the irreducible Google Drive API
         # boundary shape: ``service.files().create(body=body)`` and
         # ``service.files().update(body=body)`` accept arbitrary
@@ -719,6 +824,7 @@ class GoogleDriveProvider:
             "name": target_name,
             "parents": [namespace_folder_id] if existing is None else None,
             "appProperties": app_properties,
+            "mimeType": _BINARY_MIME_TYPE,
         }
         if existing is None:
             # Drive `files().create` requires `parents`; existing-file
@@ -740,7 +846,27 @@ class GoogleDriveProvider:
                 fields="id,name,size,md5Checksum,modifiedTime,appProperties",
             )
             action = "files.update"
-        return self._execute(request, action=action), action
+        result = self._execute(
+            request, action=action, target_id=namespace_folder_id if existing is None else str(existing["id"])
+        )
+        if attempt is not None:
+            identifier = result.get("id") if is_object_dict(result) else None
+            if not isinstance(identifier, str) or not identifier.strip():
+                raise managed_artifact_refusal("object_creation_unknown", uncertain=True)
+            receipt = ArtifactCreationReceipt(
+                profile_id=parent.profile_id,
+                root_folder_id=parent.root_folder_id,
+                artifact_id=identifier,
+                parent_id=namespace_folder_id,
+                creation_id=attempt.creation_id,
+                kind=attempt.kind,
+                publication_id=attempt.publication_id,
+            )
+            self._receipts.complete_creation(attempt, receipt)
+            self._admit(receipt.artifact_id)
+        elif existing is not None:
+            self._admit(str(existing["id"]))
+        return result, action
 
     def put(
         self,
@@ -895,6 +1021,7 @@ class GoogleDriveProvider:
             )
 
         request = service.files().get_media(fileId=entry["id"])
+        self._admit(str(entry["id"]))
         translated_error: OutboundStorageError | None = None
         payload: Any = None
         if self._before_handoff is not None:
@@ -998,7 +1125,7 @@ class GoogleDriveProvider:
         entry = self._find_file(namespace_folder_id, hmac_clean)
         if entry is None:
             return False
-        self._execute(service.files().delete(fileId=entry["id"]), action="files.delete")
+        self._execute(service.files().delete(fileId=entry["id"]), action="files.delete", target_id=str(entry["id"]))
         self._acknowledge_write("files.delete")
         return True
 
@@ -1030,8 +1157,9 @@ class GoogleDriveProvider:
             kwargs: dict[str, Any] = {"q": query, "fields": "files(id,name),nextPageToken", "pageSize": 100}
             if page_token is not None:
                 kwargs["pageToken"] = page_token
-            response = self._execute(service.files().list(**kwargs), action="iter_namespaces")
+            response = self._execute(service.files().list(**kwargs), action="iter_namespaces", target_id=vault_id)
             for entry in _listed_drive_files(response):
+                self._admit(str(entry.get("id", "")))
                 name = str(entry.get("name", ""))
                 if name:
                     self._namespace_folder_ids[name] = str(entry["id"])
@@ -1095,11 +1223,14 @@ class GoogleDriveProvider:
             }
             if page_token is not None:
                 kwargs["pageToken"] = page_token
-            response = self._execute(service.files().list(**kwargs), action="iter_objects")
+            response = self._execute(
+                service.files().list(**kwargs), action="iter_objects", target_id=namespace_folder_id
+            )
             for entry in _listed_drive_files(response):
                 name = str(entry.get("name", ""))
                 if not name.endswith(_FILE_EXTENSION) or "--" not in name:
                     continue
+                self._admit(str(entry.get("id", "")))
                 app_properties = drive_storage_app_properties(entry)
                 yield metadata_from_drive_entry(
                     entry,
@@ -1156,6 +1287,7 @@ class GoogleDriveProvider:
             root_check = self._execute(
                 service.files().get(fileId=self._root_folder_id, fields="id,mimeType,trashed"),
                 action="probe.get_root",
+                target_id=self._root_folder_id,
             )
         except OutboundStorageNotFoundError:
             return ProviderProbeReport(

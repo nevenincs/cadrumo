@@ -11,6 +11,43 @@ modelo:
           and units in collective investment undertakings.
         title: Withholdings and payments on account - income or gains from the transfer
           or redemption of shares and units in collective investment undertakings
+      form:
+        column:
+          derechos-suscripcion: Transfers of subscription rights
+          inversion-colectiva: Transfers or redemptions of shares and units in collective
+            investment institutions
+        context:
+          apellidos: Surname or registered business name
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
+        page:
+          dr-11701:
+            heading: Withholding and payments on account for collective investment
+              institutions and subscription rights
+        row:
+          base: Withholding and payments-on-account base
+          perceptores: Number of recipients
+          retenciones: Withholdings and payments on account
+        section:
+          complementaria:
+            heading: Supplementary return (6)
+          devengo:
+            heading: Tax period (2)
+          identificacion:
+            heading: Identification (1)
+          ingreso:
+            heading: Payment (4)
+          liquidacion:
+            heading: Tax calculation (3) · A) Withholding and payments on account
+          pago-cuenta:
+            heading: B) Payment on account
+          total:
+            heading: Total tax calculation
       revision:
         2019-y-siguientes:
           casilla:

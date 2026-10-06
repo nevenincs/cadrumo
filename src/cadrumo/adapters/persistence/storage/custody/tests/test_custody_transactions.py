@@ -387,6 +387,8 @@ def _create_labeled_capsule_in_sibling(
 
 def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Path) -> None:
     capsule = _committed_capsule(tmp_path)
+    sign_in = committed_sign_in(tmp_path, _PROFILE_ID)
+    captured = sign_in.establish().current
     _select_pointer(tmp_path, str(_PROFILE_ID))
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
@@ -396,6 +398,9 @@ def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Pat
     receipt = service.execute_delete(confirmation, now=_INSTANT)
 
     assert not capsule.exists()
+    advanced = sign_in.observe().current
+    assert advanced is not None and advanced.lineage == captured.lineage
+    assert advanced.generation == captured.generation + 1
     assert _observe_pointer(tmp_path).bucket_id is None
     assert receipt.transaction_id == journal.transaction_id
     assert receipt.pointer_cleared is True

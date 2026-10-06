@@ -424,7 +424,6 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/declarations.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/sede/parse.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/verify/__init__.py"),
     )
 

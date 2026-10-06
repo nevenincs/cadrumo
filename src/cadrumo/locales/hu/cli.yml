@@ -1328,7 +1328,9 @@ cli:
           az AEAT-tal.
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       spreadsheet:
-        app_help: Séma-tábla számítási felület (exportálás, visszatöltés és számítás).
+        app_help: Táblázatok exportálása. A Google-másolatok kizárólag felülvizsgálatra
+          szolgálnak; a távoli módosítások beolvasása, számítás és ellenőrzés nem
+          érhető el. A helyi XLSX-export továbbra is használható.
         calculate_help: Töltsd vissza a calc-sheets munkafüzet általad szerkesztett
           celláit, futtasd le rajtuk a helyi Decimal futtatókörnyezetet, és add ki
           a számított rovatértékeket (nem ment semmit)
@@ -1339,6 +1341,15 @@ cli:
           szerint egy helyi .xlsx munkafüzetbe élő képletekkel (a push offline megfelelője)
         modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
         period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
+        publish:
+          accept_readable_export_help: Az --accept-readable-export kapcsolóval engedélyezhető
+            a kiválasztott számítás és a rögzített könyvelési sorok közzététele a
+            jogosult felhasználók által olvasható Google-táblázatként.
+          calculation_revision_id_help: A közzéteendő mentett számítási változat pontos
+            azonosítója.
+          publication_id_help: Közzétételi UUID; elhagyásakor automatikusan létrejön.
+        publish_help: Mentett számítás közzététele olvasható natív Google-táblázatként
+          a profil mappájában.
         pull:
           assemble_observations_help: Visszatöltés után a Detalle-lap sorcsoportjait
             típusos megfigyelésekké állítja össze (kedvezményezettek, külföldi eszközök,
@@ -2057,6 +2068,9 @@ cli:
           szolgáltatás által futtatott privát profilparancsokhoz használható.
         profile_credential_ref_requires_api_key: A --profile-credential-ref használatához
           --profile-auth-method api-key szükséges.
+        profile_passphrase_channel_absent: Nem érhető el profiljelszó-csatorna. Futtasd
+          ezt a parancsot terminálban, vagy add meg a --profile-secrets-stdin vagy
+          a --profile-secrets-fd kapcsolót.
         profile_secrets_api_key_inapplicable: Az API-kulcsos hitelesítés csak a helyi
           futtatókörnyezet által kiszolgált parancsokhoz használható.
         profile_secrets_api_key_requires_channel: Az API-kulcsos hitelesítéshez --profile-secrets-stdin
@@ -2191,13 +2205,10 @@ cli:
         terminálban, vagy használd a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '
     logout:
-      help: A CLI-környezetben kiválasztott profil törlése.
+      help: Jelentkezz ki ebből a profilból az eszköz összes felhasználói munkamenetében.
+        Az ügynökök hozzáférése és az AEAT-munkamenetek aktívak maradnak.
       notices:
-        already_logged_out: Egyetlen profil sem volt bejelentkezve; nincs mit lezárni.
-        remaining_access: A CLI profilkiválasztása törölve. A többi munkamenet, az
-          időkorlátos emberi bejelentkezés folytatása és a regisztrált API-kulcsok
-          megőrzik saját jogosultságukat. A hozzáférés visszavonásához használd a
-          munkamenet vagy a profil vezérlőit.
+        already_logged_out: Nincs kiválasztott profil; nincs miből kijelentkezni.
     passphrase:
       change_help: Megváltoztatja a jelszót a rekordok újratitkosítása és a helyreállítási
         kód érvénytelenítése nélkül.
@@ -2210,10 +2221,10 @@ cli:
         a visszaállítás előtt exportált lezárt archívumok továbbra is azzal a jelszóval
         nyithatók meg, amellyel titkosították őket.
       reset_name_help: Annak a profilnak a neve, amelynek a jelszavát visszaállítod.
-      reset_scope_notice: 'A helyreállítási kód továbbra is működik; a cseréjéhez
-        kapcsold ki, majd kapcsold be újra a helyreállítást. A visszaállítás semmit
-        sem von vissza: az előtte exportált lezárt archívumok továbbra is azzal a
-        jelszóval nyithatók meg, amellyel titkosították őket.'
+      reset_scope_notice: Az alaphelyzetbe állítás megszünteti a mentett felhasználói
+        bejelentkezéseket. A helyreállítási kód érvényes marad; a cseréjéhez kapcsold
+        ki, majd be a helyreállítást. A korábban exportált archívumokhoz továbbra
+        is az exportáláskor használt jelmondat szükséges.
     profile:
       add_row:
         duplicate_field: A(z) %{field} mező többször szerepelt; nem történt írás.
@@ -2399,8 +2410,9 @@ cli:
           preflight: 'Csak előzetes ellenőrzés: semmi sem lett törölve. Futtasd újra
             a --yes kapcsolóval a törléshez.'
         refusal:
-          active_profile: Az aktív profil nem törölhető. Zárd le a munkamenetet az
-            'aeat config logout' paranccsal, majd próbáld újra.
+          active_profile: Nem törölheted a kijelölt '{name}' profilt. Jelentkezz be
+            egy másik profilba az 'aeat config login NAME' paranccsal, majd próbáld
+            újra. A kijelentkezés megtartja a kijelölt profilt.
         yes_help: Kifejezetten megerősíti a törlést
       descendiente:
         add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

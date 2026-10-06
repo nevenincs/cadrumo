@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, JsonValue, RootModel, model_validator
 
+from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.frontend_requests import (
@@ -22,6 +24,7 @@ from ..operations.secret_submission import OperationSecretRequirement
 from ..user_profile.access_contracts import AccessDenialCode, AccessSession, ProfileAccessBinding
 from ..user_profile.automation_custody_port import AutomationCustodyCode
 from ..user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
+from ..user_profile.sign_in_refusals import SignInRefusal
 from .operation_access import OperationManagementRequest
 from .projection_pages import ProjectionPage, ProjectionPageRequest
 from .submission_payload import FinancialOperandInputDescriptor, SubmissionPayloadChunk, SubmissionPayloadDescriptor
@@ -35,6 +38,22 @@ class ProfileWorkerIdentity(BaseModel):
     worker_id: UUID
     runtime_boot_id: UUID
     binding: ProfileAccessBinding
+
+    @property
+    def operation_owner_id(self) -> Hex64Str:
+        """Name this native worker's operation owner, never its lease token.
+
+        Runtime boot, immutable custody and the random worker identity make a
+        replacement worker a different owner. The value alone proves neither
+        native termination nor authority to settle a lease.
+        """
+        return content_hash_hex(
+            {
+                "schema_version": 1,
+                "authority": "cadrumo.runtime.worker.operation-owner",
+                "worker": self.model_dump(mode="json"),
+            }
+        )
 
 
 class ProfileWorkerLeaseRequest(BaseModel):
@@ -315,6 +334,7 @@ class ProfileWorkerStatus(BaseModel):
     identity: ProfileWorkerIdentity
     request_id: UUID
     sessions: tuple[UUID, ...]
+    in_flight_operations: int | None = Field(default=None, ge=0)
 
 
 class ProfileWorkerDrained(BaseModel):
@@ -374,6 +394,7 @@ class ProfileWorkerRefusal(BaseModel):
     identity: ProfileWorkerIdentity
     request_id: UUID
     reason: AutomationCustodyCode | AccessDenialCode
+    sign_in: SignInRefusal | None = None
 
 
 class ProfileWorkerOperationContract(BaseModel):

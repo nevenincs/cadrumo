@@ -542,6 +542,7 @@ desktop:
     show_all: Mostra-ho tot
     show_fewer: Mostra'n menys
     signed_out: Inicia la sessió per veure el teu calendari de presentacions.
+    standing: Obligacions per estat
     state:
       due: Pendent
       filed: Presentat
@@ -3297,6 +3298,7 @@ tui:
     progress: S'està iniciant la sessió…
     reference_invalid: Introdueix un UUID vàlid de referència de credencial.
     refused: S'ha rebutjat l'inici de sessió.
+    stay_signed_in: Mantén la sessió iniciada
     submit: Inicia la sessió
     title: Inicia la sessió en un perfil
   search:

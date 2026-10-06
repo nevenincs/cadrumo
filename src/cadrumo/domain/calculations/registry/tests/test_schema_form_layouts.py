@@ -170,6 +170,29 @@ def test_placement_detail_belongs_to_its_arm() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "details",
+    [
+        {"workbook_exclusion": "transport_control"},
+        {"workbook_exclusion_reason": "Orphan reason"},
+        {"workbook_exclusion": "transport_control", "workbook_exclusion_reason": "File code", "box_number": "12"},
+    ],
+)
+def test_transport_exclusion_requires_reason_and_has_no_printed_number(details) -> None:
+    with pytest.raises(ValidationError):
+        FormPlacementDefinition(casilla_id="control", kind="working_figure", **details)
+
+
+def test_on_form_field_cannot_be_excluded_as_transport() -> None:
+    with pytest.raises(ValidationError, match="unnumbered working figures"):
+        FormPlacementDefinition(
+            casilla_id="01",
+            kind="on_form",
+            workbook_exclusion="transport_control",
+            workbook_exclusion_reason="Not a valid transport-only placement",
+        )
+
+
 def test_page_conditions_carry_exactly_their_declared_operand() -> None:
     section = _layout().pages[0].sections[0]
     gated = FormPageDefinition(
@@ -237,3 +260,16 @@ def test_a_field_fixes_a_design_constant_only_on_a_casilla() -> None:
 
 def test_casilla_sections_lists_every_shown_casilla_at_its_section() -> None:
     assert _layout().casilla_sections() == {"01": ("p1", "s1")}
+
+
+def test_field_choices_refuse_duplicate_or_constant_sources() -> None:
+    from ..schema_form_layouts import FormFieldChoice
+
+    choice = FormFieldChoice(value="C ", heading_key="test.complementaria", official_heading="Complementaria")
+    with pytest.raises(ValidationError):
+        FormFieldBlock(id="amendment", casilla_id="amendment", choices=(choice, choice))
+    with pytest.raises(ValidationError):
+        FormFieldBlock(id="amendment", binding_id="amendment", choices=(choice,))
+    with pytest.raises(ValidationError):
+        FormFieldBlock(id="amendment", casilla_id="amendment", design_constant="C ", choices=(choice,))
+    assert FormFieldBlock(id="amendment", casilla_id="amendment", choices=(choice,)).choices[0].value == "C "

@@ -10,6 +10,42 @@ modelo:
           y operaciones financieras relacionadas con bienes inmuebles.
         title: Préstamos, créditos y operaciones financieras sobre inmuebles (informativa
           anual)
+      form:
+        context:
+          contacto:
+            heading: Persona de contacto
+          nif:
+            heading: NIF del declarante
+          telefono:
+            heading: Teléfono de contacto
+        page:
+          inmueble:
+            heading: Inmueble y devolución de intereses
+          operacion:
+            heading: Persona declarada y operación financiera
+          resumen:
+            heading: Hoja resumen
+        section:
+          declaracion:
+            heading: Declaración complementaria o sustitutiva
+          declarado:
+            heading: Identificación de la persona declarada
+          direccion:
+            heading: Dirección del inmueble
+          garantia:
+            heading: Datos del inmueble y financiación
+          identificacion:
+            heading: Declarante y ejercicio
+          importes:
+            heading: Importes de la operación y del ejercicio
+          prestamista:
+            heading: Intervención y datos del prestamista
+          prestamo:
+            heading: Identificación del préstamo, crédito u otra operación
+          reintegro:
+            heading: Reintegro de intereses y otras cantidades
+          totales:
+            heading: Resumen de los datos incluidos en la declaración
       revision:
         2022-y-siguientes:
           casilla:

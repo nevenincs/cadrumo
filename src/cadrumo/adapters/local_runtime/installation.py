@@ -11,6 +11,8 @@ from pydantic import ValidationError
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.installation import RuntimeInstallation
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from ..persistence.storage.custody.errors import ProfileCustodyRecordError
 from ..persistence.storage.custody.filesystem import (
     profile_custody_local_lock,
@@ -34,7 +36,8 @@ def read_runtime_installation(*, storage_root: Path, os_owner_id: str, storage_i
         raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
     try:
         raw = read_optional_profile_custody_local_record(
-            storage_root / ".runtime" / "installation.json", maximum_bytes=4096
+            storage_root / storage_location(StorageCategory.RUNTIME_INSTALLATION_RECORD).relative_path(),
+            maximum_bytes=4096,
         )
         if raw is None:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
@@ -51,11 +54,12 @@ def runtime_installation(*, storage_root: Path, os_owner_id: str, storage_identi
     """
     if not storage_root.is_absolute():
         raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
-    directory = storage_root / ".runtime"
+    directory = storage_root / storage_location(StorageCategory.RUNTIME_COORDINATION).relative_path()
+    lock = storage_root / storage_location(StorageCategory.RUNTIME_INSTALLATION_LOCK).relative_path()
     try:
         ensure_profile_custody_local_directory(directory)
-        with profile_custody_local_lock(directory / "installation.lock", timeout_seconds=5):
-            path = directory / "installation.json"
+        with profile_custody_local_lock(lock, timeout_seconds=5):
+            path = storage_root / storage_location(StorageCategory.RUNTIME_INSTALLATION_RECORD).relative_path()
             raw = read_optional_profile_custody_local_record(path, maximum_bytes=4096)
             if raw is None:
                 identity = RuntimeInstallation(

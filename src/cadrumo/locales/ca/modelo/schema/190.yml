@@ -1,6 +1,52 @@
 modelo:
   schema:
     '190':
+      binding:
+        modelo-190-111-actividades-dinerario-importe-anual:
+          label: Rendiments d’activitats econòmiques dineraris · total anual del Model
+            111, casella 08
+        modelo-190-111-actividades-especie-importe-anual:
+          label: Rendiments d’activitats econòmiques en espècie · total anual del
+            Model 111, casella 11
+        modelo-190-111-derechos-imagen-importe-anual:
+          label: Contraprestacions per cessió de drets d’imatge · total anual del
+            Model 111, casella 26
+        modelo-190-111-ganancias-dinerario-importe-anual:
+          label: Guanys patrimonials forestals dineraris · total anual del Model 111,
+            casella 20
+        modelo-190-111-ganancias-especie-importe-anual:
+          label: Guanys patrimonials forestals en espècie · total anual del Model
+            111, casella 23
+        modelo-190-111-premios-dinerario-importe-anual:
+          label: Premis dineraris · total anual del Model 111, casella 14
+        modelo-190-111-premios-especie-importe-anual:
+          label: Premis en espècie · total anual del Model 111, casella 17
+        modelo-190-111-retenciones-anual:
+          label: Retencions i ingressos a compte · total anual del Model 111, casella
+            28
+        modelo-190-111-trabajo-dinerario-importe-anual:
+          label: Rendiments del treball dineraris · total anual del Model 111, casella
+            02
+        modelo-190-111-trabajo-especie-importe-anual:
+          label: Rendiments del treball en espècie · total anual del Model 111, casella
+            05
+        modelo-190-perceptor-rows-incapacidad-dineraria-total:
+          label: Total de percepcions dineràries per incapacitat laboral
+        modelo-190-perceptor-rows-incapacidad-especie-total:
+          label: Total de valoracions en espècie per incapacitat laboral
+        modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total:
+          label: Total de ingressos a compte per prestacions en espècie d’incapacitat
+            laboral
+        modelo-190-perceptor-rows-incapacidad-retencion-total:
+          label: Total de retencions per incapacitat laboral
+        modelo-190-perceptor-rows-ingreso-a-cuenta-total:
+          label: Total de ingressos a compte
+        modelo-190-perceptor-rows-percepcion-dineraria-total:
+          label: Total de percepcions dineràries
+        modelo-190-perceptor-rows-percepcion-especie-total:
+          label: Total de percepcions en espècie
+        modelo-190-perceptor-rows-retencion-practicada-total:
+          label: Total de retencions practicades
       casilla:
         continuidad:
           devengo-year:

@@ -1,6 +1,20 @@
 modelo:
   schema:
     '200':
+      binding:
+        modelo-200-pagos-fraccionados-anuales:
+          label: Pagos fraccionados del año · Modelo 202, artículo 40.3, casilla 34
+        modelo-200-pagos-fraccionados-anuales-40-2:
+          label: Pagos fraccionados del año · Modelo 202, artículo 40.2, casilla 03
+        modelo-200-profile-incn-prior-12-months:
+          label: Importe neto de la cifra de negocios de los 12 meses anteriores
+        modelo-200-profile-legal-entity-form:
+          label: Forma jurídica
+        modelo-200-profile-new-entity-flag:
+          label: Entidad de nueva creación en uno de los dos primeros períodos con
+            beneficios
+        modelo-200-profile-tributacion-estado-porcentaje:
+          label: Porcentaje de tributación al Estado
       casilla:
         continuidad:
           '00042':

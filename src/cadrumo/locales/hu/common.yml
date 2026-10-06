@@ -535,6 +535,7 @@ desktop:
     show_all: Összes megjelenítése
     show_fewer: Kevesebb megjelenítése
     signed_out: Jelentkezz be a bevallási naptárad megtekintéséhez.
+    standing: Kötelezettségek állapot szerint
     state:
       due: Esedékes
       filed: Benyújtva
@@ -3292,6 +3293,7 @@ tui:
     progress: Bejelentkezés…
     reference_invalid: Adj meg érvényes hitelesítőadat-hivatkozási UUID-t.
     refused: A bejelentkezés elutasítva.
+    stay_signed_in: Maradjak bejelentkezve
     submit: Bejelentkezés
     title: Bejelentkezés egy profilba
   search:

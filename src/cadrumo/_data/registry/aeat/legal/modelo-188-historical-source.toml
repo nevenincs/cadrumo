@@ -1,0 +1,16 @@
+# PDF12-16 incorporates HFP/1308/2017 article3; final provision applies first to ejercicio2017.
+# BOE-A-1999-22372 amendment history lists no subsequent annex-V amendment until HFP/1284/2023,
+# whose final provision applies first to ejercicio2023. This pins the historical design through2022.
+[sources."aeat-dr-188-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_188/files/02-188-diseno-de-registro-2017.pdf"
+sha256 = "f86024198b4a94a747067658f5511e1b9e91cc553aaefe6241d8d3035404366f"
+bytes = 245998
+retrieved_at = 2026-10-06
+applies_from = 2017-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR188_2017.pdf"
+review_status = "pending_review"

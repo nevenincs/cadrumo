@@ -448,6 +448,53 @@ modelo:
           adóparadicsomnak minősített országokkal vagy területekkel kapcsolatos ügyletek
           és helyzetek adatszolgáltatási bevallása.
         title: Kapcsolt felek közötti ügyletek és adóparadicsomok (éves adatszolgáltatás)
+      form:
+        authored:
+          acquisition: Beszerzési érték
+          amendment: Kiegészítő vagy helyettesítő bevallás
+          amount: Ügylet összege
+          amount_ex_vat: Áfa nélküli összeg (€)
+          country: Ország- vagy területkód
+          description: Ügylet leírása
+          direction: 'I: bevétel · P: kifizetés'
+          fjo: 'Személytípus: F magánszemély · J jogi személy · O egyéb'
+          given: Utónév
+          haven: Adóparadicsomokkal kötött ügyletek
+          identity: Azonosítás
+          income_before_reduction: Jövedelem a csökkentés előtt, áfa nélkül (€)
+          intangibles: Immateriális javakból származó jövedelem csökkentése
+          issuer: Részesedés tárgyát képező vagy kibocsátó szervezet
+          kind: Értékpapír típusa
+          link: Kapcsolat típusa
+          marker: Kiegészítő vagy helyettesítő bevallás típusa
+          method: Értékelési módszer
+          name: Vezetéknevek vagy cégnév
+          nif: Adóazonosító
+          operation: Ügylet típusa
+          page1: Kapcsolt ügyletek
+          page2: Adóparadicsomi ügyletek és értékpapírok
+          party: Teljes név / Cégnév
+          percentage: Részesedési arány
+          period: Bevallási időszak
+          period_end: Bevallási időszak vége
+          period_start: Bevallási időszak kezdete
+          province: Tartomány- vagy országkód
+          receipt: Az előző bevallás igazolási száma
+          related: Kapcsolt személyekkel vagy szervezetekkel kötött ügyletek
+          resident: Illetőséggel rendelkező személy vagy szervezet
+          row1: '1'
+          row10: '10'
+          row11: '11'
+          row12: '12'
+          row2: '2'
+          row3: '3'
+          row4: '4'
+          row5: '5'
+          row6: '6'
+          row7: '7'
+          row8: '8'
+          row9: '9'
+          securities: Adóparadicsomokban tartott értékpapírok
       revision:
         2016-2017:
           casilla:

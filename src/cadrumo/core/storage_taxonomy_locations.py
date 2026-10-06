@@ -42,6 +42,7 @@ def _location(
     node_kind: StorageNodeKind = StorageNodeKind.DIRECTORY,
     scope: StorageScope = StorageScope.ROOT,
     override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
+    create_explicit_directory: bool = False,
     fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
     derives_settings_default: bool = True,
 ) -> StorageLocation:
@@ -52,6 +53,7 @@ def _location(
         node_kind=node_kind,
         scope=scope,
         override_policy=override_policy,
+        create_explicit_directory=create_explicit_directory,
         lifecycle=lifecycle,
         grouping=grouping,
         fingerprint_participation=fingerprint_participation,
@@ -129,6 +131,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.TEMPORARY_FILES,
         "tmp",
+        create_explicit_directory=True,
         consumer_module="adapters/persistence/storage/custody/_kdf_worker_supervision.py",
         settings_field="cadrumo_temp_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -663,6 +666,51 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    *(
+        _location(
+            category,
+            subpath,
+            consumer_module="adapters/local_runtime/installation.py",
+            node_kind=node_kind,
+            lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+            grouping=StorageGrouping.STATE,
+            override_policy=StorageOverridePolicy.FIXED,
+            fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        )
+        for category, subpath, node_kind in (
+            (StorageCategory.RUNTIME_COORDINATION, ".runtime", StorageNodeKind.DIRECTORY),
+            (StorageCategory.RUNTIME_INSTALLATION_RECORD, ".runtime/installation.json", StorageNodeKind.FILE),
+            (StorageCategory.RUNTIME_INSTALLATION_LOCK, ".runtime/installation.lock", StorageNodeKind.FILE),
+        )
+    ),
+    *(
+        _location(
+            category,
+            subpath,
+            dormant_reason="Native manager consumes the generated location projection; no Python writer.",
+            node_kind=StorageNodeKind.FILE,
+            lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+            grouping=StorageGrouping.STATE,
+            override_policy=StorageOverridePolicy.FIXED,
+            fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        )
+        for category, subpath in (
+            (StorageCategory.MANAGER_START_CLAIM, ".runtime/manager-start.lock"),
+            (StorageCategory.MANAGER_QUIT_RECORD, ".runtime/manager-quit.json"),
+            (StorageCategory.MANAGER_FAILED_VERSIONS, ".runtime/manager-failed-versions.json"),
+            (StorageCategory.MANAGER_PREFERENCES, "manager-preferences.json"),
+        )
+    ),
+    _location(
+        StorageCategory.MANAGER_LOG_FILE,
+        f"logs/{PRODUCT_IDENTITY.python_package}-manager.log",
+        dormant_reason="Native manager consumes the generated location projection; no Python writer.",
+        node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.ROTATION,
+        grouping=StorageGrouping.LOGS,
         override_policy=StorageOverridePolicy.FIXED,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),

@@ -405,6 +405,15 @@ class ModeloFormFieldBlock(_FormModel):
     field: ModeloFormField
 
 
+class ModeloFormContextFieldBlock(_FormModel):
+    """Read-only declared filing context; deliberately carries no editable address."""
+
+    kind: Literal["context_field"] = "context_field"
+    id: str
+    label: ModeloFormText
+    value: ModeloFormScalar
+
+
 class ModeloFormGridColumn(_FormModel):
     """One official column heading."""
 
@@ -472,7 +481,11 @@ class ModeloFormBindingInputsBlock(_FormModel):
 
 
 type ModeloFormBlock = Annotated[
-    ModeloFormFieldBlock | ModeloFormGridBlock | ModeloFormRepeatingBlock | ModeloFormBindingInputsBlock,
+    ModeloFormFieldBlock
+    | ModeloFormGridBlock
+    | ModeloFormRepeatingBlock
+    | ModeloFormBindingInputsBlock
+    | ModeloFormContextFieldBlock,
     Field(discriminator="kind"),
 ]
 
@@ -1004,6 +1017,7 @@ __all__ = [
     "ModeloFormBlocker",
     "ModeloFormCalculationNote",
     "ModeloFormCasillaAddressV1",
+    "ModeloFormContextFieldBlock",
     "ModeloFormCounts",
     "ModeloFormDeadline",
     "ModeloFormEarlierFiling",

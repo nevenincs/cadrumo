@@ -30,7 +30,7 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CONTROLLER: Final[Path] = REPO_ROOT / "src/cadrumo/entrypoints/tui/ledger/controller.py"
-_LAUNCHER: Final[Path] = REPO_ROOT / "src/cadrumo/entrypoints/tui/launcher.py"
+_LAUNCHER: Final[Path] = REPO_ROOT / "src/cadrumo/entrypoints/tui/runtime_workbench.py"
 _FACTORY: Final = "ledger_screen_factory"
 
 

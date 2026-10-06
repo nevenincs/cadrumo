@@ -11,10 +11,23 @@ modelo:
           de renda.
         title: IRPF retencions i ingressos a compte
       form:
+        column:
+          contraprestaciones_satisfechas: Contraprestacions satisfetes
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          periodo: Període
         page:
           dr-m11101:
             heading: Pàgina 1 · Retencions i ingressos a compte
         row:
+          contraprestaciones:
+            heading: Contraprestacions dineràries o en espècie
           percep-dinerarias:
             heading: Percepcions dineràries
           percep-en-especie:
@@ -28,10 +41,18 @@ modelo:
           rendimientos-en-especie:
             heading: Rendiments en espècie
         section:
+          complementaria:
+            heading: Complementària (6)
           contraprest-cesion-dchos-imagen:
             heading: Contraprestacions per la cessió de drets d'imatge
+          devengo:
+            heading: Meritació (2)
           ganancias-patrim-aprovecham-forestales:
             heading: Guanys patrimonials d'aprofitaments forestals
+          identificacion:
+            heading: Declarant (1)
+          ingreso:
+            heading: Ingrés (4)
           premios:
             heading: Premis
           rendim-actividades-economicas:

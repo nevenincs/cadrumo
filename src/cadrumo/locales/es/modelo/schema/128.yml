@@ -11,6 +11,38 @@ modelo:
           contratos de seguro de vida o invalidez.
         title: Retenciones e ingresos a cuenta - rentas de capital mobiliario de operaciones
           de capitalización y contratos de seguro
+      form:
+        column:
+          adicional: Casillas 04–05
+          ordinario: Casillas 01–03
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
+        page:
+          modelo-128-page-01:
+            heading: Retenciones sobre operaciones de capitalización y seguros de
+              vida o invalidez
+        row:
+          base: Base de retenciones e ingresos a cuenta
+          perceptores: Número de perceptores
+          retenciones: Retenciones e ingresos a cuenta
+        section:
+          complementaria:
+            heading: Complementaria (6)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Identificación (1)
+          ingreso:
+            heading: Ingreso (4)
+          liquidacion:
+            heading: Liquidación (3)
       revision:
         2019-y-siguientes:
           casilla:

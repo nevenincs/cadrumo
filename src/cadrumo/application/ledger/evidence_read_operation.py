@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
@@ -17,28 +17,41 @@ from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import (
+    OperationFailureErrorCode,
     OperationRequest,
     OperationTerminalReceipt,
     require_succeeded_terminal_receipt,
+    terminal_receipt_matches,
 )
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.refusal_evidence import OperationRefusalEvidence
+from ..operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationSchemaBindingV1,
+)
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
+from .evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from .evidence_ports import LedgerEvidencePortsFactory
 from .read_access import resolve_ledger_read_access
 
 LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID = "ledger.evidence.list"
 LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID = "ledger.evidence.view"
+LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE = "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"
 _MAX_EVIDENCE_LIST_ROWS = 4_096
 _RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
@@ -164,17 +177,38 @@ class LedgerEvidenceListProjection(BaseModel):
         return self
 
 
-class LedgerEvidenceViewProjection(BaseModel):
-    """One evidence record whose stored owner matches the disclosed profile."""
+class LedgerEvidenceViewSuccess(BaseModel):
+    """The existing bounded evidence record returned by a successful read."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    profile_id: UUID
+    kind: Literal["success"] = "success"
     record: LedgerEvidenceRecordProjection
+
+
+class LedgerEvidenceViewRefusal(BaseModel):
+    """Only the static missing-reference fact crosses the refusal detail door."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["refused"] = "refused"
+    evidence_record_present: Literal[False] = False
+
+
+class LedgerEvidenceViewProjection(BaseModel):
+    """Versioned exact-profile success or finite missing-reference refusal."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    result_version: Literal[2] = 2
+    profile_id: UUID
+    outcome: Annotated[LedgerEvidenceViewSuccess | LedgerEvidenceViewRefusal, Field(discriminator="kind")]
 
     @model_validator(mode="after")
     def _correlate_record_profile(self) -> LedgerEvidenceViewProjection:
-        if self.record.bucket_id != str(self.profile_id):
+        if isinstance(self.outcome, LedgerEvidenceViewSuccess) and self.outcome.record.bucket_id != str(
+            self.profile_id
+        ):
             raise ValueError("evidence view record belongs to another profile")
         return self
 
@@ -253,16 +287,31 @@ def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /
 
 
 def _project_view_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
-    """Release only the exact view result carried by its successful receipt."""
+    """Release only the closed outcome matching its exact terminal receipt."""
     if type(result) is not LedgerEvidenceViewExecutionResult:
         raise ValueError("invalid ledger evidence view result")
-    _require_terminal_success(
-        result,
-        receipt,
-        definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
-        profile_id=result.profile_id,
-    )
-    return result.result
+    private = LedgerEvidenceViewExecutionResult.model_validate(result.model_dump(mode="python"), strict=True)
+    if isinstance(private.result.outcome, LedgerEvidenceViewRefusal):
+        if (
+            not terminal_receipt_matches(
+                receipt,
+                definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
+                subject_ref=profile_operation_subject(str(private.profile_id)),
+                condition=OperationTerminalCondition.REFUSED,
+                effect=OperationEffect.NONE,
+            )
+            or receipt.refusal_ref != LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE
+            or receipt.refusal_detail_ref is None
+        ):
+            raise ValueError("evidence view refusal has an incompatible terminal receipt")
+    else:
+        _require_terminal_success(
+            private,
+            receipt,
+            definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
+            profile_id=private.profile_id,
+        )
+    return private.result
 
 
 def _check_result_size(result: BaseModel) -> None:
@@ -326,8 +375,8 @@ class LedgerEvidenceReadExecutor:
         self,
         request: OperationRequest[LedgerEvidenceViewRequest],
         context: OperationExecutorContext,
-    ) -> str:
-        """Capture one exact record as an encrypted, no-effect worker result."""
+    ) -> str | OperationRefusalEvidence:
+        """Capture a record or the finite missing-reference fact in encrypted custody."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
         _require_worker_identity(
@@ -342,25 +391,32 @@ class LedgerEvidenceReadExecutor:
 
         def read() -> LedgerEvidenceViewProjection:
             ports = self._ports_factory(bucket_id=bucket_id)
-            # The canonical not-found exception is registered as REFUSED; let
-            # the supervisor settle it as that declared refusal unchanged.
-            record = PurchaseInvoiceEvidenceService(ports=ports).view(
-                bucket_id=bucket_id,
-                evidence_id=payload.evidence_id,
-            )
+            try:
+                record = PurchaseInvoiceEvidenceService(ports=ports).view(
+                    bucket_id=bucket_id,
+                    evidence_id=payload.evidence_id,
+                )
+            except PurchaseInvoiceEvidenceNotFoundError:
+                # Never copy exception context, request identifiers or metadata.
+                return LedgerEvidenceViewProjection(profile_id=payload.profile_id, outcome=LedgerEvidenceViewRefusal())
             if record.bucket_id != bucket_id or record.evidence_id != payload.evidence_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             result = LedgerEvidenceViewProjection(
                 profile_id=payload.profile_id,
-                record=LedgerEvidenceRecordProjection.from_record(record),
+                outcome=LedgerEvidenceViewSuccess(record=LedgerEvidenceRecordProjection.from_record(record)),
             )
             _check_result_size(result)
             return result
 
-        async def capture() -> str:
+        async def capture() -> str | OperationRefusalEvidence:
             result = await asyncio.to_thread(read)
             execution_result = LedgerEvidenceViewExecutionResult(profile_id=payload.profile_id, result=result)
             reference = await context.operands.put(execution_result, written_at=now())
+            if isinstance(result.outcome, LedgerEvidenceViewRefusal):
+                return OperationRefusalEvidence(
+                    refusal_code=LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE,
+                    detail_ref=reference,
+                )
             return reference
 
         return await await_cancellation_complete(capture(), task_name="ledger-evidence-view")
@@ -409,7 +465,7 @@ class LedgerEvidenceViewExecutor:
 
     async def execute(
         self, request: OperationRequest[LedgerEvidenceViewRequest], context: OperationExecutorContext
-    ) -> str:
+    ) -> str | OperationRefusalEvidence:
         """Run the exact-profile view read."""
         return await self._reader.execute_view(request, context)
 
@@ -421,6 +477,7 @@ def _build_definition(
     result_type: type[BaseModel],
     executor_type: type[LedgerEvidenceListExecutor] | type[LedgerEvidenceViewExecutor],
     ports_factory: LedgerEvidencePortsFactory,
+    refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
 ) -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=definition_id,
@@ -430,6 +487,7 @@ def _build_definition(
         build=lambda: executor_type(ports_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        refusal_detail_codes=refusal_detail_codes,
     )
 
 
@@ -452,6 +510,7 @@ def build_ledger_evidence_view_definition(ports_factory: LedgerEvidencePortsFact
         result_type=LedgerEvidenceViewExecutionResult,
         executor_type=LedgerEvidenceViewExecutor,
         ports_factory=ports_factory,
+        refusal_detail_codes=frozenset({LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE}),
     )
 
 
@@ -501,9 +560,14 @@ def build_ledger_evidence_view_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
     """Bind the exact view request/result contracts and whole-profile disclosure."""
-    return OperationPublicDefinitionRegistrationV1.compose_request_result(
+    return OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,
-        public_result_type=LedgerEvidenceViewProjection,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=definition.definition_id + ".request", schema_version=1, model_type=definition.request_type
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=definition.definition_id + ".result", schema_version=2, model_type=LedgerEvidenceViewProjection
+        ),
         result_projector=_project_view_result,
         access_resolver=_resolve_view_access,
     )
@@ -511,6 +575,7 @@ def build_ledger_evidence_view_registration(
 
 __all__ = [
     "LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID",
+    "LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE",
     "LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID",
     "LedgerEvidenceListExecutionResult",
     "LedgerEvidenceListExecutor",
@@ -520,7 +585,9 @@ __all__ = [
     "LedgerEvidenceViewExecutionResult",
     "LedgerEvidenceViewExecutor",
     "LedgerEvidenceViewProjection",
+    "LedgerEvidenceViewRefusal",
     "LedgerEvidenceViewRequest",
+    "LedgerEvidenceViewSuccess",
     "build_ledger_evidence_list_definition",
     "build_ledger_evidence_list_registration",
     "build_ledger_evidence_view_definition",

@@ -184,7 +184,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t1\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\naf6b2264dd9d\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\t303\t2026\t1T\t2026-y-siguientes\tdraft\t\t\t303-2026-1T\nnotice\tmodelo.work.list.next_action\tOne declaration is available for inspection.\nnext_action\taeat app modelo work status fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t1\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\naf6b2264dd9d\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\t303\t2026\t1T\t2026-y-siguientes\tdraft\t\t\t303-2026-1T\nnotice\tmodelo.work.list.next_action\tOne declaration is available for inspection.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\nnext_action\taeat app modelo work status fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\n"
     },
     {
       "argv": [
@@ -238,6 +238,13 @@
             },
             "message": "This active declaration can be calculated.",
             "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
@@ -267,7 +274,7 @@
           "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

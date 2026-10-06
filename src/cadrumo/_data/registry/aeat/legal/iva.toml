@@ -76,6 +76,44 @@ applies_from = 2010-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210"
 review_status = "pending_review"
 
+[sources.boe-modelo-309-2023-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2022-21458-modelo-309.pdf"
+sha256 = "08e6373b7a106f70fcb32b744c640cc84913200bd2538d708b852b6d8b998849"
+bytes = 396280
+retrieved_at = 2026-10-06
+published_at = 2022-12-19
+applies_from = 2023-01-01
+source_url = "https://www.boe.es/boe/dias/2022/12/19/pdfs/BOE-A-2022-21458.pdf"
+review_status = "pending_review"
+
+[sources.boe-modelo-309-2003-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-modelo-309-2003.pdf"
+sha256 = "584f5480aeeb11c48e5b07e75a84dc90b2f73ce79ec76477160b47f1c41f3838"
+bytes = 767317
+retrieved_at = 2026-10-06
+published_at = 2003-12-30
+applies_from = 2004-01-01
+source_url = "https://www.boe.es/boe/dias/2003/12/30/pdfs/A46405-46414.pdf"
+review_status = "pending_review"
+
+[sources.boe-modelo-309-2017-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-modelo-309-2017.pdf"
+sha256 = "d90dfa7f5eb648f7d553880c91605694ba576c4e8ff0f03af5f2f617251b21c4"
+bytes = 471193
+retrieved_at = 2026-10-06
+published_at = 2017-12-21
+applies_from = 2018-01-01
+source_url = "https://www.boe.es/boe/dias/2017/12/21/pdfs/BOE-A-2017-15190.pdf"
+review_status = "pending_review"
 [legal."orden-hac-3625-2003:apartado-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -3318,4 +3356,30 @@ retrieved_at = 2026-06-08
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf"
+review_status = "pending_review"
+
+[sources."boe-modelo-308-2008-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2008-20953-modelos-303-308.pdf"
+sha256 = "dd6954f476851c46379c3a31820a389c14d4eab2b4c5d33961efac5b2415a99f"
+bytes = 789016
+retrieved_at = 2026-10-06
+published_at = 2008-12-30
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/boe/dias/2008/12/30/pdfs/A52354-52369.pdf"
+review_status = "pending_review"
+
+[sources."boe-modelo-308-2011-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2011-7479-modelo-308.pdf"
+sha256 = "35feb3e91255a4c4e745910aa982093e8993d1fc0291e31644db1c0f01067b8d"
+bytes = 254771
+retrieved_at = 2026-10-06
+published_at = 2011-04-27
+applies_from = 2011-07-01
+source_url = "https://www.boe.es/boe/dias/2011/04/27/pdfs/BOE-A-2011-7479.pdf"
 review_status = "pending_review"

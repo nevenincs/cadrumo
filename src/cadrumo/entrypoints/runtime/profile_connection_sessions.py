@@ -10,6 +10,7 @@ from uuid import UUID
 from pydantic import SecretBytes
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
+from ...adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -23,6 +24,7 @@ from ...application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
+from ...application.runtime.sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import (
     AccessDenialCode,
@@ -36,6 +38,7 @@ from ...application.user_profile.automation_custody_port import (
     AutomationCustodyError,
 )
 from .profile_host import ProfileConnection, RuntimeProfileHost
+from .sign_in_status import observe_sign_in
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -166,7 +169,7 @@ class ProfileConnectionSessionMixin:
 
     def _session(
         self: RuntimeProfileConnections, context: RuntimeConnectionContext, request: RuntimeSessionRequest
-    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | AccessDenied:
+    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeHumanSignedOut | AccessDenied:
         connection = self._connected(context.connection_id)
         if connection.context != context or connection.profile_id != request.profile_id:
             return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
@@ -182,7 +185,7 @@ class ProfileConnectionSessionMixin:
         host: RuntimeProfileHost,
         context: RuntimeConnectionContext,
         request: RuntimeSessionRequest,
-    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | AccessDenied:
+    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeHumanSignedOut | AccessDenied:
         with host.guard:
             if not self._admitting():
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
@@ -190,9 +193,35 @@ class ProfileConnectionSessionMixin:
                 return self._lock_session(connection, host, context, request)
             if request.target_session_id is not None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            if request.action == "human_sign_out":
+                return self._human_sign_out(host, context, request)
             if request.action == "session_refresh":
                 return self._refresh_session(connection, host, context, request)
             return self._status(connection, host, request.request_id, request.session_id)
+
+    def _human_sign_out(
+        self: RuntimeProfileConnections,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeSessionRequest,
+    ) -> RuntimeHumanSignedOut:
+        host.authority.human_administration_facts(connection_id=context.connection_id, session_id=request.session_id)
+        try:
+            automation_enabled = host.store.enrollment_state().automation_enabled
+        except AutomationCustodyError:
+            automation_enabled = None
+        deletion, retired = host.revoke_human_sign_in()
+        self._retired(retired)
+        return RuntimeHumanSignedOut(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            profile_id=request.profile_id,
+            session_ids=retired,
+            receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
+            keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
+            automation_enabled=automation_enabled,
+        )
 
     def _lock_session(
         self: RuntimeProfileConnections,
@@ -241,14 +270,38 @@ class ProfileConnectionSessionMixin:
         self: RuntimeProfileConnections,
         context: RuntimeConnectionContext,
         channel: RuntimeByteChannel,
-        request: RuntimeProfileLogin | RuntimeSessionRequest,
-    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeAccessRefusal:
+        request: RuntimeProfileLogin | RuntimeSessionRequest | RuntimeSignInStatusRequest,
+    ) -> (
+        RuntimeProfileStatus
+        | RuntimeSessionsLocked
+        | RuntimeSignInStatusReply
+        | RuntimeHumanSignedOut
+        | RuntimeAccessRefusal
+    ):
         """Keep credentials out of request/response documents and refuse unknown authority."""
+        sign_in = None
         try:
             if context.runtime_boot_id != self.boot or context.peer != channel.peer:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
             if not self._admitting():
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+            if isinstance(request, RuntimeSignInStatusRequest):
+                login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
+                if login.os_owner_id != context.peer.os_owner_id:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+                return RuntimeSignInStatusReply(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    profile_id=request.profile_id,
+                    status=observe_sign_in(
+                        root=self.root,
+                        storage_identity=self.storage_identity,
+                        profile_id=request.profile_id,
+                        login=login,
+                        instant=self._wall_clock(),
+                    ),
+                )
             result = (
                 self._login(context, channel, request)
                 if isinstance(request, RuntimeProfileLogin)
@@ -257,16 +310,24 @@ class ProfileConnectionSessionMixin:
             if not isinstance(result, AccessDenied):
                 return result
             code = result.code
+            sign_in = result.sign_in
         except (AutomationCustodyError, ProfileAccessRefusedError) as error:
             code = error.reason
+            if isinstance(error, ProfileAccessRefusedError):
+                sign_in = error.sign_in
         except RuntimeRefusalError as error:
             code = error.reason
         return RuntimeAccessRefusal(
-            request_id=request.request_id, runtime_boot_id=self.boot, connection_id=context.connection_id, code=code
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            code=code,
+            sign_in=sign_in,
         )
 
     def disconnect(self: RuntimeProfileConnections, context: RuntimeConnectionContext) -> None:
         """Release only this connection's authority; keep native login provenance separate."""
+        self._events.disconnect(context)
         self._enrollments.disconnect(context.connection_id)
         with self._guard:
             connection = self._connections.get(context.connection_id)

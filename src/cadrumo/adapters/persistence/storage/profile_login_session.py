@@ -19,12 +19,10 @@ from ....application.user_profile.login_session_port import (
     ProfileSignInGenerationPort,
 )
 from .custody.acceleration_receipt import (
-    advance_persisted_profile_session_idle_deadline,
     borrow_profile_session_key,
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
-    resume_profile_session,
     resume_profile_session_with_key,
 )
 from .custody.acceleration_receipt_crypto import PersistedProfileSession
@@ -169,23 +167,6 @@ class _PersistenceProfileLoginSession:
                 raise
             return None
 
-    def resume_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return resume_profile_session(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            now=now,
-        )
-
     def borrow_acceleration_receipt_key(
         self,
         *,
@@ -219,21 +200,6 @@ class _PersistenceProfileLoginSession:
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         delete_profile_session(storage_root=storage_root, profile_id=profile_id)
-
-    def advance_acceleration_idle_deadline(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        record: ProfilePersistedSessionPort,
-        new_idle_deadline: datetime,
-    ) -> ProfilePersistedSessionPort:
-        return advance_persisted_profile_session_idle_deadline(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            record=_persisted_receipt(record),
-            new_idle_deadline=new_idle_deadline,
-        )
 
     def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
         return isinstance(record, PersistedProfileSession)

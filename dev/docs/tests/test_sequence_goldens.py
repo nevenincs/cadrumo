@@ -44,7 +44,8 @@ import pytest
 from sphinx.application import Sphinx
 from sphinx.errors import SphinxError
 
-from cadrumo.tests.env_scope import scoped_env_var
+from cadrumo.core.config import load_settings, override_settings
+from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
 from dev._paths import REPO_ROOT
 
@@ -58,7 +59,7 @@ from ..sequences.checks import (
 )
 from ..sequences.cli import main as sequences_cli_main
 from ..sequences.compare import compare_transcript_to_golden
-from ..sequences.golden_store import SequenceGolden, build_golden
+from ..sequences.golden_store import SequenceGolden, build_golden, normalise_document_paths
 from ..sequences.parser import parse_sequence
 from ..sequences.runner import SequenceTranscript, execute_sequence
 from ..sequences.schema import ParsedSequence
@@ -453,13 +454,18 @@ def export_release_double_run(
     (item,) = discovered
     runs: list[tuple[str, SequenceTranscript, bytes]] = []
     current = software_identity.PACKAGE_VERSION
-    for label, version in (("current", current), ("next", _another_release_of_the_same_width(current))):
-        root = tmp_path_factory.mktemp(f"export-{label}")
-        with pytest.MonkeyPatch.context() as patch:
-            patch.setattr(software_identity, "PACKAGE_VERSION", version)
-            aux = software_identity.aeat_aux_version()
-            transcript = execute_sequence(item.sequence, sandbox_root=root)
-        runs.append((aux, transcript, (root / "workdir" / _EXPORT_FILE).read_bytes()))
+    authority_root = load_settings().cadrumo_authority_root
+    with (
+        derived_storage_settings(tmp_path_factory.mktemp("export-release-storage")),
+        override_settings(cadrumo_authority_root=authority_root),
+    ):
+        for label, version in (("current", current), ("next", _another_release_of_the_same_width(current))):
+            root = tmp_path_factory.mktemp(f"export-{label}")
+            with pytest.MonkeyPatch.context() as patch:
+                patch.setattr(software_identity, "PACKAGE_VERSION", version)
+                aux = software_identity.aeat_aux_version()
+                transcript = execute_sequence(item.sequence, sandbox_root=root)
+            runs.append((aux, transcript, (root / "workdir" / _EXPORT_FILE).read_bytes()))
     return runs[0], runs[1]
 
 
@@ -476,7 +482,14 @@ class TestModeloExportReleaseMaskHonesty:
             if (
                 left.envelope is not None
                 and right.envelope is not None
-                and (paths := differing_paths(left.envelope, right.envelope))
+                and (
+                    paths := differing_paths(
+                        normalise_document_paths(left.envelope, storage_root=first.storage_root, workdir=first.workdir),
+                        normalise_document_paths(
+                            right.envelope, storage_root=second.storage_root, workdir=second.workdir
+                        ),
+                    )
+                )
             ):
                 residual[index] = paths
         export = _export_frame(first)
@@ -505,12 +518,54 @@ class TestModeloExportReleaseMaskHonesty:
         assert compare_transcript_to_golden(second, golden, page=_EXPORT_PAGE) == ()
 
         export = _export_frame(second)
+        assert _export_result(second, export)["format"] == "xml-dictionary"
         document = second.model_dump(mode="json")
         document["frames"][export]["envelope"]["result"]["byte_size"] += 1
         resized = SequenceTranscript.model_validate_json(json.dumps(document))
         problems = compare_transcript_to_golden(resized, golden, page=_EXPORT_PAGE)
+        assert len(problems) == 2
+        assert any("XML receipt does not prove its canonical export event" in problem for problem in problems)
+        assert any("result.byte_size" in problem for problem in problems)
+
+        # Release masking cannot hide a false digest or audit event for this XML.
+        for field in ("file_sha256", "bucket_event_id"):
+            changed = second.model_dump(mode="json")
+            changed["frames"][export]["envelope"]["result"][field] = "a" * 64
+            problems = compare_transcript_to_golden(
+                SequenceTranscript.model_validate_json(json.dumps(changed)), golden, page=_EXPORT_PAGE
+            )
+            assert len(problems) == 1
+            assert "XML receipt does not prove its canonical export event" in problems[0]
+
+        from ..sequences.tests.test_modelo_export_evidence import _changed_event
+
+        changed = second.model_dump(mode="json")
+        result = changed["frames"][export]["envelope"]["result"]
+        result["file_sha256"] = "a" * 64
+        result["bucket_event_id"] = _changed_event(SequenceTranscript.model_validate_json(json.dumps(changed)))
+        problems = compare_transcript_to_golden(
+            SequenceTranscript.model_validate_json(json.dumps(changed)), golden, page=_EXPORT_PAGE
+        )
         assert len(problems) == 1
-        assert "result.byte_size" in problems[0]
+        assert "XML artifact digest differs from its export receipt" in problems[0]
+
+        # Skipping the fichero proof cannot skip ordinary envelope comparison.
+        for field, path, changed_value in (
+            ("format", "result.format", "verification-report"),
+            ("format", "result.format", {"malformed": True}),
+            ("format", "result.format", ["malformed"]),
+            ("status", "status", "error"),
+        ):
+            changed = second.model_dump(mode="json")
+            envelope = changed["frames"][export]["envelope"]
+            if field == "format":
+                envelope["result"][field] = changed_value
+            else:
+                envelope[field] = changed_value
+            problems = compare_transcript_to_golden(
+                SequenceTranscript.model_validate_json(json.dumps(changed)), golden, page=_EXPORT_PAGE
+            )
+            assert any(path in problem for problem in problems)
 
 
 class TestExecutorMaskHonesty:

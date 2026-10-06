@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:159a47cd9ba0af44f13138e26c855f2169d47a6be01f9cf367f5e7f4f6ffb141'
+body_hash: 'sha256:06412df80aae24873ba5e866f17d6b9dcdca17d8f1b30589848e352edd20e7fa'
 related:
   - '[[2026-10-04-reachability-burndown-plan]]'
 ---
@@ -106,7 +106,6 @@ dev/quality/unused_symbol_coverage.py dev/quality/unreachable_module_coverage.py
 reports zero diagnostics; and the repository commands behind `check-style`,
 `check-format`, and `check-imports` each exit 0.
 
-
 ### october-owner-cleanup | low | The current product population has exact zero dead-code findings
 
 The 2026-10-05 review covers S01 through S29 of the approved 2026-10-04 plan, including S07's current working changes, on HEAD 86dfb5e298 plus the reviewed owned transforms. Earlier Step analysis and ledger evidence remain applicable where their owners did not change. Governing decisions are the accepted reachability cleanup, product quality boundary, Just entrypoint and defining-module import decisions, the accepted manual-edit transient amendment and its observation predecessor, and the accepted annual prorrata comparison. Concurrent manager, desktop, registry and sign-in work is outside the reviewed implementation ownership.
@@ -142,7 +141,6 @@ The final live `just check-style`, `just check-format` and configured `just chec
 Failed capture attempts are retained: the first omitted stubs and a packaging resource; captured type execution also inherited the live var ignore rule and produced no report. These are not counted as clean results. The applicable full configured type result is the final live run. Broader locale inventory and spelling review remains red, although this change introduces no missing keys, placeholder failures or unreadable sources and its new guarded keys exist in all four locales. No uninterrupted full-repository pytest pass is claimed: covering owner tests, real native cases and earlier Step evidence establish this cleanup's scope. Host-dependent os_keychain tests still require an interactive desktop logon; the available native fixtures preserve that limit rather than bypassing it. Independent sign-in, desktop and manager plans remain open under their owners.
 
 Verdict: PASS for the reviewed implemented working-tree cleanup. No critical or high product finding remains. Required covering behavior, exact reachability and export gates, duplication remeasurement, style, format, configured types and import boundaries have applicable passing evidence. The remaining advisory token matches remain visible with the source review above.
-
 
 ### october-shared-checkpoint | low | Four tested receipt edits remain with the concurrent sign-in working changes
 

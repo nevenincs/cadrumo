@@ -11,6 +11,8 @@ import math
 import re
 import subprocess
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -27,7 +29,7 @@ from dev.packaging.command_execution import run_command
 from dev.product_environment import ambient_product_settings_removed
 
 from .authority_currency import require_current_authority
-from .compare import check_transcript, evaluate_expectations
+from .compare import check_transcript, evaluate_expectations, validate_live_export_evidence
 from .contracts import read_sequence_contract
 from .errors import SequenceEngineError, SequenceParseError
 from .golden_store import (
@@ -335,13 +337,16 @@ def refresh_sequences(
         if not item.sequence.executed_frames:
             continue  # all-@static: nothing runs, so there is no golden to write
         try:
-            with _sequence_progress_scope(item.page):
-                transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+                evidence_problems = validate_live_export_evidence(transcript, page=item.page)
+                if evidence_problems:
+                    all_problems.extend(evidence_problems)
+                    continue
+                written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
+                advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
-        written.append(write_golden(transcript, page=item.page, goldens_root=goldens_root))
-        advisories.extend(oversized_frame_advisories(item.page, build_golden(transcript)))
     return tuple(written), tuple(all_problems), tuple(advisories)
 
 
@@ -386,12 +391,11 @@ def check_sequences(
             continue
         advisories.extend(oversized_frame_advisories(item.page, golden))
         try:
-            with _sequence_progress_scope(item.page):
-                transcript = _execute_in_fresh_sandbox(item.sequence)
+            with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+                all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
         except SequenceEngineError as exc:
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
-        all_problems.extend(check_transcript(item.sequence, transcript, golden, page=item.page))
     return tuple(all_problems), tuple(advisories)
 
 
@@ -634,12 +638,13 @@ def check_page_coherence_in_subprocess(
     )
 
 
-def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> SequenceTranscript:
-    """Run one sequence in a disposable sandbox directory."""
+@contextmanager
+def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Iterator[SequenceTranscript]:
+    """Keep disposable artifacts alive through their owning refresh/check."""
     with TemporaryDirectory(
         prefix="cli-sequence-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
     ) as tmp:
-        return execute_sequence(sequence, sandbox_root=Path(tmp))
+        yield execute_sequence(sequence, sandbox_root=Path(tmp))
 
 
 def check_page_coherence(

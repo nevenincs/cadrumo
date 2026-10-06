@@ -42,6 +42,13 @@ digest and the export event id derived from it change at every release while
 nothing else in the envelope does.  Only ``modelo.export``'s
 ``result.file_sha256`` and ``result.bucket_event_id`` are masked; the byte
 size and every other leaf remain assertable.
+
+Two ledger read refusals expose an opaque invocation id, minted separately
+from the transaction or evidence identity. Only their exact registered
+command/code pairs' ``error.context.operation_id`` are masked, and only when
+the value has the canonical lower-case 64-hex shape. Receipt correlation is
+still asserted at the CLI boundary; malformed IDs and all refusal facts remain
+visible to comparison.
 """
 
 from __future__ import annotations
@@ -79,6 +86,13 @@ GOLDEN_MASK_PATHS: frozenset[tuple[str, str]] = frozenset(
         # with every release while the rest of the envelope does not.
         ("modelo.export", "result.file_sha256"),
         ("modelo.export", "result.bucket_event_id"),
+    },
+)
+
+_REFUSAL_OPERATION_ID_PAIRS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("ledger.view", "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX"),
+        ("ledger.evidence.view", "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"),
     },
 )
 
@@ -125,7 +139,28 @@ def mask_document(
         for masked_command, path in GOLDEN_MASK_PATHS:
             if command == masked_command:
                 _mask_existing_path(masked, path)
+        _mask_refusal_operation_id(masked, command)
     return masked
+
+
+def _mask_refusal_operation_id(document: dict[str, object], command: str) -> None:
+    """Mask only a canonical invocation id on the two enrolled read refusals."""
+    error = document.get("error")
+    if not is_object_dict(error):
+        return
+    code = error.get("code")
+    if not isinstance(code, str) or (command, code) not in _REFUSAL_OPERATION_ID_PAIRS:
+        return
+    context = error.get("context")
+    if not is_object_dict(context):
+        return
+    operation_id = context.get("operation_id")
+    if (
+        isinstance(operation_id, str)
+        and len(operation_id) == 64
+        and all(character in "0123456789abcdef" for character in operation_id)
+    ):
+        context["operation_id"] = MASK_SENTINEL
 
 
 def _mask_existing_path(document: dict[str, object], path: str) -> None:

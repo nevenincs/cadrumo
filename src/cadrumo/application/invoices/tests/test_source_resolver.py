@@ -18,6 +18,8 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 
 from ....core.aggregation import BindingSourceKind, IntracomOperationType
 from ....core.period import Period
+from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.invoices.business_premises import BusinessPremisesLease
@@ -31,6 +33,7 @@ from ...aggregation.source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceResolution,
 )
+from ...aggregation.terminal_origin_audit import collect_terminal_origin_diagnostics
 from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
     _intracommunity_clave,
@@ -172,6 +175,116 @@ def test_source_resolver_projects_an_invoice_through_the_reader_port() -> None:
     assert resolution.source_transaction_ids == ()
 
 
+def _invoice_family_context(source: BindingSourceKind) -> CalculationSourceContext:
+    modelos, _catalogues = bundled_registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "349")
+    revision = select_revision(modelo, filing_year=2026, period="1T")
+    bindings = tuple(
+        BindingDefinition.model_validate(
+            {**binding.model_dump(), "provider": {**binding.provider.model_dump(), "kind": source.value}},
+        )
+        for binding in revision.bindings
+    )
+    return CalculationSourceContext(
+        bucket_id=_BUCKET_ID,
+        modelo="349",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision=revision.model_copy(update={"bindings": bindings}),
+    )
+
+
+def _two_directional_invoices() -> tuple[Invoice, Invoice]:
+    return (
+        _invoice(kind=InvoiceKind.ISSUED, number="PROVENANCE-ISSUED", category=IvaCategory("intra_community_supply")),
+        _invoice(
+            kind=InvoiceKind.RECEIVED,
+            number="PROVENANCE-RECEIVED",
+            category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("source", "directions"),
+    [
+        (
+            BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+            {BindingSourceKind.COLLECTIBLE_INVOICE, BindingSourceKind.PAYABLE_INVOICE},
+        ),
+        (BindingSourceKind.COLLECTIBLE_INVOICE, {BindingSourceKind.COLLECTIBLE_INVOICE}),
+        (BindingSourceKind.PAYABLE_INVOICE, {BindingSourceKind.PAYABLE_INVOICE}),
+    ],
+)
+def test_invoice_provenance_names_selected_family_and_preserves_direction(
+    source: BindingSourceKind, directions: set[BindingSourceKind]
+) -> None:
+    context = _invoice_family_context(source)
+    resolution = _resolver(build_invoice_catalogue(_two_directional_invoices())).resolve(context)
+
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000") * len(directions)
+    assert len(resolution.provenance) == len(directions)
+    assert {row.resolved_binding_source for row in resolution.provenance} == {source}
+    assert {row.contributor_binding_source for row in resolution.provenance} == directions
+    for row in resolution.provenance:
+        assert row.contributor_binding_source is not None
+        assert row.contributor_source_kind == row.contributor_binding_source.value
+        assert row.source_ref.startswith(row.contributor_source_kind + ":")
+        assert row.terminal_origin is TerminalOriginClass.INVOICE_CATALOGUE
+        assert row.fingerprint is not None
+    assert collect_terminal_origin_diagnostics(context.revision, resolution) == ()
+
+
+def test_mixed_invoice_families_have_unique_primary_refs_and_no_directional_cross_talk() -> None:
+    context = _invoice_family_context(BindingSourceKind.M349_INTRACOMMUNITY_OPERATION)
+    directional = _invoice_family_context(BindingSourceKind.COLLECTIBLE_INVOICE).revision.bindings[0]
+    extra = directional.model_copy(update={"id": "test-issued-operator-count"})
+    context = context.model_copy(
+        update={
+            "revision": context.revision.model_copy(
+                update={
+                    "bindings": (*context.revision.bindings, extra),
+                }
+            )
+        }
+    )
+    invoices = _two_directional_invoices()
+    resolution = _resolver(build_invoice_catalogue(invoices)).resolve(context)
+
+    assert resolution.binding_values["test-issued-operator-count"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("2000")
+    assert len(resolution.provenance) == len({row.source_ref for row in resolution.provenance}) == 3
+    directional_rows = tuple(
+        row for row in resolution.provenance if row.resolved_binding_source is BindingSourceKind.COLLECTIBLE_INVOICE
+    )
+    assert len(directional_rows) == 1
+    assert directional_rows[0].contributor_binding_source is BindingSourceKind.COLLECTIBLE_INVOICE
+    issued_rows = tuple(row for row in resolution.provenance if row.source_ref.endswith(invoices[0].invoice_id))
+    assert len(issued_rows) == 2
+    assert len({row.fingerprint for row in issued_rows}) == 1
+    received_row = next(row for row in resolution.provenance if row.source_ref.endswith(invoices[1].invoice_id))
+    assert received_row.source_ref == f"payable_invoice:{invoices[1].invoice_id}"
+    assert collect_terminal_origin_diagnostics(context.revision, resolution) == ()
+
+
+def test_wrong_invoice_terminal_origin_still_warns_after_family_attribution() -> None:
+    context = _invoice_family_context(BindingSourceKind.M349_INTRACOMMUNITY_OPERATION)
+    resolution = _resolver(build_invoice_catalogue(_two_directional_invoices())).resolve(context)
+    wrong_origin = resolution.model_copy(
+        update={
+            "provenance": tuple(
+                row.model_copy(update={"terminal_origin": TerminalOriginClass.DERIVED_CALCULATION})
+                for row in resolution.provenance
+            )
+        }
+    )
+
+    diagnostics = collect_terminal_origin_diagnostics(context.revision, wrong_origin)
+    assert diagnostics
+    assert {diagnostic.reason for diagnostic in diagnostics} == {"terminal_origin_mismatch"}
+    assert "iva-349-declarante-importe-operaciones" in {diagnostic.binding_id for diagnostic in diagnostics}
+
+
 def test_service_categories_resolve_directional_m349_claves_without_storage() -> None:
     issued = _invoice(
         kind=InvoiceKind.ISSUED,
@@ -244,6 +357,37 @@ def _m347_context(filing_year: int) -> CalculationSourceContext:
         period=Period.from_year_and_code(filing_year, "0A"),
         revision=select_revision(modelo, filing_year=filing_year, period="0A"),
     )
+
+
+def test_m347_combined_provenance_preserves_both_invoice_directions() -> None:
+    invoices = tuple(
+        _domestic_invoice(
+            kind=kind,
+            number=number,
+            issued_at=date(2025, 2, 10),
+            counterparty_tax_id=tax_id,
+            counterparty_name="Counterparty SL",
+            base_total=Decimal("4000"),
+            iva_total=Decimal("840"),
+        )
+        for kind, number, tax_id in (
+            (InvoiceKind.ISSUED, "347-ISSUED", "B87654323"),
+            (InvoiceKind.RECEIVED, "347-RECEIVED", "B12345674"),
+        )
+    )
+    context = _m347_context(2025)
+    resolution = _resolver(build_invoice_catalogue(invoices)).resolve(context)
+
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("9680")
+    assert len(resolution.provenance) == 2
+    assert {row.resolved_binding_source for row in resolution.provenance} == {
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+    }
+    assert {row.contributor_binding_source for row in resolution.provenance} == {
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.PAYABLE_INVOICE,
+    }
+    assert collect_terminal_origin_diagnostics(context.revision, resolution) == ()
 
 
 def _rows_by_index(row_binding_values: Mapping[tuple[str, int], object]) -> list[dict[str, object]]:

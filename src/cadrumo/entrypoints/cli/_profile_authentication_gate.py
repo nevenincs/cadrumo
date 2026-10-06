@@ -251,6 +251,7 @@ _RUNTIME_PROFILE_KEYS = frozenset(
         "app_modelo_iva_wallet_seed",
         "app_modelo_iva_wallet_override",
         "app_modelo_spreadsheet_push",
+        "app_modelo_spreadsheet_publish",
         "app_modelo_spreadsheet_export",
         "app_modelo_spreadsheet_pull",
         "app_modelo_spreadsheet_calculate",

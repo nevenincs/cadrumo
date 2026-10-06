@@ -104,6 +104,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.calendar.show_all",
         "desktop.calendar.show_fewer",
         "desktop.calendar.signed_out",
+        "desktop.calendar.standing",
         "desktop.calendar.state.due",
         "desktop.calendar.state.filed",
         "desktop.calendar.state.late",

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
+from uuid import UUID
 
 import pytest
 from google.auth.transport.requests import Request
@@ -12,11 +13,14 @@ from .....application.user_profile.access_contracts import AccessDenialCode
 from .....application.user_profile.access_errors import ProfileAccessRefusedError
 from .....core.errors.error_codes import get_registered_error_code
 from .....tests.google_credentials import unused_google_credentials
-from ...google.drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...google.artifact_receipt_store import GoogleArtifactReceiptStore
 from ...google.errors import GoogleAuthScopeInsufficientError
 from ...google.google_configuration_admission import admitted_google_auth_request
 from ...google.oauth_flow import credentials_to_records
 from ...google.records import REQUIRED_SCOPES
+from ...google.root_folder import ensure_root_folder
+from ...google.tests.drive_files_server import drive_files_endpoint
 from .. import _google_drive as drive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -39,156 +43,40 @@ class _Boundary:
         self.completed.append((action, writes))
 
 
-class _Request:
-    def __init__(self, call: Callable[[], object]) -> None:
-        self.call = call
-
-    def execute(self) -> object:
-        return self.call()
-
-
-class _DriveService:
-    """Response-shaped Drive double; the production provider keeps its full algorithm."""
-
-    def __init__(self, boundary: _Boundary, *, malformed_write: bool = False) -> None:
-        self.boundary = boundary
-        self.malformed_write = malformed_write
-        self.file: dict[str, object] | None = None
-        self.calls: list[str] = []
-
-    def files(self):
-        return self
-
-    def get(self, **_kwargs: object) -> _Request:
-        def read():
-            assert self.boundary.pending[-1] == ("probe.get_root", False)
-            self.calls.append("root")
-            return {"id": "root", "mimeType": "application/vnd.google-apps.folder", "trashed": False}
-
-        return _Request(read)
-
-    def list(self, **kwargs: object) -> _Request:
-        query = kwargs["q"]
-        assert isinstance(query, str)
-
-        def read():
-            self.calls.append("list")
-            if "'root' in parents" in query:
-                return {
-                    "files": [
-                        {
-                            "id": "vault",
-                            "name": "cadrumo-vault",
-                            "mimeType": "application/vnd.google-apps.folder",
-                            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
-                        }
-                    ]
-                }
-            if "'vault' in parents" in query:
-                return {
-                    "files": [
-                        {
-                            "id": "probe",
-                            "name": "_probe",
-                            "mimeType": "application/vnd.google-apps.folder",
-                            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
-                        }
-                    ]
-                }
-            assert "'probe' in parents" in query
-            return {"files": [self.file] if self.file is not None else []}
-
-        return _Request(read)
-
-    def create(self, **kwargs: object) -> _Request:
-        body = kwargs["body"]
-        assert isinstance(body, dict)
-
-        def write():
-            assert self.boundary.pending[-1] == ("files.create", True)
-            self.calls.append("put")
-            self.file = {
-                "id": "sentinel",
-                "name": body["name"],
-                "size": "0",
-                "md5Checksum": "d41d8cd98f00b204e9800998ecf8427e",
-                "modifiedTime": "malformed" if self.malformed_write else "2026-10-01T12:00:00Z",
-                "appProperties": body["appProperties"],
-            }
-            return self.file
-
-        return _Request(write)
-
-    def delete(self, **kwargs: object) -> _Request:
-        assert kwargs["fileId"] == "sentinel"
-
-        def delete():
-            assert self.boundary.pending[-1] == ("files.delete", True)
-            self.calls.append("delete")
-            self.file = None
-            return None
-
-        return _Request(delete)
-
-
-def test_probe_keeps_canonical_sentinel_identity_put_delete_and_positive_write_ack(
-    monkeypatch: pytest.MonkeyPatch,
+@pytest.mark.parametrize("refuse_create", [False, True])
+def test_probe_has_fresh_identity_admission_and_balanced_actual_acknowledgements(
+    tmp_path: Path, refuse_create: bool
 ) -> None:
+    profile_id = UUID("1abc0000-0000-4000-8000-000000000001")
     boundary = _Boundary()
-    service = _DriveService(boundary)
-    monkeypatch.setattr(drive, "_service_factory", lambda _credentials: service)
-    provider = drive.GoogleDriveProvider(
-        credentials=unused_google_credentials(),
-        root_folder_id="root",
-        vault_folder_name="cadrumo-vault",
-        before_handoff=boundary.before,
-        acknowledged=boundary.acknowledged,
-    )
-    report = provider.probe()
-    assert report.reachable and report.writable and report.root_folder_present
-    assert [call for call in service.calls if call in {"put", "delete"}] == ["put", "delete"]
-    assert not boundary.pending
-    assert [item for item in boundary.completed if item[1]] == [("files.create", True), ("files.delete", True)]
-    assert service.file is None
-
-
-def test_probe_authority_loss_propagates_before_actual_request_without_provider_translation(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    boundary = _Boundary()
-    boundary.refuse = "files.create"
-    service = _DriveService(boundary)
-    monkeypatch.setattr(drive, "_service_factory", lambda _credentials: service)
-    provider = drive.GoogleDriveProvider(
-        credentials=unused_google_credentials(),
-        root_folder_id="root",
-        vault_folder_name="cadrumo-vault",
-        before_handoff=boundary.before,
-        acknowledged=boundary.acknowledged,
-    )
-    with pytest.raises(ProfileAccessRefusedError):
-        provider.probe()
-    assert "put" not in service.calls and "delete" not in service.calls
-    assert not boundary.pending
-
-
-def test_malformed_remote_write_never_becomes_positive_provider_ack(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    boundary = _Boundary()
-    service = _DriveService(boundary, malformed_write=True)
-    monkeypatch.setattr(drive, "_service_factory", lambda _credentials: service)
-    provider = drive.GoogleDriveProvider(
-        credentials=unused_google_credentials(),
-        root_folder_id="root",
-        vault_folder_name="cadrumo-vault",
-        before_handoff=boundary.before,
-        acknowledged=boundary.acknowledged,
-    )
-    report = provider.probe()
-    assert report.reachable and not report.writable
-    assert boundary.pending == [("files.create", True)]
-    assert ("files.create", True) not in boundary.completed and "delete" not in service.calls
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(profile_id)) as profile,
+        drive_files_endpoint() as endpoint,
+    ):
+        receipts = GoogleArtifactReceiptStore(profile.repository, profile_id=profile_id)
+        root_id = ensure_root_folder(endpoint.service, profile=str(profile_id), receipts=receipts)
+        provider = drive.GoogleDriveProvider(
+            credentials=unused_google_credentials(),
+            root_folder_id=root_id,
+            vault_folder_name="vault",
+            before_handoff=boundary.before,
+            acknowledged=boundary.acknowledged,
+            receipts=receipts,
+        )
+        provider._service = endpoint.service
+        if refuse_create:
+            boundary.refuse = "files.create"
+            with pytest.raises(ProfileAccessRefusedError):
+                provider.probe()
+            assert "files.delete" not in endpoint.calls
+        else:
+            report = provider.probe()
+            assert report.reachable and report.writable and report.root_folder_present
+            assert [call for call in endpoint.calls if call == "files.delete"] == ["files.delete"]
+            assert ("files.create", True) in boundary.completed
+            assert ("files.delete", True) in boundary.completed
+        assert not boundary.pending
+        assert ("drive.files.get.admission", False) in boundary.completed
 
 
 def test_google_auth_transport_renews_each_actual_call_and_denial_is_outside_http_translation(

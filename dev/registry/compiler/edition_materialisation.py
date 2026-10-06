@@ -56,6 +56,21 @@ class MaterialisedEdition:
     label_origins: tuple[str | None, ...] | None
 
 
+@dataclass(frozen=True, slots=True)
+class ResolvedEdition:
+    """Hydrated raw data whose lineage evidence still belongs to its revision chain.
+
+    Unlike MaterialisedEdition, this table is not a standalone edition. Callers
+    must retain the other revisions and all edge-local attestations.
+    """
+
+    modelo_id: str
+    revision_id: str
+    table: Mapping[str, object]
+    inherits_from: str | None
+    label_origins: tuple[str | None, ...] | None
+
+
 def materialise_edition(modelo_directory: Path, revision_id: str) -> MaterialisedEdition:
     """Resolve one edition of a directory-mode modelo into its complete raw revision table.
 
@@ -71,6 +86,25 @@ def materialise_edition(modelo_directory: Path, revision_id: str) -> Materialise
         RegistryLoadError: When a predecessor-dependent attestation has no
             lossless inline representation in the detached edition.
     """
+    edition = resolve_edition(modelo_directory, revision_id)
+    table = dict(edition.table)
+    if edition.inherits_from is not None:
+        table.pop(_PREDECESSOR_FIELD, None)
+        if table.get("lineage_attestations"):
+            table = _inline_lineage_claims(modelo_directory.resolve(), revision_id, table)
+    return MaterialisedEdition(
+        modelo_id=edition.modelo_id,
+        revision_id=revision_id,
+        table=table,
+        inherits_from=edition.inherits_from,
+        label_origins=edition.label_origins,
+    )
+
+
+def resolve_edition(modelo_directory: Path, revision_id: str) -> ResolvedEdition:
+    """Resolve within the intact chain, preserving distinct attestation references."""
+    from .loader import load_modelo_directory
+
     resolved = modelo_directory.resolve()
     validate_modelo_directory_source(resolved)
     manifest = _load_modelo_manifest(resolved)
@@ -91,22 +125,26 @@ def materialise_edition(modelo_directory: Path, revision_id: str) -> Materialise
     if materialised is None:
         raise RegistryLoadError(f"{resolved}: revision {revision_id!r} must be a table")
     predecessor = declared.get(_PREDECESSOR_FIELD)
-    if not isinstance(predecessor, str):
-        return MaterialisedEdition(
-            modelo_id=modelo_id,
-            revision_id=revision_id,
-            table=materialised,
-            inherits_from=None,
-            label_origins=None,
-        )
-    table = {key: value for key, value in materialised.items() if key != _PREDECESSOR_FIELD}
+    table = dict(materialised)
     if table.get("lineage_attestations"):
-        table = _inline_lineage_claims(resolved, revision_id, table)
-    return MaterialisedEdition(
+        revision = load_modelo_directory(resolved).revisions[revision_id]
+        # The loader validates exact edges and projects casilla claims. Keep
+        # the complete attestations too: their references may differ from rows.
+        identities = {a.identity for a in revision.lineage_attestations if a.family == "casillas"}
+        claims = {
+            str(row.continuidad_id): row.model_dump(
+                include={"continuidad_origin", "continuidad_evidence"}, mode="json", exclude_none=True
+            )
+            for row in revision.casillas
+            if row.continuidad_id in identities
+        }
+        projected = _project_inline_lineage_table(resolved, revision_id, table, claims)
+        table = {**projected, "lineage_attestations": table["lineage_attestations"]}
+    return ResolvedEdition(
         modelo_id=modelo_id,
         revision_id=revision_id,
         table=table,
-        inherits_from=predecessor,
+        inherits_from=predecessor if isinstance(predecessor, str) else None,
         label_origins=resolution.label_origins.get(revision_id),
     )
 

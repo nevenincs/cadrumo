@@ -1,0 +1,1642 @@
+---
+tags:
+  - '#exec'
+  - '#registry-workbook-compiler'
+date: '2026-10-05'
+modified: '2026-10-06'
+body_schema: 'body-v2'
+body_hash: 'sha256:06d3eee069f3ab98a75b0c18de5e9cd7ca8da9e3e061fe55ef3ec2d33b511f2f'
+related:
+  - "[[2026-10-05-registry-workbook-compiler-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `registry-workbook-compiler` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+
+- `S01` `M` `src/cadrumo/application/storage/calc_sheets/records.py`
+- `S01` `M` `src/cadrumo/application/storage/calc_sheets/theme.py`
+- `S01` `M` `src/cadrumo/application/storage/calc_sheets/workbook_cells.py`
+- `S01` `M` `src/cadrumo/application/storage/calc_sheets/workbook_export.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/workbook/calc_sheets_xlsx.py`
+- `S01` `A` `src/cadrumo/adapters/outbound/google/tests/test_form_geometry.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_parity.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/workbook/tests/test_calc_sheets_xlsx.py`
+- `S01` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_workbook_export.py`
+- `S01` `verify:` `pytest focused materializer and export suite 28 tests` -> `pass`
+- `S01` `verify:` `pytest final compiler and form geometry 16 tests` -> `pass`
+- `S01` `verify:` `ruff changed geometry paths` -> `pass`
+- `S01` `verify:` `just check-types` -> `fail`
+- `S01` `verify:` `just check-style` -> `fail`
+- `S01` `verify:` `just check-format` -> `fail`
+- `S01` `verify:` `just check-import-boundaries` -> `fail`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/form_workbook.py`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/tests/test_form_workbook.py`
+- `S02` `verify:` `pytest form_workbook 10 tests` -> `pass`
+- `S02` `verify:` `basedpyright form_workbook` -> `pass`
+- `S02` `verify:` `ruff compiler` -> `pass`
+- `S03` `A` `dev/registry/workbook_demo.py`
+- `S03` `A` `dev/registry/tests/test_workbook_demo.py`
+- `S03` `M` `dev/quality/metadata/import_load_targets.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S03` `verify:` `pytest dev registry workbook_demo -m integration 5 tests` -> `pass`
+- `S03` `verify:` `ruff and ty demo paths` -> `pass`
+- `S03` `verify:` `Google API three generated forms expected values and zero formula errors` -> `pass`
+- `S03` `verify:` `Google 130 live edit blank and restore` -> `pass`
+- `S01` `verify:` `final just check-import-boundaries` -> `fail`
+- `S01` `verify:` `targeted ty final compiler formatting and demonstration paths` -> `pass`
+- `S01` `verify:` `targeted Ruff final changed paths` -> `pass`
+- `S05` `M` `dev/registry/form_layout/generator.py`
+- `S05` `M` `dev/registry/form_layout/cli.py`
+- `S05` `M` `dev/registry/form_layout/tests/test_form_layout_generation.py`
+- `S05` `M` `dev/registry/form_layout/tests/test_cli_synchronisation.py`
+- `S05` `verify:` `pytest form layout generation and synchronization tests (26 tests)` -> `pass`
+- `S05` `verify:` `ruff check authored layout protection files` -> `pass`
+- `S05` `M` `dev/registry/form_layout/serialization.py`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelos-130-131-form-source.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2015-1656-modelos-130-131.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2015-1656-modelos-130-131.pdf.extracted.md`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2015-1656-modelos-130-131.pdf.extracted.json`
+- `S05` `verify:` `pytest synchronization tests including authored header (9 tests)` -> `pass`
+- `S05` `verify:` `canonical PDF sidecar load and shared source catalogue enrollment` -> `pass`
+- `S04` `A` `src/cadrumo/application/storage/calc_sheets/human_workbook.py`
+- `S04` `M` `src/cadrumo/application/storage/calc_sheets/form_workbook.py`
+- `S04` `M` `src/cadrumo/application/storage/calc_sheets/records.py`
+- `S04` `M` `src/cadrumo/application/storage/calc_sheets/export_tables.py`
+- `S04` `M` `src/cadrumo/application/storage/calc_sheets/workbook_cells.py`
+- `S04` `M` `src/cadrumo/application/storage/calc_sheets/workbook_export.py`
+- `S04` `verify:` `worker human presentation and XLSX regression suite (31 tests)` -> `pass`
+- `S04` `verify:` `worker final form tests including protection descriptions (16 tests)` -> `pass`
+- `S04` `verify:` `worker source-backed demonstration tests (5 tests)` -> `pass`
+- `S04` `verify:` `worker scoped Ruff formatting lint and ty` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/form_layout/stability_acknowledgements.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S05` `M` `dev/registry/tests/test_workbook_demo.py`
+- `S05` `verify:` `pytest form layout generation including authored131 source shape and stability (20 tests)` -> `pass`
+- `S05` `verify:` `pytest authored131 populated workbook integration` -> `fail`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/form_workbook.py`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_form_workbook.py`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/human_workbook.py`
+- `S02` `verify:` `worker contiguous grids and binding projection tests (20 cases)` -> `pass`
+- `S02` `verify:` `worker existing demonstration regressions (5 cases)` -> `pass`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/layout.py`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/engine.py`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/tests/test_form_binding_inputs.py`
+- `S02` `verify:` `worker scalar form input layout tests (17 tests)` -> `pass`
+- `S02` `verify:` `worker form renderer tests (20 tests)` -> `pass`
+- `S02` `verify:` `worker real registry integration tests including131 (6 tests)` -> `pass`
+- `S02` `verify:` `worker scoped Ruff format lint and calc_sheets ty` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `verify:` `final form generation integrity stability and regeneration suite (20 tests)` -> `pass`
+- `S06` `M` `dev/registry/workbook_demo.py`
+- `S06` `M` `src/cadrumo/application/storage/calc_sheets/form_workbook.py`
+- `S06` `A` `dev/registry/workbook_probe.py`
+- `S06` `A` `dev/registry/tests/test_workbook_probe.py`
+- `S06` `verify:` `form workbook focused tests (21)` -> `pass`
+- `S06` `verify:` `demo integration tests (7)` -> `pass`
+- `S06` `verify:` `full 160 revision structural enumeration` -> `pass`
+- `S06` `verify:` `native 131 API result 580 perturb 600 missing Sin dato restore 580` -> `pass`
+- `S06` `verify:` `demo scoped Ruff formatting ty` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-111-form-source.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2011-4948-modelo-111.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2011-4948-modelo-111.pdf.extracted.md`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2011-4948-modelo-111.pdf.extracted.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/workbook_demo.py`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/111.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/111.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/111.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/111.yml`
+- `S05` `verify:` `form generation tests 21` -> `pass`
+- `S05` `verify:` `demo integration tests 8` -> `pass`
+- `S05` `verify:` `111 source and geometry independent review` -> `pass`
+- `S05` `verify:` `111 native API1150 perturb1250 missing Sin dato restore1150` -> `pass`
+- `S04` `A` `dev/registry/tests/test_workbook_input_labels.py`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/180.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/190.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/193.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/200.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/714.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/720.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/180.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/190.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/193.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/200.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/714.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/720.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/180.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/190.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/193.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/200.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/714.yml`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/720.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/180.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/190.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/193.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/200.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/714.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/720.yml`
+- `S04` `verify:` `all17 affected revisions compile (combined final acceptance evidence46cases)` -> `pass`
+- `S04` `verify:` `locale governance7tests` -> `pass`
+- `S04` `verify:` `renderer scoped Ruff ty format` -> `pass`
+- `S04` `verify:` `fresh full160 structural probe78compiled9compiler52snapshot21frame zero unexpected` -> `pass`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/form_context.py`
+- `S02` `A` `src/cadrumo/application/modelo/work_form_context_values.py`
+- `S02` `M` `dev/registry/compiler/form_layout_integrity.py`
+- `S02` `M` `dev/registry/workbook_demo.py`
+- `S02` `M` `dev/registry/tests/test_workbook_demo.py`
+- `S02` `A` `dev/registry/tests/test_workbook_context.py`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S02` `verify:` `pytest generation/demo/context 47 cases` -> `pass`
+- `S02` `verify:` `pytest fictional_111 identity projection 1 case` -> `pass`
+- `S02` `verify:` `scoped parent Ruff and format` -> `pass`
+- `S02` `verify:` `scoped parent ty` -> `pass`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
+- `S02` `verify:` `native Modelo111 context and result API readback` -> `pass`
+- `S02` `M` `dev/registry/tests/test_workbook_context.py`
+- `S02` `verify:` `corrected public-builder context fixtures pytest 18 cases` -> `pass`
+- `S02` `verify:` `corrected context fixture Ruff and format` -> `pass`
+- `S02` `verify:` `locale translation honesty suite` -> `fail`
+- `S05` `verify:` `official BOE2015-1656 pages6and8 visual inspection` -> `pass`
+- `S05` `verify:` `locale honesty11cases` -> `pass`
+- `S05` `verify:` `130131 context identity and preserved grid focused5cases` -> `pass`
+- `S05` `verify:` `corrected130 section regression1case` -> `pass`
+- `S05` `verify:` `scoped demo ty` -> `pass`
+- `S06` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S06` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S06` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S06` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S06` `verify:` `native130 full populated tab readback` -> `pass`
+- `S06` `verify:` `native131 full populated tab readback` -> `pass`
+- `S06` `verify:` `native130 changed blank restored input` -> `pass`
+- `S06` `verify:` `native131 changed blank restored input` -> `pass`
+- `S06` `verify:` `workbook demo and locale honesty22tests` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2000-21430-modelos-115-180.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2000-21430-modelos-115-180.pdf.extracted.md`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2000-21430-modelos-115-180.pdf.extracted.json`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-115-form-source.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `verify:` `BOE Modelo115 AnnexII page20 visual inspection` -> `pass`
+- `S05` `verify:` `registry generation and workbook demonstration34tests` -> `pass`
+- `S05` `verify:` `exact115officialstructure1test` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty` -> `pass`
+- `S06` `M` `.vault/audit/2026-10-05-registry-workbook-compiler-audit.md`
+- `S06` `verify:` `native115 populated tab readback zero formula errors` -> `pass`
+- `S06` `verify:` `native115 base change recalculation` -> `pass`
+- `S06` `verify:` `native115 missing input remains unknown` -> `pass`
+- `S06` `verify:` `native115 explicit zero remains zero` -> `pass`
+- `S06` `verify:` `native115 baseline restoration` -> `pass`
+- `S06` `verify:` `Native Modelo123 2019-2023 and 2024-onward typed-plan Sheets: bounded all-tab readback, live changed/blank/zero/restored withholding, merges and protection` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2019-2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-123-form-pdf-sources.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/123.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/123.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/123.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/123.yml`
+- `S05` `verify:` `Scoped Modelo123 revision-grid identity and locale checks (20261005T203454.685098Z-pytest-72700-e0ae9e78)` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/126/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/126.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/126.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/126.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/126.yml`
+- `S05` `verify:` `Full workbook_demo pytest suite20tests (20261005T204554.188553Z-pytest-28860-2624f5cc)` -> `pass`
+- `S05` `verify:` `Scoped Ruff format lint and ty` -> `pass`
+- `S06` `verify:` `Native126all-tab bounded readback and changed/blank/zero/restored calculation` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/128/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/128.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/128.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/128.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/128.yml`
+- `S05` `verify:` `Combined generation demo locale60tests` -> `pass`
+- `S05` `verify:` `Post-heading-correction128andtranslation8tests` -> `pass`
+- `S05` `verify:` `ScopedRuff format lint ty` -> `pass`
+- `S06` `verify:` `Native128all-tab bounded readback and changed blank zero restored arithmetic` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/117/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-117-form-pdf-source.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2018-17997-modelo-117.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2018-17997-modelo-117.pdf.extracted.md`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2018-17997-modelo-117.pdf.extracted.json`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/117.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/117.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/117.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/117.yml`
+- `S05` `verify:` `Combined generation demo locale64tests` -> `pass`
+- `S05` `verify:` `ScopedRuffformatlintty` -> `pass`
+- `S06` `verify:` `Native117 all-tab readback and three-term total prior-payment subtraction blank zero restoration` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/216.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/216.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/216.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/216.yml`
+- `S05` `verify:` `Combined generation demo locale67tests` -> `pass`
+- `S05` `verify:` `Final full demo suite29tests after pure evaluation helper fix` -> `pass`
+- `S05` `verify:` `ScopedRuffformatlintty` -> `pass`
+- `S06` `verify:` `Native216 all-tab readback nonwithheld independence withholding prior-payment blank zero restoration` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2008-18497-modelos-216-296.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2008-18497-modelos-216-296.pdf.extracted.md`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2008-18497-modelos-216-296.pdf.extracted.json`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-216-historical-form-pdf-source.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/revision.toml`
+- `S05` `verify:` `pytest generation and heading suites (38 tests)` -> `pass`
+- `S05` `verify:` `pytest historical216 final selected test` -> `pass`
+- `S05` `verify:` `ruff check and format scoped test` -> `pass`
+- `S05` `verify:` `ty check scoped test` -> `pass`
+- `S05` `A` `dev/registry/mappings/modelo_216/2020/0001-records.toml`
+- `S05` `A` `dev/registry/mappings/modelo_216/2020/0002-page-01.toml`
+- `S05` `A` `dev/registry/render_profiles/modelo_216/2020/0001-numeric-representation.toml`
+- `S05` `A` `dev/registry/pipeline/tests/test_m216_historical_mapping.py`
+- `S05` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S05` `M` `dev/registry/pipeline/_form_layout_companion.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_generated_tree_publication.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/application_links/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/constructs/0001-declarations.toml`
+- `S05` `verify:` `historical216 generated mapping byte geometry and invalid inputs tests` -> `pass`
+- `S05` `verify:` `authored draft companion preservation regression` -> `pass`
+- `S05` `verify:` `pipeline historical216 check before companion guard correction` -> `pass`
+- `S05` `verify:` `pipeline historical216 publish-target stale form rollback` -> `fail`
+- `S05` `verify:` `scoped Ruff and ty` -> `pass`
+- `S05` `verify:` `scoped git diff --check` -> `pass`
+- `S05` `verify:` `full generated tree publication suite 46 tests` -> `pass`
+- `S05` `A` `dev/registry/form_layout/reconciliation.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_m216_historical_mapping.py`
+- `S05` `verify:` `historical mapping and authored first-export reconciliation 7 tests` -> `pass`
+- `S05` `verify:` `scoped ruff check and format` -> `pass`
+- `S05` `verify:` `scoped ty check` -> `pass`
+- `S05` `M` `dev/registry/form_layout/reconciliation.py`
+- `S05` `A` `dev/registry/pipeline/authored_form_bridge.py`
+- `S05` `M` `dev/registry/pipeline/cli.py`
+- `S05` `verify:` `mapping and CLI suite (36 tests)` -> `pass`
+- `S05` `verify:` `post-correction targeted mapping and form-owner suite (15 tests)` -> `pass`
+- `S05` `verify:` `scoped Ruff lint and format` -> `pass`
+- `S05` `verify:` `scoped ty` -> `pass`
+- `S05` `verify:` `scoped git diff --check` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/export`
+- `S05` `verify:` `historical 216 canonical publish-target with authored reconciliation` -> `pass`
+- `S05` `verify:` `mapping and form generation suite (45 tests)` -> `pass`
+- `S05` `verify:` `historical 216 target-current after context authoring` -> `pass`
+- `S05` `verify:` `scoped Ruff and format` -> `pass`
+- `S05` `verify:` `scoped ty` -> `pass`
+- `S05` `verify:` `scoped git diff --check` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/formulas/0001-declarations.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/completeness_manifest/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2020-2023/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-216-historical-form-pdf-source.toml`
+- `S05` `A` `dev/registry/tests/test_m216_historical_calculation.py`
+- `S05` `verify:` `historical 216 candidate inspection publication_valid=True` -> `pass`
+- `S05` `verify:` `workbook integration tests (31)` -> `pass`
+- `S05` `verify:` `historical calculation tests (9)` -> `pass`
+- `S05` `verify:` `historical 216 target-current` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty and git diff --check` -> `pass`
+- `S06` `verify:` `historical 216 native Sheet all-tabs readback` -> `pass`
+- `S06` `verify:` `historical 216 six missing-zero-recalculation native checks and restoration` -> `pass`
+- `S06` `verify:` `native populated cells and notes technical identifier/error scan` -> `pass`
+- `S05` `verify:` `post-calculation historical216 mapping/reconciliation suite (16 tests)` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/136/revisions/2022-2025/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/136/revisions/2026/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/136.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/136.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/136.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/136.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_136_authored_layout.py`
+- `S05` `verify:` `form generation suite (29 tests)` -> `pass`
+- `S05` `verify:` `Modelo136 exact layout tests (2)` -> `pass`
+- `S05` `verify:` `workbook integration suite (33)` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty and git diff --check` -> `pass`
+- `S06` `verify:` `Modelo136 2022-2025 native all-tab formula/error readback and six mutation checks` -> `pass`
+- `S06` `verify:` `Modelo136 2026 native all-tab formula/error readback and six mutation checks` -> `pass`
+- `S06` `M` `dev/registry/tests/test_workbook_demo.py`
+- `S06` `verify:` `136 typed context and geometry integration tests (4 selected)` -> `pass`
+- `S06` `verify:` `workbook demo scoped Ruff lint format and ty` -> `pass`
+- `S06` `verify:` `Both native 136 Sheets context projection and unchanged result readback` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-122.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/122/revisions/2017-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/122.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/122.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/122.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/122.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_122_authored_layout.py`
+- `S05` `verify:` `38 form generation synchronization and stability tests` -> `pass`
+- `S05` `verify:` `Full authoring candidate inspection publication_valid=True` -> `pass`
+- `S05` `verify:` `3 focused122 layout annual frame manual result and XLSX tests` -> `pass`
+- `S05` `verify:` `Scoped Ruff lint format ty and diff check` -> `pass`
+- `S04` `M` `src/cadrumo/application/storage/calc_sheets/human_workbook.py`
+- `S04` `M` `dev/registry/tests/test_workbook_demo.py`
+- `S04` `verify:` `Shared renderer and demo suite56pass plus corrected7affected tests` -> `pass`
+- `S04` `verify:` `Scoped Ruff lint format and ty` -> `pass`
+- `S06` `verify:` `122 native all-tab readback and five manual-result mutation checks` -> `pass`
+- `S06` `verify:` `122 native translated heading printed numbers merges and protection readback` -> `pass`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema_form_layouts.py`
+- `S04` `A` `src/cadrumo/application/storage/calc_sheets/workbook_exclusions.py`
+- `S04` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_form_workbook.py`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/122/revisions/2017-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S04` `M` `.vault/adr/2026-06-03-modelo-export-workbook-parity-adr.md`
+- `S04` `verify:` `117 schema renderer demo and generation tests` -> `pass`
+- `S04` `verify:` `9 final transport exclusion tests after reviewer corrections` -> `pass`
+- `S04` `verify:` `Native122 technical-surface cleanup financial value and error readback` -> `pass`
+- `S04` `verify:` `Scoped Ruff lint format ty` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/145.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/145.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/145.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/145.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_145_authored_layout.py`
+- `S05` `verify:` `30 layout and generation tests` -> `pass`
+- `S05` `verify:` `39 populated demonstration integration tests` -> `pass`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/records.py`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/tests/test_administrative_frame.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py`
+- `S02` `M` `.vault/adr/2026-06-03-modelo-export-workbook-parity-adr.md`
+- `S02` `verify:` `31 administrative coordinate and filing pull tests` -> `pass`
+- `S02` `verify:` `2 final145 integrations including generic guide refusal instruction` -> `pass`
+- `S02` `verify:` `Scoped Ruff lint format and ty` -> `pass`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/application/storage/calc_sheets/human_workbook.py`
+- `S06` `M` `dev/registry/form_layout/tests/test_modelo_145_authored_layout.py`
+- `S06` `verify:` `145 native all-tab value formula and style readback` -> `pass`
+- `S06` `verify:` `145 four live input mutation checks and restoration` -> `pass`
+- `S06` `verify:` `145 three authoring and populated integration tests` -> `pass`
+- `S06` `verify:` `Scoped Ruff lint format and ty` -> `pass`
+- `S06` `verify:` `Final145 mixed-language regression integration2tests` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2025-5407-modelos-202-222.pdf`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-202-form-pdf-source.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/202.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/202.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/202.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/202.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_202_authored_layout.py`
+- `S05` `verify:` `202 current three authored layout and populated workbook tests` -> `pass`
+- `S05` `verify:` `202 scoped Ruff lint format and ty` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2018-12515-modelos-202-222.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2023-8120-modelos-202-222.pdf`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-202-form-pdf-source.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_202_authored_layout.py`
+- `S05` `verify:` `48 current historical layout and demonstration tests` -> `pass`
+- `S05` `verify:` `202 historical scoped Ruff and ty` -> `pass`
+- `S06` `verify:` `202 current native all-tab readback` -> `pass`
+- `S06` `verify:` `202 current six live mutation checks and19200restoration` -> `pass`
+- `S06` `verify:` `202 current native formatting geometry and protection readback` -> `pass`
+- `S06` `verify:` `202 historical typed plan generation for exercises 2022 and 2024` -> `pass`
+- `S06` `verify:` `202 historical native all-tab readback 584 populated cells each` -> `pass`
+- `S06` `verify:` `202 historical six mutation checks each plus restored 3200 results` -> `pass`
+- `S06` `verify:` `202 historical native merges and protected form metadata` -> `pass`
+- `S05` `verify:` `202 additional-data binding and demonstration suite 50 tests` -> `pass`
+- `S05` `verify:` `202 additional-data scoped Ruff lint format and ty` -> `pass`
+- `S05` `verify:` `202 additional-data independent code inspection` -> `pass`
+- `S05` `verify:` `historical 202 additional-data selected 20 tests` -> `pass`
+- `S05` `verify:` `historical 202 scoped Ruff lint format ty` -> `pass`
+- `S05` `verify:` `historical 202 additional-data independent review` -> `pass`
+- `S06` `verify:` `historical 202 existing sheets additional-data unknowns and restored 3200 result readback` -> `pass`
+- `S06` `verify:` `historical 202 refreshed form merges protections and no formula errors` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/222.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/222.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/222.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/222.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_222_authored_layout.py`
+- `S05` `verify:` `current 222 focused layout demonstration calculation and grade refusal 4 tests` -> `pass`
+- `S05` `verify:` `current 222 scoped Ruff format lint and ty` -> `pass`
+- `S05` `verify:` `current 222 independent compiler_review inspection` -> `pass`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S06` `verify:` `current222 transport exclusion and year focused4tests` -> `pass`
+- `S06` `verify:` `current222 scoped Ruff lint format ty and independent review` -> `pass`
+- `S06` `verify:` `current222 native alltab779cell readback` -> `pass`
+- `S06` `verify:` `current222 nine live mutations and final19200restore` -> `pass`
+- `S06` `verify:` `current222 native179merges and protected form` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_222_authored_layout.py`
+- `S05` `verify:` `allfour222revisions focused13tests` -> `pass`
+- `S05` `verify:` `historical222 scoped Ruff lint format ty` -> `pass`
+- `S05` `verify:` `historical222 independent structure review` -> `pass`
+- `S06` `verify:` `historical222 corrected fixture9integrationtests` -> `pass`
+- `S06` `verify:` `historical222 no computed input regression and independent review` -> `pass`
+- `S06` `verify:` `historical222 alltab native readback` -> `pass`
+- `S06` `verify:` `historical222 nine live mutations each and restored3200each` -> `pass`
+- `S06` `verify:` `historical222 API geometry protection guide and year readback` -> `pass`
+- `S03` `M` `dev/registry/workbook_demo.py`
+- `S03` `M` `dev/registry/tests/test_workbook_demo.py`
+- `S03` `M` `.vault/audit/2026-10-05-registry-workbook-compiler-audit.md`
+- `S03` `verify:` `all24demo computed input audit` -> `pass`
+- `S03` `verify:` `full demo58tests` -> `pass`
+- `S03` `verify:` `final affected10tests` -> `pass`
+- `S03` `verify:` `scoped Ruff lint format ty` -> `pass`
+- `S03` `verify:` `current222guide and unchanged native100000base19200result readback` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-232-form-pdf-source.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2017-10042-modelo-232.pdf`
+- `S05` `A` `src/cadrumo/_data/manual_corpus_text/normatives/pdf/boe-a-2017-10042-modelo-232.pdf.corpus_text.json`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_232_authored_layout.py`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/232.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/232.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/232.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/232.yml`
+- `S05` `verify:` `232 structural binding tests (2)` -> `pass`
+- `S05` `verify:` `232 integration workbook/XLSX tests (2; 58 deselected; 20261006T001348.507304Z-pytest-18788-b979b401)` -> `pass`
+- `S05` `verify:` `scoped Ruff lint/format and ty` -> `pass`
+- `S05` `verify:` `official BOE annex PDF visual inspection and source sidecar hash freshness` -> `pass`
+- `S05` `verify:` `independent incremental code review` -> `pass`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/form_context.py`
+- `S06` `M` `src/cadrumo/application/modelo/work_form_context_values.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S06` `M` `dev/registry/form_layout/tests/test_modelo_232_authored_layout.py`
+- `S06` `M` `src/cadrumo/locales/es/application.yml`
+- `S06` `M` `src/cadrumo/locales/en/application.yml`
+- `S06` `M` `src/cadrumo/locales/ca/application.yml`
+- `S06` `M` `src/cadrumo/locales/hu/application.yml`
+- `S06` `M` `src/cadrumo/locales/es/modelo/schema/232.yml`
+- `S06` `M` `src/cadrumo/locales/en/modelo/schema/232.yml`
+- `S06` `M` `src/cadrumo/locales/ca/modelo/schema/232.yml`
+- `S06` `M` `src/cadrumo/locales/hu/modelo/schema/232.yml`
+- `S06` `verify:` `65 workbook demo tests (20261006T002146.522015Z-pytest-86484-58cfe9a2)` -> `pass`
+- `S06` `verify:` `11 selected layout/context tests (20261006T002038.933426Z-pytest-18044-0ef8cfd0)` -> `pass`
+- `S06` `verify:` `Ruff lint/format and scoped ty` -> `pass`
+- `S06` `verify:` `current232native1vG2hNrqduem5y6q8XdnuRW-L5MsZgKDG0jy4ps46lnU date/formula/style readback and three mutations plus restore` -> `pass`
+- `S06` `verify:` `independent incremental inspection` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-232-form-pdf-source.toml`
+- `S05` `verify:` `9selected232 tests (20261006T002759.538540Z-pytest-81944-4d2a0465)` -> `pass`
+- `S05` `verify:` `scopedRuff/ty` -> `pass`
+- `S05` `verify:` `canonical source compilation` -> `pass`
+- `S05` `verify:` `live official instructions byte-equality` -> `pass`
+- `S05` `verify:` `native232caption/type/direction/amount readback` -> `pass`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/export_tables.py`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/workbook_cells.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/workbook/calc_sheets_xlsx.py`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/tests/test_template_preview_metadata.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/workbook/tests/test_calc_sheets_xlsx.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_parity.py`
+- `S02` `verify:` `pytest preview metadata and administrative frame: 14 tests 20261006T003720.841154Z-pytest-81120-8329dfad` -> `pass`
+- `S02` `verify:` `pytest Google transport parity and XLSX materialization: 22 tests 20261006T003827.200147Z-pytest-53324-c937df5d` -> `pass`
+- `S02` `verify:` `Scoped Ruff check and format check` -> `pass`
+- `S02` `verify:` `ty calc_sheets package, workbook package, Google apply and transport parity test` -> `pass`
+- `S02` `A` `dev/registry/tests/test_historical_workbook_assembly.py`
+- `S02` `verify:` `pytest -n0 -q -m integration dev/registry/tests/test_historical_workbook_assembly.py dev/registry/tests/test_workbook_demo.py: 66 passed 20261006T004026.587962Z-pytest-40048-b9bff8f0` -> `pass`
+- `S02` `verify:` `Scoped Ruff check/format and ty for engine and historical assembly test` -> `pass`
+- `S02` `verify:` `Independent compiler_review scoped inspection: no material defect` -> `pass`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/template_source.py`
+- `S02` `A` `dev/registry/workbook_template_source.py`
+- `S02` `A` `dev/registry/tests/test_workbook_template_source.py`
+- `S02` `M` `dev/registry/tests/test_historical_workbook_assembly.py`
+- `S02` `verify:` `pytest historical source selection and actual preview builder: 8 passed 20261006T004622.069757Z-pytest-42392-4e1a0527` -> `pass`
+- `S02` `verify:` `Scoped Ruff check/format and ty` -> `pass`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/workbook_exclusions.py`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/tests/test_template_preview_form.py`
+- `S02` `A` `dev/registry/workbook_template_preview.py`
+- `S02` `A` `dev/registry/tests/test_workbook_template_preview.py`
+- `S02` `verify:` `Worker48 production form tests 20261006T004949.593193Z-pytest-14432-0a0e323b` -> `pass`
+- `S02` `verify:` `Worker10 preview boundary tests 20261006T005144.579449Z-pytest-46488-769c84da` -> `pass`
+- `S02` `verify:` `Parent76 integration tests source,assembly,humanpreview,full workbookdemo 20261006T005013.385024Z-pytest-78804-0c44109d` -> `pass`
+- `S02` `verify:` `Scoped Ruff format/lint and ty parent+worker owned files` -> `pass`
+- `S06` `M` `dev/registry/workbook_template_preview.py`
+- `S06` `M` `dev/registry/tests/test_workbook_template_preview.py`
+- `S06` `verify:` `Native2017 Modelo232 Sheet15vw4O7vh_1hnlhB7WtDH6WOHX0jn6dDwcxaPf-0iJu8:8tabs1219populatedcells, noerror/technicalhash readback` -> `pass`
+- `S06` `verify:` `Native2017 Modelo232 D13 275000/0/blank W22 matching/Sin dato; independent175000row preserved; restored250000` -> `pass`
+- `S06` `verify:` `Native2017 Modelo232 format API235merges,Arial,frozen4rows,protectedA1:X64` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_131_authored_layout.py`
+- `S05` `verify:` `Visual inspection BOE-A-2015-1656 PDF page8 printed13624 AnnexII; existing pinned corpus` -> `pass`
+- `S05` `verify:` `pytest 2 authored131layout tests 20261006T005857.940939Z-pytest-1932-10b4344a` -> `pass`
+- `S05` `verify:` `pytest selected131 integration7tests 20261006T005921.671778Z-pytest-72116-918b724c` -> `pass`
+- `S05` `verify:` `Scoped Ruff/format and ty` -> `pass`
+- `S05` `verify:` `Independent reviewer direct HEAD reference comparison no lost casilla/binding refs` -> `pass`
+- `S06` `verify:` `NativeModelo1312024 Sheet1X3m2hACYtdpo_MVGHDAkHPOxQUl8-q_jCvPYBEoeEYg and2025 Sheet1JpHl_r4zzo1gsOARODYSR_vEGIsdLbONm233CtphFG4:717 populated cells each,8tabs,error/hash/binding-name-free` -> `pass`
+- `S06` `verify:` `Both131Sheets input03 11000/0/blank -> result15 600/380/Sin dato; original10000/result580 restored independentread` -> `pass`
+- `S06` `verify:` `Both131Sheets format API inspection Arial/frozen4/merged form/protection` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026-3t-4t/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_131_authored_layout.py`
+- `S05` `verify:` `Modelo 131 authored layout unit tests (20261006T010915; 4 passed)` -> `pass`
+- `S05` `verify:` `Workbook demo integration suite (20261006T010925; 72 passed, hardcoded quarter assertion failed)` -> `fail`
+- `S05` `verify:` `Affected identity projection cases (20261006T011029; 15 passed)` -> `pass`
+- `S05` `verify:` `Scoped Ruff lint and format plus ty checks` -> `pass`
+- `S06` `verify:` `Native Modelo 131 2T 2026 Sheet 1DcqUnupzLweItJQ6MA6PylrlNY41wBASCS0Rn50JbT4: 717 populated cells, no formula errors or hash/binding leakage` -> `pass`
+- `S06` `verify:` `Native Modelo 131 4T 2026 Sheet 1ODPqSIL7sLRr0Mqq-iw5UU8sCZijKsnnOuMKVOX1IPk: 717 populated cells, no formula errors or hash/binding leakage` -> `pass`
+- `S06` `verify:` `Both native 2026 Sheets: casilla 03 changed 11000/0/blank produces 600/380/Sin dato; restored 10000 and independently read result 580` -> `pass`
+- `S06` `verify:` `Both native 2026 Sheets: API formatting and form protection readback` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/180.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_180_authored_layout.py`
+- `S05` `verify:` `Modelo 180 authored-layout tests 20261006T011720: both revisions, 33 placements, 27 recipient columns, five exact context producers and genuine box numbers` -> `pass`
+- `S05` `verify:` `Full compiled_bundled_authority with both authored Modelo 180 revisions` -> `pass`
+- `S05` `verify:` `Scoped Modelo 180 test Ruff and ty checks` -> `pass`
+- `S05` `A` `dev/registry/workbook_demo_records.py`
+- `S05` `verify:` `Full workbook demo integration suite 20261006T012142: 77 tests` -> `pass`
+- `S05` `verify:` `Scoped Ruff format/lint and ty over workbook demo, saved-record fixture and tests` -> `pass`
+- `S06` `verify:` `Native Modelo 180 2022 18N2EvqGGSZejG51DBrNWmg6v7VZY9k1wALDSdmAZchI: 456 populated cells, 2/18000/3420 summary, distinct recipients and no formula errors/hash/binding leakage` -> `pass`
+- `S06` `verify:` `Native Modelo 180 2025 1crC_8kvyEFg2DBHYR5NtBGomJfqoGVbQczkduRGLsYY: 456 populated cells, 2/18000/3420 summary, distinct recipients and no formula errors/hash/binding leakage` -> `pass`
+- `S06` `verify:` `Both Modelo 180 Sheets: annual withholding source 4000/0/blank maps to casilla 03 4000/0/Sin dato, saved recipient withholding remains 2280/1140, restore independently verified 3420` -> `pass`
+- `S06` `verify:` `Both Modelo 180 Sheets: 143 merges, Arial, four frozen rows and A1:M82 form protection read back` -> `pass`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_records.py`
+- `S02` `verify:` `Saved-record/form/compiler regression run 20261006T012625: 118 tests` -> `pass`
+- `S02` `verify:` `Scoped Ruff lint/format and ty for form record reader, workbook renderer and demonstration tests` -> `pass`
+- `S06` `verify:` `Existing native Modelo 180 2022 and 2025: compiler-derived six text-code changes and ten number-format changes per workbook applied after unchanged-value preflight` -> `pass`
+- `S06` `verify:` `Both native Sheets: I58/I80 display 08; I32/I34/I60/I62 display 12000.00/2280.00/6000.00/1140.00 with grouping; summary remains 2/18000/3420` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/184.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_184_authored_layout.py`
+- `S05` `verify:` `Modelo 184 layout tests 20261006T013233: both current revisions, full field accounting, correct period-specific count and transport exclusions` -> `pass`
+- `S05` `verify:` `Full source compilation plus both current Modelo 184 form/XLSX builds: 829/839 cells; excludes 3 transport controls and numeric wire-offset box labels` -> `pass`
+- `S05` `verify:` `Scoped Ruff lint/format and ty for Modelo 184 layout tests` -> `pass`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_modelo_export_parity.py`
+- `S02` `verify:` `122 targeted form/repeating-record/demo tests, run 20261006T014215.113757Z-pytest-28164-0ebbbf91` -> `pass`
+- `S02` `verify:` `94 workbook parity and complete demo tests after ratio correction, run 20261006T014710.979782Z-pytest-78564-da110a78` -> `pass`
+- `S02` `verify:` `scoped Ruff lint, format and ty checks` -> `pass`
+- `S05` `M` `dev/registry/workbook_demo_records.py`
+- `S05` `verify:` `184 saved members, missing country/property values, negative/zero/invalid money and generated XLSX tests, run 20261006T014325.229736Z-pytest-18296-95d1c349` -> `pass`
+- `S05` `verify:` `full demo suite included in 94-test final run` -> `pass`
+- `S06` `M` `src/cadrumo/application/storage/calc_sheets/engine.py`
+- `S06` `verify:` `Native1842024 1D_dwTUCg-pR70uTPYnntXb1UpyAdljAQX8Eh0w8bguY: 700 populated cells, 8 tabs, no formula errors/hash/binding IDs; 245 merges and protected form extent verified` -> `pass`
+- `S06` `verify:` `Native1842025 1It1dztZakqI_c95Yj4ynRhyVtIdhCx5xydLU9UyrXBY: 708 populated cells, 8 tabs, no formula errors/hash/binding IDs; 247 merges and protected form extent verified` -> `pass`
+- `S06` `verify:` `Both native184 sheets: member shares60/40, province08, money3600/2400 read back with corrected native formats` -> `pass`
+- `S06` `verify:` `Both native184 sheets: Entradas D32 changes12000/0/blank mirror to income while declared6000 and saved members3600/2400 remain stable; restored10000 and independently read back` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2009-21165.pdf`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-181-form-source.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/181/revisions/2022-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/181.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_181_authored_layout.py`
+- `S05` `verify:` `Official BOE-A-2009-21165 Annex I PDF page9 visually inspected; downloaded594407bytes SHA2566cfd6fde1f8381826e9ffed51ae93c8a4f8209cbc47457e9162bbafb94c8789d` -> `pass`
+- `S05` `verify:` `Modelo18162-field accounting, printed01-05boxes, source pins and exact context contracts; generated populated XLSX geometry, run20261006T015227.853804Z-pytest-73640-3ca52a60` -> `pass`
+- `S05` `verify:` `scoped Ruff format/lint and ty checks` -> `pass`
+- `S02` `A` `src/cadrumo/application/storage/calc_sheets/form_value_presentation.py`
+- `S02` `verify:` `117 shared form and complete demonstration tests, run20261006T015701.032786Z-pytest-79860-fab6b3a8` -> `pass`
+- `S02` `verify:` `scoped Ruff formatting/lint and ty checks` -> `pass`
+- `S02` `verify:` `Native181 date round-trip20240229 valid,20240230 and20230229 invalid,alphabetic invalid,blank unknown; restored20240115 and read display15/01/2024` -> `pass`
+- `S06` `verify:` `Native1812025 Sheet1uEFJEQrodoPCHB9E5kHGZKk-3XA-W1ZkW7AR30cpwWw:467populated cells,8tabs,no formula errors/hash/binding identifiers;148merges and protected formA1:M90` -> `pass`
+- `S06` `verify:` `Native1812025 summary01-05=1/6000/2400/120/94000; loan100000,province08 and monetary formats read back` -> `pass`
+- `S06` `verify:` `Native1812025 interest input2500/0/blank mirrors to detail while independently declared annual2400 stays unchanged; restored2400 and independently read` -> `pass`
+- `S06` `verify:` `Native1812025 compact loan date reformatted15/01/2024 through compiler-generated formula; valid/invalid/leap/blank cases verified and source restored` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/185.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_185_authored_layout.py`
+- `S05` `verify:` `BOE-A-2025-21726 PDF pages6/10 visually inspected; enrolled AEAT1852026 PDF pages1-10 text inspected` -> `pass`
+- `S05` `verify:` `Three185 tests cover21-field accounting,no wire-position boxes,exact5context fields,3-month grid,independent31/28/15day sources,affiliation leading zeros and generatedXLSX; run20261006T020227.883765Z-pytest-84500-dbff8fcd` -> `pass`
+- `S05` `verify:` `scoped Ruff formatting/lint and ty checks` -> `pass`
+- `S05` `verify:` `Shared compiler generated185March2026 native packet14content/302format requests` -> `pass`
+- `S06` `verify:` `Native Modelo185 March2026 Sheet 1HEEwbWk9PQukYD6Vziak0-UC2IiimlVI3WbhYxOAaQg: all 8 tabs bounded readback 191 populated cells no formula errors or hash/internal binding identifiers` -> `pass`
+- `S06` `verify:` `Native Modelo185 Entradas D13 changed to zero and blank: Modelo K28 shows 0 and Sin dato while K29/K30 remain 28/15; restored31 and independently read back` -> `pass`
+- `S06` `verify:` `Native Modelo185 affiliation leading zeros, period03, 45 form merges, frozen4rows, protected A1:N31 and Arial cell formatting readback` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-1999-22372.pdf`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-188-form-source.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/188.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_188_authored_layout.py`
+- `S05` `verify:` `Official BOE-A-1999-22372 PDF page31 visually inspected; source downloaded and sha256/size enrolled` -> `pass`
+- `S05` `verify:` `pytest -n0 -m unit dev/registry/form_layout/tests/test_modelo_188_authored_layout.py: 2 passed run 20261006T021031.244236Z-pytest-63148-9650a48c` -> `pass`
+- `S05` `verify:` `Scoped Ruff check and format check Modelo188 layout test` -> `pass`
+- `S05` `verify:` `compiled_bundled_authority with enrolled Modelo188 PDF and both authored layouts` -> `pass`
+- `S05` `verify:` `ty check dev/registry/form_layout/tests/test_modelo_188_authored_layout.py` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_188/files/02-188-diseno-de-registro-2017.pdf`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-188-historical-source.toml`
+- `S05` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_188/manifest.json`
+- `S05` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/historical_exclusions.json`
+- `S05` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/manifest.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/manifest.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2022/revision.toml`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_188_authored_layout.py`
+- `S05` `verify:` `AEAT archive linked 2017 design acquired 245998 bytes sha256 f86024198b4a94a747067658f5511e1b9e91cc553aaefe6241d8d3035404366f` -> `pass`
+- `S05` `verify:` `sync_aeat_record_design_corpus --regenerate-aggregate after removing newly acquired URL from exclusions: 239 required URLs and 58 manifests` -> `pass`
+- `S05` `verify:` `Modelo188 targeted layout tests 3 passed run 20261006T021440.898365Z-pytest-57248-eafeb312; Ruff check/format and ty` -> `pass`
+- `S05` `verify:` `compiled_bundled_authority after historical source enrollment` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/revision.toml`
+- `S05` `M` `dev/registry/tests/test_modelo_187_188_194_registry.py`
+- `S05` `verify:` `compiled_bundled_authority with 18 new Modelo188 recipient fields and intentional singleton role declarations` -> `pass`
+- `S05` `verify:` `Focused Modelo187/188/194 registry and Modelo188 layout tests:19 passed run20261006T022114.279795Z-pytest-23152-01a34022` -> `pass`
+- `S05` `verify:` `Modelo188 generated workbook and independent source projection:2 passed run20261006T022028.732567Z-pytest-90120-67aa32da` -> `pass`
+- `S05` `verify:` `Scoped Ruff format/lint, ty, git diff --check` -> `pass`
+- `S05` `verify:` `Cross-revision, locale, fragment packing, lineage ratchet, summary-source and registry tests:103 passed 2 failed run20261006T022000.943593Z-pytest-49228-036c58fe` -> `fail`
+- `S02` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_records_hardening.py`
+- `S02` `verify:` `123 selected records/workbook/Google transport parity/full demo suite tests passed run20261006T022527.136300Z-pytest-39296-c6901861` -> `pass`
+- `S02` `verify:` `Scoped Ruff format/lint and ty for changed application/adapters/tests` -> `pass`
+- `S06` `verify:` `Native Modelo188 2025 Sheet1fjsdM2JzdKkyK9HtKjtmmWKpDtuN3iXrO52B4rT0H28 readback8tabs207populatedcells noformula errors/hashes/internal perceptor IDs; province08 and rate19 preserved` -> `pass`
+- `S06` `verify:` `Native custom-rule readback strict true and direct Google formula evaluation: modality1/2/blank true,3/01 false; annuityA/B/blank true,a/C false` -> `pass`
+- `S06` `verify:` `Native declared income -150.25/0/blank mirrors correctly while independent summary/base/withholding remain1000/1000/190; original1000 restored and reread` -> `pass`
+- `S06` `verify:` `Native structure52merges protectedform A1:M35 frozen4 and Arial formatting readback` -> `pass`
+- `S02` `verify:` `125 records/workbook/Google transport parity/demo tests passed run20261006T022951.640992Z-pytest-45704-e10b32c9` -> `pass`
+- `S02` `verify:` `Scoped Ruff format/check, ty and git diff --check for changed modules and tests` -> `pass`
+- `S06` `verify:` `Native Modelo 188 1fjsdM2JzdKkyK9HtKjtmmWKpDtuN3iXrO52B4rT0H28: applied compiler-generated Entradas D22 strict length validation; Google formula engine accepts 24 characters, leading-zero 24-character identifier and blank, rejects 25-character predicate; form J31 preserves identifier text; finally restored D22 and E11 blank and independently read back rule and Sin dato` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/188.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/188.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/188.yml`
+- `S05` `verify:` `188 nine declarant fields grounded in aeat-dr-188-2023 pages 2-5; predecessor omission checked against archived 2017 pages 2-4; no new-on-form identity claim` -> `pass`
+- `S05` `verify:` `Focused authored layout, 187/188/194 registry and workbook demonstration tests: 113 passed; run 20261006T023833.917487Z-pytest-63232-a35de7c0` -> `pass`
+- `S05` `verify:` `Cross-revision/locales/fragment/lineage checks: 85 passed, 2 failed; run 20261006T024029.816257Z-pytest-28860-f340e5cc` -> `fail`
+- `S05` `verify:` `Corrected fragment packing with exact hydrated before/after equivalence; fragment suite 11 passed, run 20261006T024141.704989Z-pytest-74924-a6c99f04` -> `pass`
+- `S05` `verify:` `Scoped Ruff, ty and diff whitespace checks` -> `pass`
+- `S06` `verify:` `Existing native Modelo188 2025 Sheet 1fjsdM2JzdKkyK9HtKjtmmWKpDtuN3iXrO52B4rT0H28 refreshed via shared compiler/adapters; 468 requests, 270 populated cells, 72 merges, form protection A1:M46, inputs/provenance through row33; no formula errors or visible internal IDs/hashes` -> `pass`
+- `S06` `verify:` `Native declarant J8:J17 values and unknown receipts readback; Entradas D28 leading-zero phone 012345678 mirrored exactly to Modelo J10, restored blank in finally and independently verified Sin dato` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2022/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2022/constructs/0001-declarations.toml`
+- `S05` `D` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-188-historical-source.toml`
+- `S05` `verify:` `Official AEAT2017 PDF12-16 already incorporates HFP/1308/2017 article3; BOE1999 amendment history shows next annexV amendment HFP/1284/2023 art5, effective first ejercicio2023. Historical source applicability reconciled through2022` -> `pass`
+- `S05` `verify:` `32 fields authored for2022; 27 existing current fields moved to historical baseline with grounded continuity attestations and current source deltas; province01-52 historical versus01-53 current, historical/current minor guidance kept distinct` -> `pass`
+- `S05` `verify:` `Focused form/workbook suite 100 passed run20261006T024829.450371Z-pytest-88076-fe8b0c19 after fixing inherited stale construct source` -> `pass`
+- `S05` `verify:` `Cross-revision/locales/fragment/lineage suite 86 passed1failed run20261006T024902.611903Z-pytest-27728-30ef9030` -> `fail`
+- `S05` `verify:` `Scoped Ruff, ty, diff whitespace checks` -> `pass`
+- `S05` `verify:` `Modelo188 edition_delta_migration read-only assessment` -> `fail`
+- `S06` `verify:` `Native historical Modelo188 2022 created in Cadrumo folder: 1037z_K0RfAhhtxV0ewl8dMIlQe0yjjl8MRz4vSrGpsU; shared compiler/adapters478requests,8tabs,270populatedcells,72merges,protected formA1:M46,year2022,province08,all32fields; noformulaerrors/internalID/hashdisplay` -> `pass`
+- `S06` `verify:` `NativeGoogle formula engine: historical province predicate52TRUE53FALSE54FALSE08TRUE; current2025 predicate52TRUE53TRUE54FALSE08TRUE. Compiler-generated rules installed in both Sheets. D10 restored08 and E11 cleared finally, independent readback` -> `pass`
+- `S05` `M` `dev/registry/compiler/edition_materialisation.py`
+- `S05` `M` `dev/registry/edition_delta_source.py`
+- `S05` `M` `dev/registry/tests/test_edition_materialisation_entry_point.py`
+- `S05` `M` `dev/registry/tests/test_edition_delta_migration.py`
+- `S05` `verify:` `materialisation focused suites 41 tests` -> `pass`
+- `S05` `verify:` `delta mutation proof suites 13 tests` -> `pass`
+- `S05` `verify:` `migration suite 19 tests and repaired configured report-root assertion rerun 1 test` -> `pass`
+- `S05` `verify:` `Modelo 188 normalization unchanged fingerprint zero redundancy and unresolved duplication` -> `pass`
+- `S05` `verify:` `scoped ruff format lint and ty for resolver change` -> `pass`
+- `S05` `verify:` `check-import-boundaries` -> `fail`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2008-19523.pdf`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-189-form-source.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/189.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_189_authored_layout.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/google/tests/test_workbook_registry_constraints.py`
+- `S05` `verify:` `Modelo 189 authored layout integrity four revisions` -> `pass`
+- `S05` `verify:` `workbook suite initial 99 passed and 5 failed` -> `fail`
+- `S05` `verify:` `Modelo 189 rerun eight generation and valuation tests after fixing demo grade and test header accounting` -> `pass`
+- `S05` `verify:` `relocated native XLSX constraint tests two tests` -> `pass`
+- `S05` `verify:` `scoped ruff lint format ty and diff check` -> `pass`
+- `S05` `verify:` `Modelo 189 delta normalization equivalence minimality unchanged fingerprint` -> `pass`
+- `S06` `verify:` `Modelo 189 native Sheets API readback all four revisions 222 populated cells each no formula errors or displayed technical identifiers` -> `pass`
+- `S06` `verify:` `Modelo 189 native structure 62 merges form protection A1:M41 each` -> `pass`
+- `S06` `verify:` `Modelo 189 current valuation edit 1500 to 1750 propagated to form while independent total remained 1500 and exact restoration independently confirmed` -> `pass`
+- `S05` `M` `src/cadrumo/_data/corpus/normatives/pdf/PROVENANCE.md`
+- `S05` `verify:` `native adapter and real registry constraint checks after separating test layers five tests` -> `pass`
+- `S05` `verify:` `provenance capture classification and byte lengths after twelve live official hash comparisons two tests` -> `pass`
+- `S05` `verify:` `scoped ty after test-layer correction` -> `pass`
+- `S05` `verify:` `final check-import-boundaries` -> `fail`
+- `S05` `M` `dev/registry/registry_collapse_comparison.py`
+- `S05` `M` `dev/registry/tests/test_registry_collapse_verification.py`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_190_authored_layout.py`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-190-form-source.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2009-18567-modelo-190.pdf`
+- `S05` `verify:` `pytest collapse typed_comparison or lineage 20261006T031904.032303Z` -> `pass`
+- `S05` `verify:` `pytest Modelo131 snapshot parity 20261006T032350.523779Z` -> `pass`
+- `S05` `verify:` `pytest Modelo190 authored layout 20261006T032827.250232Z` -> `pass`
+- `S02` `verify:` `pytest Modelo180 and Modelo190 generation and saved sections 20261006T033114.996675Z` -> `pass`
+- `S02` `verify:` `pytest saved record and template preview regressions 20261006T033140.679096Z` -> `pass`
+- `S02` `verify:` `ruff scoped check and format` -> `pass`
+- `S02` `verify:` `ty scoped work_form_records and demo modules` -> `pass`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/190.yml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `verify:` `pytest Modelo190 authored layout four revisions` -> `pass`
+- `S05` `verify:` `pytest Modelo190 and Modelo180 fixtures 12 checks` -> `pass`
+- `S06` `M` `dev/registry/workbook_demo_records.py`
+- `S06` `verify:` `Modelo190 2022-2025 native API all populated cells and formulas readback` -> `pass`
+- `S06` `verify:` `Modelo190 current live withholding input 4200 to4300 and restored4200` -> `pass`
+- `S06` `verify:` `Modelo190 native grid font and structure API readback` -> `pass`
+- `S05` `verify:` `pytest Modelo190 all four layout context and generation cases 20261006T033849.401496Z` -> `pass`
+- `S05` `verify:` `ruff demo modules` -> `pass`
+- `S05` `verify:` `ty demo modules` -> `pass`
+- `S05` `verify:` `git diff scoped whitespace` -> `pass`
+- `S05` `M` `dev/registry/mappings/modelo_190/2020/0001-records.toml`
+- `S05` `M` `dev/registry/mappings/modelo_190/2023/0001-records.toml`
+- `S05` `M` `dev/registry/mappings/modelo_190/2024/0001-records.toml`
+- `S05` `M` `dev/registry/mappings/modelo_190/2025/0001-records.toml`
+- `S05` `A` `dev/registry/pipeline/tests/test_modelo_190_declarant_identity_mapping.py`
+- `S05` `verify:` `pytest Modelo190 source mapping 20261006T034129.824067Z` -> `pass`
+- `S05` `verify:` `pipeline check 190 2022 aeat-dr-190-2020 2022 0A` -> `fail`
+- `S05` `verify:` `ruff mapping test` -> `pass`
+- `S05` `A` `dev/registry/form_layout/tests/test_unreferenced_producer_reconciliation.py`
+- `S05` `M` `dev/registry/pipeline/authored_form_bridge.py`
+- `S05` `M` `dev/registry/pipeline/generated_tree_dispositions.toml`
+- `S05` `verify:` `pytest unreferenced producer reconciliation 20261006T034435.480974Z` -> `pass`
+- `S05` `verify:` `ruff scoped reconciliation and pipeline modules` -> `pass`
+- `S05` `verify:` `ty scoped reconciliation and pipeline modules` -> `pass`
+- `S05` `verify:` `pipeline republish1902022 without record disposition` -> `fail`
+- `S05` `M` `dev/registry/pipeline/generated_form_bridge.py`
+- `S05` `verify:` `pytest active journal bound backup regression 20261006T034817.232844Z` -> `pass`
+- `S05` `verify:` `pytest reconciliation corrected focused rerun 20261006T034435.480974Z` -> `pass`
+- `S05` `verify:` `pipeline1902022 first reconciliation attempt process70263` -> `fail`
+- `S05` `M` `dev/registry/form_layout/tests/test_unreferenced_producer_reconciliation.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/export`
+- `S05` `verify:` `pipeline republish-target1902022 process74676` -> `pass`
+- `S05` `verify:` `pipeline target-current1902022 process43721` -> `pass`
+- `S05` `verify:` `pytest six reconciliation cases 20261006T035059.131949Z` -> `pass`
+- `S05` `verify:` `pipeline republish-target1902023 process71540` -> `fail`
+- `S05` `verify:` `pytest first-export bridge regression 20261006T035308.657794Z` -> `pass`
+- `S05` `verify:` `pipeline1902023 process62896` -> `fail`
+- `S05` `verify:` `ruff and ty authored_form_bridge` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/export`
+- `S05` `verify:` `pipeline republish1902023 process79889` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/export`
+- `S05` `verify:` `pipeline republish1902024 process64753` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export`
+- `S05` `verify:` `pipeline republish1902025 process56901` -> `pass`
+- `S05` `verify:` `pytest190 and184 forms fixtures 20261006T040424.851853Z` -> `pass`
+- `S05` `verify:` `pytest6reconciliation cases 20261006T040506.558605Z` -> `pass`
+- `S05` `verify:` `ruff and ty modified demo/test modules` -> `pass`
+- `S06` `verify:` `native190fourexistingSheets before-write no-user-edits comparison` -> `pass`
+- `S06` `verify:` `native190fourrefreshedSheets identity allcontent and formulas readback` -> `pass`
+- `S05` `M` `dev/registry/mappings/modelo_193/2019`
+- `S05` `M` `dev/registry/mappings/modelo_193/2023`
+- `S05` `M` `dev/registry/mappings/modelo_193/2024-early`
+- `S05` `M` `dev/registry/mappings/modelo_193/2025`
+- `S05` `A` `dev/registry/pipeline/tests/test_modelo_193_declarant_identity_mapping.py`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit dev/registry/pipeline/tests/test_modelo_193_declarant_identity_mapping.py -q` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check dev/registry/pipeline/tests/test_modelo_193_declarant_identity_mapping.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff format --check dev/registry/pipeline/tests/test_modelo_193_declarant_identity_mapping.py` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/export`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/export`
+- `S05` `verify:` `uv run --no-sync python -m dev.registry.pipeline republish-target 193 2022 aeat-dr-193-2019 2022 0A <reviewed-manifest-digest>` -> `pass`
+- `S05` `verify:` `uv run --no-sync python -m dev.registry.pipeline republish-target 193 2023 aeat-dr-193-2023 2023 0A <reviewed-manifest-digest>` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/export`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_193_authored_layout.py`
+- `S05` `verify:` `uv run --no-sync python -m dev.registry.pipeline republish-target 193 2024 aeat-dr-193-2024 2024 0A <reviewed-manifest-digest>` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check dev/registry/form_layout/tests/test_modelo_193_authored_layout.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff format --check dev/registry/form_layout/tests/test_modelo_193_authored_layout.py` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/legal/modelo-193-form-source.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2011-19396-modelo-193.pdf`
+- `S05` `verify:` `uv run --no-sync python -m dev.registry.pipeline republish-target 193 2025-y-siguientes aeat-dr-193-2025 2025 0A <reviewed-manifest-digest>` -> `pass`
+- `S05` `verify:` `uv run --no-sync python -m dev.locales set-batch var/storage/tmp/modelo193-locales.json` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit dev/registry/form_layout/tests/test_modelo_193_authored_layout.py dev/registry/pipeline/tests/test_modelo_193_declarant_identity_mapping.py -q` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest -n0 -m integration dev/registry/tests/test_workbook_demo.py -k '193 or 190 or 180' -q` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff check dev/registry/workbook_demo.py dev/registry/workbook_demo_records.py dev/registry/tests/test_workbook_demo.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ty check dev/registry/workbook_demo.py dev/registry/workbook_demo_records.py dev/registry/tests/test_workbook_demo.py` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/enrolled-forms-sources.toml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_194_authored_layout.py`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit dev/registry/form_layout/tests/test_modelo_194_authored_layout.py -q` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check dev/registry/form_layout/tests/test_modelo_194_authored_layout.py` -> `pass`
+- `S05` `A` `dev/registry/pipeline/tests/test_modelo_194_source_geometry.py`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit dev/registry/pipeline/tests/test_modelo_194_source_geometry.py -q` -> `pass`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_withholding_row_grouping.py`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit src/cadrumo/domain/calculations/registry/tests/test_withholding_row_grouping.py src/cadrumo/domain/calculations/registry/tests/test_withholding_devengo_grouping.py -q` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit src/cadrumo/domain/calculations/registry/tests/test_withholding_row_grouping.py src/cadrumo/domain/calculations/registry/tests/test_withholding_devengo_grouping.py -q` -> `pass`
+- `S05` `verify:` `uv run --no-sync ty check src/cadrumo/domain/calculations/registry/withholding_bindings.py src/cadrumo/domain/calculations/registry/tests/test_withholding_row_grouping.py` -> `pass`
+- `S05` `A` `dev/registry/mappings/modelo_194/2019/0001-records.toml`
+- `S05` `A` `dev/registry/mappings/modelo_194/2023/0001-records.toml`
+- `S05` `A` `dev/registry/mappings/modelo_194/2024/0001-records.toml`
+- `S05` `M` `dev/registry/pipeline/tests/test_modelo_194_source_geometry.py`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit dev/registry/pipeline/tests/test_modelo_194_source_geometry.py -q` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check dev/registry/pipeline/tests/test_modelo_194_source_geometry.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff format --check dev/registry/pipeline/tests/test_modelo_194_source_geometry.py` -> `pass`
+- `S05` `A` `dev/registry/render_profiles/modelo_194/2019/0001-numeric-representation.toml`
+- `S05` `A` `dev/registry/render_profiles/modelo_194/2023/0001-numeric-representation.toml`
+- `S05` `A` `dev/registry/render_profiles/modelo_194/2024/0001-numeric-representation.toml`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -m unit dev/registry/pipeline/tests/test_modelo_194_source_geometry.py -q` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2023/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2024/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_194_authored_layout.py`
+- `S05` `verify:` `pytest Modelo194 layout and source geometry (12 tests)` -> `pass`
+- `S05` `verify:` `pytest test_cross_revision_drift.py (60 tests)` -> `pass`
+- `S05` `verify:` `pytest test_casilla_fragment_naming.py after packing repair (11 tests)` -> `pass`
+- `S05` `verify:` `pytest test_registry_locales_parity.py` -> `pass`
+- `S05` `verify:` `pytest test_continuidad_completeness_ratchet.py` -> `fail`
+- `S05` `verify:` `ruff check and format check test_modelo_194_authored_layout.py` -> `pass`
+- `S05` `A` `dev/registry/pipeline/tests/test_modelo_194_rendering.py`
+- `S05` `verify:` `pytest test_modelo_194_rendering.py run 20261006T052251.257709Z 15 tests` -> `pass`
+- `S05` `verify:` `ruff check test_modelo_194_rendering.py` -> `pass`
+- `S05` `verify:` `ty check test_modelo_194_rendering.py` -> `pass`
+- `S05` `verify:` `ruff format --check test_modelo_194_rendering.py` -> `fail`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/application_links/0001-declarations.toml`
+- `S05` `M` `dev/registry/pipeline/tests/test_modelo_194_rendering.py`
+- `S05` `verify:` `pytest test_modelo_194_rendering.py test_modelo_194_source_geometry.py run 20261006T052506.799077Z 22 tests` -> `pass`
+- `S05` `verify:` `ruff check test_modelo_194_rendering.py` -> `pass`
+- `S05` `verify:` `ruff format --check test_modelo_194_rendering.py` -> `pass`
+- `S05` `verify:` `ty check test_modelo_194_rendering.py` -> `pass`
+- `S05` `verify:` `publish-target 194 2019 session20859 missing export application link` -> `fail`
+- `S05` `verify:` `pytest Modelo194 rendering and geometry run20261006T052705.598631Z 22tests` -> `pass`
+- `S05` `verify:` `publish-target 194 2019 session37672` -> `fail`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/export`
+- `S05` `verify:` `publish-target 194 2019 aeat-dr-194-2019 2022 0A --reconcile-authored-form session32902` -> `pass`
+- `S05` `verify:` `pytest Modelo194 authored layouts and rendering run20261006T053206.593419Z 17tests` -> `pass`
+- `S05` `verify:` `ty check Modelo194 form and rendering tests after nullable assertions` -> `pass`
+- `S05` `verify:` `materialise_edition Modelo194 2023` -> `fail`
+- `S05` `A` `dev/registry/export_clearance.py`
+- `S05` `A` `dev/registry/pipeline/candidate_source_chain.py`
+- `S05` `A` `dev/registry/pipeline/tests/test_candidate_source_chain.py`
+- `S05` `M` `dev/registry/pipeline/candidate_staging.py`
+- `S05` `M` `dev/registry/pipeline/_tree_validation.py`
+- `S05` `M` `dev/registry/pipeline/_tree_check.py`
+- `S05` `verify:` `pytest source-chain plus existing candidate materialisation run20261006T053717.140627Z 11tests` -> `pass`
+- `S05` `verify:` `pytest source-chain and clearance run20261006T054057.402798Z 9tests` -> `pass`
+- `S05` `verify:` `ruff check and format --check nine changed pipeline files` -> `pass`
+- `S05` `verify:` `ty check nine changed pipeline files` -> `pass`
+- `S05` `M` `dev/registry/pipeline/tests/test_generated_tree_cli.py`
+- `S05` `verify:` `CLI/publication regression run20261006T054136.992242Z 67pass2fail` -> `fail`
+- `S05` `verify:` `publish-target 194 2023 session85760 source-window gate` -> `fail`
+- `S05` `verify:` `pytest source chain geometry authored layouts run20261006T054701.488908Z 22tests` -> `pass`
+- `S05` `verify:` `affected CLI regression plus geometry run20261006T054723.407346Z 11tests` -> `pass`
+- `S05` `verify:` `ruff check and format --check affected CLI and geometry tests` -> `pass`
+- `S05` `verify:` `ty check affected CLI and geometry tests` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2023/export`
+- `S05` `M` `dev/registry/pipeline/tests/test_candidate_source_chain.py`
+- `S05` `verify:` `publish-target1942023 session55619` -> `pass`
+- `S05` `verify:` `pytest source-chain rendering authored-layout run20261006T055313.573977Z 27tests` -> `pass`
+- `S05` `verify:` `ruff check three changed tests` -> `pass`
+- `S05` `verify:` `ty check three changed tests` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2024/export`
+- `S05` `verify:` `publish-target1942024 session32436` -> `pass`
+- `S05` `verify:` `sourcechain rendering allthree authored layouts run20261006T055503.068593Z 28pass1bootstrapfail` -> `fail`
+- `S05` `verify:` `bootstrap absence test after explicit targets=[] run20261006T055608.768048Z` -> `pass`
+- `S05` `verify:` `ty three Modelo194 tests` -> `pass`
+- `S05` `verify:` `ruff check and format --check authored layout test after list correction` -> `pass`
+- `S05` `A` `dev/registry/tests/test_modelo_194_summary.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/bindings/0001-declarations.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/formulas/0001-declarations.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/completeness_manifest/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/constructs/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/194.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/194.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/194.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/194.yml`
+- `S05` `verify:` `inspect_authoring_candidate full bundled source: zero findings` -> `pass`
+- `S05` `verify:` `pytest summary and authored-layout tests 20261006T060852.669937Z: 9 passed` -> `pass`
+- `S05` `verify:` `withholding tests prior run 20261006T060312.897560Z: 56 passed` -> `pass`
+- `S06` `M` `src/cadrumo/locales/es/modelo/schema/194.yml`
+- `S06` `M` `src/cadrumo/locales/en/modelo/schema/194.yml`
+- `S06` `M` `src/cadrumo/locales/ca/modelo/schema/194.yml`
+- `S06` `M` `src/cadrumo/locales/hu/modelo/schema/194.yml`
+- `S06` `verify:` `pytest -n0 -m integration dev/registry/tests/test_workbook_demo.py -k '194 or 193 or 190': 22 passed run 20261006T061103.101258Z` -> `pass`
+- `S06` `verify:` `ruff check and format --check three changed demo Python files` -> `pass`
+- `S06` `verify:` `ty check three changed demo Python files` -> `pass`
+- `S06` `verify:` `native Sheets all Modelo 194 editions: 533/552/552 populated cell payloads match shared compiler after Google normalization; 14 formulas each, zero effective errors, five summary totals independently checked` -> `pass`
+- `S06` `verify:` `Modelo194 edition2024 Entradas D28 125 to 150 changes only positive-base summary among five boxes; restored125 and verified` -> `pass`
+- `S06` `verify:` `native file metadata confirms all three workbook parents are Cadrumo folder 1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2003-23509.pdf`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/modelo-156.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_156_authored_layout.py`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/156.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/156.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/156.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/156.yml`
+- `S05` `verify:` `BOE-A-2003-23509 official PDF acquired 1295300 bytes sha256725580675df1b483d5cd270e804c1e00038977b673270104049123a3fe728313 and visually inspected PDF4 printed45648` -> `pass`
+- `S05` `verify:` `inspect_authoring_candidate full bundled source after Modelo156 layout: zero findings` -> `pass`
+- `S05` `verify:` `pytest test_modelo_156_authored_layout.py: 2 passed run20261006T062442.931634Z` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/casillas/0001-declarations.toml`
+- `S05` `M` `dev/registry/mappings/modelo_156/2003/0001-records.toml`
+- `S05` `M` `dev/registry/render_profiles/modelo_156/2003/0001-numeric-representation.toml`
+- `S05` `A` `dev/registry/form_layout/tests/test_casilla_split_reconciliation.py`
+- `S05` `A` `dev/registry/pipeline/tests/test_modelo_156_monthly_rendering.py`
+- `S05` `verify:` `pytest 20261006T064240.231615Z casilla split, producer reconciliation and monthly encoding 28 tests` -> `pass`
+- `S05` `verify:` `ty check reconciliation.py authored_form_bridge.py cli.py` -> `pass`
+- `S05` `verify:` `ruff check changed reconciliation/publisher/demo files` -> `pass`
+- `S06` `verify:` `pytest -q -n0 -m integration dev/registry/tests/test_workbook_demo.py (20261006T063938.011354Z) 124 tests` -> `pass`
+- `S05` `M` `dev/registry/form_layout/tests/test_casilla_split_reconciliation.py`
+- `S05` `verify:` `pytest -q -n0 dev/registry/form_layout/tests/test_casilla_split_reconciliation.py (20261006T064547.118743Z) 11 tests without warnings` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/export/0002-record-modelo-156-afiliado.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_156_authored_layout.py`
+- `S05` `verify:` `pipeline republish-target 156 2003-y-siguientes enrolled-modelo-156-layout 2025 0A 7e03378c1f149a61612582b0f0d4d519128eaed4c2ec67c0cc7678fcaaf1cb3b --reconcile-casilla-splits` -> `pass`
+- `S05` `verify:` `pytest 20261006T064314.108511Z casilla reconciliation/generated tree CLI/publication 78 tests` -> `pass`
+- `S06` `verify:` `pytest -q -n0 -m integration dev/registry/tests/test_workbook_demo.py -k 156 (20261006T065223.562367Z) 2tests` -> `pass`
+- `S06` `verify:` `ruff check and format --check six changed demo/reconciliation/publisher files` -> `pass`
+- `S06` `verify:` `ty check dev/registry/workbook_demo.py` -> `pass`
+- `S06` `verify:` `native156 all354 populated payloads match,35reference formulas,zero errors;January100.25 to101.25 and restored` -> `pass`
+- `S05` `verify:` `pipeline target-current 156 2003-y-siguientes enrolled-modelo-156-layout 2025 0A` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/casillas/0002-paper-summary.toml`
+- `S05` `verify:` `inspect_authoring_candidate full current source zero findings publication_valid=True` -> `pass`
+- `S05` `verify:` `pytest 20261006T065850.030053Z authored156 and casilla split reconciliation 14tests` -> `pass`
+- `S06` `verify:` `pytest -q -n0 -m integration dev/registry/tests/test_workbook_demo.py -k156 (20261006T065904.940628Z) 2tests` -> `pass`
+- `S06` `verify:` `native156 updated458payloads match,46references,zeroformulaerrors` -> `pass`
+- `S05` `verify:` `ruff check/format changed156demo and authoredformtest` -> `pass`
+- `S05` `verify:` `ty check dev/registry/workbook_demo.py` -> `pass`
+- `S05` `verify:` `canonical156formserialization exact-byte idempotence and integrity after LF normalization` -> `pass`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema_form_layouts.py`
+- `S02` `verify:` `pytest 20261006T071028.673887Z schema/156/formworkbook 61tests` -> `pass`
+- `S02` `verify:` `ruff check and format --check six choice-related source/testfiles` -> `pass`
+- `S02` `verify:` `ty check schema_form_layouts form_layout_integrity form_workbook` -> `pass`
+- `S05` `verify:` `full inspect_authoring_candidate session81705 zero findings publication_valid=True` -> `pass`
+- `S06` `verify:` `pytest -q -n0 -m integration dev/registry/tests/test_workbook_demo.py -k156 (20261006T071046.297067Z) 3tests` -> `pass`
+- `S06` `verify:` `native156 ordinary/complementaria/sustitutiva/invalid/missing choice scenarios and restoration` -> `pass`
+- `S06` `verify:` `native156 all459populatedpayloads and47formulas match,zeroerrors after restoration` -> `pass`
+- `S05` `M` `src/cadrumo/application/modelo/verification_predicates.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/schema_verification.py`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/verification_predicates/0001-amendment-receipt.toml`
+- `S05` `M` `src/cadrumo/application/storage/calc_sheets/form_workbook.py`
+- `S05` `verify:` `Focused predicate/schema/form/156 suite run20261006T072436.338791Z-pytest-81780-1d9c5392: 92 tests` -> `pass`
+- `S05` `verify:` `Modelo156 integration run20261006T072829.040812Z-pytest-1912-b322e19b: 4 tests` -> `pass`
+- `S05` `verify:` `Bundled authoring inspection session18894: zero findings publication_valid=True` -> `pass`
+- `S06` `verify:` `Native156 receipt checks: six scenarios and restored blank inputs` -> `pass`
+- `S06` `verify:` `Native156 full plan readback: 464 populated payloads 49 formulas zero mismatches or formula errors` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 dev/registry/form_layout/tests/test_modelo_156_authored_layout.py: run20261006T073432.294641Z-pytest-21388-573cc204 6 tests` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check dev/registry/form_layout/tests/test_modelo_156_authored_layout.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff format --check dev/registry/form_layout/tests/test_modelo_156_authored_layout.py` -> `pass`
+- `S05` `M` `dev/registry/compiler/_validate_verification_predicates.py`
+- `S05` `M` `dev/registry/compiler/validate_registry_surfaces.py`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_verification_substance.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema_verification.py`
+- `S05` `M` `dev/registry/tests/test_registry_schema_part3.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/verification_predicates/0001-amendment-receipt.toml`
+- `S05` `M` `src/cadrumo/locales/es/application.yml`
+- `S05` `M` `src/cadrumo/locales/en/application.yml`
+- `S05` `M` `src/cadrumo/locales/ca/application.yml`
+- `S05` `M` `src/cadrumo/locales/hu/application.yml`
+- `S05` `verify:` `Predicate/schema/Modelo156 tests run20261006T073725.588244Z: 75` -> `pass`
+- `S05` `verify:` `M210 advisory and shared form regressions run20261006T074047.634831Z: 43` -> `pass`
+- `S05` `verify:` `Authoring semantic validator tests run20261006T074208.209365Z: 5` -> `pass`
+- `S05` `verify:` `Final categorical-zero tests run20261006T074315.794853Z: 25` -> `pass`
+- `S05` `verify:` `Ruff check and format on changed Python files; ty application/domain and compiler validators` -> `pass`
+- `S06` `verify:` `Modelo156 workbook integration run20261006T073749.937044Z: 4` -> `pass`
+- `S06` `verify:` `Native156 six live categorical receipt scenarios and restoration` -> `pass`
+- `S06` `verify:` `Native156 readback all466 userEntered payloads (377 nonempty) and50 formulas; zero mismatches/errors` -> `pass`
+- `S05` `verify:` `Final bundled inspect_authoring_candidate with numeric conditional semantic validator session81255: zero findings publication_valid=True` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 dev/registry/form_layout/tests/test_modelo_156_authored_layout.py: run20261006T074910.953434Z 7tests` -> `pass`
+- `S05` `verify:` `Ruff check and final format check on Modelo156 authored layout tests` -> `pass`
+- `S02` `A` `src/cadrumo/domain/modelos/m156_rows.py`
+- `S02` `A` `src/cadrumo/domain/modelos/tests/test_m156_rows.py`
+- `S02` `M` `src/cadrumo/domain/modelos/row_models.py`
+- `S02` `M` `src/cadrumo/domain/modelos/calculation_revision_identity.py`
+- `S02` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S02` `M` `src/cadrumo/application/modelo/edit_services.py`
+- `S02` `M` `src/cadrumo/application/modelo/edit_apply_row_contracts.py`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_edit_detail_row_wire_mirror.py`
+- `S02` `verify:` `Typed row/revision identity and calculation adjustment regressions run20261006T075605.137059Z:24` -> `pass`
+- `S02` `verify:` `Wire mirror and amend payload regressions run20261006T075709.534059Z:37` -> `pass`
+- `S02` `verify:` `Final Modelo156 domain suite run20261006T075844.140039Z:38` -> `pass`
+- `S02` `verify:` `Ruff changed Python files and ty complete application/modelo domain/modelos` -> `pass`
+- `S02` `M` `src/cadrumo/core/aggregation.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/afiliado_contribution_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/binding_provider.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_provider_registration.py`
+- `S02` `A` `src/cadrumo/domain/modelos/m156_row_materialisation.py`
+- `S02` `A` `dev/registry/tests/test_modelo_156_member_bindings.py`
+- `S02` `verify:` `Member binding/provider/registration/calculation-route tests run20261006T080553.166971Z:84tests` -> `pass`
+- `S02` `verify:` `Ruff check/format changedfiles and ty provider registration/materializer/candidate tests` -> `pass`
+- `S02` `verify:` `Bundled inspect_authoring_candidate session49382:zero findings publication_valid=True` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/bindings/0001-afiliado-rows.toml`
+- `S05` `M` `dev/registry/tests/test_modelo_156_member_bindings.py`
+- `S05` `verify:` `Modelo 156 authored layout and actual member binding tests: 16 passed (20261006T081357.035010Z-pytest-20292-6035adee)` -> `pass`
+- `S05` `verify:` `Complete inspect_authoring_candidate after procedure citations: findings=0 publication_valid=True (session 73156)` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/registry/tests/test_workbook_demo.py -k 156: 4 passed, including all 27 actual registry target labels (20261006T081924.798813Z-pytest-75036-ecf79332)` -> `pass`
+- `S04` `verify:` `uv run --no-sync ruff check src/cadrumo/application/storage/calc_sheets/human_workbook.py dev/registry/tests/test_workbook_demo.py` -> `pass`
+- `S04` `verify:` `uv run --no-sync ty check src/cadrumo/application/storage/calc_sheets/human_workbook.py dev/registry/tests/test_workbook_demo.py` -> `pass`
+- `S05` `A` `dev/registry/form_layout/row_binding_reconciliation.py`
+- `S05` `A` `dev/registry/form_layout/tests/test_row_binding_reconciliation.py`
+- `S05` `verify:` `Reconciliation and generated-tree CLI regression suite: 52 passed (20261006T082309.138597Z-pytest-23700-a21d9e18)` -> `pass`
+- `S05` `verify:` `Final fixed-width row reconciliation tests: 12 passed (20261006T082524.377559Z-pytest-44872-fefa04d1)` -> `pass`
+- `S05` `verify:` `Explicit row-binding CLI routing test: 1 passed (20261006T082354.146657Z-pytest-28276-0815a99d)` -> `pass`
+- `S05` `verify:` `Ruff check and format --check plus ty check on six changed files` -> `pass`
+- `S05` `M` `dev/registry/pipeline/tests/test_modelo_156_monthly_rendering.py`
+- `S05` `M` `dev/registry/form_layout/tests/test_row_binding_reconciliation.py`
+- `S05` `verify:` `Canonical republish-target 156 2003-y-siguientes enrolled-modelo-156-layout 2025 0A --reconcile-row-bindings with reviewed manifest 77e004640391ded24abc0b333de20d1d7c6d3bd5aa87d71cc72225e029e10be7 (session 2978 exit 0)` -> `pass`
+- `S05` `verify:` `Canonical target-current after resolved disposition retirement: state=current (session 45264)` -> `pass`
+- `S05` `verify:` `Post-publication authored form, bindings, row reconciliation, split and monthly codec tests: 52 passed (20261006T083147.044618Z-pytest-67684-5d3c519e)` -> `pass`
+- `S05` `verify:` `Post-publication Modelo 156 workbook integration: 4 passed (20261006T083252.009201Z-pytest-10056-2352d2b1)` -> `pass`
+- `S05` `verify:` `Scoped Ruff and ty for five touched test files` -> `pass`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/tests/test_repeating_form_grids.py`
+- `S02` `verify:` `Form schema and repeating grid negative tests: 34 passed (20261006T083650.885827Z-pytest-19636-b755cba9)` -> `pass`
+- `S02` `verify:` `Renderer worker: 60 focused checks passed across 20261006T083603.549314Z-pytest-67552-45362fd3 and 20261006T083627.467758Z-pytest-92068-5c019831` -> `pass`
+- `S02` `verify:` `Scoped Ruff, format and ty on changed schema/renderer/demo files` -> `pass`
+- `S05` `A` `dev/registry/workbook_demo_members.py`
+- `S05` `A` `dev/registry/form_layout/tests/_member_scalar_history.py`
+- `S05` `verify:` `Authored layout and historical reconciliation tests: 30 passed (20261006T083828.974284Z-pytest-25992-027be56c)` -> `pass`
+- `S05` `verify:` `Real Modelo 156 workbook integration: 4 passed (20261006T083833.139951Z-pytest-27584-40a8779b)` -> `pass`
+- `S05` `verify:` `Full inspect_authoring_candidate: findings=0 publication_valid=True (session 31816)` -> `pass`
+- `S06` `M` `dev/registry/workbook_demo_members.py`
+- `S06` `verify:` `Native Modelo 156 readback: 1281 userEntered payloads, 614 nonempty cells, 23 formulas; zero mismatches and zero formula errors` -> `pass`
+- `S06` `verify:` `Native per-member sentinels: names and 12-character leading-zero membership identifiers preserved; January 100.25/75.50 independent; April numeric zero; member two December Sin dato; summary J29=2` -> `pass`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/347.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/347.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/347.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2008-16973-modelo-347.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2011-19397-modelo-347.pdf`
+- `S05` `A` `dev/registry/tests/test_modelo_347_operation_labels.py`
+- `S05` `verify:` `pytest test_modelo_347_operation_labels.py: 4 passed` -> `pass`
+- `S05` `verify:` `pytest test_registry_locales_parity.py: 2 passed` -> `pass`
+- `S05` `verify:` `ruff check dev/registry/tests/test_modelo_347_operation_labels.py` -> `pass`
+- `S05` `verify:` `ruff format --check dev/registry/tests/test_modelo_347_operation_labels.py` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_347_authored_layout.py`
+- `S05` `verify:` `pytest test_modelo_347_authored_layout.py test_registry_locales_parity.py: 4 passed` -> `pass`
+- `S05` `verify:` `ruff check dev/registry/form_layout/tests/test_modelo_347_authored_layout.py` -> `pass`
+- `S05` `verify:` `ruff format --check dev/registry/form_layout/tests/test_modelo_347_authored_layout.py` -> `pass`
+- `S02` `verify:` `candidate inspection before summary attempt: publication_valid true and zero findings` -> `pass`
+- `S02` `verify:` `attempted bound summary casillas full candidate validation` -> `fail`
+- `S05` `verify:` `pytest test_modelo_347_authored_layout.py test_cross_revision_drift.py after removing invalid attempt: 62 passed` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/0001-declarations.toml`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_347_authored_layout.py`
+- `S05` `D` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/casillas/0002-paper-summary.toml`
+- `S05` `verify:` `347 authored layouts and cross-revision drift 62 tests` -> `pass`
+- `S05` `verify:` `registry locale parity 2 tests` -> `pass`
+- `S05` `verify:` `156 fragment packing full typed modelo equivalence` -> `pass`
+- `S05` `verify:` `casilla fragment naming after156packing 11 tests` -> `pass`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/form_context.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_context_values.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S02` `M` `src/cadrumo/application/storage/calc_sheets/_styling.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S02` `verify:` `readonly summary context/workform tests 51 passed` -> `pass`
+- `S02` `verify:` `context binding inputs workbook backing cells tests 63 passed` -> `pass`
+- `S02` `verify:` `Google publication styling regression 8 tests` -> `pass`
+- `S02` `verify:` `worker scoped Ruff and ty` -> `pass`
+- `S06` `A` `dev/registry/workbook_demo_third_parties.py`
+- `S06` `A` `dev/registry/tests/test_workbook_demo_third_parties.py`
+- `S06` `verify:` `real invoice resolver 347 both revisions 2 tests` -> `pass`
+- `S06` `verify:` `347 both full workbook/XLSX generation cases 2 tests` -> `pass`
+- `S06` `verify:` `3472024 Google readback1999cells15formulas zeroerrors` -> `pass`
+- `S06` `verify:` `3472025 Google readback2352cells14formulas zeroerrors` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2008-20953-modelos-303-308.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2011-7479-modelo-308.pdf`
+- `S05` `verify:` `official308 PDFs downloaded with PDF signature and SHA256/bytes computed` -> `pass`
+- `S05` `verify:` `visual inspection BOE2008PDF12 and BOE2011PDF4` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/308.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/308.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/308.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/308.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_308_authored_layout.py`
+- `S05` `verify:` `308 recargo grid regression test 1 passed` -> `pass`
+- `S05` `verify:` `Ruff check and format308layout test` -> `pass`
+- `S05` `verify:` `typed form integrity308current` -> `pass`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_308_authored_layout.py`
+- `S05` `verify:` `308 authored layout regression 2 tests` -> `pass`
+- `S05` `verify:` `Ruff format and check308tests` -> `pass`
+- `S05` `verify:` `308 typed placement/context integrity` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/formulas/0001-declarations.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/completeness_manifest/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/application_links/0001-declarations.toml`
+- `S05` `verify:` `Modelo308 authored layout and formula tests (4 tests; 20261006T093446.349746Z)` -> `pass`
+- `S05` `verify:` `Modelo308 workbook integration and XLSX generation (2 tests; 20261006T093725.069231Z)` -> `pass`
+- `S05` `verify:` `inspect_authoring_candidate publication_valid True 2026-10-06 after four calculation-declaration fixes` -> `pass`
+- `S05` `verify:` `Ruff check and format three changed Python files` -> `pass`
+- `S05` `verify:` `test_cross_revision_drift.py 60 tests 20261006T093852.595825Z` -> `pass`
+- `S05` `verify:` `test_registry_locales_parity.py 2 tests 20261006T093949.631163Z` -> `pass`
+- `S05` `verify:` `test_casilla_fragment_naming.py 11 tests 20261006T094024.353092Z` -> `pass`
+- `S05` `verify:` `test_continuidad_completeness_ratchet.py 13 pass 1 fail 20261006T094038.201421Z` -> `fail`
+- `S05` `verify:` `ty check workbook_demo and its tests plus Modelo308 authored layout tests` -> `pass`
+- `S06` `verify:` `Modelo308 native Sheet full authored area readback 1006 cells 47 formulas zero formula errors zero substantive mismatches` -> `pass`
+- `S06` `verify:` `Modelo308 live input mutation 0 to20 changes box17 from250.35 to270.35` -> `pass`
+- `S06` `verify:` `Modelo308 missing quota produces Sin dato in form and calculation` -> `pass`
+- `S06` `verify:` `Modelo308 restored quota0 and total250.35; parent folder metadata verified` -> `pass`
+- `S05` `verify:` `Registry locale parity 2 tests 20261006T094625.861985Z` -> `pass`
+- `S05` `verify:` `Modelo308 workbook and XLSX tests2 20261006T094726.714281Z` -> `pass`
+- `S05` `verify:` `Ruff check format and ty changed demo Python files` -> `pass`
+- `S06` `verify:` `Modelo308 regenerated label delta:113cells34format/help requests applied after live conflict check` -> `pass`
+- `S06` `verify:` `Modelo308 full1006cellreadback47formulas0errors0substantive mismatches after label cleanup` -> `pass`
+- `S05` `verify:` `Full authoring candidate after paper signature context publication_valid True` -> `pass`
+- `S05` `verify:` `Modelo308 authored layout suite5 tests 20261006T095221.459406Z` -> `pass`
+- `S05` `verify:` `Updated paper signature test1 20261006T095419.341377Z` -> `pass`
+- `S05` `verify:` `Modelo308 workbook tests2 20261006T095336.905622Z` -> `pass`
+- `S05` `verify:` `Cross revision60 20261006T095255.676604Z` -> `pass`
+- `S05` `verify:` `Locales2 20261006T095400.591281Z` -> `pass`
+- `S05` `verify:` `Casilla fragments11 20261006T095433.368800Z` -> `pass`
+- `S05` `verify:` `Ruff format check and ty paper signature test` -> `pass`
+- `S05` `verify:` `Continuidad completeness13pass1fail 20261006T095454.509208Z` -> `fail`
+- `S05` `verify:` `Ruff format check final Modelo308 signature test` -> `pass`
+- `S06` `verify:` `Modelo308 signature native update full1071cells50formulas0errors0substantive mismatches` -> `pass`
+- `S06` `verify:` `Modelo308 signature context unknowns and unchanged250.35total readback` -> `pass`
+- `S06` `verify:` `Modelo308 and Procedencia expanded protected ranges metadata` -> `pass`
+- `S05` `verify:` `Modelo308 authored and workbook acceptance7tests 20261006T100140.500560Z` -> `pass`
+- `S05` `verify:` `Full locale parity2tests 20261006T100203.418128Z` -> `pass`
+- `S05` `verify:` `Ruff check format and ty demo files` -> `pass`
+- `S06` `verify:` `Modelo308 category choices native1114? full readback completed` -> `pass`
+- `S06` `verify:` `Modelo308 category update1104cells53formulas0errors0substantive mismatches` -> `pass`
+- `S06` `verify:` `Modelo308 D and category2 selected marks verified; other3categories unselected` -> `pass`
+- `S06` `verify:` `Modelo308 category input strict closed-domain validation and250.35refund verified` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/casillas/0001-declarations.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/formulas/0001-declarations.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/completeness_manifest/0001-declarations.toml`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/application_links/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/form_layouts/0001-form-layout.toml`
+- `S05` `D` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/formulas/0001-declarations.toml`
+- `S05` `D` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/completeness_manifest/0001-declarations.toml`
+- `S05` `A` `dev/registry/workbook_demo_refunds.py`
+- `S05` `M` `dev/registry/tests/test_historical_workbook_assembly.py`
+- `S05` `verify:` `Modelo308 authored/current/historical workbook tests9 20261006T101816.976546Z` -> `pass`
+- `S05` `verify:` `Cross revision60 20261006T101846.428733Z` -> `pass`
+- `S05` `verify:` `Locale parity2 20261006T102003.190603Z` -> `pass`
+- `S05` `verify:` `2019 payload/export/formula/binding/parameter/closure preservation assertions` -> `pass`
+- `S05` `verify:` `Modelo308 migration normalization no-op zero duplicate payload 20261006T101830.357425Z` -> `pass`
+- `S05` `verify:` `Ruff check format and ty4affectedPythonfiles` -> `pass`
+- `S05` `verify:` `Authoring candidate inspection and compile boundary11tests 20261006T102013.377435Z` -> `pass`
+- `S05` `verify:` `Casilla fragment11tests 20261006T102137.948976Z` -> `pass`
+- `S05` `verify:` `Continuidad completeness13pass1fail 20261006T102159.503337Z` -> `fail`
+- `S05` `verify:` `git diff --check scoped308/demo changes` -> `pass`
+- `S06` `verify:` `Modelo3082018historical native1078cells54formulas0errors0substantive mismatches` -> `pass`
+- `S06` `verify:` `Modelo3082018explicit fictional identity and250.35refund readback` -> `pass`
+- `S06` `verify:` `Modelo3082018Drive destination parent readback` -> `pass`
+- `S06` `verify:` `Historical 308 native Google Sheets live recalculation and missing-input test` -> `pass`
+- `S06` `verify:` `Historical 308 native Google Sheets exact restoration including formulas formats and validation` -> `pass`
+- `S05` `verify:` `Isolated216 source reorder complete typed equality` -> `pass`
+- `S05` `verify:` `Isolated347 explicit signature references effective typed equality` -> `pass`
+- `S05` `verify:` `Canonical normalization of isolated216 and347 repairs equivalence and minimality` -> `pass`
+- `S05` `verify:` `Final normalized216 and347 candidates compared against live effective typed fields and sequences` -> `pass`
+- `S05` `verify:` `Modelo3472025 canonical draft and in-memory electronic export using resolved synthetic invoice rows` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/formulas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S05` `verify:` `216 and347 narrow live source repairs preserve full effective typed fields and sequences` -> `pass`
+- `S05` `verify:` `Canonical216 normalization --apply` -> `pass`
+- `S05` `verify:` `Canonical347 normalization --apply source acceptance` -> `pass`
+- `S05` `verify:` `Canonical216 and347 post-apply no-op and zero redundant overrides` -> `pass`
+- `S05` `verify:` `Scoped216347 git diff --check` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/constructs/0001-declarations.toml`
+- `S05` `M` `dev/registry/tests/test_modelo_216_registry.py`
+- `S05` `verify:` `216347 focused tests first pass` -> `fail`
+- `S05` `verify:` `347 post-construct canonical normalization no-op and minimality` -> `pass`
+- `S05` `verify:` `216 test Ruff lint and formatting` -> `pass`
+- `S05` `verify:` `Scoped216347 diff whitespace check` -> `pass`
+- `S05` `verify:` `216 registry tests final rerun` -> `pass`
+- `S05` `verify:` `347 registry declared-export authored-layout and216 historical calculation tests` -> `pass`
+- `S05` `verify:` `216 updated tests Ruff lint and formatting` -> `pass`
+- `S05` `A` `dev/registry/edition_export_m347.py`
+- `S05` `M` `dev/registry/edition_export_scenarios.py`
+- `S05` `A` `dev/registry/tests/test_m347_export_scenarios.py`
+- `S05` `verify:` `347 populated export scenarios and existing scenario period and row-total tests` -> `pass`
+- `S05` `verify:` `347 canonical normalization with enrolled populated export scenarios and cross-tree byte equality` -> `pass`
+- `S05` `verify:` `347 scenario Ruff lint format and ty checks` -> `pass`
+- `S05` `verify:` `347 scenario scoped git diff --check` -> `pass`
+- `S05` `verify:` `Final347 export payload party-name and exclusion assertions` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2011-julio-2015`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/casilla_continuidad_evolutions/0001-declarations.toml`
+- `S05` `M` `dev/registry/workbook_demo_refunds.py`
+- `S05` `verify:` `cross revision drift 20261006T110706 60 tests` -> `pass`
+- `S05` `verify:` `registry locales parity 20261006T111259 2 tests` -> `pass`
+- `S05` `verify:` `casilla fragment naming 20261006T111327 11 tests` -> `pass`
+- `S05` `verify:` `308 authored layout and historical assembly 20261006T111330 14 tests` -> `pass`
+- `S05` `verify:` `continuidad completeness ratchet 20261006T111346 13 pass 1 fail` -> `fail`
+- `S05` `verify:` `308 scoped Ruff and ty` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308`
+- `S05` `verify:` `308 canonical normalization apply 20261006T111509 equivalence minimality and 2019 bytes` -> `pass`
+- `S05` `verify:` `308 canonical normalization second pass 20261006T111528 unchanged fingerprint` -> `pass`
+- `S06` `M` `dev/registry/workbook_demo_refunds.py`
+- `S06` `M` `dev/registry/tests/test_historical_workbook_assembly.py`
+- `S06` `verify:` `Google 308 2015 bounded readback 50 formulas zero errors all authored cells match` -> `pass`
+- `S06` `verify:` `Google 308 2015 quota16 20 gives270.35 missing givesSin dato restored0 gives250.35` -> `pass`
+- `S04` `M` `dev/registry/tests/test_historical_workbook_assembly.py`
+- `S04` `verify:` `historical assembly template preview and form workbook tests 20261006T111951 45 tests` -> `pass`
+- `S04` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S04` `verify:` `2015 live Modelo B2 Guia A1 regenerated title and formatting readback` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2009-2011-junio`
+- `S05` `verify:` `cross revision drift 20261006T112447 60 tests` -> `pass`
+- `S05` `verify:` `308 layouts and historical assembly 20261006T112458 18 tests` -> `pass`
+- `S05` `verify:` `locales parity 20261006T112544 2 tests` -> `pass`
+- `S05` `verify:` `fragment naming 20261006T112623 11 tests` -> `pass`
+- `S05` `verify:` `continuity completeness ratchet 20261006T112627 13 pass 1 fail` -> `fail`
+- `S05` `verify:` `308 normalization apply 20261006T112647 typed equivalence minimality 2019 bytes` -> `pass`
+- `S05` `verify:` `scoped Ruff and ty` -> `pass`
+- `S05` `verify:` `308 normalization second pass 20261006T112718 unchanged fingerprint` -> `pass`
+- `S05` `M` `dev/registry/tests/test_modelo_308_490_lineage.py`
+- `S05` `verify:` `cross revision drift 20261006T113000 60 tests` -> `pass`
+- `S05` `verify:` `308 layouts and historical assembly 20261006T113033 22 tests` -> `pass`
+- `S05` `verify:` `locales parity 20261006T113059 2 tests` -> `pass`
+- `S05` `verify:` `fragment naming 20261006T113204 11 tests` -> `pass`
+- `S05` `verify:` `continuity ratchet 20261006T113207 existing270 debt` -> `fail`
+- `S05` `verify:` `308490 lineage and604308 construct tests 20261006T113346 8 tests` -> `pass`
+- `S05` `verify:` `308 canonical normalization candidate3 20261006T113400 equivalent and2019 bytes equal` -> `pass`
+- `S05` `verify:` `scoped Ruff and ty` -> `pass`
+- `S05` `verify:` `308 normalization apply 20261006T113436 source installed` -> `pass`
+- `S05` `verify:` `308 normalization idempotence 20261006T113459 unchanged fingerprint` -> `pass`
+- `S05` `verify:` `scoped git diff check` -> `pass`
+- `S06` `verify:` `2010 historical preview packet generated21content blocks580format requests` -> `pass`
+- `S06` `verify:` `Google2010 Sheet49formulas no errors all cells match shared compiler output` -> `pass`
+- `S06` `verify:` `Google2010 quota change updates17 and preserves declaredD` -> `pass`
+- `S06` `verify:` `Google2010 blankD showsSin dato while17remains250.35` -> `pass`
+- `S06` `verify:` `Google2010 all bounded content formula format validation restored exactly` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-a-2022-21458-modelo-309.pdf`
+- `S05` `verify:` `official BOE PDF fetch signature and SHA256 capture` -> `pass`
+- `S05` `M` `dev/registry/mappings/modelo_309/2023/0002-fields.toml`
+- `S05` `M` `dev/registry/pipeline/tests/test_m309_numeric_profile.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/export/0001-record-modelo-309-page-01.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/export/_generation.provenance.json`
+- `S05` `verify:` `uv run --no-sync python -m dev.registry.pipeline target-current 309 2023-y-siguientes aeat-dr-309-2023 2023 AD-HOC` -> `pass`
+- `S05` `verify:` `test_m309_numeric_profile.py (4 tests; 20261006T114347.050505Z-pytest-12872-0d687c16)` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/locales/es/modelo/schema/309.yml`
+- `S05` `M` `src/cadrumo/locales/en/modelo/schema/309.yml`
+- `S05` `M` `src/cadrumo/locales/ca/modelo/schema/309.yml`
+- `S05` `M` `src/cadrumo/locales/hu/modelo/schema/309.yml`
+- `S05` `A` `dev/registry/form_layout/tests/test_modelo_309_authored_layout.py`
+- `S05` `verify:` `pytest dev/registry/form_layout/tests/test_modelo_309_authored_layout.py -q (3 tests)` -> `pass`
+- `S05` `verify:` `pytest dev/registry/tests/test_cross_revision_drift.py -q (60 tests; 20261006T115810.665903Z-pytest-67824-6a5c7f47)` -> `pass`
+- `S05` `verify:` `pytest dev/registry/tests/test_registry_locales_parity.py -q (2 tests)` -> `pass`
+- `S05` `verify:` `pytest dev/registry/tests/test_casilla_fragment_naming.py -q (11 tests)` -> `pass`
+- `S05` `verify:` `pytest dev/registry/tests/test_continuidad_completeness_ratchet.py -q (13 pass, same 2 Modelo270 unresolved rows)` -> `fail`
+- `S05` `verify:` `python -m dev.registry.pipeline target-current 309 2023-y-siguientes aeat-dr-309-2023 2023 AD-HOC` -> `pass`
+- `S05` `verify:` `scoped ruff check, format, ty and git diff --check` -> `pass`
+- `S02` `M` `dev/registry/form_layout/tests/test_form_layout_integrity.py`
+- `S02` `verify:` `pytest -o addopts='' -n 0 -q dev/registry/form_layout/tests/test_form_layout_integrity.py dev/registry/form_layout/tests/test_modelo_309_authored_layout.py (19 tests; 20261006T120936.481001Z-pytest-80336-d73f6289)` -> `pass`
+- `S02` `verify:` `scoped ruff check, ruff format --check and ty check` -> `pass`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-modelo-309-2003.pdf`
+- `S05` `A` `src/cadrumo/_data/corpus/normatives/pdf/boe-modelo-309-2017.pdf`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/casillas/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/constructs/0001-declarations.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/revision.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/form_layouts/0001-form-layout.toml`
+- `S05` `M` `dev/registry/form_layout/tests/test_modelo_309_authored_layout.py`
+- `S05` `verify:` `pytest test_cross_revision_drift.py (60 tests; 20261006T121444.308469Z-pytest-47044-fcd021a3)` -> `pass`
+- `S05` `verify:` `pytest test_registry_locales_parity.py (2 tests)` -> `pass`
+- `S05` `verify:` `pytest test_casilla_fragment_naming.py (11 tests)` -> `pass`
+- `S05` `verify:` `pytest test_continuidad_completeness_ratchet.py (13 pass, two pre-existing270 rows)` -> `fail`
+- `S05` `verify:` `edition_delta_migration --modelo 309 --apply (20261006T122326.380223Z-report-registry-edition-migration-49172-5528e483)` -> `pass`
+- `S05` `verify:` `edition_delta_migration --modelo 309 no-op (20261006T122423.451696Z-report-registry-edition-migration-82424-293830a7)` -> `pass`
+- `S05` `verify:` `pipeline target-current 309 2023-y-siguientes aeat-dr-309-2023 2023 AD-HOC` -> `pass`
+- `S05` `verify:` `pytest test_authoring_candidate_inspection.py test_compile_path_never_reads_the_published_bundle.py (11 tests)` -> `pass`
+- `S06` `A` `dev/registry/workbook_demo_nonperiodic.py`
+- `S06` `verify:` `pytest test_workbook_demo.py -k 309 (2 tests; 20261006T121849.541174Z-pytest-45624-9fd358be)` -> `pass`
+- `S06` `verify:` `pytest form integrity,309layout,workbook demonstration -k '309 or declared_alias or shown_twice' (10 tests; 20261006T122700.721368Z-pytest-2028-d7afc561)` -> `pass`
+- `S06` `verify:` `Google Sheets get_spreadsheet_cells 1eEg6DlrE4azhI7lNyOBlGOcHvLLmIb5NHoBBNVDImi0 (1455 expected cells,80 formulas,0 errors,0 mismatches)` -> `pass`
+- `S06` `verify:` `Native quota27 EntradasD39 0-to20 yields ModeloJ65/J67/J72=230; blank yields Sin dato; restore0 yields210 and exact original bounded values/formulas/formats/validation` -> `pass`
+- `S06` `verify:` `get_file_metadata confirms native spreadsheet in Cadrumo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ` -> `pass`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/export_layouts/0001-declarations.toml`
+- `S05` `verify:` `pytest test_modelo_309_authored_layout.py (5 tests; 20261006T123342.017375Z-pytest-28280-68fcb867)` -> `pass`
+- `S05` `verify:` `edition_delta_migration --modelo309 no-op (20261006T123453.719685Z-report-registry-edition-migration-55208-89bb3c59)` -> `pass`
+- `S05` `verify:` `scoped ruff check,format --check,ty and git diff --check` -> `pass`
+- `S06` `M` `dev/registry/workbook_demo_nonperiodic.py`
+- `S06` `verify:` `pytest test_workbook_demo.py -k309 (4 tests; 20261006T123509.452054Z-pytest-65548-5bc01940)` -> `pass`
+- `S06` `verify:` `Google Sheets native1423cell readback,77formulas,0errors,0content mismatches for1lcqW9AhYIerE8EJg7KK-tpJ3zGJvBEyxcb9oepp4mbE` -> `pass`
+- `S06` `verify:` `Live quota03 EntradasD36=20 produces ModeloJ64/J66/J71=230; clear produces Sin dato; restore0 produces210 and exact original cell values/formulas/formats/validation` -> `pass`
+- `S06` `verify:` `get_file_metadata confirms native spreadsheet and Cadrumo folder placement` -> `pass`
+
+## Notes
+
+- `S01` Configured type/style checks include pre-existing concurrent diagnostics outside assigned paths. Two new strict compiler diagnostics were fixed and targeted basedpyright is clean. Format changes in owned files were repaired; unrelated formatting remains. Boundary pass kept all 15 contracts and loaded all 4441 modules, but tree mutation invalidated a stable gate; rerun pending. Shared files contained earlier outbound-review edits on entry; no unrelated changes reverted or staged.
+- `S02` Compiler accepts scenario/template plans and explicitly refuses real saved-review metadata until exact baseline identity and value mapping are integrated. Reuses `saved_form_records` for typed repeating records and `declaration_result_casillas` for result highlighting. Layouts remain generated, not officially reviewed.
+- `S03` 39 unit tests plus 5 integration tests passed, followed by 16 compiler/geometry tests including two added text-format tests. Native Sheets are separate fictional demonstrations created through connector, not production publication receipts. 130 result 6373, income plus100 produces6393, clearing income yields Sin dato, original restored6373; 303 result1680; 349 two fictional rows. JSON output is diagnostic, not lossless reload; live bridge numeric-string rehydration issue corrected using original typed plans. XLSX and JSON delivered under user Documents/Cadrumo/Modelos generados 2026-10-05, not scratch handoff docs.
+- `S01` Final boundary run 20261005T182716 kept all 15 contracts but concurrent source changes invalidated the census and three ledger evidence modules failed loading through unrelated core.operations changes. No stable repository-wide acceptance or commit claimed. Compiler/geometry final 16 tests pass including both new text-format cases; other 25 unit cases and 5 integration cases passed in recorded runs.
+- `S05` S05 remains open: authored drafts are protected and stale drafts refused, but official-source template authoring and per-template live verification are incomplete.
+- `S05` BOE pages 6 and 8 visually inspected. Current declarations lack identity and filing-context blocks; 131 activity table requires four columns. Source enrollment is not applicability attestation for all subsequent revisions.
+- `S04` Independent reviewer closed support-sheet geometry finding. S04 remains open pending all-template readable labels and resolved document reference support. Native Sheets not refreshed in this checkpoint; prior live evidence applies only to earlier version.
+- `S05` 131 2019-2023 calculation sections and five-row activity table authored from BOE annexII and revision record bindings; identity/filing context and full revision coverage remain incomplete. Other131 editions retain their richer revision-specific declarations. Populated integration exposed missing form-only binding allocation in shared layout planner; worker implementing general scalar manual-input support.
+- `S02` Generic grids retain all declared columns and expand canvas; binding projection uses live guarded source references. Populated131 regression uncovered separate missing form-only input allocation, now in progress.
+- `S02` Engine layout version0.3.0 includes declared scalar form inputs while preserving existing formula addresses. Independent review found no material defect.131 activity result fields remain manual by registry declaration; passing live-reference tests is not proof of activity arithmetic.
+- `S05` 130 calculation-section headings authored from pinned BOE annexI with all19casillas and working figure preserved. Complete identity/filing sections and per-template native verification remain open.
+- `S06` Increment only. Full template authorship and populated native verification for every revision remain incomplete. Structural refusals are recorded in audit. Native API verification is not browser visual acceptance.
+- `S05` Partial111calculation layout only. Official identity, payment, complementary-return context and signature still outstanding. Fullcollection and browservisualacceptance notcomplete.
+- `S04` All-template completion remains open. Full160 scan pending at this checkpoint. Review193wording finding corrected and closed byinspection.
+- `S04` All17 former missing-label refusals resolved. Structural compilation remains distinct from the full official-template and native-proof goal.
+- `S02` S02 remains open. Full coverage and browser visual verification incomplete; repository boundary report contains five hard findings.
+- `S02` Locale honesty failure concerns copied Spanish Modelo131 epigraph guidance. Full import gate rerun pending after fixture correction.
+- `S05` Full template fidelity and native130/131 context refresh remain incomplete. Original combined test run had two now-corrected positional assertions.
+- `S06` Browser visual fit unverified. Full160-template goal remains incomplete; long auxiliary guidance needs additional human presentation work.
+- `S05` Native115 proof and full official-form fidelity remain incomplete. No review-state promotion.
+- `S06` Native proof: `https://docs.google.com/spreadsheets/d/1v0CqEccyVwWuBBGH58onNo_yDYTUppxQ6j8wxMgN98k/edit#gid=100` . Browser visual fit and full-template coverage remain unverified.
+- `S06` Two live revision proofs added; Google-rendered visual review and complete printed-form details pending. Full160revision goal remains active.
+- `S05` Historical and current original BOE form PDFs enrolled and inspected in prior increment. Complete negative-declaration/payment/signature fields remain pending; source and form review statuses not promoted.
+- `S05` Initial126filing-authority demo failure corrected with explicit calculation-grade request; negative test preserves filing refusal. Printed negative/payment/signature details remain unfinished.
+- `S06` Native126proof added; Google-rendered browser visual review unavailable. Full160revision scope remains open.
+- `S05` Unsupported official-heading claims removed after review. Negative/payment/signature fields unfinished; calculationauthority unchanged.
+- `S06` 128nativeproofadded. Browservisualfit and complete160revisioncoverage pending.
+- `S05` Correct2018revisedannex visually inspected; original2007eight-boxdesign explicitly rejected for2019revision. Native117proof and fullprintedformdetails pending.
+- `S06` Native117 proof added. Google-rendered visual fit and full160revision coverage remain incomplete.
+- `S05` Current216design authored; historical216applicability-only mapping, printedcontextboxnumbers,negative/payment details and nativeproof remain pending.
+- `S06` Current216nativeproof added. Historical216mapping and browser visual fit remain pending; full160revisiongoal active.
+- `S05` Historical216 liquidation only; context, calculations and native Sheet outstanding. No authority promotion. Independent reviewer found no issue. All full-inventory steps remain open.
+- `S05` Target publication correctly rolled back; no export directory installed. Authored candidate replacement fixed, but coupled export/form transaction remains outstanding. Full publication suite session4957 running.
+- `S05` Full suite finished; previous session4957 pending note superseded. Paired authored form/export installation remains outstanding.
+- `S05` Reconciliation primitive prepares typed form only; not yet integrated or installed. Rejected grouped source transaction supersedes earlier implementation assumption; use existing separate source owners and full validation.
+- `S05` Historical 216 source installation and all-modelo/native workbook coverage remain pending; no plan step closed.
+- `S05` Historical 216 calculation and native Sheet remain pending; all-modelo scope remains open.
+- `S05` Initial missing-operand engine assertions failed against the documented zero-default contract; no engine semantics changed. Live workbook missing-input guards verified separately. Full inventory remains unfinished.
+- `S06` Native Sheet `1sjJa_svcNx9N8C60Asaw7sX7bOUu7luRp_BuFmUl_CY` is fictional development output; API format inspection, not browser visual verification. All-modelo boundary remains open.
+- `S05` 136 payment marker I and signature presentation remain open; both native populated Sheet proofs are pending. No S05/S06 completion claim.
+- `S06` Both fictional native examples restored to 12000; fuller typed identity/event examples, I marker, signature and browser visual review remain incomplete.
+- `S06` Full template fidelity still pending; earlier test-only substring collision fixed and targeted tests rerun.
+- `S05` 2017 historical fidelity, repeated dependent detail, signature/payment controls and native122 proof remain pending. Reviewer requested heading restoration, now implemented.
+- `S04` Visible transport-only auxiliary fields still require removal; existing live examples except122 await shared display refresh.
+- `S06` Native122 is a fictional manual-result draft, not completed fidelity or live-calculation acceptance; all mutations restored.
+- `S04` Range/dynamic formulas with any exclusions are conservatively refused; broad classification and full design acceptance remain pending.
+- `S05` 145 remains a historical 2012 draft; current-form reconciliation and native Sheet proof remain open.
+- `S02` Administrative templates are exportable without widening core filing periods. Native145 verification and full-inventory completion remain open.
+- `S06` Native145 is a historical fictional draft, not verified current communication. Browser visual fit unavailable; all-modelo scope remains active.
+- `S06` Locale review correction verified; native145 remains explicitly historical.
+- `S05` Part1 current202draft only; producer identity safely unknown because application guard refuses incomplete202profile. Historical202revisions,Part2,remainingcontrols and nativeproof open.
+- `S05` Part1 drafts only; historical nativeproof and remaining official sections still open.
+- `S06` Current202 fictional `Sheet1i1BG4Y_msG4X1EB0U8Dg3SpQLNgzCLGlS7XuanxMXLo` verified viaAPI, not browser visual review.
+- `S06` API style verification only; browser fit and full Modelo 202 disclosures/producer profile remain incomplete; full inventory goal remains active.
+- `S05` Full Modelo 202 Part 2 and remaining controls remain incomplete.
+- `S05` Historical combined cooperative/multiple-rate producer cannot establish separate official marks; full fidelity remains incomplete.
+- `S06` API-only appearance verification; full inventory remains open.
+- `S05` Native proof, all three historical revisions, full official controls and Part 2 remain incomplete.
+- `S05` Review confirms scoped Part 1 structure; full official-form acceptance remains open.
+- `S06` Full form fidelity and all historical222revisions remain open; API appearance verification only.
+- `S05` Historical nativeSheets pending; full Part2 and selector/payment fidelity still incomplete.
+- `S06` Original fixture live result0 exposed overridden computed inputs; repaired upstream fixture. Full form controls/Part2 and broader inventory remain open.
+- `S03` Current222box19 was redundant fixture input, not incorrect native calculation; historical222defect remains fixed separately. Full inventory stays open.
+- `S05` Full fidelity and native Sheets proof remain open; 2017 normal snapshot refused support envelope as expected; no authority policy changed.
+- `S06` Native evidence is API-only; historical232native proof, code explanations and country labels remain pending. Entire catalogue goal remains active.
+- `S05` Historical live rendering requires a separate fictional preview contract; investigation recorded in canonical audit. Full catalogue work remains open.
+- `S02` Fictional preview metadata and materializer support only; neutral compiler extraction, exact canonical-source development factory, historical native Sheets and complete catalogue fidelity remain unfinished. Tests use synthetic plans, not historical authority or live Google verification. Initial `import/__all__` sorting failures corrected.
+- `S02` Shared neutral cell assembly extracted with production snapshot grounding retained. Real historical232 revision assembles its bindings and fictional year input; normal2017snapshot still refused. This is not a completed preview factory or human form path; full catalogue and native per-template verification remain open.
+- `S02` Exact fictional source and builder added. Initial tests exposed modelo-wide source membership admitting later design; restricted to revision declarations and form design pins. Mistaken `layout.source_refs` access and test exception expectations corrected before passing run. Human projection, live historical Sheet and full catalogue remain open; no filing support changes or live provider mutation.
+- `S02` Shared historical human renderer implemented without synthetic filing snapshot or producer state. Repeating fixture records remain unknown; full catalogue completion remains open.
+- `S06` Historical fictional native proof added to Cadrumo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ. API formatting inspection only; browser visual fit and full160revision fidelity remain incomplete.
+- `S05` 2024/2025 main sections authored retaining richer revision-specific fields and DPA/DID. Review generated; negative/deferred-payment marks, signature and full fidelity remain open. Initial stale digest from materialized authority corrected using canonical authored loader. Native2024/2025Sheets and2026revisions still pending.
+- `S06` Native2024/2025fictional proofs added in Cadrumo folder; activity-row results remain declared manual inputs. API-only formatting verification, no browser-fit claim. Full131negative/payment/signature controls,2026revisions and fullcatalogue remain open.
+- `S05` 2026 layouts retain generated review status: full printed fidelity and native Sheets verification remain pending. S05 and S06 remain open. Stale digests corrected after adding context-bearing layouts; period assertion now follows the declared demo case.
+- `S06` Both distinct compiler-generated examples are in the existing Cadrumo Drive folder. Verification is native API readback, not browser visual review; activity results remain explicitly manual and complete printed-form fidelity is pending. Full catalogue S06 remains open.
+- `S05` Visually inspected existing BOE-A-2000-21430 consolidated PDF Annex V summary page 35, recipient page 37 and instructions pages 40-41; reused existing exact-file source pin despite its historical modelo-115 source ID. Both review states remain generated. Full paper geometry, signature/collective-support coverage and populated native Sheets remain pending. Existing `demonstration_records` supports 349 only; Modelo 180 needs a typed fictional repeating-record path rather than invented cell data.
+- `S05` Modelo 180 fictional recipients use the existing CalculationRevision `row_binding_values` channel resolved from the selected registry, with no runtime schema extension or layout coordinates. Both revision examples retain missing fields as unknown and disclose that saved detail is independent from editable annual-source totals. Two earlier focused failures identified relation-prefill cells as the correct total-input channel; corrected before the passing full suite.
+- `S06` Native API verification only, not browser visual review. Saved detail uses registry bindings, separate from annual-source scenario totals; guide discloses this. Province integer 08 displays as 8 and repeated monetary values currently lack explicit money formats: presentation follow-up remains required alongside full printed-form fidelity. Full inventory S06 remains open.
+- `S02` Preserve registry text-family values in saved binding projections even when the export wire field is numeric, preventing province 08 from becoming 8. Numeric repeated cells inherit existing compiler number-format facets by casilla source address; no modelo-specific rendering branch or tax formula changes. S02 remains open for the full plan boundary.
+- `S06` Resolves the recorded province-code and repeated-money-format issues in both live examples. API readback only; full visual fidelity and catalogue coverage remain outstanding.
+- `S05` Official BOE-A-2015-11596 is an electronic record design, not a printed casilla form. Reviewed original text and rendered annex page 9 plus enrolled current AEAT PDF sections; use truthful human adaptation of declarant/entity-income/member sections with revision-local source pins. Review state remains generated. Four earlier revisions still incomplete (2015/2016-2018/2019-2021 each currently only two casillas; 2022 lacks full declared geometry). Entity-income multiplicity, conditional visibility, legends and native populated examples remain pending.
+- `S02` Saved binding values now follow semantic casilla types instead of fixed-width wire types: signed amounts encoded as text remain numeric, province 08 remains text. Native verification exposed ratio 60 displayed as 6000%; ratio formatting now preserves magnitude without assuming a fractional scale. Earlier live examples need format reconciliation where affected; full S02 remains open.
+- `S05` 184 fixtures now exercise `resolve_atribucion_binding_row_values` and persist both typed detail and row bindings, matching the production attribution producer. Original detail-only fixture used an unsupported replay channel. Both 2024 and 2025 examples use explicit fictional identity and declared amounts; no tax calculations or automatic share allocations invented. Earlier four 184 revisions and full official fidelity remain unfinished.
+- `S06` Both fictional examples are in Cadrumo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ. API formatting verification only; browser visual fit unverified. Initial ratio display defect fixed in shared compiler and patched from regenerated format directives. Full160revision native proof and official fidelity remain open.
+- `S05` Authored summary plus human adaptation of electronic loan/property/refund detail, retaining all62casillas. Review remains generated: signature/administrative regions, record multiplicity, conditions and native Google Sheet proof remain pending. Official AEAT https://sede.agenciatributaria.gob.es/Sede/todas-noticias/2025/julio/15/modelos-declaraciones-informativas.html confirms replacement for ejercicio2026 under Orden HAC/747/2025 (BOE-A-2025-14600). Existing registry revision2022-y-siguientes lacks that successor; example is explicitly2025, not evidence of2026coverage. Full catalogue remains active.
+- `S02` Compact date presentation derives from validated explicit YYYYMMDD component export policies, not field names or digit guessing. Original source remains unchanged; DATE rollover is refused through calendar round-trip check. Workbook-only presentation enhancement; no tax/formula or filing-format changes. FullS02 remains open.
+- `S06` Fictional2025 native Sheet placed in existing Cadrumo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ. Verification viaAPI only; browser visual fit unverified. Full official fidelity, multiple-operation support and missing2026 successor remain open; no complete-catalogue claim.
+- `S05` Official instrument defines electronic-only design. Authored human adaptation uses declarant/person sections and three-month comparison; removes misleading wire-offset box numbers88-103. Effective frame is2026 even though retained revision ID says2025-y-siguientes. Review remains generated. Historical2003-2025 has only2enrolled fields; multi-person records,conditional visibility and nativeSheet verification remain unfinished.
+- `S06` Live example https://docs.google.com/spreadsheets/d/1HEEwbWk9PQukYD6Vziak0-UC2IiimlVI3WbhYxOAaQg/edit#gid=100 is in requested Cadrumo folder. Native API verification only; browser fit unverified. Modelo185 electronic-only source adapted into human sections; no fiscal calculations invented. Historical coverage, repeated people, and conditional entity visibility remain open; full S06 remains open.
+- `S05` Both Modelo188 revisions now preserve the official three-column summary with independent positive/negative rows and blank negative-row retention. This is partial authoring, not full-form completion: only five summary casillas exist; recipient records, identification, amendment and signature sections require registry enrollment. BOE-A-2007-18192 additional provision three explicitly replaces the recipient page, not the summary. No native Modelo188 Sheet created yet.
+- `S05` AEAT 2017 design is now acquired, overturning the acquisition premise in old registry commentary; post-HFP/1308/2017 reconciliation for 2022 remains required. Source applicability deliberately restricted to2017 until that review. Both 2017 and2023 design page6 explicitly count negative OR ZERO bases in box04; Spanish label/help and grid row corrected. Recipient casillas/bindings not enrolled yet; full form and native verification remain open. Initial aggregate check refused URL still in historical exclusions; classification reconciled then check passed.
+- `S05` Current Modelo188 now places all23 casillas in summary and perceptor sections;18 new current recipient fields grounded in AEAT2023 PDF8-18 with explicit `predecessor_edition_silent` evidence from archived2017 PDF8-18. No historical2022 recipient fields fabricated. Invalid modality/negative unsigned amounts rejected; signed euros, province codes, text annuity ID and percentage-point decimal type preserved. Existing five-summary-only test updated to distinguish summary from recipient detail; focused rerun19passed. Remaining broad lineage failure is Modelo270 perc.ciudad-nacimiento and perc.codigo-pais-nacimiento, unrelated files left untouched. Initial source compilation rejected7 singleton roles; explicit per-field slot cardinality fixed and validated compilation passed. Applicability grade retained, source inspection agent-reviewed only; layout remains generated. Current fixture has one fictional recipient, declared independent amounts; no new fiscal formula. Identity context, repeated saved rows, conditional/cross-field controls, historical reconstruction and native Sheet verification remain open.
+- `S02` Live Modelo188 revealed registry enum constraints were discarded by shared workbook plan. Added `allowed_values` facet and shared exact literal-escaped validation formula consumed by both transports, preserving numeric bounds when combined and permitting missing inputs. Human messages show actual allowed values. Tests cover literal escaping, empty choice refusal, optional cells, transport parity and XLSX stop enforcement. This fixes enum propagation only: registry pattern and length constraints are still not represented by SheetCellConstraint and require follow-up before claiming complete validation fidelity.
+- `S06` Created in requested folder: https://docs.google.com/spreadsheets/d/1fjsdM2JzdKkyK9HtKjtmmWKpDtuN3iXrO52B4rT0H28/edit#gid=100. API validation rules and Google formula evaluation verified, not browser entry rejection: API writes can bypass data validation. Temporary E11 probe removed, modality restored1, annuity operation restoredblank; independent readback confirms. No CUA/artifact renderer available; browser fit remains unverified. This is one fictional recipient with independent declared values, not automatic fiscal calculations or complete Modelo188 identity/multiplicity support.
+- `S02` Extended shared SheetCellConstraint with `min_length/max_length,` nonnegative bounds and reversed-bound rejection. `text_validation_formula` combines exact enum, length and numeric bounds in both transports; empty cells remain allowed. Human messages show character limits. Actual Modelo188 empty annuity identifier now compiles with24character limit in both Google request and XLSX validation. Existing live Sheet has not yet received this additional length rule; provider boundary evaluation pending. Registry regex patterns still lack shared workbook representation; no claim of full validation parity.
+- `S06` API writes bypass interactive validation: this checks the installed strict rule and Google's formula evaluation, not browser entry rejection. Full modelo/revision coverage remains incomplete.
+- `S05` Remaining broader failure: pre-existing Modelo 270 perc.ciudad-nacimiento and perc.codigo-pais-nacimiento are absent from the lineage-debt ledger. No unrelated declarations were changed.
+- `S05` All 32 Modelo188 current casillas now placed; manual identity fields are not automatic profile binding. Repetition, cross-field checks, regex validation in workbook transports, historical full coverage and authority publication remain pending.
+- `S06` API content, formula, formatting and protection verification only; no authenticated browser visual inspection. The same demonstration Sheet was updated, not a new duplicate.
+- `S05` Remaining lineage failure unchanged: Modelo270 perc.ciudad-nacimiento and perc.codigo-pais-nacimiento are not named in debt ledger.
+- `S05` Normalization owner refuses detaching current lineage attestations with distinct historical/current `source_refs.` No transformation was applied; normalization/idempotence acceptance remains open. Current snapshots compile and workbook generation passes with revision-specific source windows.
+- `S05` Manual applicability-grade fields and historical instructions are not filing authority publication or completed multiple-recipient/cross-field/calculation implementation.
+- `S06` Live checks establish native formula/rule behavior and API formatting/protection structure, not browser entry rejection or visual fit. No authenticated CUA/artifact renderer available.
+- `S05` S05 remains open. Chain-bound resolution preserves complete lineage evidence; standalone detachment still refuses evidence loss. Migration report-root test now follows the configured development log root.
+- `S05` Boundary gate: all 15 contracts kept, four private cross-package findings in `dev/docs/sequences/export_evidence.py,` `dev/docs/tests/test_sequence_goldens.py` and `dev/registry/tests/test_workbook_demo.py;` loadability unavailable because import target metadata is stale.
+- `S05` Independent Modelo 188 collapse verification is still running in process session 8962; no completion or publication-readiness claim.
+- `S05` S05 open. Original BOE PDF 538814 bytes sha256 33383cb3eecc8d31d9e9d8596740ae7962d950ce805ab1900ce37f848ae29090: Annex I PDF5 visually inspected. All 25 registry fields placed across four revisions; only summary boxes 01 and 02. Historical design pinned to aeat-dr-189-2021-2022, successors to aeat-dr-189-2023.
+- `S05` Composite contact and amendment fields, signatures, repeated records, automatic total aggregation and complete input constraints remain pending. Authored layouts retain generated review state. No authority publication claim.
+- `S05` Transport parity tests moved beside owning Google adapter to remove private cross-package import. Broader boundary rerun session 36834 still running; independent collapse session 8962 still running against earlier snapshot.
+- `S06` S06 open. New generated Sheets in folder 1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ: 2022 https://docs.google.com/spreadsheets/d/1SQ1Lf4AKXAbvBOeyKX6bhMLjku26FvGiIHF1TB6Gkt4/edit#gid=100 ; 2023 `https://docs.google.com/spreadsheets/d/1EQG-r3D9rg9qkybYT78VWfDseX05m6o4BJdGGI7j_Q0/edit#gid=100` ; 2024 `https://docs.google.com/spreadsheets/d/1_3D_Kv4_sf2Gr1i4axQQyICrYIDBv23mz8hoZtmXhZ8/edit#gid=100` ; 2025 `https://docs.google.com/spreadsheets/d/1K2iTi13yWRdi34y2Ds3z_PFnwdyIlWfThQ5MUCyUj6E/edit#gid=100` .
+- `S06` Fictional values from checked-in demonstration cases through canonical compiled registry and shared materializers. Native API verifies year, province 08, valuation 1500 and nominal 100. No authenticated browser or artifact renderer available; pixel-level visual fit unverified.
+- `S05` Corrects earlier test-move checkpoint: src adapter tests cannot import dev compiler. Real registry-to-XLSX checks remain in dev; adapter-owned tests build the shared typed plan and assert native/XLSX strict formula parity. No dev imports remain in the new adapter test.
+- `S05` BOE corpus table now classifies 188 and 189 downloaded PDFs plus twelve earlier form PDFs, whose local digests were compared against freshly fetched official source bytes before recording captures.
+- `S05` Independent 188 verifier per-modelo artifact currently reports failed equivalence: `lineage_attestation_provenance_differs_from_hydrated_casilla,` despite unchanged fingerprints and converter acceptance. The overall process session 8962 remains live; this is unresolved and not a passing independent proof.
+- `S05` Final boundary run 20261006T031456.919018Z-check-import-boundaries-65988-76077c7f: zero contract occurrences after removing adapter test dev dependency; three existing private imports in dev/docs remain, plus stale import-load target metadata. Full import gate not passed.
+- `S05` S05 remains open. Independent comparison now retains distinct lineage evidence while ignoring exactly redundant sidecars; nine focused tests pass. Full collapse suite had 38 passes and one stale Modelo131 raw/effective-count assumption; corrected against canonical owners and affected test now passes.
+- `S05` 188 and 189 per-model independent proofs at var/storage/tmp/modelo188-189-independent-20261006b pass equivalence and idempotence. Earlier full process finished with unstable inputs and cannot establish current whole-worktree completion.
+- `S05` Modelo190 all four authored layouts retain every registered field and exact repeating record bindings. Historical BOE summary and recipient pages visually inspected; 2025 excludes withdrawn paper numbering. Four revision coverage tests pass. Populated examples, identity context, conditional controls and live verification remain pending.
+- `S02` New Modelo190 populated tests exposed section-local row discovery losing recipient identity when a section has only unknown fields. Shared projection now discovers indices across the exact matched export record, then projects visible columns. Preserves unknown values and unsupported-record refusal. Twelve demonstration checks and 21 owning regression checks pass. No native Modelo190 Sheets generated yet; S02 remains open.
+- `S05` Four Modelo190 fixture cases now compile fictional saved recipients through existing row bindings and shared workbook materializers. Historical2022-2024 formulas use recipient aggregates, current2025 formulas use annualModelo111 totals; initial fixture assumption corrected after three failing cases. Guide accurately distinguishes each source and discloses independent saved detail. No tax formulas changed. Identity context, native Sheets, conditional controls and full fidelity remain pending.
+- `S06` S06 open. Four compiled fictional examples created in Cadrumo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ: 2022 `https://docs.google.com/spreadsheets/d/1MqUZkrX1-4mPUeJMV84JbVvx5vCDO_LOwOesN9sqBCA/edit#gid=100` ; 2023 https://docs.google.com/spreadsheets/d/17IZKsBeSVnR2w1uXthU6bc1yUCIDjW2Wui4UbiqbNGE/edit#gid=100 ; 2024 `https://docs.google.com/spreadsheets/d/1cFBHU7DOGTTnl7DkicPM_PtDgkZPf0rWK5hbkUgfpOE/edit#gid=100` ; 2025 `https://docs.google.com/spreadsheets/d/18tgCJ9bwz2_qx0LMx7Em23otJT8m1NMyBO6rx4tDj7M/edit#gid=100` .
+- `S06` 872/936/948/1019 populated cells read back with zero errors and no registry hashes or row-binding IDs. Exact content comparison passes after Sheets normalization of empty strings and unnecessary ASCII tab quotes. Both recipients,province08,income42000 and withholding4200 verified; live input edit recalculates current withholding and restoration readback confirms4200.
+- `S06` API-only formatting inspection; authenticated browser and artifact renderer unavailable. Historical source aggregates and currentModelo111 annual totals remain distinct. Declarant identity context, signature, conditional controls and whole-inventory fidelity still incomplete.
+- `S05` All four Modelo190 layouts now project declarant name and filing year through exact declared export context, using fictional typed producer facts in examples. Twelve selected tests pass, including refusal to display distinct presenter identity.
+- `S05` Verified unresolved mapping defect: `dev/registry/mappings/modelo_190/{2020,2023,2024,2025}/0001-records.toml` and generated exports bind declarant NIF to `presenter.tax_id` while declarant name binds `taxpayer.full_name.` The current2025 mapping has `presenter.tax_id` at lines133 and402 (type1 andtype2 declarant identity). Do not fabricate a layout override or pass presenter==taxpayer to conceal it. Correct official-source mappings and regenerate through target owner before adding NIF context.
+- `S05` Existing native Sheets still contain the earlier layout without these new context rows; live refresh pending. S05/S06 remain open; no completed identity, publication, or full-catalogue claim.
+- `S05` Official2025 AEAT PDF pages3 and7 and all four enrolled extracted sources identify positions9-17 as declarant NIF in both record types. Corrected eight mapping entries from `presenter.tax_id` to `taxpayer.tax_id;` four canonical-loader negative regression cases pass. `https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DISENOS_LOGICOS_190_2025.pdf`
+- `S05` Source mappings are corrected but generated targets and runtime authority are NOT updated. Canonical pipeline check refuses candidate because changing export producer semantics invalidates authored form `source_state_digest.` Existing `_form_layout_companion` preserves authored drafts; reconciliation.py admits only a first export addition, and cli.py `reconcile_authored_form` route refuses republish. Need exact reviewed authored-context-change reconciliation and export/form closure through their owners; do not refresh hashes blindly, hand-edit generated exports, downgrade authored layouts or bypass validation.
+- `S05` Existing native examples still omit declarant NIF and do not yet contain new name/year context. Full goal remains active.
+- `S05` Added explicit republish-target --reconcile-unreferenced-producers path. Only unchanged unreviewed authored forms whose undisplayed header producer keys changed may reconcile; exact full revision comparison refuses geometry, bindings, visible context and other edits. Existing export eligibility, manifest receipt, source-pinned disposition, full overlay validation and separate form owner remain required. Inherited/superseded targets refused.
+- `S05` Six focused tests pass after correcting an invalid synthetic enum in the first broader test run. Broader regression process49513 still running; initial failure belongs to the now-fixed test, final result pending.
+- `S05` Added exact190/2022 disposition for two records changing declarant NIF `presenter.tax_id` to `taxpayer.tax_id,` source aeat-dr-190-2020 sha4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32. Digest-bound publication process70263 confirmed live and still running in full candidate validation. Do not restart it or claim success. Retire disposition after successful target closure. Remaining190revisions, NIF form context, live refresh and complete catalogue remain open.
+- `S05` Publication70263 rolled back with previous target restored: active replacement backup was included in unrelated-source census. Reused existing journal-bound backup validation with captured source pin and old/candidate manifests; no arbitrary backup directory exclusion. Scoped lint/type checks pass.
+- `S05` Broader regression49513 terminated:67passed,1failed. Sole failure was invalid synthetic `presenter.full_name` enum already corrected and verified in focused six-test rerun. Publication and historical first-export regressions passed.
+- `S05` Retry process74676 confirmed live after backup fix; still validating/publishing, no success claim. Retain1902022 disposition until terminal result and closure. All other190targets, NIFform enrollment, native refresh and fullcatalogue remain open.
+- `S05` 2022 export and authored-form reconciliation completed through canonical owners; target-current reports fresh canonical output matches committed target. Retired resolved2022 drift row. Runtime authority not published; NIF form context still omitted.
+- `S05` 2023 candidate refusal investigated by exact typed comparison: only two intended producer keys differ plus detached predecessor/family storage metadata. Bridge now compares full-chain future overlay against full-chain live revision, preserving lineage metadata rather than excluding it. Scoped lint/types pass.2023 retry process62896 confirmed live; do not restart.
+- `S05` Declared exact two-record source-pinned dispositions for remaining2023/2024/2025targets. Only2023 started;2024/2025 remain pending. New six-test fixture reconstructs the old erroneous producer mapping so tests remain meaningful after real2022 repair.
+- `S05` 2023 process62896 ended before publication: detached candidate form is 0001-complete-edition.toml, while bridge wrote duplicate0001-form-layout.toml. Now update candidate fragment selected by existing `_editable_form_layout_fragment` owner (supports both valid filenames). Corrected retry79889 remains confirmed live; no2023completion claim.
+- `S05` Prepared nextModelo193 evidence while source writers quiesce: official BOE-A-2011-19396 PDF downloaded to operationaltmp,1062003bytes sha5f4a03dfd1e7cd0a1798ee47d9d9ee626324519fb3ba1714e358f8f94f7c1657. Visually inspected PDF12summary,14recipient,16expense annex: summary boxes01count02base03withholding04paid withholding05expenses; recipient/expense rows have no printed casilla offsets. Official URL https://www.boe.es/boe/dias/2011/12/12/pdfs/BOE-A-2011-19396.pdf . Current consolidated text still includes AnnexI; annexII record changes apply2023/2024/2025. Not yet enrolled source or authored193layouts; no completeness claim.
+- `S05` 2023 canonical export/form publication completed. Retired resolved2023 drift row. Runtime authority not published; nativeSheets still await identity refresh.2024 correction initiated next; fullscope remains open.
+- `S05` 2024 canonical export/form reconciliation completed with taxpayer NIF mapping. Retired resolved2024 disposition.2025 target correction started next. Runtime authority and nativeSheets remain unchanged; fullcatalogue remains open.
+- `S05` Read-only193 inspection confirms42/48/52/53fields across2022/2023/2024/2025 and two formulas each; three exportrecords declarante,perceptor,gastos. All four mappingepochs2019/2023/2024-early/2025 use `presenter.tax_id` in all three declarant-NIF headerfields. Correct before authoring identity context. No193source mutations yet.
+- `S05` All four190exporttargets now map declarant NIF to `taxpayer.tax_id.` Retired final2025drift disposition. Added NIF context to authored forms via exact exportfield, preserving name/year. Fictional declarant now Empresa ficticia Ejemplo/B12345674, distinct from recipients and presenter. Twenty relevant generation/identity regression checks and six reconciliation negatives pass. Runtime authority not published; full official fidelity and inventory remain unfinished.
+- `S06` Refreshed existing IDs2022 `1MqUZkrX1-4mPUeJMV84JbVvx5vCDO_LOwOesN9sqBCA;2023` 17IZKsBeSVnR2w1uXthU6bc1yUCIDjW2Wui4UbiqbNGE;2024 `1cFBHU7DOGTTnl7DkicPM_PtDgkZPf0rWK5hbkUgfpOE;2025` `18tgCJ9bwz2_qx0LMx7Em23otJT8m1NMyBO6rx4tDj7M.` CompanyNIF/name/year appear Modelo I8:I10; totalsJ17/J18 remain42000/4200.879/943/955/1026populatedcells match compiler output after native formula normalization, zero formula errors, registry hashes, bindingIDs or presenter identity. API-style verification only; browser visual fit unverified. S06fullscope staysopen.
+- `S05` Official Modelo193 design positions 9-17 identify declarant in all three records; corrected twelve `presenter.tax_id` producers across four epochs. Four mapping tests pass. Canonical 2022 republish currently running in confirmed process 36953; other three republications, authored layouts and native Sheet verification remain pending. No runtime authority adoption claimed.
+- `S05` 2022 and 2023 canonical publication terminal success; retired their resolved three-record identity drift dispositions. 2024 publication launched next. Official PDF pages 12,14,16 visually rechecked: summary boxes01-05, unnumbered recipient/expense fields. Canonical formula inspection shows 2024 uses Modelo123 annual bindings; other three editions use recipient-row aggregate bindings. Form authoring and native verification remain pending.
+- `S05` 2024 publication terminal success; retired corresponding drift disposition. 2025 publication confirmed running as session96201. Added authored-layout acceptance tests before installation; not yet executed. Authored script prepared in session `storage193_author_script` with four-locale headings, pending source quiescence.
+- `S05` All four Modelo193 generated exports corrected and canonical republication succeeded; drift ledger rows retired. Four authored drafts installed:42/48/52/53casillas on4/5/5/5pages, source-pinned official summary01-05, exact taxpayer identity context, separate recipient/expense repeating record owners. Eight tests pass. Four-locale headings installed. Recomputed source digest after adding context using owning integrity function. No runtime authority publication or native Modelo193 Sheets yet; signatures, conditional display and final human review remain pending.
+- `S06` Modelo193 four populated native Sheets in `folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ:2022=https://docs.google.com/spreadsheets/d/1_EAFcl9v4Cod7T4GlhDgv3fx-3S1H-AMQMG-cZ-t6X0/edit;2023=https://docs.google.com/spreadsheets/d/108Evjf6amKjRqXEdVCA6H57pa9NRA7F9nuTNrS7XHRg/edit;2024=https://docs.google.com/spreadsheets/d/1dlZtkhG-bTVIhMIdgSFN-zNgcvgaFXW_xbkww8g-sR8/edit;2025=https://docs.google.com/spreadsheets/d/1uQYH_cx63IrXKdnfEzrgTzKp5-vTnMm6w5T-N3ye-9U/edit.` Full bounded populated readback matches compiler573/655/706/729cells after harmless formula quote normalization; zero errors/internal hashes. Summaries2recipients/3000base/570withheld/570paid/25expenses. Exact record replay separates2recipients and1expense;20tests pass including180/190regression. Native2024TarifasC4changed570to600:ModeloJ23became600,base3000/paid570/expense25unchanged;restored570andreadbackconfirmed. `Initial2022es_ESlocale` caused comma-formula parse `failures;restorednativeen_GBandrewrotecompilerformulas,allerrorscleared.` APIformatinspection confirmsArial/wraps/merges/protectedform/frozen4/hiddengrid;noauthenticatedbrowserorartifactrenderavailable,visualfitnotclaimed. No runtime authority adoption;fullinventorygoalremainsopen.
+- `S05` Modelo194 three editions currently only5manualsummarycasillas at applicabilitygrade; noexportlayout,identitybindings,recipientrecordsorformulas. Downloaded official119pageBOE-A-1999-22309PDF26494318bytes sha256b5cf2fc1a66909d71b4c1c27b6538131f8de27bf5a95e9e4694371069becda35 forvisualinspection:PDF79eurossummary,PDF81recipients. Authoredpartialtwo-rowthree-columnsummaryfor2019/2023/2024, positive01/02/03negative04/05/blank; all3tests pass. Fourlocaleheadings expresslydisclosepartialimplementation. Sourcepins reuseboe-modelo-194-form-layoutandexactAEATedition. Correctedsourcecataloguecommentmistakenlyattributing194to2011Ordenwhichapproves193. Full194remainsOPEN:deriveidentity/amendment/recipientfieldsfromofficialdesigns,installcanonicalexportownersandbindings,authorremainingpages,provepopulatednativeSheets;noscopecompletionclaim.
+- `S05` Canonical `extract_record_design.require_complete` reads allthreeModelo194officialPDFs:each17declarantefields,recipient23in2019/24in2023and2024;bothrecordslength250andcontiguous. Added3sourcegeometrytests. Firsttestassumedoffset188absentin2019;sourceinspectionproved188-250blankregion,correctedassertiontoactualdescription/length;rerun3pass. Later188territorialindicatorreplacesoneblankbyte. Detail144-156isCEROSnoteditablehistoricalreductions;118-130acquisition,131-143disposal,157-169base. ExistingWithholdingObservationhas193identity/securitycodefieldsbutno194acquisition/disposal/origin/linkagecontract,requiresgroundedtypedbackendextensionandrecordgroupingbeforecanonicalmapping/publication. No194fullform/nativecompletionclaim;continueimplementation.
+- `S05` `Addednullablefinancial_asset_acquisition_value/disposal_value` withnonnegativefiniteDecimalvalidation; official194positions118-130/131-143 and specialoriginDnoncompletion grounded in2024PDFpages16-18. AddedoriginA-EandrelatedentityV/blank/unknownfactsfrompositions78/187. Noautomaticbaseformulaorannualadditionintroduced:currentgroupingrefusescontradictoryacquisitiondetails. Twelve newnegative/missing/zerotests plus190/193rowgroupingregressions31pass. Full194transactiongroupingstillrequiresimplementationandgroundingbeforebindingenrollment;typedfactadditiondoesnotclaimcomplete194support.
+- `S05` `Addedexplicitregistry-selectableper_source_allocationgrouping` keyedrecipient/source/allocation;annual190/193groupingunchanged. Duplicatesourceallocationrefusesbeforeadditiveaggregation,includingexactreplayandconflictingamounts. Testsproveidenticalanddifferenttransactionvaluesstayseparateandorderindependent;35focusedtests pass. Thisisgenericmechanicalsupport,notyet194bindingenrollmentnorcompletefilingimplementation. Nextderivefull194semanticmaps/renderprofiles/casillasandbindingswithscopedofficialevidence;allthreefullforms/nativeSheetsremainpending.
+- `S05` Authored3source-pinnedsemanticinputswith2recordseachand42/43/43entries. Allofficialparseranchorscovered;sourceSHAverified;declaranteNIFbothrecordsbindtaxpayer;recipientNIFusesrowbinding;144-156fixedzero;2019reserved188-250vs2023/2024territory188andreserved189-250preserved. Contact59-107andamendment121-122partsuseeachsourceowncontentstatement. ThesearependingsemanticinputsNOTvalidatedgeneratedtargets:casillas/bindingdeclarations,renderprofiles,bootstrapregistration,strictsemanticjoinandpublicationstillrequired. Sixsourcegeometry/semanticinputtests pass. Runtimeauthorityandcomplete194formsremainunchanged/unpublished.
+- `S05` Authored3typedrenderprofiles:21/22/22singletonnumericrules,one13byteblank-or-Nsignedrecipientbase(10integer+2fraction+sign),fixed13zeroreservedmonetaryslot,telephonepart59digit-string,widths/sourceanchorspinned.2019/2023telemticchoiceTvsC;2024sourceonlyTnoconditionalchoice. All3profileloadersaccept;9source/mapping/profiletestspass. Thesechecksarenotfullpipelinevalidation:binding/casilladeclarationsstillpending,semanticparteligibilityandfullsourcegrammarchecksnotyetexecuted;no194targetpublicationorcompleteSheetclaim.
+- `S05` Enrolled six contact and declaration-identification fields once in the 2019 baseline, with twelve grounded continuation attestations across 2023 and 2024. All three layouts place eleven fields, leaving record offsets out of displayed box numbers. Four-language labels installed through dev.locales.
+- `S05` Focused test run 20261006T044816.387753Z-pytest-16876-832047f1; drift 20261006T044827.815913Z-pytest-564-e7d1b8f2; combined gates 20261006T044925.172979Z-pytest-50720-509df8ca; packing repaired and rerun 20261006T045007.148013Z-pytest-14852-99c2cdac. Remaining failure is two unresolved Modelo 270 lineage rows.
+- `S05` Recipient detail, generated filing targets and live Modelo 194 sheets remain unfinished. No authority promotion, publication or complete form claim. S05 remains open for the full inventory.
+- `S05` Corrected earlier checkpoint assumption: `scoped_families` asserts inheritance; it does not isolate an edition. 2023/2024 now explicitly clear not-yet-authored export layouts, preserving 2023 territorial binding while refusing to adopt 2019 record design. Canonical loader regression renders 2019 into an isolated real revision chain and proves later layouts remain absent. Removed two no-op parameter cases after initial test pass; rerun pending. Formatting correction pending while publication inputs remain stable.
+- `S05` Publication retry process session20859 is running; no successful publication claim. Full recipient-page authoring, derived summary, populated cases and native Google Sheets remain pending. Full-inventory S05/S06 remain open.
+- `S05` Publication advanced past territorial binding mismatch and then refused the missing export application link. Added the existing `export_draft` consumer with snapshot requirement and inherited official procedure evidence; no authority-grade promotion. Retry session37672 running. S05 open; no live Modelo194 Sheet exists yet.
+- `S05` Recipient enrollment from preceding work: 17 baseline row bindings/casillas plus territorial indicator in2023; effective counts28/29/29casillas. Actual parser leaf maps and three strict render profiles now preserve contact names, split percentage, signed base, reserved CEROS and2024T support. These are not complete human forms. Earlier tests recorded in run20261006T051543.506504Z (21), withholding20261006T050707.164455Z (27), other withholding20261006T050733.483482Z (25), signed composites20261006T051649.349428Z (56); no claim these establish full model completion.
+- `S05` Scoped evidence validator proved export link requires `layout_authority,` not procedure guidance alone. Export source now aeat-dr-194-2019; narrow successor family overrides replace it with each exact2023/2024design. New retry session32902 confirmed live. Previous terminal refusal was masked by historical-repair fallback; no completed publication claimed.
+- `S05` Visually reinspected official BOE recipient PDF81 printed40253: five recipient blocks and positive/negative page totals. Modern record design reserves old reductions at144-156 as zeros; do not recreate an obsolete editable reductions field. Full human form and live proof remain pending.
+- `S05` Generated 2019 export source installed through owning pipeline, no runtime authority adoption claimed. Authored three human pages with all28registered fields and exact taxpayer/year context. All17recipient fields bind to actual perceptor record, grouped in sections with at most4columns. No obsolete reductions input. Four-language headings installed with dev.locales.
+- `S05` First layout check failed on source digest after adding context; reloaded final context and refreshed owning digest, then17tests passed. 2023/2024 retain honest unplaced recipient fields until their generated owners are installed. All five summary totals remain manual; derived summary, signature/conditional controls, populated cases and native Sheets still pending. Full inventory goal remains open.
+- `S05` 2023 next publication preparation confirmed blocked by detached-edition staging: distinct lineage evidence for declarante-contacto-telefono would be lost. Canonical materialiser correctly refuses; do not strip attestations or replace their separate sources. Need publication staging that retains actual ancestry/evidence while validating only newly rendered target. This is implementation work, not a user permission blocker. No active process; session32902 completed successfully. 2019 source export remains installed, no native194Sheet yet.
+- `S05` Retain actual source revisions when distinct lineage evidence cannot be detached. Exact scope authority and unchanged sibling/target-fact checks accompany this route; only target export and reconciled form differ. Canonical derived casilla export references validated before comparison. No weakening of detached materialiser, no discarded lineage.
+- `S05` Separate manifest owner retires only `not_authored` export clearance after installed generated layout, with exact old/new bytes and concurrent-write refusal. Authored-form bridge validates complete final overlay before existing export-only journal cutover; form and manifest owners finish source separately, then final full validation/currentness. No grouped revision journal or runtime authority promotion.
+- `S05` 2023 publication session85760 and CLI/publication regression session83560 currently live. No successful2023 publication claimed. Full form/calculation/liveSheets and full-inventory goal remain open.
+- `S05` 2023 publication advanced past ancestry staging then correctly refused inherited casilla source aeat-dr-194-2019 outside2023window. Grounded23casilla evidence overrides in2023 and24in2024 against their already inspected exact mappings/designs, preserving separate edge attestations. First attempted sequence patches refused by actual CasillaFieldOverride schema; repaired to supported `fields.source_refs` overrides. No invalid declaration remains; canonical loader and22focusedtests pass.
+- `S05` Broader regression two failures identified: used2019bootstrap row and obsolete monkeypatch of removed unused sibling witness helper. Removed both. Rerun two affected tests plus sourcegeometry currently session52823; retry2023 publication session55619 live. All other67CLI/publication cases passed. Fullinventory goal remains open; no2023success or native194Sheets claim.
+- `S05` Both failures from67pass2fail broader run resolved and independently rerun. Publication session55619 remains confirmed live with no terminal result; resume polling samehandle, do not restart. Source tree and interpreting code held stable for this publication. No completed2023publication claim.
+- `S05` 2023 source export installed and checked through full publication path; pending export clearance retired by manifest owner. No runtime authority adoption. 2023 human form now all29fields/3pages with exact taxpayer/year context and territorial indicator. Five summary totals still manual; source inputs/calculations/conditional controls/nativeSheets remain unfinished.
+- `S05` First-publication tests now create isolated pending sources rather than relying on real export absence. This preserves negative regression coverage as targets become installed. 2024 publication session32436 confirmed live; do not restart or change registry/interpreter inputs until terminal. Changes during active publication were tests only; inspected interpreter fingerprint census excludes tests.
+- `S05` All three194source exports now installed through canonical publication, each finishing full live source validation/currentness; no runtime authority promotion. All28/29/29casillas placed across three human pages per edition, exact taxpayer/year context, no obsolete144-156reductionsinput.2023/2024territorial indicator included. Initial28form/render/staging tests passed; only emptybootstrap catalogue shape failed and was repaired/retested. No active process.
+- `S05` Still incomplete: summary01-05manual, signatures/conditional controls, populated examples and all3nativeGoogleSheets. Official2024design pages5-7 grounds countpositive records136-144,sumpositive145-159,allwithholdings160-174,countnegative-or-zero175-183,unsignedsumnegative184-198. Generic grouped withholding lacks sign partition; next implement tested per-group base-sign selection and source-grounded summary formulas, preserving missing inputs and duplicate-source refusal. S05/S06/fullinventory remain open.
+- `S05` Modelo 194 all three editions derive counts and positive/unsigned-negative base totals from record-design rules. Full inspection initially found 12 missing completeness/provenance declarations; repaired using per-edition manifest and construct source deltas. Applicability grade unchanged. Native Sheet recalculation and full-inventory fidelity remain unverified; all steps remain open.
+- `S06` Native Sheets: edition2019 exercise2022 `https://docs.google.com/spreadsheets/d/1Sp0k5bzyM00KzAaO6RjrfvqzV_gIeXuC9NFd7WQMh3c/edit` ; edition2023 https://docs.google.com/spreadsheets/d/1rnFfga7CkHGgoJKEcKkQxC4pz8YbkgBlzbxQXkKDJL0/edit ; edition2024 https://docs.google.com/spreadsheets/d/1m2GcKnyKyFNZ2KpM-E5ITIpzjsEUE521MpupbSxsvK4/edit . Fictional typed transactions drive both saved rows and backend summary. Five records for one recipient: positive125, withheld23.75, negative magnitude50, counts2/3. Google locale `en_GB` preserves compiler comma formulas; Spanish human labels. All18 row binding labels derive from existing localized casillas through dev.locales owner.
+- `S06` Initial integration run exposed unsupported2019 demo coordinate and missing human row binding labels; corrected to covered2022 and derived labels. Zero-test default-unit selection was not treated as success. Native API formatting readback confirms wrapped text, differentiated title, numeric formats and frozen headers; no CUA/artifact renderer available, no browser visual-fidelity claim. Summary scenario cells recalculate, but saved recipient cells remain read-only and do not recalculate summary. Editable record scenarios, signature/conditional controls and full inventory remain unfinished.
+- `S05` Modelo156 partial authored structure replaces automatic record-order layout. Summary sections follow official AnnexI, printed01only; NIF/year/phone/contact use exact existing export context owners. All23casillas retained, monthly fields chronologically ordered; source provenance and four-locale headings installed. NO native156delivery or complete-form claim. AEAT type2source confirms each of twelve9byte monthly fields combines oneS/Nflag and eightdigits of contribution amount (6whole+2fraction). Must split into typed status+money before populated human delivery; current monthly opaque text is known unfinished source contract, not accepted end product. Paper address/date/signature, separate amendmentcontrols,multi-memberdetail and derivedrecordcount also unfinished.
+- `S05` Reviewed outbound ADR: saved baseline rows remain immutable; editable local-only scenarios may be separate. No remote calculation/pull path added. Next implementation should finish156 monthlysemanticparts and typedcasillas through existing semantic-map/render-profile publisher, then replace provisionalmonthlysection with readable two-column calendar; keep full58modelos/160revisions goal open.
+- `S05` 156 monthly source now has 12 independent S/N text constraints and 12 unsigned money amounts, not opaque strings. 35 casillas placed; four-language calendar headings owned by dev.locales. Negative amount/overflow codec tests pass; S/N membership belongs to casilla constraints, not generic text codec.
+- `S05` Reviewed old manifest 7e03378c1f149a61612582b0f0d4d519128eaed4c2ec67c0cc7678fcaaf1cb3b; exact re-render differs only in member record twelve monthly subdivisions and manifest. Added source-pinned one-record disposition, to retire after successful replacement. No first-publication or unseen-producer bypass.
+- `S05` New exclusive reconciliation mode proves unchanged presentation/casillas/calculations, exact source-bound subdivision, unchanged context and other export fields, consistent reverse references; existing separate form/export receipt owners retained. Publication session27325 and broader test session69168 live; no completed publication or native156Sheet claimed.
+- `S06` Moved194 cases after established demo entries, preserving130/303 positional consumers. Entire workbook demo file passed, including existing cases; no new live Google verification in this checkpoint.
+- `S05` Regression fixtures reconstruct previous opaque monthly representation independently so they remain valid after source publication. Additional negatives reject unrelated header changes and carrying reviewed status across replacement.
+- `S05` Publication session27325 (python PID76228) remains live with increasing CPU; broader CLI/publication test session69168 (PID78992) continues passing cases. Resume these exact handles; no restart or interpreting/source changes until publication is terminal. Source reconciliation and native156Sheet still unverified; all plan steps remain open.
+- `S05` Source publication27325 ended0 after full final-live validation. Exact12monthly source subdivisions installed through export owner and unchanged authored presentation reconciled through form owner. Temporary one-record drift disposition retired after successful replacement. No runtime authority adoption.
+- `S05` Read-only target-current session32387 live. No other pending publication. Full156 remains incomplete: official paper address/date/signature, separate amendment controls, repeating member rows and derived count; no completed-form or full-inventory claim.
+- `S06` Created `https://docs.google.com/spreadsheets/d/1ogRgpOcFuDDFQ_dA3wMzoaN7sSwXELYHPbGi_NEbqmY/edit` ; metadata confirms parent1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ. Actual shared typedplan/canonicalGoogleformatadapter used, Spanish labels, `en_GB` formula locale. Twelve independent monthly status and money pairs, fictional entity and one affiliate; no tax calculation invented. 35fields retained; unknown receipt/context values remain unknown.
+- `S06` Native readback confirmed status strict S/N validation, two-decimal amounts, wrapped text, frozen headings, zero scanned raw hashes/technicalfieldIDs/mojibake. NativeJanuary edit updates only money mirror; status and February unchanged, originalvalue restored. No CUA/artifact renderer available: formatting API verification only, not browser visual fidelity.
+- `S06` Initial extra acceptance assertion wrongly expected entity name as literal form cell; actualcompiler correctly mirrors its input through formula. Corrected test to assert source input plus form reference, then both156tests pass. Earlier0testselection after failedencoding script is not success. Full58modelos/160revisions goal and allSteps remain open.
+- `S05` Session32387 ended0: state=current, fresh canonical output matches committed target after disposition retirement. All processes from this checkpoint are terminal. Continue remaining official form fidelity and full-inventory authoring; do not repeat publication or login.
+- `S05` Visually reinspected exact BOE-A-2003-23509 AnnexI PDF4/printed45648: street,number,staircase,floor,door,postalcode,municipality,province plus date/signatoryname/role. Added11paper-only informational casillas with exactformsource, zeroexportrefs/bindings/formulas.46fields retained. Blank signature and administration spaces share a two-column grid, not electronic signature claims.
+- `S05` Repaired confirmed UTF8-as-Latin1 fallback headings while authoring; four-language labels/help through dev.locales. Existing electronic export remains unchanged. New draft authoring does not promote human-review status or runtimeauthority.
+- `S05` Remaining156 amendment control is currently one two-character casilla at121-122; officialpaper separates complementaria/sustitutiva. Next trace typed amendment ownership and split source fields without creating independent contradictory copies. Multiple-member record set and derivedcount also pending. Full58modelos/160revisions goal remains open.
+- `S06` Updated existing `https://docs.google.com/spreadsheets/d/1ogRgpOcFuDDFQ_dA3wMzoaN7sSwXELYHPbGi_NEbqmY/edit` from actual rebuilt typedplan, after bounded live read proved no external content changes across expanded footprint. Read existing merge/protection metadata, reset only authored area, applied canonicaladapter geometry andstyles. No handcell layout.
+- `S06` Readback confirms eightfictionaladdressvalues, postcode08001astext, missing date/signatory/role staysSin dato, empty signature/adminspaces.46formula references and all458populatedpayloadsmatch; no64hexdigests/technicalfieldIDs/mojibake scanmatches. APIformatverification only; CUA/artifactrenderer unavailable. Retain full-inventory and complete-form fidelity gaps.
+- `S05` Initial exact-byte serialization assertion identified WindowsCRLF-only difference; proved normalized bytes identical, wrote exact canonicalserializer bytes, reread and passed. No semantic/formula/value change, prior validation evidence retained. All active processes terminal.
+- `S02` Added generic FormFieldChoice values/headings on existing one-casilla field block. Duplicate choices, constants and binding-only sources refused; static/compiler and runtime workbook checks require closed text domain and membership. Choice marks shareoneinput; missing staysSin dato, invaliddomain staysValor no válido, validunselectedempty. Exactmatchpreserves spaces and case, literalsquoted. No fiscalformula or remote businessedit path added.
+- `S02` Both Google and XLSX use shared SheetExportPlan referenceformulas; local work form continues exposing its same single canonical field rather than introducing two independently editablebooleans. Full application/TUI choice-marker presentation not claimed.
+- `S05` Exact AEATtype1source121-122 says onefield C at121 or S at122; otherpositionsblank. Closed sourceenum C-space,space-S,two-spaces rejects contradictoryCS, reversed/wrongposition/lowercase/singleletter values. Official BOEpaperboxes now two registry-declared selection choices overthatonecasilla, no duplicate mutable flags.
+- `S05` Priorreceipt conditional validation at123-135, multiplemember recordset/derivedcount and full-inventory remainunfinished. No electronicexportgeometryor runtimeauthoritypromotion. Formdraft reviewstateunchanged.
+- `S06` Updated same `https://docs.google.com/spreadsheets/d/1ogRgpOcFuDDFQ_dA3wMzoaN7sSwXELYHPbGi_NEbqmY/edit` after new footprintread confirmed no externalcontentchanges. Canonical plan+adapter styles only. J25/J26 share EntradasD7. Two spaces -> blank/blank; C-space -> X/blank; space-S -> blank/X; CS -> bothValor no válido; missing -> bothSin dato. Original missinginput restored and allpayloadsverified.
+- `S06` APIbatchwrites can placeinvalid data despite strict validation, so explicit invalid-value display was testedlive; no claim rawexporttextcodec enforcesdomain. No browservisualreview. Allprocessesterminal; full58modelos/160revisions goal remains active.
+- `S05` Prior completed execution evidence recovered from session checkpoint and current source inspected. Exact C-space and space-S markers require a nonzero prior receipt; this checks presence, not AEAT receipt authenticity. Ordinary-declaration zero crosscheck, multiple-affiliate support and complete inventory remain pending. No runtime authority adoption.
+- `S06` Recovered structured live results verified from session stores. `Sheet1ogRgpOcFuDDFQ_dA3wMzoaN7sSwXELYHPbGi_NEbqmY` uses shared compiler partial checks; Dato aportado means a nonzero numeric entry only. API verification, not browser visual inspection. Full inventory remains open.
+- `S05` Added independent enrolled-PDF digest and extracted record121/123 assertions for amendment exclusivity, prior-declaration reference and ordinary-zero requirement. Source check documents ordinary-zero still unimplemented; no new runtime behavior or authority promotion.
+- `S05` Initial format check found mixed line endings after patch; canonical formatter applied and recheck passed. Semantic test source unchanged.
+- `S05` Implemented `casilla_equals_implies_zero` with exact categorical trigger and explicit numeric zero required. Missing consequent fails; missing/different antecedent does not trigger. Advisory and blocking agree. Numeric/type/reference/arity authoring validation shared with existing nonzero operator. Source AEAT156 positions123-135 previously independently verified. Multiple-affiliate rendering/derivedcount, receipt authenticity and full inventory still pending; no authority-grade promotion.
+- `S06` Native `Sheet1ogRgpOcFuDDFQ_dA3wMzoaN7sSwXELYHPbGi_NEbqmY` updated via canonical compiler/Google adapter:22content573format requests. Prewrite comparison found zero user edits. Third partial check distinguishes Falta dato/Cero indicado/Debe ser cero. API verification only, no browser visual claim. Fictional inputs restored missing; live checks do not validate real AEAT receipt authenticity.
+- `S05` Full inspection is source publication validity only; it does not establish official-form fidelity for all160 revisions or runtime authority adoption.
+- `S05` Verified multiple-member implementation prerequisite: singleton export, no156bindings, Decimal-only `row_casillas` and scalar-only manual input. Accepted edit-contract ADR rejects fabricated row semantics. Added refusal regression; actual typed member source/export repetition and full goal remain unfinished.
+- `S02` Typed member prerequisite implemented using existing ModeloDetailRow and CalculationRevision mechanisms.12 explicitly addressed month records preserve independent S/N and amount; canonical month order, no missing-to-zero inference, preserved membership leading zeros. Revision identity includes all24monthlyfacts and member identity; input order and decimal scale do not change identity. Natural key NIF+membership number shared by identity merge/edit addressing; wire mirror preserves allfields. Full CalculationRevision JSON roundtrip proven for2members. Registry eligibility, row-source provider/bindings, filing replay and export repetition remain unenrolled and unfinished; no multiaffiliate liveSheet/publication or filing-readiness claim. Existing singleton example unchanged.
+- `S02` Added dedicated `afiliado_cotizacion` typed row provider, explicitly deferred until production route is connected. Does not widen `manual_input.` Candidate27field bindings tested against actual156 casillas/calendar; no persisted27binding declarations or revised export record claimed yet. Canonicalmember projection preservesleadingzeros, exactmonthstatus/amount, missingomissions, zero and stableNIF+membership ordering; duplicateidentities and no-binding revision refuse. Firsttestrun exposed missingexplicit fact/grouping/record selector keys and deferredinventory omission, bothfixed; final84pass. Sourcepublication/native multi-memberSheet stillpending.
+- `S05` 27 real row bindings grounded in existing official type-2 positions; source guidance citation complements layout evidence. Runtime routing remains deferred; no export repetition or native Sheet promotion claimed.
+- `S04` Fixed four real integration failures caused by newly enrolled member bindings. Display resolves the typed affiliate provider target's authored casilla label; missing authority remains a refusal. No native Sheet updated in this checkpoint.
+- `S05` New explicit --reconcile-row-bindings mode preserves unreviewed authored form and official fixed-width geometry while converting existing target-correlated casilla fields to one repeated row group. Rejects stale/reviewed forms, residual singleton casillas, wrong targets, altered field policy/evidence/geometry, binding-derived positions and unrelated source changes. Uses existing full-overlay validation, source receipts and separate form owner. No 156 mapping/export publication or native multi-member Sheet yet.
+- `S05` Enrolled AEAT PDF page 3 explicitly requires one type-2 record per affiliate/mutualist; page 5 defines summary count as number of type-2 records. Canonical source publication installed `repeat=binding_rows` and all 27 explicit bindings without `binding_record` or geometry changes. Header unchanged. Source-pinned one-record drift disposition retired after success. This is source installation/currentness, not runtime authority adoption or multi-member human/native form completion.
+- `S02` Shared grids reference unique declared member columns only, reject foreign/scalar/binding/constant sources, preserve missing values and zero. Delegated renderer scope followed approved plan. Saved row values remain displayed snapshots; editable member recalculation is not implemented by this facet.
+- `S05` Existing authored identity fields and twelve-month grid now repeat via one declared export record. Two typed fictional member rows project through canonical `materialize_m156_member_bindings` into persisted `row_binding_values;` the demo summary count derives from these rows. Source installation is not runtime authority adoption.
+- `S06` Updated only authorized synthetic Sheet `1ogRgpOcFuDDFQ_dA3wMzoaN7sSwXELYHPbGi_NEbqmY` after unchanged-content and blank-extension preflight. Applied canonical shared compiler packet, 761 formatting requests. API formatting/readback checked; no browser visual verification. Saved member cells are immutable displayed snapshots, not live member recalculation. All-modelo/revision coverage remains incomplete.
+- `S05` 347 official 2011 and 2025 record designs confirm A acquisitions and B supplies; corrected reversed human labels in all four locales. Full BOE PDFs enrolled as distinct hashed sources without replacing HTML identities. Form authoring and native publication for both revisions remain incomplete.
+- `S05` Locale parity compiled the full registry successfully after the four-language correction and PDF source enrollment. This does not prove completed official-form layouts or native Sheets for Modelo 347.
+- `S05` Both 347 revisions now contain authored partial form structure grounded in BOE-A-2011-19397 PDF7/9/11: exact export-owner taxpayer and previous receipt context, separate contact/declaration sections, per-person two-column quarterly grids, ordered property identities. Existing 2025 fields preserved. Review remains generated. Bound summary boxes01-04, paper signature fields, populated resolver fixtures and native per-template verification remain pending; no authority publication or completed-fidelity claim.
+- `S02` 347 summary investigation: official 2011/2025 declarante designs define record counts and annual sums, but informative classification explicitly prohibits BOUND casillas. Full candidate inspection before attempted enrollment was valid with zero findings (f67edf1764692ac7b322ef5c56fcb20c6640fe70b7f079bee0752abc363980ae). Attempted four bound summary casillas failed informative-class and calculation-closure validation; those attempted casillas and placements were removed, preserving existing bindings and authored detail layouts. Required implementation is a shared read-only summary binding presentation facet, with no tax-classification waiver. Existing FormContextFieldBlock supports only exact HEADER/DRAFT coordinates; it cannot currently display binding-owned totals.
+- `S05` Authored review notes now explicitly identify missing read-only summary presentation. No invalid bound casillas remain; underlying casilla declarations unchanged. Summary locale headings prepared through dev.locales. No native Sheet publication this checkpoint.
+- `S05` 347 paper date/signatory/role inherited informational identities papel-firma-fecha/nombre/cargo ground in BOE-A-2011-19397 summary page7, no electronic signature claim. Four summary boxes use exact scalar export binding owners with new shared readonly context facet; no bound casilla/classification waiver. Native tests still pending.
+- `S02` Existing exact-export context field now supports scalar binding owner and optional printed box. Resolves whole semantic amount, including split integer/fractional wirefields; rejects absent/rowset/repeating owners. Unconsumed summarybindings allocated protected `source_value` backing cells and readable labels, verified byGooglebaseline readback. No informative-class waiver or operator duplicate.
+- `S06` Separate native examples2024 https://docs.google.com/spreadsheets/d/15Ym2OmHOoQdyqnhV10ZXUEubP4VdFsqF83h3Yz9FvdU/edit#gid=100 and2025 https://docs.google.com/spreadsheets/d/1hgZSNb06XD-YVWHv3Q0M-Rc-t3X2aUweuTbfDWXjw8Q/edit#gid=100 moved to Cadrumo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ. Counts3/1 totals31460/7260 from canonical invoice resolution; perparty quarters and separate property row. Readback allbounded payloads match after normalizingGoogleemptystringstoabsent, noerrors. Styles/wrap/moneyformats verifiedAPI only; no browser visual verification. Address unknown. Saved detail rows static; summary references readonly source cells, no claim of interactive invoice recalculation. Continuity completeness ratchet remains failing2unresolvedModelo270birthplace fields, unrelated to347 authored signatures;13tests passed1failed.
+- `S05` 308 groundwork: original form2008AnnexII PDF12 printed52365, replacement2011AnnexI PDF4 printed42701. BOE-A-2011-7479 final provision verifies effective2011-07-01; replacement adds boxes19/20 art21.4IVA. Original printed sale price appears02, replacement correct04; must not infer continuity solely from printed number. 308historical three revisions have onlyyear/period casillas and0bindings/formulas, current2019has46casillas allmanual/informational and0formulas. Full fidelity and livecalculation work pending; no308Sheet orauthoredtemplate claimed.
+- `S05` BOE2011AnnexI PDF4 shows base/rate/quota rows08/09/10,11/12/13,14/15/16. Fixed prior generated grid that paired first rate/quota with following rowbase; preserved box17total. Removed wire positions13 and109 falselyprinted as declaration/type-taxation boxnumbers. Layout is explicitly partial authored draft, no automatic calculation claim: currentcasillas remainmanual, historicalthree revisions remainincomplete. No308nativeSheet published.
+- `S05` Current308 now groups purchaser, vehicles, vessels and aircraft separately; purchase and sale rows bind exact printed01-06 cells, separate article21.4 amounts and recargo grid. Added read-only taxpayerNIF/legalname from exact header export owners. All46casillas accounted for; selector tipo-solicitud remainsworkingfigure. Nohistoricalbackfill, formulas,signature ornativepublication claim.
+- `S05` Official BOE-A-2011-7479 Annex I printed42701 explicitly prints box17 =10+13+16; formula uses this pinned PDF as `source_ref.` Procedure source citation confirms modelo identity only, not arithmetic. Other refund branches remain manual and unknown in synthetic scenario.
+- `S05` No authority publication or runtime adoption. Native308Sheet, conditional sections, signature and historical308enrollment remain pending; full58-modelo160-revision scope remains open.
+- `S05` Continuity gate still reports only two pre-existing Modelo270 rows: perc.ciudad-nacimiento and perc.codigo-pais-nacimiento in 2023-y-siguientes; no waiver added. This does not prevent further independent form authoring.
+- `S05` Canonical source inventory measured 2026-10-06:58modelos160revisions55authored105generated. Authorship is not final fidelity or native-sheet verification.
+- `S06` Published separate fictional Modelo308 current2019+ design: https://docs.google.com/spreadsheets/d/18xIjuafktlOUdQJzURV7aEcMDAUMijtzlKAq6mPNDcg/edit#gid=100 in Cadrumo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ. Generated entirely by current registry -> `build_demonstration_plan` -> canonical Google cell/format builders.
+- `S06` Comparison normalized only52empty-string omissions and47Google removals of optional quotes around Entradas sheet references. All1006requested cells compared. Live tests touched synthetic Entradas!D46 only and restored0; Modelo!J53 and Cálculos!D2 both verified.
+- `S06` API format inspection confirms two-decimal amounts, contrasting input/computed styles, wrapped labels, gridless form and frozen headers. No browser visual inspection: actual clipping remains unverified. Partial308design still has verbose MTN/REQ field labels, missing signature/branch selection, and historical editions pending. Native arithmetic success does not close template fidelity or full rollout.
+- `S05` Current308revision now has42natural-language field labels and43edition-correct help entries in es/en/ca/hu. Exact occurrence overrides avoid changing historical identity or meanings. Removed MTN/REQ prefixes and duplicate bracketed box numbers from labels; support-sheet labels retain contextual vehicle/purchaser descriptions.
+- `S05` Fictional applicant given name Ana now populated through a declared operator input, while surname/tax ID remain exact typed producer context. Form value is a formula mirror, not a hardcoded display value; test corrected to assert input ownership rather than literal form-cell storage.
+- `S06` Updated same native Sheet https://docs.google.com/spreadsheets/d/18xIjuafktlOUdQJzURV7aEcMDAUMijtzlKAq6mPNDcg/edit#gid=100. Preserved existing input amounts/formulas, read before write found no conflicting user changes. API readback confirms Ana and human refund label, zero MTN/REQ-prefix labels on Modelo tab, total250.35.
+- `S06` Formatting preserved except four compiler-generated row heights adjusted for shorter labels; notes/validation messages regenerated. API inspection only, no browser clipping verification. Signature, conditional branches, historical308editions and wider inventory remain pending.
+- `S05` Inspected BOE-A-2011-7479 Annex I PDF4 printed42701 image: apartado5 Sujeto pasivo has place/date line and Firma. Added informational firma-lugar,firma-fecha,firma before Devolucion, grounded as `predecessor_edition_silent` after canonical predecessor payload showed only2year/periodfields; no claim of a newly introduced legal field.
+- `S05` Stable local concept IDs papel-firma-lugar,papel-firma-fecha,papel-firma. No electronic export owners, binding or formula, no required signature claim. This source change is not authority publication or runtime adoption. Native308Sheet still reflects pre-signature layout; must regenerate and verify its geometry before claiming live signature delivery.
+- `S05` Only continuity failures remain Modelo2702023+perc.ciudad-nacimiento and perc.codigo-pais-nacimiento; new308paper signature fields introduce no uncovered lineage rows. No waiver or baseline change.
+- `S06` Updated existing https://docs.google.com/spreadsheets/d/18xIjuafktlOUdQJzURV7aEcMDAUMijtzlKAq6mPNDcg/edit#gid=100 after whole authored-area conflict check. Current registry/compiler generated 49casillas including paper place/date/signature. Signature rows54-57, refund section begins58; unknown signature fields remain Sin dato, no signature/submission claim.
+- `S06` Unmerged and rebuilt compiler-owned Modelo geometry, updated existing protection IDs instead of duplicating protections. 102merge ranges; form protected throughrow64 and source references throughrow51. Canonical source values and formulas compared with Google readback, optional Entradas sheet quotes and empty strings normalized. API geometry/style inspection only; browser clipping remains unverified.
+- `S05` Inspected actual official2019XLS M30801 field12 row17: categories1occasional intra-community new transport,2exclusive equivalence surcharge,3road passenger/goods transport,4public/social entity art21.4. Note1 row63 limits declaration type toD refund. Added closed text domains and form choices, scenario D/2. Initial choice test correctly refused absent domains; source-backed domains fixed, seven tests now pass.
+- `S05` Binary AEAT XLS sha85eb926a84d309684db271e42a85dc3375e8265b6026d918400e647c76f15981 matches catalogue; layout pin465d3dddc96aec3368e6934071a4f750c1dc906c562328c992605dd6d3d5d7fd correctly hashes its extracted.md, per canonical pinning contract. No stale-pin defect.
+- `S05` Live308Sheet currently includes signature section but not newly authored category choices; regenerate and verify next. No authority publication/adoption. All-modelo scope still open.
+- `S06` Live category choices update applied after conflict-free read; exact counts and selected marks logged in next verification entry.
+- `S06` Correction to preceding provisional count: actual complete readback is1104cells, not1114. Same liveSheet https://docs.google.com/spreadsheets/d/18xIjuafktlOUdQJzURV7aEcMDAUMijtzlKAq6mPNDcg/edit#gid=100. D selected atrow15; recargo category2 selected atrow17; othercategories blank. Native validation on Entradas!D9 accepts blank or exact strings1/2/3/4. Category labels and selection formulas come from registry choices through shared compiler.
+- `S06` Form now66usedrows,53formulas, fixed-width input data retained, signature stillunknown. Readback and API styles verified; no native browser visual inspection. Historical308revisions and othermodelos remain incomplete.
+- `S05` 2016-2018 historical registry now50casillas versus2before. Current2019+49casillas retained via baseline+overrides; only continuity fields change in existing ordered casilla payloads. Both constructs now cover all fields and formula with adequate legal/source refs. Older2009/2011editions still2fields each; no completion claim.
+- `S05` Grounded AEAT2016M30801 against AEAT2019M30801 for stable roles; prior2011PDF usesCCCfield45, so2016IBAN/BIC classified `new_on_form` relative to that record, not as date of legal IBAN introduction. Other missing predecessor declarations stay explicitly `predecessor_edition_silent.` 2019continuations nowgrounded; paper preview identity fields excluded fromcurrentedition where exact export context owns identity.
+- `S05` Canonical converter applied with semantic equivalence and live2019exportbytecomparison. Initial apply reported one redundant construct `legal_refs` override; removed that exact redundant field, then canonical no-op assessment proved unchanged fingerprint49d17cc945fe5e3db8e8c3b68393d3a07f8235594f157eb955552b2b62a10647, zero unresolved duplication. Independent full-inventory assessment running handle82964; authority boundary tests running41218.
+- `S05` 2018 is outside production support envelope. Dedicated `build_historical_refund_plan` uses existing `WorkbookTemplateSource/build_template_preview_plan/add_template_preview_form,` keeping production snapshot refusal tested. Historical grade remainsapplicability; no filing/export authority upgrade. Native2018Sheet stillpending.
+- `S05` Continuity failure still only two known Modelo270birth fields, with no new308uncovered/stale rows. Independent fullinventory process82964 remains live and pending; no restart. Preparing historical2018nativepacket through historicaltemplatebuilder, not fake snapshot.
+- `S06` New Sheet `https://docs.google.com/spreadsheets/d/1jrPJpiQ9QMyXDz31VtlHtY_GeEdL9jT6MtzbfZiVEhs/edit#gid=100` placed in existingCadrumofolder. Generated through WorkbookTemplateSource -> `build_template_preview_plan` -> `add_template_preview_form` -> canonicalGooglebuilders, not production snapshot or handwritten Sheet formula. No new login.
+- `S06` Full authored-area native readback and API formats inspected. Historical2016-2018schema50casillas; informational taxpayerNIF/name correctlyshown; box17atJ56=250.35. Production2018support refusal remains tested. Browser visualclipping notverified; fullallmodeloscope remainsopen. Independent fullinventory assessment process82964stilllive.
+- `S06` Native historical 2016–2018 example `1jrPJpiQ9QMyXDz31VtlHtY_GeEdL9jT6MtzbfZiVEhs:` verified original Entradas!D45=0 with strict minimum 0. Changed third quota to 20; Modelo!J56 and Cálculos!D2 both recalculated to 270.35. Cleared third quota; both outputs became Sin dato rather than a partial numeric total. Restored 0 and proved entire bounded readback including formulas, validation and formatting equal to pre-test state; total 250.35. API verification only, not browser visual inspection. Full independent registry assessment session 82964 remains live.
+- `S05` Independent assessment per-modelo result 308.json now reports `already_minimal,` zero changed files, typed equivalence across 4 revisions passed, projection across 12 frames passed, idempotence passed and source-apply readiness passed. Overall process session 82964 still live: registry-wide fact/index/cache authority checks remain pending, so this is not a full assessment pass.
+- `S05` Next historical 308 source grounding: inspected canonical AEAT 2009 XLS 02-308-orden-eha-1033-2011-ejercicios-2009-a-2011-julio.xls (dr308 version 2.0, 53 rows) and visually reinspected BOE-A-2008-20953 printed page 52365. Original form has transport boxes 01–07/18, recargo rows 08–16 and total17=10+13+16; no article21.4 boxes19/20. CCC is 20 digits at record position744; contact764/100, phone864/20, observations884/350; total1233 positions. Buyer name is combined, country14 characters, not modern two-character country code. Record sale-price box04 conflicts with original PDF's printed02, requiring an explicit sourced presentation decision rather than guessing identity. Preserve distinction from July2011's added19/20 and CCC position770, and from2016 IBAN/BIC. Existing2009/2011 typed revisions still only have year and period and their layouts remain generated; enrollment not complete.
+- `S05` Full assessment per-modelo phase now covers `all58:55already_minimal,156converted_candidate,216partially_converted,347refused.` No candidate applied. Inspected216 current and staged typed revisions: each formula's complete payload is identical by formula ID; the equivalence failure is an effective formula sequence reorder (resultado moves from first to third), not changed arithmetic. Nonformula differences are `family_overrides/family_positions.` Preserve ordered equality gate; do not dismiss the sequence change or install that candidate.347 converter refuses a non-identity staged lift for2025-y-siguientes. Both normalization issues require resolution for their templates;308 remains `already_minimal.` Assessment82964 still live and has created temporary indexed authority under its own work directory; production authority untouched.
+- `S05` Traced216 mismatch to canonical `declared_order_restorations:` complete physical formula statement places resultado third although effective inheritance places it first. Prepared isolated source reorder at var/storage/tmp/modelo216-formula-order-20261006; full ModeloDefinition JSON equality to live source passes and `declared_order_restorations` becomes empty. Pending actual source installation after active full assessment82964 reaches terminal, then canonical normalization and relevant tests. This is not yet a delivered fix.
+- `S05` Traced347 converter refusal to exact staged chain difference:2025-y-siguientes firma-fecha `legal_refs` changes from `[orden-eha-3012-2008:art-1]` to that plus orden-hac-1431-2025:art-1; paper-signature source remains boe-modelo-347-2011-form-pdf. Source/reference and migrated snapshots under converter-runs/347-fceec63c673348228b2e7c0395339d1d reproduce it. This is provenance reattribution, not a formula-order mismatch; no candidate applied and equivalence gate retained.
+- `S05` Prepared216repair: move the complete modelo-216-resultado formula block to the first physical declaration while retaining the Totales comment above the count formulas; isolated root var/storage/tmp/modelo216-order-repair-20261006/registry/aeat. Canonical output var/storage/tmp/modelo216-order-normalize-20261006/migrated/registry/aeat, report20261006T104130.447864Z-report-registry-edition-migration-77260-23cee0e9. No arithmetic or effective-order change; normalization source accepted, zero gate findings, zero redundant overrides.
+- `S05` Prepared347repair: explicitly retain `legal_refs=[orden-eha-3012-2008:art-1]` `in2025casilla_overrides` selecting2011-2024 firma-fecha/firma-nombre/firma-cargo. This leaves live effective meaning unchanged and lets canonical normalization lift the three baseline defaults without reattributing inherited signatures. Isolated root var/storage/tmp/modelo347-provenance-repair-20261006/registry/aeat; normalized output var/storage/tmp/modelo347-provenance-normalize-20261006/migrated/registry/aeat; report20261006T104055.016124Z-report-registry-edition-migration-31724-5f8cf50a. Equivalence/minimality passed; publication readiness fails only missing2025electronic export scenario `(export_unchecked),` not source acceptance.
+- `S05` Neither repair has been applied to live source yet: full independent assessment82964 remains authoritatively live, preserving its inputs. After terminal result: inspect final outcome, apply the two narrow source edits after fresh equality checks, use canonical converter --apply independently for216/347, prove no-op and run owning tests. Full goal and all plan steps remain open.
+- `S05` Resolved the missing-scenario feasibility question without mutating live compiler inputs while assessment82964 runs. Existing `build_draft` accepts binding-index mappings through ModeloInputs. Used `compiled_bundled_authority` governed-fact scope, `third_party_observations(2025)` filtered to non-rental rows (two above-threshold counterparties and a below-threshold control), `resolve_invoice_binding_values` and `resolve_invoice_binding_row_values,` `inputs['decl.ejercicio']=2025,` canonical `schema_provider_from_authority,` synthetic profile12345678Z, and `_general_producer_snapshot('347').` `export_draft` through in-memory `_PayloadSink` succeeds as FilingExportConsumedResult. Initial run omitted required decl.ejercicio and was correctly rejected; corrected fixture passes. No AEAT submission, no plaintext payload file. This is a probe, not yet an enrolled `edition_export_scenarios` fixture or cross-tree byte-parity proof. Probe command stored in session `key347_export_probe_cmd` for reuse.
+- `S05` Installed both previously isolated repairs into actual source, then applied canonical normalization.216 final fingerprintfb087029a095a43b0409224ba06191594feb99e0445ece755bdb688238abf6ca;347 final fingerprintdc446fb7993c21de0ae0d02f45b65afd9437ec050163a26b9ae37e1df9c1d3ac. Reports20261006T105043.527558Z-report-registry-edition-migration-43120-35d9804f and20261006T105058.520260Z-report-registry-edition-migration-81368-e1c8485f.347 source applied, but `export_unchecked` publication-readiness finding remains until successful2024/2025 probe is enrolled as a scenario. No authority publication.
+- `S05` Changed approach to avoid blocking all authoring behind a long read-only run: assessment82964 still processes its captured pre-fix snapshot; live216347 source changes mean its final `inputs_stable` is expected false. Do not present it as verification of current source. Preserve it as pre-fix diagnostic evidence; final independent assessment must be on final stable inputs. Owning216347 registry/form tests running as session18481; retain handle until terminal.
+- `S05` Test session18481 ended48passed3failed (20261006T105127.524242Z-pytest-70048-9e0214c7). Two216assertions still expected the old applicability-only/no-formula historical revision, contradicted by previously enrolled BOE-grounded calculation and its passing negative tests. Updated them to require CALCULATION, target7=subtract(3,6), official BOE guidance source and no export layout; this does not upgrade authority. Third failure was real347construct omission of firma-fecha/firma-nombre/firma-cargo. Added those existing fields and their BOE2011source to baseline construct; remapped2025sequence indexes to preserve existing order with the new members appended. Both construct memberships now equal declared casillas.
+- `S05` 347 finalsource fingerprint34e9c8c070a00ff53ba9679dd7548f97d7ad1d759a96e85cb1cb054cccf27636; canonical normalization20261006T105347.048900Z-report-registry-edition-migration-15044-3797821e is no-op, equivalent and minimal. Focused tests rerunning on session49208; original full pre-fix assessment82964 still live and no longer current-input evidence.
+- `S05` Final216test correction also removed stale no-export assertion: historical2020-2023 already contains an AEAT-design-grounded generated record layout, while authority remains CALCULATION and actual filing-grade snapshot is refused by existing negative test. New assertion requires `layout.source_refs` equal the selected official design. Final216registry run20261006T105504.567269Z-pytest-86260-f6c6a005:8passed. Prior20261006T105335.332080Z-pytest-62784-80616faa had50passed and only that now-corrected stale assertion failed; other affected tests unchanged. All51targeted tests now have passing evidence across those runs.
+- `S05` Full assessment82964 is TERMINAL exit1. summary.json under modelo308-2016-independent-20261006 covers58modelos/160revisions. Captured source/candidate authority equivalence,facts,indexed,cache passed;726fact queries,3479temporal and3479capability coordinates,160indexed revisions; cache invalidation passed. Overall incomplete because original216order/347signature normalization failures and input changes during `run:inputs_stable=false,no_live_mutation=false.` This is pre-fix diagnostic evidence, NOT acceptance of current inputs; do not restart solely because of duration. Final stable-source independent assessment remains required. No running processes remain from this sequence. Historical3082009/2011 authoring remains unimplemented; only evidence inspected so far.
+- `S05` Enrolled repeatable347scenarios for2011-2024/year2024 and2025-y-siguientes/year2025. Inputs come from existing fictional invoice observations through canonical dated row/summary resolvers, with explicit declaration year. Each scenario exports two counterparties, excludes the below-threshold control, and excludes rental/property records by deliberate fixture scope. This replaces the obsolete no-honest-scenario claim; no production filing behavior changed.
+- `S05` 11scenario tests passed in20261006T105813.280448Z-pytest-75228-5aec7469. Added stricter final payload assertions for both readable party names after that run; two affected tests rerun on64588 (poll terminal before claiming its result).
+- `S05` Canonical normalization of isolated pre-normalization347repair with newly enrolled scenarios:20261006T105946.866283Z-report-registry-edition-migration-87184-84f78feb reports `gate_findings0,byte_compared=2011-2024,2025-y-siguientes,equivalence/minimalitypassed.` Thus both edition exports proved byte-identical across the representation change; application=false because this was an isolated proof, live source repair was already installed earlier. Current live347normalizer separately remains a no-op. No authority publication or AEAT submission.
+- `S05` Final two tests20261006T110129.531404Z-pytest-33372-bfe37aaf passed. Intermediate stricter-name assertion incorrectly assumed uppercasing; canonical exporter preserves supplied name case, so expectations now require exact fixture names Proveedor ficticio Ana and Cliente ficticio Luis. Combined with preceding9unchanged scenario tests, all11have passing current evidence. Both NIFs, both names, resolved2-party/24200summary, below-threshold exclusion and rental exclusion are checked. All processes started this sequence are terminal.
+- `S05` 2011-2015 historical 308 now has 49 declared fields, official grid and sum 17=10+13+16; CCC and combined names remain distinct from later IBAN/split-name editions. Translations installed through dev.locales in four locales; synthetic 2015 assembly uses explicit historical source, not a production snapshot. Live 2015 Sheet verification is pending.
+- `S05` Continuity failure remains exactly two previously observed Modelo 270 birth-place/country rows; no waiver added. Whole-worktree diff check also reports unrelated whitespace; scoped 308 diff check passes.
+- `S05` Normalization candidate proves typed equivalence and 2019 export byte equality with zero findings; apply process is underway. Full stable independent assessment remains pending. No runtime authority published.
+- `S05` 308 final source fingerprint 8ef3d4b0bb84b9f067d91a10c381097d2521ee93486b6bb141ba702bcf57c382; 303402 bytes, 973 authored payload fields, 2168 inherited, 309 genuine overrides, zero redundant overrides/unresolved duplication. Independent whole-registry assessment remains pending on final stable batch. Historical 2009 edition still has only two fields and requires design enrollment.
+- `S06` Created separate synthetic native Sheet https://docs.google.com/spreadsheets/d/1Y4PhSafr1ehjiPMLSe-m3dBr9S1xVx3o3TGtL8rmkT4/edit in existing demo folder. Shared registry template preview -> SheetExportPlan -> production formatting request builders; 22 content blocks and 595 formatting requests. Layout bounds Modelo60x11, Entradas49x4, Calculos2x4. Final bounded readback matches pre-mutation content, formulas, formats and validation.
+- `S06` Initial demo script changed spreadsheet locale to `es_ES,` causing Google rejection of comma-separated `CUSTOM_FORMULA` validation. Restored `en_GB` formula locale, rewrote content, applied only the failed atomic formatting batch, verified zero errors. Spanish labels retained. This was a demo setup mismatch; production locale behavior was not inspected in this checkpoint.
+- `S06` API-only formatting verification; no authenticated native browser render. Existing header still exposes AD-HOC period token: shared human presentation remains to be improved. Historical 2009 308 and many other designs remain incomplete.
+- `S04` Omit internal AD-HOC selector from shared form and guide headings while retaining metadata identity and ordinary period suffixes. No registry period or calculation change. Separate 2015 native Sheet title cells updated only after live read and regenerated source check; formatting preserved. Browser visual inspection remains unavailable.
+- `S05` Oldest 308 now declares 47 fields, official paper sections and 17=10+13+16; no later fields19/20. Directly inspected BOE-A-2008-20953 PDF12 printed52365 and AEAT2009 XLS v2.0 rows8-51. CCC744-763/contact offsets preserve old design. Paper sale-price label02 differs from official record04: faithful paper number retained without merging semantic identity. Paper refund-D amount fidelity remains a known gap, so this does not claim complete official reproduction.
+- `S05` 2011 continuity shared fields now grounded against both official editions; article21 boxes19/20 explicitly new on form. Exact saved-payload comparison: 2016 and2019 unchanged;2011 changes only continuity metadata and storage positions. Normalization installed983 authored fields3214 inherited414genuine overrides0redundant, fingerprint6f2ab61375c4d0e1e6bb175dba21bb865905c5baaf6e865462ff30c46a33c456.
+- `S05` Continuity ratchet failure remains two existing Modelo270 birth-place/country rows; no waiver. No runtime authority published. Full stable independent assessment and live2010 Sheet verification remain pending.
+- `S05` Second conversion is a no-op at source fingerprint6f2ab61375c4d0e1e6bb175dba21bb865905c5baaf6e865462ff30c46a33c456.
+- `S05` Added paper-only manual money field papel-importe-devolucion at refund section in all four308 editions, matching Importe D in BOE2008/2011 paper form. No invented sum across refund categories, no binding/formula/export field added. Four-language continuity label/help explains separate declaration. Fixture explicitly declares250.35; missing value remains unknown. Counts now48/50/51/50.
+- `S05` Normalization initially refused after legal-reference lifting; staged-v-reference comparison identified `constraints.legal_refs` expanding1->3 for2011. Explicit2011 field and constraint references preserve exact meaning; candidate3 passes. Apply is underway. Updated stale test expecting historical IBAN enrollment gap to require grounded2016->2019 continuity.
+- `S05` All existing native308 demos predate this new row and must be refreshed safely or regenerated; no current live proof for refund amount yet. Full collection and stable whole-registry independent assessment remain incomplete.
+- `S05` Final308source fingerprint e844bd7acc3b522ad4b6a52e81123454b90e57bfac3c7faf2f4ca5a2798c1879;350108bytes,997authored payload fields3299inherited419genuine overrides0redundant. New2010native packet regeneration uses the refund amount fixture; live Sheets remain to be updated/verified.
+- `S06` Current canonical-loader census:58modelos160layouts,58authored and102generated `(14design_box_number38casilla_number6xml_dictionary43export_record_design1predecessor_layout).` Authored count does not prove official fidelity or native verification. All tool processes at this checkpoint are terminal;2010native packet now includes paper refund amount, but no2010GoogleSheet created yet.
+- `S06` Created https://docs.google.com/spreadsheets/d/1uy1L2V-WBWTK24JbtSHkZwlcXy-dP-etOWAdKWBqYFQ/edit from latest2009-2011-junio template, fictional2010inputs, existing demo folder1XtSn8wQf83g9Rp3UEWdJS4HtDdoROBGZ.21content blocks580format requests;839read cells49formulas0errors0mismatches. ImporteD atModeloJ51 mirrorsEntradasD48;17atJ45 sumsquotas includingD37.20quota ->270.35sum and250.35D;blankD ->Sin dato independently;restored0quota/250.35D and exact fullboundedreadback.
+- `S06` Google metadata/format API inspection only; no authenticated browser screenshot. Other308liveexamples still predate new refund amount row. All-modelo goal remains open.
+- `S05` Started309design grounding. Enrolled boe-modelo-309-2023-form-pdf official https://www.boe.es/boe/dias/2022/12/19/pdfs/BOE-A-2022-21458.pdf sha08e6373b7a106f70fcb32b744c640cc84913200bd2538d708b852b6d8b998849396280bytes applies2023-01-01. AnnexPDF3printed175185 provides full11sectionform; secondcopyPDF4 is entitycollaborator. No309layout authored yet. Registry309revisions have58/55/59/62casillas and0/3/3/3formulas.
+- `S05` 309 2023 taxpayer NIF producer corrected from `presenter.tax_id` to `taxpayer.tax_id` against AEAT M30901 row12 position14 and BOE-A-2022-21458 p175185. Digest-bound republish succeeded and target-current proved exact canonical reproduction; temporary drift disposition retired. Earlier 309 revisions and authored 309 form layout remain pending. No runtime authority publication or live 309 Sheet verification.
+- `S05` Modelo309 2023 authored structure now uses exact taxpayer export context, official identification/devengo/transferor/adjudicatario/selection/transport/liquidation/complementaria/ingreso sections, eight 3-column tax rows in official 01/25/04/07 then10/13/16/19 sequence, and all62 existing casillas. Only true printed numbers appear; transport offsets200/201/1016/13 removed from placement box numbers. Source visual: BOE-A-2022-21458 Annex printed175185. AEAT2016/2018/2023 XLS M30901 rows21/22 each explicitly define the same1–6 choices; constraints enrolled at2016baseline and inherited after initial2023-only declaration correctly failed shared-role validation. Negative tests cover absent choice domain and missing quota27 versus zero. No numerical formulas changed.
+- `S05` Form still pending paper signature fields, repeated payment amount, payment-mode source-note review, human-label refinement and populated native Sheet verification. Authored seed retains generated review state and explicit incompleteness notes. No completed fidelity, human countersignature, runtime publication or native309 verification claim.
+- `S02` Verified shared mismatch: native form compiler already supports repeated casillas at declared alias sections; development registry integrity unconditionally refused count>1. Integrity now accepts a repeated reference only when every extra location is a declared alias and all locations are distinct. Negative tests retain refusal of undeclared repeats and same-section duplicates; existing single-primary declarations with unused alias metadata remain supported. No runtime schema or formula changes.
+- `S05` Paper signature place/date/signature and payment method enrolled at2004 baseline and grounded through2016/2018/2023 from BOE2003 AnnexI printed46407, BOE2017 AnnexI printed126021 and BOE2022 Annex printed175185. Four informational fields have no filing export ownership; current2023layout places them, older layouts explicitly retain pending placements. Current66casillas accounted; payment copy shares result24 and no payment execution is claimed. Removed216 transport-offset helper leaves per locale and technical trigger wording. Simplified amount-payable label exposed required-role mismatch; aligned role and unique continuity identity to `cuota_a_ingresar/cuota-a-ingresar` across all four editions, retaining casilla IDs and numeric formulas.
+- `S05` Normalization first refused a legal-provenance lift; explicit2023 inherited legal leaves preserve effective meaning. Installed fingerprint d8e90db661e970dfd5ebeec69d1db9ec8b85949cce508bc74eab137f2e4980f6,467637bytes,1260 authored fields,4048 inherited,445 genuine overrides,0 redundant; subsequent conversion no-op. Source accepted, historical applicability and absent software-identity export authority remain distinct publication-readiness refusals. No runtime authority published. Full stable independent inventory assessment remains pending.
+- `S06` Native example https://docs.google.com/spreadsheets/d/1eEg6DlrE4azhI7lNyOBlGOcHvLLmIb5NHoBBNVDImi0/edit?usp=drivesdk uses2025 current309template, synthetic taxpayer and vehicle data, existing shared compiler and Google formatting builders. All8tabs read back;867 formatted cells and21 validations observed. No technical hash/decl identifiers/trigger/transport-offset helper text in readback. API formatting evidence only: no authenticated browser visual review.
+- `S06` Row bases/rates/quotas are explicitly entered fixture data, not newly authored quota calculations. Registry formulas compute22/24; two displayed24results share one source. Guide states this limitation and incomplete nonselected branches. Printed amount does not prove payment, paper signature does not authenticate a submission. Older309templates and their live demonstrations remain pending; full160-template goal is not complete.
+- `S05` 2018-2022 layout authored from renewed visual inspection of BOE-A-2017-15190 AnnexI PDF5 printed126021 and AEAT2018 M30901. All63 casillas accounted with seven printed tax rows; no25/26/27 row imported from2023. Taxpayer NIF header corrected from `presenter.tax_id` to `taxpayer.tax_id` against official identification box and M30901 field7. Applicability-grade status preserved. The two older309layouts remain generated, including pending paper-field placements.
+- `S05` Current modelo309 fingerprint1a1f3a119c530d8a051013ee5ad1b1feba5a4d4e4218ef10c8c79b7506935bd6,469507bytes,1260 authored fields,4048 inherited,445 genuine overrides,0 redundant; canonical normalization unchanged and minimality passed. No runtime authority publication.
+- `S06` Historical2022 example https://docs.google.com/spreadsheets/d/1lcqW9AhYIerE8EJg7KK-tpJ3zGJvBEyxcb9oepp4mbE/edit?usp=drivesdk. Shared helper includes the additional rate row only when declared by the selected registry revision. Initial arbitrary2020fixture correctly hit current support floor2022; selected2022 within the same2018-2022template without altering support policy. Negative test proves the applicability edition cannot acquire filing authority. Synthetic taxpayer NIF differs from presenter; form displays taxpayer.
+- `S06` Eight native tabs verified,838formatted cells,19validations, no technical-text findings. API formatting review only, no authenticated browser inspection. Bases/rates/quotas remain entered fixture values and totals use the registry formulas, as disclosed in Guide. Full160-template objective and older309source/native verification remain pending.

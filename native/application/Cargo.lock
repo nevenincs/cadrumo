@@ -39,6 +39,7 @@ checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
 name = "cadrumo-application"
 version = "0.1.0"
 dependencies = [
+ "cadrumo-platform",
  "object",
  "serde",
  "serde_json",
@@ -48,6 +49,10 @@ dependencies = [
  "ureq",
  "zip",
 ]
+
+[[package]]
+name = "cadrumo-platform"
+version = "0.1.0"
 
 [[package]]
 name = "cc"

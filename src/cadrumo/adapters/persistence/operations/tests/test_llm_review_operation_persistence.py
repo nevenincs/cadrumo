@@ -395,7 +395,9 @@ def test_consumed_response_recovers_without_classifier_reacquisition(
 
         async def resume() -> None:
             try:
-                terminal = await recovery.submission.supervisor.reconcile(consumed.identity.operation_id)
+                admitted = await recovery.submission.supervisor.reconcile(consumed.identity.operation_id)
+                assert admitted.lifecycle is OperationLifecycle.RUNNING
+                terminal = await recovery.submission.supervisor.settled(consumed.identity.operation_id)
                 assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
                 assert terminal.effect is OperationEffect.UPDATED
                 assert terminal.consumed_interactions == consumed.consumed_interactions

@@ -1351,7 +1351,9 @@ cli:
           contacta con la AEAT.
         work_unit_id_help: Id de la declaración (SHA-256 o prefijo inequívoco).
       spreadsheet:
-        app_help: Superficie de cálculo esquema-a-hoja (exportar, recuperar y calcular)
+        app_help: Exporta hojas de cálculo. Las copias de Google son documentos de
+          revisión de salida; no puedes importar cambios, calcular ni verificar desde
+          Google. La exportación local a XLSX sigue disponible.
         calculate_help: Recupera las celdas que editaste en el libro de calc-sheets,
           ejecuta el motor Decimal local sobre ellas y emite los valores calculados
           de las casillas (no guarda nada)
@@ -1363,6 +1365,15 @@ cli:
           (la contrapartida sin conexión de push)
         modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
         period_help: Código de período (p. ej. 1T, 2T, 0A)
+        publish:
+          accept_readable_export_help: Indica --accept-readable-export para autorizar
+            la publicación del cálculo seleccionado y sus filas contables capturadas
+            como hoja de Google legible por usuarios autorizados.
+          calculation_revision_id_help: Identificador exacto de la revisión de cálculo
+            guardada que se publicará.
+          publication_id_help: UUID de publicación; se genera si se omite.
+        publish_help: Publica un cálculo guardado como hoja nativa de Google legible
+          en la carpeta del perfil.
         pull:
           assemble_observations_help: Tras recuperar, reensambla las celdas de filas
             de la pestaña Detalle en observaciones tipadas (perceptores, bienes en
@@ -2082,6 +2093,9 @@ cli:
           para órdenes privadas de perfil alojadas en el servicio local.
         profile_credential_ref_requires_api_key: --profile-credential-ref requiere
           --profile-auth-method api-key.
+        profile_passphrase_channel_absent: No hay ningún canal de contraseña del perfil
+          disponible. Ejecuta este comando en un terminal o pasa --profile-secrets-stdin
+          o --profile-secrets-fd.
         profile_secrets_api_key_inapplicable: La autenticación con clave API solo
           está disponible para los comandos atendidos por el entorno local.
         profile_secrets_api_key_requires_channel: La autenticación con clave API requiere
@@ -2220,13 +2234,11 @@ cli:
         este verbo en un terminal o usa --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
     logout:
-      help: Borrar el perfil seleccionado en este contexto de la CLI.
+      help: Cierra la sesión de este perfil en todas las sesiones de usuario de este
+        dispositivo. El acceso de los agentes y las sesiones de la AEAT siguen activos.
       notices:
-        already_logged_out: Ningún perfil tenía la sesión iniciada; no hay nada que
-          cerrar.
-        remaining_access: Se ha borrado la selección de la CLI. Las demás sesiones,
-          la reanudación humana limitada y las claves API inscritas conservan su propia
-          autorización. Usa los controles de sesión o perfil para revocar el acceso.
+        already_logged_out: No hay ningún perfil seleccionado; no hay ninguna sesión
+          que cerrar.
     passphrase:
       change_help: Cambia la contraseña sin volver a cifrar los registros ni invalidar
         un código de recuperación.
@@ -2239,10 +2251,10 @@ cli:
         sigue siendo válido, y los archivos sellados exportados antes del restablecimiento
         se siguen abriendo con la contraseña con la que se cifraron.
       reset_name_help: Nombre del perfil cuya contraseña se restablece.
-      reset_scope_notice: 'El código de recuperación sigue funcionando; para sustituirlo,
-        desactiva y vuelve a activar la recuperación. Un restablecimiento no revoca
-        nada: los archivos sellados exportados antes siguen abriéndose con la contraseña
-        con la que se cifraron.'
+      reset_scope_notice: El restablecimiento cierra las sesiones de usuario guardadas.
+        El código de recuperación sigue siendo válido; desactiva y vuelve a activar
+        la recuperación para sustituirlo. Los archivos exportados anteriormente siguen
+        requiriendo la frase de paso usada al exportarlos.
     profile:
       add_row:
         duplicate_field: El campo %{field} se indicó más de una vez; no se escribió
@@ -2428,8 +2440,9 @@ cli:
           preflight: 'Comprobación previa: no se ha eliminado nada. Vuelve a ejecutarlo
             con --yes para eliminar.'
         refusal:
-          active_profile: No puedes eliminar el perfil activo. Cierra la sesión con
-            'aeat config logout' y vuelve a intentarlo.
+          active_profile: No puedes eliminar el perfil seleccionado '{name}'. Inicia
+            sesión en otro perfil con 'aeat config login NAME' y vuelve a intentarlo.
+            Cerrar sesión conserva el perfil seleccionado.
         yes_help: Confirma explícitamente la eliminación
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

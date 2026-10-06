@@ -172,6 +172,115 @@ modelo:
           telephelyek, valamint külföldön alapított, spanyol területen jelenléttel
           rendelkező, jövedelem-hozzárendelési rendszerbe tartozó szervezetek). Részletfizetés.
         title: IS részletfizetés
+      form:
+        authored-historical:
+          context:
+            reducida-dimension:
+              heading: Kisvállalkozás · a LIS 101. cikke és a 29.1. cikk első bekezdése
+                szerinti adókulcs
+        authored2025:
+          column:
+            base:
+              heading: Adóalap
+            importe:
+              heading: Adóelőleg összege
+            porcentaje:
+              heading: Százalék
+          context:
+            capital-riesgo:
+              heading: Kockázati tőke · a LIS 50. cikke szerinti különös rendszer
+            cnae:
+              heading: Főtevékenység besorolása
+            complementaria:
+              heading: Kiegészítő bevallás
+            comunicacion-adicional:
+              heading: Kiegészítő adatok közlése
+            cooperativa:
+              heading: Adóvédelmet élvező szövetkezet
+            datos-adicionales:
+              heading: Kiegészítő adatok
+            denominacion:
+              heading: Vezetéknév vagy cégnév
+            ejercicio:
+              heading: Adóév
+            iban:
+              heading: IBAN
+            justificante:
+              heading: Korábbi bevallás bizonylatszáma
+            multiples-tipos:
+              heading: Több adókulcs alkalmazására jogosult egyéb szervezetek
+            navieras:
+              heading: Hajózási társaságok · tonnatartalom szerinti rendszer
+            negocios-millon:
+              heading: 'Az előző adóidőszak árbevétele: kevesebb mint 1 000 000 €'
+            negocios-seis-millones:
+              heading: 'Az adóidőszak kezdete előtti 12 hónap árbevétele: több mint
+                6 000 000 €'
+            nif:
+              heading: Adóazonosító
+            nombre:
+              heading: Keresztnév
+            nrs:
+              heading: Társasági hivatkozási szám
+            periodo:
+              heading: Időszak
+            reducida-dimension:
+              heading: Kisvállalkozás · a LIS 101. cikke és külön adókulcs
+            sin-fines-lucrativos:
+              heading: Nonprofit szervezetek rendszere · 49/2002. törvény
+            socimi:
+              heading: SOCIMI-rendszer · 11/2009. törvény
+            tipo-gravamen:
+              heading: A folyó adóév társaságiadó-kulcsa
+          page:
+            '1':
+              heading: Adóelőleg · oldal 1
+            '2':
+              heading: Adóelőleg · oldal 2
+          row:
+            amortizacion:
+              heading: A számviteli értékcsökkenés 30%-ának visszaforgatása
+            ic:
+              heading: Kiegészítő adó
+            is:
+              heading: Társasági adó
+            reserva:
+              heading: Adóalap-kiegyenlítési tartalék
+            reserva-cuotas:
+              heading: Adóalap-kiegyenlítési tartalék
+            resto:
+              heading: Egyéb korrekciók, a korábbi veszteségek nélkül
+            tipo-1:
+              heading: Kulcs 1
+            tipo-2:
+              heading: Kulcs 2
+            tipo-3:
+              heading: Kulcs 3
+            tipo-4:
+              heading: Kulcs 4
+            total:
+              heading: Korrekciók összesen
+          section:
+            b1:
+              heading: B.1) Általános eset · egyetlen százalék
+            b2:
+              heading: B.2) Különleges esetek · több százalék
+            base-imponible:
+              heading: B) Előleg az adóalap alapján · 40.3. cikk
+            complementaria:
+              heading: Kiegészítő bevallás
+            devengo:
+              heading: Adóidőszak
+            identificacion:
+              heading: Azonosítás
+            informacion:
+              heading: Kiegészítő információk
+            ingreso:
+              heading: Befizetés
+            modalidad-cuota:
+              heading: A) Előleg a korábbi adó alapján · 40.2. cikk
+            resultado:
+              heading: Eredmény és fizetendő összeg
       revision:
         2019-2022:
           casilla:

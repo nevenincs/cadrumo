@@ -57,6 +57,23 @@ modelo:
         official_name: Modelo 136. IRPF és IRNR. Egyes lottó- és fogadási nyeremények
           különadója. Önbevallás.
         title: Egyes lottó- és fogadási nyeremények különadója. Önbevallás
+      form:
+        page:
+          pag-1:
+            heading: Egyes lottó- és fogadási nyeremények különadója
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás
+          declarante:
+            heading: Bevalló
+          devengo:
+            heading: Adómegállapítási időszak
+          ingreso:
+            heading: Befizetés
+          liquidacion:
+            heading: Adószámítás
+          loteria:
+            heading: Nyertes lottó vagy fogadás
       revision:
         2022-2025:
           construct:

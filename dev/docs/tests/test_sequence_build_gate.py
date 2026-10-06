@@ -166,6 +166,39 @@ def test_an_unpublished_authority_fails_the_build_before_any_verdict_is_reused(t
     assert not (tmp_path / "never-read").exists()
 
 
+@pytest.mark.parametrize("problems", [[], ["strict sequence failure"]])
+def test_full_gate_bounds_actual_page_workers_and_keeps_failures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, problems: list[str]
+) -> None:
+    from ..sequences import authority_currency, checks, verdict_cache
+
+    app = cast(
+        Sphinx,
+        SimpleNamespace(
+            srcdir=str(tmp_path), config=SimpleNamespace(cadrumo_sequences_goldens_root=tmp_path / "goldens")
+        ),
+    )
+    observed: list[tuple[Path, Path | None, int]] = []
+    currency_checks: list[bool] = []
+
+    def execute(*, docs_root: Path, goldens_root: Path | None, jobs: int) -> list[str]:
+        assert currency_checks == [True]
+        observed.append((docs_root, goldens_root, jobs))
+        return problems
+
+    monkeypatch.delenv("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", raising=False)
+    monkeypatch.setattr(authority_currency, "require_current_authority", lambda: currency_checks.append(True))
+    monkeypatch.setattr(verdict_cache, "published_verdict_key", lambda **_kwargs: "fixture-key")
+    monkeypatch.setattr(verdict_cache, "check_reusing_verdict", lambda _key, run: (run(), None))
+    monkeypatch.setattr(checks, "check_sequences_in_subprocess", execute)
+    if problems:
+        with pytest.raises(SphinxError, match="strict sequence failure"):
+            check_sequence_goldens(app)
+    else:
+        check_sequence_goldens(app)
+    assert observed == [(tmp_path, tmp_path / "goldens", 2)]
+
+
 def test_no_golden_carries_a_version_literal() -> None:
     """A committed golden must not hardcode a package version.
 

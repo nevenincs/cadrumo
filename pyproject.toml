@@ -80,7 +80,9 @@ dependencies = [
   # source-citation validation.
   "pypdfium2>=5.7.1,<6",
   # PDF sanitiser; content-stream rewriter for PII redaction.
-  "pikepdf>=10.0.0,<11",
+  # Upstream 10.14 wheels require macOS 15; retain the declared macOS 14 floor.
+  "pikepdf==10.13.0.post1; sys_platform == 'darwin'",
+  "pikepdf>=10.0.0,<11; sys_platform != 'darwin'",
   # Imaging primitive behind pypdfium2's `to_pil()` page rasterisation. Same
   # class as the `lxml` entry above and declared for the same reason: Pillow
   # DOES reach a default install today, but only as a transitive of pdfplumber

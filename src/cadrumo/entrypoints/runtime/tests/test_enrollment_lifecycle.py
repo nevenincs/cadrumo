@@ -14,6 +14,7 @@ from uuid import uuid4
 import pytest
 from pydantic import SecretBytes
 
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     AdministrationSubject,
@@ -36,6 +37,7 @@ from cadrumo.application.user_profile.automation_lifecycle import AutomationDeni
 from cadrumo.application.user_profile.automation_lifecycle_service import (
     AutomationLifecycleService,
     AutomationResumeRequest,
+    HumanSignInRevocationResult,
 )
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
@@ -68,8 +70,8 @@ class _Login:
 class _ResumeOwner:
     """Expose the fixture's real password provenance to the lifecycle service."""
 
-    def __init__(self, subject: AdministrationSubject) -> None:
-        self.subject = subject
+    def __init__(self, subject: AdministrationSubject, host: RuntimeProfileHost) -> None:
+        self.subject, self.host = subject, host
         self.guard = RLock()
 
     @contextmanager
@@ -81,6 +83,13 @@ class _ResumeOwner:
     def facts(self) -> AdministrationFacts:
         """Return the current test-owned human login facts."""
         return self.subject.owner.current
+
+    def revoke_human_sign_in(self) -> HumanSignInRevocationResult:
+        deletion, _ = self.host.revoke_human_sign_in()
+        return HumanSignInRevocationResult(
+            receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
+            keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
+        )
 
     def set_profile_lock(self, *, generation: int, locked: bool) -> None:
         """Mirror the committed local lock into the trusted host observation."""
@@ -153,7 +162,7 @@ def test_prepared_offer_refuses_after_canonical_lock_and_password_resume(tmp_pat
         assert denied.access_denied and not denied.cleanup_pending
         locked = subject.store.profile_lock_state()
         assert locked.globally_locked and locked.generation > initial.generation
-        owner = _ResumeOwner(subject)
+        owner = _ResumeOwner(subject, host)
         owner.set_profile_lock(generation=locked.generation, locked=True)
         service = AutomationLifecycleService(
             custody=subject.store, owner=owner, sessions=host.authority, storage_root=subject.store.root

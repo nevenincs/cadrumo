@@ -123,7 +123,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
                     except BaseException:
                         incomplete.set()
                         raise
-                    if result is not None and result.missing_receipts:
+                    if result is not None and result.lacks_settlement_evidence:
                         self._failed.set()
             finally:
                 workers.shutdown(wait=False, cancel_futures=True)

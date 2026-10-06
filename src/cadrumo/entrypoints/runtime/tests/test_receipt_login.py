@@ -38,6 +38,12 @@ from cadrumo.application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
+from cadrumo.application.runtime.sign_in import (
+    RuntimeHumanSignedOut,
+    RuntimeSignInStatusReply,
+    RuntimeSignInStatusRequest,
+    SignInPresence,
+)
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, AccessSession, OsLockState
 from cadrumo.application.user_profile.login_session import (
     ProfileReceiptRefusedError,
@@ -87,7 +93,8 @@ def _login(
             "persist_receipt": persist_receipt,
         }
     )
-    result = client.login(request, secret, deadline=time.monotonic() + 20)
+    # Match the cold registry-publication budget used by the native admission suite.
+    result = client.login(request, secret, deadline=time.monotonic() + 75)
     assert secret == bytes(len(secret))
     return result
 
@@ -99,8 +106,9 @@ def _session(client: VerifiedRuntimeConnection, profile_id: UUID, session_id: UU
     return client.session(request, deadline=time.monotonic() + 5)
 
 
+@pytest.mark.parametrize("revocation", ["sign_out", "positive_lock"])
 def test_receipt_proof_reenters_without_password_or_api_promotion(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, revocation: str
 ) -> None:
     root = tmp_path / "cadrumo-storage"
     root.mkdir()
@@ -176,6 +184,14 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                         _connect(endpoint) for _ in range(6)
                     )
                     clients.extend((api, human, stranger, invalid_api, invalid_receipt, invalid_mcp))
+                    presence = human.sign_in_status(
+                        RuntimeSignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(presence, RuntimeSignInStatusReply)
+                    assert presence.status.presence is SignInPresence.PRESENT
+                    assert not profiles._profiles  # Observation must not start a worker.
+                    assert receipt_path.read_bytes() == original_receipt
                     invalid_api_reply = _login(
                         invalid_api, profile_id, "api_key", bytearray(b"x" * 32), persist_receipt=True
                     )
@@ -248,10 +264,56 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     assert fresh_proof == bytes(32)
                     second_human_id = second.status.session_id
                     assert second_human_id is not None and second_human_id != first_human_id
+                    retired_notice = Event()
+                    stranger.subscribe_session_events(
+                        lambda event: retired_notice.set() if event.session_id == second_human_id else None
+                    )
                     assert second.status.session_expires_at == accepted.status.session_expires_at
                     assert second.human_login == accepted.human_login
                     assert receipt_path.read_bytes() == original_receipt
                     assert isinstance(_session(api, profile_id, api_id, "session_status"), RuntimeProfileStatus)
+
+                    host = profiles._profiles[profile_id]
+                    with host.guard:
+                        native_login.lock_state = OsLockState.UNKNOWN
+                        assert host.observe_human_lock_down() == ()
+                        assert receipt_path.read_bytes() == original_receipt
+                        native_login.lock_state = OsLockState.UNLOCKED
+                        original_logins = host._logins
+                        unrelated = LoginObservation(owner_id(), login_id="other-login", lock_state=OsLockState.LOCKED)
+                        host._logins = lambda: (unrelated,)
+                        try:
+                            assert host.observe_human_lock_down() == ()
+                            assert receipt_path.read_bytes() == original_receipt
+                        finally:
+                            host._logins = original_logins
+                    with borrow_profile_receipt_key(bucket_id=profile_id) as stale_proof:
+                        if revocation == "sign_out":
+                            revoked = _session(stranger, profile_id, second_human_id, "human_sign_out")
+                            assert isinstance(revoked, RuntimeHumanSignedOut), revoked
+                            assert second_human_id in revoked.session_ids
+                            assert revoked.receipt_removed and revoked.keychain_removed
+                            assert revoked.automation_enabled is True
+                        else:
+                            with host.guard:
+                                native_login.lock_state = OsLockState.LOCKED
+                                retired = host.observe_human_lock_down()
+                                assert second_human_id in retired
+                                assert host.observe_human_lock_down() == ()
+                                profiles._retired(retired)
+                                native_login.lock_state = OsLockState.UNLOCKED
+                        assert retired_notice.wait(5), "idle client must receive retirement on its verified stream"
+                        assert not receipt_path.exists()
+                        stale = _login(human, profile_id, "receipt", stale_proof)
+                        assert isinstance(stale, RuntimeAccessRefusal)
+                        assert stale.sign_in is not None and stale.sign_in.reason == "absent"
+                    assert isinstance(_session(api, profile_id, api_id, "session_status"), RuntimeProfileStatus)
+                    absent = human.sign_in_status(
+                        RuntimeSignInStatusRequest(request_id=uuid4(), profile_id=profile_id),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(absent, RuntimeSignInStatusReply)
+                    assert absent.status.presence is SignInPresence.ABSENT
 
                     stranger.close()
                     replacement = _connect(endpoint)
@@ -478,6 +540,7 @@ def test_a_receipt_bound_elsewhere_is_refused_typed_and_deleted_by_the_worker(
                     client.resume_receipt()
                 # The runtime's typed denial reaches the client as a receipt refusal.
                 assert refused.value.reason is ProfileSessionRefusalReason.ABSENT
+                assert refused.value.binding is not None and refused.value.binding.value == case
                 cause = refused.value.__cause__
                 assert isinstance(cause, RuntimeFrontendRefusedError)
                 assert cause.reason == AccessDenialCode.AUTHENTICATION_REQUIRED.value

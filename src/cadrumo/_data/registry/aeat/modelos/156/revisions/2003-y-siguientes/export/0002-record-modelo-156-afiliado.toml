@@ -8,6 +8,7 @@ order = 1
 encoding = 'iso-8859-1'
 line_ending = 'none'
 required = true
+repeat = 'binding_rows'
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-record-type'
@@ -82,8 +83,8 @@ source_refs = ['enrolled-modelo-156-layout']
 id = 'modelo-156-t2-afiliado-nif'
 offset = 18
 length = 9
-kind = 'casilla'
-casilla_id = 'afiliado-nif'
+kind = 'binding'
+binding = 'modelo-156-row-nif'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -115,8 +116,8 @@ source_refs = ['enrolled-modelo-156-layout']
 id = 'modelo-156-t2-afiliado-nombre'
 offset = 36
 length = 40
-kind = 'casilla'
-casilla_id = 'afiliado-nombre'
+kind = 'binding'
+binding = 'modelo-156-row-nombre'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -132,8 +133,25 @@ source_refs = ['enrolled-modelo-156-layout']
 id = 'modelo-156-t2-numero-afiliacion'
 offset = 76
 length = 12
-kind = 'casilla'
-casilla_id = 'numero-afiliacion'
+kind = 'binding'
+binding = 'modelo-156-row-numero-afiliacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-enero-situacion'
+offset = 88
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-01-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -147,10 +165,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-enero'
-offset = 88
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-enero'
+offset = 89
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-01-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-febrero-situacion'
+offset = 97
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-02-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -164,10 +201,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-febrero'
-offset = 97
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-febrero'
+offset = 98
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-02-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-marzo-situacion'
+offset = 106
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-03-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -181,10 +237,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-marzo'
-offset = 106
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-marzo'
+offset = 107
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-03-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-abril-situacion'
+offset = 115
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-04-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -198,10 +273,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-abril'
-offset = 115
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-abril'
+offset = 116
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-04-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-mayo-situacion'
+offset = 124
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-05-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -215,10 +309,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-mayo'
-offset = 124
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-mayo'
+offset = 125
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-05-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-junio-situacion'
+offset = 133
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-06-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -232,10 +345,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-junio'
-offset = 133
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-junio'
+offset = 134
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-06-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-julio-situacion'
+offset = 142
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-07-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -249,10 +381,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-julio'
-offset = 142
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-julio'
+offset = 143
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-07-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-agosto-situacion'
+offset = 151
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-08-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -266,10 +417,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-agosto'
-offset = 151
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-agosto'
+offset = 152
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-08-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-septiembre-situacion'
+offset = 160
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-09-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -283,10 +453,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-septiembre'
-offset = 160
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-septiembre'
+offset = 161
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-09-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-octubre-situacion'
+offset = 169
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-10-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -300,10 +489,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-octubre'
-offset = 169
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-octubre'
+offset = 170
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-10-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-noviembre-situacion'
+offset = 178
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-11-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -317,10 +525,29 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-noviembre'
-offset = 178
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-noviembre'
+offset = 179
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-11-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-hac-3580-2003:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['enrolled-modelo-156-layout']
+
+[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-156-t2-cotizacion-diciembre-situacion'
+offset = 187
+length = 1
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-12-situacion'
 data_type = 'text'
 required = false
 padding = 'right_space'
@@ -334,15 +561,17 @@ source_refs = ['enrolled-modelo-156-layout']
 
 [[revisions.2003-y-siguientes.export_layouts.records.fields]]
 id = 'modelo-156-t2-cotizacion-diciembre'
-offset = 187
-length = 9
-kind = 'casilla'
-casilla_id = 'cotizacion-diciembre'
-data_type = 'text'
+offset = 188
+length = 8
+kind = 'binding'
+binding = 'modelo-156-row-cotizacion-12-importe'
+data_type = 'decimal'
 required = false
-padding = 'right_space'
-justification = 'left'
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
 signed = false
+value_policy = 'implied-decimal'
 legal_refs = [
     'orden-hac-3580-2003:art-1',
     'ley-58-2003:art-93',
@@ -366,3 +595,30 @@ legal_refs = [
 source_refs = ['enrolled-modelo-156-layout']
 
 [revisions.2003-y-siguientes.export_layouts.records.row_field_casilla_ids]
+cotizacion_01_importe = 'cotizacion-enero'
+cotizacion_01_situacion = 'cotizacion-enero-situacion'
+cotizacion_02_importe = 'cotizacion-febrero'
+cotizacion_02_situacion = 'cotizacion-febrero-situacion'
+cotizacion_03_importe = 'cotizacion-marzo'
+cotizacion_03_situacion = 'cotizacion-marzo-situacion'
+cotizacion_04_importe = 'cotizacion-abril'
+cotizacion_04_situacion = 'cotizacion-abril-situacion'
+cotizacion_05_importe = 'cotizacion-mayo'
+cotizacion_05_situacion = 'cotizacion-mayo-situacion'
+cotizacion_06_importe = 'cotizacion-junio'
+cotizacion_06_situacion = 'cotizacion-junio-situacion'
+cotizacion_07_importe = 'cotizacion-julio'
+cotizacion_07_situacion = 'cotizacion-julio-situacion'
+cotizacion_08_importe = 'cotizacion-agosto'
+cotizacion_08_situacion = 'cotizacion-agosto-situacion'
+cotizacion_09_importe = 'cotizacion-septiembre'
+cotizacion_09_situacion = 'cotizacion-septiembre-situacion'
+cotizacion_10_importe = 'cotizacion-octubre'
+cotizacion_10_situacion = 'cotizacion-octubre-situacion'
+cotizacion_11_importe = 'cotizacion-noviembre'
+cotizacion_11_situacion = 'cotizacion-noviembre-situacion'
+cotizacion_12_importe = 'cotizacion-diciembre'
+cotizacion_12_situacion = 'cotizacion-diciembre-situacion'
+nif = 'afiliado-nif'
+nombre = 'afiliado-nombre'
+numero_afiliacion = 'numero-afiliacion'

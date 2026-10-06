@@ -24,7 +24,6 @@ from ..adapters.outbound.model_runtime.process_control import run_runtime_instal
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import (
     build_google_credentials,
-    require_application_drive_root,
     resolve_drive_root_folder_id,
 )
 from ..adapters.persistence.operations.journal import OperationJournalRepository
@@ -120,6 +119,10 @@ from ..application.export.google_operation import (
     GoogleSheetsExportTokenMissingError,
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
+)
+from ..application.export.google_review_operation import (
+    build_google_review_operation_definition,
+    build_google_review_operation_registration,
 )
 from ..application.inventory.registered_operation import (
     build_inventory_closing_authority_record_definition,
@@ -685,7 +688,7 @@ from ..application.review.read_registration import (
     build_review_read_registrations,
 )
 from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
-from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
+from ..application.storage.calc_sheets.records import SheetExportPlan
 from ..application.user_profile.archive_operation import (
     build_profile_archive_operation_definitions,
     build_profile_archive_operation_registrations,
@@ -749,6 +752,7 @@ from ..application.workstation_check_operation import (
 from ..core.access_gate.gate import AeatAccessGate
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import InternalInvariantError
+from ..core.hex import Hex64Str
 from ..core.identity.tax_id import tax_id_identity_token
 from ..core.identity_check_verdict import IdentityCheckVerdictValue
 from ..core.paths import effective_storage_root
@@ -785,6 +789,7 @@ from .calculation_report_verification_operation_composition import build_modelo_
 from .diagnostics_operation_composition import build_diagnostics_read_ports
 from .evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from .google_configuration_operation_composition import build_google_configuration_operation_ports
+from .google_review_operation_composition import build_google_review_ports
 from .invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
 from .invoice_inspection_composition import build_invoice_inspection_read_ports
 from .invoice_intake_operation_composition import build_invoice_intake_ports
@@ -927,8 +932,6 @@ def _google_sheets_export_prepare_port():
 
         class PreparedGoogleSheetsExport:
             def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
-                # The stored root is read back before anything is listed or written beneath it.
-                require_application_drive_root(credentials, root_folder_id=root_folder_id)
                 if dry_run:
                     preview = preview_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
                     return GoogleSheetsExportRemoteResult(
@@ -941,7 +944,7 @@ def _google_sheets_export_prepare_port():
                         value_cells_written=len(plan.value_cells),
                         formula_cells_written=len(plan.formula_cells),
                         protected_ranges_written=len(plan.protected_ranges),
-                        tab_count=len(TabName),
+                        tab_count=len(plan.tabs),
                         ranges_to_clear=preview.ranges_to_clear,
                         value_cells_changed=preview.value_cells_changed,
                         value_cells_unchanged=preview.value_cells_unchanged,
@@ -1192,6 +1195,7 @@ def build_production_operation_registry(
         prerequisites=edit_prerequisites,
     )
     resolved_google_export_definition = _production_registry_google_export(google_export_definition, resolved_settings)
+    google_review_definition = build_google_review_operation_definition(build_google_review_ports)
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
         composition_factory=compose_live_state,
@@ -1628,6 +1632,7 @@ def build_production_operation_registry(
                 justificante_list_definition,
                 justificante_show_definition,
                 resolved_google_export_definition,
+                google_review_definition,
                 local_reader_definition,
                 workbench_definition,
                 metadata_definition,
@@ -1833,6 +1838,7 @@ def build_production_operation_registry(
                 build_justificante_list_registration(justificante_list_definition),
                 build_justificante_show_registration(justificante_show_definition),
                 build_google_sheets_export_operation_registration(resolved_google_export_definition),
+                build_google_review_operation_registration(google_review_definition),
                 build_local_reader_operation_registration(local_reader_definition),
                 build_workbench_generation_operation_registration(workbench_definition),
                 build_modelo_metadata_registration(metadata_definition, work_lifecycle_ports_factory),
@@ -1966,6 +1972,7 @@ def build_production_operation_registry(
 def compose_operation_dependencies(
     *,
     authority_operation: PinnedAuthorityOperation,
+    operation_owner_id: Hex64Str | None = None,
     settings: Settings | None = None,
     evidence_followup_ports: LedgerEvidenceFollowupOperationPorts | None = None,
     modelo_query_read_ports_factory: ModeloQueryReadPortsFactory = build_modelo_query_read_ports,
@@ -2062,7 +2069,7 @@ def compose_operation_dependencies(
         event_stream=journal,
         leases=leases,
         operands=operands,
-        owner_id=secrets.token_hex(32),
+        owner_id=secrets.token_hex(32) if operation_owner_id is None else operation_owner_id,
         lease_token_factory=lambda: secrets.token_hex(32),
         clock=now,
         lease_duration=_LEASE_DURATION,

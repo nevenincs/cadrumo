@@ -11,6 +11,80 @@ modelo:
           Declaración informativa anual.
         title: Cotizaciones de afiliados y mutualistas a efectos de la deducción por
           maternidad (informativa anual)
+      form:
+        choice:
+          complementaria:
+            heading: Declaración complementaria
+          sustitutiva:
+            heading: Declaración sustitutiva
+        column:
+          importe:
+            heading: Cuota devengada (€)
+          situacion:
+            heading: Situación mensual (S/N)
+        context:
+          ejercicio:
+            heading: Ejercicio
+          nif:
+            heading: NIF del declarante
+          nombre:
+            heading: Apellidos y nombre de contacto
+          telefono:
+            heading: Teléfono de contacto
+        month:
+          abril:
+            heading: Abril
+          agosto:
+            heading: Agosto
+          diciembre:
+            heading: Diciembre
+          enero:
+            heading: Enero
+          febrero:
+            heading: Febrero
+          julio:
+            heading: Julio
+          junio:
+            heading: Junio
+          marzo:
+            heading: Marzo
+          mayo:
+            heading: Mayo
+          noviembre:
+            heading: Noviembre
+          octubre:
+            heading: Octubre
+          septiembre:
+            heading: Septiembre
+        page:
+          afiliado:
+            heading: Afiliado o mutualista · desarrollo parcial
+          resumen:
+            heading: Hoja resumen · desarrollo parcial
+        section:
+          afiliado:
+            heading: Identificación del afiliado o mutualista
+          contacto:
+            heading: Persona de contacto
+          cotizaciones:
+            heading: Cotizaciones mensuales
+          declaracion:
+            heading: Declaración complementaria o sustitutiva
+          domicilio:
+            heading: Domicilio fiscal
+          firma:
+            heading: Fecha y firma
+          identificacion:
+            heading: Declarante y ejercicio
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
+        signature:
+          administracion:
+            heading: Espacio reservado para la Administración
+          paper:
+            heading: Firma en papel
+          space:
+            heading: Espacio para firma manuscrita
       revision:
         2003-y-siguientes:
           casilla:
@@ -19,45 +93,125 @@ modelo:
             afiliado-nombre:
               label: Apellidos y nombre del afiliado o mutualista
             cotizacion-abril:
-              label: 'Cotización de abril: situación mensual e importe de la cuota
-                devengada'
+              label: Abril · Cuota devengada
+            cotizacion-abril-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Abril · Cotizó al menos un día
             cotizacion-agosto:
-              label: 'Cotización de agosto: situación mensual e importe de la cuota
-                devengada'
+              label: Agosto · Cuota devengada
+            cotizacion-agosto-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Agosto · Cotizó al menos un día
             cotizacion-diciembre:
-              label: 'Cotización de diciembre: situación mensual e importe de la cuota
-                devengada'
+              label: Diciembre · Cuota devengada
+            cotizacion-diciembre-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Diciembre · Cotizó al menos un día
             cotizacion-enero:
-              label: 'Cotización de enero: situación mensual e importe de la cuota
-                devengada'
+              label: Enero · Cuota devengada
+            cotizacion-enero-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Enero · Cotizó al menos un día
             cotizacion-febrero:
-              label: 'Cotización de febrero: situación mensual e importe de la cuota
-                devengada'
+              label: Febrero · Cuota devengada
+            cotizacion-febrero-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Febrero · Cotizó al menos un día
             cotizacion-julio:
-              label: 'Cotización de julio: situación mensual e importe de la cuota
-                devengada'
+              label: Julio · Cuota devengada
+            cotizacion-julio-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Julio · Cotizó al menos un día
             cotizacion-junio:
-              label: 'Cotización de junio: situación mensual e importe de la cuota
-                devengada'
+              label: Junio · Cuota devengada
+            cotizacion-junio-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Junio · Cotizó al menos un día
             cotizacion-marzo:
-              label: 'Cotización de marzo: situación mensual e importe de la cuota
-                devengada'
+              label: Marzo · Cuota devengada
+            cotizacion-marzo-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Marzo · Cotizó al menos un día
             cotizacion-mayo:
-              label: 'Cotización de mayo: situación mensual e importe de la cuota
-                devengada'
+              label: Mayo · Cuota devengada
+            cotizacion-mayo-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Mayo · Cotizó al menos un día
             cotizacion-noviembre:
-              label: 'Cotización de noviembre: situación mensual e importe de la cuota
-                devengada'
+              label: Noviembre · Cuota devengada
+            cotizacion-noviembre-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Noviembre · Cotizó al menos un día
             cotizacion-octubre:
-              label: 'Cotización de octubre: situación mensual e importe de la cuota
-                devengada'
+              label: Octubre · Cuota devengada
+            cotizacion-octubre-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Octubre · Cotizó al menos un día
             cotizacion-septiembre:
-              label: 'Cotización de septiembre: situación mensual e importe de la
-                cuota devengada'
+              label: Septiembre · Cuota devengada
+            cotizacion-septiembre-situacion:
+              help: 'S: cotizó al menos un día en el mes. N: no cotizó ningún día.
+                El importe se declara por separado.'
+              label: Septiembre · Cotizó al menos un día
             declaracion-complementaria-sustitutiva:
               label: Declaración complementaria o sustitutiva
             declarante-razon-social:
               label: Razón social del declarante
+            domicilio-codigo-postal:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Código postal
+            domicilio-escalera:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Escalera
+            domicilio-municipio:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Municipio
+            domicilio-numero:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Número
+            domicilio-piso:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Piso
+            domicilio-provincia:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Provincia
+            domicilio-puerta:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Puerta
+            domicilio-via:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Calle / plaza / avenida
+            firma-cargo:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Cargo o empleo
+            firma-fecha:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Fecha
+            firma-nombre:
+              help: Dato del formulario en papel; no se incluye en el fichero electrónico.
+                No acredita una firma ni una presentación.
+              label: Nombre de quien firma
             numero-afiliacion:
               label: Número de afiliación
             numero-identificativo-anterior:

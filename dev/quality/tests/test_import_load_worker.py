@@ -127,6 +127,14 @@ def test_native_backend_rejects_unimplemented_or_injected_module_names(monkeypat
         pytest.fail(f"unimplemented backend attempted an import: {name}")
 
     monkeypatch.setattr(layout.importlib, "import_module", unexpected_import)
-    for name in ("linux", "os", "windows_verify", "../windows", ""):
+    for name in ("freebsd", "os", "windows_verify", "../windows", ""):
         with pytest.raises(ValueError, match="implemented enrollment"):
             layout.backend({"backend": name})
+
+
+@pytest.mark.parametrize("name", ["windows", "linux", "macos"])
+def test_native_backend_loads_each_enrolled_platform(name: str) -> None:
+    """Every bundled platform resolves to its actual implementation module."""
+    from dev.packaging.native.layout import backend
+
+    assert backend({"backend": name}).__name__ == f"dev.packaging.native.platforms.{name}"

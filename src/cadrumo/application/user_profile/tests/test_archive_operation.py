@@ -181,13 +181,51 @@ async def test_provider_admission_releases_guard_and_never_guesses_delivery(subj
 
 
 @pytest.mark.asyncio
+async def test_mirror_creation_receipt_has_local_fence_between_remote_handoffs(subject: Subject) -> None:
+    def push(
+        *,
+        namespace_filter: str | None,
+        limit: int | None,
+        dry_run: bool,
+        before_handoff: ArchiveProviderHandoff,
+        write: ArchiveLocalWriter,
+    ) -> ProfileArchivePushReport:
+        before_handoff()
+        assert not subject.fence.active
+
+        def retain_receipt() -> None:
+            assert subject.fence.active
+            subject.writes += 1
+
+        write(retain_receipt)
+        assert not subject.fence.active
+        before_handoff()
+        assert not subject.fence.active
+        return empty_push_report(dry_run=False)
+
+    subject.ports = replace(subject.ports, push=push)
+    request = _push_request()
+    await module.ProfileArchivePushExecutor(subject.compose).execute(request, subject.context(request.definition_id))
+    assert subject.writes == 1
+    assert subject.events.effects[-1] is OperationEffect.UNKNOWN
+    definition = _registry(subject).lookup(request.definition_id)
+    assert OperationEffect.UPDATED in subject.events.effects
+    assert set(subject.events.effects) <= definition.capabilities.permitted_effects
+
+
+@pytest.mark.asyncio
 async def test_cancelled_remote_owner_joins_thread_and_retains_uncertain_effect(subject: Subject) -> None:
     entered = Event()
     release = Event()
     finished = Event()
 
     def push(
-        *, namespace_filter: str | None, limit: int | None, dry_run: bool, before_handoff: ArchiveProviderHandoff
+        *,
+        namespace_filter: str | None,
+        limit: int | None,
+        dry_run: bool,
+        before_handoff: ArchiveProviderHandoff,
+        write: ArchiveLocalWriter,
     ) -> ProfileArchivePushReport:
         before_handoff()
         assert not subject.fence.active

@@ -72,7 +72,6 @@ _TEST_RUNNER_KEYS = frozenset(
         "VAULTSPEC_CI_REPORTS",
         "VAULTSPEC_CI_REPORT_NAME",
         "AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH",
-        "AEAT_GOOGLE_LIVE_PROFILE",
     },
 )
 

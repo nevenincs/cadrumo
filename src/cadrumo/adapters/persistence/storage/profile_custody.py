@@ -133,6 +133,7 @@ from .custody.sentinel_contract import (
     parse_profile_custody_sentinel_record,
     verify_profile_custody_sentinel,
 )
+from .custody.sign_in_generation import fence_profile_sign_in_for_custody_transition
 from .errors import (
     KeyringUnavailableError,
     PersistenceError,
@@ -771,6 +772,9 @@ class _PersistenceProfileCustody:
             password,
             sentinel=_substrate_handle(material.sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
         )
+
+    def fence_human_sign_in(self, *, profile_id: UUID, root: Path) -> None:
+        fence_profile_sign_in_for_custody_transition(root=root, profile_id=profile_id)
 
     def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
         return retire_profile_automation(root=root, profile_id=profile_id, secrets_store=self.automation_secrets_store)

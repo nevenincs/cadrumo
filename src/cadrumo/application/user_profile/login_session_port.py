@@ -20,7 +20,7 @@ from uuid import UUID
 from ...core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
-    from ...core.profile_session import ProfileSessionRefusalReason
+    from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
     from .access_contracts import ProfileAccessBinding
     from .login_handover import ProfileLoginHandoverJournal
 
@@ -135,6 +135,11 @@ class ProfileSessionResumeOutcomePort(Protocol):
     @property
     def refusal(self) -> ProfileSessionRefusalReason | None:
         """The typed reason a resume was refused, if it was."""
+        ...
+
+    @property
+    def binding(self) -> ReceiptBindingRefusal | None:
+        """The exact login or generation fence that rejected a saved sign-in."""
         ...
 
     @property
@@ -263,18 +268,6 @@ class ProfileLoginSessionPort(Protocol):
         """
         ...
 
-    def resume_acceleration_receipt(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        custody_generation: int,
-        dek_epoch: str,
-        now: datetime,
-    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Evaluate one receipt and return its owned wipeable DEK buffer."""
-        ...
-
     def borrow_acceleration_receipt_key(
         self,
         *,
@@ -305,17 +298,6 @@ class ProfileLoginSessionPort(Protocol):
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         """Revoke one profile's split-knowledge acceleration receipt."""
-        ...
-
-    def advance_acceleration_idle_deadline(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        record: ProfilePersistedSessionPort,
-        new_idle_deadline: datetime,
-    ) -> ProfilePersistedSessionPort:
-        """Advance a receipt while preserving its concrete DTO identity."""
         ...
 
     def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:

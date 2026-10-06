@@ -590,6 +590,94 @@ test-packaging-serial: build-packaging-cohort
 [group('test')]
 test-packaging-artifacts: test-installed-oracles test-packaging-serial test-python-compatibility test-channel-artifacts
 
+# ── Native build ─────────────────────────────────────────────────────────────
+
+# CMake owns the native build graph; these recipes own how it is entered. They
+# select the host's configure preset, so the binary directory is the one
+# `native/cmake/BinaryDirectory.cmake` admits, and they run CMake under this
+# file's exported tool locations, so bytecode, Cargo, npm and uv state land in
+# managed storage rather than beside the sources.
+#
+# The wheel step refuses a configuring interpreter that is not the exact patch
+# in `dev/packaging/release-python-version`, while the development `.venv`
+# follows only the minor in `.python-version`. The builder is therefore a
+# second locked environment. It is a member of the managed tool data location,
+# so it follows the storage root and `CADRUMO_TOOL_DATA_DIR` as every other
+# tool location does. CMake receives its interpreter as `CADRUMO_DEV_PYTHON`
+# with forward slashes, the form in which CMake stores a program it found.
+native_builder_environment := XDG_DATA_HOME / "native-builder"
+native_builder_python := replace(native_builder_environment, '\', '/') / if os_family() == "windows" { "Scripts/python.exe" } else { "bin/python" }
+
+# One configure preset per enrolled host. An unenrolled host leaves the
+# selection empty and is refused before anything is provisioned. Windows names
+# its build presets by configuration alone; every other host prefixes them with
+# its configure preset.
+native_host := os() + "-" + arch()
+native_preset := if native_host == "windows-x86_64" { "windows-x64" } else if native_host == "linux-x86_64" { "linux-x86-64" } else if native_host == "linux-aarch64" { "linux-aarch64" } else if native_host == "macos-aarch64" { "macos-arm64" } else { "" }
+native_build_preset_prefix := if os() == "windows" { "" } else { native_preset + "-" }
+
+# Converging is safe to repeat: a current environment is audited and left as it
+# is. The editable install skips authority resolution because the builder reads
+# the authority this checkout publishes, which `build-native` makes current
+# through its own prerequisite.
+[doc('Create or converge the native release-builder Python environment at the pinned patch in managed storage; never touches .venv.')]
+[group('setup')]
+[unix]
+setup-native-builder:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export UV_PROJECT_ENVIRONMENT={{quote(native_builder_environment)}}
+    export CADRUMO_EDITABLE_AUTHORITY=skip
+    uv sync --locked --python "$(cat dev/packaging/release-python-version)"
+
+[doc('Create or converge the native release-builder Python environment at the pinned patch in managed storage; never touches .venv.')]
+[group('setup')]
+[windows]
+setup-native-builder:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $env:UV_PROJECT_ENVIRONMENT = {{quote(native_builder_environment)}}
+    $env:CADRUMO_EDITABLE_AUTHORITY = 'skip'
+    uv sync --locked --python (Get-Content -Raw dev/packaging/release-python-version).Trim()
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+[private]
+_native-selection CONFIGURATION:
+    @{{ if native_preset == "" { error("No native configure preset is enrolled for host " + native_host) } else if CONFIGURATION =~ '^(Debug|Release)$' { "" } else { error("CONFIGURATION must be Release or Debug, not " + CONFIGURATION) } }}
+
+# Configure runs on every entry because `CADRUMO_DEV_PYTHON` is a cache entry:
+# only a configure moves a binary directory that was first configured against
+# `.venv` onto the builder. Configure refuses a missing or stale published
+# authority, so publication precedes it. A missing Node.js, Rust or compiler
+# pin stops here with CMake's own message.
+[private]
+_native-configure CONFIGURATION: (_native-selection CONFIGURATION) setup-native-builder registry-publish-authority-if-authority-stale
+    cmake --preset {{native_preset}} {{quote("-DCADRUMO_DEV_PYTHON=" + native_builder_python)}}
+
+# Each recipe below names one CMake target and lets CMake build what that
+# target depends on: `verify` and `zip` build the bundle first, and
+# `verify-package` packages first. CONFIGURATION is `Release` or `Debug`; any
+# other value is refused before anything runs.
+[doc('Configure the host preset with the managed builder interpreter and build a native target, the bundle by default.')]
+[group('build')]
+build-native CONFIGURATION="Release" TARGET="bundle": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target {{quote(TARGET)}}
+
+[doc('Build the native bundle and run its CTest verification.')]
+[group('test')]
+test-native-bundle CONFIGURATION="Release": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify
+
+[doc('Build the native bundle and package it as the distributable ZIP.')]
+[group('build')]
+build-native-package CONFIGURATION="Release": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target zip
+
+[doc('Package the native bundle and verify the extracted ZIP artifact.')]
+[group('test')]
+test-native-package CONFIGURATION="Release": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target verify-package
+
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is

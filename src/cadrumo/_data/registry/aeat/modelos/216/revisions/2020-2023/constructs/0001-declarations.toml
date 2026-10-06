@@ -2,13 +2,16 @@
 id = "modelo-216-liquidacion"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4"]
 source_refs = [
+    "boe-2008-18497-modelo-216-form-pdf",
+    "boe-2008-18497-modelo-216-calculation-guidance",
     "aeat-dr-216-2020-2023",
     "aeat-calendario-contribuyente-2022",
     "aeat-calendario-contribuyente-2023",
     "aeat-calendario-contribuyente-2024",
 ]
 casilla_ids = ["1", "2", "3", "4", "5", "6", "7"]
-application_links = ["modelo-216-deadline", "modelo-216-filing"]
+formulas = ["modelo-216-resultado"]
+application_links = ["modelo-216-deadline", "modelo-216-filing", "modelo-216-export", "modelo-216-calculation"]
 workbook_parity_refs = ["modelo-216-2020-2023-static-layout"]
 filing_schedules = ["modelo-216-trimestral"]
 deadline_windows = [

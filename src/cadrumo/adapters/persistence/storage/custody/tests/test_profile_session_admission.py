@@ -105,3 +105,12 @@ def test_credential_outcome_without_live_custody_is_not_admission(profiles: tupl
 
     with pytest.raises(InternalInvariantError, match="live session"):
         admit_profile_session(bucket_id=profiles[0], profile_decode_context=decode, credentials=credentials)
+
+
+def test_local_admission_does_not_infer_shared_receipt_absence(profiles: tuple[str, str]) -> None:
+    """No local DEK is a credential requirement, not an observation of sign-in."""
+    _, decode = profile_authority_contexts()
+    result = admit_profile_session(bucket_id=profiles[0], profile_decode_context=decode)
+    assert result.state is ProfileSessionAdmissionState.CREDENTIALS_REQUIRED
+    assert result.resume_refusal is None
+    assert not result.admitted

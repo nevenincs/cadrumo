@@ -153,23 +153,24 @@ modelo:
           irpf-pf-modulos-2-unidades:
             label: 'Módulo 2 (Non-employed staff): number of units'
           irpf-pf-modulos-3-unidades:
-            label: 'Módulo 3 (activity-specific unit: floor area, distance travelled
-              or load): number of units'
+            label: 'Module 3: activity-specific units (area, distance or load)'
           irpf-pf-modulos-4-unidades:
-            label: 'Módulo 4 (activity-specific unit: electricity or other energy
-              consumption): number of units'
+            label: 'Module 4: activity-specific units (electricity consumption or
+              another unit)'
           irpf-pf-modulos-5-unidades:
-            label: 'Módulo 5 (activity-specific unit, e.g. remaining floor area of
-              an independent premises or tables): number of units'
+            label: 'Module 5: activity-specific units (separate premises area or tables)'
           irpf-pf-modulos-6-unidades:
-            label: 'Módulo 6 (activity-specific unit, e.g. remaining floor area of
-              a non-independent premises or type A machines): number of units'
+            label: 'Module 6: activity-specific units (shared premises area or type
+              A machines)'
           irpf-pf-modulos-7-unidades:
-            label: 'Módulo 7 (activity-specific unit, e.g. oven surface area or type
-              B machines): number of units'
+            label: 'Module 7: activity-specific units (oven area or type B machines)'
           irpf-pf-modulos-diferencia:
             label: Difference
           irpf-pf-modulos-epigrafe-iae:
+            help: For headings 659.4 and 691.9, which group two different activities
+              under one code, use the suffix “a” or “b” (for example, “659.4a” or
+              “691.9b”) according to the activity. Check the activity coefficients
+              to choose the corresponding option.
             label: IAE heading of the activity under the objective estimation (módulos)
               regime. For headings 659.4 and 691.9, which group two different activities
               under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
@@ -221,6 +222,22 @@ modelo:
         official_name: Modelo 131. Personal Income Tax. Entrepreneurs and professionals
           under objective assessment. Instalment payment.
         title: IRPF instalment payment, objective assessment
+      form:
+        context:
+          apellidos: Surname
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
+        section:
+          devengo:
+            heading: Tax period (2)
+          identificacion:
+            heading: Declarant (1)
+          ingreso:
+            heading: Payment (4)
       revision:
         2019-2023:
           casilla:

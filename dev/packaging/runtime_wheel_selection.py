@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
-from packaging.markers import default_environment
 from packaging.requirements import Requirement
 from packaging.tags import Tag
 from packaging.utils import canonicalize_name, parse_wheel_filename
@@ -21,6 +20,7 @@ from .runtime_wheelhouse_contract import (
     RuntimeWheelhousePlan,
     TargetPlatform,
     _canonical_python_minor,
+    target_platform,
 )
 from .uv_constraints import export_runtime_constraints
 
@@ -47,28 +47,24 @@ def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tup
     return rows
 
 
-def _marker_environment(target: TargetPlatform, python_version: str) -> dict[str, str]:
+def marker_environment(target: TargetPlatform, python_version: str) -> dict[str, str]:
+    """Project target markers; never inherit kernel or Python facts from the host."""
     python_minor = _canonical_python_minor(python_version)
-    python_full_version = f"{python_minor}.0"
-    environment: dict[str, str] = {}
-    for key, value in default_environment().items():
-        if not isinstance(key, str) or not isinstance(value, str):
-            raise TypeError("packaging marker environment must contain string keys and values")
-        environment[key] = value
-    environment.update(
-        {
-            "implementation_name": "cpython",
-            "implementation_version": python_full_version,
-            "os_name": target.os_name,
-            "platform_machine": target.platform_machine,
-            "platform_python_implementation": "CPython",
-            "platform_system": target.platform_system,
-            "python_full_version": python_full_version,
-            "python_version": python_minor,
-            "sys_platform": target.sys_platform,
-        }
-    )
-    return environment
+    python_full_version = python_version if python_version.count(".") == 2 else f"{python_minor}.0"
+    return {
+        "implementation_name": "cpython",
+        "implementation_version": python_full_version,
+        "os_name": target.os_name,
+        "platform_machine": target.platform_machine,
+        "platform_python_implementation": "CPython",
+        "platform_system": target.platform_system,
+        "python_full_version": python_full_version,
+        "python_version": python_minor,
+        "sys_platform": target.sys_platform,
+        "platform_release": "",
+        "platform_version": "",
+        "extra": "",
+    }
 
 
 def _stable_abi_rank(interpreter: str, abi: str, target_minor: int) -> int | None:
@@ -169,11 +165,16 @@ def _wheel_filename(url: str) -> str:
     return filename
 
 
-def _active_requirements(repo_root: Path, target: TargetPlatform, python_version: str) -> dict[str, Requirement]:
-    environment = _marker_environment(target, python_version)
+def active_requirements(repo_root: Path, target: TargetPlatform, python_version: str) -> dict[str, Requirement]:
+    """Select the locked base closure with an explicit target marker environment."""
+    environment = marker_environment(target, python_version)
     active: dict[str, Requirement] = {}
     for line in export_runtime_constraints(repo_root=repo_root):
         requirement = Requirement(line)
+        if requirement.marker is not None and any(
+            name in str(requirement.marker) for name in ("platform_release", "platform_version")
+        ):
+            raise ValueError(f"Target kernel marker has no declared value: {requirement}")
         if requirement.marker is not None and not requirement.marker.evaluate(environment=environment):
             continue
         name = canonicalize_name(requirement.name)
@@ -251,7 +252,7 @@ def _target_wheel_rows(
     missing: list[dict[str, str]],
 ) -> dict[str, str]:
     target_rows: dict[str, str] = {}
-    for name, requirement in sorted(_active_requirements(root, target, python_minor).items()):
+    for name, requirement in sorted(active_requirements(root, target, python_minor).items()):
         package = _registry_package(name, requirement, by_name)
         wheels = _ranked_lock_wheels(package, target, python_minor)
         if not wheels:
@@ -273,7 +274,9 @@ def _target_wheel_rows(
     return target_rows
 
 
-def _plan_runtime_wheelhouse(repo_root: Path, python_version: str) -> RuntimeWheelhousePlan:
+def _plan_runtime_wheelhouse(
+    repo_root: Path, python_version: str, targets: Sequence[TargetPlatform] = SUPPORTED_TARGETS
+) -> RuntimeWheelhousePlan:
     """Resolve one runtime's exact lock wheels across every supported platform."""
     root = repo_root.resolve(strict=True)
     python_minor = _canonical_python_minor(python_version)
@@ -285,8 +288,8 @@ def _plan_runtime_wheelhouse(repo_root: Path, python_version: str) -> RuntimeWhe
     selected: dict[str, LockedWheel] = {}
     platforms: dict[str, dict[str, str]] = {}
     missing: list[dict[str, str]] = []
-    for target in SUPPORTED_TARGETS:
-        platforms[target.name] = _target_wheel_rows(root, target, python_minor, by_name, selected, missing)
+    for target in targets:
+        platforms[target.name] = _target_wheel_rows(root, target, python_version, by_name, selected, missing)
     return RuntimeWheelhousePlan(
         python_version=python_minor,
         platforms=platforms,
@@ -298,6 +301,14 @@ def _plan_runtime_wheelhouse(repo_root: Path, python_version: str) -> RuntimeWhe
 def _missing_wheel_message(plan: RuntimeWheelhousePlan) -> str:
     missing = "; ".join(f"{item['distribution']} ({item['platform']}, {item['requirement']})" for item in plan.missing)
     return f"runtime lock has no complete {plan.python_version} wheelhouse: {missing}"
+
+
+def plan_target_wheels(repo_root: Path, target: str, python_version: str) -> tuple[LockedWheel, ...]:
+    """Select one target's hash-pinned wheels using the existing floor/ABI rules."""
+    plan = _plan_runtime_wheelhouse(repo_root, python_version, (target_platform(target),))
+    if plan.missing:
+        raise SystemExit(_missing_wheel_message(plan))
+    return plan.wheels
 
 
 def plan_runtime_wheelhouse(

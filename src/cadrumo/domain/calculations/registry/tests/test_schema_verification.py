@@ -33,6 +33,7 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
         "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
         "profile_flag_enabled": 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")',
         "roll_forward_balances": 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])',
+        "casilla_equals_implies_zero": 'casilla_equals_implies_zero(["01", "  ", "07"])',
         "casilla_equals_implies_nonzero": (
             'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
         ),

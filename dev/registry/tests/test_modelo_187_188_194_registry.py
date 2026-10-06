@@ -283,12 +283,13 @@ def test_modelo_194_refuses_a_mutated_record_design_hash() -> None:
         ("194", ("01", "02", "03", "04", "05")),
     ],
 )
-def test_modelo_187_188_194_casilla_set_is_the_printed_box_set(modelo_id: str, expected: tuple[str, ...]) -> None:
-    """The declared casillas are the boxes the approving orden's annex prints."""
+def test_modelo_187_188_194_summary_is_the_printed_box_set(modelo_id: str, expected: tuple[str, ...]) -> None:
+    """Summary boxes remain distinct from the separately authored recipient detail."""
     modelo, _ = _committed_modelo(modelo_id)
     revision = modelo.revisions[_REVISION_BY_MODELO[modelo_id]]
 
-    assert tuple(str(casilla.id) for casilla in revision.casillas) == expected
-    assert all(casilla.input_kind.value == "manual" for casilla in revision.casillas), (
+    summary = tuple(casilla for casilla in revision.casillas if modelo_id != "188" or casilla.section == ("resumen",))
+    assert tuple(str(casilla.id) for casilla in summary) == expected
+    assert all(casilla.input_kind.value == "manual" for casilla in summary), (
         "every box on these hoja-resumen forms is declarante input"
     )

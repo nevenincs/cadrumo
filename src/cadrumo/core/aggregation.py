@@ -349,6 +349,8 @@ class BindingSourceKind(StrEnum):
     WITHHOLDING = RowSetGroupingKind.WITHHOLDING.value
     FOREIGN_ASSET = RowSetGroupingKind.FOREIGN_ASSET.value
     ATRIBUCION_MEMBER = "atribucion_member"
+    # Explicit member identity and independent monthly contribution facts (M156).
+    AFILIADO_COTIZACION = "afiliado_cotizacion"
     # Modelo 193 hoja-anexo gastos relationship rows (NIF del contribuyente
     # plus the annual gastos de administracion y deposito amount), produced by
     # the Sheets pull surface in the detail-record row shape.

@@ -7,7 +7,7 @@ from uuid import UUID
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, Footer, Input, Label, Select, Static
+from textual.widgets import Button, Checkbox, Footer, Input, Label, Select, Static
 
 from ....core.i18n.render import tr
 from ..components.status import PinnedStatusBar
@@ -57,6 +57,7 @@ class RuntimeLoginFormMixin:
             yield Label(tr("tui.runtime_login.credential_label_password"), id="runtime-login-credential-label")
             yield Static("", id="runtime-login-credential-hint", classes="field-hint")
             yield Input(password=True, id="runtime-login-credential")
+            yield Checkbox(tr("tui.runtime_login.stay_signed_in"), value=False, id="runtime-login-persist")
             yield Label(tr("tui.runtime_login.credential_label_api_reference"), id="runtime-login-reference-label")
             yield Input(id="runtime-login-reference")
             with Horizontal(id="runtime-login-actions", classes="credential-actions"):
@@ -81,6 +82,10 @@ class RuntimeLoginFormMixin:
         self.query_one("#runtime-login-credential", Input).focus()
         self._show_method(RuntimeLoginMethod.PASSWORD)
         self._controls()
+        if self._resume_preselected is not None:
+            self.call_after_refresh(
+                self._start_login_attempt, self._resume_preselected, RuntimeLoginMethod.RECEIPT, None, None
+            )
 
     def _show_method(self: RuntimeLoginScreen, method: RuntimeLoginMethod) -> None:
         """Show one proof family and discard values from the previous one."""
@@ -88,6 +93,10 @@ class RuntimeLoginFormMixin:
         reference = self.query_one("#runtime-login-reference", Input)
         credential.value = ""
         reference.value = ""
+        persistence = self.query_one("#runtime-login-persist", Checkbox)
+        persistence.value = False
+        persistence.display = method is RuntimeLoginMethod.PASSWORD
+        persistence.disabled = self._busy or not persistence.display
         credential.display = method in {RuntimeLoginMethod.PASSWORD, RuntimeLoginMethod.API_KEY}
         credential.disabled = not credential.display
         reference.display = method is RuntimeLoginMethod.API_REFERENCE
@@ -118,6 +127,7 @@ class RuntimeLoginFormMixin:
         for selector, kind in (
             ("#runtime-login-profile", Select),
             ("#runtime-login-method", Select),
+            ("#runtime-login-persist", Checkbox),
             ("#runtime-login-credential", Input),
             ("#runtime-login-reference", Input),
             ("#runtime-login-resume-password", Input),
@@ -132,6 +142,7 @@ class RuntimeLoginFormMixin:
                     and method in {RuntimeLoginMethod.RECEIPT, RuntimeLoginMethod.API_REFERENCE}
                 )
                 or (selector == "#runtime-login-reference" and method is not RuntimeLoginMethod.API_REFERENCE)
+                or (selector == "#runtime-login-persist" and method is not RuntimeLoginMethod.PASSWORD)
             )
         selected = cast("Select[str]", self.query_one("#runtime-login-profile", Select)).value
         profile_id = self._profile_ids.get(selected) if isinstance(selected, str) else None
@@ -194,6 +205,8 @@ class RuntimeLoginFormMixin:
         method: RuntimeLoginMethod,
         proof: bytearray | None,
         reference: UUID | None,
+        *,
+        persist_receipt: bool = False,
     ) -> None:
         label = next(choice.label for choice in self._choices if choice.profile_id == selected)
         self._busy = True
@@ -201,7 +214,9 @@ class RuntimeLoginFormMixin:
         self._controls()
         self.query_one("#runtime-login-status", PinnedStatusBar).show_progress(tr("tui.runtime_login.progress"))
         self._worker = self.run_worker(
-            self._attempt(self._profile_ids[selected], label, method, proof, reference),
+            self._attempt(
+                self._profile_ids[selected], label, method, proof, reference, persist_receipt=persist_receipt
+            ),
             name="tui-runtime-login",
             group="tui-runtime-login",
             exclusive=True,

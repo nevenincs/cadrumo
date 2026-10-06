@@ -79,12 +79,12 @@ def test_reported_facts_describe_the_returned_payload() -> None:
 
     plan = materializer.plans[0]
     covered = {cell.casilla_id for cell in plan.value_cells if cell.casilla_id is not None}
-    covered |= {cell.casilla_id for cell in plan.formula_cells}
+    covered |= {cell.casilla_id for cell in plan.formula_cells if cell.casilla_id is not None}
 
     assert export.payload == _PAYLOAD
     assert export.byte_size == len(_PAYLOAD)
     assert export.sha256 == hashlib.sha256(_PAYLOAD).hexdigest()
-    assert export.tab_names == tuple(tab.value for tab in TabName)
+    assert export.tab_names == tuple(tab.value for tab in plan.tabs)
     assert export.casilla_count == len(covered)
     assert export.modelo == "303"
     assert export.period == "1T"

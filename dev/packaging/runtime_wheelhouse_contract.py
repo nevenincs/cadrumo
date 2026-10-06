@@ -77,6 +77,14 @@ SUPPORTED_TARGETS: Final[tuple[TargetPlatform, ...]] = (
 PLATFORM_FLOORS: Final[dict[str, str]] = {target.name: target.floor for target in SUPPORTED_TARGETS}
 
 
+def target_platform(name: str) -> TargetPlatform:
+    """Resolve a canonical target without consulting the build host."""
+    for target in SUPPORTED_TARGETS:
+        if target.name == name:
+            return target
+    raise ValueError(f"Unsupported distribution target: {name}")
+
+
 @dataclass(frozen=True)
 class LockedWheel:
     """One exact lock-recorded wheel selected for at least one target."""

@@ -1,9 +1,9 @@
 """Typed ``--json`` payload schemas for ``aeat app modelo spreadsheet``.
 
-Each class here is a strict :class:`OutputSchema` subclass referenced as a
-deferred public schema target by a production-authored CommandSpec, so the
-JSON-contract suite can enumerate the whole spreadsheet surface. Validated
-results enter :class:`SchemaEnvelope` through :func:`emit_envelope`.
+These strict :class:`OutputSchema` records include historical shapes for
+retired pull, calculate and verify commands. Retaining a schema does not enroll
+an executable command. Active results enter :class:`SchemaEnvelope` through
+:func:`emit_envelope`.
 
 Sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
@@ -102,13 +102,9 @@ class ModeloSpreadsheetVerifyDivergencePayload(OutputSchema):
 
 
 class ModeloSpreadsheetVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat app modelo spreadsheet verify``.
+    """Historical parity-result envelope; the verify command is retired.
 
-    Projects the :class:`ParityReport`
-    returned by
-    :func:`verify_modelo_parity`.
-    The payload keeps the aggregate verdict beside the divergent casilla rows
-    so consumers can fail fast without discarding audit detail.
+    Retains aggregate verdict and divergent casilla rows for existing records.
     """
 
     operation: str = "modelo.spreadsheet.verify"
@@ -187,19 +183,10 @@ class ModeloSpreadsheetCalculateCasillaPayload(OutputSchema):
 
 
 class ModeloSpreadsheetPullResult(OutputSchema):
-    """JSON envelope for ``aeat app modelo spreadsheet pull``.
+    """Historical readback envelope; the pull command is retired.
 
-    Projects the :class:`PullResult`
-    returned by
-    :func:`pull_operator_edits`.
-    The payload composes
-    :class:`PullMetadata`, the
-    :class:`MetadataMatchState`,
-    populated operator/binding/relation edits, and optional row-set assemblies.
-    Casilla-bearing rows are typed so the CLI cannot emit anonymous string
-    casilla references at this boundary. Computing casilla values from pulled
-    edits is a separate verb (``app modelo spreadsheet calculate``); this transport payload
-    carries no computed block.
+    Retains typed edits and provenance for existing records, with no executable
+    remote readback or calculation capability.
     """
 
     operation: str = "modelo.spreadsheet.pull"
@@ -227,15 +214,7 @@ class ModeloSpreadsheetPullResult(OutputSchema):
 
 
 class ModeloSpreadsheetCalculateResult(OutputSchema):
-    """JSON envelope for ``aeat app modelo spreadsheet calculate``.
-
-    Pulls operator-edited cells through
-    :func:`pull_operator_edits`,
-    then runs
-    :func:`compute_from_pull`
-    against the shared registry engine. The verb persists nothing; the
-    computed block is the result surface.
-    """
+    """Historical computed-result envelope; remote calculation is retired."""
 
     operation: str = "modelo.spreadsheet.calculate"
     profile: str

@@ -10,17 +10,8 @@ orden_aplicabilidad = ["orden-1999-11-17:apartado-quinto"]
 legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout", "aeat-dr-188-2023"]
 review_status = "agent_reviewed"
-reviewed_by = """\
-agent: inspection-grade review; casillas 01-05 read from ANEXO IV of the Orden de 17-11-1999 \
-(hoja-resumen, two rows split by sign of the base); deadline window is the NOMINAL 1-31 enero \
-grounded in AEAT's Calendario, because the orden's own plazo articles state 1-20 enero (papel) and 1 \
-enero-20 febrero (soporte) and were never amended; full-Diseno casilla-number coverage inapplicable \
-(design text-parsed in full, numbers nothing); the tipo-2 per-perceptor detail is NOT modelled and \
-no export layout is declared NOT CLAIMED -- the 2023 source establishes only the selected design era, \
-while the tipo-1/tipo-2 value, semantic-map, generated-fragment and emitted-byte proof chain remains \
-absent. Stated because it is not a discriminator: 60 of the 80 revisions stamped before 2026-08-21 \
-carry the same flag and none of them name it."""
-reviewed_at = 2026-08-21
+reviewed_by = """Source inspection 2026-10-06: all 32 semantic fields are placed. Historical fields are grounded in the archived 2017 AEAT design, checked against HFP/1308/2017 article3; successor source pins and province53 follow HFP/1284/2023 article5 and AEAT2023. Identity help retains the changed minor-identification instructions. Manual applicability grade remains: no automatic profile producers, repeated recipients, cross-field controls or filing export is claimed."""
+reviewed_at = 2026-10-06
 family_storage_baseline = "2022"
 scoped_families = ["workbook_parity_refs", "verification_expectations"]
 
@@ -87,3 +78,387 @@ fields = {closes_on = 2026-01-31, filing_year = 2025, opens_on = 2026-01-01, per
 sequence_additions = {source_refs = ["aeat-calendario-contribuyente-2026-hasta-2-febrero"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "constructs"
+selector = { revision = "2022", id = "modelo-188-calculation-construct" }
+sequence_additions = { source_refs = ["aeat-dr-188-2023"] }
+sequence_removals = { source_refs = [3] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.nif" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.representante-nif" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.nombre" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.provincia" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { enum = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53"], source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.modalidad" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.rentas" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.informacion-adicional" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.reducciones" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.base-retenciones" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.porcentaje-retencion" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.retenciones" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.ejercicio-devengo" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.clave" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.renta-vitalicia-clave" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.renta-vitalicia-fecha" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.renta-vitalicia-identificacion" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.prima" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "perceptor.rendimiento-acreedor-hipotecario" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.ejercicio" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.nif" }
+fields = { source_refs = ["aeat-dr-188-2023"] }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.nombre" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.telefono" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.contacto" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.numero-justificante" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.complementaria" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.sustitutiva" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2022", id = "decl.justificante-anterior" }
+fields = { source_refs = ["aeat-dr-188-2023"], constraints = { source_refs = ["aeat-dr-188-2023"] } }
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-nif"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 18-26, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-representante-nif"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 27-35, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-nombre"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 36-75, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-provincia"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 76-77, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-modalidad"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 78, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-rentas"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 79-91, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-informacion-adicional"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 92-104, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-reducciones"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 105-117, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-base-retenciones"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 118-130, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-porcentaje-retencion"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 131-134, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-retenciones"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 135-147, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-ejercicio-devengo"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 148-151, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-clave"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 152, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-renta-vitalicia-clave"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 153, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-renta-vitalicia-fecha"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 154-161, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-renta-vitalicia-identificacion"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 162-185, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-prima"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 186-195, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-perceptor-rendimiento-acreedor-hipotecario"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 2, positions 196-210, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-ejercicio"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 5-8, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-nif"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 9-17, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-nombre"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 18-57, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-telefono"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 59-67, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-contacto"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 68-107, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-numero-justificante"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 108-120, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-complementaria"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 121, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-sustitutiva"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 122, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-declarante-justificante-anterior"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "AEAT archived 2017 tipo 1, positions 123-135, and AEAT 2023 same named field/positions establish the same concept. The 2017 PDF incorporates HFP/1308/2017 article 3 (PIAS information, last applied rate, B code). BOE-A-1999-22372 amendment history records no intervening annex-V amendment before HFP/1284/2023 article 5. That amendment updates identification instructions and adds province53 without replacing these field identities. Current and historical value rules retain their own source pins."
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-188-2017", "aeat-dr-188-2023"]

@@ -6,14 +6,18 @@ from uuid import UUID
 
 import typer
 
+from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from ...application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE,
     LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
     LedgerEvidenceListProjection,
     LedgerEvidenceListRequest,
     LedgerEvidenceViewProjection,
+    LedgerEvidenceViewRefusal,
     LedgerEvidenceViewRequest,
 )
+from ...application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .ledger_business_payloads import EvidenceListResult, EvidenceViewResult
 from .registered_operation_contracts import RegisteredOperationCompletion
@@ -59,21 +63,44 @@ def run_ledger_evidence_view(ctx: typer.Context, *, evidence_id: str) -> Evidenc
         subject_ref=profile_operation_subject(str(client.profile_id)),
         result_type=LedgerEvidenceViewProjection,
         request_version=1,
-        result_version=1,
+        result_version=2,
         timeout=120,
+        allow_refusal_detail=True,
     )
     projection = completed.projection
+    outcome = projection.outcome
+    if isinstance(outcome, LedgerEvidenceViewRefusal):
+        if (
+            projection.profile_id != client.profile_id
+            or completed.terminal_condition is not OperationTerminalCondition.REFUSED
+            or completed.refusal_code != LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE
+            or completed.effect is not OperationEffect.NONE
+        ):
+            raise invalid_completion_error(completed)
+        raise PurchaseInvoiceEvidenceNotFoundError(
+            translated_message="errors.refused.refused_ledger_evidence_not_found",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+                facts={"evidence_record_present": outcome.evidence_record_present},
+            ),
+            context={
+                "operation_id": str(completed.operation_id),
+                "refusal_code": completed.refusal_code,
+                "terminal_condition": completed.terminal_condition.value,
+                "effect": completed.effect.value,
+            },
+        )
     invalid = (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
         or completed.effect is not OperationEffect.NONE
         or projection.profile_id != client.profile_id
-        or projection.record.bucket_id != str(client.profile_id)
-        or projection.record.evidence_id != evidence_id
+        or outcome.record.bucket_id != str(client.profile_id)
+        or outcome.record.evidence_id != evidence_id
     )
     if invalid:
         raise invalid_completion_error(completed)
-    return EvidenceViewResult.model_validate(projection.record.model_dump(mode="json"))
+    return EvidenceViewResult.model_validate(outcome.record.model_dump(mode="json"))
 
 
 __all__ = ["run_ledger_evidence_list", "run_ledger_evidence_view"]

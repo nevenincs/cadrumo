@@ -58,8 +58,9 @@ from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 from dev._paths import REPO_ROOT, UTF_8
 
 from .errors import SequenceGoldenError
+from .export_evidence import normalise_ledger_export_evidence, normalise_modelo_export_evidence
 from .json_layout import format_sequence_json
-from .runner import CapturedValue, EnvelopeSource, SequenceTranscript
+from .runner import CapturedValue, EnvelopeSource, FrameExecution, SequenceTranscript
 from .schema import FrameKind, SequenceId
 
 __all__ = [
@@ -76,6 +77,7 @@ __all__ = [
     "mask_host_conditional_details",
     "masked_envelope_values",
     "normalise_document_paths",
+    "normalise_frame_envelope",
     "normalise_text_output",
     "platform_conditional_details",
     "read_golden",
@@ -575,6 +577,29 @@ def normalise_document_paths(
     return cast("dict[str, JsonValue]", _norm(document))
 
 
+def normalise_frame_envelope(
+    document: dict[str, JsonValue], *, frame: FrameExecution, transcript: SequenceTranscript
+) -> dict[str, JsonValue]:
+    """Apply the same verified sandbox evidence/path normalization at both tiers."""
+    evidence = normalise_ledger_export_evidence(
+        document,
+        argv=frame.argv,
+        profile_id=transcript.profile_id,
+        instant=transcript.frozen_instant,
+        workdir=transcript.workdir,
+        destination_token=SANDBOX_WORKDIR_PLACEHOLDER,
+    )
+    evidence = normalise_modelo_export_evidence(
+        evidence,
+        argv=frame.argv,
+        profile_id=transcript.profile_id,
+        instant=transcript.frozen_instant,
+        workdir=transcript.workdir,
+        destination_token=SANDBOX_WORKDIR_PLACEHOLDER,
+    )
+    return normalise_document_paths(evidence, storage_root=transcript.storage_root, workdir=transcript.workdir)
+
+
 def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
     """Project an executed transcript into its committed golden expectation.
 
@@ -597,14 +622,10 @@ def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
             masked_values=masked_values,
         )
 
-    def _path_normalised_envelope(envelope: dict[str, JsonValue] | None) -> dict[str, JsonValue] | None:
-        if envelope is None:
+    def _path_normalised_envelope(frame: FrameExecution) -> dict[str, JsonValue] | None:
+        if frame.envelope is None:
             return None
-        return normalise_document_paths(
-            envelope,
-            storage_root=transcript.storage_root,
-            workdir=transcript.workdir,
-        )
+        return normalise_frame_envelope(frame.envelope, frame=frame, transcript=transcript)
 
     frames: list[GoldenFrame] = []
     for frame in transcript.frames:
@@ -620,7 +641,7 @@ def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
                 kind=frame.kind,
                 argv=frame.argv,
                 exit_code=frame.exit_code,
-                envelope=_path_normalised_envelope(frame.envelope),
+                envelope=_path_normalised_envelope(frame),
                 envelope_source=frame.envelope_source,
                 text=text,
                 stderr_text=stderr_text,

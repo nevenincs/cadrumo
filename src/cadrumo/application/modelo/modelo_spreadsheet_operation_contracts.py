@@ -277,21 +277,6 @@ MODELO_SPREADSHEET_OPERATION_CONTRACTS: dict[
         ModeloSpreadsheetExportProjection,
         ModeloSpreadsheetExportOutcome,
     ),
-    MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID: (
-        ModeloSpreadsheetPullRequest,
-        ModeloSpreadsheetPullProjection,
-        ModeloSpreadsheetPullOutcome,
-    ),
-    MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID: (
-        ModeloSpreadsheetCalculateRequest,
-        ModeloSpreadsheetCalculateProjection,
-        ModeloSpreadsheetCalculateOutcome,
-    ),
-    MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID: (
-        ModeloSpreadsheetVerifyRequest,
-        ModeloSpreadsheetVerifyProjection,
-        ModeloSpreadsheetVerifyOutcome,
-    ),
 }
 
 
@@ -363,9 +348,6 @@ class ModeloSpreadsheetOperationPorts:
     operation: PinnedAuthorityOperation
     materialize: SheetWorkbookMaterializer
     plan_builder: WorkbookPlanBuilder
-    pull: SpreadsheetPullPort
-    calculate: SpreadsheetCalculatePort
-    verify: SpreadsheetVerifyPort
 
 
 class ModeloSpreadsheetOperationPortsFactory(Protocol):

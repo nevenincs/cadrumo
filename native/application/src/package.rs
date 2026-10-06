@@ -6,6 +6,8 @@ use crate::{
 use serde::Deserialize;
 use std::{collections::BTreeMap, fs, path::Path};
 
+pub mod release;
+
 /// Consumed fields of the assembler's existing manifest; no parallel file inventory.
 #[derive(Debug, Deserialize)]
 pub struct PackageManifest {

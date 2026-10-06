@@ -67,7 +67,12 @@ class RuntimeLoginAttemptMixin:
         return await open_to_completion(open_reference, profile_id)
 
     async def _login_status(
-        self: RuntimeLoginScreen, client: RuntimeFrontendClient, method: RuntimeLoginMethod, proof: bytearray | None
+        self: RuntimeLoginScreen,
+        client: RuntimeFrontendClient,
+        method: RuntimeLoginMethod,
+        proof: bytearray | None,
+        *,
+        persist_receipt: bool = False,
     ) -> RuntimeProfileStatus:
         if method is RuntimeLoginMethod.API_REFERENCE:
             return await await_cancellation_complete(
@@ -82,7 +87,7 @@ class RuntimeLoginAttemptMixin:
         if proof is None:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         exchange = (
-            asyncio.to_thread(client.login_password, proof)
+            asyncio.to_thread(client.login_password, proof, persist_receipt=persist_receipt)
             if method is RuntimeLoginMethod.PASSWORD
             else asyncio.to_thread(client.login_api_key, proof)
         )
@@ -127,6 +132,8 @@ class RuntimeLoginAttemptMixin:
         proof: bytearray | None,
         reference: UUID | None,
         state: LoginAttemptState,
+        *,
+        persist_receipt: bool = False,
     ) -> None:
         state.client, interrupted_open = await self._open_attempt_client(profile_id, method, proof, reference)
         if interrupted_open is not None:
@@ -137,7 +144,7 @@ class RuntimeLoginAttemptMixin:
         if client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.TUI:
             self._status_refused()
             return
-        status = await self._login_status(client, method, proof)
+        status = await self._login_status(client, method, proof, persist_receipt=persist_receipt)
         # Erase the proof before any receiving owner or dismissal callback runs.
         if proof is not None:
             proof[:] = bytes(len(proof))
@@ -155,7 +162,12 @@ class RuntimeLoginAttemptMixin:
     def _handle_login_failure(self: RuntimeLoginScreen, error: BaseException, *, transferred: bool) -> bool:
         if isinstance(error, (RuntimeFrontendRefusedError, RuntimeRefusalError, ProfileReceiptRefusedError)):
             code = error.reason if isinstance(error, RuntimeFrontendRefusedError) else error.reason.value
-            self._status_refused(code)
+            sign_in = error.sign_in if isinstance(error, RuntimeFrontendRefusedError) else None
+            if sign_in is not None:
+                code = sign_in.binding or sign_in.reason
+            if isinstance(error, ProfileReceiptRefusedError) and error.binding is not None:
+                code = error.binding
+            self._status_refused(code, remaining_seconds=None if sign_in is None else sign_in.remaining_seconds)
             return False
         if isinstance(error, asyncio.CancelledError):
             return True
@@ -170,12 +182,16 @@ class RuntimeLoginAttemptMixin:
         method: RuntimeLoginMethod,
         proof: bytearray | None,
         reference: UUID | None,
+        *,
+        persist_receipt: bool = False,
     ) -> None:
         """Retain every opened client until closed or explicitly handed off."""
         state = LoginAttemptState()
         try:
             try:
-                await self._perform_login_attempt(profile_id, label, method, proof, reference, state)
+                await self._perform_login_attempt(
+                    profile_id, label, method, proof, reference, state, persist_receipt=persist_receipt
+                )
             except (
                 RuntimeFrontendRefusedError,
                 RuntimeRefusalError,

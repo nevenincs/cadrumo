@@ -14,6 +14,7 @@ from ..compiler.loader import load_modelo_directory
 from .bootstrap_construct_retarget import retarget_bootstrap_construct_export_layout
 from .bootstrap_supersession import validate_bootstrap_manual_export_layout_supersession
 from .bootstrap_targets import GeneratedExportBootstrapTarget
+from .candidate_source_chain import stage_source_chain
 from .edition_candidate_staging import (
     drop_cross_edition_evolutions,
     edition_requires_detachment,
@@ -61,6 +62,7 @@ def stage_generated_export_candidate(
     supporting_modelos: Collection[str],
     bootstrap_target: GeneratedExportBootstrapTarget | None = None,
     inheritance: GeneratedExportInheritanceContext | None = None,
+    retain_source_chain: bool = False,
 ) -> Path:
     """Stage the target's complete authority through the canonical loader.
 
@@ -94,7 +96,18 @@ def stage_generated_export_candidate(
             "declare an exact bootstrap supersession before staging",
         )
     _stage_shared_candidate_authority(source_root, candidate_root, modelos={modelo, *supporting_modelos})
-    if inheritance is None:
+    if retain_source_chain:
+        if inheritance is not None or (
+            bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None
+        ):
+            raise ValueError("source-chain staging cannot also supersede or inherit an export")
+        staged_modelo_root = stage_source_chain(
+            source_modelo_root,
+            candidate_root / "modelos" / modelo,
+            revision=revision,
+            include_target_export=False,
+        )
+    elif inheritance is None:
         edition = materialise_edition(source_modelo_root, revision)
         staged_modelo_root = _stage_candidate_modelo(
             source_modelo_root,

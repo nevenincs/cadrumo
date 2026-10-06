@@ -1,12 +1,7 @@
-"""The Sheets export dry-run previews without ever writing.
+"""Local-only preview and pure payload comparison helpers.
 
-Write-shaped online tests against a real account are project-forbidden, matching
-every sibling in this package (see ``test_calc_sheets_apply_no_empty_window.py``
-and ``test_calc_sheets_export_integration.py``). What is gated here, offline, is
-the same shape those modules already established: the pure diff computation
-proven against a REAL modelo plan, and a structural proof that the preview
-function's own source never reaches a write-capable helper or a write-shaped
-Sheets/Drive action.
+Preview inventories a new publication without reading an earlier document.
+Actual provider acceptance uses the application OAuth route in the live campaign.
 """
 
 from __future__ import annotations
@@ -177,11 +172,15 @@ class TestPreviewNeverWrites:
         ):
             assert forbidden_action not in source, f"preview_export_plan must never reach a {forbidden_action} action"
 
-    def test_the_preview_function_only_uses_read_only_drive_lookups(self) -> None:
-        """``_find_folder`` / ``_find_spreadsheet`` (read), never their ``_ensure_*`` create counterparts."""
-        source = _code_body_source(preview_export_plan)
-        assert "_find_folder(" in source
-        assert "_find_spreadsheet(" in source
+    def test_preview_needs_no_remote_service_and_inventories_only_a_new_document(self) -> None:
+        from .....tests.google_credentials import unused_google_credentials
+
+        plan = _m130_plan()
+        result = preview_export_plan(plan, credentials=unused_google_credentials(), root_folder_id="local-root-id")
+        assert result.spreadsheet_exists is False
+        assert result.spreadsheet_id is None
+        assert result.ranges_to_clear == ()
+        assert result.value_cells_changed > 0
 
 
 class TestPreviewComputationReusesTheRealAdaptersOwnDiffPrimitives:

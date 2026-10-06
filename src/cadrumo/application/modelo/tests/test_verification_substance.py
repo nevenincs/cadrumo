@@ -518,10 +518,16 @@ def test_casilla_equals_implies_nonzero_bad_arity_does_not_fire() -> None:
     assert evaluate_advisory_predicate_fires(expr, values, text_values) is False
 
 
-def test_casilla_equals_implies_nonzero_is_advisory_only_no_blocking_branch() -> None:
-    """The operator has no BLOCKING_RULE branch; it trivially holds via the unmatched-expression default."""
+def test_casilla_equals_implies_nonzero_blocking_branch_uses_exact_text() -> None:
+    """Missing/nonmatching text does not trigger; an exact match requires the value."""
     values: dict[CasillaId, Decimal] = {_CASILLA_07: Decimal("0")}
     assert evaluate_predicate_expression(_CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile()) is True
+    assert not evaluate_predicate_expression(
+        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {_CASILLA_01: "literal-value"}
+    )
+    assert evaluate_predicate_expression(
+        _CASILLA_EQUALS_IMPLIES_NONZERO, values, workflow_profile(), {_CASILLA_01: "literal-value "}
+    )
 
 
 def test_casilla_equals_implies_nonzero_emits_advisory_finding_via_evaluate_verification_predicates() -> None:
@@ -657,3 +663,48 @@ def test_shipped_m100_m200_advisory_implications_fire_only_for_a_positive_missin
             )
             == []
         )
+
+
+@pytest.mark.parametrize("marker", ["C ", " S"])
+@pytest.mark.parametrize("receipt", [None, "0", "1560000000001"])
+def test_categorical_blocking_rule_reports_required_field(marker, receipt) -> None:
+    expression = f'casilla_equals_implies_nonzero(["01", "{marker}", "07"])'
+    predicate = VerificationPredicateDefinition(
+        id="casilla-equals-implies-nonzero:test-receipt",
+        predicate_id="test-receipt",
+        legal_refs=("ley-35-2006:art-99",),
+        expression=expression,
+        finding_kind="BLOCKING_RULE",
+    )
+    values = {} if receipt is None else {_CASILLA_07: Decimal(receipt)}
+    findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), {_CASILLA_01: marker})
+    if receipt == "1560000000001":
+        assert findings == []
+    else:
+        assert len(findings) == 1
+        assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+        assert findings[0].casilla_id == _CASILLA_07
+        assert findings[0].message_locale_key == "application.modelo.findings.selected_option_requires_nonzero"
+    assert evaluate_verification_predicates((predicate,), values, workflow_profile(), {_CASILLA_01: "  "}) == []
+
+
+@pytest.mark.parametrize("marker", [None, "  ", "C ", " S", " "])
+@pytest.mark.parametrize("receipt", [None, "0", "1", "-1", "0.01"])
+def test_categorical_zero_rule_requires_explicit_zero_only_for_exact_marker(marker, receipt) -> None:
+    expression = 'casilla_equals_implies_zero(["01", "  ", "07"])'
+    predicate = VerificationPredicateDefinition(
+        id="casilla-equals-implies-zero:test-receipt",
+        predicate_id="test-receipt",
+        legal_refs=("ley-35-2006:art-99",),
+        expression=expression,
+        finding_kind="BLOCKING_RULE",
+    )
+    values = {} if receipt is None else {_CASILLA_07: Decimal(receipt)}
+    texts = {} if marker is None else {_CASILLA_01: marker}
+    violation = marker == "  " and receipt != "0"
+    findings = evaluate_verification_predicates((predicate,), values, workflow_profile(), texts)
+    assert bool(findings) is violation
+    assert evaluate_advisory_predicate_fires(expression, values, texts) is violation
+    if violation:
+        assert findings[0].casilla_id == _CASILLA_07
+        assert findings[0].message_locale_key == "application.modelo.findings.selected_option_requires_zero"

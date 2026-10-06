@@ -15,7 +15,7 @@ set(CADRUMO_BUILD_DIRECTORIES
   BIN bin
   LIB lib
   SYMBOLS symbols
-  CARGO cargo
+  CARGO cargo/native
   STAGE stage
   PACKAGES packages
   TESTING testing

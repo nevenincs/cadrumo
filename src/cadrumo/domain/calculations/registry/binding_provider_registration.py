@@ -43,6 +43,7 @@ from ....core.aggregation import (
     BindingSourceKind,
     RowSetGroupingKind,
 )
+from .afiliado_contribution_bindings import AfiliadoContributionProvider, validate_afiliado_contribution_binding
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .binding_aggregation import binding_aggregation_op
 from .binding_provider import BindingProvider
@@ -365,6 +366,13 @@ def _invoice_catalogue(
 
 
 _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
+    _deferred(
+        BindingSourceKind.AFILIADO_COTIZACION,
+        AfiliadoContributionProvider,
+        validate_afiliado_contribution_binding,
+        origins=frozenset({TerminalOriginClass.DETAIL_RECORD}),
+        owner="deferred: typed affiliate rows require production calculation-route enrollment",
+    ),
     _non_runtime(
         BindingSourceKind.MANUAL_INPUT,
         ManualInputProvider,

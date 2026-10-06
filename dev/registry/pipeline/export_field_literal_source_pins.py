@@ -30,6 +30,54 @@ _M190_TRANSPORT_SHAS: Final[dict[str, str]] = {
 }
 
 
+def _source_pinned_194_transport_constant(
+    joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
+) -> str | None:
+    """Read the sole telematic code in the exact 2024 M194 design."""
+    entry = joined_field.semantic_entry
+    if str(entry.export_field_id) != "modelo-194-decl-soporte":
+        return None
+    field = joined_field.parser_field
+    identity = render_profile.design_identity
+    actual = (
+        str(identity.modelo),
+        identity.design_epoch,
+        str(identity.source_ref),
+        identity.source_sha256,
+        field.sheet,
+        field.record_identity,
+        field.source_row,
+        field.source_cell,
+        field.ordinal,
+        field.offset,
+        field.length,
+        field.aeat_type,
+        field.normalized_description,
+        official_content,
+        entry.literal,
+    )
+    expected = (
+        "194",
+        "2024",
+        "aeat-dr-194-2024",
+        "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651",
+        "Tipo 1 - Registro De Declarante",
+        "Tipo 1 - Registro De Declarante",
+        64,
+        None,
+        "6",
+        58,
+        1,
+        "Alfabético",
+        "TIPO DE SOPORTE.",
+        "Se cumplimentará una de las siguientes claves: 'T': Transmisión telemática.",
+        "T",
+    )
+    if actual != expected:
+        raise RegistryValidationError("modelo 194 telematic constant differs from its sole source-listed code")
+    return "T"
+
+
 def _source_pinned_341_pdf_constant(
     joined_field: JoinedRecordDesignField, render_profile: RenderProfile, official_content: str
 ) -> str | None:

@@ -22,6 +22,7 @@ from ...domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ...domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock, FormRepeatingRowSource
+from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
 from ...domain.filing.protocols import ModeloInputScalar
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .revision_replay_inputs import revision_detail_record_binding_inputs
@@ -30,7 +31,7 @@ from .work_form_models import ModeloFormRepeatingRow, ModeloFormScalar
 
 def _saved_value(raw: ModeloFormScalar, data_type: str) -> ModeloFormScalar:
     """Keep recorded text and zero; an invalid numeric token is an unknown cell."""
-    if data_type not in {"money", "decimal", "integer"} or raw is None:
+    if registry_scalar_value_type(data_type) not in {"decimal", "int"} or raw is None:
         return raw
     try:
         amount = Decimal(raw) if isinstance(raw, str | int) else raw
@@ -121,12 +122,13 @@ def _add_binding_field_rows(
     target: str,
     binding_rows: Mapping[BindingId, Mapping[str, ModeloFormScalar]],
     by_row: dict[int, dict[str, ModeloFormScalar]],
+    data_type: str,
 ) -> bool:
     if field.binding is None or field.binding not in binding_rows:
         return False
     values = binding_rows[field.binding]
     for index, raw in values.items():
-        _put_row_value(by_row, int(index), target, _saved_value(raw, str(field.data_type)))
+        _put_row_value(by_row, int(index), target, _saved_value(raw, data_type))
     return True
 
 
@@ -136,6 +138,7 @@ def _saved_binding_rows(
     fields: tuple[tuple[ExportFieldDefinition, str | None], ...],
     targets: set[str],
     by_row: dict[int, dict[str, ModeloFormScalar]],
+    casilla_data_types: Mapping[str, str],
 ) -> bool:
     binding_rows: dict[BindingId, Mapping[str, ModeloFormScalar]] = {}
     binding_rows.update(revision.row_binding_values)
@@ -145,7 +148,10 @@ def _saved_binding_rows(
     for field, target in fields:
         if target is None or target not in targets:
             continue
-        known = _add_binding_field_rows(field, target, binding_rows, by_row) or known
+        # Human values follow the casilla, not its wire encoding: province
+        # "08" stays text, while money in a signed text slot stays numeric.
+        data_type = casilla_data_types.get(target, str(field.data_type))
+        known = _add_binding_field_rows(field, target, binding_rows, by_row, data_type) or known
     return known
 
 
@@ -232,22 +238,28 @@ def saved_form_records(
         return False, ()
     layout, record = matched
     fields = _record_fields(snapshot, layout, record)
-    targets, casilla_targets = _target_columns(fields, column_casillas)
-    if not targets:
+    visible_targets, _ = _target_columns(fields, column_casillas)
+    if not visible_targets:
         return False, ()
+    # Sections may show only unknown fields of an otherwise saved record.
+    # Discover rows across this exact record before projecting its visible
+    # columns, so every section preserves the same recipient indices.
+    targets, casilla_targets = _target_columns(fields, tuple(target for _, target in fields))
 
     by_row: dict[int, dict[str, ModeloFormScalar]] = {}
     known = _saved_casilla_rows(revision, casilla_targets, by_row)
     detail = _detail_binding_rows(snapshot, revision, record)
     if detail is not None and "detail_rows" in revision.model_fields_set:
         known = True
-    known = _saved_binding_rows(revision, detail, fields, targets, by_row) or known
+    text_casillas = text_family_casilla_ids(snapshot.revision.casillas)
+    casilla_data_types = {str(casilla.id): str(casilla.data_type) for casilla in snapshot.revision.casillas}
+    known = _saved_binding_rows(revision, detail, fields, targets, by_row, casilla_data_types) or known
     _add_record_wide_casillas(
         revision,
         record,
         fields,
         targets,
-        text_family_casilla_ids(snapshot.revision.casillas),
+        text_casillas,
         by_row,
     )
     return known, _rows_from_values(by_row, column_casillas)

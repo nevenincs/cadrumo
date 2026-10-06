@@ -13,18 +13,23 @@ under.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
+from uuid import UUID
 
+from ....application.export.managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
+from ....application.user_profile.google_configuration_operation_ports import (
+    GoogleConfigurationAcknowledgement,
+    GoogleConfigurationCommit,
+    GoogleConfigurationHandoff,
+)
 from ....core.external_constants import GOOGLE_DRIVE_FOLDER_MIME_TYPE
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.product_identity import PRODUCT_IDENTITY
-from ....core.type_guards import is_str_keyed_dict
-from ..storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageNotFoundError
-from ._preconditions import google_terminal_refusal
+from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..storage.errors import OutboundStorageConflictError, OutboundStorageValidationError
 from .api import RequestRetryPolicy, drive_v3_service, execute_request
-from .drive_entries import is_app_owned
+from .artifact_admission import GoogleArtifactAdmission, creation_properties
+from .artifact_receipt_store import GoogleArtifactReceiptStore
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -52,40 +57,103 @@ def profile_root_folder_name(profile: str) -> str:
     return f"{PRODUCT_IDENTITY.prose_name} {profile[:_PROFILE_DISCRIMINATOR_LENGTH]}"
 
 
-def ensure_profile_root_folder(credentials: Credentials, *, profile: str) -> str:
-    """Return the ID of the profile's root folder, creating it when absent.
-
-    The folder is looked up by name among the entries this application can
-    see in My Drive, so signing in again finds the folder an earlier sign-in
-    created instead of making a second one. A same-named entry without the
-    ownership marker is refused, never adopted.
-
-    Args:
-        credentials: Credentials of the account that just signed in.
-        profile: Profile the folder belongs to.
-
-    Returns:
-        The Drive ID of the marker-stamped root folder.
-    """
+def ensure_profile_root_folder(
+    credentials: Credentials,
+    *,
+    profile: str,
+    commit: GoogleConfigurationCommit,
+    before_handoff: GoogleConfigurationHandoff,
+    acknowledged: GoogleConfigurationAcknowledgement,
+) -> str:
+    """Reuse an exact retained creation receipt or create without listing My Drive."""
     drive = drive_v3_service(
         credentials, unavailable_condition_id=RootFolderPreconditionCondition.API_CLIENT_AVAILABLE.value
     )
-    return ensure_root_folder(drive, profile=profile)
+    receipts = GoogleArtifactReceiptStore(
+        secure_object_repository_for_active_bucket(), profile_id=UUID(profile), commit=commit
+    )
+    return ensure_root_folder(
+        drive, profile=profile, receipts=receipts, before_handoff=before_handoff, acknowledged=acknowledged
+    )
 
 
-def ensure_root_folder(drive: DriveResource, *, profile: str) -> str:
-    """Find or create the profile's root folder through an already built Drive service."""
-    from .calc_sheets_apply import _ensure_folder
+def ensure_root_folder(
+    drive: DriveResource,
+    *,
+    profile: str,
+    receipts: GoogleArtifactReceiptStore,
+    before_handoff: GoogleConfigurationHandoff | None = None,
+    acknowledged: GoogleConfigurationAcknowledgement | None = None,
+) -> str:
+    """Create a marked root once; ambiguous attempts require explicit reconciliation."""
+    profile_id = UUID(profile)
+    prior = receipts.root_attempt()
+    if prior is not None:
+        if prior.receipt is None:
+            raise OutboundStorageConflictError(
+                "a prior root creation has an unknown outcome; automatic retry is refused",
+                context={"effect_uncertain": True},
+            )
+        GoogleArtifactAdmission(
+            drive,
+            profile_id=profile_id,
+            root=prior.receipt,
+            receipts=receipts,
+            before_handoff=before_handoff,
+            acknowledged=acknowledged,
+        ).require(prior.receipt.artifact_id, kind=ManagedArtifactKind.ROOT)
+        return prior.receipt.artifact_id
+    attempt = receipts.begin_root_creation()
+    if before_handoff is not None:
+        before_handoff("drive.files.create.root", writes=True)
+    created = execute_request(
+        drive.files().create(
+            body={
+                "name": profile_root_folder_name(profile),
+                "mimeType": GOOGLE_DRIVE_FOLDER_MIME_TYPE,
+                "parents": [MY_DRIVE],
+                "appProperties": creation_properties(
+                    profile_id=profile_id, creation_id=attempt.creation_id, kind=ManagedArtifactKind.ROOT
+                ),
+            },
+            fields="id",
+        ),
+        action="drive.files.create.root",
+        retry=RequestRetryPolicy.SINGLE_ATTEMPT,
+    )
+    identifier = created.get("id")
+    if not isinstance(identifier, str) or not identifier.strip():
+        raise OutboundStorageValidationError(
+            "root creation returned no usable identity", context={"effect_uncertain": True}
+        )
+    receipt = ArtifactCreationReceipt(
+        profile_id=profile_id,
+        root_folder_id=identifier,
+        artifact_id=identifier,
+        creation_id=attempt.creation_id,
+        kind=ManagedArtifactKind.ROOT,
+    )
+    receipts.complete_root_creation(receipt)
+    if acknowledged is not None:
+        acknowledged("drive.files.create.root", writes=True)
+    GoogleArtifactAdmission(
+        drive,
+        profile_id=profile_id,
+        root=receipt,
+        receipts=receipts,
+        before_handoff=before_handoff,
+        acknowledged=acknowledged,
+    ).require(identifier, kind=ManagedArtifactKind.ROOT)
+    return identifier
 
-    return _ensure_folder(drive, parent_id=MY_DRIVE, name=profile_root_folder_name(profile))
 
-
-def require_owned_root_folder(credentials: Credentials, *, root_folder_id: str) -> None:
+def require_owned_root_folder(credentials: Credentials, *, root_folder_id: str, profile: str) -> None:
     """Refuse a stored root folder ID that is not a live folder this application created.
 
     Args:
         credentials: Credentials of the signed-in account.
         root_folder_id: The ID stored for the profile.
+        profile: Exact active profile whose creation receipt is required.
 
     Raises:
         :exc:`~adapters.outbound.storage.errors.OutboundStorageConflictError`:
@@ -97,52 +165,19 @@ def require_owned_root_folder(credentials: Credentials, *, root_folder_id: str) 
     drive = drive_v3_service(
         credentials, unavailable_condition_id=RootFolderPreconditionCondition.API_CLIENT_AVAILABLE.value
     )
-    require_owned_folder(drive, root_folder_id=root_folder_id)
+    receipts = GoogleArtifactReceiptStore(secure_object_repository_for_active_bucket(), profile_id=UUID(profile))
+    require_owned_folder(drive, root_folder_id=root_folder_id, profile=profile, receipts=receipts)
 
 
-def require_owned_folder(drive: DriveResource, *, root_folder_id: str) -> None:
-    """Apply :func:`require_owned_root_folder` through an already built Drive service."""
-    try:
-        entry = execute_request(
-            drive.files().get(fileId=root_folder_id, fields="id,mimeType,trashed,appProperties"),
-            action="drive.files.get.root_folder",
-            retry=RequestRetryPolicy.REPLAY_SAFE,
-        )
-    except OutboundStorageNotFoundError:
-        # Not found is an error elsewhere; here it is the expected state of a
-        # folder this client never created, so it is refused like any other
-        # root that is not ours.
-        raise _not_owned(root_folder_id, facts={"visible_to_application": False}) from None
-    raw_properties = entry.get("appProperties")
-    properties: Mapping[str, object] = raw_properties if is_str_keyed_dict(raw_properties) else {}
-    is_folder = entry.get("mimeType") == GOOGLE_DRIVE_FOLDER_MIME_TYPE
-    is_live = entry.get("trashed") is not True
-    owned = is_app_owned(properties)
-    if is_folder and is_live and owned:
-        return
-    raise _not_owned(
-        root_folder_id,
-        facts={
-            "visible_to_application": True,
-            "is_folder": is_folder,
-            "is_live": is_live,
-            "ownership_marker_present": owned,
-        },
-    )
-
-
-def _not_owned(root_folder_id: str, *, facts: Mapping[str, bool]) -> OutboundStorageError:
-    """Build the one refusal for a stored root that is not a live folder of this application."""
-    return google_terminal_refusal(
-        OutboundStorageConflictError(
-            "the stored Drive root is not a live folder created by this application",
-            context={"root_folder_id": root_folder_id},
-            translated_message="adapters.google.root_folder.errors.root_folder_not_owned",
-        ),
-        condition_id=RootFolderPreconditionCondition.OWNED_BY_APPLICATION.value,
-        facts=facts,
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+def require_owned_folder(
+    drive: DriveResource, *, root_folder_id: str, profile: str, receipts: GoogleArtifactReceiptStore
+) -> None:
+    """Admit the exact locally retained profile root before any descendant access."""
+    root = receipts.load(root_folder_id)
+    if root is None:
+        raise OutboundStorageConflictError("stored root lacks local creation evidence; sign in to create a fresh root")
+    GoogleArtifactAdmission(drive, profile_id=UUID(profile), root=root, receipts=receipts).require(
+        root_folder_id, kind=ManagedArtifactKind.ROOT
     )
 
 

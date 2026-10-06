@@ -56,6 +56,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_verification import parse_verification_predicate_expression
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.m156_rows import Modelo156AfiliadoRow
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
@@ -131,6 +132,7 @@ def require_detail_rows_declared_for_their_owning_modelo(
 #: double-count; two rows sharing it that disagree on a declarable figure are
 #: a genuine conflict, not a duplicate.
 _ROW_IDENTITY_FIELDS: Mapping[type[ModeloDetailRow], tuple[str, ...]] = {
+    Modelo156AfiliadoRow: ("nif", "numero_afiliacion"),
     Modelo184MemberRow: ("nif", "clave", "subclave"),
     Modelo232VinculadaRow: ("nif", "tipo_operacion"),
     Modelo349OperadorRow: ("nif_comunitario", "clave_operacion"),

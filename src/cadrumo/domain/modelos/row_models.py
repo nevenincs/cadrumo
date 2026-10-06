@@ -58,6 +58,7 @@ from ..calculations.registry.governed_fact_scope import GovernedFactSource, requ
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
 from ..transactions.m210_income_classification import resolve_m210_payer_mode
+from .m156_rows import Modelo156AfiliadoRow
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -1004,7 +1005,8 @@ def validate_m210_agrupacion_renta_rows(
 # ---------------------------------------------------------------------------
 
 ModeloDetailRow = (
-    Modelo184MemberRow
+    Modelo156AfiliadoRow
+    | Modelo184MemberRow
     | Modelo232VinculadaRow
     | Modelo349OperadorRow
     | Modelo349RectificacionRow

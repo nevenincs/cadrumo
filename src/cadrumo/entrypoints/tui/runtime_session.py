@@ -22,7 +22,7 @@ from ...application.user_profile.access_contracts import ProfileAccessStatus
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.i18n.render import tr
 from ...core.time.clock import now
-from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1, AccountSessionRetired
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
@@ -100,6 +100,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         self._cleared = False
         self._locking = False
         self._reading = False
+        self._unsubscribe_retirement: Callable[[], None] | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -125,12 +126,23 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
     def on_mount(self) -> None:
         """Start non-touching status observation after the shell has mounted."""
         install_cadrumo_themes(self)
+        self._unsubscribe_retirement = self._client.subscribe_session_retirement(self._post_retirement)
         self.set_interval(_STATUS_INTERVAL_SECONDS, self._start_status_read)
         self._start_status_read()
 
     def on_unmount(self) -> None:
         """Fence late status results when the borrowed shell is discarded."""
         self._cleared = True
+        if self._unsubscribe_retirement is not None:
+            self._unsubscribe_retirement()
+            self._unsubscribe_retirement = None
+
+    def _post_retirement(self) -> None:
+        self.post_message(AccountSessionRetired())
+
+    def on_account_session_retired(self, _: AccountSessionRetired) -> None:
+        """Discard restricted private metadata on pushed lease retirement."""
+        self._expire()
 
     def _binding_is_current(self) -> bool:
         try:

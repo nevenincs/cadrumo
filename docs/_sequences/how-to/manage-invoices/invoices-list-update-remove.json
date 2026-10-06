@@ -54,7 +54,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t1\n876198eb9b01ec6643765dd6bb7141567df25dc89e280632bffce3f8f9d3e9f9\tissued\tsha256:133cad41\tFAC-2026-050\t2026-02-15\t1210.00\n"
+      "text": "bucket\t<profile-id>\ncount\t1\n876198eb9b01ec6643765dd6bb7141567df25dc89e280632bffce3f8f9d3e9f9\tissued\tsha256:133cad41\tFAC-2026-050\t2026-02-15\t1210.00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -72,7 +72,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t1\n876198eb9b01ec6643765dd6bb7141567df25dc89e280632bffce3f8f9d3e9f9\tissued\tsha256:133cad41\tFAC-2026-050\t2026-02-15\t1210.00\n"
+      "text": "bucket\t<profile-id>\ncount\t1\n876198eb9b01ec6643765dd6bb7141567df25dc89e280632bffce3f8f9d3e9f9\tissued\tsha256:133cad41\tFAC-2026-050\t2026-02-15\t1210.00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -91,7 +91,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "invoice_id\t876198eb9b01ec6643765dd6bb7141567df25dc89e280632bffce3f8f9d3e9f9\nkind\tissued\ncounterparty_name\tCliente SL\ncounterparty_tax_id\tsha256:133cad41\ninvoice_number\tFAC-2026-050\nissued_at\t2026-02-15\nbase_total\t1000.00\niva_total\t210.00\ngrand_total\t1210.00\ncurrency\tEUR\noperation_type\t\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\t\nlinked_transaction_ids\t\nbucket_event_ids\td4fee17b4a2c566db0b31f44bc80726aca5a9648795c0ae17b933b9cf01b99b0\n"
+      "text": "invoice_id\t876198eb9b01ec6643765dd6bb7141567df25dc89e280632bffce3f8f9d3e9f9\nkind\tissued\ncounterparty_name\tCliente SL\ncounterparty_tax_id\tsha256:133cad41\ninvoice_number\tFAC-2026-050\nissued_at\t2026-02-15\nbase_total\t1000.00\niva_total\t210.00\ngrand_total\t1210.00\ncurrency\tEUR\noperation_type\t\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\t\nlinked_transaction_ids\t\nbucket_event_ids\tccab1bc906e645d675771b47a9550fea4dda00e8938bc972841f47b1c1c26dff\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -109,7 +109,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.invoice.remove",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "base_total": "1000.00",
           "base_total_eur": "1000.00",
@@ -159,7 +167,7 @@
           "source_sha256": null
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

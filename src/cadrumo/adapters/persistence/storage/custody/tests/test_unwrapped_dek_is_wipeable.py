@@ -26,11 +26,13 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
+
 from ......tests.os_keychain_hook import require_os_credential_store
 from ..acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
-    resume_profile_session,
+    resume_profile_session_with_key,
 )
 from ..acceleration_receipt_crypto import (
     unwrap_profile_session_dek,
@@ -116,7 +118,7 @@ def test_the_resume_signature_declares_the_key_it_actually_yields() -> None:
     """
     from typing import get_type_hints
 
-    returned = get_type_hints(resume_profile_session)["return"]
+    returned = get_type_hints(resume_profile_session_with_key)["return"]
     key_type = returned.__args__[1]
 
     assert bytearray in key_type.__args__, (
@@ -159,7 +161,7 @@ def test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material(tmp_path: P
             generation=sign_in_custody(tmp_path, profile_id).establish().current,
         )
 
-        outcome, resumed = resume_profile_session(
+        outcome, resumed = resume_receipt_as_runtime(
             storage_root=tmp_path,
             profile_id=profile_id,
             custody_generation=1,

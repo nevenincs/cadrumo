@@ -16,11 +16,12 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
 
 from ......application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ......core.base64_codec import b64_decode, b64_encode
 from ......core.hashing import canonical_json_bytes
-from ......core.profile_session import ProfileSessionRefusalReason
+from ......core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from ...errors import DecryptionError, StorageValidationError
 from .. import acceleration_receipt as receipt
 from ..acceleration_receipt_crypto import (
@@ -113,7 +114,7 @@ def _mint(
 
 
 def _resume(sign_in: SignInGenerationCustody) -> receipt.ProfileSessionResumeOutcome:
-    outcome, dek = receipt.resume_profile_session(
+    outcome, dek = resume_receipt_as_runtime(
         storage_root=sign_in.root,
         profile_id=sign_in.binding.profile_id,
         custody_generation=sign_in.binding.custody_generation,
@@ -128,6 +129,22 @@ def _resume(sign_in: SignInGenerationCustody) -> receipt.ProfileSessionResumeOut
 
 def _path(sign_in: SignInGenerationCustody) -> Path:
     return receipt.profile_session_path(storage_root=sign_in.root, profile_id=sign_in.binding.profile_id)
+
+
+def test_custody_cleanup_retains_key_locator_until_keychain_confirms_absence(
+    sign_in: SignInGenerationCustody,
+    keychain: _Keyring,
+) -> None:
+    record = _mint(sign_in)
+    original = _path(sign_in).read_bytes()
+    keychain.unavailable = True
+    with pytest.raises(receipt.KeyringUnavailableError):
+        receipt.delete_profile_session(storage_root=sign_in.root, profile_id=sign_in.binding.profile_id)
+    assert _path(sign_in).read_bytes() == original
+    keychain.unavailable = False
+    receipt.delete_profile_session(storage_root=sign_in.root, profile_id=sign_in.binding.profile_id)
+    assert not _path(sign_in).exists()
+    assert _account(sign_in.binding.profile_id, record.session_id) not in keychain.entries
 
 
 def _account(profile_id: UUID, session_id: UUID) -> tuple[str, str]:
@@ -236,7 +253,12 @@ class TestMintBinding:
 
         outcome = _resume(sign_in)
 
-        assert outcome.refusal is ProfileSessionRefusalReason.TAMPERED
+        assert outcome.refusal is ProfileSessionRefusalReason.ABSENT
+        assert outcome.binding is (
+            ReceiptBindingRefusal.LOGIN_MISMATCH
+            if field == "login_binding"
+            else ReceiptBindingRefusal.GENERATION_CHANGED
+        )
         assert not _path(sign_in).exists()
         assert _account(record.profile_id, record.session_id) not in keychain.entries
 

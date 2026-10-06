@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import ValidationError
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.user_profile.sign_in_refusals import SignInRefusal
 from ...application.user_profile.view_operation import (
     ProfileViewItem,
     ProfileViewOperationProjection,
@@ -21,10 +22,22 @@ from ...domain.user_profile.values import ProfileSetupState
 class RuntimeFrontendRefusedError(CadrumoError):
     """A safe, typed application refusal from the installed runtime."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(
+        self, code: str, *, sign_in: SignInRefusal | None = None, custody_transaction_id: UUID | None = None
+    ) -> None:
         """Retain an allowlisted refusal code without private diagnostic text."""
         self.reason = code
-        super().__init__(code)
+        self.sign_in = sign_in
+        context: dict[str, object] = {"reason": code}
+        if custody_transaction_id is not None:
+            context["transaction_id"] = str(custody_transaction_id)
+        if sign_in is not None:
+            context["sign_in_reason"] = sign_in.reason
+            if sign_in.binding is not None:
+                context["sign_in_binding"] = sign_in.binding
+            if sign_in.remaining_seconds is not None:
+                context["seconds"] = sign_in.remaining_seconds
+        super().__init__(code, context=context)
 
 
 def frontend_failure_code(error: Exception) -> str:

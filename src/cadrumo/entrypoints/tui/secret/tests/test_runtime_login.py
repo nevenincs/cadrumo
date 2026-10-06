@@ -13,7 +13,7 @@ import pytest
 from textual.app import App
 from textual.await_complete import AwaitComplete
 from textual.pilot import Pilot
-from textual.widgets import Button, Input, Select
+from textual.widgets import Button, Checkbox, Input, Select
 
 from .....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from .....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
@@ -52,6 +52,7 @@ class _Client(RuntimeFrontendClient):
         self._frontend = OperationFrontendProjection.TUI
         self._session_id: UUID | None = None
         self.password_calls = 0
+        self.persistence_requests: list[bool] = []
         self.api_calls = 0
         self.receipt_calls = 0
         self.status_calls = 0
@@ -114,7 +115,7 @@ class _Client(RuntimeFrontendClient):
     def login_password(
         self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False
     ) -> RuntimeProfileStatus:
-        assert not persist_receipt
+        self.persistence_requests.append(persist_receipt)
         self.password_calls += 1
         return self._login_fault(secret, api_key=False)
 
@@ -304,14 +305,16 @@ async def test_password_default_transfers_only_exact_selected_verified_client() 
 
     screen = RuntimeLoginScreen(
         choices=choices,
-        preselected=choices[1].profile_id,
         open_client=open_client,
         accept_handoff=accept,
     )
     host = _Host(screen)
     async with host.run_test(size=(120, 40)) as pilot:
         await pilot.pause()
+        screen.query_one("#runtime-login-profile", Select).value = choices[1].profile_id
+        await pilot.pause()
         assert screen.query_one("#runtime-login-method", Select).value is RuntimeLoginMethod.PASSWORD
+        assert screen.query_one("#runtime-login-persist", Checkbox).value is False
         field = screen.query_one("#runtime-login-credential", Input)
         assert field.password
         field.value = "synthetic-password-proof"
@@ -992,12 +995,12 @@ async def test_cold_profile_resume_stays_unadmitted_and_next_login_uses_fresh_cl
         return recovery if len(opened) == 1 else login
 
     owner = _HandoffOwner()
-    screen = RuntimeLoginScreen(
-        choices=choices, preselected=choices[1].profile_id, open_client=open_client, accept_handoff=owner.accept
-    )
+    screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
     host = _Host(screen)
     ui_thread = get_ident()
     async with host.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        screen.query_one("#runtime-login-profile", Select).value = choices[1].profile_id
         await pilot.pause()
         password = screen.query_one("#runtime-login-resume-password", Input)
         assert password.password
@@ -1202,3 +1205,70 @@ async def test_unmount_during_resume_drains_native_call_before_failed_close_retr
         assert recovery.proof_buffer is not None and not any(recovery.proof_buffer)
         assert owner.accepted is None
     assert recovery.close_calls == 2 and recovery.resume_calls == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("persist", [False, True])
+async def test_password_persistence_is_explicit_and_frozen_at_submission(persist: bool) -> None:
+    choices = _choices()
+    client = _Client(UUID(choices[0].profile_id))
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        assert profile_id == client.profile_id
+        return client
+
+    owner = _HandoffOwner()
+    screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
+    host = _Host(screen)
+    async with host.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        checkbox = screen.query_one("#runtime-login-persist", Checkbox)
+        assert checkbox.display and not checkbox.disabled and not checkbox.value
+        checkbox.value = persist
+        screen.query_one("#runtime-login-credential", Input).value = "synthetic-password-proof"
+        screen.action_submit()
+        assert checkbox.disabled
+        checkbox.value = not persist  # A programmatic UI change cannot alter the captured request.
+        await _until(pilot, lambda: host.handoff is not None)
+        assert client.persistence_requests == [persist]
+        assert client.api_calls == client.receipt_calls == 0
+        assert host.handoff is owner.accepted
+    client.close()
+
+
+@pytest.mark.asyncio
+async def test_persistence_choice_is_cleared_on_profile_and_proof_changes() -> None:
+    choices = _choices()
+    client = _Client(UUID(choices[1].profile_id))
+
+    async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        assert profile_id == client.profile_id
+        return client
+
+    owner = _HandoffOwner()
+    screen = RuntimeLoginScreen(choices=choices, open_client=open_client, accept_handoff=owner.accept)
+    host = _Host(screen)
+    async with host.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        checkbox = screen.query_one("#runtime-login-persist", Checkbox)
+        checkbox.value = True
+        screen.query_one("#runtime-login-profile", Select).value = choices[1].profile_id
+        await pilot.pause()
+        assert not checkbox.value
+        method = screen.query_one("#runtime-login-method", Select)
+        for target in (RuntimeLoginMethod.RECEIPT, RuntimeLoginMethod.API_KEY):
+            checkbox.value = True
+            method.value = target
+            await pilot.pause()
+            assert not checkbox.value and not checkbox.display and checkbox.disabled
+            method.value = RuntimeLoginMethod.PASSWORD
+            await pilot.pause()
+            assert not checkbox.value and checkbox.display and not checkbox.disabled
+        method.value = RuntimeLoginMethod.API_KEY
+        await pilot.pause()
+        checkbox.value = True  # Hidden controls cannot request password persistence for an API grant.
+        screen.query_one("#runtime-login-credential", Input).value = "synthetic-api-proof"
+        screen.action_submit()
+        await _until(pilot, lambda: host.handoff is not None)
+        assert client.api_calls == 1 and client.persistence_requests == []
+    client.close()

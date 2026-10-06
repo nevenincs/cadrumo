@@ -11,9 +11,29 @@ modelo:
           del arrendamiento o subarrendamiento de inmuebles urbanos.
         title: IRPF retenciones sobre arrendamientos urbanos
       form:
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Declaración complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la declaración anterior
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
         page:
           dr-11501:
-            heading: Página 1 · Retenciones por arrendamientos de inmuebles urbanos
+            heading: Retenciones por arrendamiento de inmuebles urbanos
+        section:
+          complementaria:
+            heading: Complementaria (4)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Identificación (1)
+          ingreso:
+            heading: Ingreso (5)
+          liquidacion:
+            heading: Liquidación (3)
       revision:
         2019-y-siguientes:
           casilla:

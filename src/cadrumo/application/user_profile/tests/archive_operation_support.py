@@ -75,7 +75,13 @@ class Subject:
         )
 
     def push(
-        self, *, namespace_filter: str | None, limit: int | None, dry_run: bool, before_handoff: ArchiveProviderHandoff
+        self,
+        *,
+        namespace_filter: str | None,
+        limit: int | None,
+        dry_run: bool,
+        before_handoff: ArchiveProviderHandoff,
+        write: ArchiveLocalWriter,
     ) -> ProfileArchivePushReport:
         assert not self.fence.active
         if not dry_run and not self.no_remote:

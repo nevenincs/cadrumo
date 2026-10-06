@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import os
 import re
 import shutil
@@ -10,6 +11,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
 from dev.docs.build import DOCS_FLAVOR_ENV
@@ -22,7 +24,8 @@ from ..command_execution import run_command
 from .action_cache import action_lock, completed, current, fingerprint
 from .build_paths import build_paths
 from .docs_stage import DocsPackagingError, declared_languages, language_roots
-from .layout import load_layout
+from .identity import identity
+from .layout import distribution_target, load_layout
 
 # The final exception line of a failed owner build, such as the sequence gate's stale-authority refusal.
 _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
@@ -54,18 +57,37 @@ def owner_build(
     return command, _owner_environment(build_root, storage, check_sequences=check_sequences, jobs=jobs)
 
 
-def build_roots(build: Path, inputs: Path) -> None:
+def require_host_product_metadata(expected_version: str) -> None:
+    """Refuse a source-only builder before the runtime fixture asks for installed metadata."""
+    try:
+        observed = importlib.metadata.version(PRODUCT_IDENTITY.distribution)
+    except importlib.metadata.PackageNotFoundError:
+        raise DocsPackagingError(
+            f"Documentation host lacks {PRODUCT_IDENTITY.distribution} distribution metadata; "
+            f"install this checkout in {sys.executable} with uv pip install --python "
+            f'"{sys.executable}" --no-deps --editable "{REPO_ROOT}"'
+        ) from None
+    if observed != expected_version:
+        raise DocsPackagingError(
+            f"Documentation host has {PRODUCT_IDENTITY.distribution} {observed}; "
+            f"the selected checkout requires {expected_version}"
+        )
+
+
+def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None:
     """Build every declared root with the owning driver unless its enrolled inputs are unchanged."""
+    layout = load_layout(target)
+    require_host_product_metadata(identity(distribution_target(layout)).version)
     paths = build_paths(build)
     build_root = paths["user_docs_build"]
     with action_lock(build, "user-docs"):
-        identity = fingerprint(inputs, selected_published_authority(REPO_ROOT))
-        if current(build_root, identity):
+        input_identity = fingerprint(inputs, selected_published_authority(REPO_ROOT))
+        if current(build_root, input_identity):
             print("Reusing user documentation: inputs and output inventory unchanged", flush=True)
             return
         (build_root / "ready").unlink(missing_ok=True)
-        _run_owner_builds(build_root, paths["user_docs_work"], declared_languages(load_layout()))
-        completed(build_root, identity)
+        _run_owner_builds(build_root, paths["user_docs_work"], declared_languages(layout))
+        completed(build_root, input_identity)
 
 
 def _run_owner_builds(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
@@ -78,7 +100,6 @@ def _run_owner_builds(build_root: Path, work: Path, languages: tuple[str, ...]) 
         index = root / "pagefind"
         if index.exists():
             shutil.rmtree(index)
-    jobs = max(1, (os.cpu_count() or 1) // len(languages))
 
     def run(language: str) -> tuple[str, int, Path]:
         storage = work / language / "storage"
@@ -91,7 +112,7 @@ def _run_owner_builds(build_root: Path, work: Path, languages: tuple[str, ...]) 
             storage,
             build_root=build_root,
             check_sequences=language == languages[0],
-            jobs=jobs,
+            jobs=2 if language == languages[0] else max(1, (os.cpu_count() or 1) // max(1, len(languages) - 1)),
         )
         log = work / f"{language}.log"
         print(f"Building {language} user documentation; log: {log}", flush=True)
@@ -100,8 +121,12 @@ def _run_owner_builds(build_root: Path, work: Path, languages: tuple[str, ...]) 
         print(f"Documentation {language}: exit {result.returncode} in {result.duration_seconds:.0f} s", flush=True)
         return language, result.returncode, log
 
-    with ThreadPoolExecutor(max_workers=len(languages)) as pool:
-        results = list(pool.map(run, languages))
+    # The strict runtime gate owns the host first. Cold native workers must not
+    # compete with three Sphinx builds under the unchanged runtime deadlines.
+    results = [run(languages[0])]
+    if results[0][1] == 0 and len(languages) > 1:
+        with ThreadPoolExecutor(max_workers=len(languages) - 1) as pool:
+            results.extend(pool.map(run, languages[1:]))
     failed = [(language, code, log) for language, code, log in results if code]
     for language, code, log in failed:
         lines = log.read_text(encoding="utf-8").splitlines()
@@ -118,9 +143,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--inputs", type=Path, required=True)
+    parser.add_argument("--target")
     arguments = parser.parse_args()
     try:
-        build_roots(arguments.build.resolve(strict=True), arguments.inputs)
+        build_roots(arguments.build.resolve(strict=True), arguments.inputs, target=arguments.target)
     except DocsPackagingError as error:
         raise SystemExit(str(error)) from None
 

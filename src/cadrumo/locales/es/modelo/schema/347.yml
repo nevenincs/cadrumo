@@ -41,8 +41,8 @@ modelo:
               con terceras personas.
             label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
           contraparte-clave-operacion:
-            label: Clave de operación con la contraparte (A=entregas/prestaciones,
-              B=adquisiciones/recepciones, ...)
+            label: 'Clave de operación (A: adquisiciones; B: entregas de bienes y
+              prestaciones de servicios)'
           contraparte-importe-q1:
             label: Importe de operaciones con la contraparte en primer trimestre
           contraparte-importe-q2:
@@ -124,6 +124,12 @@ modelo:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
             label: OPERACIÓN SEGURO
+          papel-firma-cargo:
+            label: Cargo o empleo
+          papel-firma-fecha:
+            label: Fecha
+          papel-firma-nombre:
+            label: Nombre de quien firma
           persona-con-quien-relacionarse:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
@@ -140,6 +146,14 @@ modelo:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
             label: NIF DEL REPRESENTANTE LEGAL
+          resumen-importe-arrendamientos:
+            label: null
+          resumen-importe-operaciones:
+            label: null
+          resumen-inmuebles:
+            label: null
+          resumen-personas-entidades:
+            label: null
           situacion-inmueble:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
@@ -153,6 +167,62 @@ modelo:
       field:
         official_name: Modelo 347. Declaración anual de operaciones con terceras personas.
         title: Operaciones con terceras personas (informativa anual)
+      form:
+        column:
+          operaciones:
+            heading: Importe de las operaciones
+          transmisiones:
+            heading: Transmisiones de inmuebles sujetas a IVA
+        context:
+          anterior:
+            heading: Número de justificante de la declaración anterior
+          nif:
+            heading: NIF del declarante
+          nombre:
+            heading: Apellidos y nombre o razón social
+        page:
+          m347-declarado:
+            heading: Relación de personas y entidades
+          m347-declarante:
+            heading: Hoja resumen
+          m347-inmueble:
+            heading: Arrendamientos de locales de negocio
+        row:
+          trimestre-1:
+            heading: 1T
+          trimestre-2:
+            heading: 2T
+          trimestre-3:
+            heading: 3T
+          trimestre-4:
+            heading: 4T
+        section:
+          contacto:
+            heading: Persona de contacto
+          declaracion:
+            heading: Datos de la declaración
+          firma:
+            heading: Fecha y firma
+          identificacion:
+            heading: Identificación del declarante
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
+        signature:
+          administracion:
+            heading: Espacio reservado para la Administración
+          paper:
+            heading: Espacio del formulario en papel
+          space:
+            heading: Firma manuscrita
+        summary:
+          arrendamientos:
+            heading: Importe total de arrendamientos de locales de negocio
+          inmuebles:
+            heading: Número total de inmuebles
+          operaciones:
+            heading: Importe total anual de las operaciones
+          personas:
+            heading: Número total de personas y entidades
       revision:
         2011-2024:
           casilla:

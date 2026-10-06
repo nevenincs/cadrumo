@@ -21,6 +21,7 @@ and settings owners are imported lazily by the functions that need them.
 from __future__ import annotations
 
 import os
+import stat
 import sys
 from collections.abc import Mapping
 from enum import StrEnum
@@ -61,6 +62,21 @@ class StorageRootRefusal(StrEnum):
     HOME_UNAVAILABLE = "home_unavailable"
     CHECKOUT_UNAVAILABLE = "checkout_unavailable"
     UNSUPPORTED_PLATFORM = "unsupported_platform"
+    NON_ABSOLUTE_PIN = "non_absolute_pin"
+    INVALID_PATH_INPUT = "invalid_path_input"
+    FILESYSTEM_PATH_REFUSED = "filesystem_path_refused"
+
+
+class StoragePathRules(NamedTuple):
+    """Host path eligibility; existing modes are never changed by preparation."""
+
+    unicode_required: bool
+    normalize_absolute: bool
+    refuse_links: bool
+    enforce_existing_permissions: bool
+
+
+STORAGE_PATH_RULES: Final[StoragePathRules] = StoragePathRules(True, True, True, False)
 
 
 class ChildEnvironmentProfile(StrEnum):
@@ -198,6 +214,7 @@ class ProcessEnvironmentDeclaration(NamedTuple):
     temporary_variables: tuple[str, ...]
     host_inherited: tuple[str, ...]
     windows_host_inherited: tuple[str, ...]
+    inherited_fields: tuple[InheritedEnvironmentField, ...]
 
     def inherited_names(self, platform: StoragePlatform | None) -> tuple[str, ...]:
         """Host pins a child inherits on ``platform``."""
@@ -205,16 +222,40 @@ class ProcessEnvironmentDeclaration(NamedTuple):
             return (*self.host_inherited, *self.windows_host_inherited)
         return self.host_inherited
 
+    def inherited_kind(self, name: str) -> InheritedEnvironmentValueKind:
+        """Declared value kind, independent of the variable's spelling."""
+        return next(field.kind for field in self.inherited_fields if field.name == name)
+
+
+class InheritedEnvironmentValueKind(StrEnum):
+    """Path-valued host pins require Unicode/absolute input; opaque values do not."""
+
+    DIRECTORY_PATH = "directory_path"
+    OPAQUE = "opaque"
+
+
+class InheritedEnvironmentField(NamedTuple):
+    """One declared host pin and the eligibility of its value."""
+
+    name: str
+    kind: InheritedEnvironmentValueKind
+
+
+_INHERITED_FIELDS: Final[tuple[InheritedEnvironmentField, ...]] = (
+    InheritedEnvironmentField("CADRUMO_AUTHORITY_ROOT", InheritedEnvironmentValueKind.DIRECTORY_PATH),
+)
+
 
 PROCESS_ENVIRONMENT: Final[ProcessEnvironmentDeclaration] = ProcessEnvironmentDeclaration(
     cleared_prefixes=("PYTHON", "LD_", "DYLD_"),
     cleared_names=("VIRTUAL_ENV", "CONDA_PREFIX", "CONDA_DEFAULT_ENV", "__PYVENV_LAUNCHER__"),
     namespace_prefix=PRODUCT_IDENTITY.environment_prefix,
     temporary_variables=("TEMP", "TMP", "TMPDIR"),
-    host_inherited=("CADRUMO_AUTHORITY_ROOT",),
+    host_inherited=tuple(field.name for field in _INHERITED_FIELDS),
     # The packaged pywin32 cache resolves from the pinned root through its own
     # taxonomy member, so the Windows host pins nothing beyond the shared set.
     windows_host_inherited=(),
+    inherited_fields=_INHERITED_FIELDS,
 )
 """The one declaration of child-process environment classes."""
 
@@ -275,11 +316,72 @@ def _host_path_type() -> type[PurePath]:
     return PureWindowsPath if os.name == "nt" else PurePosixPath
 
 
-def _environment_value(environ: Mapping[str, str], name: str) -> str | None:
-    return environ.get(name, "").strip() or None
+def _checked_path_value(value: str) -> str:
+    if STORAGE_PATH_RULES.unicode_required:
+        try:
+            value.encode("utf-8")
+        except UnicodeError:
+            _refuse(StorageRootRefusal.INVALID_PATH_INPUT, "Storage path input must contain valid Unicode.")
+    if "\0" in value:
+        _refuse(StorageRootRefusal.INVALID_PATH_INPUT, "Storage path input contains a null character.")
+    return value
 
 
-def installed_default_root(
+def _environment_value(environ: Mapping[str, str], name: str, platform: StoragePlatform | None = None) -> str | None:
+    if platform is StoragePlatform.WINDOWS:
+        value = next((value for key, value in environ.items() if key.upper() == name), "")
+    else:
+        value = environ.get(name, "")
+    return _checked_path_value(value).strip() or None
+
+
+def _normalized_absolute(path: PurePath) -> PurePath:
+    _checked_path_value(str(path))
+    if not path.is_absolute():
+        _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "Storage path must be absolute.")
+    if not STORAGE_PATH_RULES.normalize_absolute:
+        return path
+    parts: list[str] = []
+    for part in path.parts[1:]:
+        if part == "..":
+            if parts:
+                parts.pop()
+        elif part != ".":
+            parts.append(part)
+    return type(path)(path.anchor, *parts)
+
+
+def _refuse_links(path: Path) -> None:
+    if not STORAGE_PATH_RULES.refuse_links:
+        return
+    for component in (path, *path.parents):
+        try:
+            metadata = component.lstat()
+        except FileNotFoundError:
+            continue
+        except OSError as error:
+            _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, str(error))
+        if (
+            stat.S_ISLNK(metadata.st_mode)
+            or getattr(metadata, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        ):
+            _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, f"Storage path contains a link: {component}")
+        if component != path and not stat.S_ISDIR(metadata.st_mode):
+            _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, f"Storage path traverses a non-directory: {component}")
+
+
+def normalize_storage_path(path: Path) -> Path:
+    """Validate original links, then normalize an absolute host path without cwd/effects."""
+    _checked_path_value(str(path))
+    if not path.is_absolute():
+        _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "A child process requires an absolute storage root pin.")
+    _refuse_links(path)
+    normalized = Path(_normalized_absolute(path))
+    _refuse_links(normalized)
+    return normalized
+
+
+def _anchored_installed_default_root(
     platform: StoragePlatform | None,
     environ: Mapping[str, str],
     *,
@@ -301,7 +403,7 @@ def installed_default_root(
     rule = STORAGE_ROOT.installed_rule(platform)
     directory = STORAGE_ROOT.channel_directory(STORAGE_ROOT.stable_channel if channel is None else channel)
     for candidate in rule.candidates:
-        value = _environment_value(environ, candidate.variable)
+        value = _environment_value(environ, candidate.variable, platform)
         if value is not None and path_type(value).is_absolute():
             return path_type(value).joinpath(*candidate.subpath, directory)
     names = " or ".join(candidate.variable for candidate in rule.candidates)
@@ -312,10 +414,25 @@ def installed_default_root(
     )
 
 
-def configured_root_value(environ: Mapping[str, str], mode: StorageMode) -> str | None:
+def installed_default_root(
+    platform: StoragePlatform | None,
+    environ: Mapping[str, str],
+    *,
+    channel: str | None = None,
+    path_type: type[PurePath] | None = None,
+) -> PurePath:
+    """Return the pure normalized installed default; host adapters also validate links."""
+    return _normalized_absolute(
+        _anchored_installed_default_root(platform, environ, channel=channel, path_type=path_type)
+    )
+
+
+def configured_root_value(
+    environ: Mapping[str, str], mode: StorageMode, *, platform: StoragePlatform | None = None
+) -> str | None:
     """Return the highest-precedence non-blank root override honoured in ``mode``."""
     for name in STORAGE_ROOT.root_variables(mode):
-        if (value := _environment_value(environ, name)) is not None:
+        if (value := _environment_value(environ, name, platform)) is not None:
             return value
     return None
 
@@ -330,20 +447,24 @@ def _expand_home(
 
     A platform with no declared rule uses ``HOME``.
     """
-    head, _separator, tail = value.replace("\\", "/").partition("/")
+    _checked_path_value(value)
+    spelling = value.replace("\\", "/") if path_type is PureWindowsPath else value
+    head, _separator, tail = spelling.partition("/")
     if head != "~":
+        if head.startswith("~") and (path_type is PureWindowsPath or not head.startswith("~\\")):
+            _refuse(StorageRootRefusal.INVALID_PATH_INPUT, "Named-user home expansion is not supported.")
         return path_type(value)
     home_variable = "HOME" if platform is None else STORAGE_ROOT.installed_rule(platform).home_variable
-    home = _environment_value(environ, home_variable)
+    home = _environment_value(environ, home_variable, platform)
     if home is None or not path_type(home).is_absolute():
         _refuse(
             StorageRootRefusal.HOME_UNAVAILABLE,
             f"{STORAGE_ROOT.variable} starts with '~' but {home_variable} is not an absolute path.",
         )
-    return path_type(home) / tail
+    return path_type(home).joinpath(*(part for part in tail.split("/") if part))
 
 
-def resolve_storage_root(
+def _anchored_storage_root(
     *,
     platform: StoragePlatform | None,
     mode: StorageMode,
@@ -363,7 +484,7 @@ def resolve_storage_root(
     passes its own.
     """
     path_type = _path_type(platform) if path_type is None else path_type
-    raw = configured_root_value(environ, mode)
+    raw = configured_root_value(environ, mode, platform=platform)
     if raw is not None:
         candidate = _expand_home(raw, platform, environ, path_type)
         if candidate.is_absolute():
@@ -373,10 +494,33 @@ def resolve_storage_root(
                 StorageRootRefusal.RELATIVE_OVERRIDE_INSTALLED,
                 f"{STORAGE_ROOT.variable} must be an absolute directory when Cadrumo is installed.",
             )
+        if candidate.drive or candidate.root:
+            _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "A relative root override cannot replace its checkout anchor.")
         return _checkout_anchor(path_type, checkout) / candidate
     if mode is StorageMode.DEVELOPMENT:
         return _checkout_anchor(path_type, checkout).joinpath(*STORAGE_ROOT.development_default)
-    return installed_default_root(platform, environ, channel=channel, path_type=path_type)
+    return _anchored_installed_default_root(platform, environ, channel=channel, path_type=path_type)
+
+
+def resolve_storage_root(
+    *,
+    platform: StoragePlatform | None,
+    mode: StorageMode,
+    environ: Mapping[str, str],
+    checkout: PurePath | str | None = None,
+    channel: str | None = None,
+    path_type: type[PurePath] | None = None,
+) -> PurePath:
+    """Pure target-syntax resolution: a Unicode, normalized absolute root without effects.
+
+    Host resolution additionally validates the original anchored components for
+    links before normalization, then validates the normalized components.
+    """
+    return _normalized_absolute(
+        _anchored_storage_root(
+            platform=platform, mode=mode, environ=environ, checkout=checkout, channel=channel, path_type=path_type
+        )
+    )
 
 
 def _checkout_anchor(path_type: type[PurePath], checkout: PurePath | str | None) -> PurePath:
@@ -385,7 +529,10 @@ def _checkout_anchor(path_type: type[PurePath], checkout: PurePath | str | None)
             StorageRootRefusal.CHECKOUT_UNAVAILABLE,
             "A development storage root needs the source checkout that anchors it.",
         )
-    return path_type(checkout)
+    anchor = path_type(_checked_path_value(str(checkout)))
+    if not anchor.is_absolute():
+        _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "The source checkout anchor must be absolute.")
+    return anchor
 
 
 def storage_root_for(
@@ -396,20 +543,22 @@ def storage_root_for(
 ) -> Path:
     """Resolve this host's storage root for ``evidence`` and ``environ``."""
     platform = declared_platform(sys_platform)
-    resolved = resolve_storage_root(
+    resolved = _anchored_storage_root(
         platform=platform,
         mode=evidence.mode,
         environ=environ,
         checkout=evidence.checkout,
         path_type=_host_path_type(),
     )
-    return Path(resolved).resolve()
+    return normalize_storage_path(Path(resolved))
 
 
 def host_installed_default_root(environ: Mapping[str, str], *, sys_platform: str | None = None) -> Path:
     """Return this host's stable-channel installed default root."""
     platform = declared_platform(sys_platform)
-    return Path(installed_default_root(platform, environ, path_type=_host_path_type())).resolve()
+    return normalize_storage_path(
+        Path(_anchored_installed_default_root(platform, environ, path_type=_host_path_type()))
+    )
 
 
 def configured_storage_root(
@@ -430,19 +579,16 @@ def configured_storage_root(
 
 
 def storage_root_override(value: str | Path) -> Path:
-    """Anchor one explicit root value for this process, or refuse it; the result is not resolved.
-
-    Callers that resolve through a memoised normaliser keep that cache.
-    """
+    """Validate and normalize one explicit root using this process's checkout/home evidence."""
     evidence = storage_mode()
-    anchored = resolve_storage_root(
+    anchored = _anchored_storage_root(
         platform=declared_platform(),
         mode=evidence.mode,
-        environ={STORAGE_ROOT.variable: str(value)},
+        environ={**os.environ, STORAGE_ROOT.variable: str(value)},
         checkout=evidence.checkout,
         path_type=_host_path_type(),
     )
-    return Path(anchored)
+    return normalize_storage_path(Path(anchored))
 
 
 def ensure_storage_root(root: Path) -> Path:
@@ -450,18 +596,39 @@ def ensure_storage_root(root: Path) -> Path:
 
     Windows keeps the inherited per-user ACL of the parent directory.
     """
-    if os.name == "posix":
-        root.mkdir(parents=True, exist_ok=True, mode=STORAGE_ROOT.posix_directory_mode)
-    else:
-        root.mkdir(parents=True, exist_ok=True)
+    root = normalize_storage_path(root)
+    missing: list[Path] = []
+    candidate = root
+    while not candidate.exists():
+        missing.append(candidate)
+        candidate = candidate.parent
+    try:
+        for directory in reversed(missing):
+            directory.mkdir(mode=STORAGE_ROOT.posix_directory_mode, exist_ok=True)
+        if not root.is_dir():
+            _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, f"Storage path is not a directory: {root}")
+    except OSError as error:
+        _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, str(error))
+    _refuse_links(root)
     return root
 
 
-def resolve_storage_path(value: str | Path, *, root: Path | None = None) -> Path:
+def resolve_storage_path(
+    value: str | Path,
+    *,
+    root: Path | None = None,
+    received: Mapping[str, str] | None = None,
+    platform: StoragePlatform | None = None,
+) -> Path:
     """Anchor relative storage members beneath the configured root."""
-    candidate = Path(value).expanduser()
+    environment = os.environ if received is None else received
+    platform = declared_platform() if platform is None else platform
+    candidate = Path(_expand_home(str(value), platform, environment, _host_path_type()))
     anchor = configured_storage_root() if root is None else root
-    return (candidate if candidate.is_absolute() else anchor / candidate).resolve()
+    anchor = normalize_storage_path(anchor)
+    if not candidate.is_absolute() and (candidate.drive or candidate.root):
+        _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "A relative storage member cannot replace its root anchor.")
+    return normalize_storage_path(candidate if candidate.is_absolute() else anchor / candidate)
 
 
 def storage_directory(environment_variable: str, default: str, *, root: Path | None = None) -> Path:
@@ -471,11 +638,17 @@ def storage_directory(environment_variable: str, default: str, *, root: Path | N
 
 def prepare_temporary_directory() -> Path:
     """Create the controlled scratch base for callers of tempfile APIs."""
+    from .storage_taxonomy import StorageCategory
+    from .storage_taxonomy_locations import storage_location
+
     root = configured_storage_root()
+    location = storage_location(StorageCategory.TEMPORARY_FILES)
+    value = location.relative_path().as_posix()
+    if location.settings_field is not None:
+        value = _environment_value(os.environ, location.settings_field.upper(), declared_platform()) or value
+    temporary = resolve_storage_path(value, root=root, received=os.environ)
     ensure_storage_root(root)
-    temporary = storage_directory("CADRUMO_TEMP_DIR", "tmp", root=root)
-    temporary.mkdir(parents=True, exist_ok=True, mode=0o700)
-    return temporary
+    return ensure_storage_root(temporary)
 
 
 def product_env_var_names() -> frozenset[str]:
@@ -505,11 +678,10 @@ def _reserved_setting_names() -> frozenset[str]:
 
 
 def _cleared(name: str, *, allowed: frozenset[str], reserved: frozenset[str]) -> bool:
-    upper = name.upper()
     declaration = PROCESS_ENVIRONMENT
-    if upper.startswith(declaration.cleared_prefixes) or upper in declaration.cleared_names:
+    if name.startswith(declaration.cleared_prefixes) or name in declaration.cleared_names:
         return True
-    return (upper.startswith(declaration.namespace_prefix) or upper in reserved) and upper not in allowed
+    return (name.startswith(declaration.namespace_prefix) or name in reserved) and name not in allowed
 
 
 def child_environment(
@@ -531,26 +703,43 @@ def child_environment(
     from .storage_taxonomy import StorageCategory
     from .storage_taxonomy_locations import storage_location
 
+    resolved_root = normalize_storage_path(root)
     environment_in = os.environ if received is None else received
     platform = declared_platform(sys_platform)
+    ambient = environment_in if base is None else base
+    if platform is StoragePlatform.WINDOWS:
+        environment_in = {name.upper(): value for name, value in environment_in.items()}
+        ambient = {name.upper(): value for name, value in ambient.items()}
     product = product_env_var_names()
     allowed = product if profile is ChildEnvironmentProfile.OPERATOR else frozenset[str]()
     reserved = _reserved_setting_names()
-    ambient = environment_in if base is None else base
     environment = {
         name: value for name, value in ambient.items() if not _cleared(name, allowed=allowed, reserved=reserved)
     }
-    environment.update({name: value for name, value in environment_in.items() if name.upper() in allowed})
+    environment.update({name: value for name, value in environment_in.items() if name in allowed})
     for name in PROCESS_ENVIRONMENT.inherited_names(platform):
         if name in environment_in:
-            environment[name] = environment_in[name]
+            value = environment_in[name]
+            if PROCESS_ENVIRONMENT.inherited_kind(name) is InheritedEnvironmentValueKind.DIRECTORY_PATH:
+                _normalized_absolute(_host_path_type()(_checked_path_value(value)))
+            environment[name] = value
     temporary = storage_location(StorageCategory.TEMPORARY_FILES)
     temporary_value = temporary.relative_path().as_posix()
     if temporary.settings_field is not None and profile is ChildEnvironmentProfile.OPERATOR:
-        temporary_value = environment_in.get(temporary.settings_field.upper(), "").strip() or temporary_value
-    resolved_root = ensure_storage_root(root.resolve())
-    temporary_root = resolve_storage_path(temporary_value, root=resolved_root)
-    temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        temporary_value = (
+            _environment_value(environment_in, temporary.settings_field.upper(), platform) or temporary_value
+        )
+    temporary_root = resolve_storage_path(
+        temporary_value, root=resolved_root, received=environment_in, platform=platform
+    )
+    if (
+        not temporary.create_explicit_directory
+        and temporary_value != temporary.relative_path().as_posix()
+        and not temporary_root.is_dir()
+    ):
+        _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, "An explicit storage member must already exist.")
+    ensure_storage_root(resolved_root)
+    ensure_storage_root(temporary_root)
     environment[STORAGE_ROOT.variable] = str(resolved_root)
     environment.update({name: str(temporary_root) for name in PROCESS_ENVIRONMENT.temporary_variables})
     return environment

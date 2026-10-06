@@ -1723,6 +1723,10 @@ application:
         per presentar-lo.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      selected_option_requires_nonzero: L’opció seleccionada exigeix un valor diferent
+        de zero en aquest camp.
+      selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit
+        en aquest camp.
       suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració recull
         rendiments del capital mobiliari de l'estalvi, però no hi consta cap retenció
         suportada. Introdueix l'import del certificat de retencions i ingressos a
@@ -1964,6 +1968,12 @@ application:
           guide: Guia - protegit
           provenance: Origen / pista d'auditoria - protegit
           tariffs: Tarifes / paràmetres vigents - protegit
+      form:
+        communication_caption: Formulari de dades · canvia les entrades als fulls
+          d’origen
+        communication_guide: Canvia les dades a Entradas. Modelo mostra la comunicació;
+          no calcula retencions.
+        reported_data_caption: Dades declarades · edita les entrades als fulls d’origen
       layout:
         errors:
           undeclared_reference: El disseny del full de càlcul referència un element
@@ -1991,6 +2001,152 @@ application:
           range_malformed: Els límits de l'interval del full de càlcul no són vàlids.
           tariff_shape_invalid: La forma de la taula de tarifes del full de càlcul
             no és vàlida.
+      review:
+        labels:
+          amount: Import (visualització numèrica)
+          amount_id: Identificador del resultat
+          art_104_tres_exclusion: Exclusió de l'article 104.Tres
+          attachments: Identificadors d'adjunts
+          attribution_notice: Només l'atribució capturada connecta les fonts amb els
+            resultats desats. La proximitat entre files no acredita una contribució.
+          authority: Generació de l'autoritat normativa
+          availability: Selecció i disponibilitat d'evidència
+          baseline_notice: Dades locals desades. Aquesta còpia serveix per revisar;
+            no certifica una presentació ni una verificació.
+          booked_date: Data comptable
+          business_pct: Proporció empresarial registrada
+          byte_length: Mida original en bytes
+          calculation_revision: Revisió del càlcul
+          casilla: Casella
+          category_id: Identificador de categoria
+          classification: Classificació empresarial
+          contribution: Identificador de contribució
+          contribution_count: Nombre de contribucions capturades
+          counterparty: Contrapart
+          counterparty_country: País de la contrapart
+          currency: Moneda
+          deduction_fact_kind: Tipus de dada de deducció
+          description: Descripció capturada
+          detail: Detall d'atribució capturat
+          digest: Empremta registrada
+          direction: Sentit del moviment registrat
+          disposition: Codi de selecció d'evidència registrat
+          document_links: Identificadors de vincles documentals
+          eur_value: Valor en EUR (visualització numèrica)
+          evidence: Índex d'evidències
+          evidence_count: Nombre d'evidències inventariades
+          evidence_excluded: Exclosa de la selecció de fitxers
+          evidence_id: Identificador d'evidència
+          evidence_included: Seleccionada per al paquet separat de fitxers
+          evidence_missing: Fitxer històric absent
+          evidence_scope: Abast de les evidències
+          evidence_unavailable: Fitxer històric no disponible
+          exact_amount: Import exacte (text)
+          exact_business_pct: Proporció empresarial exacta (text)
+          exact_decimal_notice: Les cel·les numèriques són valors de visualització.
+            El text decimal exacte conserva el valor desat i la seva escala; aquí
+            no s'arrodoneix ni es recalcula.
+          exact_eur_value: Valor exacte en EUR (text)
+          exact_fx_rate: Tipus de canvi exacte (text)
+          exact_iva_amount: Quota exacta d'IVA (text)
+          exact_iva_rate: Tipus exacte d'IVA (text)
+          exact_m210_applicable_rate: Tipus exacte del Modelo 210 (text)
+          exact_m210_gross_income_amount: Ingressos íntegres exactes del Modelo 210
+            (text)
+          exact_recargo_amount: Quota exacta de recàrrec (text)
+          exact_taxable_base: Base imposable exacta (text)
+          exact_value: Valor decimal exacte (text)
+          exported_at: Data d'exportació
+          external_notes_notice: Escriu aquí les teves troballes i escenaris. Cadrumo
+            no importa mai els teus canvis. Les dades locals desades es mantenen a
+            part.
+          field: Camp
+          finding: Troballa
+          finding_count: Nombre de troballes
+          formula: Referència de fórmula registrada
+          fx_rate: Tipus de canvi registrat
+          index_only_notice: Aquest índex no conté fitxers originals. Els fitxers
+            seleccionats requereixen un paquet separat. Els fitxers històrics absents
+            continuen absents.
+          input_classification: Classificació de l'entrada
+          invoice: Identificador de factura vinculada
+          irpf_category: Categoria d'IRPF registrada
+          iva_amount: Quota d'IVA (visualització numèrica)
+          iva_category: Categoria d'IVA registrada
+          iva_rate: Tipus d'IVA registrat
+          kind: Codi de tipus de font registrat
+          ledger: Llibre capturat
+          ledger_notice: Files del llibre capturades. Els imports són magnituds; el
+            sentit es registra a part. El text decimal exacte acompanya la visualització
+            numèrica. Les columnes addicionals conserven les dades fiscals capturades.
+          ledger_row_count: Nombre de files del llibre capturades
+          ledger_scope_notice: Instantània explícita del llibre. No implica que les
+            files contribueixin a un càlcul.
+          ledger_snapshot: Instantània del llibre
+          legal_refs: Referències legals
+          lifecycle_state: Estat del cicle de vida registrat
+          m210_applicable_rate: Tipus aplicable del Modelo 210
+          m210_asset_or_right_id: Identificador de bé o dret del Modelo 210
+          m210_gross_income_amount: Ingressos íntegres del Modelo 210
+          m210_official_tipo_renta_code: Codi de tipus de renda del Modelo 210
+          m210_payer_id: Identificador de pagador del Modelo 210
+          m210_payer_mode: Modalitat de pagador del Modelo 210
+          media_type: Tipus de fitxer
+          missing_data: Dades absents
+          modelo: Modelo
+          no_captured_rows: Aquesta instantània no conté files per a aquesta secció.
+          no_inventory_reference: Sense referència d'inventari capturada
+          not_captured: No capturat
+          not_captured_notice: No capturat vol dir que la instantània seleccionada
+            no té un valor per a aquesta dada. No vol dir zero ni no aplicable.
+          not_ledger_source: La font no és una fila del llibre
+          numeric_notice: Visualització numèrica
+          overview: Resum de la revisió
+          period: Any i període
+          prorrata_reference: Referència de prorrata
+          prorrata_sector_id: Identificador de sector de prorrata
+          publication: Identificador de publicació
+          purchase_invoice_evidence: Identificador d'evidència de factura de compra
+          reason: Motiu de disponibilitat capturat
+          recargo_amount: Quota de recàrrec d'equivalència
+          reference: Referència de dades desades / coordenada de cel·la
+          registry_digest: Empremta del registre normatiu
+          registry_revision: Revisió del registre normatiu
+          result_count: Nombre de resultats desats
+          results: Resultats desats
+          review: Les teves notes de revisió
+          review_date: Data de revisió
+          review_quality: Estat de la revisió
+          review_status: Estat de la teva revisió
+          reviewer: Revisor
+          rounding: Regla d'arrodoniment registrada
+          row_id: Coordenada de fila
+          scenario: El teu escenari
+          scope: Abast de la selecció
+          snapshot: Empremta de la instantània
+          source_id: Identificador de font
+          source_jurisdiction: Jurisdicció d'origen
+          source_kind: Tipus de font
+          source_kind_adjustment: Ajust
+          source_kind_invoice: Factura
+          source_kind_ledger_row: Fila del llibre
+          source_kind_manual_input: Entrada manual
+          source_kind_unavailable: Font històrica no disponible
+          source_refs: Referències de fonts
+          source_revision: Revisió de la font
+          sources: Atribució de fonts
+          status: Codi d'estat registrat
+          status_incomplete: Incomplet
+          status_provisional: Provisional
+          status_verified: Dades locals verificades
+          taxable_base: Base imposable (visualització numèrica)
+          transaction: Identificador del moviment
+          unattributed: Sense atribució de càlcul capturada
+          unit: Unitat registrada
+          usage_ratio_id: Identificador de proporció d'ús
+          value: Valor desat / visualització numèrica
+          value_date: Data valor
+          work_unit: Unitat de treball
       translator:
         errors:
           translation_failed: La fórmula de les definicions del model no es pot traduir

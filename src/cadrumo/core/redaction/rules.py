@@ -1180,6 +1180,16 @@ def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
 #: here is a pure function of the text and the reveal flag. Longer strings are
 #: redacted afresh so a rendered report never sits in the cache.
 _CLI_STRING_CACHE_MAX_LENGTH = 512
+_CLI_GOOGLE_SHEET_URL = re.compile(r"https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]{10,200})/edit")
+
+
+def _canonical_google_sheet_id(value: object) -> str | None:
+    """Recognize only credential-free native Sheet artifact links for success output."""
+    if not isinstance(value, str):
+        return None
+    matched = _CLI_GOOGLE_SHEET_URL.fullmatch(value)
+    identifier = matched.group(1) if matched is not None else None
+    return identifier if isinstance(identifier, str) else None
 
 
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
@@ -1207,6 +1217,11 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
 
 
 def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
+    # This named success-output line is an artifact locator, not an OAuth URL.
+    # Keep the exemption out of the generic log/error URL rule entirely.
+    sheet_label = "spreadsheet_url\t"
+    if text.startswith(sheet_label) and _canonical_google_sheet_id(text[len(sheet_label) :]) is not None:
+        return text
     # A column-header row carries no identifier values, only field names; the
     # ``label<TAB>value`` heuristic would otherwise rewrite the *next column
     # name* into a placeholder. Skip the assignment redactor for headers; the
@@ -1269,6 +1284,10 @@ def _redact_cli_mapping(value: dict[object, object], *, reveal_identifiers: bool
             else item_key
         )
         unique_key = _unique_mapping_key(redacted_key, redacted)
+        sheet_id = _canonical_google_sheet_id(item_value) if item_key == "spreadsheet_url" else None
+        if sheet_id is not None and value.get("spreadsheet_id") == sheet_id:
+            redacted[unique_key] = item_value
+            continue
         redacted[unique_key] = _redact_structured_for_cli_output(
             item_value,
             key=item_key,
@@ -1384,6 +1403,8 @@ def redact_for_cli_output(text: str, *, reveal_identifiers: bool = False) -> str
     handling. It deliberately keeps display labels untouched and targets
     machine identifiers, storage lookup values, URL paths, bearer tokens,
     and tax identities that should not be emitted as success output.
+    The exact ``spreadsheet_url<TAB>`` success line retains a canonical,
+    credential-free Google Sheet artifact link; logs and errors do not.
 
     Args:
         text: Rendered CLI text.
@@ -1430,6 +1451,8 @@ def redact_structured_for_cli_output(value: object, *, reveal_identifiers: bool 
     under canonical profile, bucket, and secure-object key fields become
     stable placeholders before JSON serialization. Container shape is
     preserved and the input object is never mutated.
+    A canonical Google Sheet ``spreadsheet_url`` is retained only alongside
+    its matching ``spreadsheet_id`` in the same mapping.
 
     Args:
         value: JSON-shaped payload to prepare for CLI success output.

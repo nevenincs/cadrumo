@@ -207,7 +207,7 @@ def test_modelo_216_years_before_the_redesign_answer_from_the_design_that_govern
         for period in redesign.period_selector.declared_periods:
             revision = select_revision(modelo, filing_year=year, period=period, support=support)
             assert revision is not redesign
-            assert revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
+            assert revision.effective_authority_grade is RegistryAuthorityGrade.CALCULATION
             designs = [ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"]
             assert len(designs) == 1
             design = catalogues.sources[designs[0]]
@@ -225,5 +225,11 @@ def test_modelo_216_pre_redesign_edition_declares_only_the_partidas_its_design_p
     printed = sorted(set(re.findall(r"Liquidación - Partida (\d)", text)))
     assert printed
     assert sorted(str(casilla.id) for casilla in revision.casillas) == printed
-    assert revision.formulas == ()
-    assert revision.export_layouts == ()
+    (formula,) = revision.formulas
+    assert formula.target_casilla_id == "7"
+    assert formula.expression.op == "subtract"
+    assert [argument.casilla_id for argument in formula.expression.args] == ["3", "6"]
+    assert "boe-2008-18497-modelo-216-calculation-guidance" in formula.source_refs
+    (layout,) = revision.export_layouts
+    assert layout.source_refs == (design_ref,)
+    assert revision.effective_authority_grade is RegistryAuthorityGrade.CALCULATION

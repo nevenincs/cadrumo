@@ -75,7 +75,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
         if session.kind is not SessionKind.HUMAN:
             snapshot = self._snapshot(facts)
             if isinstance(snapshot, AccessDenied):
-                self._retire({session_id})
+                self._retire({session_id}, reason=snapshot.code)
                 raise ProfileAccessRefusedError(snapshot.code)
             grant, key = self._records(snapshot, key_id=session.key_id, grant_id=session.grant_id)
         current = self._evaluate(session, facts, grant, key)

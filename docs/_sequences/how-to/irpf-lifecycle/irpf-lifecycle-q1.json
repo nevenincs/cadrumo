@@ -53,7 +53,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.evidence.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "bucket_event_ids": [
@@ -75,7 +83,7 @@
           "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -114,7 +122,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e\nDate\t2026-02-10\nAmount\t1210\nDescription\tventa\nReview status\treviewed\n"
+      "text": "ID\t32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e\nDate\t2026-02-10\nAmount\t1210\nDescription\tventa\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -151,7 +159,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\tff6973af70780f2feec6cbe7746745c0b0ffb2e1eb0a308f7aebc24e62b09dd7\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\n"
+      "text": "ID\tff6973af70780f2feec6cbe7746745c0b0ffb2e1eb0a308f7aebc24e62b09dd7\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -173,7 +181,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nshort_work_unit_id\t3d88172f4204\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew declaration created.\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nshort_work_unit_id\t3d88172f4204\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nNew declaration created.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -201,20 +209,26 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
             "modelo-130-actividad-economica-gastos-cumulative": "500",
             "modelo-130-actividad-economica-ingresos-cumulative": "1000",
-            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "16f01203da0659788f136bde9e669e4fbc4340c067b36c475ddf04bcb7218dcc",
+          "calculation_revision_id": "f7b25e6c3f067156d0e62579f4c0bcc6724e002d5a4ef8e321a93b15407ddba1",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -242,7 +256,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -348,7 +364,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 16f01203da0659788f136bde9e669e4fbc4340c067b36c475ddf04bcb7218dcc (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision f7b25e6c3f067156d0e62579f4c0bcc6724e002d5a4ef8e321a93b15407ddba1 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -392,7 +408,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -452,10 +468,17 @@
             },
             "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "16f01203da0659788f136bde9e669e4fbc4340c067b36c475ddf04bcb7218dcc",
+          "calculation_revision_id": "f7b25e6c3f067156d0e62579f4c0bcc6724e002d5a4ef8e321a93b15407ddba1",
           "completeness_status": "complete",
           "findings": [
             {
@@ -501,7 +524,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "6e0ccd15ef3b4397699a12e68b5db7b35e0d21fbf7ec802b958b3349ff7afcb8",
+          "verification_report_id": "ba2471ee4f433233b501a7ac6995bbfe2c0ba7c327fe0a0f768f0f7e6e2beae2",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -546,19 +569,39 @@
             },
             "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.export.development_software_identity",
+            "context": {
+              "filing_year": "2026",
+              "modelo": "130",
+              "period": "1T",
+              "software_identity_grade": "development_mock"
+            },
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
-          "bucket_event_id": "42d82b8ac7c9549dc697a306ab076a58b3fe53a6d0fc940e69b05e9283c3c380",
+          "bucket_event_id": "7eeab1e71314dc836d1c0b6af3822760e26f30a1c8b20415335909e6ce7a266b",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "16f01203da0659788f136bde9e669e4fbc4340c067b36c475ddf04bcb7218dcc",
-          "file_sha256": "eaf7e73156441acfec60519635ebea91a6a221f32b23b85a638b5219b8536c7d",
+          "calculation_revision_id": "f7b25e6c3f067156d0e62579f4c0bcc6724e002d5a4ef8e321a93b15407ddba1",
+          "file_sha256": "2f214c53d547645260dcf5747f4d57803e68cfeb3bf181e7312272deb70efe05",
           "filing_year": 2026,
           "format": "fichero-boe",
+          "iva_wallet_decision_provenance": null,
           "modelo": "130",
           "operation": "modelo.export",
-          "output_path": "modelo-130-2026-1T.boe",
+          "output_path": "<sandbox-workdir>/modelo-130-2026-1T.boe",
           "payment_election": null,
           "period": {
             "code": "1T",
@@ -573,7 +616,7 @@
           },
           "refund_election": null,
           "resolved_result_disposition": "N",
-          "software_identity_grade": null,
+          "software_identity_grade": "development_mock",
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",

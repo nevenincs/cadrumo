@@ -6,6 +6,7 @@ import importlib.abc
 import importlib.machinery
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from typing import override
@@ -20,6 +21,47 @@ def _inside(root, relative):
     if not path.is_relative_to(root) or path == root:
         raise ImportError(f"Invalid package-relative path: {relative}")
     return path
+
+
+def _admit(root, listing, directory, name, relative, leaf):
+    found = listing.get(name)
+    if found is None:
+        # Only the filesystem knows whether it folds case or normalization, so a spelling the
+        # listing lacks is put to it directly; that answer is read without following links too.
+        found = root / directory / name
+    if found.is_symlink() or found.is_junction():
+        raise ImportError(f"Invalid package-relative path: {relative}")
+    if not (found.is_file(follow_symlinks=False) if leaf else found.is_dir(follow_symlinks=False)):
+        raise ImportError(f"Missing bundled file: {relative}")
+
+
+def _listing(path):
+    with os.scandir(path) as entries:
+        return {entry.name: entry for entry in entries}
+
+
+def _present(root, names):
+    """Confirm each name is a regular file reached through real directories only.
+
+    Resolving every path costs several system calls per file on each interpreter start, so one
+    listing per directory answers for all of its files. No link is followed on the way, which
+    keeps every confirmed file inside the root without resolving it.
+    """
+    for relative in names:
+        if "\\" in relative or ":" in relative or not {"", ".", ".."}.isdisjoint(relative.split("/")):
+            raise ImportError(f"Invalid package-relative path: {relative}")
+    listings = {"": _listing(root)}
+    for relative in names:
+        directory, _, name = relative.rpartition("/")
+        if directory not in listings:
+            parent = ""
+            for part in directory.split("/"):
+                child = f"{parent}/{part}" if parent else part
+                if child not in listings:
+                    _admit(root, listings[parent], parent, part, relative, leaf=False)
+                    listings[child] = _listing(root / child)
+                parent = child
+        _admit(root, listings[directory], directory, name, relative, leaf=True)
 
 
 def _delegated_inventory(root, manifest):
@@ -65,9 +107,7 @@ def verify(full=False):
             raise ImportError(f"Incompatible CADRUMO package build: {key}")
     if identity["python"] != ".".join(map(str, sys.version_info[:3])):
         raise ImportError("Incompatible CADRUMO CPython version")
-    for relative in manifest["files"]:
-        if not _inside(root, relative).is_file():
-            raise ImportError(f"Missing bundled file: {relative}")
+    _present(root, manifest["files"])
     inventory = _delegated_inventory(root, manifest) if full else manifest["files"]
     if full:
         observed = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
@@ -99,7 +139,7 @@ class NativeModules(importlib.abc.MetaPathFinder):
         relative = self.modules.get(fullname)
         if relative is None:
             return None
-        location = self.root / relative
+        location = _inside(self.root, relative)
         if not location.is_file():
             raise ImportError(f"Missing bundled native module {fullname}: {location}")
         loader = importlib.machinery.ExtensionFileLoader(fullname, str(location))

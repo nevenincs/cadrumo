@@ -108,13 +108,8 @@ def inspect_active_profile_precondition(
     )
 
 
-def profile_deletion_requires_logout_verdict(*, requested_profile: str) -> PreconditionVerdict:
-    """Return the outcome for deleting the profile that is currently selected.
-
-    Deletion refuses its own selected target, and closing that session is a
-    separate operation the operator already owns. Naming it on the action
-    channel is what lets an automated operator recover without parsing prose.
-    """
+def profile_deletion_requires_other_selection_verdict(*, requested_profile: str) -> PreconditionVerdict:
+    """Require selection of another profile; human sign-out preserves selection."""
     condition_id = ProfilePreconditionCondition.PROFILE_TARGET_NOT_SELECTED.value
     return PreconditionVerdict(
         failed_condition_id=condition_id,
@@ -129,8 +124,10 @@ def profile_deletion_requires_logout_verdict(*, requested_profile: str) -> Preco
                 },
             ),
         ),
-        action=ActionReference(action_id="operator.profile.logout"),
-        conditionality=ActionConditionality.IMMEDIATE,
+        action=ActionReference(action_id="operator.profile.login"),
+        argument_bindings=(_missing_argument("name"),),
+        missing_argument_names=("name",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
     )
 
 
@@ -288,7 +285,7 @@ __all__ = [
     "ProfileSelectionFailure",
     "former_product_state_verdict",
     "inspect_active_profile_precondition",
-    "profile_deletion_requires_logout_verdict",
+    "profile_deletion_requires_other_selection_verdict",
     "profile_selection_failure_verdict",
     "profile_session_failure_verdict",
 ]

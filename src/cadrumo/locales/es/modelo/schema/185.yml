@@ -18,6 +18,48 @@ modelo:
         official_name: Modelo 185. Declaración informativa mensual de cotizaciones
           de afiliados y mutualistas.
         title: Declaración informativa mensual de cotizaciones de afiliados y mutualistas
+      form:
+        column:
+          dias:
+            heading: Días de alta
+          jornada:
+            heading: Tipo de jornada
+          regimen:
+            heading: Régimen de cotización
+          situacion:
+            heading: 'Situación (A: alta; B: baja)'
+        context:
+          anterior:
+            heading: Identificación de la declaración anterior
+          contacto:
+            heading: Persona de contacto
+          nif:
+            heading: NIF de la entidad
+          nombre:
+            heading: Razón social
+          telefono:
+            heading: Teléfono de contacto
+        page:
+          afiliado:
+            heading: Afiliado o mutualista
+          declarante:
+            heading: Entidad declarante y período
+        row:
+          dos-meses-antes:
+            heading: Dos meses antes
+          mes:
+            heading: Mes declarado
+          mes-anterior:
+            heading: Mes anterior
+        section:
+          declaracion:
+            heading: Datos de la declaración
+          historial:
+            heading: Situación mensual de cotización
+          identificacion:
+            heading: Identificación de la entidad
+          persona:
+            heading: Identificación de la persona declarada
       revision:
         2003-2025:
           field:

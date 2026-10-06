@@ -39,6 +39,16 @@ def _layout() -> FormLayoutDefinition:
     )
 
 
+@pytest.mark.parametrize("authored", [True, False])
+def test_fragment_header_distinguishes_authored_and_generated_ownership(authored: bool) -> None:
+    layout = _layout().model_copy(
+        update={"seed_source": FormLayoutSeedSource.AUTHORED if authored else FormLayoutSeedSource.CASILLA_NUMBER}
+    )
+    text = render_form_layout_toml("2025", layout)
+    assert text.startswith("# Authored" if authored else "# Generated")
+    assert 'state = "generated"' in text
+
+
 def _synthetic_generation(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -129,3 +139,21 @@ def test_a_fragment_the_generator_does_not_own_is_refused_before_any_write(
 
     assert [entry.name for entry in path.parent.iterdir()] == [foreign.name]
     assert foreign.read_text(encoding="utf-8") == foreign_text
+
+
+def test_selected_generation_refuses_authored_draft_before_reading_or_writing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    revision = SimpleNamespace(form_layouts=(_layout(),))
+    modelo = SimpleNamespace(id="123", revisions={"2025": revision})
+    monkeypatch.setattr(form_layout_cli, "load_registry_tree", lambda _root: ((modelo,), SimpleNamespace(sources={})))
+    with pytest.raises(RegistryValidationError, match="requires one unreviewed generated layout"):
+        form_layout_cli.synchronise_selected_form_layout(
+            tmp_path,
+            tmp_path,
+            modelo_id="123",
+            revision_id="2025",
+            expected_old_sha256="0" * 64,
+            expected_new_sha256="0" * 64,
+        )
+    assert list(tmp_path.iterdir()) == []

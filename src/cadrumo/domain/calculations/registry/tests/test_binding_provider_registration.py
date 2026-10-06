@@ -67,6 +67,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DEFERRED_KINDS = frozenset(
     {
+        BindingSourceKind.AFILIADO_COTIZACION,
         BindingSourceKind.GASTO193_CONTRIBUTOR,
         BindingSourceKind.LEDGER_TRANSACTION,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,

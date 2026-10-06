@@ -168,16 +168,12 @@ class _MirrorPreflightOutcome:
 class _MirrorObjectPushOutcome:
     """Result of uploading each planned row's ciphertext to the provider.
 
-    ``pushed_by_namespace`` counts the rows that uploaded cleanly AND stayed
-    published -- an object rolled back by a same-namespace failure is not
-    counted. ``failed_namespaces`` names every namespace that saw at least
+    ``pushed_by_namespace`` counts rows in namespaces without upload failures.
+    ``failed_namespaces`` names every namespace that saw at least
     one object failure (so its manifest is withheld); ``failed`` carries the
     `(namespace, hmac, error)` triples for the operator surface.
-    ``cleanup_failed`` carries the `(namespace, hmac, error)` triples for a
-    rollback delete that itself failed: an object this namespace already
-    uploaded, whose namespace later failed, that could not be removed and so
-    remains durable but unmanifested (``aeat-ledger-contract`` and
-    ``no-silent-under-declaration`` both bar treating this as ordinary success).
+    ``cleanup_failed`` identifies acknowledged partial uploads retained because
+    the provider cannot prove exclusive creation ownership for safe deletion.
     """
 
     pushed_by_namespace: dict[str, int]
@@ -414,14 +410,10 @@ def _push_mirror_objects(
     per-object upload error records the failure and marks the namespace so
     its manifest is later withheld.
 
-    A namespace's manifest is withheld on any object failure within it, so a
-    row this same namespace already uploaded successfully would otherwise be
-    left durable on the remote provider with no manifest that can enumerate
-    or reconcile it (finding: partial failure leaves ciphertext unowned).
-    Every namespace marked failed is therefore rolled back here: every object
-    key that namespace pushed is deleted before the outcome is returned, so a
-    withheld-manifest namespace is either fully absent from the remote or
-    fully manifested, never partially orphaned.
+    A namespace's manifest is withheld on any object failure. Successful puts
+    may have updated earlier mirror objects; deleting their keys would destroy
+    previous publications. Retain and report them until cleanup can bind to
+    exclusive creation ownership. A failed put can also have unknown effects.
     """
     pushed_by_ns: dict[str, int] = {}
     failed_namespaces: set[str] = set()
@@ -452,12 +444,10 @@ def _push_mirror_objects(
     cleanup_failed: list[tuple[str, str, str]] = []
     for namespace in failed_namespaces:
         for hmac_hex in pushed_keys_by_namespace.get(namespace, ()):
-            try:
-                provider.delete(namespace, hmac_hex)
-            except OutboundStorageError as exc:
-                cleanup_failed.append((namespace, hmac_hex, type(exc).__name__))
-        # The manifest for this namespace is withheld regardless of rollback
-        # outcome, so its object count must not be reported as pushed.
+            cleanup_failed.append(
+                (namespace, hmac_hex, "retained_after_partial_upload: deletion requires creation ownership")
+            )
+        # Retained partial effects are not a complete namespace publication.
         pushed_by_ns.pop(namespace, None)
 
     return _MirrorObjectPushOutcome(
@@ -487,6 +477,12 @@ def _push_mirror_manifests(
         if namespace in failed_namespaces:
             continue
         try:
+            integrity = inspect_remote_mirror_download(provider, manifest)
+            if not integrity.ok:
+                manifest_failed.append(
+                    (namespace, "; ".join(_format_remote_mirror_issue(issue) for issue in integrity.issues))
+                )
+                continue
             put_remote_mirror_namespace_manifest(provider, manifest)
             inspection_failures = _inspect_pushed_remote_mirror(provider=provider, manifest=manifest)
         except OutboundStorageError as exc:

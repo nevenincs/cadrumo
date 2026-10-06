@@ -303,7 +303,7 @@ id = "modelo-309-p1-nif"
 offset = 14
 length = 9
 kind = "header"
-producer_key = "presenter.tax_id"
+producer_key = "taxpayer.tax_id"
 # Design identificacion NIF.
 data_type = "text"
 required = false

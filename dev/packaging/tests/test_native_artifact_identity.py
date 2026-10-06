@@ -46,8 +46,22 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
 ) -> None:
     """A real probe subprocess must test this ZIP and fail the combined acceptance on error."""
     manifest = {
-        "build": {"version": "1.0", "build_number": "42", "build_date": "2026-10-04"},
-        "layout": {"paths": {"executable": "python.exe"}, "files": {"development_executable": "python_d.exe"}},
+        "build": {
+            "version": "1.0",
+            "build_number": "42",
+            "build_date": "2026-10-04",
+            "target": "windows-x86-64",
+            "python": "3.13.11",
+            "channel": "stable",
+        },
+        "layout": {
+            "paths": {"executable": "python.exe"},
+            "files": {"development_executable": "python_d.exe"},
+            "platform": "windows-x64",
+            "abi": 1,
+        },
+        "python": "3.13.11",
+        "distributions": {"fixture-product": "1.0"},
     }
     (tmp_path / "build-paths.json").write_text(
         json.dumps({"paths": {"verification": "verification"}}), encoding="utf-8"
@@ -61,10 +75,20 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         "archive_sha256": digest(archive),
         "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
         "development_binary": False,
+        "target": "windows-x86-64",
+        "release": {
+            "target": "windows-x86-64",
+            "platform": "windows-x64",
+            "abi": 1,
+            "python": "3.13.11",
+            "version": "1.0",
+            "channel": "stable",
+            "cohort": ["fixture-product"],
+        },
     }
     (tmp_path / "artifacts-Release.json").write_text(json.dumps(locator), encoding="utf-8")
     monkeypatch.setattr(
-        artifact_verify, "load_layout", lambda: {"files": {"package_manifest": "data/package-manifest.json"}}
+        artifact_verify, "load_layout", lambda target: {"files": {"package_manifest": "data/package-manifest.json"}}
     )
     monkeypatch.setattr(artifact_verify, "backend", lambda _: SimpleNamespace(external_probe=lambda _: ["fixture"]))
     monkeypatch.setattr(artifact_verify, "verify", lambda *args, **kwargs: None)

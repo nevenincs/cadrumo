@@ -37,7 +37,7 @@ from ....domain.calculations.registry.ids import ModeloId, RevisionId
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ...calculations.relation_prefill import resolve_relations_from_local_store
 from .engine import build_export_plan
-from .records import OperatorInputs, RelationValues, SheetExportPlan, TabName
+from .records import OperatorInputs, RelationValues, SheetExportPlan
 
 type WorkbookSnapshotResolver = Callable[[ModeloId, Period], RegistrySnapshot]
 """Resolves the registry snapshot one workbook export is built from."""
@@ -176,7 +176,7 @@ def export_modelo_workbook(
         payload=payload,
         byte_size=len(payload),
         sha256=sha256_hex(payload),
-        tab_names=tuple(tab.value for tab in TabName),
+        tab_names=tuple(tab.value for tab in plan.tabs),
         casilla_count=len(_covered_casilla_ids(plan)),
     )
 
@@ -184,7 +184,7 @@ def export_modelo_workbook(
 def _covered_casilla_ids(plan: SheetExportPlan) -> frozenset[CasillaId]:
     """Return every casilla the plan carries, as an input cell or a live formula."""
     from_values = {cell.casilla_id for cell in plan.value_cells if cell.casilla_id is not None}
-    return frozenset(from_values | {cell.casilla_id for cell in plan.formula_cells})
+    return frozenset(from_values | {cell.casilla_id for cell in plan.formula_cells if cell.casilla_id is not None})
 
 
 __all__ = [

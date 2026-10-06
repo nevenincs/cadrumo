@@ -5,9 +5,9 @@
 id = "form-layout"
 revision_id = "2016-2017"
 seed_source = "export_record_design"
-review = { state = "generated" }
+review = { state = "generated", notes = "Existing generated layout; paper signature and payment method are now enrolled from the applicable BOE form but their placement awaits historical layout authoring. No completed review claim." }
 generator_version = 1
-source_state_digest = "1d4dcddf1c563664e3cc9ced3cf582bae2b1367e44945420e18268b004350937"
+source_state_digest = "9e504e48128326847693a86fb7a2b68f79cfd2f263b01572b4b0e00a22055031"
 design_sources = [
     { source_ref = "aeat-dr-309-2016", sha256 = "1bb317f154d6e9b86027f4b20f15ec206acac245bfa7b78e3d5d73a1bb9088d3" },
 ]
@@ -67,6 +67,10 @@ placements = [
     { casilla_id = "iva.autorepercutido.intracomunitaria", kind = "working_figure" },
     { casilla_id = "iva.cuota-no-periodica-total", kind = "working_figure" },
     { casilla_id = "iva.soportado.recargo-equivalencia", kind = "working_figure" },
+    { casilla_id = "firma-lugar", kind = "unplaced", unplaced_reason = "pending_review" },
+    { casilla_id = "firma-fecha", kind = "unplaced", unplaced_reason = "pending_review" },
+    { casilla_id = "firma", kind = "unplaced", unplaced_reason = "pending_review" },
+    { casilla_id = "papel-forma-pago", kind = "unplaced", unplaced_reason = "pending_review" },
 ]
 
 [[revisions.2016-2017.form_layouts.pages]]

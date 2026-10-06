@@ -1,26 +1,31 @@
-//! The Windows storage-root resolver and child environment, generated from the native contract.
+//! Storage-root resolution and child environments from the generated native contract.
 //!
 //! Mirrors the Python storage declaration: mode comes from package or checkout evidence,
 //! never the working directory; an absolute root override wins; the installed default is
-//! the shell's local application data folder joined with the build channel's directory.
+//! the declared platform user-data base joined with the build channel's directory.
 
 use crate::{
     BUILD_CHANNEL, CHANNEL_SEPARATOR, CLEARED_NAMES, CLEARED_PREFIXES, DEVELOPMENT_DEFAULT,
     DEVELOPMENT_RELATIVE_OVERRIDE, DEVELOPMENT_ROOT_PRECEDENCE, ENTRYPOINT_FILES,
-    HOST_INHERITED_ENV, INSTALLED_DEFAULTS, INSTALLED_RELATIVE_OVERRIDE, INSTALLED_ROOT_PRECEDENCE,
-    InstalledDefault, MODE_CHECKOUT_MARKER, MODE_PACKAGE_MANIFEST,
-    MODE_PACKAGE_ROOT_FROM_EXECUTABLE, NAMESPACE_PREFIX, NATIVE, PINNED_ENV, PRODUCT_DIRECTORY,
-    PRODUCT_ENV_ALLOWLIST, RESERVED_ENV, ROOT_REFUSALS, ROOT_VARIABLE, STABLE_CHANNEL,
-    TEMPORARY_DEFAULT, TEMPORARY_ENV,
+    HOST_INHERITED_ENV, HOST_INHERITED_FIELDS, INHERITED_KIND_DIRECTORY_PATH, INSTALLED_DEFAULTS,
+    INSTALLED_RELATIVE_OVERRIDE, INSTALLED_ROOT_PRECEDENCE, InstalledDefault, MODE_CHECKOUT_MARKER,
+    MODE_PACKAGE_MANIFEST, MODE_PACKAGE_ROOT_FROM_EXECUTABLE, NAMESPACE_PREFIX, NATIVE, PINNED_ENV,
+    PRODUCT_DIRECTORY, PRODUCT_ENV_ALLOWLIST, RESERVED_ENV, ROOT_REFUSAL_CHECKOUT_UNAVAILABLE,
+    ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED, ROOT_REFUSAL_HOME_UNAVAILABLE,
+    ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE, ROOT_REFUSAL_INVALID_PATH_INPUT,
+    ROOT_REFUSAL_NON_ABSOLUTE_PIN, ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED, ROOT_REFUSALS,
+    ROOT_VARIABLE, STABLE_CHANNEL, STORAGE_NORMALIZE_ABSOLUTE, STORAGE_REFUSE_LINKS,
+    STORAGE_UNICODE_REQUIRED, TEMPORARY_CREATE_EXPLICIT, TEMPORARY_DEFAULT, TEMPORARY_ENV,
 };
+#[cfg(windows)]
 use std::os::windows::ffi::OsStringExt;
 use std::{
     env,
-    ffi::{OsString, c_void},
-    fs,
-    path::{Path, PathBuf},
-    ptr,
+    ffi::OsString,
+    path::{Component, Path, PathBuf},
 };
+#[cfg(windows)]
+use std::{ffi::c_void, ptr};
 
 /// Whether an executable runs from an installed package or a source checkout.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -44,6 +49,25 @@ pub struct Evidence {
 pub struct Refusal {
     pub code: &'static str,
     pub message: String,
+}
+
+impl std::fmt::Display for Refusal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{}: {}", self.code, self.message)
+    }
+}
+
+impl std::error::Error for Refusal {}
+
+impl From<Refusal> for std::io::Error {
+    fn from(refused: Refusal) -> Self {
+        let kind = if refused.code == ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED {
+            std::io::ErrorKind::Other
+        } else {
+            std::io::ErrorKind::InvalidInput
+        };
+        std::io::Error::new(kind, refused)
+    }
 }
 
 /// What selected a resolved storage root.
@@ -86,6 +110,14 @@ pub(crate) fn relative_components(relative: &str) -> PathBuf {
         .collect()
 }
 
+fn filename_matches(left: &str, right: &str) -> bool {
+    if cfg!(windows) {
+        left.eq_ignore_ascii_case(right)
+    } else {
+        left == right
+    }
+}
+
 /// Declared console entrypoints live in NATIVE; every other image sits at the package root.
 pub(crate) fn package_root(exe: &Path) -> Result<PathBuf, String> {
     let directory = exe.parent().ok_or("Executable has no parent")?;
@@ -95,7 +127,7 @@ pub(crate) fn package_root(exe: &Path) -> Result<PathBuf, String> {
         .is_some_and(|name| {
             ENTRYPOINT_FILES
                 .iter()
-                .any(|file| file.eq_ignore_ascii_case(name))
+                .any(|file| filename_matches(file, name))
         });
     if !declared {
         return Ok(directory.to_path_buf());
@@ -106,7 +138,7 @@ pub(crate) fn package_root(exe: &Path) -> Result<PathBuf, String> {
             .file_name()
             .and_then(|name| name.to_str())
             .zip(expected.as_os_str().to_str())
-            .is_some_and(|(actual, expected)| actual.eq_ignore_ascii_case(expected));
+            .is_some_and(|(actual, expected)| filename_matches(actual, expected));
         if !inside {
             return Err(format!(
                 "Entrypoint must reside in the package {NATIVE} directory: {}",
@@ -121,6 +153,9 @@ pub(crate) fn package_root(exe: &Path) -> Result<PathBuf, String> {
 /// Installed when the package root holds the package manifest; development when a
 /// checkout marker is an ancestor of the executable; otherwise refuse.
 pub fn detect_mode(exe: &Path) -> Result<Evidence, String> {
+    if !exe.is_absolute() {
+        return Err("Mode detection requires an absolute executable path".into());
+    }
     let package = package_root(exe)?.join(relative_components(MODE_PACKAGE_ROOT_FROM_EXECUTABLE));
     if package
         .join(relative_components(MODE_PACKAGE_MANIFEST))
@@ -159,63 +194,166 @@ pub(crate) fn channel_directory(channel: &str) -> String {
     }
 }
 
-fn windows_rule() -> &'static InstalledDefault {
+fn platform_rule() -> &'static InstalledDefault {
     INSTALLED_DEFAULTS
         .iter()
-        .find(|rule| rule.platform == "windows")
-        .expect("the contract declares a Windows installed default")
+        .find(|rule| rule.platform == std::env::consts::OS)
+        .expect("the contract declares the target installed default")
 }
 
-fn nonblank(lookup: &dyn Fn(&str) -> Option<String>, name: &str) -> Option<String> {
+fn checked_path_value(name: &str, value: &std::ffi::OsStr) -> Result<String, Refusal> {
+    let value = value
+        .to_str()
+        .filter(|value| !value.contains('\0'))
+        .ok_or_else(|| {
+            refusal(
+                ROOT_REFUSAL_INVALID_PATH_INPUT,
+                format!("{name} cannot be represented as a Unicode path"),
+            )
+        })?;
+    Ok(value.to_owned())
+}
+
+pub(crate) fn validate_inherited_pin(
+    field: &crate::InheritedEnvironmentField,
+    value: &std::ffi::OsStr,
+) -> Result<(), Refusal> {
+    if field.kind == INHERITED_KIND_DIRECTORY_PATH {
+        checked_path_value(field.name, value)?;
+        if !Path::new(value).is_absolute() {
+            return Err(refusal(
+                ROOT_REFUSAL_NON_ABSOLUTE_PIN,
+                format!("{} must be an absolute inherited pin", field.name),
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn nonblank(
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+    name: &str,
+) -> Result<Option<String>, Refusal> {
     lookup(name)
-        .map(|value| value.trim().to_owned())
-        .filter(|value| !value.is_empty())
+        .map(|value| checked_path_value(name, &value))
+        .transpose()
+        .map(|value| {
+            value
+                .map(|value| value.trim().to_owned())
+                .filter(|value| !value.is_empty())
+        })
+}
+
+fn absolute_path_input(path: &Path) -> Result<(), Refusal> {
+    if STORAGE_UNICODE_REQUIRED {
+        checked_path_value("Storage path", path.as_os_str())?;
+    }
+    if !path.is_absolute() {
+        return Err(refusal(
+            ROOT_REFUSAL_NON_ABSOLUTE_PIN,
+            "Storage path must be absolute".into(),
+        ));
+    }
+    Ok(())
+}
+
+fn normalized_absolute_components(path: &Path) -> PathBuf {
+    let mut normalized = PathBuf::new();
+    if STORAGE_NORMALIZE_ABSOLUTE {
+        for component in path.components() {
+            match component {
+                Component::CurDir => {}
+                Component::ParentDir => {
+                    normalized.pop();
+                }
+                component => normalized.push(component),
+            }
+        }
+    } else {
+        normalized = path.to_path_buf();
+    }
+    normalized
+}
+
+pub(crate) fn validated_absolute_path(path: &Path) -> Result<PathBuf, Refusal> {
+    absolute_path_input(path)?;
+    if STORAGE_REFUSE_LINKS {
+        crate::refuse_links(path)
+            .map_err(|message| refusal(ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED, message))?;
+    }
+    let normalized = normalized_absolute_components(path);
+    if STORAGE_REFUSE_LINKS {
+        crate::refuse_links(&normalized)
+            .map_err(|message| refusal(ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED, message))?;
+    }
+    Ok(normalized)
 }
 
 /// Expand a leading `~` (the current user only) against the platform home variable.
-fn expand_home(value: &str, lookup: &dyn Fn(&str) -> Option<String>) -> Result<PathBuf, Refusal> {
+fn expand_home(value: &str, lookup: &dyn Fn(&str) -> Option<OsString>) -> Result<PathBuf, Refusal> {
+    #[cfg(windows)]
     let normalized = value.replace('\\', "/");
+    #[cfg(unix)]
+    let normalized = value.to_owned();
     let (head, tail) = normalized.split_once('/').unwrap_or((&normalized, ""));
     if head != "~" {
+        if head.starts_with('~') && (cfg!(windows) || !head.starts_with("~\\")) {
+            return Err(refusal(
+                ROOT_REFUSAL_INVALID_PATH_INPUT,
+                "Named-user home expansion is not supported".into(),
+            ));
+        }
         return Ok(PathBuf::from(value));
     }
-    let home_variable = windows_rule().home_variable;
-    match nonblank(lookup, home_variable).map(PathBuf::from) {
+    let home_variable = platform_rule().home_variable;
+    match nonblank(lookup, home_variable)?.map(PathBuf::from) {
         Some(home) if home.is_absolute() => Ok(home.join(relative_components(tail))),
         _ => Err(refusal(
-            "home_unavailable",
+            ROOT_REFUSAL_HOME_UNAVAILABLE,
             format!("{ROOT_VARIABLE} starts with '~' but {home_variable} is not an absolute path."),
         )),
     }
 }
 
-/// The contract's root algorithm on explicit inputs; the Windows mirror of the Python resolver.
+/// The contract's root algorithm on explicit inputs, mirroring the Python resolver.
 ///
 /// `known_folder` replaces the environment base the Python resolver reads, because
 /// the native host asks the shell for `FOLDERID_LocalAppData` directly.
-pub(crate) fn resolve_root(
+fn anchored_root(
     mode: Mode,
-    lookup: &dyn Fn(&str) -> Option<String>,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
     checkout: Option<&Path>,
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
     let checkout_anchor = || {
-        checkout.map(Path::to_path_buf).ok_or_else(|| {
+        let anchor = checkout.map(Path::to_path_buf).ok_or_else(|| {
             refusal(
-                "checkout_unavailable",
+                ROOT_REFUSAL_CHECKOUT_UNAVAILABLE,
                 "A development storage root needs the source checkout that anchors it.".into(),
             )
-        })
+        })?;
+        checked_path_value("Checkout", anchor.as_os_str())?;
+        if !anchor.is_absolute() {
+            return Err(refusal(
+                ROOT_REFUSAL_NON_ABSOLUTE_PIN,
+                "The checkout anchor must be absolute".into(),
+            ));
+        }
+        Ok(anchor)
     };
     let precedence = match mode {
         Mode::Development => DEVELOPMENT_ROOT_PRECEDENCE,
         Mode::Installed => INSTALLED_ROOT_PRECEDENCE,
     };
-    if let Some((variable, raw)) = precedence
-        .iter()
-        .find_map(|name| nonblank(lookup, name).map(|value| (*name, value)))
-    {
+    let mut selected = None;
+    for name in precedence {
+        if let Some(value) = nonblank(lookup, name)? {
+            selected = Some((*name, value));
+            break;
+        }
+    }
+    if let Some((variable, raw)) = selected {
         let source = RootSource::Override { variable };
         let candidate = expand_home(&raw, lookup)?;
         if candidate.is_absolute() {
@@ -230,8 +368,18 @@ pub(crate) fn resolve_root(
         };
         if rule != "anchor_at_checkout" {
             return Err(refusal(
-                "relative_override_installed",
+                ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED,
                 format!("{ROOT_VARIABLE} must be an absolute directory when CADRUMO is installed."),
+            ));
+        }
+        if candidate.has_root()
+            || candidate
+                .components()
+                .any(|part| matches!(part, Component::Prefix(_)))
+        {
+            return Err(refusal(
+                ROOT_REFUSAL_NON_ABSOLUTE_PIN,
+                "A relative override cannot replace its checkout anchor".into(),
             ));
         }
         return Ok(ResolvedRoot {
@@ -245,16 +393,40 @@ pub(crate) fn resolve_root(
             source: RootSource::CheckoutDefault,
         });
     }
-    match known_folder {
-        Some(base) if base.is_absolute() => {
-            let subpath: PathBuf = windows_rule().candidates[0].subpath.iter().collect();
-            Ok(ResolvedRoot {
-                root: base.join(subpath).join(channel_directory(channel)),
-                source: RootSource::InstalledDefault,
-            })
+    #[cfg(unix)]
+    let selected = {
+        let mut selected = None;
+        for candidate in platform_rule().candidates {
+            if let Some(base) = nonblank(lookup, candidate.variable)?.map(PathBuf::from)
+                && base.is_absolute()
+            {
+                selected = Some((base, candidate));
+                break;
+            }
         }
+        selected
+    };
+    #[cfg(unix)]
+    let (base, subpath) = selected.map_or((None, PathBuf::new()), |(base, candidate)| {
+        (Some(base), candidate.subpath.iter().collect())
+    });
+    #[cfg(unix)]
+    let known_folder = {
+        let _ = known_folder;
+        base.as_deref()
+    };
+    #[cfg(windows)]
+    let subpath: PathBuf = platform_rule().candidates[0].subpath.iter().collect();
+    if let Some(base) = known_folder {
+        checked_path_value("Installed base", base.as_os_str())?;
+    }
+    match known_folder {
+        Some(base) if base.is_absolute() => Ok(ResolvedRoot {
+            root: base.join(subpath).join(channel_directory(channel)),
+            source: RootSource::InstalledDefault,
+        }),
         _ => Err(refusal(
-            "installed_base_unavailable",
+            ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE,
             format!(
                 "CADRUMO cannot locate the per-user local application data folder. \
                  Set {ROOT_VARIABLE} to an absolute directory."
@@ -263,6 +435,39 @@ pub(crate) fn resolve_root(
     }
 }
 
+pub(crate) fn resolve_root(
+    mode: Mode,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+    checkout: Option<&Path>,
+    known_folder: Option<&Path>,
+    channel: &str,
+) -> Result<ResolvedRoot, Refusal> {
+    let resolved = anchored_root(mode, lookup, checkout, known_folder, channel)?;
+    Ok(ResolvedRoot {
+        root: validated_absolute_path(&resolved.root)?,
+        source: resolved.source,
+    })
+}
+
+/// Replay the pure declaration independently of synthetic paths on the test host.
+/// Filesystem vectors exercise `resolve_root` with actual isolated fixtures.
+#[cfg(test)]
+pub(crate) fn resolve_root_vector(
+    mode: Mode,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+    checkout: Option<&Path>,
+    known_folder: Option<&Path>,
+    channel: &str,
+) -> Result<ResolvedRoot, Refusal> {
+    let resolved = anchored_root(mode, lookup, checkout, known_folder, channel)?;
+    absolute_path_input(&resolved.root)?;
+    Ok(ResolvedRoot {
+        root: normalized_absolute_components(&resolved.root),
+        source: resolved.source,
+    })
+}
+
+#[cfg(windows)]
 #[repr(C)]
 struct Guid {
     data1: u32,
@@ -271,12 +476,14 @@ struct Guid {
     data4: [u8; 8],
 }
 /// FOLDERID_LocalAppData, {F1B32785-6FBA-4FCF-9D55-7B8E7F157091}.
+#[cfg(windows)]
 const FOLDERID_LOCAL_APP_DATA: Guid = Guid {
     data1: 0xF1B3_2785,
     data2: 0x6FBA,
     data3: 0x4FCF,
     data4: [0x9D, 0x55, 0x7B, 0x8E, 0x7F, 0x15, 0x70, 0x91],
 };
+#[cfg(windows)]
 #[link(name = "shell32")]
 unsafe extern "system" {
     fn SHGetKnownFolderPath(
@@ -286,12 +493,14 @@ unsafe extern "system" {
         path: *mut *mut u16,
     ) -> i32;
 }
+#[cfg(windows)]
 #[link(name = "ole32")]
 unsafe extern "system" {
     fn CoTaskMemFree(memory: *mut c_void);
 }
 
 /// The current user's local application data folder from the shell, never the environment.
+#[cfg(windows)]
 pub(crate) fn local_app_data() -> Option<PathBuf> {
     let mut raw: *mut u16 = ptr::null_mut();
     let status =
@@ -310,21 +519,20 @@ pub(crate) fn local_app_data() -> Option<PathBuf> {
     folder
 }
 
-pub(crate) fn environment_value(name: &str) -> Option<String> {
-    env::var(name).ok()
-}
-
 /// Resolve this process's storage root for `evidence` from its environment and the shell.
 ///
 /// The runtime manager manages a root only when `source` is [`RootSource::InstalledDefault`].
 pub fn resolve_storage_root(evidence: &Evidence) -> Result<ResolvedRoot, Refusal> {
+    #[cfg(windows)]
     let known_folder = match evidence.mode {
         Mode::Installed => local_app_data(),
         Mode::Development => None,
     };
+    #[cfg(unix)]
+    let known_folder: Option<PathBuf> = None;
     resolve_root(
         evidence.mode,
-        &environment_value,
+        &|name| env::var_os(name),
         evidence.checkout.as_deref(),
         known_folder.as_deref(),
         BUILD_CHANNEL,
@@ -332,19 +540,49 @@ pub fn resolve_storage_root(evidence: &Evidence) -> Result<ResolvedRoot, Refusal
 }
 
 /// The temporary-files member beneath `root`, honouring an operator override in `lookup`.
-pub(crate) fn temporary_path(root: &Path, lookup: &dyn Fn(&str) -> Option<String>) -> PathBuf {
-    match nonblank(lookup, TEMPORARY_ENV).map(PathBuf::from) {
-        Some(path) if path.is_absolute() => path,
-        Some(path) => root.join(path),
-        None => root.join(relative_components(TEMPORARY_DEFAULT)),
+pub(crate) fn temporary_path(
+    root: &Path,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+) -> Result<PathBuf, Refusal> {
+    let explicit = nonblank(lookup, TEMPORARY_ENV)?;
+    let path = match &explicit {
+        Some(value) => expand_home(&value, lookup)?,
+        None => relative_components(TEMPORARY_DEFAULT),
+    };
+    if !path.is_absolute()
+        && (path.has_root()
+            || path
+                .components()
+                .any(|part| matches!(part, Component::Prefix(_))))
+    {
+        return Err(refusal(
+            ROOT_REFUSAL_NON_ABSOLUTE_PIN,
+            "A relative member cannot replace its root anchor".into(),
+        ));
     }
+    let path = validated_absolute_path(&if path.is_absolute() {
+        path
+    } else {
+        root.join(path)
+    })?;
+    if explicit.is_some() && !TEMPORARY_CREATE_EXPLICIT && !path.is_dir() {
+        return Err(refusal(
+            ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
+            "An explicit member must already exist".into(),
+        ));
+    }
+    Ok(path)
 }
 
 /// Whether the contract clears `name` from a child built with `profile`.
 ///
 /// `extra_allowed` names package-owned variables a native host keeps for itself.
 pub(crate) fn cleared(name: &str, profile: Profile, extra_allowed: &[&str]) -> bool {
-    let upper = name.to_ascii_uppercase();
+    let upper = if cfg!(windows) {
+        name.to_uppercase()
+    } else {
+        name.to_owned()
+    };
     let allowed = (profile == Profile::Operator && PRODUCT_ENV_ALLOWLIST.contains(&upper.as_str()))
         || extra_allowed.contains(&upper.as_str())
         || HOST_INHERITED_ENV.contains(&upper.as_str());
@@ -369,8 +607,17 @@ where
         !value.as_ref().is_empty()
             && HOST_INHERITED_ENV
                 .iter()
-                .any(|pin| name.as_ref().eq_ignore_ascii_case(pin))
+                .any(|pin| environment_name_matches(name.as_ref(), pin))
     })
+}
+
+fn environment_name_matches(name: &std::ffi::OsStr, expected: &str) -> bool {
+    if cfg!(windows) {
+        name.to_str()
+            .is_some_and(|name| name.to_uppercase() == expected)
+    } else {
+        name == expected
+    }
 }
 
 /// Build a child environment that inherits `root` instead of re-resolving it.
@@ -387,27 +634,45 @@ pub fn child_environment<I>(
 where
     I: IntoIterator<Item = (OsString, OsString)>,
 {
+    let root = crate::normalize_absolute_path(root)?;
     let mut environment: Vec<(OsString, OsString)> = ambient
         .into_iter()
+        .map(|(name, value)| {
+            #[cfg(windows)]
+            let name = name
+                .to_str()
+                .map(|name| OsString::from(name.to_uppercase()))
+                .unwrap_or_else(|| name.to_ascii_uppercase());
+            (name, value)
+        })
         .filter(|(name, _)| !cleared(&name.to_string_lossy(), profile, &[]))
+        .collect::<std::collections::BTreeMap<_, _>>()
+        .into_iter()
         .collect();
-    let lookup = |name: &str| {
+    let lookup_os = |name: &str| {
         environment
             .iter()
-            .find(|(key, _)| key.to_string_lossy().eq_ignore_ascii_case(name))
-            .map(|(_, value)| value.to_string_lossy().into_owned())
+            .find(|(key, _)| environment_name_matches(key, name))
+            .map(|(_, value)| value.as_os_str())
     };
-    let temporary = temporary_path(root, &lookup);
-    fs::create_dir_all(root)?;
-    fs::create_dir_all(&temporary)?;
+    for field in HOST_INHERITED_FIELDS {
+        if let Some(value) = lookup_os(field.name) {
+            validate_inherited_pin(field, value)?;
+        }
+    }
+    let lookup = |name: &str| lookup_os(name).map(std::ffi::OsStr::to_owned);
+    let temporary = temporary_path(&root, &lookup).map_err(std::io::Error::from)?;
+    let temporary = crate::normalize_absolute_path(&temporary)?;
+    crate::create_private_directory(&root)?;
+    crate::create_private_directory(&temporary)?;
     environment.retain(|(name, _)| {
         !PINNED_ENV
             .iter()
-            .any(|pinned| name.to_string_lossy().eq_ignore_ascii_case(pinned))
+            .any(|pinned| environment_name_matches(name, pinned))
     });
     for name in PINNED_ENV {
         let value = if *name == ROOT_VARIABLE {
-            root
+            root.as_path()
         } else {
             temporary.as_path()
         };
@@ -416,10 +681,11 @@ where
     Ok(environment)
 }
 
-#[cfg(test)]
+#[cfg(all(test, windows))]
 mod tests {
     use super::*;
     use crate::EXECUTABLE;
+    use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     struct Scratch(PathBuf);
@@ -486,22 +752,35 @@ mod tests {
         );
         for vector in windows {
             let lookup = |name: &str| {
+                if vector.invalid_environment.contains(&name) {
+                    return Some(crate::conformance_tests::invalid_unicode());
+                }
                 vector
                     .environment
                     .iter()
                     .find(|(key, _)| *key == name)
-                    .map(|(_, value)| (*value).to_owned())
+                    .map(|(_, value)| OsString::from(*value))
             };
             let mode = match vector.mode {
                 "development" => Mode::Development,
                 "installed" => Mode::Installed,
                 other => panic!("undeclared mode {other}"),
             };
-            let outcome = resolve_root(
+            let checkout = if vector.invalid_checkout {
+                Some(PathBuf::from(crate::conformance_tests::invalid_unicode()))
+            } else {
+                vector.checkout.map(PathBuf::from)
+            };
+            let known_folder = if vector.invalid_known_folder {
+                Some(PathBuf::from(crate::conformance_tests::invalid_unicode()))
+            } else {
+                vector.known_folder.map(PathBuf::from)
+            };
+            let outcome = resolve_root_vector(
                 mode,
                 &lookup,
-                vector.checkout.map(Path::new),
-                vector.known_folder.map(Path::new),
+                checkout.as_deref(),
+                known_folder.as_deref(),
                 vector.channel,
             );
             match (outcome, vector.expected_root, vector.refusal) {
@@ -539,7 +818,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(development.source, RootSource::CheckoutDefault);
-        let overridden = |name: &str| (name == ROOT_VARIABLE).then(|| r"D:\data".to_owned());
+        let overridden = |name: &str| (name == ROOT_VARIABLE).then(|| OsString::from(r"D:\data"));
         let explicit = resolve_root(
             Mode::Installed,
             &overridden,

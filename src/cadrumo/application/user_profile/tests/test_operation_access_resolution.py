@@ -57,7 +57,10 @@ def test_profile_owner_resolves_only_exact_registered_work(wrong_coordinate: str
     if wrong_coordinate == "profile":
         context = replace(context, profile_id=uuid4())
     elif wrong_coordinate in {"definition", "contract"}:
-        context = replace(context, contract=registry.lookup_public_contract(PROFILE_LOGOUT_OPERATION_DEFINITION_ID))
+        context = replace(
+            context,
+            contract=context.contract.model_copy(update={"definition_id": PROFILE_LOGOUT_OPERATION_DEFINITION_ID}),
+        )
         if wrong_coordinate == "definition":
             request = OperationRequest(
                 definition_id=PROFILE_LOGOUT_OPERATION_DEFINITION_ID,

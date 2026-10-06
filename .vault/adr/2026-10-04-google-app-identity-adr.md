@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:3785b749d11a3dbcd76caf98abb78509c9704f2bb845a04c29ef3d6c77663ba3'
+body_hash: 'sha256:3890c24aef6a304502638f37c9249f96bc141984c1331c587d65fa27da7e5ec8'
 related:
   - "[[2026-10-04-google-app-identity-research]]"
   - "[[2026-10-04-google-app-identity-reference]]"
@@ -16,6 +16,7 @@ related:
   - '[[2026-06-10-ledger-evidence-enforcement-adr]]'
   - '[[2026-08-26-cli-root-verb-homes-adr]]'
 ---
+
 # `google-app-identity` adr: `Publisher-owned Google client limited to application-created files` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -104,13 +105,15 @@ Binding commitments:
    `userinfo.email` and `drive.file`. No sensitive or restricted scope is
    requested by any Cadrumo credential source.
 3. **Client identity.** A publisher-owned Desktop client remains the only shipped client. Under the user's explicit 2026-10-06 instruction, its complete installed-client JSON is supplied through the secret-valued core setting `CADRUMO_GOOGLE_OAUTH_CLIENT_JSON`. Development uses ignored `env/.env` provisioning and CI uses a GitHub repository secret. Builds embed the validated configuration as installation data so the installed application needs neither a dotenv file nor inherited credentials. The client file and credential values are removed from source control and its affected history. No profile registration or user-facing client selector is introduced. The prior 2026-10-05 instruction to commit the client is superseded only in this commitment; publisher identity, scopes, token binding and built-in sign-in remain unchanged. Missing or malformed configuration retains the typed refusal.
-4. **Root folder.** Cadrumo creates its root folder and stores its ID per
-   profile. No command, setting or environment override accepts a Drive
-   folder or file reference from the user. The one exception is a workbook
-   ID passed to spreadsheet pull, calculate and verify, which is refused
-   unless the file carries Cadrumo's ownership marker, before any content is
-   read. This applies equally to the ciphertext mirror and the provider
-   probe, which share the root folder.
+4. **Root folder.** Cadrumo creates a marked root and stores its exact creation
+   identity per profile. No command, setting or environment override accepts a
+   Drive folder or file reference from the user. The former workbook-ID
+   exception for pull, calculate and verify is withdrawn by the authorized
+   2026-10-05 outbound-review amendment. Sheets, mirror and provider probes
+   share profile-bound current-containment admission; a marker alone is
+   insufficient. Bootstrap creates a fresh root without a My Drive name search;
+   recovery uses only a known local root receipt. The bounded metadata exception
+   and provider movement race are defined in 2026-10-05-google-outbound-review-adr.
 5. **Evidence acquisition.** Acquiring evidence bytes from Google Drive,
    Gmail or a URL through the Google adapter is withdrawn. Local evidence
    and invoice import are the supported intake. Stored attachment records
@@ -315,6 +318,15 @@ Reconsider if the live proof shows a required Sheets method refusing
 `drive.file`, or if users need Cadrumo to open a spreadsheet or folder they
 already own. Either reopens the choice between Google Picker and a sensitive
 scope and needs a new decision.
+
+## Amendment 2026-10-05 - outbound review
+
+The product owner's Session 01 instruction authorizes the scoped wording changes above, governed by 2026-10-05-google-outbound-review-adr. Earlier descriptions of then-current behavior remain historical evidence, not permission to retain retired routes. Other commitments remain in force. This amendment records architecture, not completed implementation or live acceptance.
+
+## Amendment 2026-10-05 - application parent layout
+
+The product owner explicitly requires My Drive/Cadrumo/Cadrumo {profile discriminator}/... . Commitment 4 now distinguishes the shared application parent from the profile content boundary, as specified in 2026-10-05-google-outbound-review-adr. Commitment 9 does not prohibit the newly authorized, identity-preserving relocation of a known current-client root with retained creation evidence: that operation changes placement, never adopts historical foreign-client state or rewrites creation history. No global/name discovery exception is inferred from the layout request; the earlier restriction remains until separately resolved. This is an authorized architecture adjustment, not a claim that the live folder has been moved.
+
 
 ## Amendment 2026-10-06 - credential provisioning outside Git
 

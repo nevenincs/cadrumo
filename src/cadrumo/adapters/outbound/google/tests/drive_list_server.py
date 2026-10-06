@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 from typing import override
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import httplib2
 from googleapiclient.discovery import build
@@ -26,6 +26,7 @@ def drive_files_list_endpoint(
     *,
     pages: Sequence[Mapping[str, object]],
     status: int = 200,
+    metadata: Mapping[str, Mapping[str, object]] | None = None,
 ) -> Generator[DriveFilesListEndpoint]:
     """Serve ``files.list`` responses (optionally paginated) through a real client resource.
 
@@ -39,6 +40,16 @@ def drive_files_list_endpoint(
     class DriveFilesListRequestHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             parsed = urlparse(self.path)
+            identifier = unquote(parsed.path.rsplit("/", maxsplit=1)[-1])
+            if metadata is not None and identifier != "files":
+                document = metadata.get(identifier)
+                body = json.dumps(document or {"error": {"code": 404, "message": "unknown fixture id"}}).encode()
+                self.send_response(200 if document is not None else 404)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
             requested_queries.append(parsed.query)
             body = json.dumps(remaining_pages.pop(0) if remaining_pages else {"files": []}).encode("utf-8")
             self.send_response(status)

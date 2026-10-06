@@ -16,9 +16,10 @@ related:
   - '[[2026-10-04-google-app-identity-adr]]'
 supersedes:
   - '2026-06-04-ledger-google-live-export-adr'
-modified: '2026-10-04'
-body_hash: 'sha256:d5a209ab256a2561842c0e3673069070dbf48dff7c623ab5e2bcf00ceacbfdbd'
+modified: '2026-10-05'
+body_hash: 'sha256:48606c4e0f0aacdb2b865773d09b570937f7e67d58191bf3828adb1f39c18873'
 ---
+
 # `google-optional-adapter-boundary` adr: `Google integration authority boundary and legacy-scope reconciliation` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -97,10 +98,11 @@ the constrained adapter role established here.
   `2026-10-04-google-app-identity-adr`. This ADR does not mandate a watched
   Drive inbox, automatic filename router, plaintext staging pipeline, or
   rejection-sidecar subsystem.
-- Calculation `pull` remains typed readback, and `compute` remains
-  non-persistent computation through the shared engine. Persisting pulled Sheet
-  input requires a separate ADR and delegation to the canonical calculation
-  writer.
+- Calculation pull, remote compute and public verify are retired by the
+  authorized 2026-10-05 outbound-review amendment. Remote business values do not
+  enter production calculations even transiently. Retained technical reads
+  require the closed purpose and managed-artifact admission contract in
+  2026-10-05-google-outbound-review-adr.
 - Ledger mutation remains Google-independent and uses the canonical ledger
   lifecycle.
 - This ADR neither approves nor rejects provider-neutral watched ingestion,
@@ -119,8 +121,8 @@ the constrained adapter role established here.
 
 This ADR reconciles the architecture corpus and Google plan to one boundary.
 Google may use the profile's OAuth Desktop sign-in, export ciphertext
-and typed projections, inspect remote integrity state, and return typed
-worksheet input. Domain
+and immutable review projections, and inspect narrowly admitted remote
+integrity state. Remote worksheet input is not a production input. Domain
 persistence must pass through the canonical service that owns that data.
 
 The following implemented behavior remains in scope:
@@ -128,8 +130,8 @@ The following implemented behavior remains in scope:
 - existing OAuth Desktop with secure client, token, and session storage;
 - provider composition;
 - ciphertext push plus remote manifest and object integrity reads;
-- calculation export, verification, typed pull, and non-persistent shared-engine
-  compute; and
+- outbound revision-based calculation and ledger review exports, with synthetic
+  developer acceptance verification kept outside public business routes; and
 - canonical `ledger update` for transaction correction.
 
 This ADR retires the following Google-owned mechanisms from architectural
@@ -159,7 +161,8 @@ outcomes through the current canonical owners:
 The current decisions for the remote manifest, sealed full-custody archive,
 evidence enforcement, workbook parity, binding vocabulary, and canonical ledger
 remain in force. Supersession of the older calculation records does not remove
-visual review, typed readback, or non-persistent compute.
+visual review. The 2026-10-05 amendment withdraws typed remote readback and
+non-persistent remote compute from the product contract.
 
 ## Rationale
 
@@ -192,3 +195,7 @@ the affected data and safety contract.
   full-custody archive transport, bulk correction, and worksheet adoption.
 - The immediate work is architecture-corpus and plan reconciliation. No
   production-code implementation follows from this ADR.
+
+## Amendment 2026-10-05 - outbound review
+
+The product owner's Session 01 instruction authorizes the scoped wording changes above, governed by 2026-10-05-google-outbound-review-adr. Earlier descriptions of then-current behavior remain historical evidence, not permission to retain retired routes. Other commitments remain in force. This amendment records architecture, not completed implementation or live acceptance.

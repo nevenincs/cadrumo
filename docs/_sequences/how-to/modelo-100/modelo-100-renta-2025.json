@@ -2017,7 +2017,9 @@
             "closes_on": "2026-06-30",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 90
+            "days_remaining": 90,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-06-30"
           },
           "detail_rows": [],
           "filed_at": null,

@@ -15,10 +15,6 @@ consumed in the body:
 * ``source_citation`` — a keyword-only parameter on
   ``dev.docs.terminology_handbook.curation.set_language_field`` kept as part of the public
   curation API signature.
-* ``cache_discovery`` — the ``googleapiclient.discovery.build`` keyword
-  contract on the ``_SheetsDiscoveryBuilder`` Protocol stub
-  (:mod:`cadrumo.application.storage.calc_sheets.parity_harness`). The name is
-  the google API client's keyword and is part of the structural type.
 * ``prop`` — the parameter of ``append`` on the ``_CustomDocumentProperties``
   Protocol stub (:mod:`cadrumo.adapters.outbound.workbook.calc_sheets_xlsx`).
   The stub body is ``...``; the parameter is part of the structural type.
@@ -46,11 +42,6 @@ def _reduce_ex(protocol: object) -> object:
 def _set_language_field(source_citation: object) -> object:
     """Mirror ``set_language_field`` keyword-only API parameter."""
     return source_citation
-
-
-def _sheets_discovery_build(cache_discovery: object) -> object:
-    """Mirror ``_SheetsDiscoveryBuilder.__call__`` keyword contract."""
-    return cache_discovery
 
 
 def _custom_document_properties_append(prop: object) -> object:

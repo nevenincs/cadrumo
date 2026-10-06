@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.country_code import CountryCodeAlpha2
+from ...domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ...domain.modelos.row_models import (
     M184Clave,
     M184ClaveDeclarado,
@@ -79,6 +80,38 @@ class _WireDetailRowMirror(BaseModel):
     """
 
     model_config = EDIT_WIRE_MODEL_CONFIG
+
+
+class Modelo156MonthlyContributionWireV1(BaseModel):
+    """Lossless monthly characters; domain validation owns their interpretation."""
+
+    model_config = EDIT_WIRE_MODEL_CONFIG
+
+    month: Annotated[int, Field(ge=1, le=12)]
+    status: Literal["S", "N"] | None = None
+    amount: _WireOptionalAmount = None
+
+
+class Modelo156AfiliadoRowWireV1(_WireDetailRowMirror):
+    """Wire mirror of the member and its complete, explicitly addressed calendar."""
+
+    row_type: Literal["afiliado"] = "afiliado"
+    nif: Annotated[str, Field(min_length=1, max_length=9)]
+    nombre: Annotated[str, Field(min_length=1, max_length=40)] | None = None
+    numero_afiliacion: Annotated[str, Field(pattern=r"^[0-9]{12}$")]
+    cotizaciones: Annotated[tuple[Modelo156MonthlyContributionWireV1, ...], Field(min_length=12, max_length=12)]
+
+    def to_row(self) -> Modelo156AfiliadoRow:
+        """Revalidate through the same typed source used by local input."""
+        return Modelo156AfiliadoRow(
+            nif=self.nif,
+            nombre=self.nombre,
+            numero_afiliacion=self.numero_afiliacion,
+            cotizaciones=tuple(
+                Modelo156MonthlyContribution(month=m.month, status=m.status, amount=_optional_decimal(m.amount))
+                for m in self.cotizaciones
+            ),
+        )
 
 
 class Modelo184MemberRowWireV1(_WireDetailRowMirror):
@@ -243,7 +276,8 @@ class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
 
 
 type ModeloDetailRowWireV1 = Annotated[
-    Modelo184MemberRowWireV1
+    Modelo156AfiliadoRowWireV1
+    | Modelo184MemberRowWireV1
     | Modelo232VinculadaRowWireV1
     | Modelo349OperadorRowWireV1
     | Modelo349RectificacionRowWireV1

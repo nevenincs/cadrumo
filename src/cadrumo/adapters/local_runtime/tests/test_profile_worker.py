@@ -165,8 +165,10 @@ def test_concurrent_profiles_never_retarget_and_disconnect_is_isolated(profiles)
         a.install(a_lease, a_buffer)
         b.install(b_lease, b_buffer)
         assert not any(a_buffer) and not any(b_buffer)
-        assert a.status().sessions == (a_lease.session_id,)
-        assert b.status().sessions == (b_lease.session_id,)
+        a_status, b_status = a.status(), b.status()
+        assert a_status.sessions == (a_lease.session_id,)
+        assert b_status.sessions == (b_lease.session_id,)
+        assert a_status.in_flight_operations == b_status.in_flight_operations == 0
         # A foreign profile's valid DEK cannot switch this process to B.
         with pytest.raises(AutomationCustodyError):
             a.install(b_lease, bytearray(second_key))

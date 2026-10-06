@@ -1,4 +1,4 @@
-"""Complete, exact source readings of M720's four signed monetary fields."""
+"""Complete, exact source readings of signed monetary fields."""
 
 from __future__ import annotations
 
@@ -52,17 +52,73 @@ _M720_COMPOSITES: Final[dict[int, tuple[str, str, int, int, int, str]]] = {
     ),
 }
 
+# M194 type 2: position 157 is blank/N; 158-169 is twelve magnitude
+# digits in euro cents (ten whole digits). The complete text includes the
+# origin-D accrued-coupon exception and page furniture. Its valuation prose
+# does not establish a general subtraction formula; this reading only admits
+# the explicitly stated signed representation.
+_SOURCE_READINGS: Final = {
+    "aeat-dr-720": ("720", "2013", _M720_SOURCE_SHA256, _M720_COMPOSITES),
+    "aeat-dr-194-2019": (
+        "194",
+        "2019",
+        "792cd3ab3f1e94ce7afd62a6fa37710253aec7b801e3097ad27741f90a657d5a",
+        {
+            641: (
+                "Tipo 2 - Registro De Perceptor",
+                "19",
+                157,
+                13,
+                10,
+                "106ba645250037c9302a08551ce816adb0df0855f5803a6b4a61c999512be78f",
+            )
+        },
+    ),
+    "aeat-dr-194-2023": (
+        "194",
+        "2023",
+        "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b",
+        {
+            604: (
+                "Tipo 2 - Registro De Perceptor",
+                "19",
+                157,
+                13,
+                10,
+                "2518107164cfb91cbd6f2c2a960860e5411a1af93b4101ab1c5fd359f00e92e9",
+            )
+        },
+    ),
+    "aeat-dr-194-2024": (
+        "194",
+        "2024",
+        "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651",
+        {
+            605: (
+                "Tipo 2 - Registro De Perceptor",
+                "19",
+                157,
+                13,
+                10,
+                "617b0552e1f625ae0b01fe6554cbaf1e51e3aac0a66cd8d11ad732973bdc470a",
+            )
+        },
+    ),
+}
+
 
 def source_stated_composite_anchor_keys_for(
     source: RecordDesignIntermediateSource,
 ) -> frozenset[tuple[str, int, str | None, str | None, str, int | None]]:
-    """Require all four amounts from the source even if a profile omits a rule."""
-    if str(source.source_ref) != "aeat-dr-720":
+    """Require every enrolled source amount even if a profile omits its rule."""
+    selected = _SOURCE_READINGS.get(str(source.source_ref))
+    if selected is None:
         return frozenset[tuple[str, int, str | None, str | None, str, int | None]]()
-    if source.design_epoch != "2013" or source.source_sha256 != _M720_SOURCE_SHA256:
+    _modelo, epoch, digest, readings = selected
+    if source.design_epoch != epoch or source.source_sha256 != digest:
         raise RegistryValidationError("signed monetary composite source reading is unreviewed or stale")
     keys: set[tuple[str, int, str | None, str | None, str, int | None]] = set()
-    for row, reading in _M720_COMPOSITES.items():
+    for row, reading in readings.items():
         sheet, ordinal, _offset, _length, _digits, _digest = reading
         keys.add((sheet, row, None, ordinal, sheet, None))
     return frozenset(keys)
@@ -77,15 +133,13 @@ def source_stated_composite_integer_digits_for(
     future PDF/parser change requires renewed review rather than an inferred
     reading; unrelated designs retain the canonical complete prose grammar.
     """
-    if str(identity.source_ref) != "aeat-dr-720":
+    selected = _SOURCE_READINGS.get(str(identity.source_ref))
+    if selected is None:
         return None
-    if (
-        str(identity.modelo) != "720"
-        or identity.design_epoch != "2013"
-        or identity.source_sha256 != _M720_SOURCE_SHA256
-    ):
+    modelo, epoch, digest, readings = selected
+    if str(identity.modelo) != modelo or identity.design_epoch != epoch or identity.source_sha256 != digest:
         raise RegistryValidationError("signed monetary composite source reading is unreviewed or stale")
-    reading = _M720_COMPOSITES.get(field.source_row)
+    reading = readings.get(field.source_row)
     if reading is None:
         return None
     sheet, ordinal, offset, length, whole_digits, text_digest = reading

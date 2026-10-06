@@ -550,6 +550,7 @@ desktop:
     show_all: Mostrar todo
     show_fewer: Mostrar menos
     signed_out: Inicia sesión para ver tu calendario de presentaciones.
+    standing: Obligaciones por estado
     state:
       due: Pendiente
       filed: Presentado
@@ -3298,6 +3299,7 @@ tui:
     progress: Iniciando sesión…
     reference_invalid: Introduce un UUID válido de referencia de credencial.
     refused: Se ha rechazado el inicio de sesión.
+    stay_signed_in: Mantén la sesión iniciada
     submit: Iniciar sesión
     title: Iniciar sesión en un perfil
   search:

@@ -16,6 +16,7 @@ from ..operations.registry import OperationSchemaBindingV1
 from .google_configuration_operation_refusal import GoogleConfigurationRefusalProjection
 
 GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID = "config.google.folder.view"
+GOOGLE_FOLDER_ORGANIZE_OPERATION_DEFINITION_ID = "config.google.folder.organize"
 GOOGLE_LOGIN_OPERATION_DEFINITION_ID = "config.google.login"
 GOOGLE_LOGOUT_OPERATION_DEFINITION_ID = "config.google.logout"
 GOOGLE_PROBE_OPERATION_DEFINITION_ID = "config.google.probe"
@@ -39,6 +40,10 @@ class GoogleFolderViewRequest(GoogleProfileRequest):
     """Read the root folder created for the profile."""
 
 
+class GoogleFolderOrganizeRequest(GoogleProfileRequest):
+    """Place the exact recorded profile folder beneath Cadrumo without changing its ID."""
+
+
 class GoogleLoginRequest(GoogleProfileRequest):
     """Sign in through the browser consent flow and create the profile's root folder."""
 
@@ -58,7 +63,12 @@ class GoogleStatusRequest(GoogleProfileRequest):
 
 
 type GoogleConfigurationRequest = (
-    GoogleFolderViewRequest | GoogleLoginRequest | GoogleLogoutRequest | GoogleProbeRequest | GoogleStatusRequest
+    GoogleFolderViewRequest
+    | GoogleFolderOrganizeRequest
+    | GoogleLoginRequest
+    | GoogleLogoutRequest
+    | GoogleProbeRequest
+    | GoogleStatusRequest
 )
 
 
@@ -144,6 +154,7 @@ class GoogleConfigurationOutcome(BaseModel):
 
 
 GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]]] = {
+    GOOGLE_FOLDER_ORGANIZE_OPERATION_DEFINITION_ID: (GoogleFolderOrganizeRequest, GoogleFolderViewProjection),
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: (GoogleFolderViewRequest, GoogleFolderViewProjection),
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID: (GoogleLoginRequest, GoogleLoginProjection),
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID: (GoogleLogoutRequest, GoogleLogoutProjection),
@@ -151,6 +162,7 @@ GOOGLE_CONFIGURATION_CONTRACTS: dict[str, tuple[type[BaseModel], type[BaseModel]
     GOOGLE_STATUS_OPERATION_DEFINITION_ID: (GoogleStatusRequest, GoogleStatusProjection),
 }
 GOOGLE_CONFIGURATION_REQUEST_TYPES = (
+    GoogleFolderOrganizeRequest,
     GoogleFolderViewRequest,
     GoogleLoginRequest,
     GoogleLogoutRequest,

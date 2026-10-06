@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import dataclass, field
 from threading import RLock, Thread
@@ -10,6 +11,7 @@ from uuid import UUID
 
 from ...adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from ...application.runtime.contracts import (
+    RuntimeExitReason,
     RuntimeShutdownIncompleteError,
 )
 from ...application.runtime.profile_access import (
@@ -17,6 +19,8 @@ from ...application.runtime.profile_access import (
 )
 from ...application.runtime.profile_worker import ProfileWorkerDrained
 from .profile_host import RuntimeProfileHost
+from .shutdown import RuntimeStop
+from .terminated_operations import settle_terminated_worker_operations
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -33,6 +37,8 @@ class ProfileDrainRecord:
     containment: Thread | None = None
     receipt: ProfileWorkerDrained | None = None
     contained: bool = False
+    settlement: Thread | None = None
+    parent_settled: bool = False
     guard: RLock = field(default_factory=RLock, repr=False)
 
 
@@ -88,10 +94,13 @@ class ProfileConnectionDrainMixin:
             return self._drain_result
         records = self._snapshot_drain_records(deadline=deadline)
         self._enrollments.close()
-        approval_failures = self._prepare_drain_requests(records, deadline=deadline)
+        session_end = isinstance(self.stop, RuntimeStop) and self.stop.reason is RuntimeExitReason.SESSION_END_SETTLE
+        approval_failures = self._prepare_drain_requests(records, deadline=deadline, session_end=session_end)
         self._join_drain_requests(records, deadline=deadline)
         self._start_needed_containment(records, deadline=deadline)
         self._join_drain_containment(records, deadline=deadline)
+        if session_end:
+            self._settle_terminated_operations(records, deadline=deadline)
         result = self._collect_drain_result(records, approval_failures, deadline=deadline)
         if not result.uncontained and not result.unsettled:
             self._commit_drain_result(result, deadline=deadline)
@@ -118,6 +127,7 @@ class ProfileConnectionDrainMixin:
         records: tuple[tuple[UUID, ProfileDrainRecord], ...],
         *,
         deadline: float,
+        session_end: bool = False,
     ) -> set[UUID]:
         approval_failures: set[UUID] = set()
         for profile_id, record in records:
@@ -130,7 +140,7 @@ class ProfileConnectionDrainMixin:
             if not record.begun:
                 record.worker = record.host.owner.begin_drain()
                 record.begun = True
-            if record.worker is not None and record.request is None:
+            if not session_end and record.worker is not None and record.request is None:
                 self._start_drain_request(record, deadline=deadline)
             # A prior terminal failed containment may have left its request
             # blocked. Retry containment before joining that original request.
@@ -144,6 +154,49 @@ class ProfileConnectionDrainMixin:
                 if not contained:
                     self._start_drain_containment(record, deadline=deadline)
         return approval_failures
+
+    def _settle_terminated_operations(
+        self: RuntimeProfileConnections,
+        records: tuple[tuple[UUID, ProfileDrainRecord], ...],
+        *,
+        deadline: float,
+    ) -> None:
+        for _, record in records:
+            if not record.contained or record.worker is None or record.parent_settled:
+                continue
+            if record.settlement is None or not record.settlement.is_alive():
+                self._start_parent_settlement(record, deadline=deadline)
+        for _, record in records:
+            if record.settlement is not None and record.settlement.ident is not None:
+                record.settlement.join(timeout=max(0.0, deadline - time.monotonic()))
+
+    def _start_parent_settlement(
+        self: RuntimeProfileConnections, record: ProfileDrainRecord, *, deadline: float
+    ) -> None:
+        worker, registry = record.worker, self._registry
+        if worker is None:
+            return
+
+        def settle() -> None:
+            try:
+                if registry is None:
+                    raise RuntimeShutdownIncompleteError()
+                asyncio.run(
+                    settle_terminated_worker_operations(
+                        root=self.root,
+                        identity=worker.identity,
+                        registry=registry,
+                        deadline=deadline,
+                    )
+                )
+            except BaseException:
+                # Keep the original attempt and worker until settlement succeeds.
+                return
+            with record.guard:
+                record.parent_settled = True
+
+        record.settlement = Thread(target=settle, name="profile-worker-parent-settlement", daemon=True)
+        record.settlement.start()
 
     @staticmethod
     def _join_drain_requests(
@@ -195,6 +248,8 @@ class ProfileConnectionDrainMixin:
             if record.worker is not None and not contained:
                 uncontained.append(profile_id)
             running = self._drain_threads_running(record)
+            if record.settlement is not None and not record.parent_settled:
+                unsettled.append(profile_id)
             if running:
                 unsettled.append(profile_id)
             # A pre-fence launch may own a native scope without a published
@@ -211,7 +266,7 @@ class ProfileConnectionDrainMixin:
     def _drain_threads_running(record: ProfileDrainRecord) -> bool:
         return any(
             thread is not None and (thread.ident is None or thread.is_alive())
-            for thread in (record.request, record.containment)
+            for thread in (record.request, record.containment, record.settlement)
         )
 
     @staticmethod
@@ -252,6 +307,9 @@ class ProfileConnectionDrainMixin:
             ),
             uncontained=tuple(sorted(set(uncontained))),
             unsettled=tuple(sorted(set(unsettled))),
+            parent_settled_profiles=tuple(
+                sorted(profile_id for profile_id, record in records if record.parent_settled)
+            ),
         )
 
     def _commit_drain_result(

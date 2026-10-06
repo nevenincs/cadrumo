@@ -14,11 +14,19 @@ from .identity import identity
 from .layout import backend, distribution_target, load_layout
 
 
-def generate(destination: Path, number: int, date: str, tools: Path, channel: str = "stable") -> None:
+def generate(
+    destination: Path, number: int, date: str, tools: Path, channel: str = "stable", *, target: str | None = None
+) -> None:
     """Project identity, the existing favicon, and package filenames into resources."""
     version = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     python = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
-    layout = load_layout()
+    configured_identity = destination / "identity.json"
+    if target is None and configured_identity.is_file():
+        configured_target = json.loads(configured_identity.read_text(encoding="utf-8"))["target"]
+        if not isinstance(configured_target, str):
+            raise ValueError("Configured target must be a string")
+        target = configured_target
+    layout = load_layout(target)
     product = identity(distribution_target(layout), channel)
     destination.mkdir(parents=True, exist_ok=True)
     metadata = {
@@ -54,5 +62,6 @@ if __name__ == "__main__":
     parser.add_argument("--date", required=True)
     parser.add_argument("--tools", type=Path, required=True)
     parser.add_argument("--channel", choices=("stable", "preview"), default="stable")
+    parser.add_argument("--target")
     args = parser.parse_args()
-    generate(args.destination, args.number, args.date, args.tools, args.channel)
+    generate(args.destination, args.number, args.date, args.tools, args.channel, target=args.target)

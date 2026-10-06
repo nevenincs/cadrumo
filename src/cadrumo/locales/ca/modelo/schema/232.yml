@@ -445,6 +445,53 @@ modelo:
           i d'operacions i situacions relacionades amb països o territoris qualificats
           com a paradisos fiscals.
         title: Operacions vinculades i paradisos fiscals (informativa anual)
+      form:
+        authored:
+          acquisition: Valor d’adquisició
+          amendment: Declaració complementària o substitutiva
+          amount: Import de l’operació
+          amount_ex_vat: Import sense IVA (€)
+          country: Clau de país o territori
+          description: Descripció de l’operació
+          direction: 'I: ingrés · P: pagament'
+          fjo: 'Tipus de persona: F física · J jurídica · O altra'
+          given: Nom
+          haven: Operacions amb paradisos fiscals
+          identity: Identificació
+          income_before_reduction: Renda abans de la reducció, sense IVA (€)
+          intangibles: Reducció de rendes d’actius intangibles
+          issuer: Entitat participada o emissora
+          kind: Tipus de valor
+          link: Tipus de vinculació
+          marker: Tipus de declaració complementària o substitutiva
+          method: Mètode de valoració
+          name: Cognoms o raó social
+          nif: NIF
+          operation: Tipus d’operació
+          page1: Operacions vinculades
+          page2: Operacions i tinença de valors en paradisos fiscals
+          party: Cognoms i nom / Raó social
+          percentage: Percentatge de participació
+          period: Meritació
+          period_end: Fi del període declarat
+          period_start: Inici del període declarat
+          province: Codi de província o país
+          receipt: Justificant de la declaració anterior
+          related: Operacions amb persones o entitats vinculades
+          resident: Persona o entitat resident
+          row1: '1'
+          row10: '10'
+          row11: '11'
+          row12: '12'
+          row2: '2'
+          row3: '3'
+          row4: '4'
+          row5: '5'
+          row6: '6'
+          row7: '7'
+          row8: '8'
+          row9: '9'
+          securities: Tinença de valors en paradisos fiscals
       revision:
         2016-2017:
           casilla:

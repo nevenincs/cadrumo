@@ -156,23 +156,27 @@ modelo:
           irpf-pf-modulos-2-unidades:
             label: '2. modul (Nem alkalmazott személyzet): egységek száma'
           irpf-pf-modulos-3-unidades:
-            label: '3. modul (tevékenységspecifikus egység: alapterület, megtett távolság
-              vagy raksúly): egységek száma'
+            label: '3. modul: tevékenység szerinti egységek (terület, távolság vagy
+              terhelés)'
           irpf-pf-modulos-4-unidades:
-            label: '4. modul (tevékenységspecifikus egység: villamosenergia- vagy
-              egyéb energiafogyasztás): egységek száma'
+            label: '4. modul: tevékenység szerinti egységek (áramfogyasztás vagy más
+              egység)'
           irpf-pf-modulos-5-unidades:
-            label: '5. modul (tevékenységspecifikus egység, pl. a független helyiség
-              fennmaradó alapterülete vagy asztalok): egységek száma'
+            label: '5. modul: tevékenység szerinti egységek (önálló üzlethelyiség
+              területe vagy asztalok)'
           irpf-pf-modulos-6-unidades:
-            label: '6. modul (tevékenységspecifikus egység, pl. a nem független helyiség
-              fennmaradó alapterülete vagy A típusú gépek): egységek száma'
+            label: '6. modul: tevékenység szerinti egységek (nem önálló üzlethelyiség
+              területe vagy A típusú gépek)'
           irpf-pf-modulos-7-unidades:
-            label: '7. modul (tevékenységspecifikus egység, pl. a kemence felülete
-              vagy B típusú gépek): egységek száma'
+            label: '7. modul: tevékenység szerinti egységek (kemence területe vagy
+              B típusú gépek)'
           irpf-pf-modulos-diferencia:
             label: Különbözet
           irpf-pf-modulos-epigrafe-iae:
+            help: A 659.4 és 691.9 tételszám két különböző tevékenységet foglal egy
+              kód alá. Használd az „a” vagy „b” utótagot (például „659.4a” vagy „691.9b”)
+              a tevékenységnek megfelelően. A megfelelő lehetőség kiválasztásához
+              nézd meg a tevékenység együtthatóit.
             label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
               A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet ugyanazon
               kód alatt csoportosítanak, esetén használja az "a" vagy "b" utótagot
@@ -227,6 +231,22 @@ modelo:
         official_name: Modelo 131. IRPF. Objektív megállapítás alá tartozó vállalkozók
           és szakemberek. Részletfizetés.
         title: IRPF részletfizetés, objektív megállapítás
+      form:
+        context:
+          apellidos: Vezetéknév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          periodo: Időszak
+        section:
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          identificacion:
+            heading: Bevalló (1)
+          ingreso:
+            heading: Befizetés (4)
       revision:
         2019-2023:
           casilla:

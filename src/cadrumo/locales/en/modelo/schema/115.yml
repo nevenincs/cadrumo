@@ -10,9 +10,29 @@ modelo:
           letting or subletting of urban property.
         title: IRPF withholdings on urban property letting
       form:
+        context:
+          apellidos: Surname or registered business name
+          declaracion-complementaria: Supplementary return
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous return receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
         page:
           dr-11501:
-            heading: Page 1 · Withholdings on urban property rentals
+            heading: Withholding on urban property rentals
+        section:
+          complementaria:
+            heading: Supplementary return (4)
+          devengo:
+            heading: Tax period (2)
+          identificacion:
+            heading: Identification (1)
+          ingreso:
+            heading: Payment (5)
+          liquidacion:
+            heading: Tax calculation (3)
       revision:
         2019-y-siguientes:
           casilla:

@@ -279,6 +279,7 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
                     identity=context.custody.identity,
                     request_id=request.request_id,
                     sessions=context.custody.live_sessions(),
+                    in_flight_operations=context.operations.in_flight_operation_count(),
                 )
                 write_document(context.channel, result, deadline=time.monotonic() + 5)
         except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
@@ -290,6 +291,7 @@ async def _serve_control_requests(context: _WorkerControl) -> None:
                     identity=context.custody.identity,
                     request_id=request.request_id,
                     reason=AutomationCustodyCode.INVALID if isinstance(refusal, ValidationError) else refusal.reason,
+                    sign_in=refusal.sign_in if isinstance(refusal, ProfileAccessRefusedError) else None,
                 ),
                 deadline=time.monotonic() + 5,
             )

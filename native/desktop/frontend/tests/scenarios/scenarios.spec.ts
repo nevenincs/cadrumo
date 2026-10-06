@@ -2613,6 +2613,10 @@ test("the calendar says what its marks are, and has a way back to where it stand
   // simply due has none.
   const counts = page.locator(".calendar-standing [data-slot=badge]");
   await expect(counts).toHaveCount(4);
+  // Read aloud, the counts say what they are counts of.
+  await expect(page.locator(".calendar-standing")).toHaveAccessibleName(
+    label("desktop.calendar.standing"),
+  );
   expect(
     await counts.evaluateAll((badges) =>
       badges.map((badge) => badge.querySelector("[data-slot=icon]") !== null),

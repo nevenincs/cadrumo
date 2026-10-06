@@ -1681,6 +1681,10 @@ application:
         a benyújtáshoz.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      selected_option_requires_nonzero: A kiválasztott lehetőséghez ebben a mezőben
+        nullától eltérő érték szükséges.
+      selected_option_requires_zero: A kiválasztott lehetőséghez ebben a mezőben kifejezetten
+        nullát kell megadni.
       suffered_retencion_capital_mobiliario_uncredited: Ez a bevallás megtakarításból
         származó tőkejövedelmet (rendimientos del capital mobiliario del ahorro) tartalmaz,
         de nem szerepel benne levont forrásadó (retención). Add meg az összeget a
@@ -1933,6 +1937,11 @@ application:
           guide: Útmutató - védett
           provenance: Eredet / audit trail - védett
           tariffs: Tarifák / aktív paraméterek - védett
+      form:
+        communication_caption: Adatlap · az adatokat a forráslapokon módosíthatod
+        communication_guide: Módosítsd az adatokat az Entradas lapon. A Modelo az
+          adatközlést mutatja; adóelőleget nem számít.
+        reported_data_caption: Bevallott adatok · szerkeszd a bemeneteket a forráslapokon
       layout:
         errors:
           undeclared_reference: A táblázatelrendezés olyan elemre hivatkozik, amelyet
@@ -1957,6 +1966,151 @@ application:
           invalid_column_letters: A táblázatrekord oszlopbetűi érvénytelenek.
           range_malformed: A táblázattartomány határai érvénytelenek.
           tariff_shape_invalid: A tarifa táblázat alakja érvénytelen.
+      review:
+        labels:
+          amount: Összeg (numerikus megjelenítés)
+          amount_id: Az eredmény azonosítója
+          art_104_tres_exclusion: A 104.Tres cikk szerinti kizárás
+          attachments: Mellékletek azonosítói
+          attribution_notice: Csak a rögzített hozzárendelés köti a forrásokat a mentett
+            eredményekhez. A sorok közelsége nem igazol hozzájárulást.
+          authority: A szabályforrás generációja
+          availability: Bizonyítékválasztás és elérhetőség
+          baseline_notice: Mentett helyi adatok. Ez a másolat áttekintésre szolgál;
+            nem igazol bevallásbenyújtást vagy ellenőrzést.
+          booked_date: Könyvelési dátum
+          business_pct: Rögzített üzleti hányad
+          byte_length: Eredeti méret bájtban
+          calculation_revision: A számítás verziója
+          casilla: Bevallási mező
+          category_id: Kategóriaazonosító
+          classification: Üzleti besorolás
+          contribution: Hozzájárulás azonosítója
+          contribution_count: Rögzített hozzájárulások száma
+          counterparty: Partner
+          counterparty_country: A partner országa
+          currency: Pénznem
+          deduction_fact_kind: Levonási adat típusa
+          description: Rögzített leírás
+          detail: Rögzített hozzárendelési részlet
+          digest: Rögzített lenyomat
+          direction: Rögzített pénzmozgási irány
+          disposition: Rögzített bizonyítékválasztási kód
+          document_links: Dokumentumkapcsolatok azonosítói
+          eur_value: EUR-érték (numerikus megjelenítés)
+          evidence: Bizonyítékjegyzék
+          evidence_count: Bizonyítékjegyzék tételeinek száma
+          evidence_excluded: Kizárva a fájlválasztásból
+          evidence_id: Bizonyítékazonosító
+          evidence_included: Kiválasztva a külön fájlcsomaghoz
+          evidence_missing: Hiányzó korábbi fájl
+          evidence_scope: A bizonyítékok köre
+          evidence_unavailable: Nem elérhető korábbi fájl
+          exact_amount: Pontos összeg (szöveg)
+          exact_business_pct: Pontos üzleti hányad (szöveg)
+          exact_decimal_notice: A numerikus cellák megjelenítési értékek. A pontos
+            tizedes szöveg megőrzi a mentett értéket és tizedeshelyeit; itt nem történik
+            kerekítés vagy újraszámítás.
+          exact_eur_value: Pontos EUR-érték (szöveg)
+          exact_fx_rate: Pontos árfolyam (szöveg)
+          exact_iva_amount: Pontos IVA-összeg (szöveg)
+          exact_iva_rate: Pontos IVA-kulcs (szöveg)
+          exact_m210_applicable_rate: A Modelo 210 pontos adókulcsa (szöveg)
+          exact_m210_gross_income_amount: A Modelo 210 pontos bruttó jövedelme (szöveg)
+          exact_recargo_amount: Pontos recargo-összeg (szöveg)
+          exact_taxable_base: Pontos adóalap (szöveg)
+          exact_value: Pontos tizedes érték (szöveg)
+          exported_at: Az exportálás időpontja
+          external_notes_notice: Ide írd az észrevételeidet és a forgatókönyveidet.
+            A Cadrumo soha nem importálja a módosításaidat. A mentett helyi adatok
+            elkülönülnek.
+          field: Mező
+          finding: Észrevétel
+          finding_count: Észrevételek száma
+          formula: Rögzített képlethivatkozás
+          fx_rate: Rögzített árfolyam
+          index_only_notice: Ez a jegyzék nem tartalmaz eredeti fájlokat. A kiválasztott
+            fájlokhoz külön csomag szükséges. A hiányzó korábbi fájlok továbbra is
+            hiányoznak.
+          input_classification: Bemeneti besorolás
+          invoice: Kapcsolt számla azonosítója
+          irpf_category: Rögzített IRPF-kategória
+          iva_amount: IVA-összeg (numerikus megjelenítés)
+          iva_category: Rögzített IVA-kategória
+          iva_rate: Rögzített IVA-kulcs
+          kind: Rögzített forrástípus-kód
+          ledger: Rögzített főkönyv
+          ledger_notice: Rögzített főkönyvi sorok. Az összegek nagyságértékek; az
+            irány külön szerepel. A számként megjelenített érték mellett pontos tizedes
+            szöveg található. A további oszlopok a rögzített adózási adatokat őrzik.
+          ledger_row_count: Rögzített főkönyvi sorok száma
+          ledger_scope_notice: Kifejezetten kiválasztott főkönyvi pillanatkép. Nem
+            jelenti azt, hogy a sorok számításhoz járulnak hozzá.
+          ledger_snapshot: Főkönyvi pillanatkép
+          legal_refs: Jogszabályi hivatkozások
+          lifecycle_state: Rögzített életciklusállapot
+          m210_applicable_rate: A Modelo 210 alkalmazandó adókulcsa
+          m210_asset_or_right_id: A Modelo 210 vagyontárgyának vagy jogának azonosítója
+          m210_gross_income_amount: A Modelo 210 bruttó jövedelme
+          m210_official_tipo_renta_code: A Modelo 210 jövedelemtípus-kódja
+          m210_payer_id: A Modelo 210 kifizetőjének azonosítója
+          m210_payer_mode: A Modelo 210 kifizetői módja
+          media_type: Fájltípus
+          missing_data: Hiányzó adatok
+          modelo: Bevallási nyomtatvány
+          no_captured_rows: Ez a pillanatkép nem tartalmaz sorokat ehhez a szakaszhoz.
+          no_inventory_reference: Nincs rögzített jegyzékhivatkozás
+          not_captured: Nincs rögzítve
+          not_captured_notice: A nincs rögzítve azt jelenti, hogy a kiválasztott pillanatképben
+            nincs érték az adott adathoz. Ez nem jelent nullát vagy alkalmazhatatlanságot.
+          not_ledger_source: A forrás nem főkönyvi sor
+          numeric_notice: Numerikus megjelenítés
+          overview: Az áttekintés összefoglalója
+          period: Év és időszak
+          prorrata_reference: Prorrata-hivatkozás
+          prorrata_sector_id: Prorrata-ágazat azonosítója
+          publication: A közzététel azonosítója
+          purchase_invoice_evidence: Beszerzési számla bizonyítékának azonosítója
+          reason: Rögzített elérhetőségi indok
+          recargo_amount: Recargo de equivalencia összege
+          reference: Mentett adatok hivatkozása / cellakoordináta
+          registry_digest: A szabálynyilvántartás lenyomata
+          registry_revision: A szabálynyilvántartás verziója
+          result_count: Mentett eredmények száma
+          results: Mentett eredmények
+          review: Áttekintési jegyzeteid
+          review_date: Áttekintés dátuma
+          review_quality: Az áttekintés állapota
+          review_status: Az áttekintésed állapota
+          reviewer: Áttekintő
+          rounding: Rögzített kerekítési szabály
+          row_id: Sorkoordináta
+          scenario: A forgatókönyved
+          scope: A kiválasztás köre
+          snapshot: A pillanatkép lenyomata
+          source_id: Forrásazonosító
+          source_jurisdiction: Forrás joghatósága
+          source_kind: Forrástípus
+          source_kind_adjustment: Korrekció
+          source_kind_invoice: Számla
+          source_kind_ledger_row: Főkönyvi sor
+          source_kind_manual_input: Kézi bevitel
+          source_kind_unavailable: Nem elérhető korábbi forrás
+          source_refs: Forráshivatkozások
+          source_revision: Forrásverzió
+          sources: Forráshoz rendelés
+          status: Rögzített állapotkód
+          status_incomplete: Hiányos
+          status_provisional: Előzetes
+          status_verified: Ellenőrzött helyi adatok
+          taxable_base: Adóalap (numerikus megjelenítés)
+          transaction: A tétel azonosítója
+          unattributed: Nincs rögzített számítási hozzárendelés
+          unit: Rögzített mértékegység
+          usage_ratio_id: Használati arány azonosítója
+          value: Mentett érték / numerikus megjelenítés
+          value_date: Értéknap
+          work_unit: Munkaegység
       translator:
         errors:
           translation_failed: A nyomtatványdefiníciókban szereplő képlet nem fordítható

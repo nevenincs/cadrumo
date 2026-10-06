@@ -11,7 +11,6 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
-from ...google.tests.drive_list_server import drive_files_list_endpoint
 from .. import _google_drive as drive_module
 from .. import _google_drive_metadata as drive_metadata_module
 from .._google_drive import GoogleDriveProvider
@@ -31,6 +30,7 @@ from ..errors import (
     OutboundStorageQuotaError,
     OutboundStorageUnavailableError,
 )
+from .managed_drive_fixture import current_drive_receipts, drive_files_list_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -443,7 +443,10 @@ def _assert_terminal_contract(
 
 def _provider() -> GoogleDriveProvider:
     return GoogleDriveProvider(
-        credentials=unused_google_credentials(), root_folder_id="drive-root", vault_folder_name="cadrumo-vault"
+        credentials=unused_google_credentials(),
+        root_folder_id="drive-root",
+        vault_folder_name="cadrumo-vault",
+        receipts=current_drive_receipts(),
     )
 
 
@@ -574,12 +577,12 @@ def test_drive_folder_without_the_marker_is_refused_with_an_exact_operator_decis
         with pytest.raises(OutboundStorageConflictError) as raised:
             provider._resolve_vault_folder()
 
-    _assert_terminal_contract(
-        raised.value,
-        DriveStoragePreconditionCondition.OWNERSHIP_ALIGNED,
-        NoRecoveryOutcome.OPERATOR_DECISION,
-        {"ownership_aligned": False},
-    )
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "google.managed_artifact.admitted"
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.SAFETY
+    assert raised.value.context is not None
+    assert raised.value.context["reason"] == "ownership_identity_mismatch"
 
 
 @pytest.mark.parametrize(

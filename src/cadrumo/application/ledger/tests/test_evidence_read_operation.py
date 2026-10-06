@@ -7,13 +7,14 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ....application.ledger.evidence import MediaKind, PurchaseInvoiceEvidence
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from ....application.ledger.evidence_ports import LedgerEvidencePorts
 from ....application.ledger.evidence_read_operation import (
     LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE,
     LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
     LedgerEvidenceListExecutionResult,
     LedgerEvidenceListProjection,
@@ -21,7 +22,9 @@ from ....application.ledger.evidence_read_operation import (
     LedgerEvidenceRecordProjection,
     LedgerEvidenceViewExecutionResult,
     LedgerEvidenceViewProjection,
+    LedgerEvidenceViewRefusal,
     LedgerEvidenceViewRequest,
+    LedgerEvidenceViewSuccess,
     _project_list_result,
     _project_view_result,
     build_ledger_evidence_list_definition,
@@ -255,7 +258,7 @@ def test_list_terminal_projector_binds_definition_subject_and_success_shape() ->
 def test_view_terminal_projector_binds_definition_subject_and_success_shape() -> None:
     projection = LedgerEvidenceViewProjection(
         profile_id=_PROFILE,
-        record=LedgerEvidenceRecordProjection.from_record(_record()),
+        outcome=LedgerEvidenceViewSuccess(record=LedgerEvidenceRecordProjection.from_record(_record())),
     )
     execution_result = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
     receipt = _receipt(definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID)
@@ -278,3 +281,92 @@ def test_missing_evidence_has_a_registered_refusal_error() -> None:
     code = get_registered_error_code(PurchaseInvoiceEvidenceNotFoundError)
 
     assert code.category is ErrorCategory.REFUSED
+    assert code.code == LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE
+
+
+def test_view_declares_only_missing_reference_detail_under_version_two() -> None:
+    list_definition = build_ledger_evidence_list_definition(_unused_factory)
+    view_definition = build_ledger_evidence_view_definition(_unused_factory)
+    registration = build_ledger_evidence_view_registration(view_definition)
+
+    assert not list_definition.public_error_detail and not view_definition.public_error_detail
+    assert list_definition.refusal_detail_codes == frozenset()
+    assert view_definition.refusal_detail_codes == frozenset({LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE})
+    assert registration.contract.request_schema.schema_version == 1
+    assert registration.contract.result_schema is not None
+    assert registration.contract.result_schema.schema_version == 2
+
+
+@pytest.mark.parametrize("field", ["evidence_id", "source_path", "supplier", "context", "precondition_verdict"])
+def test_missing_reference_detail_rejects_identifiers_and_exception_content(field: str) -> None:
+    with pytest.raises(ValidationError):
+        LedgerEvidenceViewRefusal.model_validate(
+            {"kind": "refused", "evidence_record_present": False, field: "private"}
+        )
+
+
+def _refusal_receipt() -> OperationTerminalReceipt:
+    return OperationTerminalReceipt(
+        identity=_receipt(definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID).identity,
+        revision=1,
+        condition=OperationTerminalCondition.REFUSED,
+        effect=OperationEffect.NONE,
+        settled_at=now(),
+        refusal_ref=LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE,
+        refusal_detail_ref="b" * 64,
+    )
+
+
+def test_missing_reference_projector_releases_only_the_static_fact() -> None:
+    projection = LedgerEvidenceViewProjection(profile_id=_PROFILE, outcome=LedgerEvidenceViewRefusal())
+    private = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
+
+    public = _project_view_result(private, _refusal_receipt())
+
+    assert public == projection
+    assert projection.outcome.model_dump() == {"kind": "refused", "evidence_record_present": False}
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"condition": OperationTerminalCondition.SUCCEEDED},
+        {"condition": OperationTerminalCondition.FAILED},
+        {"effect": OperationEffect.UPDATED},
+        {"refusal_ref": "REFUSED_PROFILE_ACCESS"},
+        {"refusal_detail_ref": None},
+        {"identity": _receipt(definition_id=LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID).identity},
+        {
+            "identity": _receipt(
+                definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID, profile_id=_OTHER_PROFILE
+            ).identity
+        },
+    ],
+)
+def test_missing_reference_projector_rejects_mismatched_receipts(changes: dict[str, object]) -> None:
+    projection = LedgerEvidenceViewProjection(profile_id=_PROFILE, outcome=LedgerEvidenceViewRefusal())
+    private = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
+
+    with pytest.raises(ValueError):
+        _project_view_result(private, _refusal_receipt().model_copy(update=changes))
+
+
+def test_view_projector_rejects_success_record_under_a_refusal_receipt() -> None:
+    projection = LedgerEvidenceViewProjection(
+        profile_id=_PROFILE,
+        outcome=LedgerEvidenceViewSuccess(record=LedgerEvidenceRecordProjection.from_record(_record())),
+    )
+    private = LedgerEvidenceViewExecutionResult(profile_id=_PROFILE, result=projection)
+
+    with pytest.raises(ValueError):
+        _project_view_result(private, _refusal_receipt())
+
+
+def test_view_projector_revalidates_unchecked_private_result() -> None:
+    projection = LedgerEvidenceViewProjection.model_construct(
+        profile_id=_OTHER_PROFILE, outcome=LedgerEvidenceViewRefusal()
+    )
+    forged = LedgerEvidenceViewExecutionResult.model_construct(profile_id=_PROFILE, result=projection)
+
+    with pytest.raises(ValueError):
+        _project_view_result(forged, _refusal_receipt())

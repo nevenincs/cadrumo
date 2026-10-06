@@ -1,8 +1,8 @@
 """Generate, check and report the declared form layouts of every modelo revision.
 
 ``generate`` writes each revision's generator-owned ``form_layouts/`` fragment
-(``--check`` compares instead and exits non-zero on drift); a reviewed layout is
-never overwritten. ``coverage`` states declared and undeclared revisions and
+(``--check`` compares instead and exits non-zero on drift); authored or reviewed
+layouts are never overwritten. ``coverage`` states declared and undeclared revisions and
 placed, working and unplaced casillas. ``stability`` lists moved placements
 that carry no acknowledgement.
 """
@@ -17,7 +17,7 @@ from typing import Annotated, Final
 import typer
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState, FormLayoutSeedSource
 
 from ..compiler.loader import load_registry_tree
 from ..record_design_labels import DATA_ROOT
@@ -145,7 +145,11 @@ def synchronise_selected_form_layout(
     if modelo is None or revision_id not in modelo.revisions:
         raise RegistryValidationError("selected form owner revision is absent")
     revision = modelo.revisions[revision_id]
-    if len(revision.form_layouts) != 1 or revision.form_layouts[0].review.state is FormLayoutReviewState.REVIEWED:
+    if (
+        len(revision.form_layouts) != 1
+        or revision.form_layouts[0].review.state is FormLayoutReviewState.REVIEWED
+        or revision.form_layouts[0].seed_source is FormLayoutSeedSource.AUTHORED
+    ):
         raise RegistryValidationError("selected form owner requires one unreviewed generated layout")
     path = form_layout_fragment_path(registry_root / "modelos" / modelo_id / "revisions" / revision_id)
     if not path.is_file() or sha256(path.read_bytes()).hexdigest() != expected_old_sha256:

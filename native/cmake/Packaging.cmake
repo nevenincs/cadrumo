@@ -24,7 +24,8 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE authority_inputs
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${authority_inputs})
-list(APPEND product_inputs ${authority_inputs} "${CADRUMO_PATH_RUNTIME}/ready")
+list(APPEND product_inputs ${authority_inputs} "${CADRUMO_PATH_RUNTIME}/ready"
+  "${CADRUMO_PATH_GENERATED}/identity.json" "${CADRUMO_PATH_GENERATED}/build-toolchain.json")
 list(JOIN product_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-product.txt" CONTENT "${input_lines}\n")
 add_custom_target(python_product
@@ -57,7 +58,7 @@ else()
   set(images_with_docs False)
 endif()
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-  "import json; from dataclasses import asdict; from dev.packaging.native.layout import application_images, load_layout, staged_application_images; layout = load_layout(); staged = staged_application_images(layout, user_docs=${images_with_docs}); print(json.dumps([dict(asdict(image), package_path=image.package_path, staged=image in staged) for image in application_images(layout)]))"
+  "import json; from dataclasses import asdict; from dev.packaging.native.layout import application_images, load_layout, staged_application_images; layout = load_layout('${CADRUMO_TARGET}'); staged = staged_application_images(layout, user_docs=${images_with_docs}); print(json.dumps([dict(asdict(image), package_path=image.package_path, staged=image in staged) for image in application_images(layout)]))"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE application_images
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 # The desktop project defines desktop-host-build and the variable naming its host image.
@@ -119,6 +120,8 @@ if(image_count GREATER 0)
     endif()
   endforeach()
 endif()
+include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
+cadrumo_package_bootstrap(package_bootstrap "${package_layout}" "${PROJECT_SOURCE_DIR}")
 add_custom_command(OUTPUT "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   COMMAND ${CADRUMO_HELPER} assemble --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>" ${development_args}
     ${user_docs_args} ${application_image_args}
@@ -129,7 +132,7 @@ add_custom_command(OUTPUT "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
     "${PROJECT_SOURCE_DIR}/native/interpreter/bootstrap.py" "${PROJECT_SOURCE_DIR}/dev/packaging/native/assemble.py"
     "${PROJECT_SOURCE_DIR}/dev/packaging/native/stdlib.py"
     ${native_helper_inputs} ${contract_inputs}
-    "${PROJECT_SOURCE_DIR}/native/interpreter/${CADRUMO_BACKEND}/bootstrap.py"
+    "${package_bootstrap}"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_custom_target(bundle ALL DEPENDS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready")
 add_dependencies(bundle rust_application)
@@ -173,9 +176,15 @@ foreach(group IN LISTS CADRUMO_CLEANUP_GROUPS)
       "${PROJECT_BINARY_DIR}" "${group}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 endforeach()
+set(native_verification_targets rust_platform rust_application)
+foreach(consumer platform_static_consumer platform_dll_consumer)
+  if(TARGET ${consumer})
+    list(APPEND native_verification_targets ${consumer})
+  endif()
+endforeach()
 add_custom_target(verify
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
-  DEPENDS bundle platform_static_consumer platform_dll_consumer rust_platform rust_application
+  DEPENDS bundle ${native_verification_targets}
   USES_TERMINAL VERBATIM)
 add_custom_target(zip
   COMMAND "${CMAKE_CPACK_COMMAND}" --config "${PROJECT_BINARY_DIR}/CPackConfig.cmake" -C "$<CONFIG>"

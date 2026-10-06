@@ -40,7 +40,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nshort_work_unit_id\t2d35589f9d5e\nbucket_id\t<bucket-id>\nmodelo\t349\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2020-y-siguientes\nname\t349-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew declaration created.\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nshort_work_unit_id\t2d35589f9d5e\nbucket_id\t<bucket-id>\nmodelo\t349\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2020-y-siguientes\nname\t349-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nNew declaration created.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -62,7 +62,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\tb168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 349 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tdecl.numero-operadores\t0\tTotal number of intra-Community operators\nkey_figure\tdecl.importe-operaciones\t0\tAmount of intra-Community transactions\ncasilla\tdecl.importe-operaciones\t0\ncasilla\tdecl.importe-rectificaciones\t0\ncasilla\tdecl.numero-operadores\t0\ncasilla\tdecl.numero-rectificaciones\t0\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision b168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5 (state: draft). It is persisted and can be resumed later.\n"
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 349 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tdecl.numero-operadores\t0\tTotal number of intra-Community operators\nkey_figure\tdecl.importe-operaciones\t0\tAmount of intra-Community transactions\ncasilla\tdecl.importe-operaciones\t0\ncasilla\tdecl.importe-rectificaciones\t0\ncasilla\tdecl.numero-operadores\t0\ncasilla\tdecl.numero-rectificaciones\t0\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nSaved as draft calculation revision 589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e (state: draft). It is persisted and can be resumed later.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -149,10 +149,17 @@
             },
             "message": "Required box [op.base-imponible] is empty.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "b168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5",
+          "calculation_revision_id": "589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e",
           "completeness_status": "incomplete",
           "findings": [
             {
@@ -166,7 +173,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "b168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5",
+                      "calculation_revision_id": "589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e",
                       "casilla_id": "op.codigo-pais",
                       "modelo": "349",
                       "period": "1T",
@@ -204,7 +211,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "b168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5",
+                      "calculation_revision_id": "589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e",
                       "casilla_id": "op.nif-comunitario",
                       "modelo": "349",
                       "period": "1T",
@@ -242,7 +249,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "b168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5",
+                      "calculation_revision_id": "589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e",
                       "casilla_id": "op.apellidos-razon-social",
                       "modelo": "349",
                       "period": "1T",
@@ -280,7 +287,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "b168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5",
+                      "calculation_revision_id": "589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e",
                       "casilla_id": "op.clave-operacion",
                       "modelo": "349",
                       "period": "1T",
@@ -318,7 +325,7 @@
                     "evidence_id": "modelo.work.verify.required_casillas",
                     "provenance": "registry_record",
                     "values": {
-                      "calculation_revision_id": "b168a2d530bfbf54846497fc5c0fab89616cd3da0403162b41648029da7b94c5",
+                      "calculation_revision_id": "589582338c7c7e5ffae6466fe8036aba99bec1260c53fdda337ccaf4fe3f2d4e",
                       "casilla_id": "op.base-imponible",
                       "modelo": "349",
                       "period": "1T",
@@ -368,7 +375,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "542654fe2b152b6c993d165dbcf33805f2196f52481412e60accfba5a1ccc382",
+          "verification_report_id": "8c336a1bb1fe336fc04a53bfd6e3ea185c19b1e48757a326b6cd0e792a343657",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

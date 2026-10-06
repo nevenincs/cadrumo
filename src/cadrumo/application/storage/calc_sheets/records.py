@@ -34,17 +34,19 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
+from ....core.hex import Hex64Str
 from ....core.identity.digest import ContentDigest
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.parsing.codes import IsoCurrencyCode
-from ....core.period import Period
+from ....core.period import Period, RegistrySelectorPeriodCode, is_administrative_period_token
 from ....core.time.utc import validate_utc_aware
 from ....domain.calculations.registry.ids import (
     BindingId,
@@ -91,6 +93,7 @@ class TabName(StrEnum):
     DETALLE = "Detalle"
     EVIDENCIA = "Evidencia"
     GUIDE = "Guía"
+    FORM = "Modelo"
 
 
 _A1_COLUMN = re.compile(r"^[A-Z]{1,3}$")
@@ -219,7 +222,7 @@ class SheetValueCell(BaseModel):
     note: str | None = None
     casilla_id: CasillaId | None = None
     parameter: ParameterId | None = None
-    role: Literal["operator_input", "parameter_value", "label", "metadata"]
+    role: Literal["operator_input", "parameter_value", "source_value", "label", "metadata"]
 
 
 class SheetRoundingRule(StrEnum):
@@ -258,7 +261,7 @@ class SheetFormulaCell(BaseModel):
 
     address: SheetCellAddress
     formula: str = Field(min_length=1)
-    casilla_id: CasillaId
+    casilla_id: CasillaId | None
     rounding_scale: int | None = Field(default=None, ge=0, le=12)
     rounding_rule: SheetRoundingRuleValue
     note: str | None = None
@@ -283,8 +286,43 @@ class SheetCellConstraint(BaseModel):
     sign: CasillaSignConstraintValue = CasillaSignConstraint.ANY
     min_value: Decimal | None = None
     max_value: Decimal | None = None
+    allowed_values: tuple[str, ...] | None = Field(default=None, min_length=1)
+    min_length: int | None = Field(default=None, ge=0)
+    max_length: int | None = Field(default=None, ge=0)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     casilla_id: CasillaId
+
+    presentation_message: str | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_text_length_bounds(self) -> SheetCellConstraint:
+        if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
+            raise CalcSheetsRecordError("minimum text length exceeds maximum text length")
+        return self
+
+    def text_validation_formula(self) -> str | None:
+        """Preserve choices and length bounds in the common Sheets/Excel dialect."""
+        if self.allowed_values is None and self.min_length is None and self.max_length is None:
+            return None
+        address = self.address.a1
+        clauses: list[str] = []
+        if self.allowed_values is not None:
+            escaped = (value.replace('"', '""') for value in self.allowed_values)
+            choices = ",".join(f'EXACT({address},"{value}")' for value in escaped)
+            clauses.append(f"OR({choices})")
+        if self.min_length is not None:
+            clauses.append(f"LEN({address})>={self.min_length}")
+        if self.max_length is not None:
+            clauses.append(f"LEN({address})<={self.max_length}")
+        lower, upper = self.resolved_bounds()
+        if lower is not None or upper is not None:
+            clauses.append(f"ISNUMBER({address})")
+        if lower is not None:
+            clauses.append(f"{address}>={format(lower, 'f')}")
+        if upper is not None:
+            clauses.append(f"{address}<={format(upper, 'f')}")
+        return f"OR(ISBLANK({address}),AND({','.join(clauses)}))"
 
     def resolved_bounds(self) -> tuple[Decimal | None, Decimal | None]:
         """Return the tightest ``(minimum, maximum)`` the sign and the bounds together imply.
@@ -317,7 +355,15 @@ class SheetCellConstraint(BaseModel):
             str: One sentence naming the casilla, its admitted range, and the
             legal references that impose it.
         """
+        if self.presentation_message is not None:
+            return self.presentation_message
         parts: list[str] = []
+        if self.allowed_values is not None:
+            parts.append(" / ".join(self.allowed_values))
+        if self.min_length is not None:
+            parts.append(f"length ≥ {self.min_length}")
+        if self.max_length is not None:
+            parts.append(f"length ≤ {self.max_length}")
         if self.sign == CasillaSignConstraint.NON_NEGATIVE:
             parts.append("≥ 0")
         elif self.sign == CasillaSignConstraint.NON_POSITIVE:
@@ -415,8 +461,8 @@ class SheetNumberFormat(BaseModel):
     model_config = _STRICT_FROZEN
 
     address: SheetCellAddress
-    casilla_id: CasillaId
-    data_type: Literal["money", "integer", "percentage"]
+    casilla_id: CasillaId | None = None
+    data_type: Literal["money", "integer", "percentage", "decimal", "date", "text"]
     pattern: str = Field(min_length=1)
 
 
@@ -470,6 +516,7 @@ class SheetStyledRange(BaseModel):
     end_column: int = Field(ge=1)
     role: StyleRole
     wrap: bool = False
+    boxed: bool = False
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -487,6 +534,35 @@ class SheetStyledRange(BaseModel):
                 translated_message="application.storage.calc_sheets.records.errors.range_malformed",
             )
         return self
+
+
+class SheetMergedRange(BaseModel):
+    """One merged rectangle; only its top-left cell may carry content."""
+
+    model_config = _STRICT_FROZEN
+
+    tab: TabName
+    start_row: int = Field(ge=1)
+    end_row: int = Field(ge=1)
+    start_column: int = Field(ge=1)
+    end_column: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _ordered(self) -> SheetMergedRange:
+        if self.end_row < self.start_row or self.end_column < self.start_column:
+            raise ValueError("merged range ends before it starts")
+        return self
+
+
+class SheetRowHeight(BaseModel):
+    """Explicit row height in pixels, shared by both materializers."""
+
+    model_config = _STRICT_FROZEN
+
+    tab: TabName
+    row: int = Field(ge=1)
+    height_pixels: int = Field(ge=1, le=409)
 
 
 class SheetColumnWidth(BaseModel):
@@ -856,6 +932,32 @@ class SheetGuideContent(BaseModel):
     paragraphs: tuple[str, ...] = Field(min_length=1)
 
 
+class SheetAdministrativeFrame(BaseModel):
+    """A registry communication coordinate, never a tax filing period.
+
+    The wire fields match the existing workbook coordinate shape. Validation
+    keeps the administrative and filing cases disjoint; no filing dates or
+    cadence are inferred for a communication.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    filing_year: FilingYear
+    code: RegistrySelectorPeriodCode
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _administrative_only(self) -> SheetAdministrativeFrame:
+        if not is_administrative_period_token(self.code):
+            raise ValueError("workbook administrative frame requires an administrative registry selector")
+        return self
+
+    @property
+    def registry_token(self) -> str:
+        """Preserve the selector used by the registry snapshot."""
+        return self.code
+
+
 class SheetExportMetadata(BaseModel):
     """Stamps the workbook with the registry + engine identities.
 
@@ -870,7 +972,7 @@ class SheetExportMetadata(BaseModel):
     modelo_id: str = Field(min_length=1)
     revision_id: RevisionId
     filing_year: FilingYear
-    period: Period
+    period: Period | SheetAdministrativeFrame
     engine_version: str = Field(min_length=1)
     registry_sha: str = Field(min_length=8, max_length=64, pattern=r"^[0-9a-f]+$")
     exported_at: datetime
@@ -891,11 +993,53 @@ class SheetExportMetadata(BaseModel):
         return self
 
     @field_serializer("period", mode="plain")
-    def _serialize_period(self, value: Period) -> dict[str, object]:
+    def _serialize_period(self, value: Period | SheetAdministrativeFrame) -> dict[str, object]:
         return {"filing_year": value.filing_year, "code": value.code}
 
 
-class SheetExportPlan(BaseModel):
+class SheetReviewMetadata(BaseModel):
+    """Publication identity without inventing a Modelo for a ledger review."""
+
+    model_config = _STRICT_FROZEN
+
+    kind: Literal["calculation", "ledger"]
+    snapshot_digest: Hex64Str
+    publication_id: UUID
+    title: str = Field(min_length=1)
+    exported_at: datetime
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _exported_at_is_utc(self) -> SheetReviewMetadata:
+        validate_utc_aware(self.exported_at)
+        return self
+
+
+class SheetTemplatePreviewMetadata(BaseModel):
+    """Identity of a fictional design preview, without filing or publication authority."""
+
+    model_config = _STRICT_FROZEN
+
+    kind: Literal["template_preview"]
+    modelo_id: str = Field(min_length=1)
+    revision_id: RevisionId
+    preview_year: FilingYear
+    preview_period: RegistrySelectorPeriodCode
+    template_digest: Hex64Str
+    engine_version: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    exported_at: datetime
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _exported_at_is_utc(self) -> SheetTemplatePreviewMetadata:
+        validate_utc_aware(self.exported_at)
+        return self
+
+
+class SheetExportPlan[
+    MetadataT: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePreviewMetadata) = SheetExportMetadata
+](BaseModel):
     """Complete description of the workbook every renderer will write.
 
     The plan is the shared contract between the registry-backed engine, Google
@@ -906,7 +1050,9 @@ class SheetExportPlan(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    metadata: SheetExportMetadata
+    metadata: MetadataT
+    human_presentation: bool = False
+    tabs: tuple[TabName, ...] = tuple(tab for tab in TabName if tab is not TabName.FORM)
     value_cells: tuple[SheetValueCell, ...] = ()
     formula_cells: tuple[SheetFormulaCell, ...] = ()
     tariffs: tuple[SheetTariffTable, ...] = ()
@@ -924,14 +1070,20 @@ class SheetExportPlan(BaseModel):
     column_widths: tuple[SheetColumnWidth, ...] = ()
     frozen_views: tuple[SheetFrozenView, ...] = ()
     auto_filters: tuple[SheetAutoFilter, ...] = ()
+    merged_ranges: tuple[SheetMergedRange, ...] = ()
+    row_heights: tuple[SheetRowHeight, ...] = ()
     guide: SheetGuideContent
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _writable_cells_are_unique(self) -> SheetExportPlan:
+    def _writable_cells_are_unique(self) -> SheetExportPlan[MetadataT]:
+        if not self.tabs or len(set(self.tabs)) != len(self.tabs):
+            raise ValueError("workbook tabs must be nonempty and unique")
         seen: set[tuple[TabName, int, int]] = set()
         duplicate_count = 0
         for address in self.all_addresses():
+            if address.tab not in self.tabs:
+                raise ValueError("workbook cell targets an undeclared tab")
             key = (address.tab, address.row, address.column)
             if key in seen:
                 duplicate_count += 1
@@ -943,6 +1095,27 @@ class SheetExportPlan(BaseModel):
                 context={"duplicate_count": duplicate_count},
                 translated_message="application.storage.calc_sheets.records.errors.duplicate_write_address",
             )
+        for height in self.row_heights:
+            if height.tab not in self.tabs:
+                raise ValueError("row height targets an undeclared tab")
+        active: list[SheetMergedRange] = []
+        for region in sorted(self.merged_ranges, key=lambda item: (item.tab, item.start_row)):
+            if region.tab not in self.tabs:
+                raise ValueError("merged range targets an undeclared tab")
+            active = [item for item in active if item.tab == region.tab and item.end_row >= region.start_row]
+            if any(
+                item.start_column <= region.end_column and item.end_column >= region.start_column for item in active
+            ):
+                raise ValueError("merged ranges overlap")
+            active.append(region)
+            for tab, row, column in seen:
+                if (
+                    tab == region.tab
+                    and region.start_row <= row <= region.end_row
+                    and region.start_column <= column <= region.end_column
+                    and (row, column) != (region.start_row, region.start_column)
+                ):
+                    raise ValueError("merged range would discard a written cell")
         return self
 
     def all_addresses(self) -> tuple[SheetCellAddress, ...]:
@@ -963,7 +1136,13 @@ class SheetExportPlan(BaseModel):
         return tuple(seen)
 
 
+type AnySheetExportPlan = (
+    SheetExportPlan | SheetExportPlan[SheetReviewMetadata] | SheetExportPlan[SheetTemplatePreviewMetadata]
+)
+
+
 __all__ = [
+    "AnySheetExportPlan",
     "OperatorInput",
     "OperatorInputs",
     "ParameterCell",
@@ -985,12 +1164,14 @@ __all__ = [
     "SheetNumberFormat",
     "SheetProtectedRange",
     "SheetProvenanceRow",
+    "SheetReviewMetadata",
     "SheetRowSet",
     "SheetRowSetColumn",
     "SheetSectionHeader",
     "SheetStyledRange",
     "SheetTariffTable",
     "SheetTariffTableRow",
+    "SheetTemplatePreviewMetadata",
     "SheetValueCell",
     "TabName",
     "column_index_to_letters",

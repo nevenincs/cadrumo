@@ -159,6 +159,7 @@ class ProfileArchivePushPort(Protocol):
         limit: int | None,
         dry_run: bool,
         before_handoff: ArchiveProviderHandoff,
+        write: ArchiveLocalWriter,
     ) -> ProfileArchivePushReport:
         """Require short admission before provider calls; do not retain COMMIT across I/O."""
         ...

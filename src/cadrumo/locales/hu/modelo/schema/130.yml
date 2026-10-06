@@ -11,10 +11,27 @@ modelo:
           tartozó gazdasági tevékenységek. Részletfizetés.
         title: IRPF részletfizetés, közvetlen megállapítás
       form:
+        context:
+          apellidos: Vezetéknév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          periodo: Időszak
         page:
           dr-13001:
             heading: 1. oldal · Adóelőleg
         section:
+          complementaria:
+            heading: Kiegészítő bevallás (7)
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          identificacion:
+            heading: Bevalló (1)
+          ingreso:
+            heading: Befizetés (4)
           liquidacion-3-i-actividades-econ-estim-directa:
             heading: I. Tényleges költségelszámolású gazdasági tevékenységek
           liquidacion-3-ii-actividades-agricolas-ga-829910:

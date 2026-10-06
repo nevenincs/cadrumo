@@ -20,22 +20,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 @pytest.mark.parametrize(
-    ("args", "proof_expected"),
+    ("args", "proof_field"),
     [
-        (("--format", "json", "app", "runtime", "status"), False),
-        (("app", "runtime", "start"), False),
-        (("--format=json", "config", "profile", "view"), True),
-        (("--profile", "docs-sequence-sandbox", "config", "profile", "view"), True),
-        (("config", "profile", "view", "--help"), False),
-        (("not-a-command",), False),
-        (("--profile-secrets-stdin", "config", "profile", "view"), False),
-        (("--profile-auth-method", "password", "config", "profile", "view"), False),
-        (("--profile-secrets-fd=9", "config", "profile", "view"), False),
-        (("config", "profile", "resume", "--secrets-stdin"), False),
+        (("--format", "json", "app", "runtime", "status"), None),
+        (("app", "runtime", "start"), None),
+        (("--format=json", "config", "profile", "view"), "profile_passphrase"),
+        (("--profile", "docs-sequence-sandbox", "config", "profile", "view"), "profile_passphrase"),
+        (("config", "profile", "view", "--help"), None),
+        (("not-a-command",), None),
+        (("--profile-secrets-stdin", "config", "profile", "view"), None),
+        (("--profile-auth-method", "password", "config", "profile", "view"), None),
+        (("--profile-secrets-fd=9", "config", "profile", "view"), None),
+        (("config", "profile", "resume", "--secrets-stdin"), None),
+        (("config", "login", "docs-sequence-replacement"), "passphrase"),
+        (("config", "login", "missing-profile"), "passphrase"),
+        (("config", "login", "--help"), None),
+        (("config", "login", "docs-sequence-replacement", "--secrets-stdin"), None),
+        (("config", "login", "docs-sequence-replacement", "--secrets-fd=9"), None),
     ],
 )
 def test_frame_authentication_uses_real_command_metadata_and_preserves_authored_channels(
-    monkeypatch: pytest.MonkeyPatch, args: tuple[str, ...], proof_expected: bool
+    monkeypatch: pytest.MonkeyPatch, args: tuple[str, ...], proof_field: str | None
 ) -> None:
     """Only a declared private invocation receives the fixture-owned proof."""
     calls: list[tuple[tuple[str, ...], str | bytes | None]] = []
@@ -49,10 +54,13 @@ def test_frame_authentication_uses_real_command_metadata_and_preserves_authored_
         sequence_runner._invoke_authenticated_frame(args)
     assert len(calls) == 1
     actual_args, supplied = calls[0]
-    if proof_expected:
-        assert actual_args == ("--profile-secrets-stdin", *args)
+    if proof_field is not None:
+        expected_args = (
+            (*args, "--secrets-stdin") if proof_field == "passphrase" else ("--profile-secrets-stdin", *args)
+        )
+        assert actual_args == expected_args
         assert supplied is not None
-        assert json.loads(supplied) == {"profile_passphrase": "docs-frame-proof"}
+        assert json.loads(supplied) == {proof_field: "docs-frame-proof"}
     else:
         assert actual_args == args
         assert supplied is None

@@ -267,6 +267,7 @@ class RootNavigationMixin:
 
     def _sever_profile_root(self: CadrumoTuiApp) -> None:
         """Invalidate every captured door and queued navigation before any await."""
+        self._stop_session_events()
         self._navigation_revision += 1
         self._load_root = None
         self._account_session = None

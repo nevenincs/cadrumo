@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from threading import RLock
 from typing import Final, Literal, Self
 from uuid import UUID, uuid4
 
+from ...application.bucket_deletion_contracts import BucketDeletionFingerprint
 from ...application.operations.registry import (
     OperationFrontendProjection,
 )
@@ -19,6 +22,20 @@ from ...application.runtime.access_management import (
     RuntimeProfileResumed,
     RuntimeSessionInventory,
     RuntimeSessionInventoryReply,
+)
+from ...application.runtime.bootstrap import (
+    RuntimePasswordReset,
+    RuntimePasswordResetCompleted,
+    RuntimePasswordResetPrepare,
+    RuntimePasswordResetPrepared,
+    RuntimePasswordResetRefused,
+)
+from ...application.runtime.bootstrap_delete import (
+    RuntimeProfileDelete,
+    RuntimeProfileDeleted,
+    RuntimeProfileDeletePrepare,
+    RuntimeProfileDeletePrepared,
+    RuntimeProfileDeleteRefused,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.deadline_budget import deadline_after
@@ -39,6 +56,8 @@ from ...application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
+from ...application.runtime.session_events import RuntimeSessionEvent
+from ...application.runtime.sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.access_projections import PublicAccessSession
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationSecretStore
@@ -82,7 +101,50 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         self._profile_id = profile_id
         self._frontend = frontend
         self._session_id: UUID | None = None
-        self._connection_purpose: Literal["fresh", "admission", "recovery", "enrollment"] = "fresh"
+        self._connection_purpose: Literal["fresh", "admission", "recovery", "enrollment", "bootstrap"] = "fresh"
+        self._event_guard = RLock()
+        self._retirement_epoch = 0
+        self._retirement_receivers: list[Callable[[], None]] = []
+        self._event_subscription: Callable[[], None] | None = None
+
+    def _session_retired(self, event: RuntimeSessionEvent) -> None:
+        if event.profile_id != self.profile_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        with self._event_guard:
+            self._retirement_epoch += 1
+            if self._session_id != event.session_id:
+                return
+            self._session_id = None
+            receivers = tuple(self._retirement_receivers)
+        for receive in receivers:
+            receive()
+
+    def _connection_failed(self) -> None:
+        with self._event_guard:
+            self._retirement_epoch += 1
+            self._session_id = None
+            receivers = tuple(self._retirement_receivers)
+        for receive in receivers:
+            receive()
+
+    def subscribe_session_retirement(self, receive: Callable[[], None]) -> Callable[[], None]:
+        """Subscribe a nonblocking private-view clearing callback, never a proof consumer."""
+        if self._event_subscription is None:
+            self._event_subscription = self._connection.subscribe_session_events(
+                self._session_retired, disconnected=self._connection_failed
+            )
+        with self._event_guard:
+            self._retirement_receivers.append(receive)
+            inactive = self._session_id is None
+        if inactive:
+            receive()
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._retirement_receivers:
+                    self._retirement_receivers.remove(receive)
+
+        return unsubscribe
 
     @classmethod
     async def open(
@@ -135,7 +197,7 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         self, method: str, secret: bytearray, *, timeout: float, persist_receipt: bool = False
     ) -> RuntimeProfileStatus:
         try:
-            if self._connection_purpose in {"recovery", "enrollment"}:
+            if self._connection_purpose in {"recovery", "enrollment", "bootstrap"}:
                 raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
             if self._session_id is not None:
                 raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
@@ -149,6 +211,8 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
                     "persist_receipt": persist_receipt,
                 }
             )
+            with self._event_guard:
+                epoch = self._retirement_epoch
             reply = self._reply(
                 self._connection.login(request, secret, deadline=deadline_after(timeout)), RuntimeProfileStatus
             )
@@ -164,7 +228,14 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
                 raise RuntimeFrontendRefusedError(
                     status.denial.value if status.denial is not None else AccessDenialCode.PROFILE_MISMATCH.value
                 )
-            self._session_id = status.session_id
+            if self._event_subscription is None:
+                self._event_subscription = self._connection.subscribe_session_events(
+                    self._session_retired, disconnected=self._connection_failed
+                )
+            with self._event_guard:
+                if epoch != self._retirement_epoch:
+                    raise RuntimeFrontendRefusedError(AccessDenialCode.SESSION_INACTIVE.value)
+                self._session_id = status.session_id
             return reply
         finally:
             secret[:] = bytes(len(secret))
@@ -197,10 +268,16 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             try:
                 return self._login("receipt", proof, timeout=timeout)
             except RuntimeFrontendRefusedError as error:
-                reason = _RUNTIME_RECEIPT_REFUSALS.get(error.reason)
+                reason = (
+                    error.sign_in.reason
+                    if error.sign_in is not None and isinstance(error.sign_in.reason, ProfileSessionRefusalReason)
+                    else _RUNTIME_RECEIPT_REFUSALS.get(error.reason)
+                )
                 if reason is None:
                     raise
-                raise ProfileReceiptRefusedError(reason) from error
+                raise ProfileReceiptRefusedError(
+                    reason, binding=None if error.sign_in is None else error.sign_in.binding
+                ) from error
 
     def submit_secret(
         self, requirement: OperationSecretRequirement, secret: bytearray, *, timeout: float = 20
@@ -248,6 +325,34 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
     def status(self, *, timeout: float = 5) -> RuntimeProfileStatus:
         """Recheck the current connection-bound session without refreshing it."""
         return self._session_status("session_status", timeout=timeout)
+
+    def sign_in_status(self, *, timeout: float = 5) -> RuntimeSignInStatusReply:
+        """Observe shared presence without borrowing proof or authenticating this connection."""
+        return self._reply(
+            self._connection.sign_in_status(
+                RuntimeSignInStatusRequest(request_id=uuid4(), profile_id=self.profile_id),
+                deadline=deadline_after(timeout),
+            ),
+            RuntimeSignInStatusReply,
+        )
+
+    def human_sign_out(self, *, timeout: float = 10) -> RuntimeHumanSignedOut:
+        """Revoke profile-wide human access using this connection's proven human session."""
+        if self._session_id is None:
+            self.resume_receipt(timeout=timeout)
+        result = self._reply(
+            self._connection.session(
+                RuntimeSessionRequest(
+                    action="human_sign_out", request_id=uuid4(), profile_id=self.profile_id, session_id=self._session()
+                ),
+                deadline=deadline_after(timeout),
+            ),
+            RuntimeHumanSignedOut,
+        )
+        if result.profile_id != self.profile_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        self._session_id = None
+        return result
 
     def refresh_api_key(self, *, timeout: float = 5) -> RuntimeProfileStatus:
         """Explicitly renew this connection's API-key lease under current authority."""
@@ -327,6 +432,118 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         if kind is AutomationDenialKind.PROFILE_LOCK:
             self._session_id = None
         return reply.receipt
+
+    def delete_profile(self, fingerprint: BucketDeletionFingerprint, *, timeout: float = 30) -> RuntimeProfileDeleted:
+        """Confirm the named target's preflight on a fresh bootstrap connection."""
+        if self._connection_purpose != "fresh" or self._session_id is not None:
+            raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
+        self._connection_purpose = "bootstrap"
+        deadline = deadline_after(timeout)
+        prepared = self._connection.delete_profile(
+            RuntimeProfileDeletePrepare(
+                request_id=uuid4(),
+                profile_id=self.profile_id,
+                frontend=self.frontend,
+                fingerprint=fingerprint,
+            ),
+            deadline=deadline,
+        )
+        if isinstance(prepared, RuntimeProfileDeleteRefused):
+            raise RuntimeFrontendRefusedError(prepared.code)
+        preparation = self._reply(prepared, RuntimeProfileDeletePrepared)
+        try:
+            completed = self._connection.delete_profile(
+                RuntimeProfileDelete(
+                    request_id=uuid4(),
+                    profile_id=self.profile_id,
+                    frontend=self.frontend,
+                    confirmation=preparation.confirmation,
+                ),
+                deadline=deadline,
+            )
+            if isinstance(completed, RuntimeProfileDeleteRefused):
+                raise RuntimeFrontendRefusedError(
+                    completed.code,
+                    custody_transaction_id=preparation.confirmation.transaction_id,
+                )
+            return self._reply(completed, RuntimeProfileDeleted)
+        except RuntimeFrontendRefusedError as error:
+            raise RuntimeFrontendRefusedError(
+                error.reason,
+                sign_in=error.sign_in,
+                custody_transaction_id=preparation.confirmation.transaction_id,
+            ) from error
+        except RuntimeRefusalError as error:
+            raise RuntimeFrontendRefusedError(
+                error.reason.value,
+                custody_transaction_id=preparation.confirmation.transaction_id,
+            ) from error
+
+    def reset_password(
+        self,
+        *,
+        recovery_code: bytearray,
+        new_passphrase: bytearray,
+        new_passphrase_confirmation: bytearray,
+        timeout: float = 75,
+    ) -> RuntimePasswordResetCompleted:
+        """Use recovery proof without local DEK custody or a live human session."""
+        from ...application.user_profile.login_session import ProfileLoginThrottledError
+        from ...application.user_profile.recovery_custody import ProfileRecoveryError
+        from ...core.hashing import canonical_json_bytes
+
+        payload = bytearray()
+        try:
+            if self._connection_purpose != "fresh" or self._session_id is not None:
+                raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
+            self._connection_purpose = "bootstrap"
+            deadline = deadline_after(timeout)
+            prepared = self._reply(
+                self._connection.password_reset_prepare(
+                    RuntimePasswordResetPrepare(request_id=uuid4(), profile_id=self.profile_id, frontend=self.frontend),
+                    deadline=deadline,
+                ),
+                RuntimePasswordResetPrepared,
+            )
+            payload.extend(
+                canonical_json_bytes(
+                    {
+                        "recovery_code": recovery_code.decode("utf-8"),
+                        "new_passphrase": new_passphrase.decode("utf-8"),
+                        "new_passphrase_confirmation": new_passphrase_confirmation.decode("utf-8"),
+                    }
+                )
+            )
+            reply = self._connection.password_reset(
+                RuntimePasswordReset(
+                    request_id=uuid4(),
+                    profile_id=self.profile_id,
+                    envelope_digest=prepared.envelope_digest,
+                ),
+                payload,
+                deadline=deadline,
+            )
+            if isinstance(reply, RuntimePasswordResetRefused):
+                if reply.code == "throttled":
+                    if reply.remaining_seconds is None:
+                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise ProfileLoginThrottledError(remaining_seconds=int(reply.remaining_seconds))
+                refusal = reply.password_refusal
+                if reply.code == "invalid_password":
+                    if refusal is None:
+                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    raise ProfileRecoveryError(
+                        translated_message=refusal.translated_message,
+                        context=dict(refusal.context),
+                        password_refusal=refusal,
+                    )
+                raise ProfileRecoveryError(translated_message="application.user_profile.errors." + reply.code)
+            return self._reply(reply, RuntimePasswordResetCompleted)
+        finally:
+            payload[:] = bytes(len(payload))
+            recovery_code[:] = bytes(len(recovery_code))
+            new_passphrase[:] = bytes(len(new_passphrase))
+            new_passphrase_confirmation[:] = bytes(len(new_passphrase_confirmation))
 
     def recover_profile(
         self, password: bytearray, *, grants: frozenset[UUID] = frozenset(), timeout: float = 20

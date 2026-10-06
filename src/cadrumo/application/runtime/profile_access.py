@@ -15,6 +15,7 @@ from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import AccessDenialCode, AccessScope, AuthorityState, ProfileAccessStatus
 from ..user_profile.automation_custody_port import AutomationCustodyCode
 from ..user_profile.login_session import ProfileHumanLoginReceipt
+from ..user_profile.sign_in_refusals import SignInRefusal
 from .access_management import (
     RuntimeAccessManagementReply,
     RuntimeAccessManagementRequest,
@@ -24,12 +25,28 @@ from .access_management import (
     RuntimeSessionInventory,
     RuntimeSessionInventoryTransfer,
 )
+from .bootstrap import (
+    RuntimePasswordReset,
+    RuntimePasswordResetCompleted,
+    RuntimePasswordResetPrepare,
+    RuntimePasswordResetPrepared,
+    RuntimePasswordResetRefused,
+)
+from .bootstrap_delete import (
+    RuntimeProfileDelete,
+    RuntimeProfileDeleted,
+    RuntimeProfileDeletePrepare,
+    RuntimeProfileDeletePrepared,
+    RuntimeProfileDeleteRefused,
+)
 from .contracts import RuntimeByteChannel, RuntimeRefusalCode
 from .enrollment_access import (
     RuntimeEnrollmentReply,
     RuntimeEnrollmentRequest,
 )
 from .operation_access import RuntimeOperationReply, RuntimeOperationRequest
+from .session_events import RuntimeSessionEvent
+from .sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
 from .transport import RuntimeConnectionContext
 
 if TYPE_CHECKING:
@@ -70,7 +87,7 @@ class RuntimeSessionRequest(BaseModel):
     """Address one connection-bound lease; its identifier is never a bearer."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    action: Literal["session_status", "session_refresh", "session_lock"]
+    action: Literal["session_status", "session_refresh", "session_lock", "human_sign_out"]
     request_id: UUID
     profile_id: UUID
     session_id: UUID
@@ -81,6 +98,11 @@ class RuntimeRequest(
     RootModel[
         Annotated[
             RuntimeProfileLogin
+            | RuntimeProfileDeletePrepare
+            | RuntimeProfileDelete
+            | RuntimePasswordResetPrepare
+            | RuntimePasswordReset
+            | RuntimeSignInStatusRequest
             | RuntimeSessionRequest
             | RuntimeOperationRequest
             | RuntimeEnrollmentRequest
@@ -189,12 +211,21 @@ class RuntimeAccessRefusal(BaseModel):
     runtime_boot_id: UUID
     connection_id: UUID
     code: AccessDenialCode | AutomationCustodyCode | RuntimeRefusalCode
+    sign_in: SignInRefusal | None = None
 
 
 class RuntimeReply(
     RootModel[
         Annotated[
             RuntimeSecretReady
+            | RuntimeProfileDeletePrepared
+            | RuntimeProfileDeleted
+            | RuntimeProfileDeleteRefused
+            | RuntimePasswordResetPrepared
+            | RuntimePasswordResetCompleted
+            | RuntimePasswordResetRefused
+            | RuntimeHumanSignedOut
+            | RuntimeSignInStatusReply
             | RuntimeProfileStatus
             | RuntimeProfileStatusTransfer
             | RuntimeSessionInventoryTransfer
@@ -218,17 +249,37 @@ class RuntimeProfileDrainResult:
     missing_receipts: tuple[UUID, ...]
     uncontained: tuple[UUID, ...]
     unsettled: tuple[UUID, ...]
+    parent_settled_profiles: tuple[UUID, ...] = ()
+
+    @property
+    def lacks_settlement_evidence(self) -> bool:
+        """Keep missing worker receipts distinct from confirmed parent settlement."""
+        return bool(set(self.missing_receipts) - set(self.parent_settled_profiles))
 
 
 class RuntimeProfileHandler(Protocol):
     """Host-owned profile admission and lifetime hooks after the native handshake."""
 
+    def connect_events(self, context: RuntimeConnectionContext) -> None:
+        """Register an already verified stream for bounded retirement notices."""
+        ...
+
+    def take_events(self, context: RuntimeConnectionContext) -> tuple[RuntimeSessionEvent, ...]:
+        """Take one bounded batch, or refuse an overflowed connection."""
+        ...
+
     def handle(
         self,
         context: RuntimeConnectionContext,
         channel: RuntimeByteChannel,
-        request: RuntimeProfileLogin | RuntimeSessionRequest,
-    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeAccessRefusal:
+        request: RuntimeProfileLogin | RuntimeSessionRequest | RuntimeSignInStatusRequest,
+    ) -> (
+        RuntimeProfileStatus
+        | RuntimeSessionsLocked
+        | RuntimeSignInStatusReply
+        | RuntimeHumanSignedOut
+        | RuntimeAccessRefusal
+    ):
         """Admit or observe only the exact current connection."""
         ...
 
@@ -258,6 +309,24 @@ class RuntimeProfileHandler(Protocol):
         request: RuntimeAutomationDeny | RuntimeProfileRecoveryPrepare | RuntimeProfileResume | RuntimeSessionInventory,
     ) -> None:
         """Complete one exact access-management exchange on the verified channel."""
+        ...
+
+    def bootstrap_delete(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeProfileDeletePrepare | RuntimeProfileDelete,
+    ) -> None:
+        """Host a confirmed existing deletion journal without profile admission."""
+        ...
+
+    def bootstrap(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimePasswordResetPrepare | RuntimePasswordReset,
+    ) -> None:
+        """Run an exact bootstrap custody transaction with separate proof."""
         ...
 
     def poll(self) -> None:

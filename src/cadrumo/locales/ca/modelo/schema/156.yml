@@ -11,6 +11,80 @@ modelo:
           Declaració informativa anual.
         title: Cotitzacions d'afiliats i mutualistes a efectes de la deducció per
           maternitat (informativa anual)
+      form:
+        choice:
+          complementaria:
+            heading: Declaració complementària
+          sustitutiva:
+            heading: Declaració substitutiva
+        column:
+          importe:
+            heading: Quota meritada (€)
+          situacion:
+            heading: Situació mensual (S/N)
+        context:
+          ejercicio:
+            heading: Exercici
+          nif:
+            heading: NIF del declarant
+          nombre:
+            heading: Cognoms i nom de contacte
+          telefono:
+            heading: Telèfon de contacte
+        month:
+          abril:
+            heading: Abril
+          agosto:
+            heading: Agost
+          diciembre:
+            heading: Desembre
+          enero:
+            heading: Gener
+          febrero:
+            heading: Febrer
+          julio:
+            heading: Juliol
+          junio:
+            heading: Juny
+          marzo:
+            heading: Març
+          mayo:
+            heading: Maig
+          noviembre:
+            heading: Novembre
+          octubre:
+            heading: Octubre
+          septiembre:
+            heading: Setembre
+        page:
+          afiliado:
+            heading: Afiliat o mutualista · desenvolupament parcial
+          resumen:
+            heading: Full resum · desenvolupament parcial
+        section:
+          afiliado:
+            heading: Identificació de l’afiliat o mutualista
+          contacto:
+            heading: Persona de contacte
+          cotizaciones:
+            heading: Cotitzacions mensuals
+          declaracion:
+            heading: Declaració complementària o substitutiva
+          domicilio:
+            heading: Domicili fiscal
+          firma:
+            heading: Data i signatura
+          identificacion:
+            heading: Declarant i exercici
+          resumen:
+            heading: Resum de les dades incloses en la declaració
+        signature:
+          administracion:
+            heading: Espai reservat per a l’Administració
+          paper:
+            heading: Signatura en paper
+          space:
+            heading: Espai per a la signatura manuscrita
       revision:
         2003-y-siguientes:
           casilla:
@@ -19,39 +93,125 @@ modelo:
             afiliado-nombre:
               label: Cognoms i nom de l'afiliat o mutualista
             cotizacion-abril:
-              label: 'Cotització de abril: situació mensual i import de la quota meritada'
+              label: Abril · Quota meritada
+            cotizacion-abril-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Abril · Va cotitzar almenys un dia
             cotizacion-agosto:
-              label: 'Cotització de agost: situació mensual i import de la quota meritada'
+              label: Agost · Quota meritada
+            cotizacion-agosto-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Agost · Va cotitzar almenys un dia
             cotizacion-diciembre:
-              label: 'Cotització de desembre: situació mensual i import de la quota
-                meritada'
+              label: Desembre · Quota meritada
+            cotizacion-diciembre-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Desembre · Va cotitzar almenys un dia
             cotizacion-enero:
-              label: 'Cotització de gener: situació mensual i import de la quota meritada'
+              label: Gener · Quota meritada
+            cotizacion-enero-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Gener · Va cotitzar almenys un dia
             cotizacion-febrero:
-              label: 'Cotització de febrer: situació mensual i import de la quota
-                meritada'
+              label: Febrer · Quota meritada
+            cotizacion-febrero-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Febrer · Va cotitzar almenys un dia
             cotizacion-julio:
-              label: 'Cotització de juliol: situació mensual i import de la quota
-                meritada'
+              label: Juliol · Quota meritada
+            cotizacion-julio-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Juliol · Va cotitzar almenys un dia
             cotizacion-junio:
-              label: 'Cotització de juny: situació mensual i import de la quota meritada'
+              label: Juny · Quota meritada
+            cotizacion-junio-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Juny · Va cotitzar almenys un dia
             cotizacion-marzo:
-              label: 'Cotització de març: situació mensual i import de la quota meritada'
+              label: Març · Quota meritada
+            cotizacion-marzo-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Març · Va cotitzar almenys un dia
             cotizacion-mayo:
-              label: 'Cotització de maig: situació mensual i import de la quota meritada'
+              label: Maig · Quota meritada
+            cotizacion-mayo-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Maig · Va cotitzar almenys un dia
             cotizacion-noviembre:
-              label: 'Cotització de novembre: situació mensual i import de la quota
-                meritada'
+              label: Novembre · Quota meritada
+            cotizacion-noviembre-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Novembre · Va cotitzar almenys un dia
             cotizacion-octubre:
-              label: 'Cotització de octubre: situació mensual i import de la quota
-                meritada'
+              label: Octubre · Quota meritada
+            cotizacion-octubre-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Octubre · Va cotitzar almenys un dia
             cotizacion-septiembre:
-              label: 'Cotització de setembre: situació mensual i import de la quota
-                meritada'
+              label: Setembre · Quota meritada
+            cotizacion-septiembre-situacion:
+              help: 'S: va cotitzar almenys un dia del mes. N: no va cotitzar cap
+                dia. L’import es declara per separat.'
+              label: Setembre · Va cotitzar almenys un dia
             declaracion-complementaria-sustitutiva:
               label: Declaració complementària o substitutiva
             declarante-razon-social:
               label: Raó social del declarant
+            domicilio-codigo-postal:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Codi postal
+            domicilio-escalera:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Escala
+            domicilio-municipio:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Municipi
+            domicilio-numero:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Número
+            domicilio-piso:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Pis
+            domicilio-provincia:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Província
+            domicilio-puerta:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Porta
+            domicilio-via:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Carrer / plaça / avinguda
+            firma-cargo:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Càrrec o ocupació
+            firma-fecha:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Data
+            firma-nombre:
+              help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
+                No acredita una signatura ni una presentació.
+              label: Nom de qui signa
             numero-afiliacion:
               label: Número d'afiliació
             numero-identificativo-anterior:

@@ -137,7 +137,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.list\nmodelo_filter\t349\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t35\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n349\t2020-y-siguientes\t1T\tmodelo-349-ledger-intracommunity-guard\tledger_iva_aggregation\tdata from your records\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-operadores\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-operaciones\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-rectificaciones\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-rectificaciones\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-codigo-pais\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-nif\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-apellidos\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-clave\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-base\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-codigo-pais\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-nif\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-apellidos\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-clave\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-ejercicio\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-periodo\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-rectificada\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-anterior\tcollectible_invoice\tissued invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-operadores-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-operaciones-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-rectificaciones-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-rectificaciones-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-codigo-pais-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-nif-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-apellidos-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-clave-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-base-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-codigo-pais-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-nif-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-apellidos-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-clave-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-ejercicio-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-periodo-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-rectificada-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-anterior-adquisicion\tpayable_invoice\treceived invoice\t-\tdecimal\tFalse\n"
+      "text": "operation\tregistry.modelo.bindings.list\nauthority_generation\ta8f14a1c31a55bf48e8a383ba3bd4c6e5d9a574778115ec99f1497e3bc7cdc60\nmodelo_filter\t349\nyear_filter\t2026\nperiod_filter\t1T\nmissing_filter\tTrue\nbinding_count\t17\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-operadores\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-operaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-numero-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-declarante-importe-rectificaciones\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-operador-row-base\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-codigo-pais\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-nif\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-apellidos\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-clave\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-ejercicio\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-periodo\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-rectificada\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\n349\t2020-y-siguientes\t1T\tiva-349-rectificacion-row-base-anterior\tm349_intracommunity_operation\tintra-community operation\t-\tdecimal\tFalse\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -159,20 +159,23 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.revision",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "binding_overrides": {
             "iva-349-declarante-importe-operaciones": "8000",
-            "iva-349-declarante-importe-operaciones-adquisicion": "0",
             "iva-349-declarante-importe-rectificaciones": "0",
-            "iva-349-declarante-importe-rectificaciones-adquisicion": "0",
             "iva-349-declarante-numero-operadores": "2",
-            "iva-349-declarante-numero-operadores-adquisicion": "0",
-            "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
-            "modelo-349-ledger-intracommunity-guard": "0"
+            "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551",
+          "calculation_revision_id": "0444fe04868e9fef6bf488187c121ac4e7510cf48d5c75a3782b8de4b907412a",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -319,10 +322,10 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:c0d40a10d081f27b894a9331e6c5b11170b057c6f8add475e7fc6e797762818b",
+              "fingerprint": "sha256:d373c3393acc77a4d68c995c1e55d6baebcb20129143076cd1296cfa13859af4",
               "lineage_role": "primary",
               "parent_source_ref": null,
-              "resolved_binding_source": "collectible_invoice",
+              "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
               "source_ref": "collectible_invoice:86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b"
             },
@@ -330,10 +333,10 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:4b81059e54a8209054823e305edb4f67fd381090cb85dffde334982206b73932",
+              "fingerprint": "sha256:dc60742da05b347039624e6de6c1b5de1b73d2a501c68c1a4eb8bf8325aeea91",
               "lineage_role": "primary",
               "parent_source_ref": null,
-              "resolved_binding_source": "collectible_invoice",
+              "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
               "source_ref": "collectible_invoice:0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209"
             }
@@ -346,7 +349,7 @@
           "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

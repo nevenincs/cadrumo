@@ -1,6 +1,19 @@
 modelo:
   schema:
     '200':
+      binding:
+        modelo-200-pagos-fraccionados-anuales:
+          label: Annual instalment payments · Form 202, Article 40.3, box 34
+        modelo-200-pagos-fraccionados-anuales-40-2:
+          label: Annual instalment payments · Form 202, Article 40.2, box 03
+        modelo-200-profile-incn-prior-12-months:
+          label: Net turnover in the preceding 12 months
+        modelo-200-profile-legal-entity-form:
+          label: Legal form
+        modelo-200-profile-new-entity-flag:
+          label: Newly created entity in one of its first two profitable tax periods
+        modelo-200-profile-tributacion-estado-porcentaje:
+          label: Percentage of tax allocated to the State
       casilla:
         continuidad:
           '00042':

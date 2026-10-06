@@ -20,6 +20,22 @@ from ..semantic_map import load_semantic_map
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def test_preparation_preserves_distinct_sibling_lineage_evidence_in_source_scope(tmp_path: Path) -> None:
+    authority = compiled_bundled_authority()
+    sibling = authority.modelo("194").revisions["2023"]
+    attestation = next(
+        item for item in sibling.lineage_attestations if item.continuidad_id == "declarante-contacto-telefono"
+    )
+    field = next(item for item in sibling.casillas if item.continuidad_id == attestation.continuidad_id)
+    assert attestation.source_refs != field.source_refs
+    invocation = GeneratedTreeInvocation("194", "2019", "aeat-dr-194-2019", 2022, "0A")
+    prepared = prepare_generated_tree_invocation(invocation, tmp_path, authority=authority)
+    assert prepared.validation.scope_authority is authority
+    assert prepared.validation.continuity_metadata_modelo_root is None
+    assert not (tmp_path / "continuity-metadata").exists()
+    assert prepared.validation.scope_authority.modelo("194").revisions["2023"] == sibling
+
+
 @pytest.mark.parametrize(
     ("modelo_id", "revision", "stable_id"),
     (

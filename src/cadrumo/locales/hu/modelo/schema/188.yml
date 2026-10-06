@@ -29,6 +29,12 @@ modelo:
           származó tőkejövedelmek. Éves összesítő.
         title: Tőkésítési műveletek és életbiztosítások adóelőleg-levonása - éves
           összesítő
+      form:
+        section:
+          declaracion:
+            heading: A bevallás adatai
+          declarante:
+            heading: Azonosítás és kapcsolattartás
       revision:
         '2022':
           construct:
@@ -39,6 +45,25 @@ modelo:
           field:
             label: 188-as modelo, 2022. adóév
         2023-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: 'Kiegészítő: C a kihagyott kifizetések hozzáadásához'
+            x-chim6r1ecdnmst31cdq6u:
+              label: Kapcsolattartó teljes neve
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Adóév
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Korábbi azonosító (csak helyettesítő bevallásnál)
+            x-chim6r1edpkmc:
+              label: Bevalló adóazonosítója
+            x-chim6r1edpnmqojick:
+              label: Teljes név vagy cégnév
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              label: Bevallás azonosítója (13 számjegy; 188-cal kezdődik)
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: 'Helyettesítő: S egy korábbi bevallás lecseréléséhez'
+            x-chim6r1eehimopb6dtn6u:
+              label: Kapcsolattartó telefonszáma
           construct:
             modelo-188-calculation-construct:
               field:

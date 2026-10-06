@@ -374,6 +374,6 @@ class SupervisedRuntime:
             self._channel.announce(RuntimeBusy())
 
     def _end_session(self) -> None:
-        # The normal drain stands in until the ordered session-end settle
-        # replaces this seam; only the exit reason distinguishes it today.
+        # The profile drain observes this reason and fences admissions before
+        # native termination, confirmation and credential-free settlement.
         self._stop.request(RuntimeExitReason.SESSION_END_SETTLE)

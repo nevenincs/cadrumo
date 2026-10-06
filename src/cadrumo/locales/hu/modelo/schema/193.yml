@@ -1,6 +1,15 @@
 modelo:
   schema:
     '193':
+      binding:
+        modelo-193-123-base-anual:
+          label: Éves adólevonási és adóelőleg-alap · 123-as nyomtatvány, 06. mező
+        modelo-193-123-retenciones-anual:
+          label: Éves adólevonások és adóelőlegek · 123-as nyomtatvány, 09. mező
+        modelo-193-perceptor-rows-base-total:
+          label: A kedvezményezettek adólevonási és adóelőleg-alapja összesen
+        modelo-193-perceptor-rows-retenciones-total:
+          label: A kedvezményezettek adólevonásai és adóelőlegei összesen
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
@@ -119,6 +128,48 @@ modelo:
           és egyes jövedelmekre vonatkozó adóelőleg-levonások és -befizetések. Éves
           összesítő.
         title: Tőkejövedelmek adóelőleg-levonásának éves összesítője
+      form:
+        context:
+          ejercicio:
+            heading: Adóév
+          nif:
+            heading: A bevalló adóazonosítója
+          nombre:
+            heading: Név vagy cégnév
+        page:
+          gastos:
+            heading: 'Melléklet: költségkimutatás'
+          perceptores-1:
+            heading: Kedvezményezettek jegyzéke · 1
+          perceptores-2:
+            heading: Kedvezményezettek jegyzéke · 2
+          perceptores-3:
+            heading: Kedvezményezettek jegyzéke · 3
+          resumen:
+            heading: Összesítő lap
+        section:
+          contacto:
+            heading: Kapcsolattartó
+          declaracion:
+            heading: A bevallás azonosítója és típusa
+          declarante:
+            heading: Bevalló és adóév
+          gastos:
+            heading: Kezelési és letéti költségek
+          identificacion:
+            heading: A kedvezményezett azonosítása
+          importes:
+            heading: Juttatások és adólevonások
+          operacion:
+            heading: Az ügylet azonosítása
+          prestamos:
+            heading: Értékpapír-kölcsönök és egyéb adatok
+          rendimiento:
+            heading: Jövedelem és értékpapírszámla
+          territorio:
+            heading: Területi megoszlás
+          totales:
+            heading: A bevallásban szereplő adatok összesítése
       revision:
         '2022':
           field:

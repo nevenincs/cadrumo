@@ -1,28 +1,91 @@
 # Native distribution contract
 
-CMake defines compilation, installation and ZIP packaging.
-Linux and macOS are mappings to
-prove, not supported native builds. The existing Python product owns application
+## Explicit build target and dependency inputs
+
+`CADRUMO_TARGET` selects a canonical target from
+`dev/packaging/runtime_wheelhouse_contract.py`. A configured binary directory
+cannot be reused for another target. `windows-x64` remains the Windows physical
+mapping spelling; the canonical distribution target is `windows-x86-64`.
+The four configure presets declare target identity. Linux/macOS require an
+explicit compiler/sysroot toolchain, reviewed SDK pins and matching native
+runner; preset existence does not establish support.
+
+`native/toolchain.json` keeps common tool versions and a `targets` object with
+per-target Rust triples and CPython acquisition pins. Windows uses the pinned
+official NuGet SDK. Linux x86-64/AArch64 and macOS ARM64 use the reviewed Astral
+Python Build Standalone 20251209 full shared-library SDKs for normal-GIL CPython
+3.13.11, with exact archive hashes and target/ABI provenance. The authorized
+selection is recorded in `scratch/provisioning-state-map/B2-native-decisions.md`.
+Missing or mismatched pins refuse provisioning. Acquisition retains provider
+metadata and all embedded dependency notices; assembly stages those notices and
+the canonical CPython notice through the declared license inventory.
+
+For tar.zst SDKs, configure `CADRUMO_ZSTD` as an explicit absolute builder
+executable. Its content hash and canonical source provenance enter
+`generated/build-toolchain.json`; the path is not a target SDK pin. Standalone
+provisioning accepts `--build-toolchain <file>` with that configured decoder.
+Linux assembly requires explicit `CADRUMO_READELF` and `CADRUMO_PATCHELF` tools;
+macOS requires `CADRUMO_INSTALL_NAME_TOOL`, `CADRUMO_CODESIGN` and an explicit
+`CADRUMO_NATIVE_SIGNING_IDENTITY`. Native tools are checked against configured
+content identities and are never discovered through the runtime PATH.
+
+The selected host interpreter, compiler, linker, Rust tools, uv and toolchain file
+are recorded in the same builder provenance. Explicit sysroots use bounded,
+deterministic file inventories in builder sidecars; links may not escape the
+SDK or form cycles. Changed compiler, wrapper, decoder or SDK bytes require
+reconfiguration and cannot reuse an old provisioning/product cache. CMake and
+Cargo share the selected linker configuration; cross/sysroot builds require the
+reviewed `CADRUMO_RUST_LINKER` wrapper.
+Configured provisioning, product and build-tool actions execute the selected,
+hashed uv path; standalone commands may supply `--uv`. Native Cargo outputs live
+in `cargo/native`, separate from `cargo/desktop`. A changed native toolchain
+identity cleans only the admitted native target directory under an OS lock,
+then publishes its identity after a successful Cargo command. Debug and Release
+are the supported profiles; single-configuration generators require an explicit
+`CMAKE_BUILD_TYPE`.
+
+Provisioning selects the base dependency closure from the lock with target
+markers and wheel ABI/floor checks. It installs exact wheel URLs with required
+SHA256 hashes, explicit target and Python version; it never executes the SDK
+interpreter. `runtime-inputs.json` records the selected wheel identities. Product
+wheel construction uses host CPython at the exact release-builder patch, and
+assembly rejects duplicate distributions, mixed cohort versions and target/ABI
+metadata disagreement. Optional integrations remain separate capabilities.
+
+Private build-cache schema 3 hashes every regular output and records contained
+SDK link text, target identity and target bytes, traversing each directory once.
+Escaping links, cycles, and added, missing or changed files refuse reuse,
+including changes that preserve size. CMake invokes that validation on every
+shared provisioning/product action. Earlier cache schemas rebuild.
+Archive extraction rejects links, special files and ambiguous member names and
+restores executable permission bits from Unix ZIP entries. Runtime, loader,
+relocation and desktop acceptance still require the extracted target artifact.
+
+CMake defines compilation, installation and ZIP packaging. All four target
+mappings and native backends are enrolled; final native, relocation, deployment
+floor and interactive acceptance remain target-specific gates. Enrollment and
+fixture execution alone do not establish a supported complete release.
+The existing Python product owns application
 behavior. Native code owns bootstrap before Python exists.
 
 ## Source and generated ownership
 
 | Concern | Authored owner | Generated output |
 | --- | --- | --- |
-| C interpreter host and CPython initialization | `native/interpreter/windows/` | `build/windows-x64/bin/<Config>/` |
-| Shared Rust platform implementation and C ABI | `native/platform/` | `build/windows-x64/cargo/` |
-| Rust application library and compatibility probes | `native/application/` | `build/windows-x64/cargo/<rust-target>/<profile>/` |
-| Shared package declarations and physical platform mappings | `native/package-layout.json`, `native/platforms/` | `build/windows-x64/generated/` |
+| C interpreter host and CPython initialization | `native/interpreter/windows/`, `native/interpreter/posix/` and shared bridge | `<binary-dir>/bin/<Config>/` |
+| Shared Rust platform implementation and C ABI | `native/platform/` | `<binary-dir>/cargo/native/` |
+| Rust application library and compatibility probes | `native/application/` | `<binary-dir>/cargo/native/<rust-target>/<profile>/` |
+| Shared package declarations and physical platform mappings | `native/package-layout.json`, `native/platforms/` | `<binary-dir>/generated/` |
 | Build-time contract projection | `dev/packaging/native/` | C header, Rust constants, JSON contract |
-| Build graph and packaging targets | `CMakeLists.txt`, `CMakePresets.json`, `native/cmake/` | `build/windows-x64/` |
-| Package assembly operations | `dev/packaging/native/` | `build/windows-x64/stage/<Config>/app/` |
+| Build graph and packaging targets | `CMakeLists.txt`, `CMakePresets.json`, `native/cmake/` | Selected CMake binary directory |
+| Package assembly operations | `dev/packaging/native/` | `<binary-dir>/stage/<Config>/app/` |
 | Product identity | `src/cadrumo/core/product_identity.py` | Native product identity |
 | Settings names and validation | `src/cadrumo/core/config.py` | Reserved environment names |
 | Storage defaults, overrides and tool locations | `src/cadrumo/core/config.py`, `storage_environment.py`, `storage_taxonomy_locations.py` | Native Settings projection |
 | Exact Python version | `dev/packaging/release-python-version` | Build input |
 | Third-party dependency closure | `pyproject.toml`, `uv.lock`, existing constraint exporter | Installed locked dependencies |
 | Python release cohort | `dev/packaging/python_cohort.py` | Existing three-wheel cohort |
-| Bundled user documentation | `docs/` and its `dev/docs/` build driver; language set in `native/package-layout.json` | `build/windows-x64/user-docs/` |
+| Bundled user documentation | `docs/` and its `dev/docs/` build driver; language set in `native/package-layout.json` | `<binary-dir>/user-docs/` |
 
 Shared packaging owns dependency installation, product wheel assembly, standard-library
 ZIP creation, manifests, artifact verification dispatch and cleanup. Physical names
@@ -30,8 +93,12 @@ come from the selected `native/platforms/` contract. Windows SDK acquisition, PE
 relocation, pywin32 patches, executable resources and hostile-loader tests belong to
 `dev/packaging/native/platforms/windows*.py`; its native build belongs to
 `native/cmake/platforms/Windows.cmake`. The Windows runtime bootstrap lives under
-`native/interpreter/windows/`. Unsupported platforms fail explicitly; no Windows
-mapping is silently reused for Linux or macOS.
+`native/interpreter/windows/`. POSIX SDK acquisition and shared inventory live in
+`dev/packaging/native/platforms/posix.py`; Linux ELF and macOS Mach-O relocation
+remain with their respective backend modules. POSIX initialization/bootstrap
+lives in `native/interpreter/posix/`. The selected contract's `bootstrap` field
+owns the assembly dependency; backend names do not infer a source directory.
+No Windows mapping is silently reused for another target.
 
 Generated files never become an alternative authored inventory. Development
 generators do not ship. Each assembly starts in a fresh directory. Runtime paths
@@ -57,6 +124,10 @@ Rust compatibility probe against the same freshly extracted ZIP. Its result reco
 the archive hash, manifest hash, extracted root and application-probe outcome; a failed
 Rust probe prevents a passing result. The staged-package override does not redirect
 this artifact check.
+The standalone `application.package` CTest uses `live-package-tests` without a
+release expectation; the artifact probe uses `live-release-tests` and receives
+the verifier's archive-bound release expectation. Both feature selections are
+intentional.
 For a separately extracted or installed artifact, configure the absolute
 `CADRUMO_APPLICATION_TEST_PACKAGE_ROOT` and run
 `ctest -C Release -R "^application\." --output-on-failure` in that build directory. This verifies that
@@ -73,19 +144,21 @@ the mode by where the package tree lives, never by the working directory.
 `<name>` is `cadrumo` for the stable channel and `cadrumo-<channel>` for any
 other, such as `cadrumo-preview`; the channel comes from the identity projection.
 
-| Location | Windows x64 | Linux mapping, unimplemented | macOS mapping, deferred |
+| Location in assembled ZIP | Windows x64 | Linux x86-64/AArch64 | macOS ARM64 |
 | --- | --- | --- | --- |
-| Executables | `P/python.exe`; application images such as `P/cadrumo.exe` and `P/cadrumo-manager.exe`; console entrypoints such as `P/bin/cadrumo-runtime.exe` and components in `P/bin/` | Private prefix `P/bin/`; system command wrappers depend on packaging format | `Cadrumo.app/Contents/MacOS/` |
-| Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | Private `P/lib/cadrumo/python.zip` and site-packages | `Contents/Resources/python.zip` and site-packages |
-| Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | Private `P/lib/`; extension identities retained | `Contents/Frameworks/`, extension package subtrees |
-| Immutable resources | `P/data/`, `P/docs/` | `P/share/cadrumo/` | `Contents/Resources/data/` and `docs/` |
+| Executables | `P/python.exe`; application images such as `P/cadrumo.exe` and `P/cadrumo-manager.exe`; console entrypoints such as `P/bin/cadrumo-runtime.exe` and components in `P/bin/` | `P/python`, `P/cadrumo`, `P/cadrumo-manager`; console entrypoints in `P/bin/` | Same declared flat executable placement as Linux |
+| Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | `P/python.zip`, `P/lib/cadrumo/site-packages/`, controlled `P/lib/cadrumo/python.pth` | Same declared Python placement as Linux |
+| Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | `P/bin/`; qualified extension identities retained | `P/bin/`; qualified extensions and relocated install names |
+| Immutable resources | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` |
 | Mutable root | `%LOCALAPPDATA%\<name>`; checkout `var/storage`; delivered-artifact tests supply an explicit root | `$XDG_DATA_HOME/<name>` when `XDG_DATA_HOME` is absolute, else `$HOME/.local/share/<name>` | `$HOME/Library/Application Support/<name>` |
 | Secure state | Existing Settings/taxonomy beneath the selected root | Same logical owner | Same logical owner |
 | Loader | Static bootstrap CRT; explicit absolute DLL load with restricted search, then registered bundle directories | Relative ELF RUNPATH for every transitive dependency; audit LD_* and libc floor | Relative install names and rpaths; signing and hardened-runtime validation |
 
-Linux deb/rpm, relocatable archive and AppImage are unresolved alternatives.
-No build target or placeholder implementation claims those formats work.
-macOS needs a native toolchain, architecture selection, codesigning and dyld validation.
+This table describes assembled artifact mappings. Installer/AppImage formats and
+the macOS application wrapper have their own distribution definitions and native
+acceptance; they do not change the current ZIP map. Linux new outputs use the
+reviewed manylinux_2_28 builder, and macOS retains the canonical 14.0 product
+floor. SDK enrollment does not prove deployment-floor or signing acceptance.
 Windows relocation passed real package-qualified extensions and transitive-DLL
 artifact tests, including public pywin32 COM imports and pikepdf/qpdf.
 Library-owned resources retain their wheel locations; assembly projects the
@@ -245,6 +318,15 @@ SDK and the locked base dependency closure; optional integrations remain outside
 this base package. The C host is compiled locally; CPython is the official binary
 build, with matching headers and import library. No CPython source patch is applied.
 
+The `just` recipes are the canonical entry: `just build-native`,
+`just test-native-bundle`, `just build-native-package` and `just test-native-package`,
+each for `Release` (the default) or `Debug`. They select the host's preset, supply
+the managed tool locations the `justfile` exports, and configure with
+`CADRUMO_DEV_PYTHON` set to the release-builder interpreter that
+`just setup-native-builder` converges at the pinned patch in managed storage, apart
+from the development `.venv`. The underlying CMake commands follow; entered by hand
+they use the caller's environment and the interpreter CMake finds in `.venv`.
+
 ```text
 cmake --preset windows-x64
 cmake --build --preset release
@@ -266,9 +348,11 @@ only declared build products and tool-managed intermediate files.
 
 CMake owns the build graph. Python helpers perform portable filesystem and wheel
 operations; PowerShell is not part of the build. The separate Windows `platforms/windows_trace.ps1`
-helper is an OS diagnostics tool. Linux/macOS compilation remains unimplemented.
-Toolchain selection is scoped by `native/cmake/WindowsToolchain.cmake`; Cargo gets
-explicit compiler-library and linker paths without changing the caller's shell.
+helper is an OS diagnostics tool. Linux/macOS adapters compile the enrolled native
+hosts through explicit target toolchains; actual runner acceptance remains
+separately recorded. Windows toolchain selection is scoped by
+`native/cmake/WindowsToolchain.cmake`; Cargo gets explicit compiler-library and
+linker paths without changing the caller's shell.
 
 ### Names, artifacts and targets
 
@@ -280,6 +364,18 @@ not a CPython debug ABI. The `python_d` target always exists and is excluded fro
 the default build. Set `-DCADRUMO_INCLUDE_DEVELOPMENT_BINARY=ON` at configure time
 to include it alongside production in the same package; shipping it is optional.
 
+The standalone projects `native/desktop` and `native/cmake/distribution` carry
+their own `CMakePresets.json`. A standalone project's binary directory is
+`build/<configure preset name>` at the repository root, such as
+`build/desktop-windows-x64`. CMake reads those presets from the project's source
+directory: configure with `cmake -S <project> --preset <name>` and build with
+`cmake --build <binary directory> --config <Config>`.
+
+Configuration refuses any other binary directory. `native/cmake/BinaryDirectory.cmake`
+admits only `build/<name>` at the repository root, where `<name>` is a configure
+preset of the project being configured; a directory of another name, or an
+enrolled name elsewhere, stops with the enrolled names.
+
 | Path beneath the binary directory | Contents |
 | --- | --- |
 | `_deps/runtime/` | Verified CPython SDK and locked third-party wheels installed for staging |
@@ -288,7 +384,7 @@ to include it alongside production in the same package; shipping it is optional.
 | `product/dependencies/` | Exact production closure plus those product wheels |
 | `generated/` | Native contracts, metadata, icon and resource source |
 | `bin/<Config>/`, `lib/<Config>/`, `symbols/<Config>/` | Native executables/DLLs, import libraries and symbols |
-| `cargo/` | Rust build products |
+| `cargo/native/` | Native Rust build products; isolated from `cargo/desktop/` |
 | `tmp/` | Preset-scoped compiler and MSBuild scratch files; retained during cleanup targets because MSBuild can still be using them |
 | `stage/<Config>/app/` | Complete application tree used by install and CPack |
 | `install/` | Default local install prefix; override with `cmake --install --prefix` |
@@ -797,11 +893,17 @@ the desktop starts, stops and authenticates nothing.
 
 ### Desktop build and test procedure
 
-The desktop is a standalone CMake project. Configure `native/desktop` in its own
-binary directory with `CADRUMO_NATIVE_CONTRACT` naming the generated
+The desktop is a standalone CMake project. Configure it with
+`cmake -S native/desktop --preset desktop-windows-x64`, whose binary directory is
+`build/desktop-windows-x64`; the other targets' presets are
+`desktop-linux-x86-64`, `desktop-linux-aarch64` and `desktop-macos-arm64`. Pass
+`CADRUMO_NATIVE_CONTRACT` naming the generated
 `contract.json` of a configured source build, and `CADRUMO_DESKTOP_PACKAGE_ROOT`
 naming an assembled package such as `stage/<Config>/app/`. Set
 `CADRUMO_DEV_PYTHON` when the checkout's development interpreter is not found.
+`frontend/scripts/bootstrap.mjs`, `tests/run-packaged.ps1` and
+`tests/run-backend.ps1` read the host's preset and use its binary directory
+unless another directory is passed.
 The standalone project's host runs from its Cargo output and finds the package
 through `CADRUMO_DESKTOP_PACKAGE_ROOT`. The source build configures this project
 only when a desktop image is staged, which requires the documentation; a `bundle`
@@ -811,7 +913,7 @@ needs neither Node.js nor npm.
 
 | Target | Operation |
 | --- | --- |
-| `desktop-frontend-install` | `npm ci` in the frontend |
+| `desktop-frontend-install` | Run `npm ci` in the frontend only when `node_modules/.package-lock.json` does not match `package-lock.json` for this platform, or `package.json` and the lockfile declare a dependency differently; the check reads the installed tree, which every binary directory shares |
 | `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
 | `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
 | `desktop-frontend-generated` | Write the chrome strings and the palette into the binary directory (`desktop/frontend-generated`), never into the source tree: with `npm ci`, all that developing the frontend in a browser needs (`native/desktop/frontend/README.md`) |
@@ -822,6 +924,10 @@ needs neither Node.js nor npm.
 | `desktop-headless-test` | Byte-for-byte CLI passthrough parity with the package interpreter, under a hostile Python environment |
 | `desktop-paths-test`, `desktop-configuration-test` | Build-path and generated Tauri configuration checks |
 | `desktop-run` | Start the built `cadrumo.exe` against `CADRUMO_DESKTOP_PACKAGE_ROOT` |
+
+The host sources are copied into `desktop/host/` in the source tree's own layout
+(`desktop/src-tauri`, `application`, `platform`), so manifest path dependencies
+resolve inside the declared directory.
 
 `node --test native/desktop/tests/shell-token.test.mjs` checks the top-frame gate
 of the token script.
@@ -946,8 +1052,13 @@ scope. They do not change with the version. MSI product/package codes retain the
 separate release lifetimes. Publisher, license, version and names come from the
 existing Python product and project metadata owners.
 
-Configure with CMake 4.4.3, `-S native/cmake/distribution`, a fresh `-B` directory,
-`-DCADRUMO_TARGET=<canonical-target>` and `-DCADRUMO_PAYLOAD=<absolute-payload>`.
+Configure with CMake 4.4.3, `-S native/cmake/distribution`, the target's preset and
+`-DCADRUMO_PAYLOAD=<absolute-payload>`. The presets are `distribution-windows-x64`,
+`distribution-linux-x86-64`, `distribution-linux-aarch64` and
+`distribution-macos-arm64`; each sets `CADRUMO_TARGET` and the binary directory
+`build/<preset name>`. The installation stage in that directory belongs to the
+payload it was prepared from: configuring a different payload there is refused,
+and no cleanup target removes the stage.
 Set `CADRUMO_DEV_PYTHON` explicitly when the checkout's development interpreter is
 not available. `CADRUMO_CHANNEL` selects `stable` or `preview`. An optional
 `CADRUMO_DESKTOP_EXECUTABLE` must name an actual file in the hashed payload

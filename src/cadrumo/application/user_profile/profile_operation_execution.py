@@ -24,14 +24,12 @@ from .bundle_export_contracts import (
 )
 from .descendant_rows import replace_profile_descendants
 from .fact_write import apply_manager_profile_field_mutation
-from .login_session import logout_active_profile
 from .plantilla_media_rows import PlantillaMediaWriteSurface, remove_plantilla_media_year, set_plantilla_media_year
 from .profile_operation_contracts import (
     PROFILE_BUNDLE_EXPORT_PHASES,
     PROFILE_COMPLETE_SETUP_PHASES,
     PROFILE_DESCENDANTS_PHASES,
     PROFILE_FIELD_MUTATION_PHASES,
-    PROFILE_LOGOUT_PHASES,
     PROFILE_PATCH_PHASES,
     PROFILE_PLANTILLA_MEDIA_PHASES,
     PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
@@ -43,7 +41,6 @@ from .profile_operation_contracts import (
     ProfileDescendantsOperationRequest,
     ProfileDescendantsOperationResult,
     ProfileFieldMutationOperationRequest,
-    ProfileLogoutOperationRequest,
     ProfileMutationOperationResult,
     ProfilePatchOperationRequest,
     ProfilePatchOperationResult,
@@ -473,27 +470,6 @@ class ProfileBundleExportOperationExecutor:
         await context.events.effect(OperationEffect.UPDATED)
         await context.events.phase(PROFILE_BUNDLE_EXPORT_PHASES[3])
         return result_ref
-
-
-class ProfileLogoutOperationExecutor:
-    """Strong-close through the one session-revocation authority."""
-
-    async def execute(
-        self,
-        request: OperationRequest[ProfileLogoutOperationRequest],
-        context: OperationExecutorContext,
-    ) -> str:
-        payload = request.payload
-        _require_active_profile_subject(request, payload.profile_id)
-        await context.events.phase(PROFILE_LOGOUT_PHASES[0])
-        await context.events.effect(OperationEffect.UNKNOWN)
-        await context.events.phase(PROFILE_LOGOUT_PHASES[1])
-        # The revocation takes the root pointer lock and deletes files; the session it
-        # closes is bound process-wide, so the worker thread sees and clears it.
-        signed_out = await asyncio.to_thread(logout_active_profile)
-        await context.events.effect(OperationEffect.UPDATED if signed_out is not None else OperationEffect.NONE)
-        await context.events.phase(PROFILE_LOGOUT_PHASES[2])
-        return request.subject_ref
 
 
 class ProfileViewOperationExecutor:

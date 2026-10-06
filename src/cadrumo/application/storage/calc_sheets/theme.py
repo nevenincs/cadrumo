@@ -52,6 +52,11 @@ class StyleRole(StrEnum):
     RESULT = "result"
     TITLE = "title"
     BODY = "body"
+    FORM_LABEL = "form_label"
+    FORM_SECTION = "form_section"
+    FORM_INPUT = "form_input"
+    FORM_COMPUTED = "form_computed"
+    FORM_RESULT = "form_result"
 
 
 HorizontalAlign = Literal["left", "center", "right"]
@@ -75,6 +80,11 @@ class RoleStyle:
 
 
 ROLE_STYLES: Final[dict[StyleRole, RoleStyle]] = {
+    StyleRole.FORM_LABEL: RoleStyle(fill_hex="FFFFFF", font_hex="243746", bold=False, align="left", wrap=True),
+    StyleRole.FORM_SECTION: RoleStyle(fill_hex="EDF1F3", font_hex="243746", bold=True, align="left", wrap=True),
+    StyleRole.FORM_INPUT: RoleStyle(fill_hex="EDF5FF", font_hex="145DA0", bold=False, align="right"),
+    StyleRole.FORM_COMPUTED: RoleStyle(fill_hex="F5F6F7", font_hex="243746", bold=False, align="right"),
+    StyleRole.FORM_RESULT: RoleStyle(fill_hex="E6F2EC", font_hex="243746", bold=True, align="right"),
     # Slate band, white bold, centred — the column-title row on every tab.
     StyleRole.HEADER: RoleStyle(fill_hex=_SLATE, font_hex=_WHITE, bold=True, align="center"),
     # Light blue-grey banner, slate bold — the first cell of each casilla section.

@@ -14,6 +14,7 @@ from ....adapters.local_runtime.profile_password_rotation import ProfileRotation
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.profile_access import RuntimeSessionsLocked
+from ....application.runtime.sign_in import RuntimeHumanSignedOut
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from .. import runtime_account
 from ..account import (
@@ -37,6 +38,7 @@ class _StrictClient(RuntimeFrontendClient):
         self._test_session_id = uuid4()
         self._frontend = OperationFrontendProjection.TUI
         self.lock_calls = 0
+        self.sign_out_calls = 0
         self.lock_thread: int | None = None
         self.lock_started = threading.Event()
         self.release_lock = threading.Event()
@@ -81,6 +83,22 @@ class _StrictClient(RuntimeFrontendClient):
         )
 
     @override
+    def human_sign_out(self, *, timeout: float = 10) -> RuntimeHumanSignedOut:
+        """Use the same controllable acknowledgement with an explicit global call."""
+        self.sign_out_calls += 1
+        acknowledgement = self.lock(timeout=timeout)
+        return RuntimeHumanSignedOut(
+            request_id=acknowledgement.request_id,
+            runtime_boot_id=acknowledgement.runtime_boot_id,
+            connection_id=acknowledgement.connection_id,
+            profile_id=self.profile_id,
+            session_ids=acknowledgement.session_ids,
+            receipt_removed=True,
+            keychain_removed=True,
+            automation_enabled=True,
+        )
+
+    @override
     def close(self) -> None:
         self.close_calls += 1
 
@@ -120,6 +138,7 @@ async def test_direct_actions_lock_original_session_once_off_ui_thread(
     assert outcome.reason is reason
     assert outcome.profile_id is None and outcome.profile_label is None
     assert client.lock_calls == 1
+    assert client.sign_out_calls == (1 if action_name == "sign_out" else 0)
     assert client.lock_thread != threading.get_ident()
 
 

@@ -35,6 +35,7 @@ from ..compiler.profile_schema import capture_profile_schema_source
 from ..compiler.registry_scope import validate_registry_scope
 from ..edition_delta_chain_materialisation import chain_materialisation, member_identities
 from ..edition_delta_proof_source import read_staged_edition
+from .candidate_source_chain import require_source_chain_unchanged
 from .export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
@@ -105,8 +106,11 @@ class GeneratedExportTreeValidationContext:
     #: product's filing support floor. The normal None route still requires a
     #: runtime snapshot at required_grade and refuses that historical year.
     historical_static_source_ref: SourceRefId | None = None
+    source_chain_revisions: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if self.source_chain_revisions and (self.scope_authority is None or self.inheritance is not None):
+            raise RegistryValidationError("source-chain validation requires source authority and no export inheritance")
         if not self.period.strip():
             raise RegistryValidationError("generated-tree validation requires a non-empty filing period")
         if str(self.target.modelo) in self.supporting_modelos:
@@ -171,6 +175,7 @@ def validate_generated_export_tree(
             if context.inheritance is not None
             else ()
         ),
+        source_chain_revisions=context.source_chain_revisions,
     )
     if context.inheritance is not None:
         if context.scope_authority is None:
@@ -189,7 +194,7 @@ def validate_generated_export_tree(
         raise RegistryValidationError(
             f"generated modelo directory loads modelo {definition.id!r}, expected {modelo_id!r}",
         )
-    expected_revisions = (
+    expected_revisions = context.source_chain_revisions or (
         (revision_id,)
         if context.inheritance is None
         else (*tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors), revision_id)
@@ -199,6 +204,10 @@ def validate_generated_export_tree(
             f"isolated generated modelo must load exactly revisions {expected_revisions!r}, "
             f"got {tuple(definition.revisions)!r}",
         )
+    if context.source_chain_revisions:
+        if context.scope_authority is None:
+            raise RegistryValidationError("source-chain validation has no source authority")
+        require_source_chain_unchanged(context.scope_authority.modelo(modelo_id), definition, revision=revision_id)
     if context.inheritance is not None and (
         definition.revisions[expected_revisions[-2]].export_layouts != (context.inheritance.baseline_layout,)
     ):
@@ -584,6 +593,7 @@ def _require_isolated_target_context(
     revision_id: str,
     supporting_modelos: frozenset[str] = frozenset(),
     baseline_revisions: tuple[str, ...] = (),
+    source_chain_revisions: tuple[str, ...] = (),
 ) -> tuple[Path, Path, Path]:
     modelos_root = _require_directory(registry_root / "modelos", subject="generated registry modelos root")
     modelo_root = modelos_root / modelo_id
@@ -603,7 +613,7 @@ def _require_isolated_target_context(
     revision_root = revisions_root / revision_id
     _require_exact_children(
         revisions_root,
-        expected={revision_id, *baseline_revisions},
+        expected=set(source_chain_revisions) if source_chain_revisions else {revision_id, *baseline_revisions},
         subject="generated modelo revisions directory",
     )
     if len(set((*baseline_revisions, revision_id))) != len(baseline_revisions) + 1:

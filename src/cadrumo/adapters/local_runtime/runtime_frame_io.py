@@ -15,6 +15,7 @@ from ...application.runtime.access_management import (
     RuntimeSessionInventoryReply,
     RuntimeSessionInventoryTransfer,
 )
+from ...application.runtime.bootstrap import RuntimePasswordReset
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -31,6 +32,7 @@ from ...application.runtime.profile_access import (
     RuntimeProfileStatus,
     RuntimeProfileStatusTransfer,
 )
+from ...application.runtime.session_events import RuntimeSessionEvent
 from ...application.runtime.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,
     SubmissionPayloadBuffer,
@@ -47,13 +49,14 @@ MAXIMUM_SECRET_BYTES = 64 * 1024
 
 
 DOCUMENT_FRAME_KIND = b"J"
+SESSION_EVENT_FRAME_KIND = b"E"
 
 
 _SECRET = b"S"
 
 
 type SecretBearingRequest = (
-    RuntimeProfileLogin | RuntimeProfileResume | RuntimeOperationSecret | RuntimeEnrollmentSubmit
+    RuntimeProfileLogin | RuntimeProfileResume | RuntimePasswordReset | RuntimeOperationSecret | RuntimeEnrollmentSubmit
 )
 
 
@@ -92,6 +95,34 @@ def read_document[Model: BaseModel](channel: RuntimeByteChannel, model: type[Mod
     try:
         return decode_document(payload, model)
     except RuntimeRefusalError as error:
+        close_runtime_transport_after_failure(channel, error)
+        raise
+
+
+def read_reply_or_event[Model: BaseModel](
+    channel: RuntimeByteChannel, model: type[Model], *, deadline: float
+) -> Model | RuntimeSessionEvent:
+    """Demultiplex only at a complete reply boundary, never inside a secret or transfer."""
+    try:
+        header = channel.read_exact(5, deadline=deadline)
+        size = struct.unpack("!I", header[1:])[0]
+        if header[:1] not in {DOCUMENT_FRAME_KIND, SESSION_EVENT_FRAME_KIND} or not 0 < size <= MAXIMUM_FRAME_BYTES:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        payload = channel.read_exact(size, deadline=deadline)
+        if header[:1] == SESSION_EVENT_FRAME_KIND:
+            return decode_document(payload, RuntimeSessionEvent)
+        return decode_document(payload, model)
+    except BaseException as error:
+        close_runtime_transport_after_failure(channel, error)
+        raise
+
+
+def write_session_event(channel: RuntimeByteChannel, event: RuntimeSessionEvent, *, deadline: float) -> None:
+    """Write a bounded event using the connection's existing sole writer."""
+    frame = SESSION_EVENT_FRAME_KIND + document_frame(event)[1:]
+    try:
+        channel.write_all(frame, deadline=deadline)
+    except BaseException as error:
         close_runtime_transport_after_failure(channel, error)
         raise
 

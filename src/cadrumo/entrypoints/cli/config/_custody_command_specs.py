@@ -25,7 +25,7 @@ from ..command_shared_contracts import (
 )
 from ..command_spec import CommandSpec, InvocationSpec
 from ._command_spec_schema import config_payload_schema as _schema
-from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
+from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DESTRUCTIVE, PROFILE_READ, STATE_FREE
 
 _OUTPUT_LANGUAGE = OptionSpec(
     name="output_language",
@@ -175,6 +175,20 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                 ),
             )
         ),
+    ),
+    CommandSpec(
+        "config_sign_in_status",
+        "config",
+        "sign-in-status",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.sign_in_status.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(_OUTPUT_LANGUAGE,),
+        policy=PROFILE_READ,
+        handler=LazyBinding.available(DeferredTarget(".custody", "config_sign_in_status", __package__)),
+        result_schema=_schema("ConfigSignInStatusResult", "config.sign-in-status"),
+        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
     ),
     CommandSpec(
         "config_logout",

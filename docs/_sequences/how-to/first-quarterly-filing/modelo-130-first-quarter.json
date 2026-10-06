@@ -174,7 +174,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -206,7 +214,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -235,26 +243,32 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec"
+          "value": "5eef0fc94f7c27fb216293f4f819b3591e51ae632ee26a4f4febf0d01de9bae9"
         }
       ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
             "modelo-130-actividad-economica-gastos-cumulative": "500",
             "modelo-130-actividad-economica-ingresos-cumulative": "1000",
-            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec",
+          "calculation_revision_id": "5eef0fc94f7c27fb216293f4f819b3591e51ae632ee26a4f4febf0d01de9bae9",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -282,7 +296,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -388,7 +404,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 5eef0fc94f7c27fb216293f4f819b3591e51ae632ee26a4f4febf0d01de9bae9 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -432,7 +448,7 @@
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -449,7 +465,7 @@
         "modelo",
         "work",
         "verify",
-        "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec"
+        "5eef0fc94f7c27fb216293f4f819b3591e51ae632ee26a4f4febf0d01de9bae9"
       ],
       "captures": [],
       "envelope": {
@@ -487,10 +503,17 @@
             },
             "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec",
+          "calculation_revision_id": "5eef0fc94f7c27fb216293f4f819b3591e51ae632ee26a4f4febf0d01de9bae9",
           "completeness_status": "complete",
           "findings": [
             {
@@ -536,7 +559,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "475fedcde9467701a4a5f9a29274e4a6db03e03b6971e85112a4c911fe7f2f4f",
+          "verification_report_id": "6b8657f779c10228df58b7fa9402cbd63f5b8c4db7a4aa9beb1d74e87da86a95",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

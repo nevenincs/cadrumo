@@ -1,4 +1,12 @@
 [[revisions."2020-2023".application_links]]
+id = "modelo-216-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3290-2008:art-1"]
+source_refs = ["boe-2008-18497-modelo-216-calculation-guidance"]
+
+[[revisions."2020-2023".application_links]]
 id = "modelo-216-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
@@ -11,3 +19,11 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-eha-3290-2008:art-1"]
+
+[[revisions."2020-2023".application_links]]
+id = "modelo-216-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-dr-216-2020-2023"]

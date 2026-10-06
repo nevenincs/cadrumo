@@ -1,17 +1,13 @@
 # Review calculations with Google Sheets
 
-This page covers the spreadsheet review of a modelo calculation: exporting it
-to Google Sheets, checking how each total is reached with live formulas, and pulling your reviewed edits back as filing inputs. Pull returns those edits without saving them. This workflow is for reviewing calculated values after your profile
-and transactions are ready. It is not a bank statement import or bulk edit
-tool.
+Google review is outbound-only. Edits in Google Sheets do not become Cadrumo
+calculation inputs. The spreadsheet `pull`, `calculate`, and `verify` commands
+have been removed; use local calculation inputs and `work calculate` instead.
 
-Cadrumo has two spreadsheet routes for the same calculation surface.
-`aeat app modelo spreadsheet push` creates a Google Sheets workbook in your
-Drive, and `pull` and `calculate` read your edits back. `aeat app modelo
-spreadsheet export` writes an offline `.xlsx` workbook with live formulas to a
-local path. It needs no Google account, but no command reads an edited local
-workbook back. Use Google Sheets to review and adjust, and see
-[Export an offline workbook](#export-an-offline-workbook) for the other route.
+The previous template-based Google `push` remains disabled. Use `publish` with
+an exact saved calculation revision to create a new native Google Sheet.
+Offline `.xlsx` export remains available; see
+[Export an offline workbook](#export-an-offline-workbook).
 
 The local configuration commands on this page (status, folder view, logout) and the readiness checks on your records run live at build time. The commands that reach
 Google Drive and Sheets run against your own authorized account rather than the
@@ -26,11 +22,12 @@ You need:
 - a modelo and period ready enough to calculate
 - the `google` extra, installed with `pip install "cadrumo[google]"`
 
-Cadrumo works only inside a folder it creates in your Google Drive when you
-sign in. It never opens, lists or changes a file or folder you already had,
-and no command accepts a Drive folder or file from you, apart from the ID of
-a workbook Cadrumo itself exported. It does not use an older `aeat-vault/`
-folder; export a new workbook before pulling edits into Cadrumo.
+Cadrumo creates a managed Drive folder for each profile. Transport checks the
+local creation receipt, profile, ownership markers and current ancestry before
+accessing managed content. Known identities may receive a minimal metadata check
+when moved outside that folder; their content is then refused. Google does not
+provide an atomic folder-membership condition for every content request, so an
+external move between the check and request remains a provider limitation.
 
 ## Configure Google access
 
@@ -53,9 +50,9 @@ status shows `session_present` as false and no folder exists yet:
 :verify: Confirm that a profile which has not signed in has no Drive folder.
 ```
 
-If you move the folder to the bin, or sign in to a different Google account,
-sign in again: Cadrumo finds its folder or creates a new one, and you export
-your workbooks again.
+A trashed or mismatched managed folder is refused. Signing in again does not
+search your Drive for a same-name replacement. An uncertain creation needs
+reconciliation before another creation attempt.
 
 Probe the connection once you have signed in. The probe reaches
 Google, so it is shown here without being run:
@@ -65,22 +62,28 @@ Google, so it is shown here without being run:
 
 The Google integration is profile-scoped. Each profile signs in separately and gets its own folder.
 
-## Export a calculation workbook
+## Publish a saved calculation
 
-Export the calculation of one modelo, year, and period. The
-export creates a Google Sheets workbook inside the configured `cadrumo-vault/`
-area in Drive:
+Copy the calculation revision ID returned by `app modelo work calculate`, then run:
 
-```{cli-sequence} sheets-push
+```text
+aeat app modelo spreadsheet publish --calculation-revision-id REVISION_ID --accept-readable-export
 ```
 
-It is a workbook for reviewing a calculation, not a bank statement export. Use `aeat app
-ledger export` when you need a CSV, JSONL, or XLSX snapshot of your records.
+The flag authorizes a readable copy of that revision and its captured ledger
+support in the profile's managed Google folder. Anyone with sufficient Google
+authorization can read the Sheet. Original attachment bytes are not uploaded by
+this command. The result includes the actual spreadsheet URL.
 
-Use `--prefill-relations` only when you want the spreadsheet to include values
-carried from related filings, such as annual summaries or prior-quarter
-carryovers. Add `--dry-run` to preview what the export would clear and rewrite
-in the workbook without writing anything.
+Each publication creates a new document and preserves earlier review notes.
+The Sheet uses saved values without recalculating from today's ledger. Missing
+historical evidence, attribution or display metadata is reported explicitly;
+an incomplete review is not a filing-ready or audit-complete declaration.
+
+An optional `--publication-id UUID` identifies one publication across retries.
+Keep that identity after a timeout: a timeout does not prove that no Sheet was
+created. A retained, completed publication can return its existing URL without
+rewriting it; partial or uncertain publication requires reconciliation.
 
 (export-an-offline-workbook)=
 ## Export an offline workbook
@@ -97,52 +100,8 @@ command refuses to overwrite an existing file unless you add `--replace`, and
 it refuses an `--output` path whose parent directory does not exist. The
 refusal reads `The export output path is not valid` and names the reason.
 
-The offline workbook is a review copy. `pull`, `calculate`, and `verify` work
-only with a Google Sheet, so edits you make in the local file do not flow back
-into Cadrumo. It accepts `--prefill-relations` like `push`.
-
-## Pull your edits back
-
-After reviewing or editing the workbook, pull your edits back from the Sheet.
-Add `--assemble-observations` when you want the command output to include
-edited row-level data assembled as structured observations. The command does not save those observations:
-
-```{cli-sequence} sheets-pull
-```
-
-The pull command checks that the spreadsheet belongs to the current profile and
-matches the expected filing period. If it refuses, re-export and retry from the
-new spreadsheet. To use a pulled edit in a filing, supply it to `aeat app modelo
-work calculate` with `--casilla`, `--binding`, or `--relation`.
-
-(compute-casilla-values-from-the-sheet)=
-## Compute box values from the Sheet
-
-Run `aeat app modelo spreadsheet calculate` when you want Cadrumo to calculate
-box values from the edits in the Sheet. It pulls the cells you edited, runs the calculation engine
-over them, and displays the result. It saves nothing:
-
-```{cli-sequence} sheets-calculate
-```
-
-The `calculate` command checks that the spreadsheet matches the expected filing
-period. If it refuses, re-export and retry from the new spreadsheet.
-
-## Check the spreadsheet calculation
-
-Run the spreadsheet check command for the same modelo, year, and period. If you have a scenario JSON with your inputs and expected Agencia Estatal
-de Administración Tributaria (AEAT) outputs, pass it explicitly with
-`--scenario`:
-
-```{cli-sequence} sheets-verify
-```
-
-The check rewrites that period's workbook with your scenario file's inputs,
-then compares the workbook's formula results with the local calculation engine
-and, when the scenario supplies AEAT-published expected outputs, with those as
-well. It overwrites edits made in the pushed sheet, so pull your edits before
-you run the check.
-It does not submit a filing to AEAT.
+The offline workbook is a review copy. Edits in it do not flow back into
+Cadrumo. It accepts `--prefill-relations` for values carried from related filings.
 
 (back-up-your-encrypted-records-to-drive)=
 ## Back up your encrypted data to Drive
@@ -155,10 +114,16 @@ upload per storage area without changing anything. Narrow a large push with
 ```{cli-sequence} sheets-backup-push
 ```
 
-Only encrypted data is uploaded. Your data leaves the machine exactly as it
-sits encrypted on disk, and the master key never leaves your computer, so the
-Drive copy is unreadable without it. The mirror is one-way: Cadrumo writes the
-copy and never reads Drive back as the original of your data.
+Secure-object payloads are uploaded as their stored ciphertext, with length
+and SHA-256 checks before a complete namespace manifest is published. Structural
+manifests contain metadata and are not encrypted payloads. A limited or incomplete
+upload does not establish a complete backup; inspect failed and degraded manifest
+counts. A partial upload retains acknowledged ciphertext when safe cleanup cannot
+be established.
+
+This is a one-way mirror with no remote restore command. Local `archive import`
+reads a portable archive, not these mirrored objects. Successful upload and
+integrity verification do not establish recoverability.
 
 ## Sign out of Google
 
@@ -169,7 +134,7 @@ To stop access by copied credentials as well, follow
 Clear the Google session for the active profile. Logout is a local command, so
 it runs here. If a session exists, it removes the saved session token and its
 metadata. The profile's Drive folder is kept, so a later `aeat config google
-login` signs in again and finds it:
+login` signs in again and validates its recorded identity:
 
 ```{cli-sequence} sheets-logout
 :verify: Confirm that with no saved session logout removes nothing.
@@ -183,10 +148,9 @@ does none of that. After you update:
 
 1. Run `aeat config google login`. A sign-in from an earlier version is not
    reused; Cadrumo tells you to sign in again.
-2. Export your workbooks again. Cadrumo keeps everything in the folder it
-   creates at sign-in and does not look for workbooks or folders an earlier
-   version created. Those stay in your Drive untouched; move or delete them
-   yourself.
+2. Keep earlier workbooks for review. Cadrumo does not adopt historical
+   unreceipted workbooks or search Drive to repair them. Use `publish` to make a
+   new review copy from a saved calculation revision.
 
 These are no longer available:
 

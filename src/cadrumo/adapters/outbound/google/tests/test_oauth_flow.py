@@ -21,7 +21,7 @@ from .....application.user_profile.capsule_record import ProfileRecordIntegrityE
 from .....core.config import override_settings
 from .....core.config_google_client import OAuthClient
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
-from .. import oauth_flow
+from .. import oauth_callback, oauth_flow
 from ..errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthNetworkError,
@@ -47,6 +47,12 @@ if TYPE_CHECKING:
     from google_auth_oauthlib.flow import OAuthCredentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+@pytest.fixture(autouse=True)
+def synthetic_browser_desktop(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These loopback tests supply a fake browser; native desktop refusal has its own tests."""
+    monkeypatch.setattr(oauth_callback, "_require_browser_desktop", lambda: None)
 
 
 def _valid_oauth_client() -> OAuthClient:

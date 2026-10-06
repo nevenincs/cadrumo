@@ -51,6 +51,7 @@ from typing import cast
 from cadrumo.tests.golden_comparison import canonicalise, differing_paths, mask_document
 
 from .errors import SequenceGoldenMismatchError
+from .export_evidence import modelo_export_evidence_problem
 from .golden_store import (
     SANDBOX_WORKDIR_PLACEHOLDER,
     GoldenFrame,
@@ -58,6 +59,7 @@ from .golden_store import (
     mask_host_conditional_details,
     masked_envelope_values,
     normalise_document_paths,
+    normalise_frame_envelope,
     normalise_text_output,
     refresh_invocation,
 )
@@ -69,6 +71,7 @@ __all__ = [
     "check_transcript",
     "compare_transcript_to_golden",
     "evaluate_expectations",
+    "validate_live_export_evidence",
 ]
 
 #: The ``@expect`` pseudo-path asserting a frame's process exit code.
@@ -92,6 +95,25 @@ def _unified_diff(expected: str, actual: str) -> str:
     return "\n".join(lines)
 
 
+def validate_live_export_evidence(transcript: SequenceTranscript, *, page: str) -> tuple[str, ...]:
+    """Require live reader-facing export evidence while its sandbox is open."""
+    problems = []
+    for index, frame in enumerate(transcript.frames):
+        if frame.kind == FrameKind.SETUP or frame.envelope is None:
+            continue
+        evidence_problem = modelo_export_evidence_problem(
+            frame.envelope,
+            argv=frame.argv,
+            profile_id=transcript.profile_id,
+            instant=transcript.frozen_instant,
+            workdir=transcript.workdir,
+        )
+        if evidence_problem is not None:
+            at = _frame_locator(page, transcript.sequence_id, index, frame)
+            problems.append(f"{at}: {evidence_problem}")
+    return tuple(problems)
+
+
 def compare_transcript_to_golden(
     transcript: SequenceTranscript,
     golden: SequenceGolden,
@@ -103,7 +125,7 @@ def compare_transcript_to_golden(
     Accumulating: every frame divergence is collected in one pass so a check
     run reports the whole worklist. An empty tuple is a clean pass.
     """
-    problems: list[str] = []
+    problems = list(validate_live_export_evidence(transcript, page=page))
     if transcript.sequence_id != golden.sequence_id:
         problems.append(
             f"page {page!r}: transcript is for sequence {transcript.sequence_id!r} but the "
@@ -271,10 +293,10 @@ def _compare_envelope(
             # tokenise it the same value-anchored way before the central field
             # mask — otherwise a path leaking into a string value (config
             # check's storage-root / corpus-path detail) diverges every run.
-            live_envelope = normalise_document_paths(
+            live_envelope = normalise_frame_envelope(
                 actual.envelope,
-                storage_root=transcript.storage_root,
-                workdir=transcript.workdir,
+                frame=actual,
+                transcript=transcript,
             )
             # Same platform-conditional carve-out the text tier applies, at
             # the structural tier: each side's own detail is masked, so the

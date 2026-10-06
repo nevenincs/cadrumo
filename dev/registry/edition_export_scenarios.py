@@ -60,10 +60,9 @@ Where it stops
   floor is moved to the earliest supported period its edition serves, and an
   edition serving no supported period has no scenario, because nothing below
   the floor selects and so nothing there can render.
-- Modelo 347 has no scenario: its layout declares a required repeated record,
-  so an empty draft leaves a required occurrence unemitted and the export path
-  refuses it. Supplying that occurrence needs source-shaped arrivals this module
-  has no honest synthetic form for, so the modelo stays undeclared.
+- Modelo 347 supplies purchase and sale rows from resolved fictional invoices,
+  including a below-threshold exclusion control. Property records are not covered
+  by this scenario.
 - Modelo 303's 2022 edition has no scenario: the export path refuses its layout,
   whose regimen-simplificado record does not repeat per projection row. It is
   the modelo's first edition and names no predecessor, so the gate does not
@@ -183,6 +182,7 @@ from cadrumo.domain.prorrata_register.register import (
 )
 
 from .compiler.loader import load_modelo_directory, load_shared_catalogues
+from .edition_export_m347 import third_party_export_inputs
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
 __all__ = [
@@ -209,6 +209,7 @@ __all__ = [
     "M322_SCENARIO_PERIODS",
     "M341_SCENARIO_PERIODS",
     "M345_SCENARIO_PERIODS",
+    "M347_SCENARIO_PERIODS",
     "M353_SCENARIO_PERIODS",
     "M390_SCENARIO_PERIODS",
     "M490_SCENARIO_PERIODS",
@@ -227,6 +228,7 @@ __all__ = [
     "m303_export_scenario",
     "m308_export_scenario",
     "m322_export_scenario",
+    "m347_export_scenario",
     "m390_export_scenario",
     "supported_scenario_periods",
 ]
@@ -276,6 +278,10 @@ M232_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 #: The annual period each Modelo 345 edition is rendered for.
 M345_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2025": Period.from_year_and_code(2025, "0A"),
+}
+M347_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2011-2024": Period.from_year_and_code(2024, "0A"),
+    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
 }
 #: The annual period each Modelo 390 edition is rendered for; 390 files only ``0A``.
 M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -1297,6 +1303,15 @@ def m308_export_scenario(period: Period) -> EditionExportScenario:
     )
 
 
+def m347_export_scenario(period: Period) -> EditionExportScenario:
+    """Supply required counterparty rows and their consistently resolved totals."""
+    return EditionExportScenario(
+        period=period,
+        inputs=third_party_export_inputs(period),
+        producer_snapshot=partial(_general_producer_snapshot, "347"),
+    )
+
+
 #: Per modelo, the scenario builder and the period each edition is rendered for.
 _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportScenario], Mapping[str, Period]]]] = {
     str(Modelo("189")): (partial(general_export_scenario, "189"), M189_SCENARIO_PERIODS),
@@ -1304,11 +1319,7 @@ _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportSc
     str(Modelo("193")): (m193_export_scenario, M193_SCENARIO_PERIODS),
     str(Modelo("232")): (partial(general_export_scenario, "232"), M232_SCENARIO_PERIODS),
     str(Modelo("345")): (partial(general_export_scenario, "345"), M345_SCENARIO_PERIODS),
-    # Modelo 347 is deliberately absent. Its m347-declarado record is a REQUIRED
-    # repeat over binding_rows in both editions, and the general scenario
-    # supplies no draft, so an empty render leaves a required occurrence
-    # unemitted. Declaring it here would produce a refusal rather than
-    # comparable bytes. It needs a builder with draft input, or an honest skip.
+    str(Modelo("347")): (m347_export_scenario, M347_SCENARIO_PERIODS),
     str(Modelo("303")): (m303_export_scenario, M303_SCENARIO_PERIODS),
     str(Modelo("131")): (m131_export_scenario, M131_SCENARIO_PERIODS),
     str(Modelo("390")): (m390_export_scenario, M390_SCENARIO_PERIODS),

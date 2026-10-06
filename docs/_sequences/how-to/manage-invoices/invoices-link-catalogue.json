@@ -91,7 +91,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tledger.link\nbucket\t<profile-id>\ntransaction_id\t4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522\nactor\toperator\ninvoice_id\t74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca\n"
+      "text": "operation\tledger.link\nbucket\t<profile-id>\ntransaction_id\t4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522\nactor\toperator\ninvoice_id\t74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -108,7 +108,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.invoice.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "base_total": "2000.00",
           "base_total_eur": "2000.00",
@@ -160,7 +168,7 @@
           "source_sha256": null
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

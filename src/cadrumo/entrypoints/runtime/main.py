@@ -166,6 +166,7 @@ def _serve_runtime_endpoint(
         stop=stop,
         capture_login=login_policy.capture,
         login_inventory=login_policy.inventory,
+        os_owner_id=endpoint.os_owner_id if isinstance(endpoint, WindowsRuntimeEndpoint) else str(posix_owner_uid()),
     )
     attach = None
     publication = None

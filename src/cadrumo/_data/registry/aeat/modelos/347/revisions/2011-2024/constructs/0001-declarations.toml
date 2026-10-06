@@ -12,6 +12,7 @@ source_refs = [
     "aeat-modelo-347-procedure",
     "boe-modelo-347-2008-form",
     "boe-modelo-347-2011-amendment",
+    "boe-modelo-347-2011-form-pdf",
 ]
 casilla_ids = [
     # The construct must collect EVERY casilla of the revision. It held the
@@ -54,6 +55,9 @@ casilla_ids = [
     "inmueble.situacion",
     "inmueble.referencia-catastral",
     "inmueble.direccion",
+    "firma-fecha",
+    "firma-nombre",
+    "firma-cargo",
 ]
 bindings = [
     "modelo-347-declarante-numero-personas-entidades",

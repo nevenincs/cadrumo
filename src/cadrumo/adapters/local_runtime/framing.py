@@ -37,6 +37,7 @@ class VerifiedRuntimeConnection(RuntimeOperationTransport):
         # One response belongs to one request. Reentrant for login's secret
         # write and for failure paths that close while the exchange is held.
         self._exchange_lock = RLock()
+        self._initialize_session_events()
         self._closed = True
         self._channel_closed = False
         self._connection_id: UUID | None = None

@@ -32,7 +32,12 @@ impl ChildConfiguration {
             {
                 return Err(Error::Invalid("invalid child environment".into()));
             }
-            if !names.insert(key.to_ascii_uppercase()) {
+            let identity = if cfg!(windows) {
+                key.to_uppercase()
+            } else {
+                key.to_owned()
+            };
+            if !names.insert(identity) {
                 return Err(Error::Invalid("ambiguous environment name casing".into()));
             }
         }
@@ -41,6 +46,30 @@ impl ChildConfiguration {
             working_directory,
             environment,
         })
+    }
+    /// Explicit preparation through the canonical platform owner. It can create the
+    /// resolved root and temporary directory; it is not a capability inspection.
+    #[cfg(feature = "platform")]
+    pub fn from_platform(
+        executable: PathBuf,
+        working_directory: PathBuf,
+        root: &Path,
+        profile: cadrumo_platform::storage::Profile,
+        ambient: impl IntoIterator<Item = (OsString, OsString)>,
+    ) -> Result<Self, Error> {
+        // Reject invalid command inputs before the owner prepares any directories.
+        Self::new(
+            executable.clone(),
+            working_directory.clone(),
+            BTreeMap::new(),
+        )?;
+        crate::filesystem::absolute_root(root)?;
+        let environment = cadrumo_platform::storage::child_environment(profile, ambient, root)?;
+        Self::new(
+            executable,
+            working_directory,
+            environment.into_iter().collect(),
+        )
     }
     pub fn executable(&self) -> &Path {
         &self.executable
@@ -55,5 +84,29 @@ impl ChildConfiguration {
             .env_clear()
             .envs(&self.environment);
         command
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn manual_environment_name_collisions_follow_native_case_identity() {
+        let executable = std::env::current_exe().unwrap();
+        let directory = std::env::temp_dir();
+        for (first, second) in [("VALUE", "value"), ("ID", "ıd"), ("SS", "ß")] {
+            let environment = BTreeMap::from([
+                (OsString::from(first), OsString::from("first")),
+                (OsString::from(second), OsString::from("second")),
+            ]);
+            let result =
+                ChildConfiguration::new(executable.clone(), directory.clone(), environment.clone());
+            if cfg!(windows) {
+                assert!(matches!(result, Err(Error::Invalid(_))), "{first}/{second}");
+            } else {
+                assert_eq!(result.unwrap().environment(), &environment);
+            }
+        }
     }
 }

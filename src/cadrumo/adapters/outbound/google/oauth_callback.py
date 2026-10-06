@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import secrets
 import socket
+import sys
 import time
 import webbrowser
 from collections.abc import Callable
 from urllib.parse import parse_qs, urlsplit
+
+from ....application.runtime.contracts import RuntimeRefusalError
+from ...local_runtime.windows_desktop_logon import current_windows_desktop_logon
 
 LOOPBACK_HOST = "127.0.0.1"
 _MAX_REQUEST_BYTES = 16_384
@@ -77,6 +81,7 @@ def receive_authorization_code(authorization_url: Callable[[str], str], *, state
     One monotonic deadline covers accept and every read, including slow partial
     headers. Socket ownership ends before the caller exchanges the code.
     """
+    _require_browser_desktop()
     deadline = time.monotonic() + timeout_seconds
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
@@ -108,6 +113,16 @@ def receive_authorization_code(authorization_url: Callable[[str], str], *, state
                 raise
             _respond(connection, accepted=True, deadline=deadline)
             return code
+
+
+def _require_browser_desktop() -> None:
+    """Never start the default browser/profile from Windows Session 0 or an unverified desktop."""
+    if sys.platform != "win32":
+        return
+    try:
+        current_windows_desktop_logon()
+    except RuntimeRefusalError:
+        raise webbrowser.Error("OS browser launcher requires the user's interactive desktop") from None
 
 
 def _respond(connection: socket.socket, *, accepted: bool, deadline: float) -> None:

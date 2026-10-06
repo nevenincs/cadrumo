@@ -232,8 +232,8 @@
           }
         ],
         "result": {
-          "authority_generation": "33b9c4cf5ace0549979bd7f64a71a1071b2071c30ceaf2e0578414f8c5e3b13d",
-          "binding_count": 8,
+          "authority_generation": "a8f14a1c31a55bf48e8a383ba3bd4c6e5d9a574778115ec99f1497e3bc7cdc60",
+          "binding_count": 6,
           "bindings": [
             {
               "binding_id": "modelo-130-resultados-negativos-anteriores",
@@ -326,57 +326,6 @@
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
               "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-ingresos-taxable-base-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "data from your records",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-modelo-130-instructions"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-130-actividad-economica-rendimiento-neto-cumulative",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "rd-439-2007:art-110",
-                "orden-eha-672-2007:art-1",
-                "ley-35-2006:art-99",
-                "rd-439-2007:art-95",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30"
-              ],
-              "modelo": "130",
-              "period": "1T",
-              "readiness": "data from your records",
-              "relation_inputs": [],
-              "revision": "2019-y-siguientes",
-              "source": "ledger_renta_income_aggregation",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
               "typed_enum": null

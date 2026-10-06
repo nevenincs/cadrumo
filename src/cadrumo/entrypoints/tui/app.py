@@ -34,6 +34,7 @@ from .account import (
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
     AccountSessionReaderV1,
+    AccountSessionRetired,
     WorkbenchAccountProviderV1,
 )
 from .app_navigation import RootNavigationMixin
@@ -179,6 +180,7 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         """Builds the workbench root off the event loop once the shell has rendered."""
         self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
+        self._unsubscribe_retirement: Callable[[], None] | None = None
         self._home_refresh_refusal_code: str | None = None
         """Why the last Home refresh was refused, or ``None`` when it succeeded."""
         self._workbench_search_refusal_code: str | None = (
@@ -276,6 +278,9 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         )
 
     def _start_session(self) -> None:
+        factories = self._account_factories
+        if factories is not None and factories.subscribe_retirement is not None:
+            self._unsubscribe_retirement = factories.subscribe_retirement(self._post_session_retired)
         if self._read_account_session is not None:
             self.set_interval(_SESSION_WATCH_SECONDS, self._watch_account_session)
         self._describe_account_keys()
@@ -283,6 +288,22 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
             self._refuse_account_action()
         if self._destination_catalogue is not None and self._refresh_home is not None:
             self._show_home(None)
+
+    def _post_session_retired(self) -> None:
+        self.post_message(AccountSessionRetired())
+
+    def on_account_session_retired(self, _: AccountSessionRetired) -> None:
+        """Clear on the UI thread; the transport callback never waits for rendering."""
+        self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+
+    def on_unmount(self) -> None:
+        """Release the event subscription when this profile-bound root leaves."""
+        self._stop_session_events()
+
+    def _stop_session_events(self) -> None:
+        unsubscribe, self._unsubscribe_retirement = self._unsubscribe_retirement, None
+        if unsubscribe is not None:
+            unsubscribe()
 
     @property
     def account_actions_available(self) -> bool:

@@ -38,7 +38,7 @@ def read_mutation_baseline(
     try:
         return client.read_profile_view((page_kind,), timeout=remaining_budget(deadline))
     except RuntimeFrontendRefusedError as error:
-        raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason}) from error
+        raise CliRefusedBoundaryError(error.reason, context=error.context) from error
 
 
 def execute_profile_mutation(

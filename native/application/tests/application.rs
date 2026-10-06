@@ -313,13 +313,14 @@ fn child_configuration_is_an_immutable_complete_environment() {
         (OsString::from("PATH"), OsString::new()),
         (OsString::from("Path"), OsString::new()),
     ]);
-    assert!(
+    assert_eq!(
         ChildConfiguration::new(
             std::env::current_exe().unwrap(),
             temp.path().into(),
             ambiguous
         )
-        .is_err()
+        .is_err(),
+        cfg!(windows)
     );
 }
 
@@ -717,10 +718,8 @@ fn cache_admission_counts_archive_directories_too() {
         store.inspect(&spec).unwrap().readiness,
         Readiness::Incompatible(_)
     ));
-    assert!(matches!(
-        store.provision(&spec, || Ok(Cursor::new(&bytes)), &Cancellation::default()),
-        Err(Error::LimitExceeded)
-    ));
+    let result = store.provision(&spec, || Ok(Cursor::new(&bytes)), &Cancellation::default());
+    assert!(matches!(result, Err(Error::LimitExceeded)), "{result:?}");
 }
 
 #[cfg(unix)]
@@ -832,6 +831,134 @@ fn killed_writer_releases_lock_and_preserves_previous_component() {
         )
         .unwrap();
     assert_eq!(store.inspect(&next).unwrap().readiness, Readiness::Ready);
+}
+
+fn extraction_archive() -> Vec<u8> {
+    let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+    let options = SimpleFileOptions::default().unix_permissions(0o755);
+    zip.start_file("chrome/browser", options).unwrap();
+    zip.write_all(b"replacement").unwrap();
+    for index in 0..512 {
+        zip.start_file(format!("resources/{index}"), options)
+            .unwrap();
+        zip.write_all(b"resource").unwrap();
+    }
+    zip.finish().unwrap().into_inner()
+}
+
+fn extraction_spec(bytes: &[u8]) -> Artifact {
+    let mut spec = artifact(bytes, "2");
+    spec.max_entries = 5000;
+    spec
+}
+
+#[test]
+fn killed_extractor_recovers_partial_payload_and_preserves_active_version() {
+    if let Some(root) = std::env::var_os("CADRUMO_EXTRACTION_TEST_ROOT") {
+        let root = std::path::PathBuf::from(root);
+        let bytes = fs::read(root.join("input.zip")).unwrap();
+        let store = ComponentStore::new(root.join("store"), "fixture-target".into()).unwrap();
+        store
+            .provision(
+                &extraction_spec(&bytes),
+                || Ok(Cursor::new(&bytes)),
+                &Cancellation::default(),
+            )
+            .unwrap();
+        return;
+    }
+    let temp = directory();
+    let store = ComponentStore::new(temp.path().join("store"), "fixture-target".into()).unwrap();
+    let bytes = archive(&[("chrome/browser", b"previous")]);
+    let previous = artifact(&bytes, "1");
+    store
+        .provision(
+            &previous,
+            || Ok(Cursor::new(&bytes)),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    let replacement = extraction_archive();
+    fs::write(temp.path().join("input.zip"), &replacement).unwrap();
+    let mut child = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "killed_extractor_recovers_partial_payload_and_preserves_active_version",
+        ])
+        .env("CADRUMO_EXTRACTION_TEST_ROOT", temp.path())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .unwrap();
+    let payload = temp
+        .path()
+        .join("store/chromium/staging/candidate/payload/resources/0");
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    while !payload.exists() && std::time::Instant::now() < deadline {
+        if child.try_wait().unwrap().is_some() {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+    let extracting = payload.exists();
+    let killed = child.kill();
+    child.wait().unwrap();
+    assert!(extracting, "child did not start real extraction");
+    killed.unwrap();
+    assert!(payload.exists(), "interruption missed the staging window");
+    assert_eq!(
+        store.inspect(&previous).unwrap().readiness,
+        Readiness::Ready
+    );
+    let next = extraction_spec(&replacement);
+    store
+        .provision(
+            &next,
+            || Ok(Cursor::new(&replacement)),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    assert_eq!(store.inspect(&next).unwrap().readiness, Readiness::Ready);
+    assert!(!temp.path().join("store/chromium/staging").exists());
+}
+
+#[test]
+fn cancellation_during_extraction_preserves_previous_payload() {
+    let temp = directory();
+    let store = ComponentStore::new(temp.path().join("store"), "fixture-target".into()).unwrap();
+    let first = archive(&[("chrome/browser", b"previous")]);
+    let previous = artifact(&first, "1");
+    store
+        .provision(
+            &previous,
+            || Ok(Cursor::new(&first)),
+            &Cancellation::default(),
+        )
+        .unwrap();
+    let replacement = extraction_archive();
+    let next = extraction_spec(&replacement);
+    let cancellation = Arc::new(Cancellation::default());
+    let observer_cancel = cancellation.clone();
+    let payload = temp
+        .path()
+        .join("store/chromium/staging/candidate/payload/resources/0");
+    let observer = std::thread::spawn(move || {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+        while !payload.exists() && std::time::Instant::now() < deadline {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        let extracting = payload.exists();
+        observer_cancel.cancel();
+        extracting
+    });
+    let result = store.provision(&next, || Ok(Cursor::new(&replacement)), &cancellation);
+    assert!(observer.join().unwrap(), "did not observe real extraction");
+    assert!(matches!(result, Err(Error::Cancelled)));
+    assert_eq!(
+        store.inspect(&previous).unwrap().readiness,
+        Readiness::Ready
+    );
+    assert!(!temp.path().join("store/chromium/staging").exists());
 }
 
 #[cfg(unix)]

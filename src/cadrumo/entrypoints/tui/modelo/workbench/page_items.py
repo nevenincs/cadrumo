@@ -27,9 +27,11 @@ from types import MappingProxyType
 from typing import Final
 
 from .....application.modelo.source_policy import SourceFamily
+from .....application.modelo.value_presentation import absent_value_text, format_casilla_value
 from .....application.modelo.work_form_models import (
     ModeloFormAttention,
     ModeloFormBindingInputsBlock,
+    ModeloFormContextFieldBlock,
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
@@ -45,7 +47,8 @@ from .....application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
-from .....core.i18n.render import tr
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language, tr
 from .casilla_list_models import (
     AddressKey,
     CasillaListEntry,
@@ -509,6 +512,19 @@ def _section_items(
             )
         elif isinstance(block, ModeloFormGridBlock):
             items.extend(_grid_items(block, staged, mode, page))
+        elif isinstance(block, ModeloFormContextFieldBlock):
+            if mode is WorkbenchFilter.ALL:
+                language = OutputLanguage(output_language())
+                value = (
+                    absent_value_text(language)
+                    if block.value is None
+                    else format_casilla_value(
+                        block.value,
+                        data_type="text",
+                        language=language,
+                    )
+                )
+                items.append(CasillaListNote(f"{block.label.text}: {value}", indent=1))
         elif mode is WorkbenchFilter.ALL:
             items.extend(_record_items(block))
     if not items:

@@ -2,7 +2,7 @@
 
 A layout is published beside its revision and read as that revision's form, so
 it must describe exactly that revision: every casilla placed once, nothing
-invented, no casilla shown in two cells, bindings addressed only where their
+invented, repeated casillas only at declared alias positions, bindings addressed only where their
 contract allows, and a source digest that still matches the revision facts the
 layout was generated from. :func:`form_layout_failures` states every departure
 as a failure line; the registry validator enrols it for every revision.
@@ -27,12 +27,15 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
     FormBlockDefinition,
     FormCellKind,
+    FormContextFieldBlock,
     FormFieldBlock,
     FormGridBlock,
     FormLayoutDefinition,
@@ -70,6 +73,17 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
     }
     if literal_scales:
         payload["literal_scales"] = literal_scales
+    # Keep existing declarations' digest contract unchanged. Context-bearing
+    # layouts additionally depend on the exact filing producer semantics.
+    if any(
+        isinstance(block, FormContextFieldBlock) for layout in revision.form_layouts for block in _layout_blocks(layout)
+    ):
+        payload["context_sources"] = [
+            (layout.id, record.id, field.id, field.producer_key, field.draft_attribute, field.data_type)
+            for layout in derive_export_layouts_from_bindings(revision)
+            for record in layout.records
+            for field in record.fields
+        ]
     return sha256_hex(canonical_json_bytes(payload))
 
 
@@ -208,7 +222,7 @@ def _placement_failures(layout: FormLayoutDefinition, revision: ModeloRevision) 
     placed = {placement.casilla_id: placement for placement in layout.placements}
     references = Counter(_referenced_casillas(layout))
     yield from _placement_domain_failures(declared, placed, references)
-    yield from _placement_count_failures(placed, references)
+    yield from _placement_count_failures(layout, placed, references)
 
 
 def _placement_domain_failures(
@@ -225,12 +239,27 @@ def _placement_domain_failures(
         yield f"shows casilla {casilla_id!r}, which the revision does not declare"
 
 
-def _placement_count_failures(placed: dict[str, FormPlacementDefinition], references: Counter[str]) -> Iterator[str]:
+def _placement_count_failures(
+    layout: FormLayoutDefinition, placed: dict[str, FormPlacementDefinition], references: Counter[str]
+) -> Iterator[str]:
     """Report references inconsistent with each placement's on-form status."""
+    positions: dict[str, list[tuple[str, str]]] = {}
+    for page in layout.pages:
+        for section in page.sections:
+            for block in section.blocks:
+                for casilla_id in _block_casilla_references(block):
+                    positions.setdefault(casilla_id, []).append((page.id, section.id))
     for casilla_id, placement in sorted(placed.items()):
         count = references.get(casilla_id, 0)
         if placement.kind is FormPlacementKind.ON_FORM and count != 1:
-            yield f"shows on-form casilla {casilla_id!r} in {count} positions; it belongs in exactly one"
+            locations = positions.get(casilla_id, [])
+            aliases = {(alias.page_id, alias.section_id) for alias in placement.aliases}
+            if (
+                not locations
+                or len(locations) != len(set(locations))
+                or any(location not in aliases for location in locations[1:])
+            ):
+                yield f"shows on-form casilla {casilla_id!r} in {count} positions; it belongs in exactly one"
         if placement.kind is not FormPlacementKind.ON_FORM and count:
             yield f"shows casilla {casilla_id!r} on the form although it is placed {placement.kind.value!r}"
 
@@ -254,6 +283,28 @@ def _page_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> It
     for page in layout.pages:
         if page.condition_casilla_id is not None and page.condition_casilla_id not in declared:
             yield f"page {page.id!r} is conditioned on undeclared casilla {page.condition_casilla_id!r}"
+
+
+def _context_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
+    for block in _layout_blocks(layout):
+        if isinstance(block, FormContextFieldBlock):
+            try:
+                resolve_form_context_field(revision, block)
+            except RegistryValidationError as error:
+                yield f"context field {block.id!r}: {error}"
+
+
+def _choice_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    for block in _layout_blocks(layout):
+        if not isinstance(block, FormFieldBlock) or not block.choices:
+            continue
+        casilla = casillas.get(block.casilla_id)
+        domain = casilla.constraints.enum if casilla is not None and casilla.constraints is not None else None
+        if casilla is None or casilla.data_type.value != "text" or domain is None:
+            yield f"choice field {block.id!r} requires a closed text casilla domain"
+        elif any(choice.value not in domain for choice in block.choices):
+            yield f"choice field {block.id!r} names a value outside its casilla domain"
 
 
 def form_layout_failures(revision: ModeloRevision) -> tuple[str, ...]:
@@ -284,4 +335,6 @@ def form_layout_failures(revision: ModeloRevision) -> tuple[str, ...]:
     failures.extend(_binding_failures(layout, revision))
     failures.extend(_repeating_failures(layout, revision))
     failures.extend(_page_failures(layout, revision))
+    failures.extend(_context_failures(layout, revision))
+    failures.extend(_choice_failures(layout, revision))
     return tuple(f"form layout {layout.id!r} {failure}" for failure in failures)

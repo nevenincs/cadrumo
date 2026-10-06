@@ -445,6 +445,53 @@ modelo:
           y de operaciones y situaciones relacionadas con países o territorios calificados
           como paraísos fiscales.
         title: Operaciones vinculadas y paraísos fiscales (informativa anual)
+      form:
+        authored:
+          acquisition: Valor de adquisición
+          amendment: Declaración complementaria o sustitutiva
+          amount: Importe de la operación
+          amount_ex_vat: Importe sin IVA (€)
+          country: Clave de país o territorio
+          description: Descripción de la operación
+          direction: 'I: ingreso · P: pago'
+          fjo: 'Tipo de persona: F física · J jurídica · O otra'
+          given: Nombre
+          haven: Operaciones con paraísos fiscales
+          identity: Identificación
+          income_before_reduction: Renta antes de la reducción, sin IVA (€)
+          intangibles: Reducción de rentas de activos intangibles
+          issuer: Entidad participada o emisora
+          kind: Tipo de valor
+          link: Tipo de vinculación
+          marker: Tipo de declaración complementaria o sustitutiva
+          method: Método de valoración
+          name: Apellidos o razón social
+          nif: NIF
+          operation: Tipo de operación
+          page1: Operaciones vinculadas
+          page2: Operaciones y tenencia de valores en paraísos fiscales
+          party: Apellidos y nombre / Razón social
+          percentage: Porcentaje de participación
+          period: Devengo
+          period_end: Fin del período declarado
+          period_start: Inicio del período declarado
+          province: Código de provincia o país
+          receipt: Justificante de la declaración anterior
+          related: Operaciones con personas o entidades vinculadas
+          resident: Persona o entidad residente
+          row1: '1'
+          row10: '10'
+          row11: '11'
+          row12: '12'
+          row2: '2'
+          row3: '3'
+          row4: '4'
+          row5: '5'
+          row6: '6'
+          row7: '7'
+          row8: '8'
+          row9: '9'
+          securities: Tenencia de valores en paraísos fiscales
       revision:
         2016-2017:
           casilla:

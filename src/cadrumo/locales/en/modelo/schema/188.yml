@@ -29,6 +29,12 @@ modelo:
           insurance contracts. Annual summary.
         title: Withholdings on capitalisation transactions and life insurance - annual
           summary
+      form:
+        section:
+          declaracion:
+            heading: Declaration details
+          declarante:
+            heading: Identity and contact
       revision:
         '2022':
           construct:
@@ -39,6 +45,25 @@ modelo:
           field:
             label: Modelo 188, tax year 2022
         2023-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: 'Supplementary: C to add omitted payments'
+            x-chim6r1ecdnmst31cdq6u:
+              label: Contact full name
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Tax year
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Previous reference (replacement only)
+            x-chim6r1edpkmc:
+              label: Declarant tax ID
+            x-chim6r1edpnmqojick:
+              label: Full name or legal name
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              label: Declaration reference (13 digits; starts with 188)
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: 'Replacement: S to replace a previous declaration'
+            x-chim6r1eehimopb6dtn6u:
+              label: Contact telephone
           construct:
             modelo-188-calculation-construct:
               field:

@@ -154,6 +154,11 @@ def test_idle_fence_stops_only_without_hosted_profiles(tmp_path: Path) -> None:
     assert not stop.is_set() and profiles._admitting()
     profiles._profiles.pop(profile_id)
     assert profiles.hosted_profile_count() == 0
+    # An accepted bootstrap transaction can own work without any profile worker.
+    profiles._custody_mutations.add(profile_id)
+    assert not profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)
+    assert not stop.is_set()
+    profiles._custody_mutations.remove(profile_id)
     assert profiles.stop_if_idle(RuntimeExitReason.SUPERVISOR_STOP, timeout=1)
     assert stop.reason is RuntimeExitReason.SUPERVISOR_STOP and not profiles._admitting()
 

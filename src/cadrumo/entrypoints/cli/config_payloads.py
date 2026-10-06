@@ -34,6 +34,7 @@ from ...application.diagnostic_models import (
     DiagnosticStatus,
     DiagnosticStatusValue,
 )
+from ...application.runtime.sign_in import SignInStatus
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.workflow.events import WorkflowReasonClass
 from ...application.workflow.profile_health import ProfileHealthStatusValue, ProfileSource
@@ -281,6 +282,13 @@ class ConfigLoginResult(OutputSchema):
     closed_previous_profile: str | None = None
 
 
+class ConfigSignInStatusResult(OutputSchema):
+    """Non-authoritative active-profile sign-in observation, without a session bearer."""
+
+    profile_id: BucketId | None
+    status: SignInStatus
+
+
 class ConfigPassphraseChangeResult(OutputSchema):
     """Non-secret outcome of one active-profile passphrase rotation."""
 
@@ -383,23 +391,24 @@ class ConfigPassphraseResetResult(OutputSchema):
 
     profile_id: BucketId
     changed: bool
+    human_receipt_revoked: bool
+    receipt_removed: bool
+    keychain_removed: bool
     password_generation: PostChangePasswordGeneration
     dek_epoch_preserved: bool
     recovery_enrollment_retained: bool
 
 
 class ConfigLogoutResult(OutputSchema):
-    """JSON envelope for ``aeat config logout``.
-
-    Reports the cleared CLI default. Each invocation's runtime connection
-    has its own lifetime; clearing selection cannot retire a prior process's
-    connection or revoke independent human acceleration and API grants.
-    """
+    """Global human sign-out; automation and receipt cleanup remain explicit."""
 
     logged_out_profile: str | None = None
     already_logged_out: bool
-    scope: Literal["cli_context"] = "cli_context"
-    human_receipt_revoked: Literal[False] = False
+    scope: Literal["profile_human_access"] = "profile_human_access"
+    human_receipt_revoked: bool
+    receipt_removed: bool | None = None
+    keychain_removed: bool | None = None
+    automation_enabled: bool | None = None
     automation_revoked: Literal[False] = False
 
 

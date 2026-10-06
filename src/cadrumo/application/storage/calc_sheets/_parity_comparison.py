@@ -1,52 +1,12 @@
-"""Pure per-casilla comparison across the calculation surfaces.
+"""Pure, exact per-casilla comparison of caller-supplied values.
 
-Extracted from the parity harness so the comparison can be reached without the
-harness's write path. That separation is load-bearing rather than tidy:
-:func:`~application.storage.calc_sheets.parity_harness.verify_modelo_parity` acquires its
-spreadsheet side by CREATING or updating the workbook, seeding operator inputs
-into ``Entradas`` and relations into ``Tarifas``, and reading ``Cálculos`` back —
-so any caller that must not write cannot go through it. The export preview is
-exactly that caller, and the decision record requires it to reuse this
-comparison rather than grow a second differ.
+The historical surface names ``local``, ``sheets`` and ``aeat`` remain part
+of the report shape. These functions acquire no values, perform no network
+operations and persist nothing. They remain usable by synthetic acceptance
+and historical report tooling after retirement of the remote parity workflow.
 
-The functions here take mappings and casilla definitions only. They deliberately
-do NOT take a snapshot or a scenario: the export preview holds neither, and a
-comparison that demanded them would have to be reimplemented for it, which is
-the duplication this module exists to prevent.
-
-The three surfaces are named from the parity use — ``local``, ``sheets``,
-``aeat`` — and the preview use reads them as "what the plan would write",
-"what the spreadsheet currently holds", and "absent". A divergent row is then
-precisely a cell whose value would change.
-
-COMPARISON IS EXACT, AND THAT IS THE CONTRACT RATHER THAN AN OVERSIGHT. The
-reconcile surfaces compare filed against computed at the tolerance the registry
-publishes per verification expectation, and it would be natural to assume this
-module simply forgot to. It did not, for three reasons, and the first is
-decisive: THE REGISTRY PUBLISHES NO TOLERANCE FOR THIS AXIS. Its tolerance is
-declared on verification expectations, which govern filed-versus-computed
-reconciliation — a legal question about whether a taxpayer's return agrees with
-the authority. Engine-versus-spreadsheet is not that question, so adopting that
-tolerance here would apply a legal allowance to an axis no law governs.
-
-Second, the preview consumer asks "would this cell's value change", and any
-difference is a write. A tolerance would make the preview UNDER-report cells the
-apply would overwrite, which is the one error a dry run must not make. Third,
-the parity consumer asks whether the spreadsheet reproduces the engine, and a
-cent of slack there would hide exactly the formula transcription error the
-harness exists to catch.
-
-So a future reader reconciling this module against the reconcile surfaces should
-not fold it onto ``verification_policy().tolerance``. If a real rounding
-difference is ever observed between the Decimal runtime and a spreadsheet
-formula, the fix is to quantize both sides to the modelo's money scale before
-comparison, not to widen the comparison.
-
-See Also:
-    :func:`~application.storage.calc_sheets.parity_harness.verify_modelo_parity`
-        The three-way harness that acquires the values and calls this.
-    :class:`~domain.calculations.registry.schema.RegistrySnapshot`
-        Authority the caller resolves casilla definitions from.
+Comparison is exact: filing-reconciliation tolerances do not govern this
+axis. Callers must resolve any required numeric scale before comparison.
 """
 
 from __future__ import annotations

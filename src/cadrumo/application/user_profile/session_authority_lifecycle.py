@@ -12,14 +12,44 @@ import asyncio
 from uuid import UUID
 
 from .access_contracts import (
+    AccessDenialCode,
     SessionKind,
 )
 from .automation_lifecycle import AutomationDenial, AutomationDenialKind
 from .session_authority_core import SessionAuthorityCore
+from .session_retirement import SessionRetirementKind
 
 
 class SessionAuthorityLifecycle(SessionAuthorityCore):
     """Own trusted lifecycle invalidation and retirement entry points."""
+
+    def human_login_ids(self) -> frozenset[str]:
+        """Identify login observations relevant to this profile's live human leases."""
+        with self.owner.admission_guard():
+            return frozenset(
+                session.originating_login_id
+                for session in self._sessions.values()
+                if session.kind is not SessionKind.API_KEY and session.originating_login_id is not None
+            )
+
+    def retire_human_sessions(
+        self,
+        *,
+        reason: AccessDenialCode = AccessDenialCode.AUTHENTICATION_REQUIRED,
+        kind: SessionRetirementKind = SessionRetirementKind.SIGNED_OUT,
+    ) -> tuple[UUID, ...]:
+        """Fence pending human admissions and retire human/attended access only.
+
+        The runtime lifecycle owner first commits its durable sign-in fence,
+        under this same guard. API-key grants and sessions retain their policy.
+        """
+        with self.owner.admission_guard():
+            self._human_admission_generation += 1
+            retired = {
+                session.session_id for session in self._sessions.values() if session.kind is not SessionKind.API_KEY
+            }
+            self._retire(retired, reason=reason, kind=kind)
+            return tuple(sorted(retired))
 
     def disconnect(self: SessionAuthorityLifecycle, connection_id: UUID) -> None:
         """Irreversibly retire this connection and all of its dependent leases."""
@@ -54,17 +84,26 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
                 or (change.kind is AutomationDenialKind.KEY and session.key_id == change.target_id)
                 or (change.kind is AutomationDenialKind.GRANT and session.grant_id == change.target_id)
             }
-            self._retire(retired)
+            self._retire(
+                retired,
+                reason=(
+                    AccessDenialCode.PROFILE_LOCKED
+                    if change.kind is AutomationDenialKind.PROFILE_LOCK
+                    else AccessDenialCode.GRANT_INACTIVE
+                ),
+            )
 
-    async def close(self: SessionAuthorityLifecycle) -> None:
+    async def close(
+        self: SessionAuthorityLifecycle, *, reason: AccessDenialCode = AccessDenialCode.RUNTIME_CHANGED
+    ) -> None:
         """Retire all live leases through the existing async cleanup protocol.
 
         The owner supplies bounded worker cleanup. Cancelling this wait does not
         stop the cleanup thread or restore any authority already removed.
         """
-        await asyncio.to_thread(self._close)
+        await asyncio.to_thread(self._close, reason=reason)
 
-    def _close(self: SessionAuthorityLifecycle) -> None:
+    def _close(self: SessionAuthorityLifecycle, *, reason: AccessDenialCode = AccessDenialCode.RUNTIME_CHANGED) -> None:
         with self.owner.admission_guard():
             self._closed = True
-            self._retire(set(self._sessions) | self._pending_retirements)
+            self._retire(set(self._sessions) | self._pending_retirements, reason=reason)

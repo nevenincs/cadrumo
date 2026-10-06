@@ -31,6 +31,7 @@ definitions.
 from __future__ import annotations
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.secure_object_write import SecureObjectWrite
 from ....core.time.clock import now
 from ...persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -52,6 +53,32 @@ _METADATA_SENSITIVITY = GOOGLE_OAUTH_METADATA_NAMESPACE.sensitivity
 _METADATA_VERSION = GOOGLE_OAUTH_METADATA_NAMESPACE.schema_version
 _DRIVE_CONFIG_SENSITIVITY = GOOGLE_DRIVE_CONFIG_NAMESPACE.sensitivity
 _DRIVE_CONFIG_VERSION = GOOGLE_DRIVE_CONFIG_NAMESPACE.schema_version
+
+
+def save_session(profile: str, token: OAuthToken, metadata: OAuthMetadata, config: DriveConfig) -> None:
+    """Commit one complete sign-in without exposing partially replaced records.
+
+    The caller must first admit the managed root. Existing records survive a
+    failed transaction together, including when replacing an earlier sign-in.
+    """
+    written_at = now()
+    _repository().save_many(
+        tuple(
+            SecureObjectWrite(
+                namespace=definition.namespace,
+                object_key=profile,
+                classification=definition.sensitivity,
+                schema_version=definition.schema_version,
+                written_at=written_at,
+                payload=record.model_dump_json().encode(UTF_8_ENCODING),
+            )
+            for definition, record in (
+                (GOOGLE_OAUTH_TOKEN_NAMESPACE, token),
+                (GOOGLE_OAUTH_METADATA_NAMESPACE, metadata),
+                (GOOGLE_DRIVE_CONFIG_NAMESPACE, config),
+            )
+        )
+    )
 
 
 def save_token(profile: str, token: OAuthToken) -> None:
@@ -223,6 +250,7 @@ __all__ = [
     "load_token",
     "save_drive_config",
     "save_metadata",
+    "save_session",
     "save_token",
 ]
 

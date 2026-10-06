@@ -183,27 +183,17 @@ print(json.dumps({{
     return {key: value for key, value in payload.items()}
 
 
-def test_apply_missing_google_api_client_is_a_closed_safety_outcome() -> None:
-    outcome = _missing_google_client_outcome(
-        imports="from cadrumo.adapters.outbound.google.calc_sheets_apply import apply_export_plan",
-        call='apply_export_plan(None, credentials=None, root_folder_id="root")',
+def test_retired_template_apply_refuses_before_client_or_plan_access() -> None:
+    with pytest.raises(OutboundStorageConflictError) as raised:
+        apply_export_plan(
+            cast(SheetExportPlan, object()), credentials=unused_google_credentials(), root_folder_id="root"
+        )
+    _assert_closed_outcome(
+        raised.value,
+        condition_id="google.managed_artifact.admitted",
+        facts={"admitted": False, "reason": "selected_review_publication_required", "effect_uncertain": False},
+        outcome=NoRecoveryOutcome.SAFETY,
     )
-
-    assert outcome == {
-        "condition_id": "google.calc_sheets.apply.api_client_available",
-        "evidence_condition_id": "google.calc_sheets.apply.api_client_available",
-        "evidence_id": "google.calc_sheets.apply.api_client_available.observation",
-        "provenance": "runtime_observation",
-        "values": {
-            "client_available": False,
-            "dependency": "google_api_python_client",
-            "service_name": "drive",
-            "service_version": "v3",
-        },
-        "action": None,
-        "conditionality": "not_applicable",
-        "outcome": "safety",
-    }
 
 
 def test_apply_rejects_a_blank_root_folder_id_with_an_operator_decision() -> None:
@@ -232,39 +222,6 @@ def test_preview_rejects_a_blank_root_folder_id_with_the_same_operator_decision(
     )
 
 
-def test_preview_missing_google_api_client_is_a_closed_safety_outcome() -> None:
-    outcome = _missing_google_client_outcome(
-        imports="from cadrumo.adapters.outbound.google.calc_sheets_apply import preview_export_plan",
-        call='preview_export_plan(None, credentials=None, root_folder_id="root")',
-    )
-
-    assert outcome["condition_id"] == "google.calc_sheets.apply.api_client_available"
-    assert outcome["outcome"] == "safety"
-
-
-def test_pull_missing_google_api_client_is_a_closed_safety_outcome() -> None:
-    outcome = _missing_google_client_outcome(
-        imports="from cadrumo.adapters.outbound.google.calc_sheets_pull import pull_operator_edits",
-        call='pull_operator_edits(None, spreadsheet_id="sheet", credentials=None)',
-    )
-
-    assert outcome == {
-        "condition_id": "google.calc_sheets.pull.api_client_available",
-        "evidence_condition_id": "google.calc_sheets.pull.api_client_available",
-        "evidence_id": "google.calc_sheets.pull.api_client_available.observation",
-        "provenance": "runtime_observation",
-        "values": {
-            "client_available": False,
-            "dependency": "google_api_python_client",
-            "service_name": "drive",
-            "service_version": "v3",
-        },
-        "action": None,
-        "conditionality": "not_applicable",
-        "outcome": "safety",
-    }
-
-
 @pytest.mark.parametrize(
     ("builder", "service_name", "service_version"),
     (("drive_v3_service", "drive", "v3"), ("sheets_v4_service", "sheets", "v4")),
@@ -289,17 +246,16 @@ def test_each_shared_service_builder_names_its_service_when_the_client_is_missin
     assert outcome["outcome"] == "safety"
 
 
-def test_pull_rejects_a_blank_spreadsheet_id_with_an_operator_decision() -> None:
-    with pytest.raises(OutboundStorageValidationError) as raised:
+def test_retired_pull_refuses_before_identity_or_credentials() -> None:
+    with pytest.raises(OutboundStorageConflictError) as raised:
         pull_operator_edits(
             cast(RegistrySnapshot, object()), spreadsheet_id="  ", credentials=unused_google_credentials()
         )
-
     _assert_closed_outcome(
         raised.value,
-        condition_id="google.calc_sheets.pull.spreadsheet_id_valid",
-        facts={"spreadsheet_id_present": False},
-        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        condition_id="google.managed_artifact.admitted",
+        facts={"admitted": False, "reason": "remote_business_input_retired", "effect_uncertain": False},
+        outcome=NoRecoveryOutcome.SAFETY,
     )
 
 

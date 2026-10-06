@@ -43,6 +43,16 @@ def _leaf(catalogue: dict[str, object], key: str) -> str:
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
+def test_missing_profile_passphrase_guidance_uses_root_channels_only(locale: str) -> None:
+    """Root authentication must never prescribe a leaf command's secret flags."""
+    copy = _leaf(_catalogue(locale), f"{_ERRORS_PREFIX}.profile_passphrase_channel_absent")
+    assert "--profile-secrets-stdin" in copy
+    assert "--profile-secrets-fd" in copy
+    assert "--secrets-stdin" not in copy
+    assert "--secrets-fd" not in copy
+
+
+@pytest.mark.parametrize("locale", _LOCALES)
 def test_machine_secret_guidance_names_both_explicit_channels_without_environment_fallback(locale: str) -> None:
     catalogue = _catalogue(locale)
     guidance_keys = (

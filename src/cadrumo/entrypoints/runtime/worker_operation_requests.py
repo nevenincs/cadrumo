@@ -44,8 +44,11 @@ from ...application.user_profile.access_contracts import AccessAction, AccessDen
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.logging import get_logger
 from .operation_host import ProfileWorkerOperationHost
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
+
+_LOGGER = get_logger(__name__)
 
 
 async def receive(channel: WorkerChannel, failed: asyncio.Event, *, control: bool = False) -> ProfileWorkerRequest:
@@ -84,6 +87,8 @@ async def operate(
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
                 if failed.is_set():
                     raise
+                if isinstance(refusal, ProfileAccessRefusedError):
+                    _LOGGER.warning("worker operation access refused code=%s", refusal.reason, exc_info=refusal)
                 write_document(
                     channel,
                     ProfileWorkerRefusal(

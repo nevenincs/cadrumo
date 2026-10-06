@@ -9,7 +9,7 @@ from uuid import UUID
 
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Button, Input, Select
+from textual.widgets import Button, Checkbox, Input, Select
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
 from ....application.user_profile.login_interaction import ProfileLoginChoice
@@ -77,6 +77,7 @@ class RuntimeLoginScreen(
         self._choices = tuple(choices)
         self._profile_ids = parsed
         self._preselected = preselected if preselected in parsed else self._choices[0].profile_id
+        self._resume_preselected = preselected if preselected in parsed else None
         self._open_client = open_client
         self._open_credential_client = open_credential_client
         self._requester_factory = requester_factory
@@ -140,6 +141,7 @@ class RuntimeLoginScreen(
         if self._busy:
             return
         if event.select.id == "runtime-login-profile":
+            self.query_one("#runtime-login-persist", Checkbox).value = False
             self.query_one("#runtime-login-resume-password", Input).value = ""
             self.query_one("#runtime-login-resume-grants", Input).value = ""
             self._controls()
@@ -164,9 +166,13 @@ class RuntimeLoginScreen(
         proof, selected_grants = inputs
         self._start_resume(profile_id, proof, selected_grants)
 
-    def _status_refused(self, code: str | None = None) -> None:
+    def _status_refused(self, code: str | None = None, *, remaining_seconds: int | None = None) -> None:
         if self._active():
-            message = tr("tui.runtime_login.refused")
+            message = (
+                tr("errors.refused.refused_profile_login_throttled", seconds=remaining_seconds)
+                if remaining_seconds is not None
+                else tr("tui.runtime_login.refused")
+            )
             self.query_one("#runtime-login-status", PinnedStatusBar).show_error(
                 message if code is None else f"{message} ({code})"
             )
@@ -204,7 +210,10 @@ class RuntimeLoginScreen(
                 tr("tui.runtime_login.credential_required")
             )
             return
-        self._start_login_attempt(selected, method, proof, reference)
+        persist_receipt = (
+            method is RuntimeLoginMethod.PASSWORD and self.query_one("#runtime-login-persist", Checkbox).value
+        )
+        self._start_login_attempt(selected, method, proof, reference, persist_receipt=persist_receipt)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch only explicit submit or abandon controls."""

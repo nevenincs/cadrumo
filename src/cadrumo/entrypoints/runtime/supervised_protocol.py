@@ -86,8 +86,9 @@ class RuntimeHeartbeat(BaseModel):
     ``tick_age_ms`` is the time since the accept loop last turned, absent
     before the runtime serves. ``frontends`` counts open verified transport
     connections. ``hosted_profiles`` counts profile hosts, each owning the
-    worker in which that profile's operations run, so zero proves that no
-    operation is in flight.
+    worker in which that profile's operations run. It is not an operation
+    count or an idle decision: bootstrap custody may run without a worker.
+    The runtime's stop-if-idle admission fence owns the final decision.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

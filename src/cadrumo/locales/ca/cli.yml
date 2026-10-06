@@ -1341,7 +1341,9 @@ cli:
           l'AEAT.
         work_unit_id_help: Id de la declaració (SHA-256 o prefix inequívoc).
       spreadsheet:
-        app_help: Superfície de càlcul esquema-a-full (exportar, recuperar i calcular)
+        app_help: Exporta fulls de càlcul. Les còpies de Google són documents de revisió
+          de sortida; no pots importar canvis, calcular ni verificar des de Google.
+          L’exportació local a XLSX continua disponible.
         calculate_help: Recupera les cel·les que has editat al llibre de calc-sheets,
           executa el motor Decimal local sobre elles i emet els valors calculats de
           les caselles (no desa res)
@@ -1353,6 +1355,15 @@ cli:
           contrapartida fora de línia de push)
         modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
         period_help: Codi de període (p. ex. 1T, 2T, 0A)
+        publish:
+          accept_readable_export_help: Indica --accept-readable-export per autoritzar
+            la publicació del càlcul seleccionat i les files comptables capturades
+            com a full de Google llegible pels usuaris autoritzats.
+          calculation_revision_id_help: Identificador exacte de la revisió de càlcul
+            desada que es publicarà.
+          publication_id_help: UUID de publicació; es genera si s'omet.
+        publish_help: Publica un càlcul desat com a full natiu de Google llegible
+          a la carpeta del perfil.
         pull:
           assemble_observations_help: Després de recuperar, reensambla les cel·les
             de files de la pestanya Detalle en observacions tipades (perceptors, béns
@@ -2066,6 +2077,9 @@ cli:
           per a ordres privades de perfil allotjades al servei local.
         profile_credential_ref_requires_api_key: --profile-credential-ref requereix
           --profile-auth-method api-key.
+        profile_passphrase_channel_absent: No hi ha cap canal de contrasenya del perfil
+          disponible. Executa aquesta ordre en un terminal o passa --profile-secrets-stdin
+          o --profile-secrets-fd.
         profile_secrets_api_key_inapplicable: L'autenticació amb clau API només està
           disponible per a les ordres ateses per l'entorn local.
         profile_secrets_api_key_requires_channel: L'autenticació amb clau API requereix
@@ -2205,12 +2219,11 @@ cli:
         aquest verb en un terminal o fes servir --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contrasenya del perfil: '
     logout:
-      help: Esborrar el perfil seleccionat en aquest context de la CLI.
+      help: Tanca la sessió d’aquest perfil a totes les sessions d’usuari d’aquest
+        dispositiu. L’accés dels agents i les sessions de l’AEAT continuen actius.
       notices:
-        already_logged_out: Cap perfil tenia la sessió iniciada; no hi ha res a tancar.
-        remaining_access: S’ha esborrat la selecció de la CLI. Les altres sessions,
-          la represa humana limitada i les claus API inscrites conserven la seva pròpia
-          autorització. Fes servir els controls de sessió o perfil per revocar l’accés.
+        already_logged_out: No hi ha cap perfil seleccionat; no hi ha cap sessió per
+          tancar.
     passphrase:
       change_help: Canvia la contrasenya sense tornar a xifrar els registres ni invalidar
         un codi de recuperació.
@@ -2223,10 +2236,10 @@ cli:
         de recuperació continua sent vàlid, i els arxius segellats exportats abans
         del restabliment s'obren encara amb la contrasenya amb què es van xifrar.
       reset_name_help: Nom del perfil la contrasenya del qual es restableix.
-      reset_scope_notice: 'El codi de recuperació continua funcionant; per substituir-lo,
-        desactiva i torna a activar la recuperació. Un restabliment no revoca res:
-        els arxius segellats exportats abans s''obren encara amb la contrasenya amb
-        què es van xifrar.'
+      reset_scope_notice: El restabliment tanca les sessions d’usuari desades. El
+        codi de recuperació continua sent vàlid; desactiva i torna a activar la recuperació
+        per substituir-lo. Els arxius exportats anteriorment continuen requerint la
+        frase de pas emprada en exportar-los.
     profile:
       add_row:
         duplicate_field: El camp %{field} s'ha indicat més d'una vegada; no s'ha escrit
@@ -2408,8 +2421,9 @@ cli:
           preflight: 'Comprovació prèvia: no s''ha eliminat res. Torna a executar
             amb --yes per eliminar.'
         refusal:
-          active_profile: No pots eliminar el perfil actiu. Tanca la sessió amb 'aeat
-            config logout' i torna-ho a provar.
+          active_profile: No pots eliminar el perfil seleccionat '{name}'. Inicia
+            sessió en un altre perfil amb 'aeat config login NAME' i torna-ho a provar.
+            Tancar la sessió conserva el perfil seleccionat.
         yes_help: Confirma explícitament l'eliminació
       descendiente:
         add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

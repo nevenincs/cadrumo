@@ -167,12 +167,11 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
         # A full build checks every enrolled page; shard the pages across a
         # BOUNDED pool of child interpreters (each sequence keeps its own fresh
         # hermetic sandbox, so execution is unchanged — only the scheduling
-        # is). Width 4 is the same bounded-not-auto footprint the gate builds
-        # use for Sphinx ``-j``: sized for co-residency on a shared machine,
-        # never for the whole box.
+        # is). Two page workers bound simultaneous cold runtime imports while
+        # preserving each frame's assertions and operation deadlines.
         full_problems, reused = check_reusing_verdict(
             published_verdict_key(docs_root=docs_root, goldens_root=goldens_root),
-            lambda: check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=4),
+            lambda: check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2),
         )
         if reused is not None:
             print(f"cli-sequence goldens: clean ({reused})", flush=True)

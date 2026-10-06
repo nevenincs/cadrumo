@@ -7,6 +7,8 @@ modelo:
             del mismo ejercicio, o S si anula y sustituye a otra anterior del mismo
             ejercicio.
           label: Declaración complementaria o sustitutiva
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjfdlh74p9dcdnmst31cdq6u:
+          label: Nombre de la persona de contacto
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn0:
           label: Número identificativo de la declaración
         x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn2qobeehin4qbfe8:
@@ -20,6 +22,8 @@ modelo:
         ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qchdd5mn0rriehiiqrpdepgmorri5li6abbcc4mn8sj1dppmqqbjd5nms
         : help: Importe o valor de la transmisión, o saldo medio del último trimestre.
           label: Suma total de valoración 2
+        x-dlnm8pbcdsmjechg5pq7is35bsoist35dhimcrredsmm6rreehgm6t3f:
+          label: Teléfono de la persona de contacto
         x-dlnm8pbcdsmjechg5pq7is35bsoist39e1niqp355lpmus3fe9q6a:
           help: 'Se indica la clave T: transmisión telemática.'
           label: Tipo de soporte

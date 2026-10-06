@@ -310,6 +310,354 @@ source_row = 138
 record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
 ordinal = "3"
 
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 161
+ordinal = "9"
+semantic_part_offset = 89
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 89-96: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-89"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 161
+ordinal = "9"
+semantic_part_offset = 89
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 178
+ordinal = "10"
+semantic_part_offset = 98
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 98-105: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-98"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 178
+ordinal = "10"
+semantic_part_offset = 98
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 194
+ordinal = "11"
+semantic_part_offset = 107
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 107-114: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-107"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 194
+ordinal = "11"
+semantic_part_offset = 107
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 211
+ordinal = "12"
+semantic_part_offset = 116
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 116-123: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-116"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 211
+ordinal = "12"
+semantic_part_offset = 116
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 227
+ordinal = "13"
+semantic_part_offset = 125
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 125-132: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-125"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 227
+ordinal = "13"
+semantic_part_offset = 125
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 244
+ordinal = "14"
+semantic_part_offset = 134
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 134-141: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-134"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 244
+ordinal = "14"
+semantic_part_offset = 134
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 260
+ordinal = "15"
+semantic_part_offset = 143
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 143-150: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-143"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 260
+ordinal = "15"
+semantic_part_offset = 143
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 276
+ordinal = "16"
+semantic_part_offset = 152
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 152-159: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-152"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 276
+ordinal = "16"
+semantic_part_offset = 152
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 293
+ordinal = "17"
+semantic_part_offset = 161
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 161-168: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-161"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 293
+ordinal = "17"
+semantic_part_offset = 161
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 309
+ordinal = "18"
+semantic_part_offset = 170
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 170-177: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-170"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 309
+ordinal = "18"
+semantic_part_offset = 170
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 326
+ordinal = "19"
+semantic_part_offset = 179
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 179-186: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-179"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 326
+ordinal = "19"
+semantic_part_offset = 179
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 6
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 342
+ordinal = "20"
+semantic_part_offset = 188
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_statement = "Monthly contribution amount at 188-195: six integer digits and two decimal digits, without comma."
+justification = "The source explicitly distinguishes the S/N contribution-status fact from the monthly amount and prints both integer and fractional ranges."
+decision_id = "m156-month-amount-188"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Afiliado O Mutualista"
+record_identity = "Tipo 2 - Registro De Afiliado O Mutualista"
+source_row = 342
+ordinal = "20"
+semantic_part_offset = 188
 [design_identity]
 modelo = "156"
 design_epoch = "2003"

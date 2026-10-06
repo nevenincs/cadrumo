@@ -1,6 +1,7 @@
-#[cfg(not(target_os = "windows"))]
-compile_error!("Only the Windows foundation has been implemented");
+#[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+compile_error!("Unsupported native platform");
 
+#[cfg(windows)]
 use std::os::windows::fs::MetadataExt;
 use std::{
     env, fs,
@@ -8,7 +9,12 @@ use std::{
     ptr,
 };
 include!(env!("CADRUMO_CONTRACT_RS"));
+#[cfg(test)]
+mod conformance_tests;
+#[cfg(windows)]
 pub mod desktop;
+#[cfg(all(test, unix))]
+mod posix_tests;
 pub mod storage;
 
 use storage::Profile;
@@ -35,10 +41,18 @@ fn context() -> Result<Context, String> {
     let exe = env::current_exe().map_err(|e| e.to_string())?;
     let evidence = storage::detect_mode(&exe)?;
     let user = storage::resolve_storage_root(&evidence)
-        .map_err(|refused| refused.message)?
+        .map_err(|refused| refused.to_string())?
         .root;
-    let temporary = storage::temporary_path(&user, &storage::environment_value);
+    let user = normalize_absolute_path(&user).map_err(|e| e.to_string())?;
+    let temporary = storage::temporary_path(&user, &|name| env::var_os(name))
+        .map_err(|refused| refused.to_string())?;
+    let temporary = normalize_absolute_path(&temporary).map_err(|e| e.to_string())?;
     let package = evidence.package;
+    let authority = package.join(AUTHORITY);
+    for field in HOST_INHERITED_FIELDS {
+        storage::validate_inherited_pin(field, authority.as_os_str())
+            .map_err(|refused| refused.to_string())?;
+    }
     let paths = vec![
         package.clone(),
         user.clone(),
@@ -46,18 +60,24 @@ fn context() -> Result<Context, String> {
         package.join(STDLIB),
         package.join(PACKAGES),
         package.join(NATIVE),
-        package.join(AUTHORITY),
+        authority,
         user,
         temporary,
     ];
     Ok(Context { paths })
 }
-fn refuse_links(path: &Path) -> Result<(), String> {
+pub(crate) fn refuse_links(path: &Path) -> Result<(), String> {
     for ancestor in path.ancestors() {
         match fs::symlink_metadata(ancestor) {
-            Ok(meta) if meta.file_attributes() & 0x400 != 0 => {
+            Ok(meta) if is_link(&meta) => {
                 return Err(format!(
-                    "Reparse point is not permitted: {}",
+                    "Symbolic link or reparse point is not permitted: {}",
+                    ancestor.display()
+                ));
+            }
+            Ok(meta) if ancestor != path && !meta.is_dir() => {
+                return Err(format!(
+                    "Storage path traverses a non-directory: {}",
                     ancestor.display()
                 ));
             }
@@ -67,6 +87,40 @@ fn refuse_links(path: &Path) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+fn is_link(meta: &fs::Metadata) -> bool {
+    #[cfg(windows)]
+    {
+        meta.file_attributes() & 0x400 != 0
+    }
+    #[cfg(unix)]
+    {
+        meta.file_type().is_symlink()
+    }
+}
+
+pub(crate) fn create_private_directory(path: &Path) -> std::io::Result<()> {
+    if !path.is_absolute() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Storage path must be absolute",
+        ));
+    }
+    refuse_links(path).map_err(std::io::Error::other)?;
+    let mut builder = fs::DirBuilder::new();
+    builder.recursive(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+        builder.mode(POSIX_DIRECTORY_MODE);
+    }
+    builder.create(path)?;
+    refuse_links(path).map_err(std::io::Error::other)
+}
+
+pub(crate) fn normalize_absolute_path(path: &Path) -> std::io::Result<PathBuf> {
+    storage::validated_absolute_path(path).map_err(std::io::Error::from)
 }
 
 /// Names a packaged host clears from itself, keeping the product and package allowlists.
@@ -95,11 +149,33 @@ fn pinned(ctx: &Context) -> Vec<(&'static str, &Path)> {
     values
 }
 
+fn executable_search_path(ctx: &Context) -> Result<std::ffi::OsString, String> {
+    let mut search = vec![ctx.paths[0].clone()];
+    if let Some(overrides) = env::var_os("CADRUMO_EXTERNAL_BIN_DIRS") {
+        for directory in env::split_paths(&overrides) {
+            if !directory.is_absolute() || !directory.is_dir() {
+                return Err(
+                    "CADRUMO_EXTERNAL_BIN_DIRS requires existing absolute directories".into(),
+                );
+            }
+            search.push(directory);
+        }
+    }
+    search.push(ctx.paths[5].clone());
+    #[cfg(windows)]
+    {
+        let system = env::var_os("SystemRoot").ok_or("SystemRoot is missing")?;
+        search.push(PathBuf::from(system).join("System32"));
+    }
+    #[cfg(unix)]
+    search.extend([PathBuf::from("/usr/bin"), PathBuf::from("/bin")]);
+    env::join_paths(search).map_err(|e| e.to_string())
+}
+
 fn prepare(ctx: &Context) -> Result<(), String> {
+    let search = executable_search_path(ctx)?;
     for path in [&ctx.paths[1], &ctx.paths[8]] {
-        refuse_links(path)?;
-        fs::create_dir_all(path).map_err(|e| e.to_string())?;
-        refuse_links(path)?;
+        create_private_directory(path).map_err(|e| e.to_string())?;
     }
     // Environment mutation occurs once, before Python or application threads exist.
     let names: Vec<_> = env::vars_os().map(|(key, _)| key).collect();
@@ -114,22 +190,7 @@ fn prepare(ctx: &Context) -> Result<(), String> {
         for (name, value) in pinned(ctx) {
             env::set_var(name, value);
         }
-        let system = env::var_os("SystemRoot").ok_or("SystemRoot is missing")?;
-        let mut search = vec![ctx.paths[0].clone()];
-        if let Some(overrides) = env::var_os("CADRUMO_EXTERNAL_BIN_DIRS") {
-            for directory in env::split_paths(&overrides) {
-                if !directory.is_absolute() || !directory.is_dir() {
-                    return Err(
-                        "CADRUMO_EXTERNAL_BIN_DIRS requires existing absolute directories".into(),
-                    );
-                }
-                search.push(directory);
-            }
-        }
-        search.push(ctx.paths[5].clone());
-        search.push(PathBuf::from(system).join("System32"));
-        let path = env::join_paths(search).map_err(|e| e.to_string())?;
-        env::set_var("PATH", path);
+        env::set_var("PATH", search);
     }
     Ok(())
 }

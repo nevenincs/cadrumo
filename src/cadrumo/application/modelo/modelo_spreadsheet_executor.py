@@ -11,16 +11,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.capabilities import ServiceCapability
-from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..operations.models import OperationRequest
@@ -31,32 +29,22 @@ from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..storage.calc_sheets.workbook_export import ModeloWorkbookExport, export_modelo_workbook
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from ..user_profile.capabilities import resolve_active_capability
 from .export_sink import LocalFileExportSink, ModeloExportOutputPathError
 from .modelo_spreadsheet_operation_contracts import (
     MODELO_SPREADSHEET_OPERATION_CONTRACTS,
-    ModeloSpreadsheetCalculateRequest,
     ModeloSpreadsheetExecutionResult,
     ModeloSpreadsheetExportRequest,
     ModeloSpreadsheetOperationPorts,
     ModeloSpreadsheetOperationPortsFactory,
-    ModeloSpreadsheetPullRequest,
     ModeloSpreadsheetRequest,
-    ModeloSpreadsheetVerifyRequest,
     SpreadsheetOutputPathRefusal,
     SpreadsheetRefusal,
-    SpreadsheetRowIngressRefusal,
-    SpreadsheetSnapshotMismatchRefusal,
     spreadsheet_refusal_code,
 )
 from .modelo_spreadsheet_operation_projections import (
-    ModeloSpreadsheetCalculateProjection,
     ModeloSpreadsheetExportProjection,
     ModeloSpreadsheetProjection,
-    ModeloSpreadsheetPullProjection,
-    ModeloSpreadsheetVerifyProjection,
 )
-from .modelo_spreadsheet_operation_scenario import decode_modelo_spreadsheet_scenario
 
 MAX_MODELO_SPREADSHEET_SCENARIO_BYTES = PROJECTION_DOCUMENT_MAX_BYTES
 
@@ -88,32 +76,6 @@ def _admit_spreadsheet_request(
     return payload
 
 
-def _row_ingress_refusal(error: RegistryValidationError) -> SpreadsheetRowIngressRefusal | None:
-    """Select only canonical ingress facts; never retain general validation text."""
-    facts = error.context
-    if (
-        facts is None
-        or error.translated_message != "application.calculations.row_set.errors.row_assembly_failed"
-        or facts.get("validation_error_type") != "row_set_ingress"
-    ):
-        return None
-    try:
-        return SpreadsheetRowIngressRefusal.model_validate(
-            {
-                "reason": facts.get("validation_error_detail"),
-                "grouping": facts.get("grouping"),
-                "row_index": facts.get("row_index"),
-                "binding_id": facts.get("binding_id"),
-                "declared_grouping": facts.get("declared_grouping"),
-                "first_row_set_index": facts.get("first_row_set_index"),
-                "second_row_set_index": facts.get("second_row_set_index"),
-            },
-            strict=True,
-        )
-    except ValidationError:
-        return None
-
-
 def _output_path_refusal(
     error: ModeloExportOutputPathError, payload: ModeloSpreadsheetExportRequest
 ) -> SpreadsheetOutputPathRefusal:
@@ -132,35 +94,6 @@ def _output_path_refusal(
         },
         strict=True,
     )
-
-
-async def _authorize_provider(scope: _SpreadsheetExecution) -> None:
-    # Admission ends before canonical provider implementations discover or refresh credentials.
-    async with scope.context.cancellation.irreversible_section():
-        _admit_spreadsheet_request(scope.request, scope.context)
-
-
-async def _authorize_mutation(scope: _SpreadsheetExecution) -> None:
-    if not isinstance(scope.payload, ModeloSpreadsheetVerifyRequest):
-        raise ValueError("spreadsheet read cannot request mutation authority")
-    async with scope.context.cancellation.irreversible_section():
-        _admit_spreadsheet_request(scope.request, scope.context)
-        scope.remote_dispatched = True
-        await scope.context.events.effect(OperationEffect.UNKNOWN)
-
-
-def _provider_admission(scope: _SpreadsheetExecution) -> Callable[[], None]:
-    def admit() -> None:
-        asyncio.run_coroutine_threadsafe(_authorize_provider(scope), scope.loop).result()
-
-    return admit
-
-
-def _mutation_handoff(scope: _SpreadsheetExecution) -> Callable[[], None]:
-    def handoff() -> None:
-        asyncio.run_coroutine_threadsafe(_authorize_mutation(scope), scope.loop).result()
-
-    return handoff
 
 
 def _current_effect(scope: _SpreadsheetExecution) -> OperationEffect:
@@ -228,85 +161,17 @@ async def _export_workbook(scope: _SpreadsheetExecution) -> ModeloSpreadsheetExp
     )
 
 
-async def _pull_workbook(scope: _SpreadsheetExecution) -> ModeloSpreadsheetPullProjection | OperationRefusalEvidence:
-    payload = cast(ModeloSpreadsheetPullRequest, scope.payload)
-    facts = await asyncio.to_thread(scope.ports.pull, payload, admit_provider=_provider_admission(scope))
-    if isinstance(facts, SpreadsheetSnapshotMismatchRefusal):
-        if facts.spreadsheet_id != payload.spreadsheet_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        return await _refuse(scope, facts)
-    if facts.spreadsheet_id != payload.spreadsheet_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    if not payload.assemble_observations and (facts.assembled_groupings or facts.assembled_observation_count):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    await scope.context.events.effect(OperationEffect.NONE)
-    return ModeloSpreadsheetPullProjection(**scope.coordinate, **facts.model_dump(mode="python"))
-
-
-async def _calculate_workbook(
-    scope: _SpreadsheetExecution,
-) -> ModeloSpreadsheetCalculateProjection | OperationRefusalEvidence:
-    payload = cast(ModeloSpreadsheetCalculateRequest, scope.payload)
-    facts = await asyncio.to_thread(scope.ports.calculate, payload, admit_provider=_provider_admission(scope))
-    if isinstance(facts, SpreadsheetSnapshotMismatchRefusal):
-        if facts.spreadsheet_id != payload.spreadsheet_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        return await _refuse(scope, facts)
-    if facts.spreadsheet_id != payload.spreadsheet_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    await scope.context.events.effect(OperationEffect.NONE)
-    return ModeloSpreadsheetCalculateProjection(**scope.coordinate, **facts.model_dump(mode="python"))
-
-
-async def _verify_workbook(scope: _SpreadsheetExecution) -> ModeloSpreadsheetVerifyProjection:
-    payload = cast(ModeloSpreadsheetVerifyRequest, scope.payload)
-    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
-    source = None
-    source_path = None
-    if payload.scenario_path is not None:
-        source_path = Path(payload.scenario_path)
-        try:
-            source = await asyncio.to_thread(scope.source_reader, source_path)
-        except OSError as error:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from error
-        if len(source) > MAX_MODELO_SPREADSHEET_SCENARIO_BYTES or sha256_hex(source) != payload.scenario_sha256:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    scenario = decode_modelo_spreadsheet_scenario(source, source_path=source_path)
-    acknowledgement = await asyncio.to_thread(
-        scope.ports.verify,
-        payload,
-        scenario,
-        admit_provider=_provider_admission(scope),
-        before_mutation=_mutation_handoff(scope),
-    )
-    if not scope.remote_dispatched or not acknowledgement.remote_write_confirmed:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    await scope.context.events.effect(OperationEffect.UPDATED)
-    return ModeloSpreadsheetVerifyProjection(**scope.coordinate, **acknowledgement.facts.model_dump(mode="python"))
-
-
 async def _dispatch(scope: _SpreadsheetExecution) -> ModeloSpreadsheetProjection | OperationRefusalEvidence:
     payload = scope.payload
     if isinstance(payload, ModeloSpreadsheetExportRequest):
         return await _export_workbook(scope)
-    if isinstance(payload, ModeloSpreadsheetPullRequest):
-        return await _pull_workbook(scope)
-    if isinstance(payload, ModeloSpreadsheetCalculateRequest):
-        return await _calculate_workbook(scope)
-    if isinstance(payload, ModeloSpreadsheetVerifyRequest):
-        return await _verify_workbook(scope)
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
 async def _retain_success(scope: _SpreadsheetExecution, projection: ModeloSpreadsheetProjection) -> str:
     if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-    effect = (
-        "none"
-        if isinstance(scope.payload, (ModeloSpreadsheetPullRequest, ModeloSpreadsheetCalculateRequest))
-        else "updated"
-    )
+    effect = "updated"
     outcome_type = MODELO_SPREADSHEET_OPERATION_CONTRACTS[scope.request.definition_id][2]
     outcome = outcome_type.model_validate(
         {**scope.coordinate, "outcome": "succeeded", "result": projection.model_dump(mode="python")}, strict=True
@@ -324,16 +189,6 @@ async def _execute_scope(scope: _SpreadsheetExecution) -> OperationExecutorResul
         if not isinstance(scope.payload, ModeloSpreadsheetExportRequest):
             raise
         return await _refuse(scope, _output_path_refusal(error, scope.payload))
-    except RegistryValidationError as error:
-        detail = _row_ingress_refusal(error)
-        if (
-            not isinstance(scope.payload, ModeloSpreadsheetPullRequest)
-            or not scope.payload.assemble_observations
-            or detail is None
-        ):
-            await scope.context.events.effect(_current_effect(scope))
-            raise
-        return await _refuse(scope, detail)
     except BaseException:
         await scope.context.events.effect(_current_effect(scope))
         raise

@@ -448,6 +448,53 @@ modelo:
           and of transactions and situations relating to countries or territories
           classified as tax havens.
         title: Related-party transactions and tax havens (annual informative return)
+      form:
+        authored:
+          acquisition: Acquisition value
+          amendment: Supplementary or replacement declaration
+          amount: Transaction amount
+          amount_ex_vat: Amount excluding VAT (€)
+          country: Country or territory code
+          description: Transaction description
+          direction: 'I: income · P: payment'
+          fjo: 'Person type: F individual · J legal entity · O other'
+          given: Given name
+          haven: Transactions with tax havens
+          identity: Identification
+          income_before_reduction: Income before reduction, excluding VAT (€)
+          intangibles: Income reduction for intangible assets
+          issuer: Investee or issuing entity
+          kind: Security type
+          link: Relationship type
+          marker: Supplementary or replacement declaration type
+          method: Valuation method
+          name: Surnames or legal name
+          nif: Tax ID
+          operation: Transaction type
+          page1: Related-party transactions
+          page2: Transactions and securities in tax havens
+          party: Full name / Legal name
+          percentage: Ownership percentage
+          period: Reporting period
+          period_end: Reporting period end
+          period_start: Reporting period start
+          province: Province or country code
+          receipt: Previous declaration receipt
+          related: Related-party transactions
+          resident: Resident individual or entity
+          row1: '1'
+          row10: '10'
+          row11: '11'
+          row12: '12'
+          row2: '2'
+          row3: '3'
+          row4: '4'
+          row5: '5'
+          row6: '6'
+          row7: '7'
+          row8: '8'
+          row9: '9'
+          securities: Securities held in tax havens
       revision:
         2016-2017:
           casilla:

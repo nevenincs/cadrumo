@@ -7,6 +7,51 @@ modelo:
           88 del Reglamento del IRPF).
         title: IRPF. Retenciones sobre rendimientos del trabajo. Comunicación de datos
           al pagador
+      form:
+        authored2012:
+          column:
+            anio-adopcion:
+              heading: Año de adopción o acogimiento
+            anio-nacimiento:
+              heading: Año de nacimiento
+            ayuda-movilidad:
+              heading: Ayuda de otras personas o movilidad reducida
+            computo-entero:
+              heading: Cómputo por entero
+            convivencia-otros:
+              heading: Convivencia con otros descendientes
+            discapacidad-grado:
+              heading: Grado de discapacidad
+          page:
+            heading: Comunicación al pagador · diseño de 2012 pendiente de revisión
+          row:
+            ascendiente-1:
+              heading: Ascendiente 1
+            ascendiente-2:
+              heading: Ascendiente 2
+            descendiente-1:
+              heading: Descendiente 1
+            descendiente-2:
+              heading: Descendiente 2
+            descendiente-3:
+              heading: Descendiente 3
+            descendiente-4:
+              heading: Descendiente 4
+          section:
+            acuse:
+              heading: 7. Acuse de recibo
+            ascendientes:
+              heading: 3. Ascendientes
+            descendientes:
+              heading: 2. Hijos y otros descendientes
+            firma:
+              heading: 6. Fecha y firma de la comunicación
+            pensiones:
+              heading: 4. Pensiones compensatorias y alimentos
+            perceptor:
+              heading: 1. Datos del perceptor
+            vivienda:
+              heading: 5. Vivienda habitual
       revision:
         2012-01-31-y-siguientes:
           casilla:

@@ -23,6 +23,7 @@ from ...core.time.utc import UtcInstant
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operations.schema_identity import OperationPublicSchemaId
+from .sign_in_refusals import SignInRefusal
 
 ACCESS_LEASE_MAXIMUM = timedelta(minutes=5)
 GRANT_DEFAULT_VALIDITY = timedelta(days=365)
@@ -439,6 +440,7 @@ class AccessDenied(BaseModel):
 
     outcome: Literal["denied"] = "denied"
     code: AccessDenialCode
+    sign_in: SignInRefusal | None = None
 
 
 class AccessAllowed(BaseModel):

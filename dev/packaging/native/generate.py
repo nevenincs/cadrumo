@@ -9,10 +9,13 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.config import AuthorityRootSettings, Settings
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import (
     PROCESS_ENVIRONMENT,
+    STORAGE_PATH_RULES,
     STORAGE_ROOT,
     ChildEnvironmentProfile,
+    InheritedEnvironmentValueKind,
     StorageMode,
     StorageRootRefusal,
     development_tool_env_var_names,
@@ -24,16 +27,27 @@ from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from .identity import identity
 from .layout import distribution_target, entrypoint_files, load_layout
 from .runtime_exit_reasons import runtime_exit_section, rust_runtime_exit_reasons
-from .storage_vectors import storage_root_vectors
+from .storage_vectors import (
+    INVALID_NATIVE_PATH_BYTES,
+    INVALID_NATIVE_PATH_UTF16,
+    storage_path_vectors,
+    storage_root_vectors,
+)
 
 CONTRACT_SCHEMA = 1
 
 
 def _rust_string(value: str) -> str:
-    literal = json.dumps(value, ensure_ascii=False)
-    if "\\u" in literal:
-        raise ValueError(f"Contract string needs an escape Rust does not share with JSON: {value!r}")
-    return literal
+    value.encode("utf-8")  # Native OS strings have explicit fixture encodings.
+    escapes = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
+    return (
+        '"'
+        + "".join(
+            escapes.get(character, f"\\u{{{ord(character):x}}}" if ord(character) < 32 else character)
+            for character in value
+        )
+        + '"'
+    )
 
 
 def _rust_strings(values: Iterable[str]) -> str:
@@ -46,7 +60,11 @@ def _rust_option(value: str | None) -> str:
 
 def _require_authority_pin() -> None:
     """The native host pins only the Settings-owned authority root beyond the pinned set."""
-    for variable in (*PROCESS_ENVIRONMENT.host_inherited, *PROCESS_ENVIRONMENT.windows_host_inherited):
+    variables = (*PROCESS_ENVIRONMENT.host_inherited, *PROCESS_ENVIRONMENT.windows_host_inherited)
+    classified = [field.name for field in PROCESS_ENVIRONMENT.inherited_fields]
+    if len(classified) != len(set(classified)) or set(classified) != set(variables):
+        raise ValueError("Every inherited variable must have exactly one declared value kind")
+    for variable in variables:
         if variable.lower() not in AuthorityRootSettings.model_fields:
             raise ValueError(f"Host-inherited pin is not the authority root setting: {variable}")
 
@@ -77,6 +95,7 @@ def _root_section() -> dict[str, Any]:
         "blank_is_unset": True,
         "posix_directory_mode": STORAGE_ROOT.posix_directory_mode,
         "refusals": [refusal.value for refusal in StorageRootRefusal],
+        "path_rules": STORAGE_PATH_RULES._asdict(),
     }
 
 
@@ -91,6 +110,7 @@ def _locations_section() -> list[dict[str, Any]]:
             "node_kind": location.node_kind.value,
             "grouping": location.grouping.value,
             "lifecycle": location.lifecycle.value,
+            "create_explicit_directory": location.create_explicit_directory,
         }
         for location in STORAGE_TAXONOMY.values()
     ]
@@ -109,6 +129,7 @@ def _environment_section(fields: list[str]) -> dict[str, Any]:
         "host_inherited": {
             "all": list(declaration.host_inherited),
             "windows": list(declaration.windows_host_inherited),
+            "fields": [{"name": field.name, "kind": field.kind.value} for field in declaration.inherited_fields],
         },
         "allowlist": {
             "product": sorted(product_env_var_names()),
@@ -148,6 +169,9 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         "    pub channel: &'static str,",
         "    pub expected_root: Option<&'static str>,",
         "    pub refusal: Option<&'static str>,",
+        "    pub invalid_environment: &'static [&'static str],",
+        "    pub invalid_checkout: bool,",
+        "    pub invalid_known_folder: bool,",
         "}",
         f"pub const CONTRACT_SCHEMA: u32 = {contract['schema']};",
         f"pub const BUILD_CHANNEL: &str = {_rust_string(contract['channel']['build'])};",
@@ -165,6 +189,19 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         f"pub const ROOT_REFUSALS: &[&str] = {_rust_strings(root['refusals'])};",
         "pub const INSTALLED_DEFAULTS: &[InstalledDefault] = &[",
     ]
+    lines.pop()  # The installed-default array follows scalar declarations.
+    lines.extend(
+        f"pub const ROOT_REFUSAL_{refusal.name}: &str = {_rust_string(refusal.value)};"
+        for refusal in StorageRootRefusal
+    )
+    lines.extend(
+        f"pub const STORAGE_{name.upper()}: bool = {str(value).lower()};" for name, value in root["path_rules"].items()
+    )
+    lines.extend(
+        f"pub const INHERITED_KIND_{kind.name}: &str = {_rust_string(kind.value)};"
+        for kind in InheritedEnvironmentValueKind
+    )
+    lines.append("pub const INSTALLED_DEFAULTS: &[InstalledDefault] = &[")
     for rule in root["installed_defaults"]:
         candidates = ", ".join(
             f"InstalledBaseCandidate {{ variable: {_rust_string(candidate['variable'])}, "
@@ -183,6 +220,13 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         f"pub const PINNED_ENV: &[&str] = {_rust_strings(environment['pinned'])};",
         f"pub const HOST_INHERITED_ENV: &[&str] = {_rust_strings(environment['host_inherited']['all'])};",
         f"pub const WINDOWS_HOST_INHERITED_ENV: &[&str] = {_rust_strings(environment['host_inherited']['windows'])};",
+        "pub struct InheritedEnvironmentField { pub name: &'static str, pub kind: &'static str }",
+        "pub const HOST_INHERITED_FIELDS: &[InheritedEnvironmentField] = &["
+        + ",".join(
+            f"InheritedEnvironmentField {{ name: {_rust_string(field['name'])}, kind: {_rust_string(field['kind'])} }}"
+            for field in environment["host_inherited"]["fields"]
+        )
+        + "];",
         f"pub const PRODUCT_ENV_ALLOWLIST: &[&str] = {_rust_strings(environment['allowlist']['product'])};",
         f"pub const MODE_PACKAGE_MANIFEST: &str = {_rust_string(mode['package_manifest'])};",
         f"pub const MODE_PACKAGE_ROOT_FROM_EXECUTABLE: &str = {_rust_string(mode['package_root_from_executable'])};",
@@ -199,19 +243,44 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
             f"mode: {_rust_string(vector['mode'])}, environment: &[{pairs}], "
             f"checkout: {_rust_option(vector['checkout'])}, known_folder: {_rust_option(vector['known_folder'])}, "
             f"channel: {_rust_string(vector['channel'])}, expected_root: {_rust_option(vector['expected_root'])}, "
-            f"refusal: {_rust_option(vector['refusal'])} }},"
+            f"refusal: {_rust_option(vector['refusal'])}, "
+            f"invalid_environment: {_rust_strings(vector['invalid_environment'])}, "
+            f"invalid_checkout: {str(vector['invalid_checkout']).lower()}, "
+            f"invalid_known_folder: {str(vector['invalid_known_folder']).lower()} }},"
+        )
+    lines.append("];")
+    lines += [
+        f"pub const INVALID_NATIVE_PATH_BYTES: &[u8] = &{list(INVALID_NATIVE_PATH_BYTES)};",
+        f"pub const INVALID_NATIVE_PATH_UTF16: &[u16] = &{list(INVALID_NATIVE_PATH_UTF16)};",
+        "pub struct StoragePathVector { pub name: &'static str, pub components: &'static [&'static str], "
+        "pub directories: &'static [&'static str], pub files: &'static [&'static str], "
+        "pub links: &'static [(&'static str, &'static str)], "
+        "pub expected_components: Option<&'static [&'static str]>, pub refusal: Option<&'static str> }",
+        "pub const STORAGE_PATH_VECTORS: &[StoragePathVector] = &[",
+    ]
+    for vector in contract["path_vectors"]:
+        links = ",".join(f"({_rust_string(name)},{_rust_string(target)})" for name, target in vector["links"])
+        expected = (
+            "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
+        )
+        lines.append(
+            f"StoragePathVector {{ name: {_rust_string(vector['name'])}, "
+            f"components: {_rust_strings(vector['components'])}, directories: {_rust_strings(vector['directories'])}, "
+            f"files: {_rust_strings(vector['files'])}, links: &[{links}], "
+            f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
         )
     lines.append("];")
     return lines
 
 
-def generate(root: Path, destination: Path, channel: str = "stable") -> None:
+def generate(root: Path, destination: Path, channel: str = "stable", *, target: str | None = None) -> None:
     """Write C, Rust and inspection projections from their authored owners in one run.
 
     ``channel`` is the release channel the identity projection validated for this build.
     """
-    layout = load_layout(root=root)
-    build_channel = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml").channel
+    layout = load_layout(target, root=root)
+    release = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml")
+    build_channel = release.channel
     version = (root / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     if not version.startswith((root / ".python-version").read_text(encoding="utf-8").strip() + "."):
         raise ValueError("Exact CPython build must belong to the development minor")
@@ -235,6 +304,15 @@ def generate(root: Path, destination: Path, channel: str = "stable") -> None:
         "channel": {"build": build_channel, "installed_directory": STORAGE_ROOT.channel_directory(build_channel)},
         "layout": layout,
         "python": version,
+        "release": {
+            "platform": layout["platform"],
+            "abi": layout["abi"],
+            "target": release.target,
+            "python": version,
+            "version": release.version,
+            "channel": release.channel,
+            "cohort": list(PRODUCT_IDENTITY.cohort_distributions),
+        },
         "settings": fields,
         "storage_environment_allowlist": sorted(product),
         "storage": [item.model_dump(mode="json") for item in STORAGE_TAXONOMY.values()],
@@ -243,6 +321,12 @@ def generate(root: Path, destination: Path, channel: str = "stable") -> None:
         "environment": _environment_section(fields),
         "mode": _mode_section(layout),
         "vectors": [vector.as_contract() for vector in storage_root_vectors()],
+        "path_vectors": [vector.as_contract() for vector in storage_path_vectors()],
+        "invalid_native_path": {
+            "posix_bytes": list(INVALID_NATIVE_PATH_BYTES),
+            "windows_utf16": list(INVALID_NATIVE_PATH_UTF16),
+            "refusal": StorageRootRefusal.INVALID_PATH_INPUT.value,
+        },
         "runtime_exit": runtime_exit_section(),
     }
     _require_authority_pin()
@@ -254,6 +338,7 @@ def generate(root: Path, destination: Path, channel: str = "stable") -> None:
     rust = [f"pub const ABI: u32 = {layout['abi']};"]
     rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
     rust.append(f"pub const RESERVED_ENV: &[&str] = {_rust_strings(fields)};")
+    rust.append(f"pub const TEMPORARY_CREATE_EXPLICIT: bool = {str(temporary.create_explicit_directory).lower()};")
     rust.append(f"pub const PACKAGE_ENV_ALLOWLIST: &[&str] = {_rust_strings(layout['overrides'])};")
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
     entrypoints = [Path(relative).name for relative in entrypoint_files(layout).values()]
@@ -274,5 +359,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
     parser.add_argument("--channel", default="stable")
+    parser.add_argument("--target")
     args = parser.parse_args()
-    generate(Path(__file__).resolve().parents[3], args.destination, args.channel)
+    generate(Path(__file__).resolve().parents[3], args.destination, args.channel, target=args.target)

@@ -24,7 +24,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.prorrata.elect_especial",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "count": 1,
@@ -46,7 +54,7 @@
           }
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -99,6 +107,13 @@
               "sector_id": "arrendamiento"
             },
             "message": "--sector 'arrendamiento' matches no declared differentiated sector (LIVA arts. 9.1.c / 101), so this input is deducted at the common-use percentage rather than the sector percentage. The sector must exist before it can own the input.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],

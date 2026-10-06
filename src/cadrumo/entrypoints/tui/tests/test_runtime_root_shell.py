@@ -53,6 +53,7 @@ def _root(*, child_factory: Callable[[object], Screen[None]] | None = None) -> R
         },
     )
     account = object.__new__(AccountFactoriesV1)
+    object.__setattr__(account, "subscribe_retirement", None)
     object.__setattr__(account, "profile", _screen)
     object.__setattr__(account, "password", lambda: Screen())
     object.__setattr__(account, "access", None)
@@ -99,6 +100,32 @@ def test_precomposed_root_uses_injected_doors_without_local_operation_services()
     )
     assert loaded == [root]
     assert mounted == [True, True]
+
+
+def test_pushed_retirement_severs_precomposed_root() -> None:
+    root = _root()
+    callbacks: list[Callable[[], None]] = []
+
+    def subscribe(receive: Callable[[], None]) -> Callable[[], None]:
+        callbacks.append(receive)
+        return lambda: callbacks.remove(receive)
+
+    object.__setattr__(root.account_factories, "subscribe_retirement", subscribe)
+
+    async def retire(pilot: Pilot[object]) -> None:
+        await pilot.pause()
+        assert len(callbacks) == 1
+        callbacks[0]()
+        await pilot.pause()
+        app = pilot.app
+        assert isinstance(app, CadrumoTuiApp)
+        assert app._destination_catalogue is None
+        assert not callbacks
+
+    outcome = asyncio.run(
+        run_precomposed_runtime_root_session(load_root=lambda: root, headless=True, auto_pilot=retire)
+    )
+    assert outcome is not None and outcome.reason is AccountRecomposeReasonV1.EXPIRED
 
 
 @pytest.mark.asyncio

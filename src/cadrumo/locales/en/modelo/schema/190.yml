@@ -1,6 +1,49 @@
 modelo:
   schema:
     '190':
+      binding:
+        modelo-190-111-actividades-dinerario-importe-anual:
+          label: Cash income from economic activities · annual total from Form 111,
+            box 08
+        modelo-190-111-actividades-especie-importe-anual:
+          label: Income in kind from economic activities · annual total from Form
+            111, box 11
+        modelo-190-111-derechos-imagen-importe-anual:
+          label: Consideration for assignment of image rights · annual total from
+            Form 111, box 26
+        modelo-190-111-ganancias-dinerario-importe-anual:
+          label: Cash capital gains from forestry · annual total from Form 111, box
+            20
+        modelo-190-111-ganancias-especie-importe-anual:
+          label: Capital gains in kind from forestry · annual total from Form 111,
+            box 23
+        modelo-190-111-premios-dinerario-importe-anual:
+          label: Cash prizes · annual total from Form 111, box 14
+        modelo-190-111-premios-especie-importe-anual:
+          label: Prizes in kind · annual total from Form 111, box 17
+        modelo-190-111-retenciones-anual:
+          label: Withholdings and payments on account · annual total from Form 111,
+            box 28
+        modelo-190-111-trabajo-dinerario-importe-anual:
+          label: Cash employment income · annual total from Form 111, box 02
+        modelo-190-111-trabajo-especie-importe-anual:
+          label: Employment income in kind · annual total from Form 111, box 05
+        modelo-190-perceptor-rows-incapacidad-dineraria-total:
+          label: Total cash benefits for incapacity for work
+        modelo-190-perceptor-rows-incapacidad-especie-total:
+          label: Total values of benefits in kind for incapacity for work
+        modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total:
+          label: Total payments on account for incapacity benefits in kind
+        modelo-190-perceptor-rows-incapacidad-retencion-total:
+          label: Total withholdings on incapacity benefits
+        modelo-190-perceptor-rows-ingreso-a-cuenta-total:
+          label: Total payments on account
+        modelo-190-perceptor-rows-percepcion-dineraria-total:
+          label: Total cash payments
+        modelo-190-perceptor-rows-percepcion-especie-total:
+          label: Total benefits in kind
+        modelo-190-perceptor-rows-retencion-practicada-total:
+          label: Total withholdings made
       casilla:
         continuidad:
           devengo-year:

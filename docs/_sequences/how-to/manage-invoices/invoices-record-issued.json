@@ -36,7 +36,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.invoice.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "base_total": "1000.00",
           "base_total_eur": "1000.00",
@@ -86,7 +94,7 @@
           "source_sha256": null
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -109,7 +117,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.invoice.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "base_total": "1000.00",
           "base_total_eur": "1000.00",
@@ -159,7 +175,7 @@
           "source_sha256": null
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

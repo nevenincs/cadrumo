@@ -11,12 +11,13 @@ from functools import partial
 from pydantic import BaseModel
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.hashing import canonical_json_bytes, content_hash_hex
+from ...core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ..operations.interactions import OperationConsumedInteraction
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
+from ..operations.persistence.journal import serialize_operation_operand
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..operations.registry import operation_public_schema_reference
@@ -84,7 +85,9 @@ def _require_consent_digests_match(
     payload: GoogleLoginRequest,
 ) -> None:
     pending = consumed.checkpoint
-    if pending.reviewed_proposal_digest != proposal.digest:
+    # Secure references address typed serialized bytes; continuation/effect
+    # digests below address the canonical semantic proposal.
+    if pending.reviewed_proposal_digest != sha256_hex(serialize_operation_operand(proposal)):
         raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
     if pending.request.continuation_digest != proposal.digest:
         raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)

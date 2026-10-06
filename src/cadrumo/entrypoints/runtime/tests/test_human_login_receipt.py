@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import time
 from pathlib import Path
+from typing import NoReturn
 from uuid import uuid4
 
 import pytest
@@ -24,11 +25,17 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
     SessionState,
 )
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
-from cadrumo.application.user_profile.login_session import ProfileLoginOutcome, borrow_profile_receipt_key
+from cadrumo.application.user_profile.login_session import (
+    ProfileLoginOutcome,
+    ProfileLoginThrottledError,
+    borrow_profile_receipt_key,
+)
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.runtime import profile_login
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 from cadrumo.tests.audited_process import run_audited_process
 
@@ -105,6 +112,19 @@ def _exercise(tmp_path: Path, mode: str) -> None:
             path = receipt.profile_session_path(storage_root=root, profile_id=identity.binding.profile_id)
             proof = bytearray(PROFILE_INPUT.encode())
             try:
+                if mode == "throttled":
+
+                    def refuse(**_kwargs: object) -> NoReturn:
+                        raise ProfileLoginThrottledError(remaining_seconds=23)
+
+                    patcher.setattr(profile_login, "authenticate_profile_candidate", refuse)
+                    with pytest.raises(ProfileAccessRefusedError) as refused:
+                        human.authenticate(proof)
+                    assert refused.value.sign_in is not None
+                    assert refused.value.sign_in.reason == "throttled"
+                    assert refused.value.sign_in.remaining_seconds == 23
+                    assert not custody.live_sessions() and not path.exists() and store.writes == 0
+                    return
                 candidate_id, outcome = human.authenticate(proof)
                 assert not outcome.session_persisted and not path.exists()
                 lease = _human_lease(identity, outcome)
@@ -193,6 +213,7 @@ def _exercise(tmp_path: Path, mode: str) -> None:
         "retired_before_mint",
         "lease_gone",
         "advanced_before_mint",
+        "throttled",
     ],
 )
 def test_worker_human_login_receipt_lifecycle(tmp_path: Path, mode: str) -> None:

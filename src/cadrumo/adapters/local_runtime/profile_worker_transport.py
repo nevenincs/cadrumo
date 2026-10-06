@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from ...application.operations.models import OperationIdentity
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.deadline_budget import remaining_budget
 from ...application.runtime.profile_worker import (
     ProfileWorkerControlRequest,
     ProfileWorkerDrained,
@@ -189,7 +190,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         if isinstance(result, ProfileWorkerRefusal):
             if isinstance(result.reason, AccessDenialCode):
-                raise ProfileAccessRefusedError(result.reason)
+                raise ProfileAccessRefusedError(result.reason, sign_in=result.sign_in)
             raise AutomationCustodyError(result.reason)
         if not isinstance(result, response):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
@@ -216,5 +217,11 @@ def _acquire_exchange_lock(lock: RLock, deadline: float | None) -> None:
     if deadline is None:
         lock.acquire()
         return
-    if not lock.acquire(timeout=max(0.0, deadline - time.monotonic())):
+    remaining = remaining_budget(deadline)
+    if not lock.acquire(timeout=remaining):
         raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+    try:
+        remaining_budget(deadline)
+    except RuntimeRefusalError:
+        lock.release()
+        raise

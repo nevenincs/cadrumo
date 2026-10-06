@@ -46,7 +46,6 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
     registry = OperationRegistry(definitions=AUTH_DEFINITIONS)
     definition_ids = tuple(definition.definition_id for definition in AUTH_DEFINITIONS)
     assert definition_ids == (
-        PROFILE_LOGIN_OPERATION_DEFINITION_ID,
         AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
         AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
         AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -59,9 +58,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
         for definition_id in definition_ids
         if registry.lookup(definition_id).capabilities.request_storage
         is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
-    } == {
-        PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-    }
+    } == set()
     assert all(
         registry.lookup(definition_id).capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
         for definition_id in (
@@ -72,7 +69,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
             PROFILE_ROTATION_OPERATION_DEFINITION_ID,
         )
     )
-    assert registry.lookup(PROFILE_LOGIN_OPERATION_DEFINITION_ID).ephemeral_secret is not None
+    assert PROFILE_LOGIN_OPERATION_DEFINITION_ID not in definition_ids
     assert registry.lookup(PROFILE_ROTATION_OPERATION_DEFINITION_ID).ephemeral_secret is not None
     assert all(
         registry.lookup(definition_id).ephemeral_secret is None

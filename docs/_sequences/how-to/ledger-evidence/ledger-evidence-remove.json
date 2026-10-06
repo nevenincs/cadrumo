@@ -53,7 +53,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "evidence_id\t4fbeef4e52f5c0a8\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Sol SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100.00\niva_rate\t21\niva_amount\t21.00\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\nbucket_event_ids\te0cd1c6d0c07c20521672f7d19db3f8a22429bba593e3b33876e52d429a53c13\n"
+      "text": "evidence_id\t4fbeef4e52f5c0a8\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Sol SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100\niva_rate\t21\niva_amount\t21\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\nbucket_event_ids\te0cd1c6d0c07c20521672f7d19db3f8a22429bba593e3b33876e52d429a53c13\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -91,13 +91,26 @@
           },
           "category": "REFUSED",
           "code": "REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
-          "context": null,
+          "context": {
+            "effect": "none",
+            "operation_id": "32a71325252e7465596f1b7a2dc622dd551a52f7bff6adbd8e6806946baed6b4",
+            "refusal_code": "REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
+            "terminal_condition": "refused"
+          },
           "message": "No purchase-invoice evidence exists with the identifier provided.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null
         },
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "schema_version": "2",
         "status": "error"
       },

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 from typing import Protocol, Self
 from uuid import UUID
 
@@ -44,8 +45,17 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..storage.calc_sheets.engine import build_export_plan
-from ..storage.calc_sheets.records import OperatorInputs, RelationValues, SheetExportPlan
+from ..storage.calc_sheets.records import OperatorInputs, RelationValues, SheetExportPlan, SheetReviewMetadata
+from ..storage.calc_sheets.review_workbook import ReviewLabelResolver, build_review_workbook
 from ..user_profile.capabilities import resolve_active_capability
+from .managed_artifact_ports import ManagedArtifactKind
+from .publication_receipt import (
+    PublicationReceipt,
+    PublicationState,
+    ReadableExportAuthorization,
+    ReadablePayloadCategory,
+)
+from .review_snapshot import CalculationReviewSelection, ReviewSelection, ReviewSnapshot
 
 GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID = "export.google-sheets"
 GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT = "export.google-sheets.preflight"
@@ -243,6 +253,107 @@ def _resolve_snapshot(modelo: ModeloId, period: Period) -> RegistrySnapshot:
 def _unconfigured_google_sheets_export_prepare_port(_profile_id: str) -> GoogleSheetsExportPreparedPort:
     """Refuse accidental execution before the production composition binds a port."""
     raise InternalInvariantError("Google Sheets export transport has not been composed")
+
+
+def prepare_google_review_plan(
+    snapshot: ReviewSnapshot,
+    *,
+    selection: ReviewSelection,
+    publication: PublicationReceipt,
+    authorization: ReadableExportAuthorization,
+    exported_at: datetime,
+    label: ReviewLabelResolver,
+) -> SheetExportPlan[SheetReviewMetadata]:
+    """Prepare a new review after runtime disclosure, without any provider access.
+
+    The caller resolves the selected saved snapshot once and admits disclosure
+    through the runtime. These correlation checks cannot grant that authority.
+    Published or uncertain receipts belong to reconciliation, never population.
+    """
+    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
+        raise GoogleSheetsExportCapabilityDisabledError("Google Sheets export capability is disabled")
+    _require_active_profile(selection.profile_id)
+    if (
+        snapshot.selection != selection
+        or publication.profile_id != selection.profile_id
+        or publication.snapshot_digest != snapshot.snapshot_digest
+        or authorization.profile_id != selection.profile_id
+        or authorization.publication_id != publication.publication_id
+        or authorization.root_folder_id != publication.root.artifact_id
+        or authorization.snapshot_digest != snapshot.snapshot_digest
+    ):
+        raise GoogleSheetsExportSubjectMismatchError("Review snapshot, publication and disclosure identities differ")
+    if publication.state is not PublicationState.PREPARED or publication.artifacts:
+        raise GoogleSheetsExportSubjectMismatchError("Existing publication requires reconciliation, not population")
+    categories = set(authorization.payload_categories)
+    required: set[ReadablePayloadCategory] = (
+        {ReadablePayloadCategory.CALCULATION} if isinstance(selection, CalculationReviewSelection) else set()
+    )
+    if selection.kind == "ledger" or snapshot.ledger_rows:
+        required.add(ReadablePayloadCategory.LEDGER)
+    if not required <= categories:
+        raise GoogleSheetsExportSubjectMismatchError("Review content exceeds the admitted disclosure categories")
+    return build_review_workbook(
+        snapshot,
+        publication_id=publication.publication_id,
+        exported_at=exported_at,
+        label=label,
+    )
+
+
+class GoogleSheetsReviewPreparedPort(Protocol):
+    """Receipt-bound transport composed after profile and destination admission."""
+
+    def execute(
+        self,
+        plan: SheetExportPlan[SheetReviewMetadata],
+        publication: PublicationReceipt,
+    ) -> PublicationReceipt:
+        """Populate only this new publication and return acknowledged checkpoints."""
+        ...
+
+
+def publish_google_review(
+    snapshot: ReviewSnapshot,
+    *,
+    selection: ReviewSelection,
+    publication: PublicationReceipt,
+    authorization: ReadableExportAuthorization,
+    prepared: GoogleSheetsReviewPreparedPort,
+    exported_at: datetime,
+    label: ReviewLabelResolver,
+) -> PublicationReceipt:
+    """Hand a new baseline to admitted transport inside the supervisor's effect guard.
+
+    The caller must retain UNKNOWN until transport settlement and persist the
+    returned receipt, including partial/uncertain outcomes. A completed remote
+    document is never selected by workbook name or used for a second population.
+    """
+    plan = prepare_google_review_plan(
+        snapshot,
+        selection=selection,
+        publication=publication,
+        authorization=authorization,
+        exported_at=exported_at,
+        label=label,
+    )
+    result = prepared.execute(plan, publication)
+    if (
+        result.publication_id != publication.publication_id
+        or result.profile_id != publication.profile_id
+        or result.root != publication.root
+        or result.snapshot_digest != publication.snapshot_digest
+        or result.predecessor_publication_id != publication.predecessor_publication_id
+        or result.package_digest != publication.package_digest
+    ):
+        raise InternalInvariantError("Review transport returned an unrelated publication receipt")
+    if result.state not in {PublicationState.PUBLISHED, PublicationState.PARTIAL, PublicationState.UNCERTAIN}:
+        raise InternalInvariantError("Review transport returned an unfinished publication checkpoint")
+    if result.state is PublicationState.PUBLISHED:
+        sheets = tuple(item for item in result.artifacts if item.kind is ManagedArtifactKind.REVIEW_SHEET)
+        if len(sheets) != 1:
+            raise InternalInvariantError("Published review requires exactly one native workbook receipt")
+    return result
 
 
 class GoogleSheetsExportService:

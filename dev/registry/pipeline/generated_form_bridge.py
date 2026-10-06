@@ -91,7 +91,13 @@ def _other_files(root: Path, modelo: str, revision: str, *, transaction_backup: 
 
 
 def _active_verified_backup(
-    registry_root: Path, modelo: str, revision: str, candidate_manifest_sha256: str, old_manifest_sha256: str
+    registry_root: Path,
+    modelo: str,
+    revision: str,
+    candidate_manifest_sha256: str,
+    old_manifest_sha256: str,
+    *,
+    reviewed_source: tuple[str, str] | None = None,
 ) -> Path | None:
     """Identify only this target's journal-attested, intact old export package."""
     paths = GeneratedExportTransactionPaths(target_root=registry_root.resolve(), modelo=modelo, revision_id=revision)
@@ -118,12 +124,13 @@ def _active_verified_backup(
     if _sha(backup / "_generation.provenance.json") != old_manifest:
         raise RegistryValidationError("Generated export cutover backup differs from reviewed old manifest")
     old_package = verify_generated_export_package(backup)
+    source_ref, source_sha256 = reviewed_source or _REVIEWED[(modelo, revision)][:2]
     if (
         str(old_package.modelo),
         str(old_package.revision_id),
         str(old_package.source_ref),
         old_package.source_sha256,
-    ) != (modelo, revision, _REVIEWED[(modelo, revision)][0], _REVIEWED[(modelo, revision)][1]):
+    ) != (modelo, revision, source_ref, source_sha256):
         raise RegistryValidationError("Generated export cutover backup differs from reviewed old source")
     return backup
 

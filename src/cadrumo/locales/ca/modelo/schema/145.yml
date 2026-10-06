@@ -7,6 +7,51 @@ modelo:
           (article 88 del Reglament de l'IRPF).
         title: IRPF. Retencions sobre rendiments del treball. Comunicació de dades
           al pagador
+      form:
+        authored2012:
+          column:
+            anio-adopcion:
+              heading: Any d’adopció o acolliment
+            anio-nacimiento:
+              heading: Any de naixement
+            ayuda-movilidad:
+              heading: Ajuda d’altres persones o mobilitat reduïda
+            computo-entero:
+              heading: Còmput íntegre
+            convivencia-otros:
+              heading: Convivència amb altres descendents
+            discapacidad-grado:
+              heading: Grau de discapacitat
+          page:
+            heading: Comunicació al pagador · disseny de 2012 pendent de revisió
+          row:
+            ascendiente-1:
+              heading: Ascendent 1
+            ascendiente-2:
+              heading: Ascendent 2
+            descendiente-1:
+              heading: Descendent 1
+            descendiente-2:
+              heading: Descendent 2
+            descendiente-3:
+              heading: Descendent 3
+            descendiente-4:
+              heading: Descendent 4
+          section:
+            acuse:
+              heading: 7. Justificant de recepció
+            ascendientes:
+              heading: 3. Ascendents
+            descendientes:
+              heading: 2. Fills i altres descendents
+            firma:
+              heading: 6. Data i signatura de la comunicació
+            pensiones:
+              heading: 4. Pensions compensatòries i aliments
+            perceptor:
+              heading: 1. Dades del perceptor
+            vivienda:
+              heading: 5. Habitatge habitual
       revision:
         2012-01-31-y-siguientes:
           casilla:

@@ -62,6 +62,27 @@ modelo:
         official_name: Modelo 189. Declaración informativa anual acerca de valores,
           seguros y rentas.
         title: Declaración informativa anual acerca de valores, seguros y rentas
+      form:
+        page:
+          detalle:
+            heading: Detalle de valores, seguros y rentas
+          hoja-resumen:
+            heading: Hoja resumen
+        section:
+          declaracion:
+            heading: Declaración complementaria o sustitutiva
+          declarante:
+            heading: Declarante
+          ejercicio:
+            heading: Ejercicio y presentación
+          identificacion:
+            heading: Identificación del declarado
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
+          valor:
+            heading: Identificación de los valores, seguros o rentas
+          valoracion:
+            heading: Valoración y titularidad
       revision:
         '2022':
           field:

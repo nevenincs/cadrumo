@@ -166,6 +166,17 @@ class PublicModeloFormFieldBlock(BaseModel):
     field: PublicModeloFormField
 
 
+class PublicModeloFormContextFieldBlock(BaseModel):
+    """Selected read-only context, with no producer snapshot or editing target."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal["context_field"]
+    id: str
+    label: ModeloFormText
+    value: PublicScalarValueV1 | None
+
+
 class PublicModeloFormGridCell(BaseModel):
     """Typed local-human workbench view of ModeloFormGridCell."""
 
@@ -236,7 +247,8 @@ type PublicModeloFormBlock = Annotated[
     PublicModeloFormFieldBlock
     | PublicModeloFormGridBlock
     | PublicModeloFormRepeatingBlock
-    | PublicModeloFormBindingInputsBlock,
+    | PublicModeloFormBindingInputsBlock
+    | PublicModeloFormContextFieldBlock,
     Field(discriminator="kind"),
 ]
 
@@ -489,6 +501,7 @@ def restore_modelo_workbench_form(projection: ModeloWorkbenchFormProjectionV1) -
 __all__ = [
     "ModeloWorkbenchFormProjectionV1",
     "PublicModeloFormBindingInputsBlock",
+    "PublicModeloFormContextFieldBlock",
     "PublicModeloFormEarlierFiling",
     "PublicModeloFormField",
     "PublicModeloFormFieldBlock",

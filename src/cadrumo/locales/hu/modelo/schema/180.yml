@@ -1,6 +1,11 @@
 modelo:
   schema:
     '180':
+      binding:
+        modelo-180-115-base-anual:
+          label: Éves adólevonási és adóelőleg-alap · 115-ös nyomtatvány, 02. mező
+        modelo-180-115-retenciones-anual:
+          label: Éves adólevonások és adóelőlegek · 115-ös nyomtatvány, 03. mező
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:

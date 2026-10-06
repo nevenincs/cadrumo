@@ -124,7 +124,9 @@
               "conditional_recargo_preview_pct": "15.00",
               "conditional_recargo_preview_reference_on": "2026-04-01",
               "days_overdue": "397",
-              "legal_refs": "ley-58-2003:art-27.2"
+              "holiday_coverage": "national_only",
+              "legal_refs": "ley-58-2003:art-27.2",
+              "nominal_closes_on": "2025-02-28"
             },
             "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
             "severity": "warning"
@@ -194,7 +196,9 @@
               "surcharge_pct": "15.00"
             },
             "days_overdue": 397,
-            "days_remaining": null
+            "days_remaining": null,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2025-02-28"
           },
           "detail_rows": [
             {

@@ -1,20 +1,83 @@
 modelo:
   schema:
     '194':
+      binding:
+        modelo-194-perceptor-row-base:
+          label: Base de retencions i ingressos a compte
+        modelo-194-perceptor-row-ceuta-melilla:
+          label: Deducció territorial aplicable
+        modelo-194-perceptor-row-clave-codigo:
+          label: Tipus d’identificació de l’emissor
+        modelo-194-perceptor-row-codigo-cuenta:
+          label: Compte de valors
+        modelo-194-perceptor-row-codigo-emisor:
+          label: Identificació de l’emissor
+        modelo-194-perceptor-row-ejercicio-devengo:
+          label: Exercici de meritació anterior
+        modelo-194-perceptor-row-nif:
+          label: NIF del perceptor
+        modelo-194-perceptor-row-nif-representante:
+          label: NIF del representant legal
+        modelo-194-perceptor-row-nombre:
+          label: Cognoms i nom o raó social
+        modelo-194-perceptor-row-origen:
+          label: Origen de l’operació
+        modelo-194-perceptor-row-pendiente:
+          label: Pendent d’abonament
+        modelo-194-perceptor-row-porcentaje:
+          label: Percentatge de retenció
+        modelo-194-perceptor-row-provincia:
+          label: Codi de província
+        modelo-194-perceptor-row-retenciones:
+          label: Retencions i ingressos a compte
+        modelo-194-perceptor-row-tipo-codigo:
+          label: Tipus d’identificació del compte
+        modelo-194-perceptor-row-valor-adquisicion:
+          label: Valor d’adquisició o subscripció
+        modelo-194-perceptor-row-valor-transmision:
+          label: Valor de transmissió o reemborsament
+        modelo-194-perceptor-row-vinculacion:
+          label: Rendiments d’entitat vinculada
+        modelo-194-resumen-base-negativa:
+          label: Suma de bases negatives, amb signe
+        modelo-194-resumen-base-positiva:
+          label: Suma de bases positives
+        modelo-194-resumen-perceptores-no-positivos:
+          label: Registres amb base negativa o zero
+        modelo-194-resumen-perceptores-positivos:
+          label: Registres amb base positiva
+        modelo-194-resumen-retenciones-total:
+          label: Total de retencions i ingressos a compte
       casilla:
         continuidad:
+          activo-financiero-entidad-vinculada:
+            label: Rendiments d’entitat vinculada
+          activo-financiero-origen-operacion:
+            label: Origen de l’operació
+          activo-financiero-valor-adquisicion:
+            label: Valor d’adquisició o subscripció
+          activo-financiero-valor-transmision:
+            label: Valor de transmissió o reemborsament
+          capital-ajeno-perceptor-base-retenciones:
+            label: Base de retencions i ingressos a compte
+          capital-ajeno-perceptor-deduccion-territorial:
+            label: Deducció territorial aplicable
+          capital-ajeno-perceptor-porcentaje-retencion:
+            label: Percentatge de retenció
+          capital-ajeno-perceptor-retenciones:
+            label: Retencions i ingressos a compte
           capital-ajeno-resumen-base-negativa:
-            help: Suma de les bases de retenció dels registres de perceptor amb base
-              negativa.
+            help: Suma de les bases negatives expressada com a import positiu, sense
+              compensar les bases positives.
             label: Base de retencions i ingressos a compte negativa
           capital-ajeno-resumen-base-positiva:
             help: Suma de les bases de retenció dels registres de perceptor amb base
               positiva.
             label: Base de retencions i ingressos a compte
           capital-ajeno-resumen-perceptores-base-negativa:
-            help: Nombre de perceptors (registres) la base de retencions dels quals
-              és negativa.
-            label: Nombre total de perceptors amb base negativa
+            help: Es compta cada operació declarada, encara que diverses corresponguin
+              al mateix perceptor. Inclou bases negatives i zero.
+            label: Nombre de registres amb base negativa o zero
           capital-ajeno-resumen-perceptores-base-positiva:
             help: Nombre de perceptors (registres) la base de retencions dels quals
               és positiva.
@@ -23,6 +86,38 @@ modelo:
             help: Suma de les retencions i ingressos a compte practicats sobre les
               rendes declarades.
             label: Retencions i ingressos a compte
+          cuenta-valores-identificacion:
+            label: Compte de valors
+          cuenta-valores-tipo-identificacion:
+            label: Tipus d’identificació del compte
+          declaracion-anterior-numero:
+            label: Justificant de la declaració anterior
+          declaracion-complementaria:
+            label: Declaració complementària
+          declaracion-numero-identificativo:
+            label: Número de justificant
+          declaracion-sustitutiva:
+            label: Declaració substitutiva
+          declarante-contacto-nombre:
+            label: Cognoms i nom de contacte
+          declarante-contacto-telefono:
+            label: Telèfon de contacte
+          emisor-clave-identificacion:
+            label: Tipus d’identificació de l’emissor
+          emisor-identificacion:
+            label: Identificació de l’emissor
+          perceptor-identificacion-fiscal:
+            label: NIF del perceptor
+          perceptor-nombre:
+            label: Cognoms i nom o raó social
+          perceptor-provincia:
+            label: Codi de província
+          perceptor-representante-identificacion-fiscal:
+            label: NIF del representant legal
+          rendimiento-ejercicio-devengo:
+            label: Exercici de meritació anterior
+          rendimiento-pendiente-abono:
+            label: Pendent d’abonament
       construct:
         modelo-194-calculation-construct:
           field:
@@ -36,6 +131,88 @@ modelo:
           canvi o conversió de qualsevol classe d'actius representatius de la captació
           i utilització de capitals aliens. Resum anual.
         title: Retencions de capital mobiliari i transmissió d'actius - resum anual
+      form:
+        column:
+          base:
+            heading: Base de retencions i ingressos a compte
+          perc-base:
+            heading: Base de retencions i ingressos a compte
+          perc-ceuta-melilla:
+            heading: Deducció territorial aplicable
+          perc-clave-codigo:
+            heading: Tipus d’identificació de l’emissor
+          perc-codigo-cuenta:
+            heading: Compte de valors
+          perc-codigo-emisor:
+            heading: Identificació de l’emissor
+          perc-ejercicio-devengo:
+            heading: Exercici de meritació anterior
+          perc-nif:
+            heading: NIF del perceptor
+          perc-nif-representante:
+            heading: NIF del representant legal
+          perc-nombre:
+            heading: Cognoms i nom o raó social
+          perc-origen:
+            heading: Origen de l’operació
+          perc-pendiente:
+            heading: Pendent d’abonament
+          perc-porcentaje:
+            heading: Percentatge de retenció
+          perc-provincia:
+            heading: Codi de província
+          perc-retenciones:
+            heading: Retencions i ingressos a compte
+          perc-tipo-codigo:
+            heading: Tipus d’identificació del compte
+          perc-valor-adquisicion:
+            heading: Valor d’adquisició o subscripció
+          perc-valor-transmision:
+            heading: Valor de transmissió o reemborsament
+          perc-vinculacion:
+            heading: Rendiments d’entitat vinculada
+          perceptores:
+            heading: Nombre de perceptors
+          retenciones:
+            heading: Retencions i ingressos a compte
+        context:
+          ejercicio:
+            heading: Exercici
+          nif:
+            heading: NIF del declarant
+          nombre:
+            heading: Cognoms i nom o raó social
+        page:
+          importes:
+            heading: Imports i retencions
+          perceptores:
+            heading: Relació de perceptors
+          resumen:
+            heading: Full resum · desenvolupament parcial
+        row:
+          negativa:
+            heading: Base negativa o zero
+          positiva:
+            heading: Base positiva
+        section:
+          contacto:
+            heading: Persona de contacte
+          cuenta:
+            heading: Compte de valors i meritació
+          declaracion:
+            heading: Identificació i tipus de declaració
+          emisor:
+            heading: Operació i emissor
+          identificacion:
+            heading: Identificació del declarant
+          perceptores:
+            heading: Identificació del perceptor
+          resumen:
+            heading: Resum de les dades incloses en la declaració
+          retenciones:
+            heading: Base i retencions
+          valores:
+            heading: Adquisició i transmissió
       revision:
         '2019':
           field:

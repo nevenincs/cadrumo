@@ -17,7 +17,7 @@ from . import edition_delta_fields as _edition_delta_fields
 from . import edition_delta_payload as _edition_delta_payload
 from . import edition_delta_types as _edition_delta_types
 from .compiler.casilla_inheritance import retired_lineages
-from .compiler.edition_materialisation import materialise_edition
+from .compiler.edition_materialisation import resolve_edition
 from .compiler.reference_defaults import default_row_references
 from .compiler.reference_resolution import edition_reference_declarations, resolve_row_references
 from .edition_round_trip import RowKey
@@ -125,7 +125,7 @@ def _manifest_table(text: str, revision_id: str) -> _Row:
 def _read_edition(modelo_dir: Path, revision_id: str) -> _EditionSource:
     edition_dir = modelo_dir / "revisions" / revision_id
     manifest_text = (edition_dir / _edition_delta_fields._MANIFEST).read_text(encoding="utf-8")
-    materialised = materialise_edition(modelo_dir, revision_id)
+    materialised = resolve_edition(modelo_dir, revision_id)
     raw_rows = materialised.table.get(_edition_delta_fields._CASILLAS, ())
     rows = tuple(_as_row(row) for row in (raw_rows if isinstance(raw_rows, list | tuple) else ()))
     origins = materialised.label_origins or tuple(None for _ in rows)

@@ -157,7 +157,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551"
+          "value": "0444fe04868e9fef6bf488187c121ac4e7510cf48d5c75a3782b8de4b907412a"
         }
       ],
       "envelope": {
@@ -176,16 +176,11 @@
           "authorization_state": null,
           "binding_overrides": {
             "iva-349-declarante-importe-operaciones": "8000",
-            "iva-349-declarante-importe-operaciones-adquisicion": "0",
             "iva-349-declarante-importe-rectificaciones": "0",
-            "iva-349-declarante-importe-rectificaciones-adquisicion": "0",
             "iva-349-declarante-numero-operadores": "2",
-            "iva-349-declarante-numero-operadores-adquisicion": "0",
-            "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
-            "modelo-349-ledger-intracommunity-guard": "0"
+            "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551",
+          "calculation_revision_id": "0444fe04868e9fef6bf488187c121ac4e7510cf48d5c75a3782b8de4b907412a",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -197,7 +192,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [
             {
@@ -334,16 +331,16 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 0444fe04868e9fef6bf488187c121ac4e7510cf48d5c75a3782b8de4b907412a (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:c0d40a10d081f27b894a9331e6c5b11170b057c6f8add475e7fc6e797762818b",
+              "fingerprint": "sha256:d373c3393acc77a4d68c995c1e55d6baebcb20129143076cd1296cfa13859af4",
               "lineage_role": "primary",
               "parent_source_ref": null,
-              "resolved_binding_source": "collectible_invoice",
+              "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
               "source_ref": "collectible_invoice:86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b"
             },
@@ -351,10 +348,10 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:4b81059e54a8209054823e305edb4f67fd381090cb85dffde334982206b73932",
+              "fingerprint": "sha256:dc60742da05b347039624e6de6c1b5de1b73d2a501c68c1a4eb8bf8325aeea91",
               "lineage_role": "primary",
               "parent_source_ref": null,
-              "resolved_binding_source": "collectible_invoice",
+              "resolved_binding_source": "m349_intracommunity_operation",
               "resolver_id": "invoice_catalogue",
               "source_ref": "collectible_invoice:0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209"
             }
@@ -384,7 +381,7 @@
         "modelo",
         "work",
         "verify",
-        "88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551"
+        "0444fe04868e9fef6bf488187c121ac4e7510cf48d5c75a3782b8de4b907412a"
       ],
       "captures": [],
       "envelope": {
@@ -400,7 +397,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "88f45ea32b2b594f40b5d1a0ffbee5a11c41a44b6a1513f7652bf4bb3d293551",
+          "calculation_revision_id": "0444fe04868e9fef6bf488187c121ac4e7510cf48d5c75a3782b8de4b907412a",
           "completeness_status": "complete",
           "findings": [],
           "granted_verificado_completo": true,
@@ -424,7 +421,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "add07f5dca7f155fc409583888e2b677e1a3b9f9afd8edb2e8a14a9e0da3c6c8",
+          "verification_report_id": "564283bbadd3bc5eb40d35389695e3ad7658fe03aa80bbc44f1db3b4136c075d",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

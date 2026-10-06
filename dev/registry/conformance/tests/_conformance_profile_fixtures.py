@@ -2,7 +2,7 @@
 
 import pytest
 
-from cadrumo.domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
+from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
 from ..profile import RegistryConformanceProfile, audit_bundled_registry_conformance
 

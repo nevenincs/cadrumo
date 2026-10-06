@@ -1,12 +1,12 @@
 # BOE form-annex corpus — provenance
 
 This directory holds two kinds of artefact, and confusing them is the thing this
-record exists to prevent. Four files are **captures**: BOE PDFs downloaded
+record exists to prevent. The **captures** are BOE PDFs downloaded
 whole, where the bundled bytes are the bytes the publisher served. Nine are
 **transcriptions**: plain text typed out from a BOE annex, where the bundled
 bytes were produced here and no URL would ever serve them.
 
-The registry rows for all thirteen have the same shape — `sha256`, `bytes`,
+The registry rows have the same shape — `sha256`, `bytes`,
 `retrieved_at`, `source_url` — so a reader cannot tell the two apart from the
 catalogue alone. That is what the tables below are for.
 
@@ -16,6 +16,21 @@ The bundled bytes are what the address served.
 
 | File | Bytes | Retrieved | Served from |
 | ---- | ----- | --------- | ----------- |
+| `boe-a-2009-18567-modelo-190.pdf` | 1094631 | 2026-10-06 | `boe.es/boe/dias/2009/11/23/pdfs/BOE-A-2009-18567.pdf` |
+| `boe-a-2000-21430-modelos-115-180.pdf` | 5994105 | 2026-10-05 | `boe.es/buscar/pdf/2000/BOE-A-2000-21430-consolidado.pdf` |
+| `boe-a-2007-20485-modelos-117-123-124-126-128.pdf` | 1350673 | 2026-10-05 | `boe.es/eli/es/o/2007/11/23/eha3435/dof/spa/pdf` |
+| `boe-a-2008-18497-modelos-216-296.pdf` | 648950 | 2026-10-05 | `boe.es/boe/dias/2008/11/17/pdfs/A45583-45621.pdf` |
+| `boe-a-2009-21165.pdf` | 594407 | 2026-10-06 | `boe.es/boe/dias/2009/12/31/pdfs/BOE-A-2009-21165.pdf` |
+| `boe-a-2011-4948-modelo-111.pdf` | 495375 | 2026-10-05 | `boe.es/buscar/pdf/2011/BOE-A-2011-4948-consolidado.pdf` |
+| `boe-a-2015-1656-modelos-130-131.pdf` | 446569 | 2026-10-05 | `boe.es/boe/dias/2015/02/19/pdfs/BOE-A-2015-1656.pdf` |
+| `boe-a-2017-10042-modelo-232.pdf` | 288131 | 2026-10-06 | `boe.es/boe/dias/2017/08/30/pdfs/BOE-A-2017-10042.pdf` |
+| `boe-a-2018-12515-modelos-202-222.pdf` | 558599 | 2026-10-06 | `boe.es/boe/dias/2018/09/14/pdfs/BOE-A-2018-12515.pdf` |
+| `boe-a-2018-17997-modelo-117.pdf` | 471979 | 2026-10-05 | `boe.es/boe/dias/2018/12/29/pdfs/BOE-A-2018-17997.pdf` |
+| `boe-a-2023-8120-modelos-202-222.pdf` | 5094990 | 2026-10-06 | `boe.es/boe/dias/2023/03/31/pdfs/BOE-A-2023-8120.pdf` |
+| `boe-a-2024-1772-modelos-123-216-210.pdf` | 1015931 | 2026-10-05 | `boe.es/boe/dias/2024/01/31/pdfs/BOE-A-2024-1772.pdf` |
+| `boe-a-2025-5407-modelos-202-222.pdf` | 719796 | 2026-10-06 | `boe.es/boe/dias/2025/03/19/pdfs/BOE-A-2025-5407.pdf` |
+| `boe-a-1999-22372.pdf` | 11362203 | 2026-10-06 | `boe.es/boe/dias/1999/11/20/pdfs/A40382-40434.pdf` |
+| `boe-a-2008-19523.pdf` | 538814 | 2026-10-06 | `boe.es/boe/dias/2008/12/04/pdfs/A48384-48405.pdf` |
 | `boe-a-2003-1911-modelo-185-annex-i.pdf` | 290582 | 2026-08-26 | `boe.es/boe/dias/2003/01/30/pdfs/A03911-03920.pdf` |
 | `boe-a-2023-17429-modelo-721-layout.pdf` | 294687 | 2026-06-28 | `boe.es/boe/dias/2023/07/29/pdfs/BOE-A-2023-17429.pdf` |
 | `boe-a-2024-27528-modelo-721-layout-amendment.pdf` | 827110 | 2026-06-28 | `boe.es/boe/dias/2024/12/31/pdfs/BOE-A-2024-27528.pdf` |

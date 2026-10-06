@@ -72,9 +72,10 @@ def _bucket_delete_refusal(
 class BucketMaintenanceService:
     """Expose only non-mutating maintenance operations for current capsules."""
 
-    def __init__(self, *, bucket_storage: ProfileBucketStoragePort) -> None:
+    def __init__(self, *, bucket_storage: ProfileBucketStoragePort, root: Path | None = None) -> None:
         """Bind the bucket storage used by maintenance operations."""
         self._bucket_storage = bucket_storage
+        self._root = root
 
     @contextmanager
     def deletion_target_locks(
@@ -129,7 +130,7 @@ class BucketMaintenanceService:
         """
         from ...core.config import load_settings
 
-        root = load_settings().cadrumo_local_storage_root
+        root = self._root if self._root is not None else load_settings().cadrumo_local_storage_root
         try:
             validated_bucket_deletion_paths(
                 root=root,
@@ -144,7 +145,7 @@ class BucketMaintenanceService:
                 bucket_id=str(command.bucket_id),
                 facts={"bucket_id": str(command.bucket_id), "custody_target_unlinked": False},
             ) from exc
-        bucket = read_profile_bucket_by_id(command.bucket_id)
+        bucket = read_profile_bucket_by_id(command.bucket_id, root=root)
         if bucket is None:
             raise _bucket_delete_refusal(
                 BucketDeletionPreconditionCondition.LABEL_PROJECTION_PRESENT,

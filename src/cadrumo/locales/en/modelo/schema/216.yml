@@ -13,23 +13,62 @@ modelo:
           a permanent establishment. Withholdings and payments on account. Return
           and payment document.
         title: IRNR withholdings and payments on account
+      form:
+        column:
+          base: Withholding and payments-on-account base
+          numero-rentas: Number of income items
+          retenciones: Withholdings and payments on account
+        context:
+          apellidos: Surnames or legal name
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          nombre-completo: Full name or registered business name
+          periodo: Period
+        page:
+          pag-1:
+            heading: Non-resident income tax · Withholding and payments on account
+        row:
+          base-historica: Withholding base / Income amount
+          dividendos: Dividends and other income from equity interests
+          otras-rentas: Other income
+          totales: Totals
+        section:
+          complementaria:
+            heading: Supplementary return
+          devengo:
+            heading: Tax period
+          identificacion:
+            heading: Identification
+          ingreso:
+            heading: Payment
+          liquidacion:
+            heading: Tax calculation
+          no-sometidas:
+            heading: II. Income not subject to withholding or payments on account
+          sometidas:
+            heading: I. Income subject to withholding or payments on account
       revision:
         2020-2023:
           casilla:
             '1':
-              label: Settlement. Item 1. Number of income items
+              label: Number of income items subject to withholding
             '2':
-              label: Settlement. Item 2. Withholding and advance payment tax base
+              label: Withholding and payment-on-account base
             '3':
-              label: Settlement. Item 3. Withholdings and payments on account
+              label: Withholdings and payments on account
             '4':
-              label: Settlement. Item 4. Number of income items
+              label: Number of income items not subject to withholding
             '5':
-              label: Settlement. Item 5. Withholding and advance payment tax base
+              label: Income not subject to withholding
             '6':
-              label: Settlement. Item 6. Amount payable from prior returns
+              label: Amounts payable in previous returns for the same tax, year and
+                period
             '7':
-              label: Settlement. Item 7. Result payable
+              label: Amount payable
           field:
             label: Order EHA/3290/2008, tax years 2020 to 2023
         2024-y-siguientes:

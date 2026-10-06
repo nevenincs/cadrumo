@@ -17,7 +17,8 @@ from cadrumo.application.operations.persistence.leases import operation_conflict
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.operations import OperationLifecycle
 
-from .test_supervisor import _NOW, _registry, _repositories, _request, _supervisor
+from .supervision_support import run_to_settlement
+from .test_supervisor import _NOW, IdleExecutor, _registry, _repositories, _request, _supervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -73,6 +74,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
                 cleanup_timeout=timedelta(minutes=1),
             )
             ids = ("3" * 64, "4" * 64)
+            assert services.submission.supervisor.in_flight_operation_count() == 0
             try:
                 for index, operation_id in enumerate(ids):
                     await services.submission.submit(
@@ -84,6 +86,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
                 for _ in ids:
                     await asyncio.wait_for(entered.get(), timeout=3)
 
+                assert services.submission.supervisor.in_flight_operation_count() == 2
                 started = asyncio.get_running_loop().time()
                 result = await services.drain(timedelta(milliseconds=40))
                 elapsed = asyncio.get_running_loop().time() - started
@@ -91,6 +94,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
                 assert result.unresolved == ids
                 assert result.recovery_required == ids
                 assert result.needs_containment
+                assert services.submission.supervisor.in_flight_operation_count() == 2
                 assert all(executor.cancelled.is_set() for executor in executors)
                 for operation_id in ids:
                     assert (await journal.load(operation_id)).lifecycle is not OperationLifecycle.TERMINAL
@@ -130,7 +134,9 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
             )
             operation_id = "3" * 64
             request = _request()
+            assert supervisor.in_flight_operation_count() == 0
             await supervisor.submit(request, operation_id=operation_id)
+            assert supervisor.in_flight_operation_count() == 1
             scope = operation_conflict_scope_reference(
                 definition_id=request.definition_id, subject_ref=request.subject_ref
             )
@@ -141,6 +147,7 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
             assert drained.unresolved == ()
             assert drained.recovery_required == (operation_id,)
             assert not drained.needs_containment
+            assert supervisor.in_flight_operation_count() == 1
             assert (await journal.load(operation_id)).lifecycle is OperationLifecycle.CREATED
             assert (await leases.inspect(scope, operation_id, observed_at=_NOW)).current == before.current
 
@@ -154,5 +161,37 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
                 with pytest.raises(ValueError, match="draining"):
                     await admission
             assert (await supervisor.shutdown()).recovery_required == (operation_id,)
+
+        asyncio.run(exercise())
+
+
+def test_operation_count_returns_to_zero_after_durable_settlement(tmp_path: Path) -> None:
+    """An idle host is not an in-flight operation; observation does not renew leases."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+
+        async def exercise() -> None:
+            supervisor = _supervisor(
+                registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+                journal=journal,
+                leases=leases,
+                operands=operands,
+                owner_id="1" * 64,
+                token="2" * 64,
+            )
+            request = _request()
+            operation_id = await supervisor.submit(request)
+            scope = operation_conflict_scope_reference(
+                definition_id=request.definition_id, subject_ref=request.subject_ref
+            )
+            before = await leases.inspect(scope, operation_id, observed_at=_NOW)
+            assert supervisor.in_flight_operation_count() == 1
+            assert supervisor.in_flight_operation_count() == 1
+            assert await leases.inspect(scope, operation_id, observed_at=_NOW) == before
+            settled = await run_to_settlement(supervisor, operation_id)
+            assert settled.lifecycle is OperationLifecycle.TERMINAL
+            assert supervisor.in_flight_operation_count() == 0
 
         asyncio.run(exercise())

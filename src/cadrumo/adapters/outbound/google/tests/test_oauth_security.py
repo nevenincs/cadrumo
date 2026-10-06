@@ -22,7 +22,7 @@ from google.auth import crypt, jwt
 from google.auth.transport import requests as auth_requests
 from google.oauth2.credentials import Credentials
 
-from .. import oauth_flow
+from .. import oauth_callback, oauth_flow
 from ..errors import GoogleAuthNetworkError, GoogleAuthScopeInsufficientError, GoogleAuthValidationError
 from ..oauth_callback import OAuthCallbackRefusedError, receive_authorization_code, validate_callback
 from ..records import REQUIRED_SCOPES, OAuthToken
@@ -33,6 +33,13 @@ if TYPE_CHECKING:
     from google_auth_oauthlib.flow import OAuthCredentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+@pytest.fixture(autouse=True)
+def synthetic_browser_desktop(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Callback adversarial tests use a stand-in browser, not the machine's Chrome profile."""
+    monkeypatch.setattr(oauth_callback, "_require_browser_desktop", lambda: None)
+
 
 _AUTHORITY = "127.0.0.1:49152"
 _STATE = "synthetic-unpredictable-state"

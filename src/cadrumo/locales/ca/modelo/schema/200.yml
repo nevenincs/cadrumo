@@ -1,6 +1,21 @@
 modelo:
   schema:
     '200':
+      binding:
+        modelo-200-pagos-fraccionados-anuales:
+          label: Pagaments fraccionats de l’any · Model 202, article 40.3, casella
+            34
+        modelo-200-pagos-fraccionados-anuales-40-2:
+          label: Pagaments fraccionats de l’any · Model 202, article 40.2, casella
+            03
+        modelo-200-profile-incn-prior-12-months:
+          label: Import net de la xifra de negocis dels 12 mesos anteriors
+        modelo-200-profile-legal-entity-form:
+          label: Forma jurídica
+        modelo-200-profile-new-entity-flag:
+          label: Entitat de nova creació en un dels dos primers períodes amb beneficis
+        modelo-200-profile-tributacion-estado-porcentaje:
+          label: Percentatge de tributació a l’Estat
       casilla:
         continuidad:
           '00042':

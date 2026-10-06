@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 
 from ....core.google_drive_query import escape_google_drive_query_literal as _escape_google_drive_query_literal
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..storage.drive_pagination import next_drive_page_token
 from ..storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ._preconditions import google_terminal_refusal
 from .api import RequestRetryPolicy, execute_request
@@ -62,6 +63,7 @@ class DriveEntryPreconditionCondition(StrEnum):
     ENTRY_MAPPING_VALID = "google.drive_entry.entry_mapping_valid"
     OWNERSHIP_METADATA_VALID = "google.drive_entry.ownership_metadata_valid"
     OWNERSHIP_ALIGNED = "google.drive_entry.ownership_aligned"
+    IDENTITY_UNAMBIGUOUS = "google.drive_entry.identity_unambiguous"
 
 
 def is_app_owned(app_properties: Mapping[str, Any]) -> bool:
@@ -179,11 +181,46 @@ def find_owned_drive_entry(
             an owned entry carries no usable ID.
     """
     query = build_owned_entry_query(parent_id=parent_id, name=name, mime_type=mime_type)
-    response = execute_request(
-        drive.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
-        action=list_action,
-        retry=RequestRetryPolicy.REPLAY_SAFE,
-    )
+    page_token: str | None = None
+    seen_tokens: set[str] = set()
+    found: File | None = None
+    while True:
+        response = execute_request(
+            drive.files().list(
+                q=query,
+                fields="files(id,name,appProperties),nextPageToken",
+                pageSize=100,
+                pageToken=page_token,
+            ),
+            action=list_action,
+            retry=RequestRetryPolicy.REPLAY_SAFE,
+        )
+        for entry in _validated_owned_entries(
+            response, parent_id=parent_id, name=name, conflict_message=conflict_message
+        ):
+            if found is not None:
+                raise _drive_entry_terminal_refusal(
+                    OutboundStorageConflictError(
+                        "Drive owned-entry lookup returned an ambiguous identity",
+                        context={"parent_id": parent_id},
+                    ),
+                    DriveEntryPreconditionCondition.IDENTITY_UNAMBIGUOUS,
+                    facts={"parent_id": parent_id, "identity_unambiguous": False},
+                )
+            found = entry
+        page_token = next_drive_page_token(response.get("nextPageToken"), seen_tokens=seen_tokens, action=list_action)
+        if page_token is None:
+            return found
+
+
+def _validated_owned_entries(
+    response: Mapping[str, Any],
+    *,
+    parent_id: str,
+    name: str,
+    conflict_message: str,
+) -> list[File]:
+    """Validate every candidate before the caller resolves a unique identity."""
     entries = response.get("files", [])
     if not isinstance(entries, list):
         raise _drive_entry_terminal_refusal(
@@ -194,6 +231,7 @@ def find_owned_drive_entry(
             DriveEntryPreconditionCondition.LIST_RESPONSE_VALID,
             facts={"parent_id": parent_id, "entry_name": name, "entries_list_valid": False},
         )
+    validated: list[File] = []
     for entry_index, entry in enumerate(entries):
         if not isinstance(entry, dict):
             raise _drive_entry_terminal_refusal(
@@ -225,7 +263,8 @@ def find_owned_drive_entry(
             )
         if is_app_owned(existing):
             require_drive_entry_id(entry, name=name, parent_id=parent_id)
-            return entry
+            validated.append(entry)
+            continue
         raise _drive_entry_terminal_refusal(
             OutboundStorageConflictError(
                 conflict_message,
@@ -234,7 +273,7 @@ def find_owned_drive_entry(
             DriveEntryPreconditionCondition.OWNERSHIP_ALIGNED,
             facts={"parent_id": parent_id, "entry_name": name, "ownership_aligned": False},
         )
-    return None
+    return validated
 
 
 __all__ = [

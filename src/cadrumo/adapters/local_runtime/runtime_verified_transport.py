@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+import time
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from threading import RLock
+from threading import Event, RLock, Thread
 from uuid import UUID
 
 from ...application.runtime.access_management import (
@@ -23,10 +24,11 @@ from ...application.runtime.profile_access import (
     RuntimeReply,
     RuntimeSecretReady,
 )
+from ...application.runtime.session_events import RuntimeSessionEvent
 from .runtime_frame_io import (
     SecretBearingRequest,
-    read_document,
     read_profile_status,
+    read_reply_or_event,
     read_session_inventory,
     write_document,
     write_secret,
@@ -43,6 +45,67 @@ class RuntimeVerifiedTransport:
     _channel_closed: bool
     _connection_id: UUID | None
     hello: RuntimeServerHello
+
+    def subscribe_session_events(
+        self, receive: Callable[[RuntimeSessionEvent], None], *, disconnected: Callable[[], None] | None = None
+    ) -> Callable[[], None]:
+        """Observe this connection without giving a second thread concurrent read authority."""
+        with self._exchange_lock:
+            if self._closed:
+                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+            self._event_receivers.append(receive)
+            if disconnected is not None:
+                self._disconnect_receivers.append(disconnected)
+            if self._event_reader is None:
+                self._event_reader = Thread(target=self._read_idle_events, name="runtime-session-events", daemon=True)
+                self._event_reader.start()
+
+        def unsubscribe() -> None:
+            with self._exchange_lock:
+                if receive in self._event_receivers:
+                    self._event_receivers.remove(receive)
+                if disconnected is not None and disconnected in self._disconnect_receivers:
+                    self._disconnect_receivers.remove(disconnected)
+
+        return unsubscribe
+
+    def _initialize_session_events(self) -> None:
+        self._event_receivers: list[Callable[[RuntimeSessionEvent], None]] = []
+        self._disconnect_receivers: list[Callable[[], None]] = []
+        self._event_reader: Thread | None = None
+        self._event_stop = Event()
+
+    def _receive_event(self, event: RuntimeSessionEvent) -> None:
+        if event.runtime_boot_id != self.hello.boot_id or (
+            self._connection_id is not None and event.connection_id != self._connection_id
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        self._connection_id = event.connection_id
+        for receive in tuple(self._event_receivers):
+            receive(event)
+
+    def _read_idle_events(self) -> None:
+        while not self._event_stop.wait(0.05):
+            if not self._exchange_lock.acquire(blocking=False):
+                continue
+            try:
+                if self._closed:
+                    return
+                if not self._channel.read_ready():
+                    continue
+                received = read_reply_or_event(self._channel, RuntimeReply, deadline=time.monotonic() + 5)
+                if not isinstance(received, RuntimeSessionEvent):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                self._receive_event(received)
+            except BaseException as error:
+                try:
+                    self._close_after_failure(error)
+                finally:
+                    for disconnected in tuple(self._disconnect_receivers):
+                        disconnected()
+                return
+            finally:
+                self._exchange_lock.release()
 
     def _close_after_failure(self, error: BaseException) -> None:
         retained = error.__dict__.get("_runtime_transport_cleanup")
@@ -93,7 +156,11 @@ class RuntimeVerifiedTransport:
     def _reply(self, request_id: UUID, *, deadline: float) -> RuntimeReply:
         if self._closed:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-        result = read_document(self._channel, RuntimeReply, deadline=deadline)
+        while True:
+            result = read_reply_or_event(self._channel, RuntimeReply, deadline=deadline)
+            if not isinstance(result, RuntimeSessionEvent):
+                break
+            self._receive_event(result)
         self._verify_reply(request_id, result.root.request_id, result.root.runtime_boot_id, result.root.connection_id)
         if isinstance(result.root, RuntimeProfileStatusTransfer):
             result = RuntimeReply(read_profile_status(self._channel, result.root, deadline=deadline))
@@ -131,6 +198,7 @@ class RuntimeVerifiedTransport:
         """Stop exchanges immediately and retry failed owned channel cleanup."""
         with self._exchange_lock:
             self._closed = True
+            self._event_stop.set()
             if not self._channel_closed:
                 self._channel.close()
                 self._channel_closed = True

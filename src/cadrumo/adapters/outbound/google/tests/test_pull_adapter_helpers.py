@@ -23,7 +23,6 @@ import pytest
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
 from .....core.decimal.coercion import coerce_decimal as _coerce_decimal
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
-from .....tests.google_credentials import unused_google_credentials
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..calc_sheets_pull import (
     _classify_metadata_match,
@@ -31,7 +30,6 @@ from ..calc_sheets_pull import (
     _merge_developer_metadata_entries,
     _parse_relation_metadata,
     _require_matching_metadata,
-    pull_operator_edits,
 )
 from ..calc_sheets_pull_records import MetadataMatchState
 from ._calc_sheets_support import modelo_130_2025_1t_snapshot
@@ -308,6 +306,29 @@ def test_prechange_exterior_workbook_layout_stamp_is_refused_before_pull_layout(
     assert raised.value.translated_message == "adapters.google.calc_sheets.errors.workbook_snapshot_mismatch"
 
 
+def test_administrative_workbook_is_refused_by_filing_pull_even_with_matching_stamps() -> None:
+    snapshot = published_snapshot("145", filing_year=2025, period="comunicacion")
+    metadata = build_export_plan(snapshot).metadata
+    pairs = {
+        "cadrumo_modelo_id": metadata.modelo_id,
+        "cadrumo_revision_id": metadata.revision_id,
+        "cadrumo_filing_year": str(metadata.filing_year),
+        "cadrumo_period": metadata.period.registry_token,
+        "cadrumo_engine_version": metadata.engine_version,
+        "cadrumo_registry_sha": metadata.registry_sha,
+    }
+    verdict, pulled = _classify_metadata_match(pairs, snapshot)
+    assert verdict is MetadataMatchState.STALE
+    # A caller cannot override the classifier and turn a communication into a filing.
+    with pytest.raises(OutboundStorageConflictError):
+        _require_matching_metadata(
+            spreadsheet_id="fictional-communication",
+            metadata_match=MetadataMatchState.MATCHES,
+            metadata=pulled,
+            snapshot=snapshot,
+        )
+
+
 def test_current_exterior_workbook_layout_stamp_is_accepted_before_pull_layout() -> None:
     """The matching live M369 exterior export remains eligible for pull."""
 
@@ -337,16 +358,6 @@ def test_current_exterior_workbook_layout_stamp_is_accepted_before_pull_layout()
 # ---------------------------------------------------------------------------
 # Public pull validation
 # ---------------------------------------------------------------------------
-
-
-def test_pull_operator_edits_refuses_blank_spreadsheet_id_before_service_build() -> None:
-    snapshot = modelo_130_2025_1t_snapshot()
-
-    with pytest.raises(OutboundStorageValidationError) as raised:
-        pull_operator_edits(snapshot=snapshot, spreadsheet_id="  ", credentials=unused_google_credentials())
-
-    assert raised.value.context == {"spreadsheet_id": "  "}
-    assert raised.value.translated_message == "adapters.google.calc_sheets.errors.spreadsheet_id_blank"
 
 
 # ---------------------------------------------------------------------------

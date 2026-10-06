@@ -7,9 +7,12 @@ publish = false
 
 [features]
 live-python-tests = []
-live-package-tests = []
+live-package-tests = ["platform"]
+live-release-tests = ["live-package-tests"]
+platform = ["dep:cadrumo-platform"]
 
 [dependencies]
+cadrumo-platform = { path = "../platform", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"

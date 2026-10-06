@@ -2940,11 +2940,16 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
         )
 
         async def observe_recovered_continuation() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
-            reconciliation = asyncio.create_task(recovery.reconcile(operation_id))
+            reconciliation = asyncio.create_task(recovery.continue_operation(operation_id))
             await DurableContinuationExecutor.recovered_resume_entered.wait()
+            await asyncio.sleep(0)
+            acknowledged_while_waiting = reconciliation.done()
             live = await journal.load(operation_id)
             DurableContinuationExecutor.release_recovered_resume.set()
-            return live, await reconciliation
+            await reconciliation
+            settled = await recovery.settled(operation_id)
+            assert acknowledged_while_waiting, "recovery must acknowledge before the resumed effect completes"
+            return live, settled
 
         resumed, settled = asyncio.run(observe_recovered_continuation())
 

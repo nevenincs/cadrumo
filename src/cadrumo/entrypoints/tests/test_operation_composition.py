@@ -118,7 +118,9 @@ def test_production_composition_is_available_before_profile_login(tmp_path: Path
         assert current_active_bucket_session() is None
         dependencies = compose_operation_dependencies(authority_operation=unread_authority_operation())
 
-        assert dependencies.observation.registry.lookup("auth.profile.login").definition_id == "auth.profile.login"
+        assert dependencies.observation.registry.lookup("auth.profile.passphrase-rotate").definition_id == (
+            "auth.profile.passphrase-rotate"
+        )
         asyncio.run(dependencies.shutdown())
 
 

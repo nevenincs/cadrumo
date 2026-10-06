@@ -1,0 +1,11 @@
+# Single-configuration generators must select an explicit supported profile.
+get_property(cadrumo_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(cadrumo_multi_config)
+  set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Supported build configurations" FORCE)
+else()
+  unset(CMAKE_CONFIGURATION_TYPES CACHE)
+  unset(CMAKE_CONFIGURATION_TYPES)
+  if(NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release)$")
+    message(FATAL_ERROR "Select CMAKE_BUILD_TYPE=Debug or Release")
+  endif()
+endif()

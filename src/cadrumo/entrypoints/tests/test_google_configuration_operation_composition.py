@@ -249,11 +249,13 @@ def test_sign_in_creates_the_root_folder_before_anything_is_stored(
         events.append("consent")
         return _consented(profile)
 
-    def create_folder(credentials: object, *, profile: str) -> str:
+    def create_folder(credentials: object, *, profile: str, commit, before_handoff, acknowledged) -> str:
         assert isinstance(credentials, OAuthCredentials)
         assert credentials.client_id == SYNTHETIC_CLIENT_ID and credentials.refresh_token == _REFRESH_CREDENTIAL
         assert load_token(profile) is None and load_metadata(profile) is None and load_drive_config(profile) is None
+        before_handoff("drive.root-folder.ensure", writes=True)
         events.append("create-folder")
+        acknowledged("drive.root-folder.ensure", writes=True)
         return "created-root-folder"
 
     monkeypatch.setattr(composition, "run_login_flow", consent)
@@ -285,8 +287,6 @@ def test_sign_in_creates_the_root_folder_before_anything_is_stored(
             "create-folder",
             "done:drive.root-folder.ensure:True",
             "commit",
-            "commit",
-            "commit",
         ]
         assert load_drive_config(str(_PROFILE)) == DriveConfig(root_folder_id="created-root-folder")
         stored = load_token(str(_PROFILE))
@@ -301,7 +301,7 @@ def test_a_sign_in_whose_folder_cannot_be_created_stores_nothing(
 ) -> None:
     use_installation_client(monkeypatch, tmp_path / "installation")
 
-    def refuse_folder(credentials: object, *, profile: str) -> str:
+    def refuse_folder(credentials: object, *, profile: str, **_kwargs: object) -> str:
         raise OutboundStorageConflictError(
             "folder exists but is not marked as app-owned",
             translated_message="errors.refused.refused_outbound_storage_conflict",

@@ -146,6 +146,10 @@ SANDBOX_PROFILE_ID: str = "99999999-9999-4999-8999-999999999999"
 #: The sandbox profile's display label (a decoupled label, no role in any key).
 SANDBOX_PROFILE_LABEL: str = "docs-sequence-sandbox"
 
+#: An existing alternative for the documented selected-profile deletion journey.
+SANDBOX_REPLACEMENT_PROFILE_ID = "f6a2ae44-2493-4c98-b856-ea071ff26dea"
+SANDBOX_REPLACEMENT_PROFILE_LABEL = "docs-sequence-replacement"
+
 #: Synthetic profile facts for the injected sandbox identity, mirroring the
 #: fact paths the workspace-initialization service persists. All values are
 #: synthetic; richer fixture state is built by ``@setup`` frames.
@@ -512,6 +516,48 @@ def _refuse_live_opt_in(sequence_id: str) -> None:
         )
 
 
+def _publish_sandbox_profile(*, profile_id: str, label: str) -> None:
+    """Create and select one real synthetic capsule without authenticating it."""
+    identity = UUID(profile_id)
+    dek = derive_test_bucket_key(profile_id, purpose="dek")
+    material = create_profile_custody_registration_material(
+        profile_id=identity,
+        password=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+        dek=dek,
+        dek_epoch=b64encode(derive_test_bucket_key(profile_id, purpose="dek-epoch")[:16]).decode("ascii"),
+        salt=derive_test_bucket_key(profile_id, purpose="password-salt")[:16],
+    )
+    create_context, decode_context = profile_authority_contexts()
+    initial = create_user_profile_record(
+        context=create_context,
+        profile_id=profile_id,
+        setup_state=ProfileSetupState.INCOMPLETE,
+    )
+    session = ProfileRecordSession.from_envelope(
+        envelope=material.envelope, dek=dek, profile_decode_context=decode_context
+    )
+    try:
+        ProfileCapsuleLifecycle().create(
+            label=label,
+            profile_id=identity,
+            password_envelope=material.envelope,
+            sentinel=material.sentinel,
+            data_files={},
+            initial_record=initial,
+            record_session=session,
+        )
+    finally:
+        session.close()
+
+
+def _publish_replacement_sandbox_profile() -> None:
+    """Publish the replacement, then restore the original documented login target."""
+    _publish_sandbox_profile(profile_id=SANDBOX_REPLACEMENT_PROFILE_ID, label=SANDBOX_REPLACEMENT_PROFILE_LABEL)
+    # Canonical capsule creation selects its new capsule. The first documented
+    # logout still belongs to the original profile's real persisted receipt.
+    ProfileCapsuleLifecycle().select(SANDBOX_PROFILE_ID)
+
+
 @contextmanager
 def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
     """Publish the deterministic sandbox profile and hold its custody span open.
@@ -537,36 +583,7 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
         with open_test_profile_session(SANDBOX_PROFILE_ID):
             yield
         return
-    identity = UUID(SANDBOX_PROFILE_ID)
-    dek = derive_test_bucket_key(SANDBOX_PROFILE_ID, purpose="dek")
-    material = create_profile_custody_registration_material(
-        profile_id=identity,
-        password=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
-        dek=dek,
-        dek_epoch=b64encode(derive_test_bucket_key(SANDBOX_PROFILE_ID, purpose="dek-epoch")[:16]).decode("ascii"),
-        salt=derive_test_bucket_key(SANDBOX_PROFILE_ID, purpose="password-salt")[:16],
-    )
-    create_context, decode_context = profile_authority_contexts()
-    initial = create_user_profile_record(
-        context=create_context,
-        profile_id=SANDBOX_PROFILE_ID,
-        setup_state=ProfileSetupState.INCOMPLETE,
-    )
-    session = ProfileRecordSession.from_envelope(
-        envelope=material.envelope, dek=dek, profile_decode_context=decode_context
-    )
-    try:
-        ProfileCapsuleLifecycle().create(
-            label=SANDBOX_PROFILE_LABEL,
-            profile_id=identity,
-            password_envelope=material.envelope,
-            sentinel=material.sentinel,
-            data_files={},
-            initial_record=initial,
-            record_session=session,
-        )
-    finally:
-        session.close()
+    _publish_sandbox_profile(profile_id=SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
     # A settings override provides a route; it does not publish the durable
     # CLI default whose logout/delete walkthroughs observe real transitions.
     ProfileCapsuleLifecycle().select(SANDBOX_PROFILE_ID)
@@ -600,9 +617,9 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
 
 
 #: The provisioned-at-rest sandbox state each later sandbox in this process is
-#: cloned from, keyed by authority generation and the synthetic password digest.
+#: cloned from, keyed by authority, synthetic password and temporary-root lifetime.
 #: Neither the password nor its digest is exposed in transcripts or diagnostics.
-_SANDBOX_TEMPLATES: dict[tuple[str, str], Path] = {}
+_SANDBOX_TEMPLATES: dict[tuple[str, str, Path], Path] = {}
 _SANDBOX_TEMPLATE_HOLDER: list[TemporaryDirectory[str]] = []
 
 
@@ -625,11 +642,16 @@ def _sandbox_template() -> Path:
     # operator password must never enter the template identity or its custody.
     with _neutralized_ambient_env():
         password_digest = sha256_hex(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
-    identity = (generation, password_digest)
+    temporary_root = prepare_temporary_directory().resolve()
+    identity = (generation, password_digest, temporary_root)
     template = _SANDBOX_TEMPLATES.get(identity)
-    if template is not None:
+    if template is not None and template.is_dir():
         return template
-    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-", dir=prepare_temporary_directory())
+    # A caller may end its temporary-root scope before this process ends.
+    # Rebuild an absent owned template through the same capsule publication;
+    # failures copying a present template still propagate normally.
+    _SANDBOX_TEMPLATES.pop(identity, None)
+    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-", dir=temporary_root)
     _SANDBOX_TEMPLATE_HOLDER.append(holder)
     template = Path(holder.name)
     dispose_engine()
@@ -929,21 +951,23 @@ def sequence_sandbox(
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
         sequence_receipt_store(Path(load_settings().cadrumo_local_storage_root), enabled=persistent_sign_in),
-        sequence_runtime(
+    ):
+        if enrolled_sequence_ids is None and sequence_id == "profile-setup-delete":
+            _publish_replacement_sandbox_profile()
+        with sequence_runtime(
             Path(load_settings().cadrumo_local_storage_root),
             signed_in_profile=UUID(SANDBOX_PROFILE_ID) if persistent_sign_in else None,
-        ),
-    ):
-        effective_settings = load_settings()
-        try:
-            yield SequenceSandbox(
-                storage_root=Path(effective_settings.cadrumo_local_storage_root),
-                workdir=workdir.resolve(),
-                profile_id=SANDBOX_PROFILE_ID,
-                frozen_instant=SANDBOX_INSTANT,
-            )
-        finally:
-            close_active_bucket_session()
+        ):
+            effective_settings = load_settings()
+            try:
+                yield SequenceSandbox(
+                    storage_root=Path(effective_settings.cadrumo_local_storage_root),
+                    workdir=workdir.resolve(),
+                    profile_id=SANDBOX_PROFILE_ID,
+                    frozen_instant=SANDBOX_INSTANT,
+                )
+            finally:
+                close_active_bucket_session()
 
 
 def _interpolation_text(value: CapturedScalar) -> str:
@@ -1167,8 +1191,8 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     _drop_handlers_bound_to_a_dead_stream()
     # The synthetic capsule stays readable across a sequence through a
     # test-only active-profile override. Profile deletion is deliberately
-    # sessionless, however, and must observe the durable pointer that logout
-    # clears rather than that provisioning override. Narrowly mask the harness
+    # sessionless, however, and must observe the durable selection retained
+    # after logout rather than that provisioning override. Narrowly mask the harness
     # field for this exact leaf; every sibling retains the normal sandbox span.
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
@@ -1203,6 +1227,9 @@ def _invoke_authenticated_frame(args: tuple[str, ...]) -> Result:
         return invoke_cached_cli(list(args))
     spec = COMMAND_GRAPH.resolve_invocation(args)
     registration = None if spec is None else command_registration_for_node(COMMAND_GRAPH.node(spec.key))
+    if spec is not None and spec.key == "config_login":
+        password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+        return invoke_cached_cli([*args, "--secrets-stdin"], input=json.dumps({"passphrase": password}))
     if registration is None or registration.profile_authentication is not ProfileAuthenticationPosture.RESUME_FALLBACK:
         return invoke_cached_cli(list(args))
     password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -1477,6 +1504,8 @@ def _execute_page_sequence(
 ) -> SequenceTranscript | None:
     if not sequence.executed_frames:
         return None  # all-@static: nothing runs, so no transcript
+    if sequence.sequence_id == "profile-setup-delete":
+        _publish_replacement_sandbox_profile()
     captures: dict[str, CapturedScalar] = {}
     seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
     seed_frames = (

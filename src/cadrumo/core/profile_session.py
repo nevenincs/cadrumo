@@ -51,6 +51,25 @@ class ProfileSessionRefusalReason(StrEnum):
     """AEAD tag verification failed (metadata or ciphertext altered)."""
 
 
+class ReceiptBindingRefusal(StrEnum):
+    """Why a receipt no longer belongs to the expected sign-in."""
+
+    GENERATION_MISSING = "generation_missing"
+    """No generation record exists, so no receipt can be current."""
+
+    GENERATION_UNREADABLE = "generation_unreadable"
+    """The generation record exists but cannot be read."""
+
+    GENERATION_BINDING_MISMATCH = "generation_binding_mismatch"
+    """The generation record fences other custody of this profile."""
+
+    GENERATION_CHANGED = "generation_changed"
+    """The receipt carries a generation that has since been advanced or replaced."""
+
+    LOGIN_MISMATCH = "login_mismatch"
+    """The receipt was minted for another OS login."""
+
+
 class ProfileRecordUnavailability(StrEnum):
     """Closed enumeration of why the active profile's record did not resolve.
 
@@ -76,4 +95,4 @@ class ProfileRecordUnavailability(StrEnum):
     """A session is authenticated, but for a different profile identity."""
 
 
-__all__ = ["ProfileRecordUnavailability", "ProfileSessionRefusalReason"]
+__all__ = ["ProfileRecordUnavailability", "ProfileSessionRefusalReason", "ReceiptBindingRefusal"]

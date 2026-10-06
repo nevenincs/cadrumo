@@ -2,6 +2,17 @@ modelo:
   schema:
     '714':
       binding:
+        m714-m100-base-imponible-ahorro:
+          label: Megtakarítások személyijövedelemadó-alapja · 100-as nyomtatvány,
+            0460. mező
+        m714-m100-base-imponible-general:
+          label: Általános személyijövedelemadó-alap · 100-as nyomtatvány, 0435. mező
+        m714-m100-cuota-integra-autonomica:
+          label: A regionális személyi jövedelemadó kedvezmények előtti összege ·
+            100-as nyomtatvány, 0546. mező
+        m714-m100-cuota-integra-estatal:
+          label: Az állami személyi jövedelemadó kedvezmények előtti összege · 100-as
+            nyomtatvány, 0545. mező
         ? x-dlnm8pbcdsmjec9k5orj2d1d60p2soj9cln6aspdf4mm8pbiclhmgrrj5lgj2bb2d5imspbj5lkmsrblclh6opbj5ln62t3le9gmopbqc4mnasj2c5n62bbmd5r6ipbechgiqq31c9kn8tb1dgmm6r31epiiqc8
         : label: 'Állandó lakóhely 1: kulcskód'
         ? x-dlnm8pbcdsmjec9k5orj2d1d60p2soj9cln6aspdf4mm8pbiclhmgrrj5lgj2bb2d5imspbj5lkmsrblclh6opbj5ln62t3le9gmopbqc4mnasj2c5n62bbmd5r6ipbechgiqq31c9kn8tb1dgmm6r31epiiqcg

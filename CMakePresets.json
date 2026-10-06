@@ -22,6 +22,51 @@
         "TEMP": "$env{CADRUMO_BUILD_DIR}/tmp",
         "TMP": "$env{CADRUMO_BUILD_DIR}/tmp",
         "TMPDIR": "$env{CADRUMO_BUILD_DIR}/tmp"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "windows-x86-64"
+      }
+    },
+    {
+      "name": "linux-x86-64",
+      "displayName": "linux-x86-64 (requires native SDK/toolchain)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/linux-x86-64",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "linux-x86-64"
+      }
+    },
+    {
+      "name": "linux-aarch64",
+      "displayName": "linux-aarch64 (requires native SDK/toolchain)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/linux-aarch64",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "linux-aarch64"
+      }
+    },
+    {
+      "name": "macos-arm64",
+      "displayName": "macos-arm64 (requires native SDK/toolchain)",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/macos-arm64",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "macos-arm64"
       }
     }
   ],
@@ -40,14 +85,62 @@
       "name": "package-debug",
       "inherits": "debug",
       "targets": [
-        "package"
+        "zip"
       ]
     },
     {
       "name": "package-release",
       "inherits": "release",
       "targets": [
-        "package"
+        "zip"
+      ]
+    },
+    {
+      "name": "linux-x86-64-debug",
+      "configurePreset": "linux-x86-64",
+      "configuration": "Debug",
+      "targets": [
+        "bundle"
+      ]
+    },
+    {
+      "name": "linux-x86-64-release",
+      "configurePreset": "linux-x86-64",
+      "configuration": "Release",
+      "targets": [
+        "bundle"
+      ]
+    },
+    {
+      "name": "linux-aarch64-debug",
+      "configurePreset": "linux-aarch64",
+      "configuration": "Debug",
+      "targets": [
+        "bundle"
+      ]
+    },
+    {
+      "name": "linux-aarch64-release",
+      "configurePreset": "linux-aarch64",
+      "configuration": "Release",
+      "targets": [
+        "bundle"
+      ]
+    },
+    {
+      "name": "macos-arm64-debug",
+      "configurePreset": "macos-arm64",
+      "configuration": "Debug",
+      "targets": [
+        "bundle"
+      ]
+    },
+    {
+      "name": "macos-arm64-release",
+      "configurePreset": "macos-arm64",
+      "configuration": "Release",
+      "targets": [
+        "bundle"
       ]
     }
   ],
@@ -63,6 +156,54 @@
     {
       "name": "release",
       "configurePreset": "windows-x64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x86-64-debug",
+      "configurePreset": "linux-x86-64",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-x86-64-release",
+      "configurePreset": "linux-x86-64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-aarch64-debug",
+      "configurePreset": "linux-aarch64",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-aarch64-release",
+      "configurePreset": "linux-aarch64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-arm64-debug",
+      "configurePreset": "macos-arm64",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-arm64-release",
+      "configurePreset": "macos-arm64",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true

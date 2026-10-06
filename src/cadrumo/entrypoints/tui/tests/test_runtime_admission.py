@@ -168,6 +168,33 @@ async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_f
 
 
 @pytest.mark.asyncio
+async def test_explicit_preselected_profile_resumes_before_password_prompt() -> None:
+    profile_id = uuid4()
+
+    class ResumeClient(_OwnedClient):
+        @override
+        def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+            return super().login_password(bytearray(b"synthetic-proof"))
+
+    client = ResumeClient(profile_id)
+
+    async def open_client(selected: UUID) -> RuntimeFrontendClient:
+        assert selected == profile_id
+        return client
+
+    async with asyncio.timeout(10):
+        async with runtime_login_session(
+            choices=(ProfileLoginChoice(profile_id=str(profile_id), label="Saved profile"),),
+            preselected=str(profile_id),
+            open_client=open_client,
+            headless=True,
+        ) as handoff:
+            assert handoff is not None and handoff.method is RuntimeLoginMethod.RECEIPT
+            assert handoff.client is client and client.closed == 0
+    assert client.closed == 1
+
+
+@pytest.mark.asyncio
 async def test_cancelled_login_does_not_create_or_transfer_a_client() -> None:
     profile_id = uuid4()
 

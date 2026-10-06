@@ -13,6 +13,11 @@ from ...application.runtime.access_management import (
     RuntimeProfileResume,
     RuntimeSessionInventory,
 )
+from ...application.runtime.bootstrap import RuntimePasswordReset, RuntimePasswordResetPrepare
+from ...application.runtime.bootstrap_delete import (
+    RuntimeProfileDelete,
+    RuntimeProfileDeletePrepare,
+)
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -50,16 +55,22 @@ from ...application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
+from ...application.runtime.sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...core.logging import get_logger
 from .framing import accept_runtime_handshake
-from .runtime_frame_io import read_document, write_document, write_profile_status
+from .runtime_frame_io import read_document, write_document, write_profile_status, write_session_event
 from .runtime_transport_cleanup import RuntimeTransportCleanup, close_runtime_transport_after_failure
 
 _LOGGER = get_logger(__name__)
 
 type _ProfileConnectionRequest = (
     RuntimeProfileLogin
+    | RuntimeProfileDeletePrepare
+    | RuntimeProfileDelete
+    | RuntimePasswordResetPrepare
+    | RuntimePasswordReset
+    | RuntimeSignInStatusRequest
     | RuntimeSessionRequest
     | RuntimeOperationRequest
     | RuntimeEnrollmentRequest
@@ -124,6 +135,8 @@ class RuntimeConnectionHandling:
         try:
             context = RuntimeConnectionContext(uuid4(), self.identity.boot_id, channel.peer)
             accept_runtime_handshake(channel, identity=self.identity, deadline=time.monotonic() + 5)
+            if self.profiles is not None:
+                self.profiles.connect_events(context)
             self._serve_connection_requests(channel, context)
         except RuntimeRefusalError as error:
             retained = self._retain_channel_cleanup(error, channel=channel)
@@ -155,6 +168,9 @@ class RuntimeConnectionHandling:
     def _serve_connection_requests(self, channel: RuntimeByteChannel, context: RuntimeConnectionContext) -> None:
         """Serve the admitted request sequence until the peer or host closes it."""
         while not self.stop.is_set():
+            if self.profiles is not None:
+                for event in self.profiles.take_events(context):
+                    write_session_event(channel, event, deadline=time.monotonic() + 5)
             if not channel.read_ready():
                 self.stop.wait(0.05)
                 continue
@@ -169,7 +185,14 @@ class RuntimeConnectionHandling:
 
     def _dispatch_profile_request(
         self, channel: RuntimeByteChannel, context: RuntimeConnectionContext, request: _ProfileConnectionRequest
-    ) -> RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeAccessRefusal | None:
+    ) -> (
+        RuntimeProfileStatus
+        | RuntimeSessionsLocked
+        | RuntimeSignInStatusReply
+        | RuntimeHumanSignedOut
+        | RuntimeAccessRefusal
+        | None
+    ):
         """Dispatch the closed profile request families through their application owner."""
         if self.profiles is None:
             return RuntimeAccessRefusal(
@@ -178,6 +201,12 @@ class RuntimeConnectionHandling:
                 connection_id=context.connection_id,
                 code=RuntimeRefusalCode.UNAVAILABLE,
             )
+        if isinstance(request, RuntimeProfileDeletePrepare | RuntimeProfileDelete):
+            self.profiles.bootstrap_delete(context, channel, request)
+            return None
+        if isinstance(request, RuntimePasswordResetPrepare | RuntimePasswordReset):
+            self.profiles.bootstrap(context, channel, request)
+            return None
         if isinstance(
             request,
             RuntimeAutomationDeny | RuntimeProfileRecoveryPrepare | RuntimeProfileResume | RuntimeSessionInventory,

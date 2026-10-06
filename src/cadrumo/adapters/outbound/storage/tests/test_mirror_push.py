@@ -554,17 +554,9 @@ def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path)
         assert len(list(provider.iter_objects(target_namespace))) == 1
 
 
-def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp_path: Path) -> None:
-    """A partial namespace failure leaves no unmanifested ciphertext on the remote.
-
-    Two rows are seeded in one real namespace; the second row's target file
-    is pre-occupied by a real directory, so the real
-    :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes` replace
-    genuinely fails for it (no mock/monkeypatch). The first row's object
-    uploads successfully before the second fails -- proving the finding's
-    scenario -- and the rollback must delete it: the namespace's manifest is
-    withheld, and the provider must not retain any orphaned object for it.
-    """
+@pytest.mark.parametrize("previously_published", [False, True])
+def test_google_sync_push_retains_objects_when_a_later_upload_fails(tmp_path: Path, previously_published: bool) -> None:
+    """A real interrupted write cannot authorize deleting an earlier mirror object."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="db940db3-b347-4518-861b-e67c8dee653b") as profile:
         repository = profile.repository
         namespace_definition = lookup_namespace_definition("google_oauth_metadata")
@@ -589,6 +581,19 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
         second_row = raw_rows[-1]  # the row inserted second, by ascending row_id
 
         provider = LocalFileSystemProvider(tmp_path / "mirror")
+        first_row = raw_rows[0]
+        first_hmac = remote_mirror_object_key_hmac(namespace, first_row.object_key)
+        if previously_published:
+            provider.put(
+                namespace,
+                first_hmac,
+                first_row.payload,
+                content_hash=f"sha256-{hashlib.sha256(first_row.payload).hexdigest()}",
+                label=remote_mirror_object_label(namespace),
+            )
+            put_remote_mirror_namespace_manifest(
+                provider, build_remote_mirror_namespace_manifest(namespace, (first_row,))
+            )
         second_hmac = remote_mirror_object_key_hmac(second_row.namespace, second_row.object_key)
         second_label = remote_mirror_object_label(second_row.namespace)
         # Real O_EXCL-then-replace collision: os.replace refuses to swap a
@@ -607,17 +612,11 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
 
         assert len(result["failed_objects"]) == 1
         assert result["failed_objects"][0][0] == namespace
-        assert result["cleanup_failed_objects"] == []
-        # Scoped to the namespace whose upload failed: the rollback must undo
-        # THIS namespace's partial publication, not stop the bucket's other
-        # mirrorable rows -- the fixture's profile fact and bucket event --
-        # from completing their own.
+        assert provider.get(namespace, first_hmac)[0] == first_row.payload
+        assert result["cleanup_failed_objects"] == [
+            (namespace, first_hmac, "retained_after_partial_upload: deletion requires creation ownership")
+        ]
         assert namespace not in result["manifest_pushed_by_namespace"]
         assert namespace not in result["pushed_by_namespace"]
 
-        # The first row's object was genuinely uploaded, then rolled back. The
-        # obstruction is cleared by now, so nothing stands at the second row's
-        # path either: an empty listing here means the rollback removed what it
-        # published, rather than meaning the collision directory was filtered
-        # out of the listing.
-        assert list(provider.iter_objects(namespace)) == [], "no unmanifested object may remain after the rollback"
+        assert len(list(provider.iter_objects(namespace))) == 1

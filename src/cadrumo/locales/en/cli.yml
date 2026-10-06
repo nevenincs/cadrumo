@@ -1247,7 +1247,9 @@ cli:
           integrity check first). Local-only; never contacts AEAT.
         work_unit_id_help: Declaration id (SHA-256 or unambiguous prefix).
       spreadsheet:
-        app_help: Schema-to-sheet calc surface (export, pull, and compute)
+        app_help: Export spreadsheets. Google copies are outbound review documents;
+          remote pull, calculate and verify are unavailable. Local XLSX export remains
+          available.
         calculate_help: Pull the cells you edited from a calc-sheets workbook, run
           the local Decimal runtime over them, and emit the computed box values (persists
           nothing)
@@ -1259,6 +1261,14 @@ cli:
           counterpart of push)
         modelo_help: Modelo id to export (e.g. 130, 303, 100)
         period_help: Filing period code (e.g. 1T, 2T, 0A)
+        publish:
+          accept_readable_export_help: Pass --accept-readable-export to authorize
+            publishing the selected calculation and captured ledger rows as a Google
+            Sheet readable by authorized users.
+          calculation_revision_id_help: Exact saved calculation revision id to publish.
+          publication_id_help: Publication UUID; generated when omitted.
+        publish_help: Publish a saved calculation as a readable native Google Sheet
+          in the profile folder.
         pull:
           assemble_observations_help: After pulling, reassemble Detalle-tab row-set
             cells into typed observations (perceptors, foreign assets, related-party
@@ -1937,6 +1947,8 @@ cli:
           only for runtime-hosted private profile commands.
         profile_credential_ref_requires_api_key: --profile-credential-ref requires
           --profile-auth-method api-key.
+        profile_passphrase_channel_absent: No profile passphrase channel is available.
+          Run this command at a terminal, or pass --profile-secrets-stdin or --profile-secrets-fd.
         profile_secrets_api_key_inapplicable: API-key authentication is available
           only for commands served by the local runtime.
         profile_secrets_api_key_requires_channel: API-key authentication requires
@@ -2061,12 +2073,10 @@ cli:
         at a terminal, or pass --secrets-stdin or --secrets-fd.
       passphrase_prompt: 'Profile passphrase: '
     logout:
-      help: Clear this CLI context’s selected profile.
+      help: Sign out of this profile across human sessions on this device. Agent access
+        and AEAT sessions stay active.
       notices:
-        already_logged_out: No profile was logged in; nothing to close.
-        remaining_access: The CLI selection is cleared. Other sessions, bounded human
-          resume and enrolled API keys retain their own authority. Use session or
-          profile controls to revoke access.
+        already_logged_out: No profile is selected; there is nothing to sign out.
     passphrase:
       change_help: Change the passphrase without re-encrypting records or invalidating
         a recovery code.
@@ -2079,9 +2089,9 @@ cli:
         archives exported before the reset still open with the passphrase they were
         sealed under.
       reset_name_help: Name of the profile whose passphrase is being reset.
-      reset_scope_notice: 'The recovery code still works; replace it by disabling
-        and re-enabling recovery. A reset revokes nothing: archives exported before
-        it still open with the passphrase they were sealed under.'
+      reset_scope_notice: A reset ends saved human sign-in. The recovery code remains
+        valid; replace it by disabling and re-enabling recovery. Archives exported
+        earlier still require the passphrase used when they were exported.
     profile:
       add_row:
         duplicate_field: Field %{field} was supplied more than once; nothing was written.
@@ -2251,8 +2261,9 @@ cli:
           deleted: Profile deleted along with its local state.
           preflight: 'Preflight only: nothing was deleted. Re-run with --yes to delete.'
         refusal:
-          active_profile: Cannot delete the active profile. Close the session with
-            'aeat config logout' and try again.
+          active_profile: Cannot delete the selected profile '{name}'. Sign in to
+            another profile with 'aeat config login NAME', then retry. Logout preserves
+            the selected profile.
         yes_help: Explicitly confirm the deletion
       descendiente:
         add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].

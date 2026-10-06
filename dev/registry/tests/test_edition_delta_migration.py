@@ -35,6 +35,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
+from dev.test_runs.paths import test_log_root as development_log_root
 
 from ..analysis.delta_minimality import restatement_differences
 from ..compiler.casilla_identity import LINEAGE_CLAIM_FIELDS
@@ -884,7 +885,7 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     assert " publication_readiness_status=failed " in summary, output
     assert " publication_execution_status=not_performed " in summary, output
     assert " applied=False " in summary, output
-    assert persisted.is_relative_to((REPO_ROOT / ".logs" / "audit-runs").resolve())
+    assert persisted.is_relative_to((development_log_root() / ".logs" / "audit-runs").resolve())
     assert persisted.is_file()
     assert "summary changed=True" in persisted.read_text(encoding="utf-8")
     assert not persisted.is_relative_to((tmp_path / "work").resolve())

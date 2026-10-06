@@ -40,7 +40,11 @@ fn running_native_executable_matches_host_and_rejects_wrong_cpu_format_and_diges
 
 #[test]
 fn refuses_nonbinary_even_with_matching_digest() {
-    let directory = tempfile::tempdir().unwrap();
+    // The system temporary directory can have a linked ancestor (macOS /var).
+    // Keep this format check separate from the production link-refusal check.
+    let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
+    std::fs::create_dir_all(root).unwrap();
+    let directory = tempfile::tempdir_in(root).unwrap();
     let path = directory.path().join("not-binary");
     std::fs::write(&path, b"text").unwrap();
     #[cfg(unix)]
@@ -49,8 +53,6 @@ fn refuses_nonbinary_even_with_matching_digest() {
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
     }
     let digest = Sha256Digest::new(format!("{:x}", Sha256::digest(b"text"))).unwrap();
-    assert!(matches!(
-        binary::verify(&path, &digest, BinaryExpectation::host().unwrap()),
-        Err(Error::Incompatible(_))
-    ));
+    let result = binary::verify(&path, &digest, BinaryExpectation::host().unwrap());
+    assert!(matches!(result, Err(Error::Incompatible(_))), "{result:?}");
 }

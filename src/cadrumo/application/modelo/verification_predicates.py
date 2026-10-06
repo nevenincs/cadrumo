@@ -327,6 +327,7 @@ def evaluate_predicate_expression(
     expression: str,
     casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
+    text_values: Mapping[CasillaId, str] | None = None,
 ) -> bool:
     """Return True when the predicate holds, False when it is violated.
 
@@ -369,6 +370,19 @@ def evaluate_predicate_expression(
     predicate = parse_verification_predicate_expression(expression)
     if predicate is None:
         return True
+    if predicate.operator in (
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO,
+    ):
+        ids = _predicate_casilla_ids(predicate)
+        if len(ids) != 2:
+            return True
+        antecedent, consequent = ids
+        if (text_values or {}).get(antecedent) != predicate.literal:
+            return True
+        if predicate.operator is VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO:
+            return consequent in casilla_values and casilla_values[consequent] == 0
+        return casilla_values.get(consequent, Decimal(0)) != 0
     evaluator = _BLOCKING_PREDICATE_EVALUATORS.get(predicate.operator)
     if evaluator is None:
         return True
@@ -558,6 +572,23 @@ def _advisory_casilla_equals_implies_nonzero_fires(
     return casilla_values.get(consequent_id, Decimal(0)) == Decimal(0)
 
 
+def _advisory_casilla_equals_implies_zero_fires(
+    expr: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    text_values: Mapping[CasillaId, str],
+    _profile: TaxpayerProfile | None,
+) -> bool | None:
+    predicate = parse_verification_predicate_expression(expr)
+    if predicate is None or predicate.operator is not VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO:
+        return None
+    if len(predicate.arguments) != 3:
+        return False
+    antecedent, consequent = _predicate_casilla_ids(predicate)
+    return text_values.get(antecedent) == predicate.literal and (
+        consequent not in casilla_values or casilla_values[consequent] != 0
+    )
+
+
 def _advisory_casilla_equals_implies_profile_flag_fires(
     expr: str,
     _casilla_values: Mapping[CasillaId, Decimal],
@@ -654,6 +685,7 @@ _ADVISORY_PREDICATE_EVALUATORS: tuple[_AdvisoryPredicateEvaluator, ...] = (
     _advisory_equals_fires,
     _advisory_equals_sum_fires,
     _advisory_casilla_equals_implies_nonzero_fires,
+    _advisory_casilla_equals_implies_zero_fires,
     _advisory_casilla_equals_implies_profile_flag_fires,
     _advisory_casilla_equals_implies_diverges_fires,
     _advisory_deduccion_requires_adquisicion_before_fires,
@@ -733,11 +765,30 @@ def _blocking_predicate_finding(
     """Build the refusal for a violated registry-authored blocking predicate.
 
     A violated ``equals_sum`` names its total box and the sum of the boxes the
-    design adds into it, so the filer can see the two figures that disagree;
-    every other operator reports the predicate identity alone.
+    design adds into it, so the filer can see the two figures that disagree.
+    A categorical requirement names the missing field with a human message;
+    other operators retain their predicate identity.
     """
     legal_refs = tuple(str(r) for r in predicate.legal_refs)
     parsed = parse_verification_predicate_expression(predicate.expression)
+    if parsed is not None and parsed.operator in (
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO,
+    ):
+        ids = _predicate_casilla_ids(parsed)
+        if len(ids) == 2:
+            return ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id=ids[1],
+                message_locale_key=(
+                    "application.modelo.findings.selected_option_requires_zero"
+                    if parsed.operator is VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO
+                    else "application.modelo.findings.selected_option_requires_nonzero"
+                ),
+                message_facts={},
+                legal_refs=legal_refs,
+            )
     if parsed is not None and parsed.operator is VerificationPredicateOperator.EQUALS_SUM:
         operands = _equals_sum_operands(parsed, casilla_values)
         if operands is not None:
@@ -836,8 +887,8 @@ def evaluate_verification_predicates(
     ``text_values`` carries operator-entered raw strings (e.g.
     :attr:`~CalculationRevision.input_values_by_casilla_id`),
     independent of the Decimal ``casilla_values`` projection. It defaults to an
-    empty mapping and is consumed by text-aware ADVISORY operators such as
-    ``casilla_equals_implies_nonzero``; every other operator ignores it.
+    empty mapping and is consumed by text-aware advisory operators and the
+    categorical nonzero blocking rule.
 
     ``BLOCKING_RULE`` predicates use negative logic: the predicate expression must
     hold, and a violation emits a BLOCKING finding. ``ADVISORY`` predicates use
@@ -894,7 +945,7 @@ def _evaluate_selected_predicate_findings(
             if evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values, profile):
                 findings.append(_advisory_predicate_finding(predicate))
         else:
-            if not evaluate_predicate_expression(predicate.expression, casilla_values, profile):
+            if not evaluate_predicate_expression(predicate.expression, casilla_values, profile, text_values):
                 finding = _blocking_predicate_finding(predicate, casilla_values)
                 findings.append(finding)
                 if blocking_finding_observer is not None:

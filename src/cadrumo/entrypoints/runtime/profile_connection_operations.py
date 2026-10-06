@@ -161,13 +161,14 @@ class ProfileConnectionOperationMixin:
                 deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RuntimeRefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
-                # The client sees only the code; the log keeps which check refused and where.
+                # Preserve bounded typed refusal facts; no secret or private result is disclosed.
                 _log.warning("runtime operation refused code=%s", error.reason, exc_info=error)
                 reply = RuntimeAccessRefusal(
                     request_id=request.request_id,
                     runtime_boot_id=self.boot,
                     connection_id=context.connection_id,
                     code=error.reason,
+                    sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
                 )
                 deadline = time.monotonic() + 5
             # Write errors propagate: a partially written frame is never retried

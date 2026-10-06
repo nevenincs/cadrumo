@@ -41,8 +41,7 @@ modelo:
               with third parties.
             label: SUPPLEMENTARY OR REPLACEMENT RETURN
           contraparte-clave-operacion:
-            label: Transaction code with the counterparty (A=supplies, B=acquisitions,
-              ...)
+            label: 'Transaction code (A: purchases; B: supplies of goods and services)'
           contraparte-importe-q1:
             label: Amount of transactions with the counterparty in the first quarter
           contraparte-importe-q2:
@@ -123,6 +122,12 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: INSURANCE TRANSACTION
+          papel-firma-cargo:
+            label: Position or job title
+          papel-firma-fecha:
+            label: Date
+          papel-firma-nombre:
+            label: Signatory name
           persona-con-quien-relacionarse:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
@@ -139,6 +144,14 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: NIF OF THE LEGAL REPRESENTATIVE
+          resumen-importe-arrendamientos:
+            label: null
+          resumen-importe-operaciones:
+            label: null
+          resumen-inmuebles:
+            label: null
+          resumen-personas-entidades:
+            label: null
           situacion-inmueble:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
@@ -152,6 +165,62 @@ modelo:
       field:
         official_name: Modelo 347. Annual return of transactions with third parties.
         title: Transactions with third parties (annual informative return)
+      form:
+        column:
+          operaciones:
+            heading: Transaction amount
+          transmisiones:
+            heading: Property transfers subject to VAT
+        context:
+          anterior:
+            heading: Previous declaration receipt number
+          nif:
+            heading: Declarant tax ID
+          nombre:
+            heading: Full name or legal name
+        page:
+          m347-declarado:
+            heading: Persons and entities
+          m347-declarante:
+            heading: Summary page
+          m347-inmueble:
+            heading: Business premises rentals
+        row:
+          trimestre-1:
+            heading: Q1
+          trimestre-2:
+            heading: Q2
+          trimestre-3:
+            heading: Q3
+          trimestre-4:
+            heading: Q4
+        section:
+          contacto:
+            heading: Contact person
+          declaracion:
+            heading: Declaration details
+          firma:
+            heading: Date and signature
+          identificacion:
+            heading: Declarant identification
+          resumen:
+            heading: Declaration summary
+        signature:
+          administracion:
+            heading: Space reserved for the administration
+          paper:
+            heading: Paper form space
+          space:
+            heading: Handwritten signature
+        summary:
+          arrendamientos:
+            heading: Total business premises rental amount
+          inmuebles:
+            heading: Total properties
+          operaciones:
+            heading: Total annual transaction amount
+          personas:
+            heading: Total persons and entities
       revision:
         2011-2024:
           casilla:

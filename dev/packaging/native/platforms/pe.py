@@ -19,6 +19,8 @@ def imports(path: Path) -> set[str]:
     header = unpack("<I", 0x3C)[0]
     if data[:2] != b"MZ" or data[header : header + 4] != b"PE\0\0":
         raise ValueError(f"Invalid PE image: {path}")
+    if unpack("<H", header + 4)[0] != 0x8664:
+        raise ValueError(f"Expected an AMD64 PE image: {path}")
     sections = unpack("<H", header + 6)[0]
     optional_size = unpack("<H", header + 20)[0]
     optional = header + 24

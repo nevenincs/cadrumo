@@ -123,7 +123,7 @@ def config_status(ctx: typer.Context, output_language: OutputLanguage | None = N
     try:
         collection = client.read_profile_view((ProfileViewPageKind.STATUS,), output_language=language)
     except RuntimeFrontendRefusedError as error:
-        raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason}) from error
+        raise CliRefusedBoundaryError(error.reason, context=error.context) from error
     items = collection.items(ProfileViewPageKind.STATUS)
     if len(items) != 1 or not isinstance(items[0], ProfileViewStatusItem):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

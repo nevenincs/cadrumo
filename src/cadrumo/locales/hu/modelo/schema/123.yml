@@ -34,6 +34,45 @@ modelo:
           külföldi illetőségűek jövedelemadójának (IRNR) adóelőleg-levonásai és -befizetései.
           Egyes tőkejövedelmek vagy egyes jövedelmek.
         title: Tőkejövedelmek adóelőleg-levonása
+      form:
+        column:
+          base: A levont adó és az adóelőleg alapja
+          dividendos: Osztalék és tulajdoni részesedésből származó egyéb jövedelem
+          ingresos-anteriores: Korábbi adóévek befizetései
+          numero-perceptores: Kedvezményezettek száma
+          otras-rentas: Egyéb jövedelem
+          regularizacion: Korrekció
+          retenciones: Levont adó és adóelőleg
+          totales: Összesen
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          nombre-completo: Teljes név vagy cégnév
+          periodo: Időszak
+        page:
+          dr-12301:
+            heading: Tőkejövedelemből és egyes más jövedelmekből levont adó
+        row:
+          base: A levont adó és az adóelőleg alapja
+          numero-rentas: Jövedelemtételek száma
+          periodificacion: Időbeli elhatárolás
+          retenciones: Levont adó és adóelőleg
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás (6)
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          identificacion:
+            heading: Azonosítás (1)
+          ingreso:
+            heading: Befizetés (4)
+          liquidacion:
+            heading: Adóelszámolás (3)
       revision:
         2019-2023:
           casilla:

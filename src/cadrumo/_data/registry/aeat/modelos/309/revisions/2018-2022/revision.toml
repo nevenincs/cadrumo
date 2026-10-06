@@ -433,6 +433,42 @@ fields = { continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 pr
 removed_fields = []
 restate_provenance = true
 
+[[revisions."2018-2022".casilla_overrides]]
+[revisions."2018-2022".casilla_overrides.selector]
+revision = "2016-2017"
+id = "firma-lugar"
+
+[revisions."2018-2022".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2003-23809 Annex I printed46407 with BOE-A-2017-15190 Annex I printed126021: signature place/date/signature and payment method keep the same paper roles. Payment method becomes a free-text printed line rather than the older cash/account-charge markers; no automatic code conversion is claimed."
+source_refs = ["boe-modelo-309-2017-form-pdf"]
+[[revisions."2018-2022".casilla_overrides]]
+[revisions."2018-2022".casilla_overrides.selector]
+revision = "2016-2017"
+id = "firma-fecha"
+
+[revisions."2018-2022".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2003-23809 Annex I printed46407 with BOE-A-2017-15190 Annex I printed126021: signature place/date/signature and payment method keep the same paper roles. Payment method becomes a free-text printed line rather than the older cash/account-charge markers; no automatic code conversion is claimed."
+source_refs = ["boe-modelo-309-2017-form-pdf"]
+[[revisions."2018-2022".casilla_overrides]]
+[revisions."2018-2022".casilla_overrides.selector]
+revision = "2016-2017"
+id = "firma"
+
+[revisions."2018-2022".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2003-23809 Annex I printed46407 with BOE-A-2017-15190 Annex I printed126021: signature place/date/signature and payment method keep the same paper roles. Payment method becomes a free-text printed line rather than the older cash/account-charge markers; no automatic code conversion is claimed."
+source_refs = ["boe-modelo-309-2017-form-pdf"]
+[[revisions."2018-2022".casilla_overrides]]
+[revisions."2018-2022".casilla_overrides.selector]
+revision = "2016-2017"
+id = "papel-forma-pago"
+
+[revisions."2018-2022".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2003-23809 Annex I printed46407 with BOE-A-2017-15190 Annex I printed126021: signature place/date/signature and payment method keep the same paper roles. Payment method becomes a free-text printed line rather than the older cash/account-charge markers; no automatic code conversion is claimed."
+source_refs = ["boe-modelo-309-2017-form-pdf"]
 [[revisions."2018-2022".family_overrides]]
 family = "formulas"
 selector = {revision = "2016-2017", id = "modelo-309-cuota-devengada-total"}
@@ -457,9 +493,9 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions."2018-2022".family_overrides]]
 family = "constructs"
 selector = {revision = "2016-2017", id = "modelo-309-iva-no-periodica"}
-sequence_additions = {source_refs = ["aeat-dr-309-2018"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {source_refs = [3, 0, 1, 2]}
+sequence_additions = {source_refs = ["aeat-dr-309-2018", "boe-modelo-309-2017-form-pdf"]}
+sequence_removals = {source_refs = [0, 4]}
+sequence_order = {source_refs = [3, 0, 1, 2, 4]}
 
 [[revisions."2018-2022".family_overrides]]
 family = "application_links"

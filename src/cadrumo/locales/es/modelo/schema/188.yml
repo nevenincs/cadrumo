@@ -12,9 +12,10 @@ modelo:
               los registros de perceptor con base positiva.
             label: Base de retenciones e ingresos a cuenta
           capitalizacion-seguros-resumen-perceptores-base-negativa:
-            help: Número de perceptores (registros) cuya base de retenciones e ingresos
-              a cuenta es negativa.
-            label: Número total de perceptores con base negativa
+            help: Número de registros cuya base de retenciones e ingresos a cuenta
+              es negativa o cero. Un perceptor que figure en varios registros se cuenta
+              una vez por cada registro.
+            label: Número total de perceptores con base negativa o cero
           capitalizacion-seguros-resumen-perceptores-base-positiva:
             help: Número de perceptores (registros) cuya base de retenciones e ingresos
               a cuenta es positiva.
@@ -28,8 +29,156 @@ modelo:
           mobiliario de operaciones de capitalización y contratos de seguro de vida
           o invalidez. Resumen anual.
         title: Retenciones capitalización y seguros de vida - resumen anual
+      form:
+        column:
+          base:
+            heading: Base de retenciones e ingresos a cuenta
+          perceptores:
+            heading: Número total de perceptores
+          retenciones:
+            heading: Retenciones e ingresos a cuenta
+        page:
+          hoja-resumen:
+            heading: Hoja-resumen · resumen anual en euros
+          perceptor:
+            heading: Datos de un perceptor
+        row:
+          negativa:
+            heading: Base negativa o cero
+          positiva:
+            heading: Base positiva
+        section:
+          declaracion:
+            heading: Datos de la declaración
+          declarante:
+            heading: Identificación y contacto
+          identificacion:
+            heading: Identificación del perceptor
+          otros:
+            heading: Otros rendimientos declarados
+          rendimientos:
+            heading: Rendimientos y retenciones
+          renta-vitalicia:
+            heading: Renta vitalicia asegurada
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
       revision:
         '2022':
+          casilla:
+            '01':
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es positiva.
+              label: Número total de perceptores con base positiva
+            '02':
+              help: Suma de las bases de retención e ingreso a cuenta reflejadas en
+                los registros de perceptor con base positiva.
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              help: Suma de las retenciones e ingresos a cuenta practicados sobre
+                las rentas declaradas.
+              label: Retenciones e ingresos a cuenta
+            '04':
+              help: Número de registros cuya base de retenciones e ingresos a cuenta
+                es negativa o cero. Un perceptor que figure en varios registros se
+                cuenta una vez por cada registro.
+              label: Número total de perceptores con base negativa o cero
+            '05':
+              help: Suma de las bases de retención e ingreso a cuenta reflejadas en
+                los registros de perceptor con base negativa.
+              label: Base de retenciones e ingresos a cuenta negativa
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: 'Complementaria: C para añadir percepciones omitidas'
+            x-chim6r1ecdnmst31cdq6u:
+              label: Apellidos y nombre de la persona de contacto
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Ejercicio
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Justificante anterior (solo si es sustitutiva)
+            x-chim6r1edpkmc:
+              label: NIF del declarante
+            x-chim6r1edpnmqojick:
+              label: Apellidos y nombre o razón social
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              label: Número de justificante (13 dígitos; empieza por 188)
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: 'Sustitutiva: S para reemplazar una declaración anterior'
+            x-chim6r1eehimopb6dtn6u:
+              label: Teléfono de contacto
+            x-e1in4or5e1q6ushec9gn6p9de9in8pbecdkmurj5ec:
+              help: En IRPF, rendimiento menos las reducciones aplicables. En IS e
+                IRNR con establecimiento permanente, el mismo importe y signo del
+                rendimiento. Valor declarado; todavía no se calcula automáticamente.
+              label: Base de retenciones e ingresos a cuenta
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                16.'
+              label: 'Clave B: anticipación de un PIAS'
+            x-e1in4or5e1q6ushecll6asj3d5hmirpdchincpbectng:
+              help: Solo para cantidades devengadas en ejercicios anteriores. Cada
+                ejercicio de devengo se declara en un registro distinto.
+              label: Ejercicio de devengo anterior
+            x-e1in4or5e1q6ushed5n6crridlgm6qbfdomm2p39cdkmurj1dg:
+              help: Renta exenta comunicada al constituir la renta vitalicia de un
+                PIAS, declarada al anticipar total o parcialmente sus derechos económicos.
+              label: Renta exenta comunicada por anticipación de un PIAS
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                11.'
+              label: 'Modalidad: 1 dineraria; 2 en especie'
+            x-e1in4or5e1q6ushedpkmc:
+              help: Según el diseño histórico, si un menor de edad carece de NIF,
+                se informa el NIF del representante legal en su campo correspondiente.
+              label: NIF del perceptor
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                10.'
+              label: Apellidos y nombre o razón social del perceptor
+            x-e1in4or5e1q6ushee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: 'Porcentaje expresado en puntos porcentuales: 19 significa 19
+                %. Si se aplicaron varios tipos durante el ejercicio, se declara únicamente
+                el último.'
+              label: Porcentaje de retención (%)
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                18.'
+              label: Prima aportada
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                10.'
+              label: Código de provincia
+            x-e1in4or5e1q6ushee9im8tb3cdkmurj5ec:
+              help: Solo para IRPF. Se declara cero si el rendimiento es negativo;
+                no se aplica a IS ni a IRNR con establecimiento permanente.
+              label: Reducciones de la disposición transitoria cuarta
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                18.'
+              label: Rendimiento de seguro cuyo beneficiario es el acreedor hipotecario
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                16.'
+              label: 'Operación: A constitución; B anticipación'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lj6aor8c4:
+              help: Si hubo constitución y anticipación durante el ejercicio, se informa
+                cada operación en un registro distinto.
+              label: Fecha de constitución o anticipación
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2017, página
+                17.'
+              label: Identificación de la renta vitalicia asegurada
+            x-e1in4or5e1q6ushee9imst31ec:
+              help: Importe en euros con su signo. Los rendimientos de distinto signo
+                se declaran en registros separados.
+              label: Rentas o rendimientos del capital mobiliario
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: Según el diseño histórico, se informa el NIF del representante
+                si el perceptor es menor de edad. En los demás casos permanece sin
+                dato.
+              label: NIF del representante legal
+            x-e1in4or5e1q6ushee9in8pbecdkmurj5ec:
+              help: Importe declarado. Debe ser cero cuando la base sea negativa.
+                La verificación entre campos y el cálculo automático siguen pendientes.
+              label: Retenciones e ingresos a cuenta
           construct:
             modelo-188-calculation-construct:
               field:
@@ -38,6 +187,120 @@ modelo:
           field:
             label: Modelo 188, ejercicio 2022
         2023-y-siguientes:
+          casilla:
+            '01':
+              help: Número de perceptores (registros) cuya base de retenciones e ingresos
+                a cuenta es positiva.
+              label: Número total de perceptores con base positiva
+            '02':
+              help: Suma de las bases de retención e ingreso a cuenta reflejadas en
+                los registros de perceptor con base positiva.
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              help: Suma de las retenciones e ingresos a cuenta practicados sobre
+                las rentas declaradas.
+              label: Retenciones e ingresos a cuenta
+            '04':
+              help: Número de registros cuya base de retenciones e ingresos a cuenta
+                es negativa o cero. Un perceptor que figure en varios registros se
+                cuenta una vez por cada registro.
+              label: Número total de perceptores con base negativa o cero
+            '05':
+              help: Suma de las bases de retención e ingreso a cuenta reflejadas en
+                los registros de perceptor con base negativa.
+              label: Base de retenciones e ingresos a cuenta negativa
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: 'Complementaria: C para añadir percepciones omitidas'
+            x-chim6r1ecdnmst31cdq6u:
+              label: Apellidos y nombre de la persona de contacto
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Ejercicio
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Justificante anterior (solo si es sustitutiva)
+            x-chim6r1edpkmc:
+              label: NIF del declarante
+            x-chim6r1edpnmqojick:
+              label: Apellidos y nombre o razón social
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              label: Número de justificante (13 dígitos; empieza por 188)
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: 'Sustitutiva: S para reemplazar una declaración anterior'
+            x-chim6r1eehimopb6dtn6u:
+              label: Teléfono de contacto
+            x-e1in4or5e1q6ushec9gn6p9de9in8pbecdkmurj5ec:
+              help: En IRPF, rendimiento menos las reducciones aplicables. En IS e
+                IRNR con establecimiento permanente, el mismo importe y signo del
+                rendimiento. Valor declarado; todavía no se calcula automáticamente.
+              label: Base de retenciones e ingresos a cuenta
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                16.'
+              label: 'Clave B: anticipación de un PIAS'
+            x-e1in4or5e1q6ushecll6asj3d5hmirpdchincpbectng:
+              help: Solo para cantidades devengadas en ejercicios anteriores. Cada
+                ejercicio de devengo se declara en un registro distinto.
+              label: Ejercicio de devengo anterior
+            x-e1in4or5e1q6ushed5n6crridlgm6qbfdomm2p39cdkmurj1dg:
+              help: Renta exenta comunicada al constituir la renta vitalicia de un
+                PIAS, declarada al anticipar total o parcialmente sus derechos económicos.
+              label: Renta exenta comunicada por anticipación de un PIAS
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                11.'
+              label: 'Modalidad: 1 dineraria; 2 en especie'
+            x-e1in4or5e1q6ushedpkmc:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                8.'
+              label: NIF del perceptor
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                10.'
+              label: Apellidos y nombre o razón social del perceptor
+            x-e1in4or5e1q6ushee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: 'Porcentaje expresado en puntos porcentuales: 19 significa 19
+                %. Si se aplicaron varios tipos durante el ejercicio, se declara únicamente
+                el último.'
+              label: Porcentaje de retención (%)
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                18.'
+              label: Prima aportada
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                10.'
+              label: Código de provincia
+            x-e1in4or5e1q6ushee9im8tb3cdkmurj5ec:
+              help: Solo para IRPF. Se declara cero si el rendimiento es negativo;
+                no se aplica a IS ni a IRNR con establecimiento permanente.
+              label: Reducciones de la disposición transitoria cuarta
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                18.'
+              label: Rendimiento de seguro cuyo beneficiario es el acreedor hipotecario
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                16.'
+              label: 'Operación: A constitución; B anticipación'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lj6aor8c4:
+              help: Si hubo constitución y anticipación durante el ejercicio, se informa
+                cada operación en un registro distinto.
+              label: Fecha de constitución o anticipación
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dato declarado por perceptor. Fuente: diseño AEAT 2023, página
+                17.'
+              label: Identificación de la renta vitalicia asegurada
+            x-e1in4or5e1q6ushee9imst31ec:
+              help: Importe en euros con su signo. Los rendimientos de distinto signo
+                se declaran en registros separados.
+              label: Rentas o rendimientos del capital mobiliario
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: Se informa cuando el perceptor es menor de 14 años. En los demás
+                casos permanece sin dato.
+              label: NIF del representante legal
+            x-e1in4or5e1q6ushee9in8pbecdkmurj5ec:
+              help: Importe declarado. Debe ser cero cuando la base sea negativa.
+                La verificación entre campos y el cálculo automático siguen pendientes.
+              label: Retenciones e ingresos a cuenta
           construct:
             modelo-188-calculation-construct:
               field:

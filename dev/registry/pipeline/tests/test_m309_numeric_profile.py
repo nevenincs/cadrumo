@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
@@ -50,6 +51,9 @@ def test_actual_source_render_retains_closed_codes_and_integer_kilograms(inputs,
         render_profile_source_evidence=inputs.render_profile_source_evidence,
     )
     fields = {str(field.id): field for record in rendered.layout.records for field in record.fields}
+    # The identification block belongs to the taxpayer, even with a representative.
+    assert fields["modelo-309-p1-nif"].producer_key is FilingProducerKey.TAXPAYER_TAX_ID
+    assert fields["modelo-309-p1-apellidos"].producer_key is FilingProducerKey.TAXPAYER_FULL_NAME
     for field_id in ("modelo-309-p1-situacion-tributaria", "modelo-309-p1-hecho-imponible"):
         assert fields[field_id].allowed_values == ("1", "2", "3", "4", "5", "6")
         assert fields[field_id].value_policy is ExportValuePolicy.ENUMERATED_DIGITS

@@ -5,9 +5,9 @@
 id = "form-layout"
 revision_id = "2004-2015"
 seed_source = "casilla_number"
-review = { state = "generated" }
+review = { state = "generated", notes = "Existing generated layout; paper signature and payment method are now enrolled from the applicable BOE form but their placement awaits historical layout authoring. No completed review claim." }
 generator_version = 1
-source_state_digest = "194418dc1de6b716ff1bc587a53aa36b6036b2e08b233d96abd21f86dad3fb2d"
+source_state_digest = "576b7630d570c017bdad847d43d1bcd547e456963b4ce9444a2de3fdf0f4a089"
 placements = [
     { casilla_id = "decl.a-deducir-23", kind = "on_form", box_number = "23" },
     { casilla_id = "decl.aeronave-ano", kind = "on_form", box_number = "546" },
@@ -67,6 +67,10 @@ placements = [
     { casilla_id = "wire.observaciones", kind = "on_form", box_number = "64" },
     { casilla_id = "wire.transmitente-apellidos-nombre-razon-social", kind = "on_form", box_number = "34" },
     { casilla_id = "wire.transmitente-pais-texto", kind = "on_form", box_number = "74" },
+    { casilla_id = "firma-lugar", kind = "unplaced", unplaced_reason = "pending_review" },
+    { casilla_id = "firma-fecha", kind = "unplaced", unplaced_reason = "pending_review" },
+    { casilla_id = "firma", kind = "unplaced", unplaced_reason = "pending_review" },
+    { casilla_id = "papel-forma-pago", kind = "unplaced", unplaced_reason = "pending_review" },
 ]
 
 [[revisions.2004-2015.form_layouts.pages]]

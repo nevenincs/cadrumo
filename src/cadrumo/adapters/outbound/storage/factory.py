@@ -44,6 +44,7 @@ from ....application.user_profile.access_contracts import AccessDenialCode
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....application.user_profile.google_configuration_operation_ports import (
     GoogleConfigurationAcknowledgement,
+    GoogleConfigurationCommit,
     GoogleConfigurationHandoff,
 )
 from ....core.config import Settings, load_settings
@@ -188,6 +189,7 @@ def get_storage_provider(
     profile: str | None = None,
     before_handoff: GoogleConfigurationHandoff | None = None,
     acknowledged: GoogleConfigurationAcknowledgement | None = None,
+    commit: GoogleConfigurationCommit | None = None,
 ) -> StorageProvider:
     """Build a :class:`StorageProvider` for the active AEAT profile.
 
@@ -197,6 +199,7 @@ def get_storage_provider(
         profile: Optional expected profile, checked against the active profile.
         before_handoff: Optional admission check before each provider handoff.
         acknowledged: Optional acknowledgement of a completed provider handoff.
+        commit: Protected local writer for retained Google creation receipts.
 
     Returns:
         A concrete :class:`StorageProvider` already wired with credentials and
@@ -224,15 +227,23 @@ def get_storage_provider(
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:
+        from uuid import UUID
+
+        from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+        from ..google.artifact_receipt_store import GoogleArtifactReceiptStore
         from ._google_drive import GoogleDriveProvider
 
         root_folder_id = resolve_required_drive_root_folder_id(profile=profile)
+        receipts = GoogleArtifactReceiptStore(
+            secure_object_repository_for_active_bucket(), profile_id=UUID(profile), commit=commit
+        )
         if before_handoff is None and acknowledged is None:
             credentials = build_google_credentials(profile=profile)
-            require_application_drive_root(credentials, root_folder_id=root_folder_id)
+            require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
             return GoogleDriveProvider(
                 credentials=credentials,
                 root_folder_id=root_folder_id,
+                receipts=receipts,
                 vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
             )
         if before_handoff is not None:
@@ -242,12 +253,13 @@ def get_storage_provider(
             acknowledged("google.credentials-acquisition")
         if before_handoff is not None:
             before_handoff("drive.root-folder.verification")
-        require_application_drive_root(credentials, root_folder_id=root_folder_id)
+        require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
         if acknowledged is not None:
             acknowledged("drive.root-folder.verification")
         return GoogleDriveProvider(
             credentials=credentials,
             root_folder_id=root_folder_id,
+            receipts=receipts,
             vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
             before_handoff=before_handoff,
             acknowledged=acknowledged,
@@ -278,7 +290,7 @@ def resolve_required_drive_root_folder_id(*, profile: str) -> str:
     return root_folder_id
 
 
-def require_application_drive_root(credentials: Credentials, *, root_folder_id: str) -> None:
+def require_application_drive_root(credentials: Credentials, *, root_folder_id: str, profile: str) -> None:
     """Read the stored root folder back from Drive and refuse it unless this application created it.
 
     Every composition that is about to write or read beneath the root
@@ -286,7 +298,7 @@ def require_application_drive_root(credentials: Credentials, *, root_folder_id: 
     """
     from ..google.root_folder import require_owned_root_folder
 
-    require_owned_root_folder(credentials, root_folder_id=root_folder_id)
+    require_owned_root_folder(credentials, root_folder_id=root_folder_id, profile=profile)
 
 
 __all__ = [

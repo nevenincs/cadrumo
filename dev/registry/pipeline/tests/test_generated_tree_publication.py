@@ -129,6 +129,27 @@ def _publication_inputs(
     return context, joined, semantic_map, rendered, candidate_export_root
 
 
+@pytest.mark.parametrize("stale", [False, True])
+def test_export_preparation_preserves_authored_drafts_even_before_review(tmp_path: Path, stale: bool) -> None:
+    context, _joined, _semantic_map, _rendered, candidate_export = _publication_inputs(tmp_path, existing_export=False)
+    form_root = candidate_export.parent / "form_layouts"
+    fragment = next(form_root.glob("*.toml"))
+    document = rtoml.loads(fragment.read_text(encoding="utf-8"))
+    layout = document["revisions"][ISOLATED_TREE.revision]["form_layouts"][0]
+    layout["seed_source"] = "authored"
+    layout["review"] = {"state": "generated"}
+    if stale:
+        layout["source_state_digest"] = "0" * 64
+    fragment.write_text(rtoml.dumps(document), encoding="utf-8")
+    authored = fragment.read_bytes()
+
+    prepare_generated_form_layout_companion(context.validation, temporary_root=context.temporary_root)
+
+    # Authorship is independent of review status. Never replace the custom
+    # design with automatic row ordering while preparing an export candidate.
+    assert fragment.read_bytes() == authored
+
+
 def _publish(
     context: GeneratedExportTreePublicationContext,
     joined: JoinedRecordDesign,

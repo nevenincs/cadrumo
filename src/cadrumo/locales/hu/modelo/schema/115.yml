@@ -11,9 +11,29 @@ modelo:
           vagy albérletbe adásából származó jövedelmek.
         title: IRPF városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások
       form:
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          periodo: Időszak
         page:
           dr-11501:
-            heading: 1. oldal · Városi ingatlanok bérleti díjainak visszatartásai
+            heading: Városi ingatlan bérbeadásából levont adó
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás (4)
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          identificacion:
+            heading: Azonosítás (1)
+          ingreso:
+            heading: Befizetés (5)
+          liquidacion:
+            heading: Adóelszámolás (3)
       revision:
         2019-y-siguientes:
           casilla:

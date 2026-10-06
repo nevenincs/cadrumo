@@ -1,45 +1,14 @@
-"""Read operator-edited Sheets cells back into structured records.
+"""Historical pull-record decoding helpers and terminal retirement refusals.
 
-Pairs with :mod:`~adapters.outbound.google.calc_sheets_apply`. The export
-side materialises a
-:class:`~application.storage.calc_sheets.records.SheetExportPlan` as a real Google
-Sheets workbook; this module reads the operator's edits back out, validates the
-workbook is still bound to the
-:class:`~domain.calculations.registry.schema.RegistrySnapshot` the engine
-compiled it from, and returns typed records the caller can inspect, compute
-from, or assemble into ledger / filing inputs.
-
-Two safety gates fire before any value is read:
-
-1. **Drive ownership marker** — the spreadsheet must carry the
-   ``appProperties.cadrumo_vault_app=cadrumo`` marker. Reading values from a
-   spreadsheet that lacks the marker would mix operator content with
-   foreign Drive files and break the ``cadrumo-vault/`` isolation contract.
-2. **Registry-SHA and layout-engine metadata match** — the spreadsheet's developer
-   metadata must declare ``cadrumo_registry_sha = <snapshot.registry_sha>``
-   and ``cadrumo_modelo_id`` / ``cadrumo_revision_id`` / ``cadrumo_filing_year`` /
-   ``cadrumo_period`` / ``cadrumo_engine_version`` matching the caller's snapshot
-   and live layout compiler. A mismatch means the workbook was compiled
-   against a different registry slice or coordinate layout — casilla
-   identity/layout, formula chains, and bracket tables may have shifted.
-   The pull is refused with a typed error before coordinates are read.
-
-The pull adapter does NOT mutate any local state; it returns a
-:class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult` and leaves applying the
-edits to the caller.
-
-See Also:
-    :func:`~adapters.outbound.google.calc_sheets_pull.pull_operator_edits` reads the
-    workbook,
-    :func:`~adapters.outbound.google.calc_sheets_pull.compute_from_pull` maps a matching
-    pull into
-    :class:`~domain.calculations.registry.formula_runtime.RegistryCalculationResult`.
+Remote workbook edits are not business inputs. Both legacy execution entrypoints
+refuse before remote access or local calculation; released record schemas remain
+readable through calc_sheets_pull_records.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -50,6 +19,8 @@ from enum import StrEnum
 # live path) while the type-checker can narrow the ``Any`` service returns.
 from typing import TYPE_CHECKING, Any, Final
 
+from .artifact_admission import managed_artifact_refusal
+
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
     from googleapiclient._apis.drive.v3.resources import DriveResource
@@ -58,7 +29,7 @@ if TYPE_CHECKING:
 from pydantic import ValidationError
 
 from ....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, collect_row_sets, registry_sha
-from ....application.storage.calc_sheets.layout import SheetLayout, plan_layout
+from ....application.storage.calc_sheets.layout import SheetLayout
 from ....application.storage.calc_sheets.records import (
     SheetRelationProvenance,
     SheetRelationProvenanceValue,
@@ -70,13 +41,11 @@ from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryO
 from ....core.period import Period, PeriodError
 from ....core.type_guards import is_object_list, is_str_keyed_dict
 from ....domain.calculations.registry.casilla_membership import (
-    casillas_by_id,
     text_family_casilla_ids,
     undeclared_casilla_ids,
 )
 from ....domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
-    calculate_registry_snapshot,
 )
 from ....domain.calculations.registry.ids import (
     LEGAL_REFS_ADAPTER,
@@ -91,14 +60,13 @@ from ....domain.calculations.registry.relations import relation_prefill_bindings
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ....domain.period import calculation_filing_date
 from ..storage.errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
     OutboundStorageValidationError,
 )
 from ._preconditions import google_terminal_refusal
-from .api import RequestRetryPolicy, drive_v3_service, execute_request, sheets_v4_service
+from .api import RequestRetryPolicy, execute_request
 from .calc_sheets_pull_records import (
     BindingEdit as _BindingEdit,
 )
@@ -342,7 +310,8 @@ def _classify_metadata_match(
     # a workbook may have different casilla or tariff coordinates even where
     # modelo, revision, year, and period all align.
     matches = (
-        metadata.modelo_id == snapshot.modelo.id
+        snapshot.filing_period is not None
+        and metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
         and metadata.period == Period.from_year_and_code(snapshot.filing_year, snapshot.period).registry_token
@@ -371,7 +340,8 @@ def _require_matching_metadata(
     except PeriodError:
         workbook_period = None
     metadata_binds_snapshot = (
-        metadata.modelo_id == snapshot.modelo.id
+        snapshot.filing_period is not None
+        and metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
         and workbook_period == Period.from_year_and_code(snapshot.filing_year, snapshot.period)
@@ -440,121 +410,9 @@ def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     return None
 
 
-def pull_operator_edits(
-    snapshot: RegistrySnapshot,
-    *,
-    spreadsheet_id: str,
-    credentials: Credentials,
-) -> _PullResult:
-    """Read operator-edited cells back from a workbook into typed records.
-
-    This is the readback entrypoint behind ``aeat app modelo spreadsheet
-    pull``. It verifies the Drive ownership marker, reads developer metadata,
-    classifies metadata against ``snapshot``, reads operator/binding/relation
-    cells plus Detalle row-set blocks, and returns a
-    :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult`.
-
-    Args:
-        snapshot: The
-            :class:`~domain.calculations.registry.schema.RegistrySnapshot` the
-            workbook was compiled against. Used to derive the layout (cell
-            addresses for every casilla / binding / relation) and to validate
-            the workbook's developer-metadata stamps.
-        spreadsheet_id: The Drive file id of the workbook to read.
-            Must already exist and carry the
-            ``appProperties.cadrumo_vault_app=cadrumo`` ownership marker.
-        credentials: A ``google.oauth2.credentials.Credentials``-shaped
-            object carrying a refresh + access token with the
-            ``drive.file`` scope.
-
-    Returns:
-        A :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult` carrying the
-        operator edits, binding edits, relation edits, and the metadata-match
-        verdict. A non-matching stamp is refused before the live layout is
-        derived, so no operator cells are read under coordinates that may have
-        shifted since export.
-
-    Raises:
-        :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`:
-            When ``spreadsheet_id`` is blank.
-        :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: When
-            Drive or Sheets rejects the request, the target is missing, quota
-            is exhausted, or the workbook fails the app-owned marker gate.
-    """
-    if not spreadsheet_id.strip():
-        error = OutboundStorageValidationError(
-            "spreadsheet_id must not be blank",
-            context={"spreadsheet_id": spreadsheet_id},
-            translated_message="adapters.google.calc_sheets.errors.spreadsheet_id_blank",
-        )
-        raise _calc_sheets_pull_terminal_refusal(
-            error,
-            CalcSheetsPullPreconditionCondition.SPREADSHEET_ID_VALID,
-            facts={"spreadsheet_id_present": False},
-            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-        )
-
-    drive = drive_v3_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
-    sheets = sheets_v4_service(credentials, unavailable_condition_id=_CLIENT_UNAVAILABLE_CONDITION)
-
-    _verify_ownership(drive, spreadsheet_id)
-    metadata_pairs = _read_developer_metadata(sheets, spreadsheet_id)
-    metadata_match, metadata = _classify_metadata_match(metadata_pairs, snapshot)
-    _require_matching_metadata(
-        spreadsheet_id=spreadsheet_id,
-        metadata_match=metadata_match,
-        metadata=metadata,
-        snapshot=snapshot,
-    )
-
-    filing_anchor = (
-        calculation_filing_date(snapshot.filing_period)
-        if snapshot.filing_period is not None
-        else date(snapshot.filing_year, 12, 31)
-    )
-    layout = plan_layout(snapshot.revision, bracket_filter_date=filing_anchor)
-
-    operator_input_ids, operator_input_ranges = _operator_input_addresses(snapshot, layout)
-    binding_ids = list(layout.binding_cells)
-    binding_ranges = [layout.binding_cells[bid].qualified() for bid in binding_ids]
-    relation_ids = list(layout.relation_cells)
-    relation_ranges = [layout.relation_cells[rid].qualified() for rid in relation_ids]
-    all_ranges = operator_input_ranges + binding_ranges + relation_ranges
-    value_ranges = _batch_get_values(sheets, spreadsheet_id, all_ranges)
-
-    casilla_by_id = casillas_by_id(snapshot.revision)
-    cursor = 0
-    operator_edits, cursor, casilla_cells_read = _decode_operator_edits(
-        value_ranges,
-        cursor,
-        operator_input_ids,
-        casilla_by_id,
-    )
-    binding_edits, cursor, binding_cells_read = _decode_binding_edits(value_ranges, cursor, binding_ids)
-    relation_edits, cursor, relation_cells_read = _decode_relation_edits(
-        value_ranges,
-        cursor,
-        relation_ids,
-        metadata_pairs,
-    )
-
-    # Read row-set detail rows from the Detalle tab. Each row-set
-    # reserves first_data_row + 50 rows by N columns; we issue one
-    # batchGet covering each row-set's full data block and capture
-    # any non-blank cell as a RowSetCellEdit.
-    row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
-    cells_read = casilla_cells_read + binding_cells_read + relation_cells_read + row_set_cells_read
-
-    return _PullResult(
-        spreadsheet_id=spreadsheet_id,
-        operator_edits=operator_edits,
-        binding_edits=binding_edits,
-        relation_edits=relation_edits,
-        row_set_edits=row_set_edits,
-        metadata=metadata,
-        metadata_match=metadata_match,
-        cells_read=cells_read,
-    )
+def pull_operator_edits(snapshot: RegistrySnapshot, *, spreadsheet_id: str, credentials: Credentials) -> _PullResult:
+    """Refuse retired remote business-input execution before inspecting any identity."""
+    raise managed_artifact_refusal("remote_business_input_retired")
 
 
 def _operator_input_addresses(
@@ -967,71 +825,9 @@ def _decode_row_set_cell(
     return _RowSetCellEdit(binding=binding_id, row_index=local_row, value=coerced_value)
 
 
-def compute_from_pull(
-    snapshot: RegistrySnapshot,
-    pull: _PullResult,
-) -> RegistryCalculationResult:
-    """Run the local Decimal runtime against a :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult`.
-
-    Maps each edit family back to the runtime contract:
-
-    - :attr:`~adapters.outbound.google.calc_sheets_pull_records.OperatorEdit.value`
-      flows into runtime ``inputs`` for a numeric casilla, with ``Decimal("0")``
-      substituted for ``None`` so the runtime's "every non-computed casilla has
-      a value" precondition holds; a text casilla's written text flows into
-      ``text_inputs`` and an empty text cell leaves the casilla absent.
-    - :attr:`~adapters.outbound.google.calc_sheets_pull_records.BindingEdit.value`
-      is routed by the binding's ``typed_enum`` declaration: numeric bindings
-      flow into ``binding_values`` as Decimals; enum bindings flow into
-      ``enum_binding_values`` as plain strings.
-    - :attr:`~adapters.outbound.google.calc_sheets_pull_records.RelationEdit.value`
-      flows into ``relation_values`` as Decimals, with ``Decimal("0")``
-      substituted for ``None``.
-
-    Refuses to compute when the workbook's metadata stamps do not
-    match the supplied snapshot (``pull.metadata_match != "matches"``).
-    The caller is responsible for handling stale workbooks before
-    invoking this helper.
-
-    Args:
-        snapshot: The
-            :class:`~domain.calculations.registry.schema.RegistrySnapshot` the
-            workbook was compiled against. Used to derive input casilla
-            identifiers, active relation periods, and the metadata-match gate.
-        pull: The :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult` carrying
-            the operator-edited cells to compute from.
-
-    Returns:
-        A :class:`~domain.calculations.registry.formula_runtime.RegistryCalculationResult`
-        produced by
-        :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`.
-
-    Raises:
-        :exc:`~adapters.outbound.storage.errors.OutboundStorageConflictError`:
-            When ``pull`` does not bind to ``snapshot`` by metadata verdict and
-            registry-SHA stamp.
-    """
-    _require_metadata_match(pull=pull, snapshot=snapshot)
-    inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
-    text_inputs = _collect_text_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
-    binding_values, enum_binding_values = _collect_binding_values(snapshot=snapshot, edits=pull.binding_edits)
-    relation_values = _collect_relation_values(snapshot=snapshot, edits=pull.relation_edits)
-    return calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        date_context={
-            "filing_period": (
-                calculation_filing_date(snapshot.filing_period)
-                if snapshot.filing_period is not None
-                else date(snapshot.filing_year, 12, 31)
-            ),
-        },
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        relation_values=relation_values,
-        text_inputs=text_inputs or None,
-        # The worksheet pull carries operator cell edits, not filing-instance
-    )
+def compute_from_pull(snapshot: RegistrySnapshot, pull: _PullResult) -> RegistryCalculationResult:
+    """Historical pull records remain decodable but cannot drive a calculation."""
+    raise managed_artifact_refusal("remote_business_calculation_retired")
 
 
 def _require_metadata_match(*, pull: _PullResult, snapshot: RegistrySnapshot) -> None:

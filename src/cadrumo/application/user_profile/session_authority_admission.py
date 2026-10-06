@@ -19,6 +19,7 @@ from uuid import UUID, uuid4
 from pydantic import SecretBytes
 
 from ...core.async_cleanup import AsyncResourceCleanupError
+from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from .access_contracts import (
     ACCESS_LEASE_MAXIMUM,
     AccessDenialCode,
@@ -36,6 +37,7 @@ from .automation_custody_port import AutomationCustodySnapshot
 from .login_session import ProfileLoginOutcome
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
 from .session_authority_core import SessionAuthorityCore
+from .sign_in_refusals import SignInRefusal
 
 
 class _ProspectiveSessionRetirement:
@@ -95,6 +97,7 @@ class _ApiKeyAdmissionCandidate:
 class _HumanAdmissionCandidate:
     deadline: float
     session: AccessSession
+    generation: int
 
 
 class SessionAuthorityAdmission(SessionAuthorityCore):
@@ -275,11 +278,12 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             facts = self._facts(connection_id)
             if isinstance(facts, AccessDenied):
                 return facts
+            generation = self._human_admission_generation
         identity = uuid4()
         retirement = _ProspectiveSessionRetirement(self.owner, lambda: self._retire({identity}))
         primary: BaseException | None = None
         try:
-            candidate = self._authenticate_human_candidate(connection_id, identity, facts, retirement)
+            candidate = self._authenticate_human_candidate(connection_id, identity, facts, retirement, generation)
             if isinstance(candidate, AccessDenied):
                 return candidate
             return self._publish_human_candidate(connection_id, candidate, retirement)
@@ -295,6 +299,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         identity: UUID,
         baseline: SessionAuthorityFacts,
         retirement: _ProspectiveSessionRetirement,
+        generation: int,
     ) -> _HumanAdmissionCandidate | AccessDenied:
         with self.owner.authenticate_human(connection_id) as authenticated:
             if authenticated is None:
@@ -304,6 +309,13 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             if str(outcome.bucket_id) != str(self.binding.profile_id):
                 return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
             with self.owner.admission_guard():
+                if generation != self._human_admission_generation:
+                    return AccessDenied(
+                        code=AccessDenialCode.AUTHENTICATION_REQUIRED,
+                        sign_in=SignInRefusal(
+                            reason=ProfileSessionRefusalReason.ABSENT, binding=ReceiptBindingRefusal.GENERATION_CHANGED
+                        ),
+                    )
                 current = self._facts(connection_id)
                 if isinstance(current, AccessDenied):
                     return current
@@ -316,7 +328,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                     return decision
                 retirement.binding_attempted = True
                 self.owner.bind_human(session)
-                return _HumanAdmissionCandidate(deadline, session)
+                return _HumanAdmissionCandidate(deadline, session, generation)
 
     def _human_admission_denial(
         self: SessionAuthorityAdmission,
@@ -367,6 +379,13 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         retirement: _ProspectiveSessionRetirement,
     ) -> AccessSession | AccessDenied:
         with self.owner.admission_guard():
+            if candidate.generation != self._human_admission_generation:
+                return AccessDenied(
+                    code=AccessDenialCode.AUTHENTICATION_REQUIRED,
+                    sign_in=SignInRefusal(
+                        reason=ProfileSessionRefusalReason.ABSENT, binding=ReceiptBindingRefusal.GENERATION_CHANGED
+                    ),
+                )
             current = self._facts(connection_id)
             if isinstance(current, AccessDenied):
                 return current

@@ -31,6 +31,7 @@ from typing import Annotated
 
 from pydantic import Field
 
+from .afiliado_contribution_bindings import AfiliadoContributionProvider
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .bindings_previous_filing import PreviousFilingProvider
 from .design_constant_bindings import DesignConstantProvider
@@ -69,7 +70,8 @@ __all__ = ["BindingProvider"]
 
 
 BindingProvider = Annotated[
-    ManualInputProvider
+    AfiliadoContributionProvider
+    | ManualInputProvider
     | DesignConstantProvider
     | ProfileProvider
     | PreviousFilingProvider

@@ -21,8 +21,10 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretBytes
 
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion, revoke_profile_sign_in
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     AdministrationSubject,
@@ -62,6 +64,7 @@ from cadrumo.application.user_profile.automation_lifecycle import (
 from cadrumo.application.user_profile.automation_lifecycle_service import (
     AutomationLifecycleService,
     AutomationResumeRequest,
+    HumanSignInRevocationResult,
 )
 from cadrumo.application.user_profile.login_session import (
     ProfileLoginOutcome,
@@ -75,6 +78,7 @@ from cadrumo.application.user_profile.operations import (
 from cadrumo.application.user_profile.session_authority import ProfileSessionAuthority
 from cadrumo.application.user_profile.session_authority_contracts import SessionAuthorityFacts
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from cadrumo.core.profile_session import ReceiptBindingRefusal
 from cadrumo.core.time.utc import UtcInstant
 
 pytestmark = [
@@ -286,6 +290,19 @@ class LifecycleOwner:
         current = self.subject.owner.current
         return AdministrationFacts(
             profile=current.profile, context=current.context, originating_login_id="test-login", session=self.session
+        )
+
+    def revoke_human_sign_in(self) -> HumanSignInRevocationResult:
+        deletion = revoke_profile_sign_in(
+            SignInGenerationCustody(
+                root=self.subject.store.root,
+                binding=self.subject.store.binding,
+            )
+        )
+        self.subject.authority.retire_human_sessions()
+        return HumanSignInRevocationResult(
+            receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
+            keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
         )
 
     def set_profile_lock(self, *, generation: int, locked: bool) -> None:
@@ -904,12 +921,18 @@ def test_global_lock_requires_exact_password_selection_before_new_api_admission(
         lock_generation=subject.owner.current.profile.lock_generation,
         grants=frozenset({api.grant_id}),
     )
+    sign_in = SignInGenerationCustody(root=subject.store.root, binding=subject.store.binding)
+    before_sign_in = sign_in.establish().current
     # Key possession is never a replacement for the password proof.
     with pytest.raises(AutomationCustodyError):
         service.resume(selection, password=subject.credential)
     assert not subject.store.snapshot().automation_enabled
+    assert sign_in.observe().current == before_sign_in
     result = service.resume(selection, password=SecretBytes(PROFILE_INPUT.encode()))
     assert result.reactivated_grants == selection.grants
+    after_sign_in = sign_in.observe().current
+    assert after_sign_in is not None and after_sign_in.generation == before_sign_in.generation + 1
+    assert result.human_sign_in_revocation is not None
     fresh = subject.admit()
     assert isinstance(fresh, AccessSession) and fresh.session_id != api.session_id
     assert fresh.profile_lock_generation > api.profile_lock_generation
@@ -1146,7 +1169,12 @@ def test_paused_human_authentication_allows_status_and_cannot_publish_across_pro
 
     assert authenticated.is_set()
     assert isinstance(candidate, AccessDenied)
-    assert candidate.code is AccessDenialCode.PROFILE_LOCKED
+    assert candidate.code is (
+        AccessDenialCode.AUTHENTICATION_REQUIRED if resume_before_release else AccessDenialCode.PROFILE_LOCKED
+    )
+    if resume_before_release:
+        assert candidate.sign_in is not None
+        assert candidate.sign_in.binding is ReceiptBindingRefusal.GENERATION_CHANGED
     assert owner.human_bind_attempt == initial_bind
     assert owner.human_released and not owner.human_bound and not owner.active
     assert human.session_id in owner.retired
@@ -1212,8 +1240,11 @@ def test_human_candidate_is_retired_when_context_release_overlaps_fresh_fence(su
 
     assert isinstance(candidate, AccessDenied)
     assert candidate.code is (
-        AccessDenialCode.PROFILE_LOCKED if fence == "lock-resume" else AccessDenialCode.SESSION_EXPIRED
+        AccessDenialCode.AUTHENTICATION_REQUIRED if fence == "lock-resume" else AccessDenialCode.SESSION_EXPIRED
     )
+    if fence == "lock-resume":
+        assert candidate.sign_in is not None
+        assert candidate.sign_in.binding is ReceiptBindingRefusal.GENERATION_CHANGED
     assert owner.active == (set() if fence == "lock-resume" else {human.session_id})
     assert owner.retired.count(attempted) == 1
     status = subject.authority.status(
@@ -1606,3 +1637,200 @@ def test_failed_mint_retires_the_published_session(subject: Subject) -> None:
     assert attempted is not None
     assert owner.receipt_events == [("capture", attempted), ("discard", attempted)]
     assert not owner.active and not _published(subject, attempted)
+
+
+def test_human_sign_out_retires_human_access_but_keeps_api_session(subject: Subject) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    api = subject.admit()
+    assert isinstance(api, AccessSession)
+    retired = subject.authority.retire_human_sessions()
+    assert human.session_id in retired
+    assert api.session_id not in retired
+    assert not _published(subject, human.session_id)
+    assert api.session_id in subject.owner.active
+
+
+def test_retirement_event_commits_once_even_when_physical_cleanup_needs_retry(subject: Subject) -> None:
+    from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
+
+    events: list[SessionRetirement] = []
+    subject.authority._retired = events.append
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    subject.owner.failed_retirements.add(human.session_id)
+    with pytest.raises(ExceptionGroup):
+        subject.authority.retire_human_sessions()
+    assert not _published(subject, human.session_id)
+    assert len(events) == 1
+    assert events[0].session_id == human.session_id
+    assert events[0].kind is SessionRetirementKind.SIGNED_OUT
+    subject.owner.failed_retirements.clear()
+    subject.authority.revalidate_sessions()
+    assert len(events) == 1
+    assert human.session_id not in subject.owner.active
+
+
+def test_sign_out_between_binding_and_publication_refuses_candidate(subject: Subject) -> None:
+    class SigningOutOwner(AdmissionOwner):
+        @override
+        @contextmanager
+        def authenticate_human(self, connection_id: UUID) -> Iterator[tuple[ProfileLoginOutcome, str]]:
+            with super().authenticate_human(connection_id) as proof:
+                yield proof
+            subject.authority.retire_human_sessions()
+
+    owner = SigningOutOwner(subject.enrollment)
+    owner.persist_receipt = True
+    subject.owner = owner
+    subject.authority = subject.new_authority()
+    result = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(result, AccessDenied)
+    assert not owner.active and not owner.pending_receipts
+    assert all(event != "mint" for event, _ in owner.receipt_events)
+
+
+@pytest.mark.parametrize("refusal", ["unknown-login", "missing-grant"])
+def test_refused_profile_recovery_preserves_sign_in_generation(subject: Subject, refusal: str) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    service = lifecycle(subject, human)
+    service.deny(
+        AutomationDenial(
+            request_id=uuid4(),
+            binding=subject.store.binding,
+            kind=AutomationDenialKind.PROFILE_LOCK,
+        )
+    )
+    sign_in = SignInGenerationCustody(root=subject.store.root, binding=subject.store.binding)
+    before = sign_in.establish().current
+    facts = subject.owner.current
+    if refusal == "unknown-login":
+        subject.owner.current = SessionAuthorityFacts(
+            facts.profile,
+            changed(
+                facts.context,
+                login_contexts=tuple(
+                    changed(login, lock_state=OsLockState.UNKNOWN) for login in facts.context.login_contexts
+                ),
+            ),
+        )
+    selection = AutomationResumeRequest(
+        request_id=uuid4(),
+        profile_id=subject.store.binding.profile_id,
+        lock_generation=facts.profile.lock_generation,
+        grants=frozenset({uuid4()}) if refusal == "missing-grant" else frozenset(),
+    )
+    with pytest.raises(AutomationCustodyError):
+        service.resume(selection, password=SecretBytes(PROFILE_INPUT.encode()))
+    assert sign_in.observe().current == before
+    assert subject.store.profile_lock_state().globally_locked
+
+
+@pytest.mark.parametrize("selected_grants", [False, True], ids=["human-only", "selected-automation"])
+def test_failed_recovery_publication_keeps_revocation_and_allows_retry(
+    subject: Subject, monkeypatch: pytest.MonkeyPatch, selected_grants: bool
+) -> None:
+    api = subject.admit()
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(api, AccessSession) and api.grant_id is not None
+    assert isinstance(human, AccessSession)
+    service = lifecycle(subject, human)
+    service.deny(
+        AutomationDenial(request_id=uuid4(), binding=subject.store.binding, kind=AutomationDenialKind.PROFILE_LOCK)
+    )
+    generation = SignInGenerationCustody(root=subject.store.root, binding=subject.store.binding)
+    before = generation.establish().current
+    selection = AutomationResumeRequest(
+        request_id=uuid4(),
+        profile_id=subject.store.binding.profile_id,
+        lock_generation=subject.owner.current.profile.lock_generation,
+        grants=frozenset({api.grant_id}) if selected_grants else frozenset(),
+    )
+
+    def refuse_publication(*_args: object, **_kwargs: object) -> None:
+        # Inject at the existing custody publication boundary, after the real
+        # password proof and durable revocation; never replace their owners.
+        raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            type(subject.store), "publish_enrollment" if selected_grants else "unlock_profile", refuse_publication
+        )
+        with pytest.raises(AutomationCustodyError):
+            service.resume(selection, password=SecretBytes(PROFILE_INPUT.encode()))
+    revoked = generation.observe().current
+    assert revoked is not None and revoked.generation == before.generation + 1
+    assert subject.store.profile_lock_state().globally_locked
+    assert not subject.owner.active
+    assert isinstance(subject.admit(), AccessDenied)
+
+    recovered = service.resume(selection, password=SecretBytes(PROFILE_INPUT.encode()))
+    retried = generation.observe().current
+    assert retried is not None and retried.generation == revoked.generation + 1
+    assert recovered.reactivated_grants == selection.grants
+    assert recovered.human_sign_in_revocation is not None
+    assert not subject.store.profile_lock_state().globally_locked
+
+
+@pytest.mark.parametrize("retry_observation", ["published", "wrong-generation", "revoked-grant", "revoked-key"])
+def test_recovery_retries_after_grants_publish_but_unlock_fails(
+    subject: Subject, monkeypatch: pytest.MonkeyPatch, retry_observation: str
+) -> None:
+    api = subject.admit()
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(api, AccessSession) and api.grant_id is not None
+    assert isinstance(human, AccessSession)
+    service = lifecycle(subject, human)
+    service.deny(
+        AutomationDenial(request_id=uuid4(), binding=subject.store.binding, kind=AutomationDenialKind.PROFILE_LOCK)
+    )
+    generation = SignInGenerationCustody(root=subject.store.root, binding=subject.store.binding)
+    before = generation.establish().current
+    selection = AutomationResumeRequest(
+        request_id=uuid4(),
+        profile_id=subject.store.binding.profile_id,
+        lock_generation=subject.owner.current.profile.lock_generation,
+        grants=frozenset({api.grant_id}),
+    )
+
+    def refuse_unlock(*_args: object, **_kwargs: object) -> None:
+        raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(type(subject.store), "unlock_profile", refuse_unlock)
+        with pytest.raises(AutomationCustodyError):
+            service.resume(selection, password=SecretBytes(PROFILE_INPUT.encode()))
+    published = subject.store.enrollment_state()
+    assert published.grants[0].grant.state is AuthorityState.ACTIVE
+    assert subject.store.profile_lock_state().globally_locked
+    assert isinstance(subject.admit(), AccessDenied)
+
+    if retry_observation != "published":
+        entry = published.grants[0]
+        if retry_observation == "wrong-generation":
+            invalid = changed(entry, grant=changed(entry.grant, profile_lock_generation=selection.lock_generation + 1))
+        elif retry_observation == "revoked-grant":
+            invalid = changed(entry, grant=changed(entry.grant, state=AuthorityState.REVOKED))
+        else:
+            invalid = changed(
+                entry,
+                keys=tuple(changed(item, key=changed(item.key, state=AuthorityState.REVOKED)) for item in entry.keys),
+            )
+        # Fault only the returned control observation. Proof, local lock and
+        # generation remain real; changed/revoked authority must not be revived.
+        with monkeypatch.context() as patch:
+            patch.setattr(type(subject.store), "enrollment_state", lambda _store: changed(published, grants=(invalid,)))
+            with pytest.raises(AutomationCustodyError):
+                service.resume(selection, password=SecretBytes(PROFILE_INPUT.encode()))
+        refused = generation.observe().current
+        assert refused is not None and refused.generation == before.generation + 1
+        assert subject.store.profile_lock_state().globally_locked
+
+    recovered = service.resume(selection, password=SecretBytes(PROFILE_INPUT.encode()))
+    after = generation.observe().current
+    assert after is not None and after.generation == before.generation + 2
+    assert recovered.reactivated_grants == selection.grants
+    assert subject.store.enrollment_state().grants == published.grants
+    assert not subject.store.profile_lock_state().globally_locked
+    assert isinstance(subject.admit(), AccessSession)

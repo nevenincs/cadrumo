@@ -16,9 +16,18 @@ from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
+from ...adapters.persistence.storage.custody.acceleration_receipt import (
+    ReceiptDeletion,
+    inspect_profile_session,
+    revoke_profile_sign_in,
+)
+from ...adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_matches
 from ...adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
 from ...adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from ...adapters.persistence.storage.custody.automation_store import AutomationControlStore
+from ...adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ...adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
+from ...adapters.persistence.storage.errors import StorageError
 from ...adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ...application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
 from ...application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
@@ -30,6 +39,7 @@ from ...application.runtime.contracts import RuntimeRefusalError, RuntimeShutdow
 from ...application.runtime.login import RuntimeLoginEvidence
 from ...application.runtime.profile_access import RuntimeHumanProof
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
+from ...application.runtime.session_events import RuntimeSessionEvent
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.runtime.worker_authorization import (
     WorkerAuthorityRequest,
@@ -52,7 +62,9 @@ from ...application.user_profile.access_contracts import (
     Availability,
     DisclosureCategory,
     DisclosurePermission,
+    LoginEligibility,
     OperationResponseScopeAllowed,
+    OsLockState,
     ProfileAccessState,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
@@ -74,6 +86,7 @@ from ...application.user_profile.automation_operations import (
 from ...application.user_profile.custody_ports import bind_profile_custody_port
 from ...application.user_profile.session_authority import ProfileSessionAuthority
 from ...application.user_profile.session_authority_contracts import SessionAuthorityFacts
+from ...application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from ...core.operations import profile_operation_subject
 from ...core.time.clock import now
 from .session_owner import ProfileWorkerSessionOwner
@@ -93,6 +106,7 @@ class ProfileConnection:
     human_secret: bytearray | None = field(default=None, repr=False)
     persist_human_receipt: bool = False
     recovery_generation: int | None = None
+    bootstrap_digest: str | None = None
 
 
 @dataclass(frozen=True)
@@ -183,6 +197,7 @@ class RuntimeProfileHost:
         recipient: Callable[[EnrollmentRequester], ProtectedEnrollmentRecipient] | None = None,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
+        retired: Callable[[RuntimeSessionEvent], None] | None = None,
     ) -> None:
         """Compose existing authorities without opening keys or selecting a profile."""
         self.store, self._registry = store, registry
@@ -194,6 +209,9 @@ class RuntimeProfileHost:
         self._replacement_retirement_guard = Lock()
         self._lock_fence: ProfileGlobalLockState | None = None
         self._password_rotation: OperationIdentity | None = None
+        self._locked_logins: set[str] = set()
+        self._retired_event = retired
+        self._sign_in_generation: SignInGeneration | None = None
         self.issuer = CustodyAutomationKeyIssuer()
         self.owner = ProfileWorkerSessionOwner(
             ProfileWorkerIdentity(worker_id=uuid4(), runtime_boot_id=runtime_boot_id, binding=store.binding),
@@ -211,8 +229,27 @@ class RuntimeProfileHost:
             owner=self.owner,
             custody=store,
             issuer=self.issuer,
+            retired=self._session_retired,
         )
         self.approvals = RuntimeApprovalSessions(worker=self.owner.identity, service=self._approval_service)
+
+    def _session_retired(self, retirement: SessionRetirement) -> None:
+        """Publish committed retirement metadata; the queue never performs transport I/O."""
+        if self._retired_event is None:
+            return
+        generation = self._sign_in_generation
+        self._retired_event(
+            RuntimeSessionEvent(
+                runtime_boot_id=self.owner.identity.runtime_boot_id,
+                connection_id=retirement.connection_id,
+                profile_id=retirement.profile_id,
+                session_id=retirement.session_id,
+                event=retirement.kind,
+                reason=retirement.reason,
+                generation_lineage=None if generation is None else generation.lineage,
+                generation=None if generation is None else generation.generation,
+            )
+        )
 
     def _require_approval_binding(self, binding: RuntimeApprovalBinding) -> None:
         if (
@@ -482,11 +519,69 @@ class RuntimeProfileHost:
                 self._lock_fence = ProfileGlobalLockState(
                     binding=self.store.binding, generation=generation, globally_locked=True
                 )
+                self.revoke_human_sign_in(
+                    reason=AccessDenialCode.PROFILE_LOCKED, kind=SessionRetirementKind.PROFILE_LOCKED
+                )
             else:
                 committed = self.store.profile_lock_state()
                 if committed.generation != generation or committed.globally_locked or generation < current.generation:
                     raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
                 self._lock_fence = None
+
+    def revoke_human_sign_in(
+        self,
+        *,
+        reason: AccessDenialCode = AccessDenialCode.AUTHENTICATION_REQUIRED,
+        kind: SessionRetirementKind = SessionRetirementKind.SIGNED_OUT,
+    ) -> tuple[ReceiptDeletion, tuple[UUID, ...]]:
+        """Commit the durable fence before receipt deletion and live human retirement."""
+        with self.guard:
+            custody = SignInGenerationCustody(root=self.store.root, binding=self.store.binding)
+            deletion = revoke_profile_sign_in(custody)
+            self._sign_in_generation = custody.observe().current
+            try:
+                return deletion, self.authority.retire_human_sessions(reason=reason, kind=kind)
+            finally:
+                self._sign_in_generation = None
+
+    def observe_human_lock_down(self) -> tuple[UUID, ...]:
+        """Revoke on newly positive lock/logout evidence; unknown preserves the receipt."""
+        with self.guard:
+            observed = tuple(login.observe(credential_facilities=Availability.UNAVAILABLE) for login in self._logins())
+            relevant = self.authority.human_login_ids()
+            try:
+                receipt = inspect_profile_session(
+                    storage_root=self.store.root, profile_id=self.store.binding.profile_id
+                )
+            except (OSError, ValueError, StorageError, ProfileCustodyRecordError):
+                receipt = None
+            positive = {
+                login.login_id
+                for login in observed
+                if login.os_owner_id == self.store.binding.os_owner_id
+                and (
+                    login.login_id in relevant
+                    or (receipt is not None and profile_session_login_matches(record=receipt, login_id=login.login_id))
+                )
+                and (
+                    login.lock_state is OsLockState.LOCKED
+                    or (not login.active and login.unattended is LoginEligibility.INELIGIBLE)
+                )
+            }
+            unlocked = {
+                login.login_id for login in observed if login.active and login.lock_state is OsLockState.UNLOCKED
+            }
+            self._locked_logins.difference_update(unlocked)
+            if positive <= self._locked_logins:
+                return ()
+            reason = (
+                AccessDenialCode.OS_LOCKED
+                if any(login.login_id in positive and login.lock_state is OsLockState.LOCKED for login in observed)
+                else AccessDenialCode.OS_SESSION_UNAVAILABLE
+            )
+            _, retired = self.revoke_human_sign_in(reason=reason, kind=SessionRetirementKind.REVOKED)
+            self._locked_logins.update(positive)
+            return retired
 
     @contextmanager
     def _human_proof(self, connection_id: UUID) -> Generator[RuntimeHumanProof]:
@@ -546,6 +641,13 @@ class RuntimeProfileHost:
                     current = None
                 if current == binding:
                     return False
+                if current is not None:
+                    # The mutation's commit guard has been released. Fence and
+                    # clean the obsolete receipt against proven successor custody;
+                    # an unreadable binding never authorizes destructive cleanup.
+                    sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
+                    revoke_profile_sign_in(sign_in)
+                    self._sign_in_generation = sign_in.observe().current
                 worker = self.owner.begin_drain()
             finally:
                 self.guard.release()
@@ -567,7 +669,8 @@ class RuntimeProfileHost:
             if not self.owner.wait_construction(deadline=deadline):
                 raise RuntimeShutdownIncompleteError()
             self.owner.settle(deadline=deadline)
-            asyncio.run(self.authority.close())
+            asyncio.run(self.authority.close(reason=AccessDenialCode.CUSTODY_CHANGED))
             return True
         finally:
+            self._sign_in_generation = None
             self._replacement_retirement_guard.release()

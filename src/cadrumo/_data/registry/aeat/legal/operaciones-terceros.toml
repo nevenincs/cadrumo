@@ -451,3 +451,29 @@ notes = """RGAT art 34.1.k: se hacen constar separadamente las operaciones en la
 required_text = [
     "las operaciones en las que el sujeto pasivo sea el destinatario de acuerdo con lo establecido en el",
 ]
+
+[sources."boe-modelo-347-2008-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2008-16973-modelo-347.pdf"
+sha256 = "4e12d9d16bb1f07b45bc62a7a6ae82f27a656b8d76a2baca977dfbd2b7f4e138"
+bytes = 462906
+retrieved_at = 2026-10-06
+published_at = 2008-10-23
+applies_from = 2008-10-23
+source_url = "https://www.boe.es/boe/dias/2008/10/23/pdfs/A42154-42190.pdf"
+review_status = "pending_review"
+
+[sources."boe-modelo-347-2011-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2011-19397-modelo-347.pdf"
+sha256 = "5b5bbfeb8f50443bfded5e8467354f5803c884e86a62465e1a4abe89ce76de13"
+bytes = 1022556
+retrieved_at = 2026-10-06
+published_at = 2011-12-12
+applies_from = 2011-12-13
+source_url = "https://www.boe.es/boe/dias/2011/12/12/pdfs/BOE-A-2011-19397.pdf"
+review_status = "pending_review"

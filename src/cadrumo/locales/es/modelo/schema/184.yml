@@ -273,6 +273,54 @@ modelo:
         official_name: Modelo 184. Declaración informativa anual de Entidades en régimen
           de atribución de rentas.
         title: Entidades en régimen de atribución de rentas (informativa anual)
+      form:
+        context:
+          contacto:
+            heading: Persona de contacto
+          nif:
+            heading: NIF de la entidad
+          nombre:
+            heading: Denominación o razón social
+          telefono:
+            heading: Teléfono de contacto
+        page:
+          m184-declarante:
+            heading: Datos de la entidad y resumen de la declaración
+          m184-entidad:
+            heading: Rentas obtenidas por la entidad
+          m184-socio:
+            heading: Socios, herederos, comuneros y partícipes
+        section:
+          actividad:
+            heading: Actividad económica
+          cesionario:
+            heading: Cesionario
+          declaracion:
+            heading: Datos de la declaración
+          entidad-espanola:
+            heading: Entidad constituida en España
+          entidad-extranjera:
+            heading: Entidad constituida en el extranjero
+          gastos-actividad:
+            heading: Gastos de la actividad económica
+          gastos-inmueble:
+            heading: Gastos del inmueble arrendado
+          identificacion:
+            heading: Identificación de la entidad
+          identificacion-renta:
+            heading: Identificación de la renta
+          inmueble:
+            heading: Inmueble arrendado
+          inversion:
+            heading: Participación en instituciones de inversión colectiva
+          renta:
+            heading: Importes de la renta
+          representante:
+            heading: Representante de la entidad
+          resumen:
+            heading: Resumen de la declaración
+          socios:
+            heading: Identificación y rentas atribuidas a cada miembro
       revision:
         '2015':
           casilla:

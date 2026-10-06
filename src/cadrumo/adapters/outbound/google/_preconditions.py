@@ -9,14 +9,14 @@ from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryO
 from ..storage.errors import OutboundStorageError
 
 
-def google_terminal_refusal(
-    error: OutboundStorageError,
+def google_terminal_refusal[ErrorT: OutboundStorageError](
+    error: ErrorT,
     *,
     condition_id: str,
     facts: Mapping[str, str | int | bool],
     provenance: ActionEvidenceProvenance,
     outcome: NoRecoveryOutcome,
-) -> OutboundStorageError:
+) -> ErrorT:
     """Clone ``error`` with one Google-owned terminal precondition verdict."""
     return type(error)(
         error.args[0] if error.args else None,

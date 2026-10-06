@@ -11,9 +11,11 @@ import pytest
 from cadrumo.core.config import Settings
 from cadrumo.core.storage_environment import (
     PROCESS_ENVIRONMENT,
+    STORAGE_PATH_RULES,
     STORAGE_ROOT,
     TOOL_STORAGE_LOCATIONS,
     StorageMode,
+    StorageRootRefusal,
     development_tool_env_var_names,
     product_env_var_names,
 )
@@ -23,7 +25,7 @@ from dev._paths import REPO_ROOT
 from dev.packaging.native import generate as generator_module
 from dev.packaging.native.generate import generate
 from dev.packaging.native.layout import load_layout
-from dev.packaging.native.storage_vectors import storage_root_vectors
+from dev.packaging.native.storage_vectors import storage_path_vectors, storage_root_vectors
 from dev.packaging.native.verification_paths import verification_destination
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -101,6 +103,10 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     }
     assert root["development_default"] == Path(*STORAGE_ROOT.development_default).as_posix()
     assert root["relative_override"] == {mode.value: STORAGE_ROOT.relative_override(mode).value for mode in StorageMode}
+    assert root["path_rules"] == STORAGE_PATH_RULES._asdict()
+    assert root["refusals"] == [refusal.value for refusal in StorageRootRefusal]
+    for refusal in StorageRootRefusal:
+        assert _rust_strings(generated, f"ROOT_REFUSAL_{refusal.name}") == [refusal.value]
     assert {rule["platform"] for rule in root["installed_defaults"]} == {"windows", "linux", "macos"}
     windows = next(rule for rule in root["installed_defaults"] if rule["platform"] == "windows")
     assert windows["candidates"] == [{"variable": "LOCALAPPDATA", "subpath": []}]
@@ -113,9 +119,16 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
         expected_variable = None if location.settings_field is None else location.settings_field.upper()
         assert entry["variable"] == expected_variable
         assert entry["override_policy"] == location.override_policy.value
+        assert entry["create_explicit_directory"] == location.create_explicit_directory
+    assert {name for name, item in locations.items() if item["create_explicit_directory"]} == {
+        StorageCategory.TEMPORARY_FILES.value
+    }
 
     environment = contract["environment"]
     assert environment["pinned"] == [STORAGE_ROOT.variable, *PROCESS_ENVIRONMENT.temporary_variables]
+    assert environment["host_inherited"]["fields"] == [
+        {"name": field.name, "kind": field.kind.value} for field in PROCESS_ENVIRONMENT.inherited_fields
+    ]
     assert environment["allowlist"]["product"] == sorted(product_env_var_names())
     assert environment["allowlist"]["development"] == sorted(
         {STORAGE_ROOT.development_variable, *development_tool_env_var_names()}
@@ -134,6 +147,8 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
         "checkout_marker": STORAGE_ROOT.checkout_marker,
     }
     assert contract["vectors"] == [vector.as_contract() for vector in storage_root_vectors()]
+    assert contract["path_vectors"] == [vector.as_contract() for vector in storage_path_vectors()]
+    assert contract["invalid_native_path"]["refusal"] == StorageRootRefusal.INVALID_PATH_INPUT.value
     assert len(contract["vectors"]) >= 1
 
     # contract.rs carries the same data from the same run.

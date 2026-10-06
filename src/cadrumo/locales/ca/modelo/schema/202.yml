@@ -155,6 +155,117 @@ modelo:
           (establiments permanents i entitats en règim d'atribució de rendes constituïdes
           a l'estranger amb presència en territori espanyol). Pagament fraccionat.
         title: IS pagament fraccionat
+      form:
+        authored-historical:
+          context:
+            reducida-dimension:
+              heading: Empresa de dimensió reduïda · article 101 LIS i tipus del primer
+                paràgraf de l’article 29.1 LIS
+        authored2025:
+          column:
+            base:
+              heading: Base
+            importe:
+              heading: Import del pagament fraccionat
+            porcentaje:
+              heading: Percentatge
+          context:
+            capital-riesgo:
+              heading: Capital de risc · règim especial de l’article 50 LIS
+            cnae:
+              heading: CNAE de l’activitat principal
+            complementaria:
+              heading: Autoliquidació complementària
+            comunicacion-adicional:
+              heading: Comunicació de dades addicionals
+            cooperativa:
+              heading: Cooperativa fiscalment protegida
+            datos-adicionales:
+              heading: Dades addicionals
+            denominacion:
+              heading: Cognoms o raó social
+            ejercicio:
+              heading: Exercici
+            iban:
+              heading: IBAN
+            justificante:
+              heading: Justificant de l’autoliquidació anterior
+            multiples-tipos:
+              heading: Altres entitats que poden aplicar més d’un tipus impositiu
+            navieras:
+              heading: Entitats navilieres · règim per tonatge
+            negocios-millon:
+              heading: 'Xifra de negocis del període anterior: inferior a 1.000.000
+                €'
+            negocios-seis-millones:
+              heading: 'Xifra de negocis dels 12 mesos anteriors a l’inici del període:
+                superior a 6.000.000 €'
+            nif:
+              heading: NIF
+            nombre:
+              heading: Nom
+            nrs:
+              heading: Número de referència de societats
+            periodo:
+              heading: Període
+            reducida-dimension:
+              heading: Empresa de dimensió reduïda · article 101 LIS i tipus específic
+            sin-fines-lucrativos:
+              heading: Règim d’entitats sense fins lucratius · Llei 49/2002
+            socimi:
+              heading: Règim SOCIMI · Llei 11/2009
+            tipo-gravamen:
+              heading: Tipus de gravamen de l’impost sobre societats de l’exercici
+                en curs
+          page:
+            '1':
+              heading: Pagament fraccionat · pàgina 1
+            '2':
+              heading: Pagament fraccionat · pàgina 2
+          row:
+            amortizacion:
+              heading: Reversió del 30% de l’amortització comptable
+            ic:
+              heading: Impost complementari
+            is:
+              heading: Impost sobre societats
+            reserva:
+              heading: Reserva d’anivellament
+            reserva-cuotas:
+              heading: Reserva d’anivellament
+            resto:
+              heading: Altres correccions, excepte compensació de pèrdues anteriors
+            tipo-1:
+              heading: Tipus 1
+            tipo-2:
+              heading: Tipus 2
+            tipo-3:
+              heading: Tipus 3
+            tipo-4:
+              heading: Tipus 4
+            total:
+              heading: Total de correccions
+          section:
+            b1:
+              heading: B.1) Cas general · percentatge únic
+            b2:
+              heading: B.2) Casos específics · diversos percentatges
+            base-imponible:
+              heading: B) Pagament segons la base imposable · article 40.3
+            complementaria:
+              heading: Autoliquidació complementària
+            devengo:
+              heading: Meritació
+            identificacion:
+              heading: Identificació
+            informacion:
+              heading: Informació addicional
+            ingreso:
+              heading: Ingrés
+            modalidad-cuota:
+              heading: A) Pagament segons la quota anterior · article 40.2
+            resultado:
+              heading: Resultat i import a ingressar
       revision:
         2019-2022:
           casilla:

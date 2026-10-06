@@ -93,7 +93,7 @@ export_field_id = "modelo-309-p1-nif"
 kind = "header"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2023"]
-producer_key = "presenter.tax_id"
+producer_key = "taxpayer.tax_id"
 
 [entries.anchor]
 sheet = "M30901"

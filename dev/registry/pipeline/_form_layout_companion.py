@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutReviewState, FormLayoutSeedSource
 
 from ..compiler.loader import load_registry_tree
 from ..form_layout.generator import generate_revision_layout
@@ -31,8 +31,9 @@ def prepare_generated_form_layout_companion(
 ) -> None:
     """Regenerate only the selected modelo's isolated candidate companion.
 
-    A reviewed layout remains authored authority: the owning generator leaves
-    it in place and validation refuses it if the new export makes it stale.
+    An authored or reviewed layout remains authority: leave it in place so
+    validation refuses it if the new export makes it stale. Review state alone
+    does not distinguish an authored draft from automatic generator output.
     """
     require_existing_non_link(context.registry_root, subject="generated form companion candidate root")
     candidate_root = context.registry_root.resolve()
@@ -58,7 +59,7 @@ def _selected_candidate_revision(
     """Load the isolated tree and require it to contain only the requested revision."""
     modelos, catalogues = load_registry_tree(candidate_root)
     modelo = next(modelo for modelo in modelos if str(modelo.id) == str(context.target.modelo))
-    expected = (
+    expected = context.source_chain_revisions or (
         (str(context.target.revision_id),)
         if context.inheritance is None
         else (
@@ -77,12 +78,16 @@ def _selected_candidate_revision(
 
 
 def _revision_needs_generated_layout(revision: ModeloRevision) -> bool:
-    """Preserve authored reviewed layouts and skip revisions with none."""
+    """Preserve authored drafts and reviewed layouts; skip revisions with none."""
     if not revision.form_layouts:
         return False
     if len(revision.form_layouts) != 1:
         raise RegistryValidationError("generated form companion requires exactly one declared form layout")
-    return revision.form_layouts[0].review.state is not FormLayoutReviewState.REVIEWED
+    layout = revision.form_layouts[0]
+    return (
+        layout.seed_source is not FormLayoutSeedSource.AUTHORED
+        and layout.review.state is not FormLayoutReviewState.REVIEWED
+    )
 
 
 def _editable_form_layout_fragment(revision_root: Path) -> Path:

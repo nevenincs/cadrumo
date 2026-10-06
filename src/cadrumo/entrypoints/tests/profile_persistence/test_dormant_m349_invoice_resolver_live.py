@@ -134,7 +134,7 @@ def m349_calculated(
     # The invoice source is CLAIMED (resolver enrolled): no unhandled advisory.
     assert not any(
         diag.source_kind in {"collectible_invoice", "payable_invoice", "m349_intracommunity_operation"}
-        and diag.reason == "unhandled_binding_source"
+        and diag.reason in {"unhandled_binding_source", "terminal_origin_mismatch"}
         for diag in result.source_diagnostics
     )
     return work_unit, result.revision

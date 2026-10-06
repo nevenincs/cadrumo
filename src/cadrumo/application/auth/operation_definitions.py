@@ -53,7 +53,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
-from ..user_profile.login_session import ProfileLoginOutcome, login_profile
 from ..user_profile.passphrase_rotation import (
     ProfilePassphraseRotationError,
     ProfilePassphraseRotationOutcome,
@@ -72,7 +71,6 @@ AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID = "auth.session.acquire"
 AUTH_LOGOUT_OPERATION_DEFINITION_ID = "auth.session.logout"
 AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
 PROFILE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"
-_PROFILE_LOGIN_KIND = "profile.login.passphrase"
 _PROFILE_ROTATION_KIND = "profile.passphrase.rotation"
 #: Outer finalizers receive only the invocation identity, never the executor's
 #: supervisor-owned capabilities.
@@ -161,9 +159,7 @@ def _require_active_profile_subject[PayloadT: BaseModel](request: OperationReque
 
 
 async def _result_reference(result: BaseModel, context: OperationExecutorContext) -> str:
-    """Persist a post-custody result or retain the safe profile reference."""
-    if context.identity.definition_id == PROFILE_LOGIN_OPERATION_DEFINITION_ID:
-        return context.identity.subject_ref
+    """Persist the result in the operation's encrypted custody."""
     return await context.operands.put(result, written_at=now())
 
 
@@ -198,36 +194,6 @@ def _require_rotation_outcome(value: object, *, profile_id: UUID) -> ProfilePass
             if outcome.profile_id == str(profile_id):
                 return outcome
     raise ValueError("passphrase rotation returned an invalid profile outcome")
-
-
-class ProfileLoginOperationExecutor:
-    def __init__(self, *, login: Callable[..., ProfileLoginOutcome] = login_profile) -> None:
-        self._login = login
-
-    async def execute(
-        self,
-        request: OperationRequest[ProfileLoginOperationRequest],
-        context: OperationExecutorContext,
-    ) -> str:
-        _require_profile_subject(request, request.payload.profile_id)
-        await context.events.phase("auth.login.secret-consume")
-        async with context.ephemeral_secret.consume() as secret:
-            passphrase = bytes(secret).decode("utf-8")
-            try:
-                await context.events.effect(OperationEffect.UNKNOWN)
-                await context.events.phase("auth.login.execute")
-                result = self._login(
-                    name=str(request.payload.profile_id),
-                    passphrase_callback=lambda: passphrase,
-                    profile_decode_context=context.authority_operation.profile_decode_context(),
-                )
-            finally:
-                passphrase = ""
-        if result.bucket_id != str(request.payload.profile_id):
-            raise ValueError("profile login returned a different profile")
-        await context.events.effect(OperationEffect.NONE if result.already_authenticated else OperationEffect.UPDATED)
-        await context.events.phase("auth.login.settlement")
-        return await _result_reference(result, context)
 
 
 class ProfilePassphraseRotationOperationExecutor:
@@ -540,7 +506,6 @@ def _definition(
 def build_auth_operation_definitions(
     *,
     ports: AuthOperationPorts,
-    profile_login: Callable[..., ProfileLoginOutcome] = login_profile,
     rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] = rotate_profile_passphrase,
     finalize_rotation: ProfileRotationFinalizer | None = None,
     configure: Callable[..., AuthConfigureResult] = configure_operator_auth,
@@ -550,15 +515,6 @@ def build_auth_operation_definitions(
 ) -> tuple[OperationDefinition, ...]:
     """Build the owner registrations over the composed outer authority ports."""
     return (
-        _definition(
-            definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-            request_type=ProfileLoginOperationRequest,
-            result_type=ProfileLoginOutcome,
-            executor_type=ProfileLoginOperationExecutor,
-            build=lambda: ProfileLoginOperationExecutor(login=profile_login),
-            phases=("auth.login.secret-consume", "auth.login.execute", "auth.login.settlement"),
-            secret_kind=_PROFILE_LOGIN_KIND,
-        ),
         _definition(
             definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
             request_type=AuthConfigureOperationRequest,

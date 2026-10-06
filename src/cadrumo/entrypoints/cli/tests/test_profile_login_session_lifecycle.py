@@ -1,8 +1,8 @@
 """Opt-in OS-keychain lifecycle through installed runtime and real CLI processes.
 
-Each invocation owns its runtime connection. Logout later clears only the
-captured CLI default; the separately held receipt remains available to a
-fresh, exact-profile login. These cases require an interactive Windows
+Each invocation owns its runtime connection. Logout revokes shared human
+sign-in before clearing the captured CLI default. Unattended login requires
+an explicit secret channel. These cases require an interactive Windows
 credential store and clean up their isolated profile UUIDs on every exit.
 """
 
@@ -178,39 +178,35 @@ class TestSessionLifecycle:
         record = _session_record(storage_root, bucket_id)
         assert record.is_file()
 
-        # 3. A later process admits through the existing receipt.
+        # 3. An unattended process cannot automatically borrow a receipt.
         follow_on = _run(storage_root, ("config", "profile", "view"))
-        assert follow_on.returncode == 0, _output(follow_on)
-        assert "aeat config login" not in _output(follow_on), _output(follow_on)
+        assert follow_on.returncode != 0, _output(follow_on)
 
-        # 4. Logout clears selection without revoking the receipt or another
-        #    process's independently owned authority.
-        original_receipt = record.read_bytes()
+        # 4. Explicit logout durably revokes human access and clears selection.
         logged_out = _run(storage_root, ("config", "logout"), as_json=True)
         assert logged_out.returncode == 0, _output(logged_out)
         logout_document = _envelope(logged_out)
-        assert logout_document["result"]["scope"] == "cli_context"
-        assert logout_document["result"]["human_receipt_revoked"] is False
+        assert logout_document["result"]["scope"] == "profile_human_access"
+        assert logout_document["result"]["human_receipt_revoked"] is True
         assert logout_document["result"]["automation_revoked"] is False
-        assert "config.logout.remaining_access" in {notice["code"] for notice in logout_document["notices"]}
-        assert record.read_bytes() == original_receipt
+        assert logout_document["result"]["receipt_removed"] is True
+        assert not record.exists()
 
         again = _run(storage_root, ("config", "logout"), as_json=True)
         assert again.returncode == 0, _output(again)
         repeat = _envelope(again)["result"]
         assert repeat["already_logged_out"] is True
         assert repeat["logged_out_profile"] is None
-        assert record.read_bytes() == original_receipt
+        assert not record.exists()
 
         resumed = _run(storage_root, ("config", "login", bucket_id), as_json=True)
-        assert resumed.returncode == 0, _output(resumed)
-        assert _envelope(resumed)["result"]["already_authenticated"] is True
+        assert resumed.returncode != 0, _output(resumed)
 
-    def test_repeat_login_resumes_existing_receipt_without_new_secret(
+    def test_noninteractive_repeat_login_requires_explicit_secret(
         self,
         runtime_profile: tuple[Path, str],
     ) -> None:
-        """A second CLI process resumes a persisted receipt without a password channel."""
+        """Unattended login refuses automatic receipt reuse and preserves it."""
         storage_root, bucket_id = runtime_profile
         _run(storage_root, ("config", "logout"))
 
@@ -232,9 +228,5 @@ class TestSessionLifecycle:
             ("config", "login", bucket_id),
             as_json=True,
         )
-        assert second.returncode == 0, _output(second)
-        second_result = _envelope(second)["result"]
-
-        assert second_result["already_authenticated"] is True
-        assert second_result["authenticated_at"] == first_result["authenticated_at"]
+        assert second.returncode != 0, _output(second)
         assert record.read_bytes() == original_receipt

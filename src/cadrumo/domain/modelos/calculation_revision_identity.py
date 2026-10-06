@@ -27,6 +27,7 @@ from ..identifiers import canonical_decimal_string as _canonical_decimal
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
 from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
 from .errors import ModeloValidationError
+from .m156_rows import Modelo156AfiliadoRow
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 
 if TYPE_CHECKING:
@@ -78,6 +79,12 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
 
     def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
         d: dict[str, object] = {}
+        if isinstance(row, Modelo156AfiliadoRow):
+            d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
+            for month in row.cotizaciones:
+                d[f"month_{month.month:02d}_status"] = month.status
+                d[f"month_{month.month:02d}_amount"] = None if month.amount is None else str(month.amount.normalize())
+            return dict(sorted(d.items()))
         for field_name, field_value in row.model_dump().items():
             if isinstance(field_value, Decimal):
                 d[field_name] = str(field_value.normalize())
@@ -86,6 +93,8 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
         return dict(sorted(d.items()))
 
     def _row_identity_key(row: ModeloDetailRow) -> str:
+        if isinstance(row, Modelo156AfiliadoRow):
+            return f"{row.nif}|{row.numero_afiliacion}"
         if isinstance(row, Modelo210AgrupacionRentaRow):
             return row.source_id
         if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)):

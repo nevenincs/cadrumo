@@ -136,6 +136,16 @@ class _ExecutableRequest[ResponseBodyT](Protocol):
     ) -> ResponseBodyT: ...
 
 
+class GoogleRequestExecutor(Protocol):
+    """Typed Google request boundary that can bind fresh artifact admission."""
+
+    def __call__[ResponseBodyT](
+        self, request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
+    ) -> ResponseBodyT:
+        """Execute one typed request under the supplied retry contract."""
+        ...
+
+
 def execute_request[ResponseBodyT](
     request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
 ) -> ResponseBodyT:
@@ -215,6 +225,31 @@ def execute_request[ResponseBodyT](
                 **({"effect_uncertain": True} if effect_uncertain else {}),
             ),
         ) from exc
+
+
+def execute_media_request(request: _ExecutableRequest[bytes], *, action: str) -> bytes:
+    """Read admitted binary content once; transport failures never trigger hidden retries."""
+    try:
+        payload = request.execute(num_retries=0)
+    except OutboundStorageError:
+        raise
+    except Exception as exc:
+        ended_grant = ended_grant_refusal(exc, action=action)
+        if ended_grant is not None:
+            raise ended_grant from exc
+        _raise_mapped_google_http_error(exc, action=action)
+        raise OutboundStorageNetworkError(
+            "Google binary content request failed",
+            context={"action": action},
+            precondition_verdict=_external_verdict("google.api.transport_unavailable", action=action),
+        ) from exc
+    if not isinstance(payload, bytes):
+        raise OutboundStorageNetworkError(
+            "Google binary content response was not bytes",
+            context={"action": action},
+            precondition_verdict=_external_verdict("google.api.response_not_bytes", action=action),
+        )
+    return payload
 
 
 def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:

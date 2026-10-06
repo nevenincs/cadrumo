@@ -24,42 +24,19 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.registry import OperationFrontendProjection
 from .modelo_spreadsheet_executor import ModeloSpreadsheetExecutor
 from .modelo_spreadsheet_operation_contracts import (
-    MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID,
-    MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_SPREADSHEET_OPERATION_CONTRACTS,
-    MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID,
-    MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE,
-    MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
     ModeloSpreadsheetExecutionResult,
     ModeloSpreadsheetOperationPortsFactory,
 )
 
 
-def _declared_refusal_codes(definition_id: str) -> frozenset[str]:
-    if definition_id == MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID:
-        return frozenset({"REFUSED_MODELO_EXPORT_OUTPUT_PATH"})
-    if definition_id == MODELO_SPREADSHEET_PULL_OPERATION_DEFINITION_ID:
-        return frozenset({MODELO_SPREADSHEET_ROW_INGRESS_REFUSAL_CODE, "REFUSED_OUTBOUND_STORAGE_CONFLICT"})
-    if definition_id == MODELO_SPREADSHEET_CALCULATE_OPERATION_DEFINITION_ID:
-        return frozenset({"REFUSED_OUTBOUND_STORAGE_CONFLICT"})
-    return frozenset[str]()
-
-
 def build_modelo_spreadsheet_definitions(
     factory: ModeloSpreadsheetOperationPortsFactory, *, source_reader: Callable[[Path], bytes] = Path.read_bytes
 ) -> tuple[OperationDefinition, ...]:
-    """Declare four secure-reference operations without constructing providers."""
+    """Declare local XLSX export without constructing providers."""
     definitions: list[OperationDefinition] = []
     for definition_id, (request_type, _result_type, _outcome_type) in MODELO_SPREADSHEET_OPERATION_CONTRACTS.items():
-        mutates = definition_id in {
-            MODELO_SPREADSHEET_EXPORT_OPERATION_DEFINITION_ID,
-            MODELO_SPREADSHEET_VERIFY_OPERATION_DEFINITION_ID,
-        }
-        effects = (
-            frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED})
-            if mutates
-            else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-        )
+        effects = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED})
         definitions.append(
             build_single_phase_definition(
                 definition_id=definition_id,
@@ -81,7 +58,7 @@ def build_modelo_spreadsheet_definitions(
                     close_policy=OperationClosePolicy.DETACH_ALLOWED,
                 ),
                 permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
-                refusal_detail_codes=_declared_refusal_codes(definition_id),
+                refusal_detail_codes=frozenset({"REFUSED_MODELO_EXPORT_OUTPUT_PATH"}),
             )
         )
     return tuple(sorted(definitions, key=lambda row: row.definition_id))

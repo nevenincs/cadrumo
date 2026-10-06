@@ -66,6 +66,9 @@
     }
   },
   "platforms": {
-    "windows-x64": "platforms/windows-x64.json"
+    "windows-x64": "platforms/windows-x64.json",
+    "linux-x86-64": "platforms/linux-x86-64.json",
+    "linux-aarch64": "platforms/linux-aarch64.json",
+    "macos-arm64": "platforms/macos-arm64.json"
   }
 }

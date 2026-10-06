@@ -28,6 +28,12 @@ modelo:
           mobiliari d'operacions de capitalització i contractes d'assegurança de vida
           o invalidesa. Resum anual.
         title: Retencions de capitalització i assegurances de vida - resum anual
+      form:
+        section:
+          declaracion:
+            heading: Dades de la declaració
+          declarante:
+            heading: Identificació i contacte
       revision:
         '2022':
           construct:
@@ -38,6 +44,25 @@ modelo:
           field:
             label: Model 188, exercici 2022
         2023-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: 'Complementària: C per afegir percepcions omeses'
+            x-chim6r1ecdnmst31cdq6u:
+              label: Cognoms i nom de la persona de contacte
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Exercici
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              label: Justificant anterior (només si és substitutiva)
+            x-chim6r1edpkmc:
+              label: NIF del declarant
+            x-chim6r1edpnmqojick:
+              label: Cognoms i nom o raó social
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              label: Número de justificant (13 dígits; comença per 188)
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: 'Substitutiva: S per substituir una declaració anterior'
+            x-chim6r1eehimopb6dtn6u:
+              label: Telèfon de contacte
           construct:
             modelo-188-calculation-construct:
               field:

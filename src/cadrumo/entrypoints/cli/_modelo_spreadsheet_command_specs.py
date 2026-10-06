@@ -1,15 +1,6 @@
-"""Import-light command authority for the modelo spreadsheet transport family.
+"""Command authority for outbound spreadsheet publication and local XLSX export.
 
-The subject is ``spreadsheet`` rather than ``workbook`` because ``app modelo
-work`` already exists: ``work`` and ``workbook`` differ by four characters under
-one parent, and ``work verify`` beside ``workbook verify`` is a collision an
-operator reads as a typo. The subject is also transport-neutral, so an offline
-workbook transport lands here as ``export``/``import`` without new vocabulary.
-
-``push`` and ``pull`` are the remote counterparty pair. ``calculate`` and
-``verify`` are computation verbs. Verification creates and writes a remote
-workbook before comparing its results; its policy therefore requires profile
-mutation admission. Export publishes a local workbook under that same authority.
+Remote pull, calculate and verify have no enrolled command or compatibility alias.
 """
 
 from __future__ import annotations
@@ -215,60 +206,43 @@ MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
     ),
-    _leaf(
-        "app_modelo_spreadsheet_pull",
-        "pull",
-        "cli.app.modelo.spreadsheet.pull_help",
-        "modelo_spreadsheet_pull",
-        "ModeloSpreadsheetPullResult",
-        _GOOGLE_CALCULATION_WRITE,
-        "modelo.spreadsheet.pull",
-        (
-            _MODELO,
-            _PERIOD,
-            _YEAR,
-            _SPREADSHEET_ID,
+    CommandSpec(
+        "app_modelo_spreadsheet_publish",
+        "app_modelo_spreadsheet",
+        "publish",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.spreadsheet.publish_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
             _option(
-                "assemble_observations",
-                ("--assemble-observations/--no-assemble-observations",),
+                "calculation_revision_id",
+                ("--calculation-revision-id",),
+                TEXT_VALUE,
+                "cli.app.modelo.spreadsheet.publish.calculation_revision_id_help",
+                required=True,
+            ),
+            _option(
+                "publication_id",
+                ("--publication-id",),
+                TEXT_VALUE,
+                "cli.app.modelo.spreadsheet.publish.publication_id_help",
+            ),
+            _option(
+                "accept_readable_export",
+                ("--accept-readable-export",),
                 FLAG_VALUE,
-                "cli.app.modelo.spreadsheet.pull.assemble_observations_help",
+                "cli.app.modelo.spreadsheet.publish.accept_readable_export_help",
                 default=False,
                 flag=True,
             ),
         ),
-    ),
-    _leaf(
-        "app_modelo_spreadsheet_calculate",
-        "calculate",
-        "cli.app.modelo.spreadsheet.calculate_help",
-        "modelo_spreadsheet_calculate",
-        "ModeloSpreadsheetCalculateResult",
-        _GOOGLE_CALCULATION_WRITE,
-        "modelo.spreadsheet.calculate",
-        (_MODELO, _PERIOD, _YEAR, _SPREADSHEET_ID),
-    ),
-    _leaf(
-        "app_modelo_spreadsheet_verify",
-        "verify",
-        "cli.app.modelo.spreadsheet.verify_help",
-        "modelo_spreadsheet_verify",
-        "ModeloSpreadsheetVerifyResult",
-        _GOOGLE_CALCULATION_WRITE,
-        "modelo.spreadsheet.verify",
-        (
-            _MODELO,
-            _PERIOD,
-            _YEAR,
-            _option(
-                "scenario_path",
-                ("--scenario",),
-                PATH_VALUE,
-                "cli.app.modelo.spreadsheet.verify.scenario_help",
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.AUXILIARY,
-            ),
+        policy=_GOOGLE_CALCULATION_HANDOFF,
+        handler=LazyBinding.available(DeferredTarget(".google_review_cli", "publish_google_review_cli", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".google_review_cli", "GoogleReviewPublicationResult", __package__),
+            identity="modelo.spreadsheet.publish",
         ),
     ),
 )
