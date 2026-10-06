@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d6cc425f0cb627623996087c3f1cc006294c5ce84d2b6e207c55c718fd455f6'
+body_hash: 'sha256:e31480dd2f19f904e8a0b5915a1c0aef80debcbe7d4ed4b1e8232b2268f2e9e1'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -266,6 +266,9 @@ related:
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
 - `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/shell/calendar.ts`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
 
 ## Notes
 

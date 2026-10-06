@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:22cdfd281a754472edaf9d26968f64df286186593f6e597f0a158c59ea58fcec'
+body_hash: 'sha256:b3ba475db9e02d22747331c208d5621f528427cfac8dbd1c058b3a125152b8ca'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -242,6 +242,30 @@ The distance to a deadline was hidden in a pane under 448 pixels, which is every
 ### Views review left | low | not reproduced
 
 One run of the full suite failed a test at its first step, the sign-in dialog not appearing in the no-profile scenario; it passed in eighteen repeats and two further full runs. Recorded as seen once under load, not as fixed.
+
+### Calendar head | low | the calendar opened on a list to be read row by row
+
+Settled in `87ccfcf7bb` and `240b778d69`: the page's head counts the range in the product's four readings, the pressing ones first, without combining them; a deadline more than two months ahead is said in months while lateness stays in the product's own days; Ctrl+Shift+D shows the calendar and puts it away.
+
+### Third review ways on | medium | withheld, the calendar and Messages fell short of the pane beside them
+
+An independent review of `2905b2e711`, `5273a9949a` and `03c4d21dd0` found no high defect. Withheld, the calendar named the phase and dropped the refusal and every way on; carrying on in the TUI left it a dead end until the window was refocused; Messages did nothing at all while the TUI was withheld. Resolved in `02f69e0f28`: the calendar shows what the TUI pane shows by the same component at `native/desktop/frontend/src/components/SignIn.tsx:400`; in the TUI's own flow it reads the account's status once on opening and offers to read it again; Messages leads to the pane's way in. The account-state table test checks the calendar's offers and what Messages says in every state.
+
+### Third review focus | medium | the dialog's way to the TUI left the keyboard where the dialog was opened from
+
+Opened from the calendar or the palette, "Open the TUI" and a successful sign-in returned focus to the opener while the TUI started. Resolved in `02f69e0f28`: put aside, the dialog returns focus to what it took it from, including when the gate closing opened it; admitted, focus goes on to the calendar that asked or to the TUI. Signing out from a focused terminal leaves focus on the pane's way back in.
+
+### Third review not known | low | no answer yet was drawn as none unread
+
+For as long as the read took, and whenever the account withheld it, Messages showed nothing, as it does for none unread; under a finger the pin's meaning could not be reached. Resolved in `02f69e0f28`: both carry the hollow pin, the withheld one with the account's reason; a tap says in a toast why there is no count. The pin is centred where a count is and no longer paints a disc on a hovered button. A second failed read is announced by a new alert while its button stays and keeps focus.
+
+### Third review tests | low | three tests asserted less than they claimed
+
+Status reads were compared with a number already reached before the step under test; a page was "scrolled by a finger" through a script call; a saved value was read before the save had run. Each now asserts what it names.
+
+### Third review left | low | one fix has no test of its own
+
+Returning focus to the calendar after a dialog opened by a session ending underneath is fixed by the same code that a pressed opener uses, but no test ends a session from outside: the scenario host has no handle for it.
 
 ## Recommendations
 
