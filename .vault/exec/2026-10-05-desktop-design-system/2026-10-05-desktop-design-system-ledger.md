@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:0fb33e407a4046e16e245a321ad67415fb3e60481f6f6d2bc02a9ad307811389'
+body_hash: 'sha256:708bed657c6a8a10068886874a063e4f2888634e229d8adefe42d9bb55ae85b3'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -278,6 +278,7 @@ related:
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
 - `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/components/ui/popover.tsx`
 
 ## Notes
 

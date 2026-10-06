@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:1ad79f13e3441f449e35bcf836a1c1662715271295140f26f4d5057aa18ed7ca'
+body_hash: 'sha256:04ec968c9f52baed42c9a382da818b2803e95bce888af531720613eb3dda13c5'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -298,6 +298,10 @@ The notice of dropped records stood above every span, with thousands of older re
 ### Log review left | low | not changed
 
 Rows have no role of their own beneath the log. Three tests still rest on a fixed wait: the gentlest wheel, the cap on the drawn span, and focus handed to the list once. The frame times and heap the check measured are of the development build; the production figures are the benchmark's, which stayed within budget after the change.
+
+### Overlay focus | medium | settings could be left open with the keyboard outside it
+
+Found when the benchmark, moved to the canonical build directory, failed one run in three in its overlay stage. With a tooltip showing anywhere in the window, Escape pressed inside settings closed only the tooltip; a test that hovers a rail button with focus in settings fails without the fix. And the palette, a moment after it had gone, took focus back to its opener even when another surface had opened and taken focus in that moment. Resolved in `bc428c15e3`: the popover closes at the first Escape as the dialog does, at `native/desktop/frontend/src/components/ui/popover.tsx:43`, and the palette leaves focus where it has been put. The benchmark passed three runs in three afterwards; it also waits for settings to hold focus before pressing a key in it.
 
 ## Recommendations
 
