@@ -390,7 +390,7 @@ enrolled name elsewhere, stops with the enrolled names.
 | `install/` | Default local install prefix; override with `cmake --install --prefix` |
 | `packages/<Config>/` | ZIP artifacts |
 | `testing/<Config>/`, `verification/<Config>/` | Test state and extracted-artifact evidence |
-| `user-docs/build/`, `user-docs/work/` | Documentation owner build roots per language, with their logs and private storage |
+| `user-docs/build/`, `user-docs/work/` | The language roots one documentation compile wrote, with its log and private storage |
 | `user-docs/stage/` | Shippable documentation subset and its manifest, copied into each staged package |
 
 ZIP names are `CADRUMO-<version>-b<build>-windows-x64-<Config>.zip`, with one
@@ -508,18 +508,23 @@ the product's output languages, and English must be declared. `native/cmake/Docs
 defines the `user_docs` target for the source build and the standalone desktop
 project; `bundle` and `desktop-host-build` depend on it.
 
-`dev/packaging/native/docs_build.py` runs the documentation owner's build command
-once per declared language, in parallel, as a user-scope build from a private source
-copy. `CADRUMO_DOCS_BUILD_ROOT` points the owner's path API at `user-docs/build/`,
-so each root lands in `user-docs/build/html/<lang>/`. Ambient `CADRUMO_DOCS_*`
-settings are dropped, each root gets its own storage root, and the Pagefind contract
-is pinned to `full`. The cli-sequence golden check runs on exactly the first declared
-root; the other roots use the owner's documented opt-out. The step fingerprints the
-contents of `inputs-user-docs.txt`: documentation sources, documentation tooling,
-`src/`, the layout and the selected published authority. Unchanged inputs reuse the
-previous roots. A stale published authority fails the target, and the owner's refusal
-is printed as the `cause:` line. Each root's previous search index is removed before
-its build, so staging can never accept an older root after a failed build.
+`dev/packaging/native/docs_build.py` compiles the documentation once for every
+declared language (`python -m dev.docs.compile_once --html-root`), as a user-scope
+build from a private source copy, and each language's root is composed at
+`user-docs/build/html/<lang>/`. The pages are read once however many languages are
+declared. Ambient `CADRUMO_DOCS_*` settings are dropped and the compile gets its own
+storage root. The site's one search index is then built over every root, under the
+`full` Pagefind contract, into the English root. The cli-sequence golden check runs
+in that one compile. The step fingerprints the contents of `inputs-user-docs.txt`:
+documentation sources, documentation tooling, `src/`, the layout and the selected
+published authority. Unchanged inputs reuse the previous roots. The documentation
+does not depend on the platform or on the build directory, so a build configuration
+whose inputs outside its own build directory match the site another configuration of
+the checkout built copies that site from the development cache (`user-docs`) instead
+of compiling again; the cache holds one site, checked against its recorded inventory
+before it is reused. A stale published authority fails the target, and the owner's
+refusal is printed as the `cause:` line. The previous search index is removed before
+the compile, so staging can never accept an older root after a failed build.
 
 `dev/packaging/native/docs_stage.py` stages the addresses of the published site
 layout: English at `P/docs/user/` and every other language at

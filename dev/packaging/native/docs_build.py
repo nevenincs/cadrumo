@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.metadata
 import os
 import re
 import shutil
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
+from dev.cache_root import dev_cache_dir
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
@@ -32,6 +35,10 @@ _RAISED = re.compile(r"^\s*((?:\w+\.)*\w*(?:Error|Exception): .+)$")
 #: opposite contract -- they must index nothing -- and the two values only make
 #: sense read together.
 PACKAGE_INDEX_ENVIRONMENT: dict[str, str] = {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}
+
+#: The development cache holding the one built site every build configuration
+#: of this checkout takes its documentation from.
+SHARED_SITE_CACHE = "user-docs"
 
 
 def compile_environment(storage: Path) -> dict[str, str]:
@@ -93,15 +100,82 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None
     paths = build_paths(build)
     build_root = paths["user_docs_build"]
     with action_lock(build, "user-docs"):
-        input_identity = fingerprint(inputs, selected_published_authority(REPO_ROOT))
+        authority = selected_published_authority(REPO_ROOT)
+        input_identity = fingerprint(inputs, authority)
         if current(build_root, input_identity):
             print("Reusing user documentation: inputs and output inventory unchanged", flush=True)
             return
         (build_root / "ready").unlink(missing_ok=True)
         languages = declared_languages(layout)
-        _compile_roots(build_root, paths["user_docs_work"], languages)
-        _index_site(build_root, languages)
+
+        def produce(destination: Path) -> None:
+            _compile_roots(destination, paths["user_docs_work"], languages)
+            _index_site(destination, languages)
+
+        built = take_shared_site(
+            build_root,
+            dev_cache_dir(SHARED_SITE_CACHE),
+            shared_site_identity(fingerprint(inputs, authority, outside=build), languages),
+            produce,
+        )
+        if not built:
+            print("Reusing the user documentation another build configuration built from the same inputs", flush=True)
         completed(build_root, input_identity)
+
+
+def shared_site_identity(inputs_outside_the_build: str, languages: tuple[str, ...]) -> str:
+    """Return what a built site depends on in every build configuration alike.
+
+    The documentation reads the sources, the registry authority and the
+    declared languages. It does not read the platform, the architecture or the
+    directory a configuration builds in, so those are not part of what names
+    it: two configurations of one checkout with the same inputs get one site.
+    """
+    return hashlib.sha256(f"{inputs_outside_the_build}\n{','.join(languages)}".encode()).hexdigest()
+
+
+def take_shared_site(build_root: Path, shared: Path, identity: str, produce: Callable[[Path], None]) -> bool:
+    """Fill *build_root* with the site of *identity*, producing it only if no configuration has.
+
+    The site is produced into the build configuration that needs it first and
+    then kept in *shared*; every other configuration with the same inputs
+    copies it instead of compiling the documentation again. The cache holds one
+    site: a different identity replaces it, because the only readers of the
+    old one were configurations whose inputs have since changed.
+
+    Args:
+        build_root: The configuration's own documentation build directory.
+        shared: The directory the checkout's configurations share.
+        identity: What the wanted site depends on.
+        produce: Builds the site into the directory it is given.
+
+    Returns:
+        Whether the site was produced here rather than copied.
+    """
+    shared.parent.mkdir(parents=True, exist_ok=True)
+    with action_lock(shared.parent, shared.name):
+        if current(shared, identity):
+            _copy_site(shared, build_root)
+            return False
+        produce(build_root)
+        _copy_site(build_root, shared)
+        completed(shared, identity)
+        return True
+
+
+def _copy_site(source: Path, destination: Path) -> None:
+    """Replace *destination* with the site in *source*, leaving completion to the caller.
+
+    The completion marker binds a directory's inventory to the identity its own
+    owner checks, so it is never carried from one directory to another.
+    """
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(
+        source,
+        destination,
+        ignore=lambda directory, _names: {"ready"} if Path(directory) == source else set(),
+    )
 
 
 def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:

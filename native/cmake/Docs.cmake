@@ -1,7 +1,8 @@
 include_guard(GLOBAL)
 # Bundled user documentation, shared by the source build and the desktop project.
-# The owning docs driver builds each language declared in native/package-layout.json and
-# refuses a stale published authority at its cli-sequence gate. Staging copies the shippable
+# The owning docs driver compiles the documentation once for every language declared in
+# native/package-layout.json, shares the built site between the build configurations of one
+# checkout, and refuses a stale published authority at its cli-sequence gate. Staging copies the shippable
 # subset into the published layout and writes the docs manifest that the package delegates to.
 set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run --
   "${CADRUMO_DEV_PYTHON}" -B -m)

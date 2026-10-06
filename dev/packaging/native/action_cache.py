@@ -42,10 +42,22 @@ def action_lock(build: Path, action: str) -> Iterator[None]:
                 fcntl.flock(stream, fcntl.LOCK_UN)
 
 
-def fingerprint(inputs: Path, extra: tuple[Path, ...] = ()) -> str:
-    """Hash the enrolled inputs by name and bytes, including selected authority."""
+def fingerprint(inputs: Path, extra: tuple[Path, ...] = (), *, outside: Path | None = None) -> str:
+    """Hash the enrolled inputs by name and bytes, including selected authority.
+
+    Args:
+        inputs: The file listing the enrolled inputs, one path per line.
+        extra: Inputs enrolled by the caller rather than by the listing.
+        outside: A directory whose own files are left out. A build
+            configuration enrolls files of its own directory that say where
+            that configuration writes; a fingerprint that is to mean the same
+            thing in every configuration of one checkout cannot include them.
+    """
     result = hashlib.sha256()
     paths = {*map(Path, inputs.read_text(encoding="utf-8").splitlines()), *extra}
+    if outside is not None:
+        boundary = outside.resolve()
+        paths = {path for path in paths if not path.resolve().is_relative_to(boundary)}
     for path in sorted(paths):
         result.update(str(path.resolve()).encode("utf-8"))
         try:
