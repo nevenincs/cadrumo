@@ -109,33 +109,41 @@ def test_each_position_receives_the_string_its_writer_writes(slots: CompileSlots
 
 
 def test_a_navigation_or_toctree_title_is_written_the_way_its_region_writes_it(slots: CompileSlots) -> None:
-    """A title in these two regions is never educated, and two writers own them.
+    """The region says who escapes a title, and the rendering says if it was educated.
 
     Read off the English desktop root built on 2026-10-06: Modelo 151's title
-    carries ``"Beckham law"`` with straight quotation marks in the sidebar and in
-    the body toctree, while the same title in the page's own heading carries
-    ``“Beckham law”``. An explicit toctree entry title is an attribute of the
-    toctree node rather than a text node, so the smart-quotes transform passes it
-    by; the sidebar is then re-serialised by Furo through BeautifulSoup, which
-    leaves ``"`` and ``@`` where the docutils writer escapes both.
+    carries ``"Beckham law"`` with straight quotation marks in the sidebar and
+    in the body toctree, while the same title in the page's own heading carries
+    ``“Beckham law”``. The two are not one string. The sidebar's is the explicit
+    toctree entry title, an attribute of the toctree node that the smart-quotes
+    transform passes by, and the heading's is a text node it educates -- and the
+    same sidebar also carries titles a page's own educated heading supplied. So
+    the uneducated ones are told apart by their rendering and not by the region.
+
+    The regions do say who escapes: the sidebar is re-serialised by Furo through
+    BeautifulSoup, which leaves ``"`` and ``@`` where the docutils writer
+    escapes both.
     """
-    mark = slots.mark(Rendering.DOCUTILS, ['a "q" @ b', "l'IVA & z", "<y>"])
+    strings = ['a "q" @ b', "l'IVA & z", "<y>"]
+    heading = slots.mark(Rendering.DOCUTILS, strings)
+    title = slots.mark(Rendering.PLAIN, strings)
     page = (
-        f"<p>{mark}</p>"
-        f'<div class="sidebar-tree"><ul><li><input aria-label="n {mark}"><a>{mark}</a></li></ul></div>'
-        f'<div class="toctree-wrapper compound"><ul><li><a>{mark}</a></li></ul></div>'
-        f"<p>{mark}</p>"
+        f"<p>{heading}</p>"
+        f'<div class="sidebar-tree"><ul><li><input aria-label="n {title}"><a>{title}</a></li></ul></div>'
+        f'<div class="toctree-wrapper compound"><ul><li><a>{title}</a></li></ul></div>'
+        f'<div class="sidebar-tree"><ul><li><a>{heading}</a></li></ul></div>'
     )
-    educated = ("a “q” &#64; b", "l’IVA &amp; z", "&lt;y&gt;")
+    educated_text = ("a “q” &#64; b", "l’IVA &amp; z", "&lt;y&gt;")
+    educated_navigation = ("a “q” @ b", "l’IVA &amp; z", "&lt;y&gt;")
     navigation = ('a "q" @ b', "l'IVA &amp; z", "&lt;y&gt;")
     entry = ("a &quot;q&quot; &#64; b", "l'IVA &amp; z", "&lt;y&gt;")
     factored = factor_page(page, slots)
     assert [piece for piece in factored if isinstance(piece, tuple)] == [
-        educated,
+        educated_text,
         navigation,
         navigation,
         entry,
-        educated,
+        educated_navigation,
     ]
 
 

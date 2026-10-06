@@ -213,6 +213,7 @@ _BUILD_LANGUAGE = OutputLanguage(language)
 _COMPILE_SLOTS = import_module("dev.docs.compile_slots")
 _MESSAGE_MARKS = import_module("dev.docs.message_marks")
 _MESSAGE_MARKS_TRANSFORM = _MESSAGE_MARKS.DeclareBlockLanguage
+_MESSAGE_MARKS_TITLE_TRANSFORM = _MESSAGE_MARKS.NoteToctreeTitleMarks
 _MESSAGE_MARKS_POST_TRANSFORM = _MESSAGE_MARKS.ResolveOwnPageAnchors
 _MULTILINGUAL = os.environ.get("CADRUMO_DOCS_MULTILINGUAL") == "1"
 if _MULTILINGUAL:
@@ -1608,6 +1609,12 @@ def setup(app):
     Returns:
         The extension metadata declaring parallel-read/write safety.
     """
+    # Sphinx's own words come from one translator the build language settles.
+    # They are replaced here, before the builder captures one for its
+    # templates, so the one compile can answer them for every language.
+    from dev.docs.sphinx_messages import register as _register_sphinx_messages
+
+    _register_sphinx_messages(app)
 
     def _skip_non_owner_autodoc_member(app, what, name, obj, skip, options):
         """Keep private/generated typing objects out of public object indexing."""
@@ -1913,6 +1920,7 @@ def setup(app):
         app.connect("builder-inited", _mark_authored_messages, priority=900)
         app.connect("build-finished", _read_authored_messages, priority=100)
         app.connect("build-finished", _write_compile_slots, priority=200)
+        app.add_transform(_MESSAGE_MARKS_TITLE_TRANSFORM)
         app.add_transform(_MESSAGE_MARKS_TRANSFORM)
         app.add_post_transform(_MESSAGE_MARKS_POST_TRANSFORM)
     _LANGUAGE_SWITCHER.register(app)
@@ -1958,4 +1966,10 @@ def setup(app):
     from dev.docs.shared_page_assets import register as _register_shared_page_assets
 
     _register_shared_page_assets(app)
+
+    # Sphinx's own interface strings are one script per language, which the one
+    # compile writes for every language rather than for the build's own.
+    from dev.docs.translations_js import register as _register_translations_js
+
+    _register_translations_js(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

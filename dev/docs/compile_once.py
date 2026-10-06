@@ -46,6 +46,7 @@ from .language_roots import compose_root, store_compiled_root
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from .shared_page_assets import CHROME_STRINGS_SCRIPT, language_chrome_strings
 from .shared_structure import compare_page
+from .translations_js import TRANSLATIONS_SCRIPT, language_translations_js
 
 #: The environment key ``docs/conf.py`` reads to carry every language.
 MULTILINGUAL_ENV: Final[str] = "CADRUMO_DOCS_MULTILINGUAL"
@@ -165,15 +166,21 @@ def _per_language_assets(files: dict[str, Path], languages: Sequence[str]) -> di
 
     The variants are build output of the compile, so they are taken out of the
     site's shared files: what the site holds is the canonical path, stored once
-    per language from these.
+    per language from these. A language the compile wrote no variant for is
+    stored none, which is what a language whose own build writes no such file
+    needs: English has no Sphinx interface strings and therefore no
+    ``translations.js``.
     """
     per_language: dict[str, dict[str, Path]] = {language: {} for language in languages}
-    canonical = f"_static/{CHROME_STRINGS_SCRIPT}"
-    for language in languages:
-        variant = f"_static/{language_chrome_strings(language)}"
-        source = files.pop(variant, None)
-        if source is not None:
-            per_language[language][canonical] = source
+    variants = {
+        CHROME_STRINGS_SCRIPT: language_chrome_strings,
+        TRANSLATIONS_SCRIPT: language_translations_js,
+    }
+    for canonical, named in variants.items():
+        for language in languages:
+            source = files.pop(f"_static/{named(language)}", None)
+            if source is not None:
+                per_language[language][f"_static/{canonical}"] = source
     return per_language
 
 

@@ -8,6 +8,7 @@ from typing import Final
 from cadrumo.core.external_constants import OutputLanguage
 
 from ._locale_chrome import docs_chrome
+from .compile_slots import Rendering, language_text
 from .legal_reference_models import LegalPage, LegalProvisionRecord, LegalReferenceError
 from .legal_reference_routing import (
     legal_document_slug,
@@ -99,11 +100,15 @@ def _official_wording_block(required_text: tuple[str, ...], language: OutputLang
     """
     quoted = "".join(f"<p>{escape(item.rstrip())}</p>" for item in required_text)
     label = escape(docs_chrome("docs.legal.provision.official_wording", language))
+    # The label's own language is the page's, which the one compile does not
+    # have: the tag is as much a per-language string as the label is, and this
+    # block's own raw HTML is where it is written.
+    label_language = language_text(lambda carried: carried, language.value, rendering=Rendering.VERBATIM)
     return [
         ".. raw:: html",
         "",
         '   <div class="cadrumo-legal-wording">',
-        f'     <p class="cadrumo-legal-wording-label" lang="{language.value}">{label}</p>',
+        f'     <p class="cadrumo-legal-wording-label" lang="{label_language}">{label}</p>',
         f'     <blockquote lang="es">{quoted}</blockquote>',
         "   </div>",
         "",

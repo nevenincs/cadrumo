@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from functools import partial
 from typing import TYPE_CHECKING
 
-from ._locale_chrome import docs_chrome, docs_fragment, docs_line
+from ._locale_chrome import docs_chrome, docs_fragment, docs_line, toctree_title_chrome
 from .casilla_card_rendering import _box_number, _localised, _render_entry
 from .casilla_display import _section_anchor, _section_display, _token_display
 from .casilla_legal_grounding import _legal_list, _LegalLink
@@ -258,10 +258,15 @@ def _render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema, langua
     lines = [".. toctree::", "   :maxdepth: 1", ""]
     for page in pages:
         overview = schema.modelos.get(page.modelo)
+        # The same heading as the page's own, recorded as the entry title it is
+        # here: nothing educates a title the toctree directive took from its
+        # own line, where the page's heading is a text block and is educated.
         label = (
             f"Modelo {page.modelo}"
             if overview is None
-            else docs_chrome("docs.casilla.chrome.page_heading", language, modelo=page.modelo, title=overview.title)
+            else toctree_title_chrome(
+                "docs.casilla.chrome.page_heading", language, modelo=page.modelo, title=overview.title
+            )
         )
         lines.append(f"   {_rst_escape(label)} <{page.modelo}>")
     return header + title + "\n" + intro + "\n".join(lines) + "\n"

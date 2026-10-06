@@ -21,3 +21,13 @@
   {{ super() }}
   <meta name="cadrumo-docs-site-prefix" content="{{ cadrumo_docs_site_prefix | default('', true) }}">
 {% endblock extrahead %}
+
+{# Sphinx loads its own interface strings from _static/translations.js and adds
+   that script only for a language whose strings it ships. The one compile has
+   no one language, so the tag is written here instead, once per script and for
+   no script but the one it follows (dev.docs.translations_js). The loop is the
+   theme's own; a build that is not that compile gets the empty string back and
+   writes the bytes it writes today. #}
+{% block regular_scripts %}{% for path in script_files -%}
+      {{ js_tag(path) }}{{ cadrumo_translations_js_tag(path.filename) }}
+    {% endfor -%}{% endblock regular_scripts %}

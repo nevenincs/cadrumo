@@ -32,7 +32,14 @@ from cadrumo.core.i18n.render import lookup_translation
 
 from .compile_slots import Rendering, active
 
-__all__ = ["DocsChromeError", "docs_chrome", "docs_fragment", "docs_line", "template_chrome"]
+__all__ = [
+    "DocsChromeError",
+    "docs_chrome",
+    "docs_fragment",
+    "docs_line",
+    "template_chrome",
+    "toctree_title_chrome",
+]
 
 
 class DocsChromeError(RuntimeError):
@@ -90,6 +97,34 @@ def template_chrome(key: str, language: OutputLanguage, /, **values: object) -> 
         DocsChromeError: As :func:`docs_chrome` raises it.
     """
     return _chrome(Rendering.TEMPLATE, key, language, values)
+
+
+def toctree_title_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
+    """Return one chrome string used as an explicit toctree entry title, or refuse.
+
+    An explicit entry title is an attribute of the toctree node, so nothing
+    parses it as markup and the smart-quotes transform never sees it: it
+    reaches the navigation, a body toctree and the relation links as it was
+    authored. The compile records it as that
+    (:attr:`~dev.docs.compile_slots.Rendering.PLAIN`) rather than as a docutils
+    writer's, which would publish a typographic apostrophe where every
+    single-language build writes the authored one. The same string used as a
+    page's own heading is :func:`docs_chrome` and is educated there, so the two
+    uses are two marks.
+
+    Args:
+        key: The dotted catalogue key holding the string.
+        language: The language this docs root is being built for.
+        values: Placeholder values interpolated into the authored string.
+
+    Returns:
+        The authored string for ``language``, with placeholders filled, or the
+        mark standing for every language's string under a multilingual compile.
+
+    Raises:
+        DocsChromeError: As :func:`docs_chrome` raises it.
+    """
+    return _chrome(Rendering.PLAIN, key, language, values)
 
 
 def _chrome(rendering: Rendering, key: str, language: OutputLanguage, values: Mapping[str, object]) -> str:

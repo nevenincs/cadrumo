@@ -109,6 +109,9 @@ class MessagePlan:
         blocks: Every block written into a fragment document, by its number.
         fragments: The fragment documents written, as docnames.
         pages: The authored pages whose messages were marked.
+        titles: The marks a read document carries as a toctree title, which
+            :class:`NoteToctreeTitleMarks` fills and :func:`harvest` records
+            uneducated.
         messages: Marks reserved, one per marked message.
     """
 
@@ -116,6 +119,7 @@ class MessagePlan:
     blocks: list[_Block] = field(default_factory=list)
     fragments: list[str] = field(default_factory=list)
     pages: list[str] = field(default_factory=list)
+    titles: set[str] = field(default_factory=set)
 
     @property
     def messages(self) -> int:
@@ -136,6 +140,20 @@ class MessagePlan:
         except ValueError:
             return None
 
+    def sources_of(self, mark: str) -> list[str]:
+        """Return one mark's translation in every language as its catalogue holds it.
+
+        This is the string itself rather than what rendering it produced, which
+        is what a toctree title reaches the page as: the title is an attribute
+        of the toctree node, so nothing parsed it as markup and nothing
+        educated it.
+        """
+        strings = [""] * len(self.languages)
+        for block in self.blocks:
+            if block.mark == mark:
+                strings[block.language] = _one_line(block.source)
+        return strings
+
 
 # ── The compile's one active plan ────────────────────────────────────────────
 # The transform that tells each fragment paragraph which language it holds runs
@@ -150,7 +168,7 @@ def active() -> MessagePlan | None:
 
 
 def _read_catalogue(path: Path) -> dict[str, str]:
-    """Return one gettext catalogue as its singular translations, in file order."""
+    """Return one gettext catalogue as its usable singular translations, in file order."""
     from babel.messages.pofile import read_po
 
     with path.open("rb") as stream:
@@ -158,6 +176,12 @@ def _read_catalogue(path: Path) -> dict[str, str]:
     translations: dict[str, str] = {}
     for message in catalogue:
         if not isinstance(message.id, str) or not message.id:
+            continue
+        if message.fuzzy:
+            # A build compiles its catalogues without the fuzzy entries, so a
+            # fuzzy translation reaches no page of that language's own build and
+            # must reach no recorded string either. Left out, the message is
+            # untranslated here exactly as it is there.
             continue
         string = message.string
         if isinstance(string, str) and string:
@@ -463,13 +487,22 @@ def harvest(plan: MessagePlan, slots: CompileSlots, page_path: Callable[[str], P
             f"(first {incomplete[:2]}) and {len(absent)} did not render at all "
             f"(first {absent[:2]}); the fragment documents did not carry what was marked"
         )
+    # A toctree title is the catalogue's own string, so the rendering the
+    # fragment produced for it is not what any page carries. They are recorded
+    # first, so a translation that names one reads the recorded string rather
+    # than the rendering that stands for nothing.
+    supplied = len(rendered)
+    for mark in sorted(plan.titles & set(rendered)):
+        titles = plan.sources_of(mark)
+        slots.supply(mark, titles, titles, rendering=Rendering.PLAIN)
+        del rendered[mark]
     for mark, strings in rendered.items():
         markup = [
             _without_marks(mark, string or "", language, rendered, slots) for language, string in enumerate(strings)
         ]
         slots.supply(mark, markup, [plain_text(string) for string in markup])
     _ACTIVE = None
-    return len(rendered)
+    return supplied
 
 
 class ResolveOwnPageAnchors(SphinxPostTransform):
@@ -522,6 +555,40 @@ class ResolveOwnPageAnchors(SphinxPostTransform):
             node["refdomain"] = "doc"
             node["reftargetid"] = target
             node["reftarget"] = owner
+
+
+class NoteToctreeTitleMarks(SphinxTransform):
+    """Note which marked messages a read document carries as a toctree title.
+
+    An explicit toctree entry title and a toctree caption are attributes of the
+    toctree node, which is why Sphinx's own translation of them replaces a
+    string rather than patching a tree. Nothing parses that string as markup,
+    and the smart-quotes transform educates text blocks, so the title reaches
+    the navigation, a body toctree and the relation links exactly as the
+    catalogue holds it -- where a title the page's own heading supplied reaches
+    the same places educated. The two cannot be told apart by where they land,
+    so they are told apart here, by the mark.
+    """
+
+    #: After Sphinx's own ``Locale`` transform, which is what puts a mark in a
+    #: toctree's titles, and long before the smart quotes this is about.
+    default_priority = 25
+
+    @override
+    def apply(self, **kwargs: object) -> None:
+        """Record every mark this document's toctrees carry as a title."""
+        from sphinx import addnodes
+
+        plan = _ACTIVE
+        if plan is None:
+            return
+        for toctree in self.document.findall(addnodes.toctree):
+            titles = [title for title, _docname in toctree["entries"] if title]
+            caption = toctree.get("caption")
+            if caption:
+                titles.append(caption)
+            for title in titles:
+                plan.titles.update(found.group() for found in MARK.finditer(title))
 
 
 class DeclareBlockLanguage(SphinxTransform):

@@ -68,8 +68,14 @@ def _build_switcher_site(tmp_path: Path, language: str) -> str:
         f"html_context = {context!r}\n"
         # The element is built by the module that owns it, registered exactly as
         # the production configuration registers it, so the build under test
-        # exercises the shipped code and not a copy of it.
-        "from dev.docs.language_switcher import register as setup\n"
+        # exercises the shipped code and not a copy of it. The shared base
+        # template asks for the interface-strings tag too, so the module that
+        # answers it is registered as well: the template is the shipped one.
+        "from dev.docs.language_switcher import register as _switcher\n"
+        "from dev.docs.translations_js import register as _translations_js\n"
+        "def setup(app):\n"
+        "    _switcher(app)\n"
+        "    _translations_js(app)\n"
     )
     (site / "conf.py").write_text(conf, encoding="utf-8")
     (site / "index.md").write_text("# Home\n\n```{toctree}\nhow-to/quickstart\n```\n", encoding="utf-8")

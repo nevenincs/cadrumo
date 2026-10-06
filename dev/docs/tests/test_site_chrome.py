@@ -108,7 +108,9 @@ def _requested_keys() -> frozenset[str]:
     so the two cannot be reconciled by editing a list in this file.
     """
     source = (Path(__file__).resolve().parents[1] / "site_chrome.py").read_text(encoding="utf-8")
-    pattern = re.compile(r'docs_chrome\(\s*"(docs\.site\.[\w.]+)"')
+    # Any of the resolvers, because which one a key is asked for through says
+    # which writer puts it on the page and nothing about the key set.
+    pattern = re.compile(r'(?:docs|template|toctree_title)_chrome\(\s*"(docs\.site\.[\w.]+)"')
     keys: set[str] = set()
     for match in pattern.finditer(source):
         key = match.group(1)

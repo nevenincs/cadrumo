@@ -32,6 +32,15 @@ writer are the same bytes and need different strings.
 - :attr:`Rendering.VERBATIM` is text already in the form the creation site
   wrote it for -- a generator's own ``.. raw:: html`` block, a JSON literal --
   and is placed as it was recorded.
+- :attr:`Rendering.PLAIN` is plain text a docutils writer or the theme escapes
+  where it lands and that no build ever educated, because it never stood in a
+  text block for the smart-quotes transform to find. An explicit toctree entry
+  title and a toctree caption are attributes of the toctree node; Sphinx's own
+  translated words are put into a finished page by the HTML writer long after
+  the transforms ran. Which strings those are is a property of the string and
+  not of where it lands, because the regions a title reaches -- the navigation,
+  a body toctree, the relation links -- also carry titles a page's own educated
+  heading supplied.
 - :attr:`Rendering.MESSAGE` is one translatable message of an authored page,
   whose translation carries inline markup, links and roles and is therefore
   recorded already rendered. One message reaches more than one writer -- a
@@ -93,6 +102,7 @@ class Rendering(StrEnum):
     TEMPLATE = "template"
     VERBATIM = "verbatim"
     MESSAGE = "message"
+    PLAIN = "plain"
 
 
 class Position(StrEnum):
@@ -102,16 +112,15 @@ class Position(StrEnum):
     ATTRIBUTE = "attribute"
     TITLE = "title"
     MARKUP = "markup"
-    #: Inside a toctree in a page's own body. The docutils writer escapes it,
-    #: and the smart-quotes transform never saw it: an explicit toctree entry
-    #: title is an attribute of the toctree node, not a text node, so the
-    #: transform that educates every text block passes it by.
+    #: Inside a toctree in a page's own body, written by the docutils writer.
+    #: What stands there is a page's title and never a message's own markup,
+    #: which is the one thing this position says that :attr:`TEXT` does not.
     ENTRY_TEXT = "entry-text"
     ENTRY_ATTRIBUTE = "entry-attribute"
-    #: Inside the theme's navigation tree. Furo hands the writer's toctree HTML
-    #: to BeautifulSoup and writes ``str(soup)`` back, which unescapes what the
-    #: writer escaped (``&quot;`` and ``&#64;`` included) and escapes the result
-    #: minimally. The titles are the same uneducated entry titles.
+    #: Inside the theme's navigation tree, which carries the same titles. Furo
+    #: hands the writer's toctree HTML to BeautifulSoup and writes ``str(soup)``
+    #: back, which unescapes what the writer escaped (``&quot;`` and ``&#64;``
+    #: included) and escapes the result minimally.
     NAVIGATION_TEXT = "navigation-text"
     NAVIGATION_ATTRIBUTE = "navigation-attribute"
 
@@ -258,10 +267,30 @@ def _message_written(position: Position, markup: str, plain: str) -> str:
     return _docutils_attribute(plain)
 
 
+def _plain_written(position: Position, value: str) -> str:
+    """Return one uneducated string as the page carries it at *position*.
+
+    Escaped exactly as a docutils writer's own string is, and educated nowhere,
+    because the string never stood in a text block: it is a toctree attribute,
+    or a word of Sphinx's own that the writer put into a finished page.
+    """
+    if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
+        return _minimal(value)
+    if position in {Position.TEXT, Position.ENTRY_TEXT}:
+        return _docutils_text(value)
+    if position in {Position.ATTRIBUTE, Position.ENTRY_ATTRIBUTE}:
+        return _docutils_attribute(value)
+    if position is Position.TITLE:
+        return _template_title(value)
+    raise CompileSlotsError(f"an uneducated string reached page markup rather than text or an attribute: {value!r}")
+
+
 def _written(rendering: Rendering, position: Position, value: str, plain: str | None, language: str) -> str:
     """Return one language's string as the page carries it at *position*."""
     if rendering is Rendering.VERBATIM:
         return value
+    if rendering is Rendering.PLAIN:
+        return _plain_written(position, value)
     if rendering is Rendering.MESSAGE:
         if plain is None:
             raise CompileSlotsError(f"a message mark reached the page with no plain form recorded: {value!r}")
@@ -279,19 +308,13 @@ def _written(rendering: Rendering, position: Position, value: str, plain: str | 
             f"a mark whose strings a Jinja template owns reached {position.value} markup: {value!r}. "
             "Only text and attribute values a template writes can be recorded that way."
         )
-    # Navigation and body-toctree entry titles reach the page without being
-    # educated, so each language's string must not be educated either.
-    if position is Position.ENTRY_TEXT:
-        return _docutils_text(value)
-    if position is Position.ENTRY_ATTRIBUTE:
-        return _docutils_attribute(value)
-    if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
-        return _minimal(value)
     educated = _educated(value, language)
-    if position is Position.TEXT:
+    if position in {Position.TEXT, Position.ENTRY_TEXT}:
         return _docutils_text(educated)
-    if position is Position.ATTRIBUTE:
+    if position in {Position.ATTRIBUTE, Position.ENTRY_ATTRIBUTE}:
         return _docutils_attribute(educated)
+    if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
+        return _minimal(educated)
     if position is Position.TITLE:
         return _template_title(educated)
     raise CompileSlotsError(
@@ -369,13 +392,25 @@ class CompileSlots:
         self.plain.append(None)
         return f"{MARK_OPEN}{_number(number)}{MARK_CLOSE}"
 
-    def supply(self, mark: str, values: Sequence[str], plain: Sequence[str]) -> None:
+    def supply(
+        self,
+        mark: str,
+        values: Sequence[str],
+        plain: Sequence[str],
+        *,
+        rendering: Rendering | None = None,
+    ) -> None:
         """Record what a mark reserved by :meth:`reserve` reads in every language.
 
         Args:
             mark: A mark this compile reserved.
             values: One rendering per language, in :attr:`languages` order.
             plain: The plain text each rendering reads as, in the same order.
+            rendering: Which writer owns the strings, where that is settled
+                only now. A marked message is reserved before Sphinx reads a
+                document, and whether the message is an explicit toctree entry
+                title -- which decides whether it ever met the smart-quotes
+                transform -- is known from the read documents and not before.
 
         Raises:
             CompileSlotsError: If *mark* was not reserved by this compile, or
@@ -395,6 +430,8 @@ class CompileSlots:
         for value in (*values, *plain):
             if MARK_OPEN in value or MARK_CLOSE in value:
                 raise CompileSlotsError("a recorded string contains a character reserved for mark delimiters")
+        if rendering is not None:
+            self.renderings[number] = rendering
         self.values[number] = tuple(values)
         self.plain[number] = tuple(plain)
         self._reserved.discard(number)
@@ -682,16 +719,16 @@ def context_at(starts: Sequence[int], contexts: Sequence[tuple[int, str]], offse
     return contexts[index][1] if index >= 0 else "unknown"
 
 
-#: The regions whose titles reach the page without the smart-quotes transform,
+#: The regions that carry a page's title rather than a message's own markup,
 #: keyed by the class the element carrying them declares: Furo's own navigation
 #: wrapper, and the ``compound`` div docutils writes a body toctree inside.
 #:
-#: The rule is about the EXPLICIT entry title, which is the only kind of title a
-#: mark can be today. A toctree entry that inherits a page's own title takes it
-#: from a text node the transform already educated, so once the authored page
-#: titles are carried too, the two kinds inside one region will need telling
-#: apart by the entry rather than by the region.
-_UNEDUCATED_REGIONS: Final[dict[str, tuple[Position, Position]]] = {
+#: The region says which writer wrote the title and that the title is plain
+#: text. It does not say whether the title was educated: a region carries both
+#: a title a page's own heading supplied, which was, and an explicit toctree
+#: entry title, which was not. That is a property of the string, and the mark
+#: carries it as :attr:`Rendering.PLAIN`.
+_TITLE_REGIONS: Final[dict[str, tuple[Position, Position]]] = {
     "sidebar-tree": (Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE),
     "toctree-wrapper": (Position.ENTRY_TEXT, Position.ENTRY_ATTRIBUTE),
 }
@@ -706,7 +743,7 @@ def _region_entered(tag: str) -> tuple[Position, Position] | None:
     if classes is None:
         return None
     for name in classes.group(1).split():
-        found = _UNEDUCATED_REGIONS.get(name)
+        found = _TITLE_REGIONS.get(name)
         if found is not None:
             return found
     return None
