@@ -1020,6 +1020,7 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggles
       "desktop.rail.docs_home",
       "desktop.rail.tui",
       "desktop.calendar.title",
+      "desktop.rail.messages",
       "desktop.rail.aeat",
       "desktop.rail.console",
       "desktop.rail.python",
@@ -1189,16 +1190,137 @@ test("no-views: a host that offers no profile views shows no way into one", asyn
   await open(target, "no-views");
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect(calendarButton(target)).toHaveCount(0);
+  await expect(messagesButton(target)).toHaveCount(0);
   await target
     .getByRole("button", { name: label("desktop.rail.search") })
     .click();
   const palette = target.locator(".palette");
-  await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
-  await expect(
-    palette
-      .locator(".palette-title")
-      .filter({ hasText: label("desktop.calendar.title") }),
-  ).toHaveCount(0);
+  for (const key of ["desktop.calendar.title", "desktop.rail.messages"]) {
+    await palette.getByRole("combobox").fill(label(key));
+    await expect(
+      palette.locator(".palette-title").filter({ hasText: label(key) }),
+    ).toHaveCount(0);
+  }
+  expect(await calls(target, "notifications")()).toBe(0);
+});
+
+const messagesButton = (target: Page) =>
+  target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.messages") });
+
+const named = (key: string, values: Record<string, string | number> = {}) =>
+  `${label("desktop.rail.messages")}, ${Object.entries(values).reduce(
+    (text, [name, value]) => text.replace(`{${name}}`, String(value)),
+    label(key),
+  )}`;
+
+test("the messages button counts what is unread and opens the TUI", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  const button = messagesButton(target);
+  // The count is in the name, not only in the corner.
+  await expect(button).toHaveAccessibleName(
+    named("desktop.messages.unread", { count: 3 }),
+  );
+  await expect(button.locator("[data-slot=badge]")).toHaveText("3");
+  await expect.poll(calls(target, "notifications")).toBe(1);
+  await button.click();
+  await expect(tui(target)).toBeFocused();
+  // Hidden, the TUI is shown again.
+  await target
+    .locator(".pane-tui .pane-head")
+    .getByRole("button")
+    .last()
+    .click();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await button.click();
+  await expect(target.locator(".pane-tui")).toBeVisible();
+  await expect(tui(target)).toBeFocused();
+});
+
+test("the palette's messages action opens the TUI", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.rail.messages"));
+  await target.keyboard.press("Enter");
+  await expect(palette).toHaveCount(0);
+  await expect(tui(target)).toBeFocused();
+});
+
+test("messages are read at sign-in and dropped at sign-out, never while signed out", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  const button = messagesButton(target);
+  // Under the dialog the rail is out of the accessibility tree, so the
+  // button is found by its attribute: its name is the label and no more.
+  await expect(target.locator(".sign-in")).toBeVisible();
+  const plain = target.locator(
+    `.rail button[aria-label="${label("desktop.rail.messages")}"]`,
+  );
+  await expect(plain).toHaveCount(1);
+  await expect(plain.locator("[data-slot=badge]")).toHaveCount(0);
+  expect(await calls(target, "notifications")()).toBe(0);
+  await password(target).fill("demo");
+  await submit(target).click();
+  await expect(button).toHaveAccessibleName(
+    named("desktop.messages.unread", { count: 3 }),
+  );
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  await target
+    .locator(".settings")
+    .getByRole("button", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(button).toHaveAccessibleName(label("desktop.rail.messages"));
+  await expect(button.locator("[data-slot=badge]")).toHaveCount(0);
+  await expect.poll(calls(target, "notifications")).toBe(1);
+});
+
+test("what is not known of the messages is said, never shown as none unread", async ({
+  page: target,
+}) => {
+  // Never captured: not known to be none.
+  await open(target, "empty");
+  await expect(messagesButton(target)).toHaveAccessibleName(
+    named("desktop.messages.never"),
+  );
+  await expect(messagesButton(target).locator("[data-slot=badge]")).toHaveCount(
+    0,
+  );
+  // A read that failed says so, with its code.
+  await open(target, "views-refused");
+  await expect(messagesButton(target)).toHaveAccessibleName(
+    named("desktop.messages.failed", { code: "timed_out" }),
+  );
+  // The tooltip says what the name says.
+  await messagesButton(target).hover();
+  await expect(target.getByRole("tooltip")).toContainText("timed_out");
+});
+
+test("messages are read again when the window is returned to, at most once a minute", async ({
+  page: target,
+}) => {
+  await target.clock.install();
+  await open(target, "signed-in");
+  await expect.poll(calls(target, "notifications")).toBe(1);
+  await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await target.clock.runFor(1000);
+  expect(await calls(target, "notifications")()).toBe(1);
+  await target.clock.runFor(61_000);
+  await target.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect.poll(calls(target, "notifications")).toBe(2);
 });
 
 test("the palette opens the calendar, and choosing it again keeps it open", async ({

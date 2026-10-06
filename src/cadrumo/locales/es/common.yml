@@ -589,6 +589,11 @@ desktop:
     only_logger: Mostrar solo este logger
     paste: Pegar
     select_all: Seleccionar todo
+  messages:
+    failed: No se han podido leer ({code})
+    never: Aún sin sincronizar con la AEAT
+    none_unread: Ninguno sin leer en la última sincronización
+    unread: '{count} sin leer'
   palette:
     actions: Acciones
     close: Cerrar la búsqueda
@@ -621,6 +626,7 @@ desktop:
     docs_home: Inicio de la documentación
     label: Espacio de trabajo
     logs: Registros
+    messages: Mensajes
     python: Shell de Python
     search: Buscar
     settings: Ajustes

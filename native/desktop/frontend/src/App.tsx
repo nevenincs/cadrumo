@@ -44,6 +44,7 @@ import {
 } from "./components/SignIn";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
+import { useMessages } from "./shell/messages";
 import { useSignIn } from "./shell/signIn";
 import { FilingCalendarView } from "./components/FilingCalendar";
 import { Split } from "./components/Split";
@@ -262,6 +263,7 @@ export function App({ host }: { host: Host }) {
     signedIn,
     calendarOn && firstPaneShown,
   );
+  const messages = useMessages(views, signedIn);
   // The keyboard goes with the page: into the calendar when it is shown,
   // back to the documentation when it is put away.
   const pageShown = useRef(page);
@@ -468,15 +470,19 @@ export function App({ host }: { host: Host }) {
     () => document.querySelector<HTMLElement>(".rail [role=toolbar]")?.focus(),
     [],
   );
+  // The TUI is where the profile is worked on: shown, with the keyboard.
+  const showTui = useCallback(() => {
+    setMaximized((area) => (area === "tui" ? area : null));
+    patch({ tuiShown: true });
+    focusView("tui");
+  }, [patch, focusView]);
   // Every way into the TUI's own flow, from the pane, the dialog, settings
   // or the palette: the TUI is shown and the keyboard goes to it.
   const continueInTui = useCallback(() => {
     accountRef.current.openTui();
     setSettingsOpen(false);
-    setMaximized((area) => (area === "tui" ? area : null));
-    patch({ tuiShown: true });
-    focusView("tui");
-  }, [patch, focusView]);
+    showTui();
+  }, [showTui]);
 
   const openTab = useCallback(
     (tab: PanelTab, { toggle = true }: { toggle?: boolean } = {}) => {
@@ -881,6 +887,16 @@ export function App({ host }: { host: Host }) {
         },
       },
       {
+        id: "view.messages",
+        label: t("desktop.rail.messages"),
+        group: "views",
+        icon: "mail",
+        keywords: "notifications notificaciones dehu inbox unread",
+        enabled: () => views !== undefined,
+        // The notifications are read in the TUI; the window shows the count.
+        run: showTui,
+      },
+      {
         id: "link.aeat",
         label: t("desktop.rail.aeat"),
         group: "links",
@@ -972,6 +988,7 @@ export function App({ host }: { host: Host }) {
       docsEntry,
       phase,
       views,
+      showTui,
       calendarOn,
       firstPaneShown,
       mayEnterPassword,
@@ -1378,6 +1395,28 @@ export function App({ host }: { host: Host }) {
             pressed: calendarOn && firstPaneShown,
             divided: true,
             onClick: () => runAction("view.calendar"),
+          } satisfies RailItem,
+          {
+            id: "messages",
+            icon: "mail",
+            label: t("desktop.rail.messages"),
+            ...(messages.kind === "ready"
+              ? messages.summary.captured_at === null
+                ? { hint: t("desktop.messages.never") }
+                : messages.summary.unread > 0
+                  ? {
+                      badge: messages.summary.unread,
+                      badgeLabel: t("desktop.messages.unread", {
+                        count: messages.summary.unread,
+                      }),
+                    }
+                  : { hint: t("desktop.messages.none_unread") }
+              : messages.kind === "failed"
+                ? {
+                    hint: t("desktop.messages.failed", { code: messages.code }),
+                  }
+                : {}),
+            onClick: () => runAction("view.messages"),
           } satisfies RailItem,
         ]
       : []),

@@ -1,4 +1,8 @@
-import type { CalendarEntry, FilingCalendar } from "../../shell/views";
+import type {
+  CalendarEntry,
+  FilingCalendar,
+  NotificationsSummary,
+} from "../../shell/views";
 
 // A filing calendar in the shape the product reports, for the scenario host
 // and the stories. The dates are fixed around `TODAY`, so a story looks the
@@ -79,6 +83,20 @@ export const FIXTURE_CALENDAR: FilingCalendar = {
     advised: [{ modelo: "347", reason: "applicability_undetermined" }],
     out_of_scope: ["720"],
   },
+};
+
+/** Counts from a capture earlier the same morning. */
+export const FIXTURE_NOTIFICATIONS: NotificationsSummary = {
+  captured_at: `${FIXTURE_TODAY}T07:02:11Z`,
+  row_count: 7,
+  unread: 3,
+};
+
+/** A profile whose notifications were never captured: not known to be none. */
+export const NEVER_CAPTURED: NotificationsSummary = {
+  captured_at: null,
+  row_count: 0,
+  unread: 0,
 };
 
 /** The same calendar with nothing due: an empty range is not a failed read. */

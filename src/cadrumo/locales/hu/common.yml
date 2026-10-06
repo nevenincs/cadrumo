@@ -574,6 +574,11 @@ desktop:
     only_logger: Csak ez a logger
     paste: Beillesztés
     select_all: Az összes kijelölése
+  messages:
+    failed: Nem sikerült beolvasni ({code})
+    never: Még nincs szinkronizálva az AEAT-tal
+    none_unread: A legutóbbi szinkronizáláskor nem volt olvasatlan
+    unread: '{count} olvasatlan'
   palette:
     actions: Műveletek
     close: Keresés bezárása
@@ -606,6 +611,7 @@ desktop:
     docs_home: Dokumentáció kezdőlapja
     label: Munkaterület
     logs: Naplók
+    messages: Üzenetek
     python: Python-shell
     search: Keresés
     settings: Beállítások

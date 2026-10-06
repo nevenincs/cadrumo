@@ -566,6 +566,11 @@ desktop:
     only_logger: Show only this logger
     paste: Paste
     select_all: Select all
+  messages:
+    failed: Couldn't be read ({code})
+    never: Not synced with AEAT yet
+    none_unread: None unread at the last sync
+    unread: '{count} unread'
   palette:
     actions: Actions
     close: Close search
@@ -598,6 +603,7 @@ desktop:
     docs_home: Docs home
     label: Workspace
     logs: Logs
+    messages: Messages
     python: Python shell
     search: Search
     settings: Settings

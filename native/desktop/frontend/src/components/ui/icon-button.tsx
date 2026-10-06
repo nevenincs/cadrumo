@@ -15,6 +15,9 @@ type IconButtonProps = Omit<ButtonProps, "size" | "aria-label" | "title"> & {
   accessibleName?: string;
   /** A chord shown beside the label in the tooltip; it binds nothing. */
   shortcut?: string;
+  /** What the button currently has to say, after the label in the tooltip
+   * and in the accessible name: a state, not a second name. */
+  hint?: string;
   size?: "xs" | "sm" | "md" | "lg";
   /** Where the tooltip opens. */
   side?: React.ComponentProps<typeof TooltipContent>["side"];
@@ -28,6 +31,7 @@ function IconButton({
   label,
   accessibleName,
   shortcut,
+  hint,
   size = "xs",
   side = "bottom",
   variant = "ghost",
@@ -41,14 +45,21 @@ function IconButton({
           data-slot="icon-button"
           variant={variant}
           size={`icon-${size}`}
-          aria-label={accessibleName ?? label}
+          aria-label={accessibleName ?? (hint ? `${label}, ${hint}` : label)}
           {...props}
         >
           {children}
         </Button>
       </TooltipTrigger>
       <TooltipContent side={side}>
-        {label}
+        {hint ? (
+          <span>
+            {label}
+            <span className="opacity-70"> · {hint}</span>
+          </span>
+        ) : (
+          label
+        )}
         {shortcut && <Kbd>{shortcut}</Kbd>}
       </TooltipContent>
     </Tooltip>

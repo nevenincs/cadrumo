@@ -1,7 +1,9 @@
 // Read-only views of the signed-in profile that a host may offer the shell.
-// Each mirrors what the product's own command reports, field for field, for
-// the fields the shell shows: nothing here is computed or renamed, so a state
-// the product keeps apart stays apart on screen.
+// The calendar mirrors what the product's own command reports, field for
+// field, for the fields the shell shows: nothing in it is computed or
+// renamed, so a state the product keeps apart stays apart on screen. The
+// notifications are counts only, taken by the host, so that no row of them
+// reaches the window.
 
 /** What the person still has to do about an obligation. */
 export type CalendarUserState = "due" | "late" | "filed" | "unknown";
@@ -71,9 +73,24 @@ export type FilingCalendar = {
   coverage: CalendarCoverage;
 };
 
+/** What the last capture of the tax agency's notifications held, as counts.
+ * The rows carry names and tax numbers, and the window has no use for them:
+ * the host counts and passes on only this. */
+export type NotificationsSummary = {
+  /** When the notifications were last captured from the agency; null when
+   * they never were, which is not "no notifications". */
+  captured_at: string | null;
+  /** Rows in that capture. */
+  row_count: number;
+  /** Rows the agency had not marked as read when they were captured. */
+  unread: number;
+};
+
 /** The views a host offers. A host without them offers none: the shell then
  * shows no way into them, rather than a way into something that cannot load. */
 export interface ProfileViews {
+  /** Counts from the last capture. Refused when nobody is signed in. */
+  notifications(): Promise<NotificationsSummary>;
   /** Dates are inclusive ISO dates. Refused when nobody is signed in. */
   filingCalendar(range: { from: string; to: string }): Promise<FilingCalendar>;
 }

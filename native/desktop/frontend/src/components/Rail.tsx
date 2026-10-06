@@ -15,6 +15,9 @@ export type RailItem = {
   badge?: number;
   /** What the badge counts, said in full for the accessible name. */
   badgeLabel?: string;
+  /** What the item has to say when it shows no count: a state, shown after
+   * the label in the tooltip and in the accessible name. */
+  hint?: string;
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
   onClick: () => void;
@@ -29,12 +32,8 @@ function RailButton({ item }: { item: RailItem }) {
       <Toolbar.Button asChild>
         <IconButton
           label={item.label}
-          accessibleName={
-            item.badge && item.badgeLabel
-              ? `${item.label}, ${item.badgeLabel}`
-              : undefined
-          }
           shortcut={item.shortcut}
+          hint={item.badge ? item.badgeLabel : item.hint}
           size="lg"
           side="right"
           aria-pressed={item.pressed}

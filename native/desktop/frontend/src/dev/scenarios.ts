@@ -45,9 +45,10 @@ export type Scenario = {
   docsSearch: "results" | "empty" | "slow" | "failed";
   /** Clipboard and external-link calls: served from memory, or refused. */
   services: "memory" | "refused";
-  /** The profile views: the fixture calendar, one with nothing due, a read
-   * that is refused, or a host that offers no views at all, as the desktop
-   * host does today. */
+  /** The profile views: the fixture calendar and notification counts, a
+   * calendar with nothing due and notifications never captured, reads that
+   * are refused, or a host that offers no views at all, as the desktop host
+   * does today. */
   views: "fixture" | "empty" | "refused" | "none";
 };
 

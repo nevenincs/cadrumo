@@ -88,10 +88,11 @@ A scenario is a named, deterministic host behaviour, declared as data in
 | `views-refused`       | Signed in, with every profile view refused: not an empty calendar        |
 | `no-views`            | Signed in on a host with no profile views, as the desktop host is today  |
 
-Every scenario but `no-views` offers the profile views (the filing calendar)
-from a fixture; `empty` offers a calendar with nothing due. The desktop host
-offers none yet, so the product shows no way into one: the views are design
-evidence until a host provides them.
+Every scenario but `no-views` offers the profile views (the filing calendar
+and the notification counts behind the Messages button) from a fixture;
+`empty` offers a calendar with nothing due and notifications never captured.
+The desktop host offers none yet, so the product shows no way into one: the
+views are design evidence until a host provides them.
 
 Select one in the control or in the address:
 
