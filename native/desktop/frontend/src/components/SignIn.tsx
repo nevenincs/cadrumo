@@ -200,6 +200,7 @@ export function SignInDialog({
   const [unchosen, setUnchosen] = useState(false);
   const errorId = useId();
   const choiceErrorId = useId();
+  const choiceHintId = useId();
   const status = account.status;
   // With no profile on this computer the dialog is the form that makes
   // one; with some, it is that form when the person asks for it.
@@ -399,8 +400,15 @@ export function SignInDialog({
                   className="profile-choice"
                   value={account.target?.name ?? ""}
                   aria-invalid={(unchosen && mustChoose) || undefined}
+                  // What is wrong with the choice, and why one of the
+                  // profiles in it cannot be chosen: both are heard with it.
                   aria-describedby={
-                    unchosen && mustChoose ? choiceErrorId : undefined
+                    [
+                      unchosen && mustChoose ? choiceErrorId : null,
+                      unnameable ? choiceHintId : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined
                   }
                   onChange={(event) => {
                     // Not while an answer is pending: it is that profile's.
@@ -428,7 +436,10 @@ export function SignInDialog({
                   {unchosen && mustChoose && t("desktop.signin.choose_profile")}
                 </FieldError>
                 {unnameable && (
-                  <FieldDescription className="profile-unnameable">
+                  <FieldDescription
+                    id={choiceHintId}
+                    className="profile-unnameable"
+                  >
                     {t("desktop.signin.unnameable")}
                   </FieldDescription>
                 )}

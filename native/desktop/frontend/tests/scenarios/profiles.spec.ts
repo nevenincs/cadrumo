@@ -800,6 +800,10 @@ test("a profile under a name the command line would rewrite is listed, not offer
   await expect(dialog(target).locator(".profile-unnameable")).toHaveText(
     label("desktop.signin.unnameable"),
   );
+  // Heard with the choice, not only seen under it.
+  await expect(choice(target)).toHaveAccessibleDescription(
+    label("desktop.signin.unnameable"),
+  );
   // And such a name is refused for a new profile before anything is sent.
   await dialog(target)
     .getByRole("button", { name: label("desktop.account.new_profile") })
