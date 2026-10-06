@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:708bed657c6a8a10068886874a063e4f2888634e229d8adefe42d9bb55ae85b3'
+body_hash: 'sha256:62a3b59e3476148fb347ff462fdf9f5f940d9d97e7b51eff39201ab032123f52'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -279,6 +279,16 @@ related:
 - `S11` `verify:` `npm test` -> `pass`
 - `S11` `verify:` `npm run benchmark -- --check` -> `pass`
 - `S11` `M` `native/desktop/frontend/src/components/ui/popover.tsx`
+- `S11` `M` `native/desktop/frontend/src/shell/strings.ts`
+- `S11` `M` `native/desktop/frontend/src/content.d.ts`
+- `S11` `M` `native/desktop/frontend/tests/support/strings.ts`
+- `S11` `M` `native/desktop/frontend/dev/docs-fixture/plugin.ts`
+- `S11` `M` `native/cmake/BuildPaths.cmake`
+- `S11` `M` `native/desktop/CMakeLists.txt`
+- `S11` `M` `native/CONTRACT.md`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `node --test native/desktop/tests/build-paths.test.mjs` -> `pass`
 
 ## Notes
 

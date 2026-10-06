@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e02dd2c0ffb2e03fd8f20ff3361897ee0068dd2a012d8650bcf37f0b359e080'
+body_hash: 'sha256:ce4146ce2b78bec721978f5d05d8cb355a6bcba1f5b531b8d36a88de736b9aa1'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -302,6 +302,10 @@ Rows have no role of their own beneath the log. The three tests that rested on a
 ### Overlay focus | medium | settings could be left open with the keyboard outside it
 
 Found when the benchmark, moved to the canonical build directory, failed one run in three in its overlay stage. With a tooltip showing anywhere in the window, Escape pressed inside settings closed only the tooltip; a test that hovers a rail button with focus in settings fails without the fix. And the palette, a moment after it had gone, took focus back to its opener even when another surface had opened and taken focus in that moment. Resolved in `bc428c15e3`: the popover closes at the first Escape as the dialog does, at `native/desktop/frontend/src/components/ui/popover.tsx:43`, and the palette leaves focus where it has been put. The benchmark passed three runs in three afterwards; it also waits for settings to hold focus before pressing a key in it.
+
+### Generated inputs | medium | the shell's strings and palette were written into the source tree
+
+A full Windows build by another session found that the two generated inputs were written to the frontend's source folder, so every binary directory owned the same files and concurrent builds raced on them; the same pass found the frontend's build directory was a free-form name. Resolved in `97ba357908`, after that session enrolled one binary directory per preset: the two files are outputs of the binary directory, declared at `native/cmake/BuildPaths.cmake:24` and removed by its desktop cleanup, and the shell imports them by two names that one plugin resolves, at `native/desktop/frontend/vite.config.ts:21`. A build without them stops and names the bootstrap, where it used to start and show each string's key; that was checked by removing one. The browser suite, the catalogue, the benchmark and the build-path tests pass on the enrolled directory.
 
 ## Recommendations
 
