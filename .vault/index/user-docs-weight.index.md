@@ -6,8 +6,10 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:b1864aa62f328be06d14e194307b3406aad5eb09012172cdb6904c1553c82445'
+body_hash: 'sha256:15e7756d52bce92470cab6841eff43ce1ff13d4bdf3bb383796abf25c10f6836'
 related:
+  - '[[2026-10-06-user-docs-weight-adr]]'
+  - '[[2026-10-06-user-docs-weight-plan]]'
   - '[[2026-10-06-user-docs-weight-research]]'
 ---
 
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#user-docs-weight`.
 
 ## Documents
+
+### adr
+
+- `2026-10-06-user-docs-weight-adr` - `user-docs-weight` adr: `one documentation structure, each language as text` | (**status:** `accepted`)
+
+### plan
+
+- `2026-10-06-user-docs-weight-plan` - `user-docs-weight` plan
 
 ### research
 

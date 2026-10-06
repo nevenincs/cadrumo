@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:a82d83cbf6121690526b992f620cdc5318f6a312377ecbe306a3be5c159671ff'
+body_hash: 'sha256:a3495fc026d3bcfc3133b20441cab3f09547ecd967e7b5c457c8bd2a93577345'
 related:
   - "[[2026-07-18-user-docs-localization-adr]]"
   - "[[2026-07-13-docs-cli-sequences-adr]]"
@@ -15,13 +15,27 @@ related:
 
 # `user-docs-weight` research: `where the bundled user documentation's weight comes from and what removes it`
 
-The Windows package 0.5.1 b2115 carried 432 MB of user documentation in 62,771 files, a complete tree per language. The question was which of that weight is accident, which is decided, and what would remove it. Measured on 2026-10-06 on a snapshot of the working tree (commit `af1fb06015`), one English desktop root was 109.0 MB in 15,702 shippable files. The changes made the same day inside existing decisions bring it to 93.8 MB (Spanish 111.3 MB to 95.8 MB). The rest is content the accepted decisions require on every page or in every language, plus recorded command output. Four further options would each remove more than everything removed so far; each needs a decision or work outside the documentation tooling.
+The Windows package 0.5.1 b2115 carried 432 MB of user documentation in 62,771 files, a complete tree per language. The question was which of that weight is accident, which is decided, and what would remove it. Measured on 2026-10-06 on a snapshot of the working tree (commit `af1fb06015`), one English desktop root was 109.0 MB in 15,702 shippable files. The changes made the same day inside existing decisions bring it to 93.8 MB. The decisive finding is that a translated page is the English page with different text in it: the four roots hold 289.6 MB of pages, and factored they are one 63.9 MB structure plus 4.2 to 5.0 MB of strings per language, recovered byte for byte. After that, the search index is the largest part of what a language adds.
 
 ## Findings
 
-### Every language tree is translated, so whole pages cannot be shared between languages
+### A language is 4 to 5 MB of text over a structure every language shares
 
-No page body is identical between the English and Spanish roots in any area. The share of English text segments that reappear verbatim in Spanish is 36% in `technical`, 57% in `_generated/casillas`, 61% in `_generated/legal`, 96% in `how-to` and 98% in `explanation`. The two high figures are recorded command output, which stays English by decision (`2026-07-18-user-docs-localization-adr`, Constraints). Byte-identical files across the four trees are static assets only, about 4 MB per language (`mermaid.min.js` is 2.7 MB of it). Shipping one copy of language-neutral pages is therefore not available; the repetition is inside the pages.
+No page file is identical between two language roots, but their markup is. Compared piece by piece, the Spanish pages differ from the English ones in text runs and attribute values (`title`, `aria-label`, `lang`), in the language switcher, in one script tag, and in about 25 places where a translation adds inline emphasis. `dev/docs/shared_structure.py:129` factors each page into the bytes all languages share, with a numbered slot wherever they differ, and one flat list of strings per language. Over the 561 pages of the four roots built on 2026-10-06:
+
+| | MB |
+| --- | --- |
+| Pages as built, four languages | 289.6 |
+| One structure | 63.9 |
+| English strings | 4.2 |
+| Spanish strings | 4.8 |
+| Catalan strings | 4.8 |
+| Hungarian strings | 5.0 |
+| Structure and four languages | 82.7 |
+
+There are 279,687 slot occurrences and 37,695 distinct slots; a language's strings deflate to about 1.1 MB. Composing the structure with each language's strings reproduced all 2,244 pages exactly, in 29 seconds for the whole set. Of the other files, 61 are identical in every language (7.2 MB once: static assets, the image, downloads) and 60,232 differ, all but 0.02 MB of them the Pagefind index (63.5 MB across the four languages).
+
+An earlier reading of this record compared whole pages, found none identical, and concluded nothing could be shared. That was the wrong test: the unit that repeats is the structure inside the page, not the page file.
 
 ### What was removed on 2026-10-06 without changing a decision
 
@@ -59,21 +73,21 @@ A root's Pagefind index is 16 MB in about 15,100 files. 13,133 fragments (6.5 MB
 
 ### Options not yet taken, by size
 
-- Store the documentation compressed and inflate in the scheme handler: about 375 MB to about 110 MB on disk with no content change. A single archive per language would also cut about 62,000 files to four. Changes the package contract (`native/CONTRACT.md`), the handler and the staging manifest. Not prototyped; WebView behaviour with a pre-compressed body was not tested, so the estimate assumes the handler inflates.
-- Ship the selected language plus English, or make languages separately installable: the tree count falls from four to two or one. The language set is `user_docs.languages` in `native/package-layout.json`; the localization decision governs the site, not the package.
-- State a section's shared legal basis once and keep per-card references that differ: about 6 MB per language. Amends D6 of `2026-07-15-docs-terminology-search-adr` and its per-entry gates, or is resolved in the registry if the shared references are an authoring shortcut.
-- Re-author the 21 over-limit frames as text or narrower commands, and make the limit a refusal: up to 6 MB per language. A3 already covers the authoring; refusal amends A4.
-- Index a casilla record once for all languages, or with the build language and Spanish only: up to 6.5 MB and 13,000 files for each language after the first. Amends D4 and D5 of the terminology-search decisions and changes what a query in another language finds.
-- Share byte-identical static assets across language roots: about 12 MB. Needs a content-addressed manifest or a handler fallback.
+- Ship one structure and each language's strings, composed when a page is requested: 289.6 MB of pages become 82.7 MB, and the 21.7 MB of identical non-page files become 7.2 MB. The desktop composes in its scheme handler (`native/desktop/src-tauri/src/docs/site.rs:47`); a static web host needs the pages expanded at publish. The strings can come from aligning four built roots, as measured here, or from one compile that emits them from the catalogues; only the second stops the registry projections, the CLI introspection, the sequence rendering and the theme rendering from running once per language (`dev/packaging/native/docs_build.py:93`).
+- One search index for all languages, or casilla records indexed once: the index is 63.5 MB and 60,232 files across the four languages, and after the factoring it is the largest part of the documentation. A casilla record already carries all four languages' text (`dev/docs/pagefind_inject.py:360`). Amends D4 and D5 of the terminology-search decisions.
+- State a section's shared legal basis once and keep per-card references that differ: about 6 MB of the structure. Amends D6 of `2026-07-15-docs-terminology-search-adr` and its per-entry gates, or is resolved in the registry if the shared references are an authoring shortcut.
+- Re-author the 21 over-limit frames as text or narrower commands, and make the limit a refusal: up to 6 MB of the structure. A3 already covers the authoring; refusal amends A4.
+- Store the structure compressed and inflate in the scheme handler: text deflates about 3.5 to 1. Changes the package contract; not prototyped.
 
-Rejected on the evidence: sharing page bodies between languages (none is identical), and rendering casilla data in the browser from one data file, which the no-JavaScript constraint in `2026-09-24-docs-build-performance-adr` excludes for the shared source.
+Rejected on the evidence: compressing or delta-encoding four built trees as the answer, which leaves the four builds and stores the repetition instead of removing it; substituting text in the browser, which the no-JavaScript constraint in `2026-09-24-docs-build-performance-adr` excludes for the published site.
 
-The evidence favours compressed storage and the frame re-authoring first: the first removes more than all other options together and touches no content, the second is already decided and only unexecuted. Two questions belong to the owner: whether the casilla reference may state shared grounding once per section, and whether a package must carry all four languages at install.
+The evidence favours the shared structure first: it removes more than every other option together and its correctness is checkable byte for byte against the roots built today. The search index is the next decision.
 
 ## Sources
 
 - `dev/docs/navigation.py:65`
 - `dev/docs/shared_page_assets.py:1`
+- `dev/docs/shared_structure.py:129`
 - `dev/docs/casilla_legal_grounding.py:162`
 - `dev/docs/casilla_card_rendering.py:161`
 - `dev/docs/tests/test_casilla_anchor_parity.py:102`
