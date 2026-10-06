@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:7beeec0f35d84c7c66c09848968cc46e9b79a48b4738c8307145e55629d72ec5'
+body_hash: 'sha256:b071186bbd3fa07e27ca3d48f081011ada6b0c278c96b377ae87f4d830bbfb2a'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -46,3 +46,9 @@ related:
 - `S01` `verify:` `ruff check and format on both files` -> `pass`
 - `S01` `verify:` `ty check on both files` -> `pass`
 - `S01` `verify:` `factor and compose the four desktop roots built 2026-10-06 (561 pages, 2244 comparisons, 0 mismatches)` -> `pass`
+- `S02` `A` `dev/docs/language_roots.py`
+- `S02` `A` `dev/docs/tests/test_language_roots.py`
+- `S02` `verify:` `pytest dev/docs/tests/test_language_roots.py dev/docs/tests/test_shared_structure.py (23 tests)` -> `pass`
+- `S02` `verify:` `ruff check and format on both files` -> `pass`
+- `S02` `verify:` `ty check on both files` -> `pass`
+- `S02` `verify:` `store the four desktop roots built 2026-10-06 (382.1 MB, 62720 files) as 156.0 MB and compare every file composed back (0 differences)` -> `pass`

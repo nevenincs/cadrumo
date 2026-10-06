@@ -8,7 +8,7 @@ related:
   - '[[2026-10-06-user-docs-weight-adr]]'
 modified: '2026-10-06'
 body_schema: body-v2
-body_hash: 'sha256:cbe48ffc8b90e0e07846429fcb5d5b3137afe922855a07b23778244c336fd218'
+body_hash: 'sha256:5675e049465f1aa54f05bed96fbb1b5c95507c70253766c83ba355c6eebfd45a'
 ---
 
 # `user-docs-weight` plan
@@ -22,7 +22,7 @@ The plan reaches the decision's two commitments in its order D5. S01 to S05 chan
 ## Steps
 
 - [x] `S01` - Factor pages into one structure and each language's strings, recovered byte for byte; `dev/docs/shared_structure.py, dev/docs/tests/test_shared_structure.py`.
-- [ ] `S02` - Factor whole language roots: page structures, language text, files stored once and files kept per language, with a composer that rebuilds any root and a gate that compares it with the built one; `dev/docs/language_roots.py, dev/docs/tests/`.
+- [x] `S02` - Factor whole language roots: page structures, language text, files stored once and files kept per language, with a composer that rebuilds any root and a gate that compares it with the built one; `dev/docs/language_roots.py, dev/docs/tests/`.
 - [ ] `S03` - Stage the package as one structure and each language's text, with a manifest that says how each address is served; `dev/packaging/native/docs_stage.py, native/package-layout.json`.
 - [ ] `S04` - Compose a page from its structure and the language's text in the documentation scheme handler, and state the layout in the contract; `native/desktop/src-tauri/src/docs/, native/CONTRACT.md`.
 - [ ] `S05` - Publish the site by composing each language's pages from the structure and the text; `dev/deploy/docs_static_site.py`.
