@@ -82,12 +82,17 @@ export function scenarioHost(
         : scenario.signIn.profile,
   });
 
+  // A view belongs to a signed-in profile; without one it is refused.
+  // Where the platform signs in inside the TUI the host cannot tell, and
+  // the fixture session stands for a signed-in one.
+  const readable = () =>
+    scenario.views !== "refused" &&
+    (presence === "present" || !scenario.signIn.status.supported);
   const views: ProfileViews = {
     async notifications() {
       say("notifications");
       await wait(options.latencyMs);
-      if (presence !== "present" || scenario.views === "refused")
-        throw failure("timed_out", "cli");
+      if (!readable()) throw failure("timed_out", "cli");
       return scenario.views === "empty"
         ? NEVER_CAPTURED
         : FIXTURE_NOTIFICATIONS;
@@ -95,9 +100,7 @@ export function scenarioHost(
     async filingCalendar(range) {
       say(`filingCalendar ${range.from} ${range.to}`);
       await wait(options.latencyMs);
-      // A view belongs to a signed-in profile; without one it is refused.
-      if (presence !== "present" || scenario.views === "refused")
-        throw failure("timed_out", "cli");
+      if (!readable()) throw failure("timed_out", "cli");
       return scenario.views === "empty" ? EMPTY_CALENDAR : FIXTURE_CALENDAR;
     },
   };

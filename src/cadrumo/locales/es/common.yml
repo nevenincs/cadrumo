@@ -528,6 +528,7 @@ desktop:
       submitted_observed: Presentación observada
     as_of: Según los registros locales a {date}. Aquí no se ha consultado nada a la
       AEAT.
+    close: Cerrar el calendario
     empty: No hay obligaciones de presentación en este periodo.
     failed: No se ha podido leer el calendario ({code}).
     loading: Cargando el calendario…
@@ -535,6 +536,7 @@ desktop:
       external_baseline_imported: Importado de una presentación anterior
       not_ready_to_file: Sin preparar
       ready_to_file: Listo para presentar
+    maximize: Maximizar el calendario
     modelo: Modelo {modelo}
     moved: Trasladado desde el {date}
     open_tui: Abrir en la TUI

@@ -505,6 +505,7 @@ desktop:
       not_observed: No agency receipt seen
       submitted_observed: Submission seen
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
+    close: Close the calendar
     empty: No filing obligations in this period.
     failed: The calendar couldn't be read ({code}).
     loading: Loading the calendar…
@@ -512,6 +513,7 @@ desktop:
       external_baseline_imported: Imported from an earlier filing
       not_ready_to_file: Not ready to file
       ready_to_file: Ready to file
+    maximize: Maximize the calendar
     modelo: Modelo {modelo}
     moved: Moved from {date}
     open_tui: Open in the TUI

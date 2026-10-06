@@ -258,6 +258,8 @@ export function useSignIn(host: Host) {
       );
       setSignOutFailure(null);
     },
+    /** Read the status again: something else has shown it may be stale. */
+    recheck: () => void refresh(),
     openTui: () => setHandover(true),
     tuiExited: () => {
       setHandover(false);

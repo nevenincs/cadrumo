@@ -222,6 +222,8 @@ test("no chord reaches the shell from under the sign-in dialog", async ({
 test("F6 reaches the calendar where the documentation would be", async ({
   page: target,
 }) => {
+  // Short enough that the calendar has more than it can show at once.
+  await target.setViewportSize({ width: 1280, height: 520 });
   await open(target);
   await rail(target)
     .getByRole("button", { name: label("desktop.calendar.title") })
@@ -230,6 +232,13 @@ test("F6 reaches the calendar where the documentation would be", async ({
     name: label("desktop.calendar.title"),
   });
   await expect(page).toBeFocused();
+  // The focused page is what scrolls: the keyboard moves through it.
+  const scrolled = () => page.evaluate((element) => element.scrollTop);
+  expect(await scrolled()).toBe(0);
+  await target.keyboard.press("PageDown");
+  await expect.poll(scrolled).toBeGreaterThan(0);
+  await target.keyboard.press("Home");
+  await expect.poll(scrolled).toBe(0);
   await target.keyboard.press("F6");
   await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
   await target.keyboard.press("Shift+F6");

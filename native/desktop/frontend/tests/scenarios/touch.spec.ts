@@ -122,11 +122,23 @@ for (const language of ["en", "hu"])
         edge.x + edge.width + 1,
       );
     }
-    const wide = await page.evaluate((element) => {
-      const scroller = element.querySelector(".calendar");
-      return scroller ? scroller.scrollWidth > scroller.clientWidth : true;
-    });
-    expect(wide, language).toBe(false);
+    expect(
+      await page.evaluate(
+        (element) => element.scrollWidth > element.clientWidth,
+      ),
+      language,
+    ).toBe(false);
+    // How far off each open obligation is stays on screen at this width:
+    // seven of the fixture's nine are not filed.
+    await expect(page.locator(".calendar-distance:visible")).toHaveCount(7);
+    // A finger scrolls the page.
+    const box = (await page.boundingBox())!;
+    await target.touchscreen.tap(box.x + box.width / 2, box.y + 20);
+    await page.evaluate((element) => element.scrollTo(0, 200));
+    expect(
+      await page.evaluate((element) => element.scrollTop),
+      language,
+    ).toBeGreaterThan(0);
   });
 
 test("the shell stacks its panes and never scrolls sideways", async ({

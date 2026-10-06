@@ -520,6 +520,7 @@ desktop:
       not_observed: Sense justificant observat
       submitted_observed: Presentació observada
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
+    close: Tanca el calendari
     empty: No hi ha obligacions de presentació en aquest període.
     failed: No s'ha pogut llegir el calendari ({code}).
     loading: S'està carregant el calendari…
@@ -527,6 +528,7 @@ desktop:
       external_baseline_imported: Importat d'una presentació anterior
       not_ready_to_file: Sense preparar
       ready_to_file: A punt per presentar
+    maximize: Maximitza el calendari
     modelo: Modelo {modelo}
     moved: Traslladat des del {date}
     open_tui: Obre a la TUI

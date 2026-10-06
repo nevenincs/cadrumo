@@ -205,7 +205,16 @@ export function SignInDialog({
   const busy = account.busy;
   const wasBusy = useRef(busy);
   useEffect(() => {
-    if (wasBusy.current && !busy && open) input.current?.focus();
+    if (wasBusy.current && !busy && open) {
+      const held = document.activeElement;
+      // Unless the person has taken it somewhere else in the meantime.
+      if (
+        !held ||
+        held === document.body ||
+        input.current?.form?.contains(held)
+      )
+        input.current?.focus();
+    }
     wasBusy.current = busy;
   }, [busy, open]);
 
@@ -219,13 +228,21 @@ export function SignInDialog({
   const creating = account.phase === "no-profile";
   const servicesDown = account.phase === "services-down";
   const answerable = status.runtimeAvailable && account.canSignIn;
+  // A refusal that hands over to the TUI is the explanation: no lead then
+  // says it a second way.
   const lead = creating
     ? t("desktop.account.no_profile_lead")
     : servicesDown
       ? null
       : answerable
         ? t("desktop.signin.lead")
-        : t("desktop.signin.open_tui_hint");
+        : account.refusal
+          ? null
+          : t("desktop.signin.open_tui_hint");
+  // Titled as a sign-in only where there is something to sign in with.
+  const title = answerable
+    ? "desktop.signin.title"
+    : (accountLabel(account.phase) ?? "desktop.signin.title");
 
   return (
     <Dialog
@@ -254,15 +271,7 @@ export function SignInDialog({
         <DialogHeader className="gap-3 pr-0">
           <Logo className="pr-8" />
           <div className="grid gap-1">
-            <DialogTitle>
-              {t(
-                creating
-                  ? "desktop.account.no_profile"
-                  : servicesDown
-                    ? "desktop.account.services_down"
-                    : "desktop.signin.title",
-              )}
-            </DialogTitle>
+            <DialogTitle>{t(title)}</DialogTitle>
             {lead && <DialogDescription>{lead}</DialogDescription>}
           </div>
         </DialogHeader>
@@ -474,6 +483,13 @@ export function Account({
   const phase = account.phase;
   if (!status?.supported) return null;
   const label = accountLabel(phase === "no-profile" ? "signed-out" : phase);
+  // The TUI's own flow is the way on where the account is not settled and
+  // no password can settle it. With no profile, that is the profile's line.
+  const handover =
+    !account.canSignIn &&
+    (phase === "signed-out" ||
+      phase === "unknown" ||
+      phase === "services-down");
   // The profile is shown where it is known, by name or as none. With no
   // runtime to ask it is simply not known, and the section is left out.
   const profile = status.active_profile !== null || phase === "no-profile";
@@ -533,8 +549,15 @@ export function Account({
             <Button variant="outline" size="sm" onClick={onSignIn}>
               {t("desktop.signin.submit")}
             </Button>
+          ) : handover ? (
+            <Button variant="outline" size="sm" onClick={onOpenTui}>
+              {t("desktop.signin.open_tui")}
+            </Button>
           ) : null}
         </div>
+        {handover && (
+          <Refusal refusal={account.refusal} seconds={account.retrySeconds} />
+        )}
         {phase === "signed-in" && (
           <p className="text-sm text-muted-foreground">
             {t("desktop.account.sign_out_hint")}

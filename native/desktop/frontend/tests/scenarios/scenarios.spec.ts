@@ -704,7 +704,7 @@ const ACCOUNT_STATES: {
     saying: "desktop.account.signed_out",
     dot: "unavailable",
     badge: "desktop.account.signed_out",
-    offers: [],
+    offers: ["desktop.signin.open_tui"],
     withholds: [
       "desktop.signin.submit",
       "desktop.account.sign_out",
@@ -716,7 +716,7 @@ const ACCOUNT_STATES: {
     saying: "desktop.account.services_down",
     dot: "unavailable",
     badge: "desktop.account.services_down",
-    offers: [],
+    offers: ["desktop.signin.open_tui"],
     withholds: [
       "desktop.signin.submit",
       "desktop.account.sign_out",
@@ -761,6 +761,27 @@ for (const state of ACCOUNT_STATES)
       await expect(
         pane.getByRole("button", { name: label(key), exact: true }),
       ).toHaveCount(0);
+
+    // The calendar page says the same, or shows the calendar.
+    const calendarToggle = target
+      .getByRole("navigation", { name: label("desktop.rail.label") })
+      .getByRole("button", { name: label("desktop.calendar.title") });
+    await calendarToggle.click();
+    const calendarRegion = target.getByRole("region", {
+      name: label("desktop.calendar.title"),
+    });
+    if (state.saying)
+      await expect(calendarRegion).toContainText(label(state.saying));
+    else
+      await expect(calendarRegion.getByRole("listitem").first()).toBeVisible();
+    await expect(
+      calendarRegion.getByRole("button", {
+        name: label("desktop.signin.submit"),
+        exact: true,
+      }),
+    ).toHaveCount(state.offers.includes("desktop.signin.submit") ? 1 : 0);
+    await calendarToggle.click();
+    await expect(calendarRegion).toHaveCount(0);
 
     // Settings: the session section says the same and offers the same.
     await target
@@ -933,6 +954,16 @@ test("throttled: a wait that is still running outlasts the dialog", async ({
   await submit(target).click();
   const dialog = target.locator(".sign-in");
   await expect(dialog.locator("button[type=submit]")).toBeDisabled();
+  const left = async () =>
+    Number(
+      /\b(\d+)\b/.exec(
+        (await dialog
+          .locator('[data-slot=alert] span[aria-hidden="true"]')
+          .textContent()) ?? "",
+      )?.[1],
+    );
+  await expect.poll(left).toBeLessThan(30);
+  const before = await left();
   await target.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await target
@@ -943,6 +974,11 @@ test("throttled: a wait that is still running outlasts the dialog", async ({
     })
     .click();
   await expect(dialog.locator("button[type=submit]")).toBeDisabled();
+  // The same wait, further along: not a new thirty seconds.
+  const after = await left();
+  expect(after).toBeGreaterThan(0);
+  expect(after).toBeLessThanOrEqual(before);
+  await expect.poll(calls(target, "signIn")).toBe(1);
 });
 
 test("one Escape closes the dialog from a button showing its tooltip", async ({
@@ -975,6 +1011,19 @@ test("sign-out-refused: the failure is said once, not again when settings reopen
     .click();
   await expect(settings.getByRole("alert")).toBeVisible();
   await target.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await settingsButton.click();
+  await expect(settings).toBeVisible();
+  await expect(settings.getByRole("alert")).toHaveCount(0);
+  // The same however settings is closed: by its own button this time.
+  await settings
+    .getByRole("button", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
+    .click();
+  await expect(settings.getByRole("alert")).toBeVisible();
+  await settingsButton.click();
   await expect(settings).toHaveCount(0);
   await settingsButton.click();
   await expect(settings).toBeVisible();
@@ -1082,9 +1131,20 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
       window as unknown as { __scenarioHostCalls: string[] }
     ).__scenarioHostCalls.find((made) => made.startsWith("filingCalendar ")),
   );
-  expect(asked).toMatch(
-    /^filingCalendar \d{4}-\d{2}-01 \d{4}-\d{2}-(28|29|30|31)$/,
-  );
+  const expected = await target.evaluate(() => {
+    const iso = (day: Date) =>
+      [
+        day.getFullYear(),
+        String(day.getMonth() + 1).padStart(2, "0"),
+        String(day.getDate()).padStart(2, "0"),
+      ].join("-");
+    const today = new Date();
+    // From the first day three months back to the last day eight ahead.
+    return `filingCalendar ${iso(
+      new Date(today.getFullYear(), today.getMonth() - 3, 1),
+    )} ${iso(new Date(today.getFullYear(), today.getMonth() + 9, 0))}`;
+  });
+  expect(asked).toBe(expected);
   // No row offers a way to a place the window cannot reach.
   await expect(
     page.getByRole("button", { name: label("desktop.calendar.open_tui") }),
@@ -1112,9 +1172,16 @@ test("the documentation keeps its place under the calendar", async ({
     second ?? "",
   );
   await calendarButton(target).click();
-  await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.pane.docs"), exact: true })
+  // The header speaks of the calendar while it shows it.
+  const head = target.locator(".pane-docs .pane-head");
+  await expect(
+    head.getByRole("button", { name: label("desktop.calendar.maximize") }),
+  ).toBeVisible();
+  await expect(
+    head.getByRole("button", { name: label("desktop.pane.maximize_docs") }),
+  ).toHaveCount(0);
+  await head
+    .getByRole("button", { name: label("desktop.calendar.close") })
     .click();
   await expect(target.locator(".docs-frame")).toBeVisible();
   await expect(target.locator(".pane-docs .pane-title")).toHaveText(
@@ -1167,11 +1234,202 @@ test("views-refused: a read that fails is said, never drawn as an empty calendar
   await expect(page.getByRole("alert")).toContainText("timed_out");
   await expect(page).not.toContainText(label("desktop.calendar.empty"));
   await expect.poll(calendarReads(target)).toBe(1);
-  await page
-    .getByRole("button", { name: label("desktop.calendar.refresh") })
-    .click();
+  const again = page.getByRole("button", {
+    name: label("desktop.calendar.refresh"),
+  });
+  await again.focus();
+  await target.keyboard.press("Enter");
   await expect.poll(calendarReads(target)).toBe(2);
   await expect(page.getByRole("alert")).toContainText("timed_out");
+  // The button that asked is still there, and still holds the keyboard.
+  await expect(again).toBeFocused();
+  // A refused read has the account looked at again.
+  await expect.poll(calls(target, "signInStatus")).toBeGreaterThanOrEqual(2);
+});
+
+test("unsupported: where sign-in is the TUI's, the calendar is asked for and shown", async ({
+  page: target,
+}) => {
+  await open(target, "unsupported");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page.getByRole("listitem").first()).toBeVisible();
+  await expect(page).not.toContainText(label("desktop.calendar.signed_out"));
+});
+
+test("the calendar's sign-in gets focus back when the dialog is put aside", async ({
+  page: target,
+}) => {
+  await open(target, "signed-out");
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  // With the TUI hidden, its way back in is not on screen to fall back to.
+  await target
+    .locator(".pane-tui .pane-head")
+    .getByRole("button")
+    .last()
+    .click();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  const signIn = page.getByRole("button", {
+    name: label("desktop.signin.submit"),
+    exact: true,
+  });
+  await signIn.click();
+  await expect(password(target)).toBeFocused();
+  await target.keyboard.press("Escape");
+  await expect(target.locator(".sign-in")).toHaveCount(0);
+  await expect(signIn).toBeFocused();
+  // Signed in from here, the keyboard is in the calendar that loads.
+  await signIn.click();
+  await password(target).fill("demo");
+  await submit(target).click();
+  await expect(page.getByRole("listitem").first()).toBeVisible();
+  await expect(page).toBeFocused();
+});
+
+test("signing out from the calendar leaves the keyboard on its page", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await page
+    .getByRole("button", { name: label("desktop.calendar.refresh") })
+    .focus();
+  await target.keyboard.press("ControlOrMeta+k");
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.account.sign_out"));
+  await target.keyboard.press("Enter");
+  await expect(page).toContainText(label("desktop.account.signed_out"));
+  await expect(page.getByRole("listitem")).toHaveCount(0);
+  await expect(page).toBeFocused();
+});
+
+test("the calendar's own actions replace the documentation's while it is shown", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.locator(".palette");
+  for (const key of ["desktop.action.zoom_in", "desktop.action.docs_back"]) {
+    await palette.getByRole("combobox").fill(label(key));
+    await expect(
+      palette.locator(".palette-title").filter({ hasText: label(key) }),
+    ).toHaveCount(0);
+  }
+  await target.keyboard.press("Escape");
+  // A zoom chord changes nothing that is not on screen.
+  await target.keyboard.press("ControlOrMeta+=");
+  await calendarButton(target).click();
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  await palette.getByRole("combobox").fill(label("desktop.action.zoom_reset"));
+  await expect(
+    palette
+      .locator(".palette-title")
+      .filter({ hasText: label("desktop.action.zoom_reset") }),
+  ).toHaveCount(1);
+  expect(
+    await target.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("cadrumo-shell-layout") ?? "{}").layout
+          ?.zoom ?? 1,
+    ),
+  ).toBe(1);
+});
+
+test("the calendar chosen while the TUI is maximized takes the keyboard", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await calendarButton(target).click();
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await expect(page).toBeFocused();
+  await target
+    .locator(".pane-tui .pane-head")
+    .getByRole("button", { name: label("desktop.pane.maximize_tui") })
+    .click();
+  await expect(page).toBeHidden();
+  await target.locator('[data-terminal="tui"] .xterm-screen').click();
+  await target.keyboard.press("ControlOrMeta+Shift+k");
+  const palette = target.locator(".palette");
+  await palette.getByRole("combobox").fill(label("desktop.calendar.title"));
+  await target.keyboard.press("Enter");
+  await expect(palette).toHaveCount(0);
+  await expect(page).toBeVisible();
+  await expect(page).toBeFocused();
+});
+
+test("putting the calendar away from the rail leaves the keyboard on the rail", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await calendarButton(target).focus();
+  await target.keyboard.press("Enter");
+  await expect(
+    target.getByRole("region", { name: label("desktop.calendar.title") }),
+  ).toBeFocused();
+  await calendarButton(target).focus();
+  await target.keyboard.press("Enter");
+  await expect(target.locator(".docs-frame")).toBeVisible();
+  await expect(calendarButton(target)).toBeFocused();
+});
+
+test("profile-locked: the dialog and settings say it and offer the TUI", async ({
+  page: target,
+}) => {
+  await open(target, "profile-locked");
+  const dialog = target.locator(".sign-in");
+  // Not titled as a sign-in where there is nothing to sign in with.
+  await expect(dialog.getByRole("heading")).toHaveText(
+    label("desktop.account.signed_out"),
+  );
+  await target.keyboard.press("Escape");
+  await target
+    .getByRole("button", { name: label("desktop.rail.settings") })
+    .click();
+  const settings = target.locator(".settings");
+  await expect(settings).toContainText(
+    label("desktop.signin.refused.profile_locked"),
+  );
+  await settings
+    .getByRole("button", {
+      name: label("desktop.signin.open_tui"),
+      exact: true,
+    })
+    .click();
+  await expect(settings).toHaveCount(0);
+  await expect(tui(target)).toBeFocused();
+});
+
+test("a refusal does not take the keyboard back from where the person moved it", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=wrong-password&latency=600");
+  await password(target).fill("not-the-password");
+  await target.keyboard.press("Enter");
+  const dismiss = target
+    .locator(".sign-in")
+    .getByRole("button", { name: label("desktop.signin.dismiss") });
+  await dismiss.focus();
+  await expect(target.locator(".sign-in")).toContainText(
+    label("desktop.signin.refused.invalid"),
+  );
+  await expect(dismiss).toBeFocused();
 });
 
 test("empty: a calendar with nothing due says so", async ({ page: target }) => {

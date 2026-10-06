@@ -159,6 +159,14 @@ export function App({ host }: { host: Host }) {
   // where the host offers one. The documentation stays loaded underneath.
   const [page, setPage] = useState<"docs" | "calendar">("docs");
   const calendarPage = useRef<HTMLElement>(null);
+  // The calendar was asked for: it takes focus once it is laid out.
+  const wantsCalendar = useRef(false);
+  // What held focus when the sign-in dialog was asked for, and whether
+  // that was in the calendar: the control itself may be gone by the close.
+  const signInOpener = useRef<{
+    element: Element | null;
+    calendar: boolean;
+  } | null>(null);
   const [environment, setEnvironment] = useState<Environment>({
     state: "loading",
   });
@@ -258,21 +266,50 @@ export function App({ host }: { host: Host }) {
   const views = host.views;
   const firstPaneShown = maximized !== "tui" && maximized !== "panel";
   const calendarOn = views !== undefined && page === "calendar";
+  const calendarVisible = calendarOn && firstPaneShown;
+  // Whose views are read: the signed-in profile's. Where the platform signs
+  // in inside the TUI the shell cannot tell, so it asks and shows the answer.
+  const reader =
+    signedIn || phase === "unsupported"
+      ? (account.status?.active_profile ?? "")
+      : null;
+  const recheckAccount = useCallback(() => accountRef.current.recheck(), []);
   const calendar = useFilingCalendar(
     views,
-    signedIn,
-    calendarOn && firstPaneShown,
+    reader,
+    calendarVisible,
+    recheckAccount,
   );
-  const messages = useMessages(views, signedIn);
-  // The keyboard goes with the page: into the calendar when it is shown,
-  // back to the documentation when it is put away.
-  const pageShown = useRef(page);
+  const messages = useMessages(views, reader, recheckAccount);
+  // The keyboard goes to the calendar when it was asked for and is laid
+  // out. Put away, focus stays where it is, unless it was in the page: then
+  // it goes to what the pane shows instead.
+  const calendarWas = useRef(calendarVisible);
   useEffect(() => {
-    if (pageShown.current === page) return;
-    pageShown.current = page;
-    if (page === "calendar") calendarPage.current?.focus();
-    else docs.current?.focus();
-  }, [page]);
+    if (calendarVisible && wantsCalendar.current) {
+      wantsCalendar.current = false;
+      calendarPage.current?.focus();
+    } else if (
+      !calendarVisible &&
+      calendarWas.current &&
+      firstPaneShown &&
+      document.activeElement === document.body
+    )
+      docs.current?.focus();
+    calendarWas.current = calendarVisible;
+  }, [calendarVisible, firstPaneShown]);
+  const askSignIn = useCallback(() => {
+    const element = document.activeElement;
+    signInOpener.current = {
+      element,
+      calendar: element?.closest(".calendar-page") != null,
+    };
+    setSignInDismissed(false);
+  }, []);
+  // Settings closes by more than one way; what it showed is settled by all.
+  useEffect(() => {
+    if (!settingsOpen) accountRef.current.settle();
+  }, [settingsOpen]);
 
   useEffect(() => {
     let current = true;
@@ -663,6 +700,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "back",
         chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
+        enabled: () => !calendarOn,
         run: () => docs.current?.back(),
       },
       {
@@ -671,6 +709,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "forward",
         chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
+        enabled: () => !calendarOn,
         run: () => docs.current?.forward(),
       },
       {
@@ -679,6 +718,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomIn",
         chords: [{ mod: true, code: "Equal", key: "=", scope: "docs" }],
+        enabled: () => !calendarOn,
         run: () =>
           patch({
             zoom: Math.min(2, Math.round((layout.zoom + 0.1) * 10) / 10),
@@ -690,6 +730,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomOut",
         chords: [{ mod: true, code: "Minus", key: "-", scope: "docs" }],
+        enabled: () => !calendarOn,
         run: () =>
           patch({
             zoom: Math.max(0.5, Math.round((layout.zoom - 0.1) * 10) / 10),
@@ -701,6 +742,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "reset",
         chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
+        enabled: () => !calendarOn,
         run: () => patch({ zoom: 1 }),
       },
       {
@@ -873,17 +915,22 @@ export function App({ host }: { host: Host }) {
         // could not load.
         enabled: () => views !== undefined,
         run: () => {
-          if (calendarOn && firstPaneShown) {
+          if (calendarVisible) {
             setPage("docs");
             return;
           }
+          wantsCalendar.current = true;
           setMaximized((area) => (area === "docs" ? area : null));
           setPage("calendar");
         },
         choose: () => {
+          if (calendarVisible) {
+            calendarPage.current?.focus();
+            return;
+          }
+          wantsCalendar.current = true;
           setMaximized((area) => (area === "docs" ? area : null));
           setPage("calendar");
-          calendarPage.current?.focus();
         },
       },
       {
@@ -911,7 +958,18 @@ export function App({ host }: { host: Host }) {
         icon: "lock",
         keywords: "login password",
         enabled: () => mayEnterPassword,
-        run: () => setSignInDismissed(false),
+        run: askSignIn,
+      },
+      {
+        // The TUI's own flow, wherever the account is not settled: the way
+        // on when no password can settle it.
+        id: "account.openTui",
+        label: t("desktop.signin.open_tui"),
+        group: "account",
+        icon: "tui",
+        keywords: "unlock recovery another profile",
+        enabled: () => gated && phase !== "checking" && phase !== "no-profile",
+        run: continueInTui,
       },
       {
         id: "account.createProfile",
@@ -990,7 +1048,9 @@ export function App({ host }: { host: Host }) {
       views,
       showTui,
       calendarOn,
-      firstPaneShown,
+      calendarVisible,
+      gated,
+      askSignIn,
       mayEnterPassword,
       continueInTui,
       signedIn,
@@ -1392,7 +1452,7 @@ export function App({ host }: { host: Host }) {
             id: "calendar",
             icon: "calendar",
             label: t("desktop.calendar.title"),
-            pressed: calendarOn && firstPaneShown,
+            pressed: calendarVisible,
             divided: true,
             onClick: () => runAction("view.calendar"),
           } satisfies RailItem,
@@ -1507,37 +1567,47 @@ export function App({ host }: { host: Host }) {
         title={t(calendarOn ? "desktop.calendar.title" : "desktop.pane.docs")}
         onToggleMaximize={() => toggleMaximize("docs")}
         controls={[
+          maximizeControl(
+            "docs",
+            calendarOn
+              ? "desktop.calendar.maximize"
+              : "desktop.pane.maximize_docs",
+          ),
+          ...(tuiVisible ? splitControls : []),
+          // The calendar is put away as the TUI is: by its pane's close.
           ...(calendarOn
             ? [
                 {
-                  id: "docs",
-                  icon: "book",
-                  label: t("desktop.pane.docs"),
+                  id: "close",
+                  icon: "close",
+                  label: t("desktop.calendar.close"),
                   run: () => setPage("docs"),
                 } satisfies PaneControl,
               ]
             : []),
-          maximizeControl("docs", "desktop.pane.maximize_docs"),
-          ...(tuiVisible ? splitControls : []),
         ]}
       />
       {calendarOn && (
-        <section
-          ref={calendarPage}
-          tabIndex={-1}
-          aria-label={t("desktop.calendar.title")}
-          className="calendar-page flex min-h-0 flex-1 flex-col focus-visible:-outline-offset-2"
-        >
-          <FilingCalendarView
-            state={calendar.state}
-            locale={locale}
-            refreshing={calendar.refreshing}
-            onRefresh={calendar.refresh}
-            onSignIn={
-              mayEnterPassword ? () => setSignInDismissed(false) : undefined
-            }
-          />
-        </section>
+        <FilingCalendarView
+          page={calendarPage}
+          state={calendar.state}
+          // Withheld, it says what the rest of the window says of the
+          // account, and offers a sign-in only where one can be given.
+          gate={
+            phase === "checking"
+              ? { title: t("desktop.signin.checking"), pending: true }
+              : {
+                  title: t(accountLabel(phase) ?? "desktop.account.unknown"),
+                  lead: mayEnterPassword
+                    ? t("desktop.calendar.signed_out")
+                    : undefined,
+                }
+          }
+          locale={locale}
+          refreshing={calendar.refreshing}
+          onRefresh={calendar.refresh}
+          onSignIn={mayEnterPassword ? askSignIn : undefined}
+        />
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}
       <div className={calendarOn ? "hidden" : "contents"}>
@@ -1615,7 +1685,7 @@ export function App({ host }: { host: Host }) {
       {account.gated ? (
         <SignedOut
           account={account}
-          onSignIn={() => setSignInDismissed(false)}
+          onSignIn={askSignIn}
           onOpenTui={continueInTui}
           signInButton={signInButton}
         />
@@ -1811,6 +1881,7 @@ export function App({ host }: { host: Host }) {
                   account={account}
                   onSignIn={() => {
                     setSettingsOpen(false);
+                    signInOpener.current = null;
                     setSignInDismissed(false);
                   }}
                   onSignOut={signOut}
@@ -1820,10 +1891,7 @@ export function App({ host }: { host: Host }) {
               prefs={prefs}
               setPrefs={setPrefs}
               languages={languages}
-              close={() => {
-                setSettingsOpen(false);
-                accountRef.current.settle();
-              }}
+              close={() => setSettingsOpen(false)}
               onReset={() => {
                 setPrefs(DEFAULT_PREFS);
                 setLayout(DEFAULT_LAYOUT);
@@ -1877,11 +1945,26 @@ export function App({ host }: { host: Host }) {
               if (!open) accountRef.current.settle();
             }}
             onOpenTui={continueInTui}
-            // Dismissed, focus goes to the way back in; signed in, to the
-            // TUI that has just started.
+            // Focus goes back to what asked for the dialog while that is
+            // still on screen. Otherwise: to the page that asked, to the
+            // TUI's way back in or the TUI that has just started, and last
+            // to the rail.
             onClosed={() => {
-              if (signInButton.current) signInButton.current.focus();
-              else if (tuiVisible) focusView("tui");
+              const opener = signInOpener.current;
+              signInOpener.current = null;
+              const shown = (element: Element | null): element is HTMLElement =>
+                element instanceof HTMLElement &&
+                element.isConnected &&
+                element.offsetParent !== null;
+              const from = opener?.element ?? null;
+              if (shown(from)) from.focus();
+              else if (opener?.calendar && shown(calendarPage.current))
+                calendarPage.current.focus();
+              else if (shown(signInButton.current))
+                signInButton.current.focus();
+              else if (tuiVisible && !account.gated) focusView("tui");
+              else if (shown(calendarPage.current))
+                calendarPage.current.focus();
               else focusRail();
             }}
           />

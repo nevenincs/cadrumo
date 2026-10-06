@@ -2,16 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { failureCode } from "../errors";
 import type { FilingCalendar, ProfileViews } from "./views";
 
-/** What the calendar page has to show: the read in flight, why there is
- * nothing to read, or the calendar. A failed read is never drawn as an empty
- * calendar. */
+/** What the calendar page has to show: the read in flight, that the account
+ * withholds it, why it failed, or the calendar. A failed read is never drawn
+ * as an empty calendar. */
 export type CalendarState =
   | { kind: "loading" }
-  | { kind: "signed-out" }
+  | { kind: "withheld" }
   | { kind: "failed"; code: string }
   | { kind: "ready"; calendar: FilingCalendar };
 
-type Read = Exclude<CalendarState, { kind: "signed-out" }>;
+type Read = Exclude<CalendarState, { kind: "withheld" }>;
 
 const iso = (day: Date) =>
   [
@@ -30,26 +30,30 @@ export function calendarRange(today: Date): { from: string; to: string } {
 }
 
 /**
- * The filing calendar of the signed-in profile, read when its page is shown
- * and again each time it is shown anew. Nothing is read for a page nobody is
- * looking at, and what was read is dropped when the sign-in ends: it belongs
- * to that profile, not to the window.
+ * The filing calendar of a profile, read when its page is shown and again
+ * each time it is shown anew. Nothing is read for a page nobody is looking
+ * at. `reader` names whose calendar it is, and is null while the account
+ * withholds the read: what was read is dropped whenever it changes, because
+ * a calendar belongs to its profile and not to the window. A read that is
+ * refused may mean the account has changed underneath, so it is reported.
  */
 export function useFilingCalendar(
   views: ProfileViews | undefined,
-  signedIn: boolean,
+  reader: string | null,
   shown: boolean,
+  onRefused: () => void,
 ) {
   const [read, setRead] = useState<Read>({ kind: "loading" });
   const [refreshing, setRefreshing] = useState(false);
   const request = useRef(0);
+  const refused = useRef(onRefused);
+  refused.current = onRefused;
 
   const refresh = useCallback(() => {
     if (!views) return;
     const mine = ++request.current;
+    // What is on screen stays up, and so does whatever was pressed to ask.
     setRefreshing(true);
-    // A read that failed starts over; one that answered stays up meanwhile.
-    setRead((held) => (held.kind === "failed" ? { kind: "loading" } : held));
     views
       .filingCalendar(calendarRange(new Date()))
       .then(
@@ -64,20 +68,24 @@ export function useFilingCalendar(
         if (mine !== request.current) return;
         setRead(next);
         setRefreshing(false);
+        if (next.kind === "failed") refused.current();
       });
   }, [views]);
 
   useEffect(() => {
-    if (signedIn && shown) refresh();
-  }, [signedIn, shown, refresh]);
-
-  useEffect(() => {
-    if (signedIn) return;
     ++request.current;
     setRead({ kind: "loading" });
     setRefreshing(false);
-  }, [signedIn]);
+  }, [reader]);
 
-  const state: CalendarState = signedIn ? read : { kind: "signed-out" };
-  return { state, refreshing: refreshing && read.kind === "ready", refresh };
+  useEffect(() => {
+    if (reader !== null && shown) refresh();
+  }, [reader, shown, refresh]);
+
+  const state: CalendarState = reader === null ? { kind: "withheld" } : read;
+  return {
+    state,
+    refreshing: refreshing && state.kind !== "loading",
+    refresh,
+  };
 }

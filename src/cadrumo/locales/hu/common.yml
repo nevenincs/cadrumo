@@ -513,6 +513,7 @@ desktop:
       submitted_observed: Benyújtás megfigyelve
     as_of: A helyi adatok alapján, {date} állapot szerint. Itt semmit nem kérdeztünk
       le az AEAT-től.
+    close: Naptár bezárása
     empty: Ebben az időszakban nincs bevallási kötelezettség.
     failed: A naptárat nem sikerült beolvasni ({code}).
     loading: A naptár betöltése…
@@ -520,6 +521,7 @@ desktop:
       external_baseline_imported: Korábbi bevallásból importálva
       not_ready_to_file: Nincs előkészítve
       ready_to_file: Benyújtásra kész
+    maximize: Naptár teljes méretben
     modelo: Modelo {modelo}
     moved: 'Áthelyezve erről: {date}'
     open_tui: Megnyitás a TUI-ban

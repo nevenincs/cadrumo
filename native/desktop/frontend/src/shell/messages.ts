@@ -14,18 +14,23 @@ export type MessagesState =
 const REREAD_MS = 60_000;
 
 /**
- * The counts of the signed-in profile's notifications, read at sign-in and
- * again when the window is returned to. Reading asks the tax agency nothing:
- * the counts are of the last capture. They are dropped when the sign-in
- * ends.
+ * The counts of a profile's notifications, read when the profile becomes
+ * readable and again when the window is returned to. Reading asks the tax
+ * agency nothing: the counts are of the last capture. `reader` names whose
+ * they are, and is null while the account withholds the read; the counts are
+ * dropped whenever it changes. A read that is refused may mean the account
+ * has changed underneath, so it is reported.
  */
 export function useMessages(
   views: ProfileViews | undefined,
-  signedIn: boolean,
+  reader: string | null,
+  onRefused: () => void,
 ): MessagesState {
   const [state, setState] = useState<MessagesState>({ kind: "unknown" });
   const request = useRef(0);
   const readAt = useRef(0);
+  const refused = useRef(onRefused);
+  refused.current = onRefused;
 
   const read = useCallback(() => {
     if (!views) return;
@@ -42,23 +47,23 @@ export function useMessages(
       )
       .then((next) => {
         // An answer to a question no longer being asked is not shown.
-        if (mine === request.current) setState(next);
+        if (mine !== request.current) return;
+        setState(next);
+        if (next.kind === "failed") refused.current();
       });
   }, [views]);
 
   useEffect(() => {
-    if (!signedIn) {
-      ++request.current;
-      setState({ kind: "unknown" });
-      return;
-    }
+    ++request.current;
+    setState({ kind: "unknown" });
+    if (reader === null) return;
     read();
     const focus = () => {
       if (Date.now() - readAt.current >= REREAD_MS) read();
     };
     window.addEventListener("focus", focus);
     return () => window.removeEventListener("focus", focus);
-  }, [signedIn, read]);
+  }, [reader, read]);
 
   return state;
 }

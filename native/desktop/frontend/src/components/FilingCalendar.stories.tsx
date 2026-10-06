@@ -52,7 +52,7 @@ export const NothingDue: Story = {
 
 export const Loading: Story = { args: { state: { kind: "loading" } } };
 
-export const SignedOut: Story = { args: { state: { kind: "signed-out" } } };
+export const SignedOut: Story = { args: { state: { kind: "withheld" } } };
 
 export const Failed: Story = {
   args: { state: { kind: "failed", code: "timed_out" } },

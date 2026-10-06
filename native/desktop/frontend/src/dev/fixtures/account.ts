@@ -42,6 +42,7 @@ export function accountFixture(
     submit: async () => undefined,
     signOut: async () => undefined,
     settle: () => undefined,
+    recheck: () => undefined,
     openTui: () => undefined,
     tuiExited: () => undefined,
     ...rest,
