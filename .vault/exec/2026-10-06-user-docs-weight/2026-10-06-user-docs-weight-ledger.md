@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:62549ff4e9482b9f61976542b7df8bf5ef2ff2b6a1ba28b4090dd19b30f46657'
+body_hash: 'sha256:9b85ff7fa758135c1eaff8899d70315e8083cae1c4aed04c989f8b6929dbc244'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -81,6 +81,10 @@ related:
 - `S05` `verify:` `compose the published layout over the four roots built 2026-10-06: one apex index, 25.5 MB in 16,713 files, preflight accepted` -> `pass`
 - `S05` `verify:` `ruff and ty on dev/deploy` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
+- `S10` `M` `justfile`
+- `S10` `M` `dev/tests/test_lane_reachability.py`
+- `S10` `verify:` `pytest dev/tests/test_lane_reachability.py` -> `pass`
+- `S10` `verify:` `pytest dev/ci/tests/test_machine_aware_load.py dev/ci/tests/test_ci_workflow.py` -> `pass`
 
 ## Notes
 
