@@ -21,6 +21,11 @@ export type AeatSubmissionState =
 export type CalendarEntry = {
   modelo: string;
   period: string;
+  /** The day the filing window opens, as an ISO date. The product's calendar
+   * command does not report it in its list today, though the product knows
+   * it; null where a host has no source for it. The window is then not
+   * drawn, only its close: an opening is never guessed. */
+  opens_on: string | null;
   /** The legal closing date, as an ISO date. */
   closes_on: string;
   /** The closing date after weekends and holidays; the one that binds. */
@@ -37,6 +42,24 @@ export type CalendarEntry = {
   local_filing_state: LocalFilingState;
   aeat_submission_state: AeatSubmissionState;
   justificante_verified: boolean;
+};
+
+/** Something observed beside the legal calendar: a filing that was made, or
+ * a message from the agency. It is a record of what was seen and when, and
+ * never by itself a statement that an obligation is met. */
+export type CalendarEvent = {
+  event_type: "filing" | "message";
+  /** The day it happened, as an ISO date. */
+  event_date: string;
+  /** Where the observation comes from. */
+  source: string;
+  /** The product's own sentence for it, in the output language. */
+  summary: string;
+  reference_id: string;
+  status: string | null;
+  aeat_submission_state: AeatSubmissionState | null;
+  aeat_submitted_at: string | null;
+  justificante_verified: boolean | null;
 };
 
 /** A profile detail the calendar had to assume, with the product's own
@@ -67,6 +90,9 @@ export type CalendarCoverage = {
 export type FilingCalendar = {
   range: { from_date: string; to_date: string };
   entries: CalendarEntry[];
+  /** What was observed in the range: the profile's own filing history and
+   * the agency's messages, as the product recorded them. */
+  events: CalendarEvent[];
   warnings: CalendarWarning[];
   /** When the product worked this out. */
   generated_at: string | null;

@@ -232,11 +232,14 @@ test("F6 reaches the calendar where the documentation would be", async ({
     name: label("desktop.calendar.title"),
   });
   await expect(page).toBeFocused();
-  // The focused page is what scrolls: the keyboard moves through it.
+  // The focused page is what scrolls: the keyboard moves through it. It
+  // opens on the current month, with the months before it above.
   const scrolled = () => page.evaluate((element) => element.scrollTop);
-  expect(await scrolled()).toBe(0);
+  await expect(page.locator(".calendar-months")).toBeVisible();
+  const opened = await scrolled();
+  expect(opened).toBeGreaterThan(0);
   await target.keyboard.press("PageDown");
-  await expect.poll(scrolled).toBeGreaterThan(0);
+  await expect.poll(scrolled).toBeGreaterThan(opened);
   // The scroll is eased: the next key waits for it to come to rest, or the
   // first would carry on over it.
   const resting = async () => {
@@ -251,11 +254,39 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
   await target.keyboard.press("Shift+F6");
   await expect(page).toBeFocused();
-  // Inside the page the keyboard reaches its controls in order.
+  // Inside the page the keyboard reaches its controls in order: the choice
+  // of face, which is one stop, then the fresh read, then the obligations.
+  await target.keyboard.press("Tab");
+  await expect(
+    page.getByRole("radio", { name: label("desktop.calendar.view_months") }),
+  ).toBeFocused();
   await target.keyboard.press("Tab");
   await expect(
     page.getByRole("button", { name: label("desktop.calendar.refresh") }),
   ).toBeFocused();
+  // Each obligation is one stop among the months, however many weeks it
+  // crosses: the fixture's nine, and no more.
+  await expect(page.locator(".calendar-bar:not([tabindex='-1'])")).toHaveCount(
+    9,
+  );
+  await target.keyboard.press("Tab");
+  const first = page.locator(".calendar-bar:focus");
+  await expect(first).toHaveAttribute("aria-pressed", "false");
+  const key = await first.getAttribute("data-entry");
+  await target.keyboard.press("Enter");
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  // The arrow keys move the choice of face, and the list comes with what
+  // was chosen among the months marked in it.
+  await target.keyboard.press("Shift+Tab");
+  await target.keyboard.press("Shift+Tab");
+  await target.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("radio", { name: label("desktop.calendar.view_list") }),
+  ).toBeChecked();
+  await expect(page.locator(".calendar-months")).toHaveCount(0);
+  const row = page.locator(`.calendar-list li[data-entry="${key}"]`);
+  await expect(row).toHaveAttribute("aria-current", "true");
+  await expect(row).toBeInViewport();
 });
 
 test("the calendar's chord shows it from a terminal and puts it away again", async ({

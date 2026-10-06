@@ -507,6 +507,9 @@ desktop:
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
     close: Close the calendar
     empty: No filing obligations in this period.
+    event:
+      filing: Filing
+      message: Message
     failed: The calendar couldn't be read ({code}).
     loading: Loading the calendar…
     local:
@@ -516,6 +519,7 @@ desktop:
     maximize: Maximize the calendar
     modelo: Modelo {modelo}
     moved: Moved from {date}
+    observed: Filing history and messages
     open_tui: Open in the TUI
     payment_cutoff: Direct debit until {date}
     refresh: Refresh
@@ -527,7 +531,11 @@ desktop:
       unknown: Unknown
     title: Filing calendar
     undetermined: 'Could not be determined: {modelos}'
+    view: View
+    view_list: List
+    view_months: Calendar
     warnings: Some profile details are missing, so these dates use defaults.
+    window_unknown: Opening date not reported
   docs:
     frame_title: Cadrumo documentation
     loading: Loading the documentation…

@@ -51,6 +51,7 @@ DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
 DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]](
     {
         "desktop.calendar.aeat.": ("accepted", "justificante_verified", "not_observed", "submitted_observed"),
+        "desktop.calendar.event.": ("filing", "message"),
         "desktop.calendar.local.": ("external_baseline_imported", "not_ready_to_file", "ready_to_file"),
         "desktop.calendar.state.": ("due", "filed", "late", "unknown"),
     }
@@ -86,6 +87,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.calendar.as_of",
         "desktop.calendar.close",
         "desktop.calendar.empty",
+        "desktop.calendar.event.filing",
+        "desktop.calendar.event.message",
         "desktop.calendar.failed",
         "desktop.calendar.loading",
         "desktop.calendar.local.external_baseline_imported",
@@ -94,6 +97,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.calendar.maximize",
         "desktop.calendar.modelo",
         "desktop.calendar.moved",
+        "desktop.calendar.observed",
         "desktop.calendar.open_tui",
         "desktop.calendar.payment_cutoff",
         "desktop.calendar.refresh",
@@ -104,7 +108,11 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.calendar.state.unknown",
         "desktop.calendar.title",
         "desktop.calendar.undetermined",
+        "desktop.calendar.view",
+        "desktop.calendar.view_list",
+        "desktop.calendar.view_months",
         "desktop.calendar.warnings",
+        "desktop.calendar.window_unknown",
         "desktop.docs.frame_title",
         "desktop.docs.loading",
         "desktop.host.failed",

@@ -189,9 +189,49 @@ const SURFACES: {
       await expect(
         target
           .getByRole("region", { name: label("desktop.calendar.title") })
-          .getByRole("listitem")
+          .locator(".calendar-bar")
           .first(),
       ).toBeVisible();
+    },
+  },
+  {
+    name: "the filing calendar as a list",
+    scenario: "signed-in",
+    reach: async (target) => {
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.calendar.title") })
+        .click();
+      const page = target.getByRole("region", {
+        name: label("desktop.calendar.title"),
+      });
+      await page
+        .getByRole("radio", { name: label("desktop.calendar.view_list") })
+        .click();
+      await expect(page.locator("li[data-entry]").first()).toBeVisible();
+    },
+  },
+  {
+    name: "the filing calendar maximized, months and list, one chosen",
+    scenario: "signed-in",
+    reach: async (target) => {
+      await target
+        .getByRole("navigation", { name: label("desktop.rail.label") })
+        .getByRole("button", { name: label("desktop.calendar.title") })
+        .click();
+      await target
+        .getByRole("button", { name: label("desktop.calendar.maximize") })
+        .click();
+      const page = target.getByRole("region", {
+        name: label("desktop.calendar.title"),
+      });
+      await page
+        .locator('.calendar-bar[data-entry="130:2026-3T"]')
+        .first()
+        .click();
+      await expect(
+        page.locator('.calendar-list li[data-entry="130:2026-3T"]'),
+      ).toHaveAttribute("aria-current", "true");
     },
   },
   {

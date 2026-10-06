@@ -259,9 +259,36 @@ typed in `src/shell/views.ts`.
 - **Withheld, a view says what the TUI pane says**, by the same component,
   `SignedOut`, with the same ways on.
 - **The types are what a host must return.** The calendar mirrors the result
-  of `app overview calendar` field for field. The notification summary is
+  of `app overview calendar`, entries and observed events, field for field,
+  and adds one field that command does not print today: `opens_on`, the day
+  an obligation's filing window opens. The product's own calendar model has
+  it; a host that cannot supply it returns null. The notification summary is
   counts only: the rows it is counted from carry names and tax numbers, and
   they do not reach the window.
+
+The calendar has two faces over the one read, in
+`src/components/FilingCalendar.tsx`:
+
+- **The months** (`src/components/CalendarMonths.tsx`, laid out by
+  `src/shell/calendarGrid.ts`) draw each obligation as a bar across the days
+  its window is open, ending on the day that binds, in a row of its own where
+  windows overlap. What was observed, a filing made or a message from the
+  agency, is a mark on its day, and the day the product evaluated is marked.
+  A window whose opening is null is drawn on its closing day alone and says
+  the opening was not reported: an opening is never guessed. The week begins
+  on the day the chrome language begins it.
+- **The list** says where each obligation stands, by month, with what was
+  observed in each month under its obligations.
+
+A page at least `--calendar-split` wide, a maximized pane on most windows,
+shows both: the months, and the list as a second column that scrolls by
+itself. A narrower page shows one, the months first, with a switch that
+stays in reach as the page scrolls. Each face opens on where the person is:
+the current month, the list's mark for today, or the obligation chosen.
+Choosing an obligation in one face marks it in the other and brings it into
+view. An obligation is one keyboard stop and one thing read aloud however
+many weeks its bar crosses. The colours of the bars are the colours of the
+counts in the page's head, and every state is also said in words.
 
 A new view takes its type and method in `src/shell/views.ts`, a fixture and
 an answer in the scenario host, a hook in `src/shell/` that owns when it is
@@ -354,8 +381,13 @@ The browser tests also select `.pane-tui`, `.pane-head`, `section.panel`,
 `.main-area`, `.tabstrip`, `.split` with `split-row` or `split-column`,
 `.split-separator`, `.logview`, `.filter-text`, `.record`, `.source-banner`,
 `.terminal-note`, `.terminal-host`, `.rail`, `[data-pin]` on a rail button,
-and in the calendar `.calendar-page`, `.calendar-standing` and
-`.calendar-distance`.
+and in the calendar `.calendar-page`, `.calendar-head`,
+`.calendar-standing`, `.calendar-view`, `.calendar-months`,
+`.calendar-month` with `data-month`, `[data-day]`, `.calendar-bar` and
+`li[data-entry]` with `data-entry` (Modelo and period), `data-selected`,
+`.calendar-grid-today`, `.calendar-event` with `data-event`,
+`.calendar-list`, `.calendar-aside`, `.calendar-observed`,
+`.calendar-today` and `.calendar-distance`.
 
 ## What only the desktop window can show
 
@@ -388,7 +420,12 @@ to be checked in a built desktop package, on an interactive desktop, with
   counts yet, so everything about them here is scenario evidence. When one
   does: the product's real answers against the types in `src/shell/views.ts`,
   how long a read takes, since each is a process, what a read answers once the
-  sign-in has ended, and the calendar over a real profile's year.
+  sign-in has ended, and the calendar over a real profile's year: how many
+  windows overlap in a week, and whether the host can say when each opens.
+- **Touch beside a pane's edge.** A finger that lands on nothing of its own
+  within about 30 px of the line between two panes is given to that line by
+  the browser's touch adjustment and resizes the panes instead of scrolling.
+  Measured in Chromium's touch emulation only; check it on a touch screen.
 - **A screen reader pass** of the sign-in dialog, the palette, the log and the
   calendar.
 

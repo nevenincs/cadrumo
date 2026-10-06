@@ -522,6 +522,9 @@ desktop:
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
     close: Tanca el calendari
     empty: No hi ha obligacions de presentació en aquest període.
+    event:
+      filing: Presentació
+      message: Missatge
     failed: No s'ha pogut llegir el calendari ({code}).
     loading: S'està carregant el calendari…
     local:
@@ -531,6 +534,7 @@ desktop:
     maximize: Maximitza el calendari
     modelo: Modelo {modelo}
     moved: Traslladat des del {date}
+    observed: Historial de presentacions i missatges
     open_tui: Obre a la TUI
     payment_cutoff: Domiciliació fins al {date}
     refresh: Actualitza
@@ -542,7 +546,11 @@ desktop:
       unknown: Desconegut
     title: Calendari de presentacions
     undetermined: 'No s''ha pogut determinar: {modelos}'
+    view: Vista
+    view_list: Llista
+    view_months: Calendari
     warnings: Falten dades del perfil; aquestes dates fan servir valors per defecte.
+    window_unknown: Data d'obertura no indicada
   docs:
     frame_title: Documentació de Cadrumo
     loading: S'està carregant la documentació…

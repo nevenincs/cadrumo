@@ -530,6 +530,9 @@ desktop:
       AEAT.
     close: Cerrar el calendario
     empty: No hay obligaciones de presentación en este periodo.
+    event:
+      filing: Presentación
+      message: Mensaje
     failed: No se ha podido leer el calendario ({code}).
     loading: Cargando el calendario…
     local:
@@ -539,6 +542,7 @@ desktop:
     maximize: Maximizar el calendario
     modelo: Modelo {modelo}
     moved: Trasladado desde el {date}
+    observed: Historial de presentaciones y mensajes
     open_tui: Abrir en la TUI
     payment_cutoff: Domiciliación hasta el {date}
     refresh: Actualizar
@@ -550,7 +554,11 @@ desktop:
       unknown: Desconocido
     title: Calendario de presentaciones
     undetermined: 'No se ha podido determinar: {modelos}'
+    view: Vista
+    view_list: Lista
+    view_months: Calendario
     warnings: Faltan datos del perfil; estas fechas usan valores por defecto.
+    window_unknown: Fecha de apertura no indicada
   docs:
     frame_title: Documentación de Cadrumo
     loading: Cargando la documentación…

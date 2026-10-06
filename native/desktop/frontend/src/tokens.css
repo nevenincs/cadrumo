@@ -101,12 +101,17 @@
   --resize-step: 1.5rem;
   /* How close to its end the log still counts as following the newest record. */
   --log-follow-slack: 1.5rem;
+  /* The calendar page at this width shows its months and its list side by
+     side; narrower, one of them at a time. */
+  --calendar-split: 56rem;
   /* Where a top-placed dialog sits: the same gap is kept below it. */
   --overlay-top: 12vh;
 
   /* ── Layers, lowest first. Overlays are portalled to the document body,
      so only these few need an order. ─────────────────────────────── */
   --layer-separator: 5;
+  /* A row of controls that stays while its page scrolls under it. */
+  --layer-pinned: 10;
   --layer-popover: 40;
   --layer-modal: 50;
   --layer-menu: 60;

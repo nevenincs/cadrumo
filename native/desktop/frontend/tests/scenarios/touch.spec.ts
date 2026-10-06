@@ -106,13 +106,41 @@ for (const language of ["en", "hu"])
     // documentation and the TUI.
     await target.locator(".rail button").nth(3).tap();
     const page = target.locator(".calendar-page");
-    await expect(page.getByRole("listitem").first()).toBeVisible();
-    expect(await overflowing(target)).toBe(false);
-    for (const control of await page.getByRole("button").all()) {
-      const box = await control.boundingBox();
-      expect(box?.height, language).toBeGreaterThanOrEqual(FINGER);
-      expect(box?.width, language).toBeGreaterThanOrEqual(FINGER);
-    }
+    // Each face in turn: the months, where every window is a control, a
+    // window of one day among them; then the list.
+    const fits = async (face: string) => {
+      expect(await overflowing(target), face).toBe(false);
+      expect(
+        await page.evaluate(
+          (element) => element.scrollWidth > element.clientWidth,
+        ),
+        face,
+      ).toBe(false);
+      const controls = [
+        ...(await page.getByRole("button").all()),
+        ...(await page.getByRole("radio").all()),
+      ];
+      expect(controls.length, face).toBeGreaterThan(2);
+      for (const control of controls) {
+        const box = await control.boundingBox();
+        const name = `${language} ${face}: ${await control.getAttribute("aria-label")}`;
+        expect(box?.height, name).toBeGreaterThanOrEqual(FINGER);
+        expect(box?.width, name).toBeGreaterThanOrEqual(FINGER);
+      }
+    };
+    await expect(page.locator(".calendar-months")).toBeVisible();
+    await expect(
+      page.locator('.calendar-bar[data-entry="349:2026-3T"]'),
+    ).toHaveCount(1);
+    await fits("months");
+    // The choice of face stays in reach wherever the page is scrolled to.
+    const list = page.getByRole("radio", {
+      name: label("desktop.calendar.view_list", {}, language),
+    });
+    await expect(list).toBeInViewport();
+    await list.tap();
+    await expect(page.locator(".calendar-list li[data-entry]")).toHaveCount(9);
+    await fits("list");
     // Every row keeps its text inside the page.
     const edge = (await page.boundingBox())!;
     for (const row of await page.getByRole("listitem").all()) {
@@ -122,12 +150,6 @@ for (const language of ["en", "hu"])
         edge.x + edge.width + 1,
       );
     }
-    expect(
-      await page.evaluate(
-        (element) => element.scrollWidth > element.clientWidth,
-      ),
-      language,
-    ).toBe(false);
     // How far off each open obligation is stays on screen at this width:
     // seven of the fixture's nine are not filed.
     await expect(page.locator(".calendar-distance:visible")).toHaveCount(7);
@@ -135,7 +157,11 @@ for (const language of ["en", "hu"])
     const box = (await page.boundingBox())!;
     const client = await target.context().newCDPSession(target);
     const x = box.x + box.width / 2;
-    const from = box.y + box.height - 30;
+    // From well inside the page: a touch that lands on nothing of its own
+    // within a fingertip of the line between the panes is given to that
+    // line by the browser, and moves it.
+    const from = box.y + box.height - 80;
+    const before = await page.evaluate((element) => element.scrollTop);
     const touch = (type: "touchStart" | "touchMove" | "touchEnd", y: number) =>
       client.send("Input.dispatchTouchEvent", {
         type,
@@ -149,7 +175,7 @@ for (const language of ["en", "hu"])
       .poll(() => page.evaluate((element) => element.scrollTop), {
         message: language,
       })
-      .toBeGreaterThan(0);
+      .toBeGreaterThan(before + 60);
   });
 
 test("a tap on messages says why there is no count", async ({

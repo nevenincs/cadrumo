@@ -1,5 +1,6 @@
 import type {
   CalendarEntry,
+  CalendarEvent,
   FilingCalendar,
   NotificationsSummary,
 } from "../../shell/views";
@@ -13,12 +14,14 @@ export const FIXTURE_TODAY = "2026-10-06";
 function entry(
   modelo: string,
   period: string,
+  opens: string | null,
   closes: string,
   change: Partial<CalendarEntry> = {},
 ): CalendarEntry {
   return {
     modelo,
     period,
+    opens_on: opens,
     closes_on: closes,
     adjusted_closes_on: closes,
     shift_reason: "none",
@@ -33,41 +36,79 @@ function entry(
   };
 }
 
+function observed(
+  type: CalendarEvent["event_type"],
+  on: string,
+  summary: string,
+  change: Partial<CalendarEvent> = {},
+): CalendarEvent {
+  return {
+    event_type: type,
+    event_date: on,
+    source: type === "filing" ? "filed_declarations" : "notifications",
+    summary,
+    reference_id: `fixture-${type}-${on}`,
+    status: null,
+    aeat_submission_state: null,
+    aeat_submitted_at: null,
+    justificante_verified: null,
+    ...change,
+  };
+}
+
 export const FIXTURE_CALENDAR: FilingCalendar = {
   range: { from_date: "2026-07-01", to_date: "2027-06-30" },
   generated_at: `${FIXTURE_TODAY}T09:14:05Z`,
   entries: [
-    entry("303", "2026-2T", "2026-07-20", {
+    entry("303", "2026-2T", "2026-07-01", "2026-07-20", {
       user_state: "filed",
       local_filing_state: "ready_to_file",
       aeat_submission_state: "justificante_verified",
       justificante_verified: true,
     }),
-    entry("130", "2026-2T", "2026-07-20", {
+    entry("130", "2026-2T", "2026-07-01", "2026-07-20", {
       user_state: "late",
       days_overdue: 78,
       local_filing_state: "ready_to_file",
     }),
-    entry("303", "2026-3T", "2026-10-20", {
+    entry("303", "2026-3T", "2026-10-01", "2026-10-20", {
       payment_cutoff_on: "2026-10-15",
       local_filing_state: "ready_to_file",
     }),
-    entry("130", "2026-3T", "2026-10-20"),
-    entry("111", "2026-3T", "2026-10-20", {
+    entry("130", "2026-3T", "2026-10-01", "2026-10-20"),
+    entry("111", "2026-3T", "2026-10-01", "2026-10-20", {
       aeat_submission_state: "submitted_observed",
       user_state: "filed",
       local_filing_state: "external_baseline_imported",
     }),
-    entry("349", "2026-3T", "2026-10-20", { user_state: "unknown" }),
-    entry("303", "2026-4T", "2027-01-30", {
+    // A host that could not say when this window opens: only its close.
+    entry("349", "2026-3T", null, "2026-10-20", { user_state: "unknown" }),
+    entry("303", "2026-4T", "2027-01-01", "2027-01-30", {
       adjusted_closes_on: "2027-02-01",
       shift_reason: "weekend",
     }),
-    entry("390", "2026", "2027-01-30", {
+    entry("390", "2026", "2027-01-01", "2027-01-30", {
       adjusted_closes_on: "2027-02-01",
       shift_reason: "weekend",
     }),
-    entry("100", "2026", "2027-06-30", { payment_cutoff_on: "2027-06-25" }),
+    entry("100", "2026", "2027-04-07", "2027-06-30", {
+      payment_cutoff_on: "2027-06-25",
+    }),
+  ],
+  events: [
+    observed("filing", "2026-07-17", "Modelo 303 2026-2T filed", {
+      status: "presentado",
+      aeat_submission_state: "justificante_verified",
+      aeat_submitted_at: "2026-07-17T10:42:00Z",
+      justificante_verified: true,
+    }),
+    observed("message", "2026-09-03", "Notification received from the agency"),
+    observed("filing", "2026-10-02", "Modelo 111 2026-3T filed", {
+      status: "presentado",
+      aeat_submission_state: "submitted_observed",
+      aeat_submitted_at: "2026-10-02T08:15:00Z",
+      justificante_verified: false,
+    }),
   ],
   warnings: [
     {
@@ -119,7 +160,7 @@ export const AHEAD_CALENDAR = without(
 export const STRADDLING_CALENDAR: FilingCalendar = {
   ...AHEAD_CALENDAR,
   entries: [
-    entry("216", "2026-09", "2026-10-01", {
+    entry("216", "2026-09", "2026-09-21", "2026-10-01", {
       user_state: "filed",
       local_filing_state: "ready_to_file",
       aeat_submission_state: "accepted",
@@ -132,6 +173,7 @@ export const STRADDLING_CALENDAR: FilingCalendar = {
 export const EMPTY_CALENDAR: FilingCalendar = {
   ...FIXTURE_CALENDAR,
   entries: [],
+  events: [],
   warnings: [],
   coverage: { ...FIXTURE_CALENDAR.coverage, surfaced: [], advised: [] },
 };

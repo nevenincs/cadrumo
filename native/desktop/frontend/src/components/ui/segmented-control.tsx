@@ -48,7 +48,7 @@ function SegmentedControlItem({
       className={cn(
         // A segment is as wide as its words need, sharing what is left over;
         // a name too long for the row wraps instead of being cut.
-        "min-h-control-sm min-w-0 flex-auto cursor-pointer rounded-md px-2 py-0.5 text-base leading-tight text-balance text-muted-foreground select-none",
+        "min-h-control-sm min-w-control-sm flex-auto cursor-pointer rounded-md px-2 py-0.5 text-base leading-tight text-balance text-muted-foreground select-none",
         "transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         "data-[state=checked]:bg-raised data-[state=checked]:font-medium data-[state=checked]:text-foreground data-[state=checked]:shadow-raised",
         "forced-colors:data-[state=checked]:bg-[Highlight] forced-colors:data-[state=checked]:text-[HighlightText]",

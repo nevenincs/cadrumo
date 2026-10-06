@@ -515,6 +515,9 @@ desktop:
       le az AEAT-től.
     close: Naptár bezárása
     empty: Ebben az időszakban nincs bevallási kötelezettség.
+    event:
+      filing: Bevallás
+      message: Üzenet
     failed: A naptárat nem sikerült beolvasni ({code}).
     loading: A naptár betöltése…
     local:
@@ -524,6 +527,7 @@ desktop:
     maximize: Naptár teljes méretben
     modelo: Modelo {modelo}
     moved: 'Áthelyezve erről: {date}'
+    observed: Bevallási előzmények és üzenetek
     open_tui: Megnyitás a TUI-ban
     payment_cutoff: 'Beszedési megbízás eddig: {date}'
     refresh: Frissítés
@@ -535,7 +539,11 @@ desktop:
       unknown: Ismeretlen
     title: Bevallási naptár
     undetermined: 'Nem sikerült megállapítani: {modelos}'
+    view: Nézet
+    view_list: Lista
+    view_months: Naptár
     warnings: Hiányoznak profiladatok, ezért ezek a dátumok alapértékeket használnak.
+    window_unknown: A kezdő dátum nincs megadva
   docs:
     frame_title: Cadrumo-dokumentáció
     loading: A dokumentáció betöltése…

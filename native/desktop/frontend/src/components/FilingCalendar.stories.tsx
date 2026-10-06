@@ -14,12 +14,18 @@ import { PaneHeader } from "./PaneHeader";
 import { SignedOut } from "./SignIn";
 
 // The filing calendar page in every state, over a fixed calendar in the
-// product's own shape. The toolbar's language also sets how dates are written.
+// product's own shape. The toolbar's language also sets how dates are
+// written and the day a week begins on. A page as wide as the window shows
+// the months and the list together; one as wide as a pane shows one of them.
 const noop = () => undefined;
 
 type Args = {
   state: CalendarState;
   refreshing?: boolean;
+  /** As wide as a pane beside another, where one face is shown at a time. */
+  pane?: boolean;
+  /** The face such a pane shows first. */
+  view?: "months" | "list";
   /** Why the calendar is withheld, as a phase of the account. */
   phase?: "signed-out" | "checking" | "locked" | "services-down";
 };
@@ -36,10 +42,16 @@ const ACCOUNTS = {
   }),
 };
 
-function Page({ state, refreshing, phase }: Args) {
+function Page({ state, refreshing, phase, pane, view }: Args) {
   const t = useStrings();
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div
+      className={
+        pane
+          ? "flex h-dvh w-full max-w-2xl flex-col border-r bg-background"
+          : "flex h-dvh flex-col bg-background"
+      }
+    >
       <PaneHeader
         title={t("desktop.calendar.title")}
         controls={[]}
@@ -49,6 +61,7 @@ function Page({ state, refreshing, phase }: Args) {
         state={state}
         locale={document.documentElement.lang || "en"}
         refreshing={refreshing}
+        defaultView={view}
         withheld={
           phase && (
             <SignedOut
@@ -76,7 +89,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Obligations: Story = {};
+export const Obligations: Story = { name: "Months and list together" };
+
+export const PaneMonths: Story = {
+  name: "In a pane: the months",
+  args: { pane: true },
+};
+
+export const PaneList: Story = {
+  name: "In a pane: the list",
+  args: { pane: true, view: "list" },
+};
 
 export const Refreshing: Story = { args: { refreshing: true } };
 
