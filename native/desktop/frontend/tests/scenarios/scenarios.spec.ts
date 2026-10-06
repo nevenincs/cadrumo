@@ -3110,6 +3110,91 @@ test("a short page keeps only the calendar's controls in view, a tall one its wh
   ).toEqual([]);
 });
 
+for (const scheme of ["light", "dark"] as const)
+  test(`a window's edge stands out from the card and from its own fill (${scheme})`, async ({
+    page: target,
+  }) => {
+    await target.addInitScript((appearance) => {
+      localStorage.setItem(
+        "cadrumo-shell-layout",
+        JSON.stringify({ prefs: { appearance } }),
+      );
+    }, scheme);
+    await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+    await open(target, "signed-in", "&calendar=busy");
+    await calendarButton(target).click();
+    const page = target.getByRole("region", {
+      name: label("desktop.calendar.title"),
+    });
+    await expect(target.locator("html")).toHaveAttribute("data-scheme", scheme);
+    // Every reading is drawn somewhere once the crowded months are whole.
+    await expect(page.locator(".calendar-whole").first()).toBeVisible();
+    for (const whole of await page.locator(".calendar-whole").all())
+      await whole.click();
+    const ratios = await page.evaluate((element) => {
+      const canvas = document.createElement("canvas").getContext("2d")!;
+      const rgba = (colour: string) => {
+        canvas.clearRect(0, 0, 1, 1);
+        canvas.fillStyle = colour;
+        canvas.fillRect(0, 0, 1, 1);
+        const [r = 0, g = 0, b = 0, a = 0] = canvas.getImageData(
+          0,
+          0,
+          1,
+          1,
+        ).data;
+        return [r, g, b, a / 255] as const;
+      };
+      type Colour = readonly [number, number, number, number];
+      const over = (top: Colour, under: readonly number[]) =>
+        [0, 1, 2].map(
+          (channel) =>
+            (top[channel] ?? 0) * top[3] + (under[channel] ?? 0) * (1 - top[3]),
+        );
+      const luminance = (colour: readonly number[]) => {
+        const [r = 0, g = 0, b = 0] = colour.map((value) => {
+          const part = value / 255;
+          return part <= 0.03928
+            ? part / 12.92
+            : ((part + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const ratio = (a: readonly number[], b: readonly number[]) => {
+        const [high = 0, low = 0] = [luminance(a), luminance(b)].sort(
+          (x, y) => y - x,
+        );
+        return (high + 0.05) / (low + 0.05);
+      };
+      const card = over(
+        rgba(
+          getComputedStyle(
+            element.querySelector(".calendar-month > div:last-child")!,
+          ).backgroundColor,
+        ),
+        [255, 255, 255],
+      );
+      return ["late", "due", "unknown", "filed"].map((state) => {
+        const bar = element.querySelector(
+          `.calendar-bar[data-state="${state}"]`,
+        );
+        if (!bar) return { state, card: 0, fill: 0 };
+        const style = getComputedStyle(bar);
+        const edge = over(rgba(style.borderTopColor), card);
+        return {
+          state,
+          card: ratio(edge, card),
+          fill: ratio(edge, over(rgba(style.backgroundColor), card)),
+        };
+      });
+    });
+    // Three to one is the least a part of a control needs to be made out.
+    for (const { state, card, fill } of ratios) {
+      expect(card, `${state} against the card`).toBeGreaterThanOrEqual(3);
+      expect(fill, `${state} against its fill`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
 test("with the system's colours forced, the calendar still shows its day, its states and what is chosen", async ({
   page: target,
 }) => {

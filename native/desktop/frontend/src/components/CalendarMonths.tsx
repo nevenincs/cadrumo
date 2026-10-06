@@ -30,7 +30,9 @@ import type { CalendarUserState, FilingCalendar } from "../shell/views";
 // wash and the hue are gone: the edge and the mark remain, and what is
 // filed takes a double edge in place of its hollow.
 const BAR_TONE: Record<CalendarUserState, string> = {
-  due: "border-muted-foreground bg-secondary",
+  // The plainest reading has the quietest edge: still three to one against
+  // the card and against its own fill, in both schemes, and no more.
+  due: "border-muted-foreground/80 bg-secondary",
   late: "border-dashed border-destructive bg-destructive/10",
   filed:
     "border-success bg-transparent forced-colors:border-y-[3px] forced-colors:border-double",
