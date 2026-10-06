@@ -563,13 +563,28 @@ test("a focused record that scrolls out of the log hands focus to the log, once"
   // Following, the newest span moves on and the focused record leaves it:
   // focus goes to the list and stays there, and the log goes on following.
   await expect(list).toBeFocused({ timeout: 15000 });
-  await target.waitForTimeout(500);
+  // Once: another whole span of records arrives, and focus is where it was.
+  const held = await errorsHeld(target)();
+  await expect.poll(errorsHeld(target)).toBeGreaterThan(held + 60);
   await expect(list).toBeFocused();
   await expect(follow).toHaveAttribute("aria-pressed", "true");
   // An arrow key goes on to the record Tab would reach.
   await target.keyboard.press("ArrowUp");
   await expect(list.locator(".record:focus")).toHaveCount(1);
 });
+
+/** How many error records the log holds, as its bar counts them: a number
+ * that grows as records arrive, whatever span is drawn. One generated record
+ * in seven is an error. It stops growing once the ring is full. */
+const errorsHeld = (target: Page) => async () =>
+  Number(
+    /\d+/.exec(
+      (await target
+        .locator(".logview [data-slot=badge][data-variant=danger]")
+        .first()
+        .textContent()) ?? "",
+    )?.[0] ?? 0,
+  );
 
 // The log's Follow toggle and its list, with the pointer over the list.
 async function overLog(target: Page) {
@@ -618,7 +633,8 @@ test("the gentlest wheel up leaves the end of a busy log", async ({
   );
   await openLogs(target);
   const { list, follow } = await overLog(target);
-  for (let notch = 0; notch < 40; notch++) await target.mouse.wheel(0, -2);
+  // One notch of the smallest size a wheel sends.
+  await target.mouse.wheel(0, -2);
   await expect(follow).toHaveAttribute("aria-pressed", "false");
   // And the view stays where the wheel left it while records arrive.
   const gap = () =>
@@ -627,8 +643,7 @@ test("the gentlest wheel up leaves the end of a busy log", async ({
         element.scrollHeight - element.scrollTop - element.clientHeight,
     );
   const before = await gap();
-  await target.waitForTimeout(600);
-  expect(await gap()).toBeGreaterThan(before);
+  await expect.poll(gap).toBeGreaterThan(before + 200);
 });
 
 test("End returns a reader to the newest record of a busy log", async ({
@@ -1017,11 +1032,14 @@ test("a reader far from the end is never given the whole log to draw", async ({
       top: (row?.getBoundingClientRect().top ?? 0) - edge,
     };
   });
-  // Far more arrives than the span may hold.
-  await target.waitForTimeout(4000);
-  const drawn = await list.locator(".record").count();
-  expect(drawn).toBeLessThanOrEqual(2000);
-  expect(drawn).toBeGreaterThan(400);
+  // Far more arrives than the span may hold: about twenty-eight hundred
+  // records, by the errors among them.
+  const held = await errorsHeld(target)();
+  await expect
+    .poll(errorsHeld(target), { timeout: 20000 })
+    .toBeGreaterThan(held + 400);
+  // The span is full, and no fuller.
+  expect(await list.locator(".record").count()).toBe(2000);
   const after = await list.evaluate((element, seq) => {
     const edge = element.getBoundingClientRect().top;
     const row = element.querySelector(`[data-seq="${seq}"]`);
