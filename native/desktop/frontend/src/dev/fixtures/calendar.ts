@@ -99,6 +99,35 @@ export const NEVER_CAPTURED: NotificationsSummary = {
   unread: 0,
 };
 
+const without = (keep: (entry: CalendarEntry) => boolean): FilingCalendar => ({
+  ...FIXTURE_CALENDAR,
+  entries: FIXTURE_CALENDAR.entries.filter(keep),
+  warnings: [],
+});
+
+/** Only what is behind today: the mark for today closes the list. */
+export const BEHIND_CALENDAR = without(
+  (item) => item.adjusted_closes_on < FIXTURE_TODAY,
+);
+
+/** Only what is ahead: the mark for today opens the list. */
+export const AHEAD_CALENDAR = without(
+  (item) => item.adjusted_closes_on >= FIXTURE_TODAY,
+);
+
+/** Today falls between two dates of one month: the month is split by it. */
+export const STRADDLING_CALENDAR: FilingCalendar = {
+  ...AHEAD_CALENDAR,
+  entries: [
+    entry("216", "2026-09", "2026-10-01", {
+      user_state: "filed",
+      local_filing_state: "ready_to_file",
+      aeat_submission_state: "accepted",
+    }),
+    ...AHEAD_CALENDAR.entries,
+  ],
+};
+
 /** The same calendar with nothing due: an empty range is not a failed read. */
 export const EMPTY_CALENDAR: FilingCalendar = {
   ...FIXTURE_CALENDAR,

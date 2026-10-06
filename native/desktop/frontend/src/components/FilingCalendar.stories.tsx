@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
-import { EMPTY_CALENDAR, FIXTURE_CALENDAR } from "@/dev/fixtures/calendar";
+import {
+  AHEAD_CALENDAR,
+  BEHIND_CALENDAR,
+  EMPTY_CALENDAR,
+  FIXTURE_CALENDAR,
+  STRADDLING_CALENDAR,
+} from "@/dev/fixtures/calendar";
 import type { CalendarState } from "../shell/calendar";
 import { useStrings } from "../shell/strings";
 import { FilingCalendarView } from "./FilingCalendar";
@@ -77,6 +83,22 @@ export const Refreshing: Story = { args: { refreshing: true } };
 export const NothingDue: Story = {
   name: "Nothing in the range",
   args: { state: { kind: "ready", calendar: EMPTY_CALENDAR } },
+};
+
+// Where the mark for today stands in each shape of range.
+export const TodayOpens: Story = {
+  name: "Today: everything is ahead",
+  args: { state: { kind: "ready", calendar: AHEAD_CALENDAR } },
+};
+
+export const TodayWithinMonth: Story = {
+  name: "Today: inside a month",
+  args: { state: { kind: "ready", calendar: STRADDLING_CALENDAR } },
+};
+
+export const TodayCloses: Story = {
+  name: "Today: everything is behind",
+  args: { state: { kind: "ready", calendar: BEHIND_CALENDAR } },
 };
 
 export const Loading: Story = { args: { state: { kind: "loading" } } };
