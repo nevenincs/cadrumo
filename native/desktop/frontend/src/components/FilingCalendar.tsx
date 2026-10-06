@@ -104,10 +104,20 @@ function Entry({
         dateTime={entry.adjusted_closes_on}
         className="grid w-10 justify-items-center"
       >
-        <span className="text-md leading-tight font-semibold tabular-nums">
+        {/* The eye has the month in the heading above; read aloud, a day
+            and a weekday alone are not a date, so the whole date is said. */}
+        <span className="sr-only">
+          {new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(
+            closes,
+          )}
+        </span>
+        <span
+          aria-hidden="true"
+          className="text-md leading-tight font-semibold tabular-nums"
+        >
           {closes.getDate()}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span aria-hidden="true" className="text-xs text-muted-foreground">
           {new Intl.DateTimeFormat(locale, { weekday: "short" }).format(closes)}
         </span>
       </time>

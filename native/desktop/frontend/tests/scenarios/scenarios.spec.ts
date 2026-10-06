@@ -1691,6 +1691,14 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   ).toContainText(said.format(3, "month"));
   // The standing is a list of readings, each with its count.
   await expect(page.locator("ul.calendar-standing > li")).toHaveCount(4);
+  // Read aloud, each obligation says its whole date, not a day and a
+  // weekday that only the heading above makes a date.
+  await expect(late.locator("time .sr-only")).toHaveText(
+    new Intl.DateTimeFormat("en", { dateStyle: "full" }).format(
+      new Date(2026, 6, 20),
+    ),
+  );
+  await expect(late.locator("time [aria-hidden=true]")).toHaveCount(2);
   // Where the past ends is marked once, in the language's word for today,
   // between the last obligation behind and the first one ahead.
   const mark = page.getByRole("separator");
