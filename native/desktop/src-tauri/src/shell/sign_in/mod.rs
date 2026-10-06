@@ -578,17 +578,20 @@ mod tests {
                 "kind": "refused", "code": "profile_already_exists", "retryAfterSeconds": null
             })
         );
-        // A second profile is the one selected once it exists.
+        // A second profile is the one selected once it exists. Its label
+        // holds what a command line is most often wrong about: quotes,
+        // spaces, an ampersand, and a backslash at its very end.
+        let second = r#"Segundo "el nuevo" & Cía (2026) \"#;
         assert_eq!(
-            create(&state, "Segundo, S.L."),
-            serde_json::json!({"kind": "created", "name": "Segundo, S.L."})
+            create(&state, second),
+            serde_json::json!({"kind": "created", "name": second})
         );
         assert_eq!(
             listed(&state),
             serde_json::json!({
                 "profiles": [
                     {"name": first, "active": false},
-                    {"name": "Segundo, S.L.", "active": true}
+                    {"name": second, "active": true}
                 ],
                 "complete": true
             })
