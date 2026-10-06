@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-weight'
 date: '2026-10-06'
-modified: '2026-10-06'
+modified: '2026-10-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b85ff7fa758135c1eaff8899d70315e8083cae1c4aed04c989f8b6929dbc244'
+body_hash: 'sha256:341354cc0b7b3fea21a6a8d81a966bce2298f4e62c74fa95673a6e4e1e64a030'
 related:
   - "[[2026-10-06-user-docs-weight-plan]]"
 ---
@@ -85,6 +85,12 @@ related:
 - `S10` `M` `dev/tests/test_lane_reachability.py`
 - `S10` `verify:` `pytest dev/tests/test_lane_reachability.py` -> `pass`
 - `S10` `verify:` `pytest dev/ci/tests/test_machine_aware_load.py dev/ci/tests/test_ci_workflow.py` -> `pass`
+- `S12` `M` `dev/packaging/native/action_cache.py`
+- `S12` `M` `dev/packaging/native/docs_build.py`
+- `S12` `A` `dev/packaging/native/tests/test_docs_shared_site.py`
+- `S12` `M` `native/CONTRACT.md`
+- `S12` `M` `native/cmake/Docs.cmake`
+- `S12` `verify:` `pytest dev/packaging/native/tests -k docs` -> `pass`
 
 ## Notes
 

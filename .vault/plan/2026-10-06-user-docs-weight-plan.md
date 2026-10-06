@@ -8,7 +8,7 @@ related:
   - '[[2026-10-06-user-docs-weight-adr]]'
 modified: '2026-10-06'
 body_schema: body-v2
-body_hash: 'sha256:cee4b50881978ad49ffd44498e65abba8ece2664e1f1c9efe7e975246391177d'
+body_hash: 'sha256:a7f00fc298bf884d6d3969b2f696a0d3f745bf56334ee3e06f47c0ce4c7e8551'
 ---
 
 # `user-docs-weight` plan
@@ -32,7 +32,7 @@ The plan reaches the decision's two commitments in its order D5. S01 to S05 chan
 - [ ] `S08` - Emit the authored pages' strings from the gettext catalogues in the one compile, retire the per-language builds, and move the strict and completeness gates onto the composed pages; `dev/docs/build.py, dev/docs/i18n.py, dev/packaging/native/docs_build.py, dev/docs/tests/`.
 - [ ] `S10` - Make the local and CI flows compile the documentation once: the language recipes, the live preview's per-language rebuilds, the docs gates that the local gate and the repository-contract lane each run again, and the prove jobs that repeat them per interpreter; `justfile, .github/workflows/release.yml, dev/docs/serve.py, dev/docs/serve_languages.py`.
 - [ ] `S11` - Run each language-independent projection once per compile: the command tree written per root and the command walk the search records repeat per language; `dev/docs/cli_tree.py, dev/docs/terminology/cli_projection.py, docs/conf.py`.
-- [ ] `S12` - Build the packaged documentation once for every platform preset and key its cache on what it reads, not on the binary directory; `native/cmake/Docs.cmake, dev/packaging/native/action_cache.py`.
+- [x] `S12` - Build the packaged documentation once for every platform preset and key its cache on what it reads, not on the binary directory; `native/cmake/Docs.cmake, dev/packaging/native/action_cache.py`.
 - [ ] `S13` - Store the structure with one line terminator whatever platform compiled it, and compose each page with the terminator the composing platform's own build writes; `dev/docs/language_roots.py, dev/docs/compile_once.py, dev/docs/_locale_chrome.py`.
 
 ## Parallelization
