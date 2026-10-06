@@ -55,6 +55,7 @@ from __future__ import annotations
 import bisect
 import html
 import json
+import os
 import re
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -342,6 +343,29 @@ class CompileSlots:
     plain: list[tuple[str, ...] | None] = field(default_factory=list)
     _numbers: dict[tuple[Rendering, tuple[str, ...]], int] = field(default_factory=dict)
     _reserved: set[int] = field(default_factory=set)
+    _process: int = field(default_factory=os.getpid)
+
+    def _new_number(self) -> int:
+        """Return the next mark number, refusing one taken outside the recording process.
+
+        Sphinx reads documents in forked worker processes where it can. A
+        worker inherits this record and can read every mark in it, but a
+        mark it adds stays in the worker: the page it reads carries the
+        number, the process that writes the record never learns the
+        strings, and two workers take the same number for different
+        strings. A creation site reached while a worker reads must
+        therefore record its marks before reading starts.
+
+        Raises:
+            CompileSlotsError: If called in a process other than the one
+                the record was made in.
+        """
+        if os.getpid() != self._process:
+            raise CompileSlotsError(
+                "a mark was created in a worker process, where its strings are lost and its number "
+                "is taken again by another worker; record it before the documents are read"
+            )
+        return len(self.values)
 
     def mark(self, rendering: Rendering, values: Sequence[str]) -> str:
         """Return the mark that reads *values* across the languages, recording it once.
@@ -368,7 +392,7 @@ class CompileSlots:
         key = (rendering, strings)
         number = self._numbers.get(key)
         if number is None:
-            number = self._numbers[key] = len(self.values)
+            number = self._numbers[key] = self._new_number()
             self.renderings.append(rendering)
             self.values.append(strings)
             self.plain.append(None)
@@ -385,7 +409,7 @@ class CompileSlots:
         shared with another string, so it is kept out of the record of marks
         taken by what they read.
         """
-        number = len(self.values)
+        number = self._new_number()
         self._reserved.add(number)
         self.renderings.append(rendering)
         self.values.append(())

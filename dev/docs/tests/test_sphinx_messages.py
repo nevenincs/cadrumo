@@ -8,6 +8,7 @@ and what filling one with an argument must produce.
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 
@@ -80,3 +81,18 @@ def test_filling_a_word_builds_a_mark_from_every_language_filled(
         "Conmutar Libro",
         "Commuta Llibre",
     )
+
+
+def test_a_marked_word_comes_back_from_a_pickled_environment_still_fillable(
+    slots: CompileSlots, translations: _MarkingTranslations
+) -> None:
+    """A reader process hands its environment back pickled, with Sphinx's own words on it.
+
+    A deep copy rebuilds the word through the same reduction pickling uses.
+    """
+    restored = copy.deepcopy(translations.gettext("Toggle navigation of %s"))
+
+    assert MARK.fullmatch(restored) is not None
+    assert slots.values == [("Toggle navigation of %s", "Conmutar %s", "Commuta %s")]
+    restored % "x"
+    assert slots.values[-1] == ("Toggle navigation of x", "Conmutar x", "Commuta x")

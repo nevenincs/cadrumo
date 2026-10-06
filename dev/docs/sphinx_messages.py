@@ -97,6 +97,16 @@ class _MarkedMessage(str):
         return marked
 
     @override
+    def __reduce__(self) -> tuple[type[_MarkedMessage], tuple[str, tuple[str, ...], Rendering]]:
+        """Return what rebuilds this word when the build environment is unpickled.
+
+        Sphinx keeps some of its own words on the environment, and a reader
+        process hands its environment back pickled. A string is otherwise
+        rebuilt from its value alone, which this word's strings do not survive.
+        """
+        return (_MarkedMessage, (str(self), self._strings, self._rendering))
+
+    @override
     def __mod__(self, value: object) -> str:
         """Return the mark for each language's word filled with *value*."""
         return _marked(

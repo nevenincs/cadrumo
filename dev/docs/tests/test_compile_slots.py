@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -329,3 +330,31 @@ def test_an_element_only_some_languages_carry_owns_its_own_line_break(slots: Com
     assert composed["en"] == f"<header>{break_}<span>01</span>{break_}<h3>Activity</h3>{break_}</header>"
     assert composed["es"] == f"<header>{break_}<span>01</span>{break_}<h3>Actividad</h3>{break_}</header>"
     assert composed["ca"] == f"<header>{break_}<span>01</span>{break_}</header>"
+
+
+def _marks_taken_in_this_process(slots: CompileSlots) -> tuple[str, str]:
+    """Read a recorded mark and try to record a new one, reporting what each did."""
+    known = slots.mark(Rendering.VERBATIM, ["one", "uno"])
+    try:
+        slots.mark(Rendering.VERBATIM, ["two", "dos"])
+    except CompileSlotsError as error:
+        return known, str(error)
+    return known, ""
+
+
+def test_a_worker_process_reads_recorded_marks_and_is_refused_a_new_one() -> None:
+    """A mark a worker adds never reaches the record, so it is refused where it is made."""
+    slots = CompileSlots(("en", "es"))
+    known = slots.mark(Rendering.VERBATIM, ["one", "uno"])
+
+    assert _marks_taken_in_this_process(slots) == (known, "")
+    assert slots.values == [("one", "uno"), ("two", "dos")]
+
+    inherited = CompileSlots(("en", "es"))
+    inherited.mark(Rendering.VERBATIM, ["one", "uno"])
+    with ProcessPoolExecutor(max_workers=1) as pool:
+        read, refusal = pool.submit(_marks_taken_in_this_process, inherited).result(timeout=120)
+
+    assert read == known
+    assert "worker process" in refusal
+    assert inherited.values == [("one", "uno")]
