@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c6a20a12f7d740b66f99741fd8cb4af0b3f677c6b25b6e359a86dd226028345'
+body_hash: 'sha256:7010a5cb08f7411fcc6f3448c3b787dd780ce012847a23759e5c24dfb37f81cf'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -450,6 +450,10 @@ Whether one more window fits a crowded week was tried by placing windows in orde
 ### Ninth review left | low | not changed
 
 A reader's scroll in the same frame as a change of width is taken for the layout's and undone; measured again by this review. Not exercised by it: the log's keys, touch and the four languages, the midnight re-read, forced colours.
+
+### Pane note | low | a pane's note was cut with nowhere to read the rest
+
+A sweep of the whole shell in four languages at three sizes, the calendar apart: the log's bar, the tabs, the pane heads, the palette, settings, the throttled dialog, the signed-out pane, the rail and the window itself. Everything found was by design, the sideways-scrolling log bar and the icon-only tabs on a phone, but one: at 200 percent in Spanish, Catalan and Hungarian the note beside a pane's title, which gives way first, was cut to a few letters, and a session that failed says why in that note. Resolved in `4c173862fb`: the note carries its whole text as its title. A test holds it in Hungarian at 200 percent.
 
 ## Recommendations
 
