@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:795b897eee3cb8d9dc21165646f6ffb372aee452e58cdcf47f39b67be17e1d32'
+body_hash: 'sha256:6bde0dd8066778430ca6e13994b34694a2626dcb07f70123a959b5167d6e89ac'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -510,6 +510,10 @@ Same review, run with a slow list: with no profile selected the dialog showed it
 ### sign-in host | low | smaller findings of the same review
 
 Resolved: a refusal the product makes before it has read its command names no command, and was reduced to an unreadable answer (`native/desktop/src-tauri/src/shell/sign_in/wire.rs`); a read's deadline counted its wait for the running command (`native/desktop/src-tauri/src/shell/sign_in/process.rs`); the packaged recorder kept the length of a password body (`native/desktop/tests/packaged/browser.mjs`); the taken-name check followed the system's language; a test of the single submission passed without the guards it named. The contract passage is corrected where it differed from the code. Left as recorded: closing the window stops a creation in flight without waiting for it, and what the product's custody recovery makes of that was not traced; whether the webview's transport ever resends a long-pending request was not established.
+
+### sign-in host | low | a creation stopped part-way leaves nothing behind, as far as it was sampled
+
+The eleventh review left open what the product makes of a creation whose child is stopped, as closing the window or passing the deadline stops it. Asked of a real package on storage of its own: a creation killed with its children after 8, 16 and 24 seconds of about 30 left no profile, a listing that was coherent and unchanged, no process behind, and the same label free to be created at once, which then succeeded. The moment of the commit itself was not sampled. This supports what the window now does with an unanswered creation: it says the outcome is unknown and takes the list as the witness. No change was needed.
 
 ## Recommendations
 
