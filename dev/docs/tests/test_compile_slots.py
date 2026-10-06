@@ -108,6 +108,37 @@ def test_each_position_receives_the_string_its_writer_writes(slots: CompileSlots
     ]
 
 
+def test_a_navigation_or_toctree_title_is_written_the_way_its_region_writes_it(slots: CompileSlots) -> None:
+    """A title in these two regions is never educated, and two writers own them.
+
+    Read off the English desktop root built on 2026-10-06: Modelo 151's title
+    carries ``"Beckham law"`` with straight quotation marks in the sidebar and in
+    the body toctree, while the same title in the page's own heading carries
+    ``“Beckham law”``. An explicit toctree entry title is an attribute of the
+    toctree node rather than a text node, so the smart-quotes transform passes it
+    by; the sidebar is then re-serialised by Furo through BeautifulSoup, which
+    leaves ``"`` and ``@`` where the docutils writer escapes both.
+    """
+    mark = slots.mark(Rendering.DOCUTILS, ['a "q" @ b', "l'IVA & z", "<y>"])
+    page = (
+        f"<p>{mark}</p>"
+        f'<div class="sidebar-tree"><ul><li><input aria-label="n {mark}"><a>{mark}</a></li></ul></div>'
+        f'<div class="toctree-wrapper compound"><ul><li><a>{mark}</a></li></ul></div>'
+        f"<p>{mark}</p>"
+    )
+    educated = ("a “q” &#64; b", "l’IVA &amp; z", "&lt;y&gt;")
+    navigation = ('a "q" @ b', "l'IVA &amp; z", "&lt;y&gt;")
+    entry = ("a &quot;q&quot; &#64; b", "l'IVA &amp; z", "&lt;y&gt;")
+    factored = factor_page(page, slots)
+    assert [piece for piece in factored if isinstance(piece, tuple)] == [
+        educated,
+        navigation,
+        navigation,
+        entry,
+        educated,
+    ]
+
+
 #: Strings a built root carries, with the typography that root's own language
 #: gave them. Read off the desktop roots built on 2026-10-06: the English root
 #: writes the legal catalogue's ``Cataloguer's note`` as ``Cataloguer’s note``

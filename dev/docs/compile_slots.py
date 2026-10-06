@@ -88,6 +88,18 @@ class Position(StrEnum):
     ATTRIBUTE = "attribute"
     TITLE = "title"
     MARKUP = "markup"
+    #: Inside a toctree in a page's own body. The docutils writer escapes it,
+    #: and the smart-quotes transform never saw it: an explicit toctree entry
+    #: title is an attribute of the toctree node, not a text node, so the
+    #: transform that educates every text block passes it by.
+    ENTRY_TEXT = "entry-text"
+    ENTRY_ATTRIBUTE = "entry-attribute"
+    #: Inside the theme's navigation tree. Furo hands the writer's toctree HTML
+    #: to BeautifulSoup and writes ``str(soup)`` back, which unescapes what the
+    #: writer escaped (``&quot;`` and ``&#64;`` included) and escapes the result
+    #: minimally. The titles are the same uneducated entry titles.
+    NAVIGATION_TEXT = "navigation-text"
+    NAVIGATION_ATTRIBUTE = "navigation-attribute"
 
 
 def _number(value: int) -> str:
@@ -148,10 +160,27 @@ def _educated(value: str, language: str) -> str:
     return "".join(str(piece) for piece in educated)
 
 
+def _minimal(value: str) -> str:
+    """Return one string as BeautifulSoup's minimal formatter writes it.
+
+    ``&``, ``<`` and ``>`` and nothing else, in text and in an attribute value
+    alike (``bs4.formatter.HTMLFormatter`` at its default entity substitution).
+    """
+    return html.escape(value, quote=False)
+
+
 def _written(rendering: Rendering, position: Position, value: str, language: str) -> str:
     """Return one language's string as the page carries it at *position*."""
     if rendering is Rendering.VERBATIM:
         return value
+    # Navigation and body-toctree entry titles reach the page without being
+    # educated, so each language's string must not be educated either.
+    if position is Position.ENTRY_TEXT:
+        return _docutils_text(value)
+    if position is Position.ENTRY_ATTRIBUTE:
+        return _docutils_attribute(value)
+    if position in {Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE}:
+        return _minimal(value)
     educated = _educated(value, language)
     if position is Position.TEXT:
         return _docutils_text(educated)
@@ -431,6 +460,36 @@ def context_at(starts: Sequence[int], contexts: Sequence[tuple[int, str]], offse
     return contexts[index][1] if index >= 0 else "unknown"
 
 
+#: The regions whose titles reach the page without the smart-quotes transform,
+#: keyed by the class the element carrying them declares: Furo's own navigation
+#: wrapper, and the ``compound`` div docutils writes a body toctree inside.
+#:
+#: The rule is about the EXPLICIT entry title, which is the only kind of title a
+#: mark can be today. A toctree entry that inherits a page's own title takes it
+#: from a text node the transform already educated, so once the authored page
+#: titles are carried too, the two kinds inside one region will need telling
+#: apart by the entry rather than by the region.
+_UNEDUCATED_REGIONS: Final[dict[str, tuple[Position, Position]]] = {
+    "sidebar-tree": (Position.NAVIGATION_TEXT, Position.NAVIGATION_ATTRIBUTE),
+    "toctree-wrapper": (Position.ENTRY_TEXT, Position.ENTRY_ATTRIBUTE),
+}
+
+#: One tag's ``class`` attribute value.
+_CLASSES: Final[re.Pattern[str]] = re.compile(r'\sclass="([^"]*)"')
+
+
+def _region_entered(tag: str) -> tuple[Position, Position] | None:
+    """Return the positions one opening tag's classes declare a region of, if any."""
+    classes = _CLASSES.search(tag)
+    if classes is None:
+        return None
+    for name in classes.group(1).split():
+        found = _UNEDUCATED_REGIONS.get(name)
+        if found is not None:
+            return found
+    return None
+
+
 def mark_positions(page: str) -> list[tuple[re.Match[str], Position]]:
     """Return every mark one compiled page carries, and where in its markup it sits.
 
@@ -443,23 +502,41 @@ def mark_positions(page: str) -> list[tuple[re.Match[str], Position]]:
     """
     found: list[tuple[re.Match[str], Position]] = []
     in_title = False
+    region: tuple[Position, Position] | None = None
+    depth = 0
     for piece in _PIECE.finditer(page):
         text = piece.group()
         if text[0] != "<":
-            found.extend(
-                (mark, Position.TITLE if in_title else Position.TEXT)
-                for mark in MARK.finditer(page, piece.start(), piece.end())
-            )
+            ordinary = Position.TITLE if in_title else Position.TEXT
+            where = ordinary if region is None else region[0]
+            found.extend((mark, where) for mark in MARK.finditer(page, piece.start(), piece.end()))
             continue
-        if (name := _TAG_NAME.match(text)) is not None and name.group(1).lower() == "title":
-            in_title = not text.startswith("</")
+        name = _TAG_NAME.match(text)
+        tag = name.group(1).lower() if name is not None else "?"
+        closing = text.startswith("</")
+        if tag == "title":
+            in_title = not closing
+        if region is None:
+            # Both regions are written as a div, which is what makes the nesting
+            # of divs enough to find where each one ends.
+            region = _region_entered(text) if tag == "div" and not closing else None
+            depth = 1 if region is not None else 0
+        elif tag == "div":
+            # The region ends with the element that opened it, so the nesting of
+            # its own kind of element is what says where that is.
+            depth += -1 if closing else 1
+            if depth == 0:
+                region = None
         spans = [
             (piece.start() + attribute.start(2), piece.start() + attribute.end(2))
             for attribute in _ATTRIBUTE.finditer(text)
         ]
         for mark in MARK.finditer(page, piece.start(), piece.end()):
             inside = any(start <= mark.start() and mark.end() <= end for start, end in spans)
-            found.append((mark, Position.ATTRIBUTE if inside else Position.MARKUP))
+            if not inside:
+                found.append((mark, Position.MARKUP))
+            else:
+                found.append((mark, Position.ATTRIBUTE if region is None else region[1]))
     return found
 
 
