@@ -52,6 +52,7 @@ from openpyxl.worksheet.properties import PageSetupProperties
 from openpyxl.writer.excel import ExcelWriter
 
 from ....application.storage.calc_sheets.export_tables import export_identity_stamps
+from ....application.storage.calc_sheets.number_formats import XLSX_NUMBER_LOCALE
 from ....application.storage.calc_sheets.records import (
     AnySheetExportPlan,
     SheetCellConstraint,
@@ -66,6 +67,7 @@ from ....application.storage.calc_sheets.theme import (
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
+    WORKBOOK_FONT_SIZE,
 )
 from ....application.storage.calc_sheets.workbook_cells import (
     formula_cell_blocks,
@@ -269,7 +271,7 @@ def _write_cells(
 
 def _apply_base_font(written: Mapping[TabName, tuple[Cell, ...]], *, family: str) -> None:
     """Set the declared family on every written cell, before role styling lands."""
-    base = Font(name=family)
+    base = Font(name=family, size=WORKBOOK_FONT_SIZE)
     for cells in written.values():
         for cell in cells:
             cell.font = base
@@ -292,6 +294,7 @@ def _apply_styled_ranges(
         font = Font(
             name=family,
             bold=style.bold,
+            size=style.font_size,
             color=_argb(style.font_hex) if style.font_hex is not None else None,
         )
         fill = (
@@ -301,8 +304,8 @@ def _apply_styled_ranges(
         )
         alignment = Alignment(
             horizontal=style.align,
-            vertical=STYLED_RANGE_VERTICAL_ALIGN,
-            wrap_text=styled.wrap,
+            vertical="center" if STYLED_RANGE_VERTICAL_ALIGN == "middle" else STYLED_RANGE_VERTICAL_ALIGN,
+            wrap_text=styled.wrap or style.wrap,
         )
         sheet = sheets[styled.tab]
         for row in range(styled.start_row, styled.end_row + 1):
@@ -322,7 +325,11 @@ def _apply_number_formats(sheets: Mapping[TabName, Worksheet], plan: AnySheetExp
     for number_format in plan.number_formats:
         address = number_format.address
         cell = _cell(sheets[address.tab], row=address.row, column=address.column)
-        cell.number_format = number_format.pattern
+        cell.number_format = (
+            XLSX_NUMBER_LOCALE + number_format.pattern
+            if number_format.data_type in {"money", "integer", "decimal", "percentage"}
+            else number_format.pattern
+        )
 
 
 def _apply_emphasis(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:

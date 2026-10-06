@@ -1,12 +1,14 @@
 """Form geometry survives both workbook transports; destructive merges fail."""
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from io import BytesIO
 from uuid import UUID
 
 import pytest
 from openpyxl import load_workbook
 
+from .....application.storage.calc_sheets.number_formats import numeric_format
 from .....application.storage.calc_sheets.records import (
     SheetCellAddress,
     SheetExportMetadata,
@@ -24,6 +26,7 @@ from .....application.storage.calc_sheets.theme import StyleRole
 from .....core.period import Period
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
 from .._calc_sheets_apply_formatting import (
+    build_base_font_requests,
     build_form_geometry_requests,
     build_grid_resize_requests,
     build_number_format_requests,
@@ -150,3 +153,79 @@ def test_numeric_looking_box_label_remains_text_in_both_transports() -> None:
     assert cell.number_format == "@"
     request = build_number_format_requests(plan, sheet_id_by_tab={"Modelo": 42})[0]
     assert request["repeatCell"]["cell"]["userEnteredFormat"]["numberFormat"] == {"type": "TEXT", "pattern": "@"}
+
+
+@pytest.mark.parametrize(
+    ("role", "horizontal", "bold"),
+    [
+        (StyleRole.CASILLA, "center", True),
+        (StyleRole.FORM_INPUT, "right", False),
+        (StyleRole.FORM_COMPUTED, "right", False),
+        (StyleRole.FORM_RESULT, "right", True),
+    ],
+)
+def test_box_styles_match_between_transports(role, horizontal, bold) -> None:
+    plan = _plan()
+    plan = plan.model_copy(update={"styled_ranges": (plan.styled_ranges[0].model_copy(update={"role": role}),)})
+    cell = load_workbook(BytesIO(materialize_export_plan(plan)))["Modelo"]["B2"]
+    assert cell.alignment.vertical == "center"
+    assert cell.alignment.horizontal == horizontal
+    assert cell.font.bold is bold
+    assert all(getattr(cell.border, edge).style == "thin" for edge in ("top", "bottom", "left", "right"))
+    native = build_styled_range_requests(plan, sheet_id_by_tab={"Modelo": 42})[0]["repeatCell"]["cell"][
+        "userEnteredFormat"
+    ]
+    assert native["verticalAlignment"] == "MIDDLE"
+    assert native["horizontalAlignment"] == horizontal.upper()
+    assert native["textFormat"]["bold"] is bold
+    assert all(native["borders"][edge]["style"] == "SOLID" for edge in ("top", "bottom", "left", "right"))
+
+
+@pytest.mark.parametrize(
+    ("kind", "currency", "pattern"),
+    [
+        ("money", "EUR", '#,##0.00" €"'),
+        ("money", "USD", "#,##0.00"),
+        ("money", None, "#,##0.00"),
+        ("integer", None, "#,##0"),
+        ("decimal", None, "#,##0.############"),
+        ("float", None, "#,##0.############"),
+        ("ratio", None, "0.00####"),
+        ("percentage", None, "0.00####%"),
+    ],
+)
+@pytest.mark.parametrize("value", [Decimal("1234.56"), Decimal("-1234.56"), Decimal(0), None])
+def test_spanish_numeric_formats_preserve_values_and_missing_cells(kind, currency, pattern, value) -> None:
+    declared = numeric_format(kind, currency=currency)
+    assert declared is not None
+    assert declared[1] == pattern
+    address = SheetCellAddress.at(TabName.FORM, 3, 2)
+    plan = _plan().model_copy(
+        update={
+            "value_cells": (SheetValueCell(address=address, value=value, role="operator_input"),),
+            "number_formats": (SheetNumberFormat(address=address, data_type=declared[0], pattern=declared[1]),),
+        }
+    )
+    cell = load_workbook(BytesIO(materialize_export_plan(plan)))["Modelo"]["B3"]
+    assert cell.value is None if value is None else Decimal(str(cell.value)) == value
+    assert cell.number_format == "[$-C0A]" + pattern
+    native = build_number_format_requests(plan, sheet_id_by_tab={"Modelo": 42})[0]["repeatCell"]["cell"][
+        "userEnteredFormat"
+    ]
+    assert native["numberFormat"] == {"type": "PERCENT" if kind == "percentage" else "NUMBER", "pattern": pattern}
+    assert build_base_font_requests(plan, sheet_id_by_tab={"Modelo": 42})[0] == {
+        "updateSpreadsheetProperties": {"properties": {"locale": "es_ES"}, "fields": "locale"}
+    }
+
+
+def test_title_size_is_shared_between_transports() -> None:
+    plan = _plan()
+    plan = plan.model_copy(
+        update={"styled_ranges": (plan.styled_ranges[0].model_copy(update={"role": StyleRole.TITLE}),)}
+    )
+    cell = load_workbook(BytesIO(materialize_export_plan(plan)))["Modelo"]["B2"]
+    assert cell.font.sz == 16
+    native = build_styled_range_requests(plan, sheet_id_by_tab={"Modelo": 42})[0]["repeatCell"]["cell"][
+        "userEnteredFormat"
+    ]
+    assert native["textFormat"]["fontSize"] == 16

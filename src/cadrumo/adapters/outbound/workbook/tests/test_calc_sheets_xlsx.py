@@ -136,7 +136,7 @@ def test_computed_casilla_arrives_as_a_live_formula_with_its_number_format() -> 
     # the engine already computed, which is what makes it a live workbook.
     assert written.data_type == "f"
     assert written.value == f"={formula_cell.formula}"
-    assert written.number_format == pattern
+    assert written.number_format == "[$-C0A]" + pattern
 
 
 def test_seeded_money_input_arrives_as_a_number_under_its_declared_format() -> None:
@@ -167,7 +167,7 @@ def test_seeded_money_input_arrives_as_a_number_under_its_declared_format() -> N
     # floats, so the comparison goes through Decimal rather than asserting a type.
     assert written.data_type == "n"
     assert Decimal(str(written.value)) == Decimal("1234.56")
-    assert written.number_format == "#,##0.00"
+    assert written.number_format == '[$-C0A]#,##0.00" €"'
 
 
 def test_header_band_renders_the_shared_palette_and_font() -> None:

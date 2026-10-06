@@ -1580,6 +1580,7 @@
         "cadrumo.application.storage.calc_sheets.export_tables",
         "cadrumo.application.storage.calc_sheets.form_workbook",
         "cadrumo.application.storage.calc_sheets.layout",
+        "cadrumo.application.storage.calc_sheets.number_formats",
         "cadrumo.application.storage.calc_sheets.parity_harness",
         "cadrumo.application.storage.calc_sheets.records",
         "cadrumo.application.storage.calc_sheets.review_labels",

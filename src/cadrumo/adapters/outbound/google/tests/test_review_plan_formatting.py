@@ -30,4 +30,4 @@ def test_native_review_date_and_decimal_formats_match_plan() -> None:
         if request["repeatCell"]["range"]["sheetId"] == 2
     }
     assert formats[1] == {"type": "DATE", "pattern": "yyyy-mm-dd"}
-    assert formats[4] == {"type": "NUMBER", "pattern": "#,##0.00##########"}
+    assert formats[4] == {"type": "NUMBER", "pattern": '#,##0.00" €"'}

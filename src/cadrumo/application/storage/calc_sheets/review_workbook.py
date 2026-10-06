@@ -8,6 +8,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from ...export.review_snapshot import CalculationReviewSelection, ReviewSnapshot, ReviewSourceKind
+from .number_formats import numeric_format
 from .records import (
     SheetAutoFilter,
     SheetCellAddress,
@@ -123,6 +124,9 @@ class _ReviewLayout:
         self.style(tab, _HEADER_ROW, _HEADER_ROW, len(headers), StyleRole.HEADER)
         if rows:
             self.style(tab, _FIRST_ROW, end, len(headers), StyleRole.BODY)
+            for column, header in enumerate(headers, 1):
+                if header == "casilla":
+                    self.style(tab, _FIRST_ROW, end, column, StyleRole.CASILLA, start_column=column)
         self.widths.extend(
             SheetColumnWidth(tab=tab, column=column, width=_column_width(header))
             for column, header in enumerate(headers, 1)
@@ -132,13 +136,23 @@ class _ReviewLayout:
             SheetAutoFilter(tab=tab, start_row=_HEADER_ROW, end_row=end, start_column=1, end_column=len(headers))
         )
 
-    def numeric(self, tab: TabName, row: int, column: int, value: Decimal | None) -> None:
+    def numeric(
+        self,
+        tab: TabName,
+        row: int,
+        column: int,
+        value: Decimal | None,
+        *,
+        unit: str = "decimal",
+        currency: str | None = None,
+    ) -> None:
         if value is not None:
+            data_type, pattern = numeric_format(unit, currency=currency) or ("decimal", "#,##0.############")
             self.formats.append(
                 SheetNumberFormat(
                     address=SheetCellAddress.at(tab, row, column),
-                    data_type="decimal",
-                    pattern="#,##0.00##########",
+                    data_type=data_type,
+                    pattern=pattern,
                 )
             )
 
@@ -279,7 +293,7 @@ def build_review_workbook(
             ],
         )
         for index, amount in enumerate(snapshot.amounts, _FIRST_ROW):
-            layout.numeric(TabName.CALCULOS, index, 4, amount.value)
+            layout.numeric(TabName.CALCULOS, index, 4, amount.value, unit=amount.unit, currency=amount.currency)
         if snapshot.amounts:
             layout.style(
                 TabName.CALCULOS, _FIRST_ROW, _HEADER_ROW + len(snapshot.amounts), 4, StyleRole.COMPUTED, start_column=4
@@ -392,7 +406,9 @@ def build_review_workbook(
             (40, row.m210_gross_income_amount),
             (41, row.m210_applicable_rate),
         ):
-            layout.numeric(TabName.DETALLE, index, column, value)
+            unit = "ratio" if column in {18, 19, 41} else "decimal" if column == 17 else "money"
+            currency = "EUR" if column == 7 else row.currency
+            layout.numeric(TabName.DETALLE, index, column, value, unit=unit, currency=currency)
     layout.table(
         TabName.DETALLE,
         "ledger",

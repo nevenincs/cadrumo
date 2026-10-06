@@ -43,6 +43,7 @@ from .engine import registry_sha
 from .errors import CalcSheetsEngineError
 from .form_value_presentation import compact_date_casillas, compact_date_expression
 from .human_workbook import human_template_preview, human_workbook
+from .number_formats import numeric_format
 from .records import (
     SheetAdministrativeFrame,
     SheetCellAddress,
@@ -63,7 +64,7 @@ from .records import (
     TabName,
 )
 from .template_source import WorkbookTemplateSource
-from .theme import StyleRole
+from .theme import FORM_FONT_FAMILY, StyleRole
 
 
 def add_form_workbook[M: (SheetExportMetadata, SheetReviewMetadata)](
@@ -224,7 +225,7 @@ def _project_form[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePre
             *(r.model_copy(update={"role": roles.get(r.role, r.role)}) for r in plan.styled_ranges),
             *builder.styles,
         ),
-        "font_family": "Arial",
+        "font_family": FORM_FONT_FAMILY,
         "number_formats": (*plan.number_formats, *builder.formats),
         "column_widths": (
             *plan.column_widths,
@@ -349,6 +350,10 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         self.values.append(SheetValueCell(address=address, value=text, role="label"))
         if isinstance(text, str):
             self.formats.append(SheetNumberFormat(address=address, data_type="text", pattern="@"))
+        elif isinstance(text, Decimal):
+            pattern = numeric_format("decimal")
+            if pattern is not None:
+                self.formats.append(SheetNumberFormat(address=address, data_type=pattern[0], pattern=pattern[1]))
 
     def span(self, start: int, end: int, role: StyleRole, *, boxed: bool = False) -> None:
         if start < end:
@@ -366,7 +371,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                 end_column=end,
                 role=role,
                 wrap=True,
-                boxed=boxed,
+                boxed=boxed or role is StyleRole.FORM_SECTION,
             )
         )
 
@@ -411,6 +416,10 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             for directive in self.plan.number_formats:
                 if directive.address == source.address:
                     self.formats.append(directive.model_copy(update={"address": address}))
+        elif constant is not None:
+            pattern = numeric_format(self.casillas[casilla_id].data_type)
+            if pattern is not None:
+                self.formats.append(SheetNumberFormat(address=address, data_type=pattern[0], pattern=pattern[1]))
 
     def guarded_calculations(self) -> tuple[SheetFormulaCell, ...]:
         """Keep supporting calculations unknown when their scalar inputs are blank.
@@ -489,7 +498,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         self.text(casilla.label)
         self.span(2, 8, StyleRole.FORM_LABEL)
         self.text(str(self.placements[casilla_id].box_number or ""), 9)
-        self.span(9, 9, StyleRole.FORM_LABEL, boxed=True)
+        self.span(9, 9, StyleRole.CASILLA, boxed=True)
         self.value(casilla_id, 10, 12, constant=constant, decimals=decimals)
         self.heights.append(
             SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=max(30, 18 * (1 + len(casilla.label) // 65)))
@@ -578,7 +587,7 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                 start = 6 + column_index * 2
                 if cell.casilla_id:
                     self.text(str(self.placements[cell.casilla_id].box_number or ""), start)
-                    self.span(start, start, StyleRole.FORM_LABEL, boxed=True)
+                    self.span(start, start, StyleRole.CASILLA, boxed=True)
                     if record_values is None:
                         self.value(
                             cell.casilla_id, start + 1, start + 1, constant=cell.literal, decimals=cell.literal_decimals
@@ -618,15 +627,16 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         )
         self.span(column, end, StyleRole.FORM_COMPUTED, boxed=True)
         if isinstance(value, Decimal | int) and not isinstance(value, bool):
-            source = self.sources.get(casilla_id) if casilla_id else None
-            if source is not None:
-                for directive in self.plan.number_formats:
-                    if directive.address == source.address:
-                        self.formats.append(
-                            directive.model_copy(
-                                update={"address": SheetCellAddress.at(TabName.FORM, self.row, column)}
-                            )
-                        )
+            casilla = self.casillas.get(casilla_id) if casilla_id else None
+            pattern = numeric_format(casilla.data_type if casilla is not None else "decimal")
+            if pattern is not None:
+                self.formats.append(
+                    SheetNumberFormat(
+                        address=SheetCellAddress.at(TabName.FORM, self.row, column),
+                        data_type=pattern[0],
+                        pattern=pattern[1],
+                    )
+                )
 
     def repeating(self, block: FormRepeatingGroupBlock) -> None:
         known, saved_rows = self.records(block)
@@ -652,9 +662,12 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
                         or (self.casillas[column.casilla_id].label if column.casilla_id else "Dato del registro")
                     )
                     box_number = self.placements[column.casilla_id].box_number if column.casilla_id else None
-                    self.text(f"[{box_number}] {label}" if box_number else label)
+                    self.text(label)
                     self.span(2, 8, StyleRole.FORM_LABEL)
-                    self.record_value(column.casilla_id, value, 9, 12)
+                    if box_number:
+                        self.text(str(box_number), 9)
+                        self.span(9, 9, StyleRole.CASILLA, boxed=True)
+                    self.record_value(column.casilla_id, value, 10 if box_number else 9, 12)
                     self.heights.append(SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=32))
                     self.row += 1
                 for grid in block.grids:
@@ -708,10 +721,14 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
         """Show only the explicitly declared immutable filing fact."""
         field = resolve_form_context_field(self.registry_revision, block)
         label = lookup_translation(block.heading_key, locale="es") or block.official_heading or "Dato del formulario"
-        self.text(f"[{block.box_number}] {label}" if block.box_number else label)
+        self.text(label)
+        value_column = 10 if block.box_number else 9
+        if block.box_number:
+            self.text(str(block.box_number), 9)
+            self.span(9, 9, StyleRole.CASILLA, boxed=True)
         if field.binding is not None:
             self.span(2, 8, StyleRole.FORM_LABEL)
-            self.binding_value(str(field.binding), 9, 12, readonly=True)
+            self.binding_value(str(field.binding), value_column, 12, readonly=True)
             self.heights.append(SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=32))
             self.row += 1
             return
@@ -727,8 +744,8 @@ class _FormBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePr
             shown = Decimal(value)
         else:
             shown = value
-        self.text(shown, 9)
-        self.span(9, 12, StyleRole.FORM_COMPUTED, boxed=True)
+        self.text(shown, value_column)
+        self.span(value_column, 12, StyleRole.FORM_COMPUTED, boxed=True)
         self.heights.append(SheetRowHeight(tab=TabName.FORM, row=self.row, height_pixels=32))
         self.row += 1
 

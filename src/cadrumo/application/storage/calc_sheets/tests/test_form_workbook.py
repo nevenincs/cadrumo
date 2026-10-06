@@ -84,6 +84,40 @@ def form_source():
     return snapshot, build_export_plan(snapshot)
 
 
+@pytest.mark.parametrize(
+    ("kind", "expected"),
+    [("money", '#,##0.00" €"'), ("integer", "#,##0"), ("decimal", "#,##0.############"), ("ratio", "0.00####")],
+)
+def test_form_and_support_inputs_share_declared_numeric_semantics(form_source, kind, expected):
+    snapshot, _ = form_source
+    first = next(c for c in snapshot.revision.casillas if c.input_kind.value == "manual")
+    revision = snapshot.revision.model_copy(
+        update={
+            "casillas": tuple(
+                c.model_copy(update={"data_type": CasillaDataType(kind)}) if c.id == first.id else c
+                for c in snapshot.revision.casillas
+            )
+        }
+    )
+    snapshot = snapshot.model_copy(update={"revision": revision})
+    rendered = add_form_workbook(build_export_plan(snapshot), snapshot)
+    source = next(c for c in rendered.value_cells if c.casilla_id == first.id)
+    form = next(c for c in rendered.formula_cells if c.address.tab is TabName.FORM and c.casilla_id == first.id)
+    formats = {f.address: f.pattern for f in rendered.number_formats}
+    assert formats[source.address] == formats[form.address] == expected
+    box = next(
+        c
+        for c in rendered.value_cells
+        if c.address.tab is TabName.FORM and c.address.row == form.address.row and c.address.column == 9
+    )
+    assert box.value == first.number
+    assert any(
+        s.role is StyleRole.CASILLA and s.boxed and s.start_row == box.address.row and s.start_column == 9
+        for s in rendered.styled_ranges
+    )
+    assert any(s.role is StyleRole.FORM_SECTION and s.boxed for s in rendered.styled_ranges)
+
+
 def test_blank_inputs_remain_live_without_becoming_zero(form_source):
     snapshot, plan = form_source
     rendered = add_form_workbook(plan, snapshot)
@@ -247,7 +281,11 @@ def test_manual_evidence_keeps_meaning_and_explanation(form_source):
     )
     rendered = add_form_workbook(plan.model_copy(update={"evidence": evidence}), snapshot)
     values = [value for block in plan_value_blocks(rendered) for value in block.values]
-    assert "125.50" in values
+    assert Decimal("125.50") in values
+    assert any(
+        f.address.tab is TabName.EVIDENCIA and f.address.column == 10 and f.pattern == '#,##0.00" €"'
+        for f in rendered.number_formats
+    )
     assert "Ajuste confirmado con el justificante" in values
     assert "Dato introducido" in values
     assert "casilla_input" not in values
@@ -579,10 +617,12 @@ def test_repeated_grids_use_each_saved_record_without_scalar_leakage(form_source
     )
     builder.repeating(block)
     cells = {(c.address.row, c.address.column): c.value for c in builder.values}
-    assert cells[3, 9] == "000123"
+    assert cells[3, 9] == "01"
+    assert cells[3, 10] == "000123"
     assert cells[5, 7] == Decimal(0)
     assert cells[5, 9] == "Sin dato"
-    assert cells[7, 9] == "000456"
+    assert cells[7, 9] == "01"
+    assert cells[7, 10] == "000456"
     assert cells[9, 7] == Decimal("7.25")
     assert cells[9, 9] == Decimal(9)
     assert not builder.formulas

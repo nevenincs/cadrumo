@@ -56,6 +56,7 @@ from ._translator import is_translatable, translate_formula
 from .errors import CalcSheetsEngineError
 from .evidence import sheet_evidence_from_ledger_filing
 from .layout import SheetLayout, plan_layout
+from .number_formats import numeric_format
 from .records import (
     OperatorInputs,
     RelationValue,
@@ -881,26 +882,13 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     )
 
 
-def _number_format_pattern(data_type: str) -> tuple[Literal["money", "integer", "decimal"], str] | None:
-    if data_type == "money":
-        return ("money", "#,##0.00")
-    if data_type == "integer":
-        return ("integer", "0")
-    if data_type == "ratio":
-        # Ratio does not declare a scale: member shares use 60 for 60%,
-        # while coefficients can use fractions. Preserve the stored magnitude
-        # instead of letting spreadsheet percent formatting multiply by 100.
-        return ("decimal", "0.00####")
-    return None
-
-
 def _number_formats(
     revision: ModeloRevision,
     layout: SheetLayout,
 ) -> tuple[SheetNumberFormat, ...]:
     formats: list[SheetNumberFormat] = []
     for casilla in revision.casillas:
-        pattern = _number_format_pattern(casilla.data_type)
+        pattern = numeric_format(casilla.data_type)
         if pattern is None:
             continue
         data_type, format_pattern = pattern
@@ -919,9 +907,9 @@ def _number_formats(
             ),
         )
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
-    formatted_addresses = {directive.address for directive in formats}
+    formatted_addresses = {directive.address.qualified() for directive in formats}
     for binding_id, address in {**layout.binding_cells, **layout.date_binding_cells}.items():
-        if address in formatted_addresses:
+        if address.qualified() in formatted_addresses:
             continue
         binding = bindings_by_id[binding_id]
         data_type = binding.value.data_type
@@ -929,7 +917,7 @@ def _number_formats(
             # A boolean is neither numeric zero/one nor the strings TRUE/FALSE.
             # Both transports already preserve literal bool payloads.
             continue
-        pattern = _number_format_pattern(data_type)
+        pattern = numeric_format(data_type)
         if pattern is not None:
             format_type, format_pattern = pattern
             directive = SheetNumberFormat(address=address, data_type=format_type, pattern=format_pattern)
@@ -940,7 +928,7 @@ def _number_formats(
         else:
             directive = SheetNumberFormat(address=address, data_type="decimal", pattern="0.############")
         formats.append(directive)
-        formatted_addresses.add(address)
+        formatted_addresses.add(address.qualified())
     return tuple(formats)
 
 
@@ -1221,7 +1209,20 @@ def assemble_workbook_plan[M: (SheetExportMetadata, SheetTemplatePreviewMetadata
     provenance = _provenance_rows(revision, layout)
     provenance_values = _provenance_value_cells(provenance)
     protected = _protected_ranges(layout)
-    number_formats = _number_formats(revision, layout)
+    number_formats = list(_number_formats(revision, layout))
+    for table in tariff_tables:
+        if table.data_type == "bracket_table":
+            coordinates = (
+                (SheetCellAddress.at(table.anchor.tab, table.anchor.row + row, table.anchor.column + column), kind)
+                for row in range(1, len(table.bracket_rows) + 1)
+                for column, kind in enumerate(("money", "money", "money", "ratio"))
+            )
+        else:
+            coordinates = iter(((table.anchor, table.data_type),))
+        for address, kind in coordinates:
+            pattern = numeric_format(kind)
+            if pattern is not None:
+                number_formats.append(SheetNumberFormat(address=address, data_type=pattern[0], pattern=pattern[1]))
     section_headers = _section_headers(layout)
     anchors = _anchors(layout)
     anchor_value_cells = tuple(
@@ -1249,7 +1250,7 @@ def assemble_workbook_plan[M: (SheetExportMetadata, SheetTemplatePreviewMetadata
         tariffs=tariff_tables,
         provenance=provenance,
         protected_ranges=protected,
-        number_formats=number_formats,
+        number_formats=tuple(number_formats),
         section_headers=section_headers,
         anchors=anchors,
         cell_constraints=cell_constraints,

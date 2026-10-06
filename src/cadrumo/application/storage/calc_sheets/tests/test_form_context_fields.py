@@ -204,10 +204,15 @@ def test_summary_links_existing_scalar_without_editable_duplicate(form_source):
     snapshot, _block, _binding = _with_summary(snapshot)
     plan = build_export_plan(snapshot)
     result = add_form_workbook(plan, snapshot)
-    label = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "[02] Importe total")
+    label = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "Importe total")
     cell = next(c for c in result.formula_cells if c.address.tab is TabName.FORM and c.address.row == label.address.row)
     assert "ISBLANK(" in cell.formula and '"Sin dato"' in cell.formula
     assert cell.casilla_id is None
+    assert cell.address.column == 10
+    assert any(
+        c.address.tab is TabName.FORM and c.address.row == label.address.row and c.value == "02"
+        for c in result.value_cells
+    )
     assert not any(c.address == cell.address for c in result.cell_constraints)
     assert any(p.tab is TabName.FORM and p.start_row <= cell.address.row <= p.end_row for p in result.protected_ranges)
 
@@ -261,7 +266,7 @@ def test_summary_preserves_backing_scalar_and_live_reference(form_source, value,
         }
     )
     result = add_form_workbook(plan, snapshot)
-    label = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "[02] Importe total")
+    label = next(c for c in result.value_cells if c.address.tab is TabName.FORM and c.value == "Importe total")
     formula = next(
         c for c in result.formula_cells if c.address.tab is TabName.FORM and c.address.row == label.address.row
     )

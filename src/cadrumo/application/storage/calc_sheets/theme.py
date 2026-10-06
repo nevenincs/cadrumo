@@ -23,8 +23,10 @@ from typing import Final, Literal
 # A single declared monospace family. Roboto Mono is a native Google-Sheets
 # font rendered by the live Sheets transport.
 WORKBOOK_FONT_FAMILY: Final[str] = "Roboto Mono"
+FORM_FONT_FAMILY: Final[str] = "Arial"
+WORKBOOK_FONT_SIZE: Final[int] = 11
 
-STYLED_RANGE_VERTICAL_ALIGN: Final[str] = "top"
+STYLED_RANGE_VERTICAL_ALIGN: Final[str] = "middle"
 """Vertical alignment applied to every role-styled range.
 
 Unlike the horizontal alignment this is uniform across roles, which is why it
@@ -52,6 +54,7 @@ class StyleRole(StrEnum):
     RESULT = "result"
     TITLE = "title"
     BODY = "body"
+    CASILLA = "casilla"
     FORM_LABEL = "form_label"
     FORM_SECTION = "form_section"
     FORM_INPUT = "form_input"
@@ -68,8 +71,8 @@ class RoleStyle:
 
     ``fill_hex`` / ``font_hex`` are ``RRGGBB`` (or ``None`` for "no fill" /
     "default ink"); ``bold`` toggles weight; ``align`` is the horizontal
-    alignment; ``wrap`` requests text wrapping (the renderer auto-grows row
-    height to fit).
+    alignment; ``wrap`` requests text wrapping. Explicit row heights remain
+    owned by the shared layout, including merged fields.
     """
 
     fill_hex: str | None
@@ -77,9 +80,11 @@ class RoleStyle:
     bold: bool
     align: HorizontalAlign
     wrap: bool = False
+    font_size: int = WORKBOOK_FONT_SIZE
 
 
 ROLE_STYLES: Final[dict[StyleRole, RoleStyle]] = {
+    StyleRole.CASILLA: RoleStyle(fill_hex="FFFFFF", font_hex="243746", bold=True, align="center"),
     StyleRole.FORM_LABEL: RoleStyle(fill_hex="FFFFFF", font_hex="243746", bold=False, align="left", wrap=True),
     StyleRole.FORM_SECTION: RoleStyle(fill_hex="EDF1F3", font_hex="243746", bold=True, align="left", wrap=True),
     StyleRole.FORM_INPUT: RoleStyle(fill_hex="EDF5FF", font_hex="145DA0", bold=False, align="right"),
@@ -96,7 +101,7 @@ ROLE_STYLES: Final[dict[StyleRole, RoleStyle]] = {
     # Green accent, slate bold — the filing result (resultado / cuota).
     StyleRole.RESULT: RoleStyle(fill_hex="C6E0B4", font_hex=_SLATE, bold=True, align="right"),
     # No fill, slate bold — the Guía title and other headline prose.
-    StyleRole.TITLE: RoleStyle(fill_hex=None, font_hex=_SLATE, bold=True, align="left"),
+    StyleRole.TITLE: RoleStyle(fill_hex=None, font_hex=_SLATE, bold=True, align="left", font_size=16),
     # No fill, default ink, left — plain body text (concepto / refs), wrap opt-in.
     StyleRole.BODY: RoleStyle(fill_hex=None, font_hex=None, bold=False, align="left"),
 }
@@ -119,9 +124,11 @@ def hex_to_rgb_floats(value: str) -> dict[str, float]:
 
 
 __all__ = [
+    "FORM_FONT_FAMILY",
     "ROLE_STYLES",
     "STYLED_RANGE_VERTICAL_ALIGN",
     "WORKBOOK_FONT_FAMILY",
+    "WORKBOOK_FONT_SIZE",
     "HorizontalAlign",
     "RoleStyle",
     "StyleRole",

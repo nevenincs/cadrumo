@@ -518,10 +518,8 @@ def _open_or_create_plan_spreadsheet(
 def _force_spreadsheet_locale(
     *, sheets: Any, spreadsheet_id: str, execute: GoogleRequestExecutor = execute_request
 ) -> None:
-    # Force the workbook locale to `en_US` so the formula argument
-    # separator stays a comma. Applies on every run so a workbook
-    # created under a previous engine version (which may have used
-    # `es_ES`) is corrected on the next export.
+    # Parse generated formulas under the engine's invariant grammar. The shared
+    # formatting pass subsequently applies the Spanish display locale.
     execute(
         sheets.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id,
@@ -776,6 +774,7 @@ def _write_plan_values(
     )
     formulas = build_formula_data(plan.formula_cells)
     if formulas:
+        _force_spreadsheet_locale(sheets=sheets, spreadsheet_id=spreadsheet_id, execute=execute)
         execute(
             sheets.spreadsheets()
             .values()

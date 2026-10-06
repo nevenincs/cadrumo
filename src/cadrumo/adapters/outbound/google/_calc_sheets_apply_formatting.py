@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Final, Literal
 
+from ....application.storage.calc_sheets.number_formats import WORKBOOK_LOCALE
 from ....application.storage.calc_sheets.records import (
     AnySheetExportPlan,
     SheetAutoFilter,
@@ -23,6 +24,7 @@ from ....application.storage.calc_sheets.theme import (
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
+    WORKBOOK_FONT_SIZE,
     hex_to_rgb_floats,
 )
 from ....application.storage.calc_sheets.workbook_cells import validate_merged_content
@@ -66,8 +68,8 @@ def build_number_format_requests(
 ) -> list[Request]:
     """Apply each numeric casilla's display format.
 
-    Money/integer cells render as NUMBER with the casilla's pattern; ratio cells
-    as PERCENT, matching the official AEAT workbook presentation.
+    Only explicitly fractional percentages use PERCENT. Registry ratios retain
+    their stored scale through a decimal pattern.
     """
     requests: list[Request] = []
     for number_format in plan.number_formats:
@@ -152,14 +154,17 @@ def build_base_font_requests(
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
-    """Set the monospace family across every tab's whole grid in one request each.
+    """Set Spanish display locale and the base typeface after cell population.
 
-    The role-specific styled-range requests (which carry bold / colour / fill)
-    run after these and merge on top, so the workbook reads in the chosen
-    monospace family while the per-role emphasis still lands.
+    Generated formulas are populated under invariant parsing before this pass.
+    Role-specific requests then overlay size, weight, colour and alignment.
     """
     family = plan.font_family or WORKBOOK_FONT_FAMILY
-    requests: list[Request] = []
+    # Formatting follows value/formula population. Switching the display locale
+    # here preserves formulas parsed under the engine's invariant grammar.
+    requests: list[Request] = [
+        {"updateSpreadsheetProperties": {"properties": {"locale": WORKBOOK_LOCALE}, "fields": "locale"}}
+    ]
     for tab in TabName:
         sheet_id = sheet_id_by_tab.get(tab.value)
         if sheet_id is None:
@@ -168,8 +173,10 @@ def build_base_font_requests(
             {
                 "repeatCell": {
                     "range": {"sheetId": sheet_id},
-                    "cell": {"userEnteredFormat": {"textFormat": {"fontFamily": family}}},
-                    "fields": "userEnteredFormat.textFormat.fontFamily",
+                    "cell": {
+                        "userEnteredFormat": {"textFormat": {"fontFamily": family, "fontSize": WORKBOOK_FONT_SIZE}}
+                    },
+                    "fields": "userEnteredFormat.textFormat.fontFamily,userEnteredFormat.textFormat.fontSize",
                 },
             },
         )
@@ -197,14 +204,14 @@ def build_styled_range_requests(
         if sheet_id is None:
             continue
         style = ROLE_STYLES[styled.role]
-        text_format: TextFormat = {"fontFamily": family, "bold": style.bold}
+        text_format: TextFormat = {"fontFamily": family, "bold": style.bold, "fontSize": style.font_size}
         if style.font_hex is not None:
             text_format["foregroundColor"] = _sheets_color(style.font_hex)
         user_format: CellFormat = {
             "textFormat": text_format,
             "horizontalAlignment": _HORIZONTAL_ALIGN[style.align],
             "verticalAlignment": _VERTICAL_ALIGN[STYLED_RANGE_VERTICAL_ALIGN],
-            "wrapStrategy": "WRAP" if styled.wrap else "OVERFLOW_CELL",
+            "wrapStrategy": "WRAP" if styled.wrap or style.wrap else "OVERFLOW_CELL",
         }
         fields = [
             "userEnteredFormat.textFormat",

@@ -77,8 +77,9 @@ def _snapshot(modelo: str, year: int, period: str, on: date):
 
 
 _FORMAT_BY_REGISTRY_TYPE = {
-    "money": ("money", "#,##0.00"),
-    "integer": ("integer", "0"),
+    "money": ("money", '#,##0.00" €"'),
+    "integer": ("integer", "#,##0"),
+    "decimal": ("decimal", "#,##0.############"),
     "ratio": ("decimal", "0.00####"),
 }
 

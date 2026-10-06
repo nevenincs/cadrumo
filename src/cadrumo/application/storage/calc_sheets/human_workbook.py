@@ -11,6 +11,7 @@ import re
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ....core.decimal.coercion import coerce_decimal
 from ....core.i18n.render import lookup_translation, tr
 from ....core.period import AD_HOC_PERIOD_CODE, Period
 from ....domain.calculations.registry.afiliado_contribution_bindings import AfiliadoContributionProvider
@@ -27,15 +28,18 @@ from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.schema_references import LegalReference, SourceReference
 from .engine import registry_sha
 from .errors import CalcSheetsEngineError
+from .number_formats import numeric_format
 from .records import (
     SheetAdministrativeFrame,
     SheetAutoFilter,
     SheetCellAddress,
+    SheetCellConstraint,
     SheetColumnWidth,
     SheetEvidenceFacet,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFrozenView,
+    SheetNumberFormat,
     SheetProtectedRange,
     SheetReviewMetadata,
     SheetStyledRange,
@@ -199,7 +203,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
         return labels[key]
 
     def legal_text(refs: tuple[str, ...]) -> str:
-        parts = []
+        parts: list[str] = []
         for key in refs:
             reference = legal_catalogue.get(key)
             if reference is None:
@@ -213,7 +217,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
         return "\n".join(dict.fromkeys(parts))
 
     def source_text(refs: tuple[str, ...]) -> str:
-        parts = []
+        parts: list[str] = []
         for key in refs:
             source = source_catalogue.get(key)
             if source is None:
@@ -233,14 +237,14 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
     ):
         raise CalcSheetsEngineError("workbook transport exclusion is referenced by a sheet formula")
     readonly_source_rows = {(c.address.tab, c.address.row) for c in plan.value_cells if c.role == "source_value"}
-    anchors = {a.address for a in plan.anchors}
+    anchors = {a.address.qualified() for a in plan.anchors}
     values: list[SheetValueCell] = []
     for cell in plan.value_cells:
         address = cell.address
         owner = rows.get((address.tab, address.row))
         if owner is not None and owner.id in excluded:
             continue
-        if address.tab in (TabName.PROVENANCE, TabName.GUIDE, TabName.EVIDENCIA) or address in anchors:
+        if address.tab in (TabName.PROVENANCE, TabName.GUIDE, TabName.EVIDENCIA) or address.qualified() in anchors:
             if cell.role not in ("label", "metadata"):
                 raise CalcSheetsEngineError("human presentation cannot discard a data cell")
             continue
@@ -334,9 +338,25 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
             "Explicación",
         ),
     )
+    evidence_formats: list[SheetNumberFormat] = []
+
+    def evidence_format(row: int, column: int, kind: str, currency: str | None = "EUR") -> None:
+        pattern = numeric_format(kind, currency=currency)
+        if pattern is not None:
+            evidence_formats.append(
+                SheetNumberFormat(
+                    address=SheetCellAddress.at(TabName.EVIDENCIA, row, column),
+                    data_type=pattern[0],
+                    pattern=pattern[1],
+                )
+            )
+
     for index, row in enumerate(plan.evidence.contributor_rows, 2):
         if row.attachment_ids or row.document_link_ids:
             raise CalcSheetsEngineError("human evidence requires resolved document references")
+        evidence_format(index, 2, "money", row.currency)
+        for column, kind in ((4, "money"), (5, "ratio"), (6, "money"), (8, "decimal"), (9, "money")):
+            evidence_format(index, column, kind, "EUR" if column == 9 else row.currency)
         emit(
             TabName.EVIDENCIA,
             index,
@@ -361,6 +381,12 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
         kind_labels = {"casilla_input": "Dato introducido", "binding_override": "Dato sustituido por el usuario"}
         if row.kind not in kind_labels:
             raise CalcSheetsEngineError("human evidence requires an authored fact-kind label")
+        evidence_format(index, 10, casillas[row.casilla_id].data_type)
+        displayed_value: str | Decimal = row.value
+        if numeric_format(casillas[row.casilla_id].data_type) is not None:
+            parsed = coerce_decimal(row.value)
+            if parsed is not None and parsed.is_finite():
+                displayed_value = parsed
         emit(
             TabName.EVIDENCIA,
             index,
@@ -374,7 +400,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
                 None,
                 None,
                 None,
-                row.value,
+                displayed_value,
                 legal_text(row.legal_refs),
                 source_text(row.source_refs),
                 kind_labels[row.kind],
@@ -382,7 +408,7 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
             ),
         )
 
-    constraints = []
+    constraints: list[SheetCellConstraint] = []
     for constraint in plan.cell_constraints:
         if constraint.casilla_id in excluded:
             continue
@@ -528,6 +554,9 @@ def _project_human_workbook[M: (SheetExportMetadata, SheetReviewMetadata, SheetT
             "styled_ranges": (*(style for style in plan.styled_ranges if style.tab not in replaced_tabs), *styles),
             "merged_ranges": tuple(region for region in plan.merged_ranges if region.tab not in replaced_tabs),
             "row_heights": tuple(height for height in plan.row_heights if height.tab not in replaced_tabs),
-            "number_formats": tuple(fmt for fmt in plan.number_formats if fmt.address.tab not in replaced_tabs),
+            "number_formats": (
+                *(fmt for fmt in plan.number_formats if fmt.address.tab not in replaced_tabs),
+                *evidence_formats,
+            ),
         }
     )

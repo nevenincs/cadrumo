@@ -121,6 +121,16 @@ def _data_tab_ranges(
         ),
     ]
     if last_row >= 2:
+        ranges.append(
+            SheetStyledRange(
+                tab=tab,
+                start_row=2,
+                end_row=last_row,
+                start_column=_COL_CASILLA,
+                end_column=_COL_CASILLA,
+                role=StyleRole.CASILLA,
+            )
+        )
         ranges.extend(
             (
                 SheetStyledRange(
