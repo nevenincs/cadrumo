@@ -216,7 +216,14 @@ export const AccountSection: Story = {
   render: () => (
     <div className="grid max-w-settings gap-8">
       {SECTIONS.map(([name, account]) => (
-        <Specimen key={name} title={name} className="grid gap-3">
+        // The account ends with the rule that sets it apart from what follows
+        // it in settings. Here a specimen's own rule follows, so it is left
+        // out rather than drawn twice.
+        <Specimen
+          key={name}
+          title={name}
+          className="grid gap-3 [&>[data-slot=separator]:last-child]:hidden"
+        >
           <Account
             account={account}
             onSignIn={() => undefined}
