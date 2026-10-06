@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c8e03369c4b11826b9faa6c12824eb71164e197583dae3145b466fd158fd29a'
+body_hash: 'sha256:0ad46c835352f1683fb06e7af3d1f6d7f0430e320dee480e594635f3a94a5e98'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -306,6 +306,9 @@ related:
 - `S11` `verify:` `npm run check` -> `pass`
 - `S11` `verify:` `npm test` -> `pass`
 - `S11` `verify:` `npm run benchmark -- --check` -> `pass`
+- `S11` `A` `native/desktop/frontend/src/shell/profiles.ts`
+- `S11` `A` `native/desktop/frontend/tests/profiles.spec.ts`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/profiles.spec.ts`
 
 ## Notes
 
