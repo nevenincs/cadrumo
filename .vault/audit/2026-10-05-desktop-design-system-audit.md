@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:bcbcd9a78e723f965ba042f9c46bafa9628c1359dfbbd9e996c8bd5d3d3877c4'
+body_hash: 'sha256:ecdafca394cc9cb717068729fc132b186e630a745faaa564e7593fa229b28b1c'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -390,6 +390,42 @@ Pressing a part of a window that is only for the eye focused a control hidden fr
 ### Seventh review left | low | not changed
 
 A window can take another row from one week to the next, because each week is packed on its own: that is what keeps a week short once its neighbours have closed, and the count of what is left out depends on it. The two waits that outlast a wish for focus are as long as the wish lives and stay fixed for that reason. A chord pressed while a slow sign-in is in flight opens nothing on the scenario host, so that path of granting a pending wish is not exercised.
+
+### Calendar observer loop | medium | the calendar resized what it observed, inside the observation
+
+Found in the development server's log, not by a test: the page drew its change of state inside its resize observation for every change, and a page crossing the height at which its whole head stays resized the head it was observing, which the browser reported on the window as a loop of undelivered observations. Resolved in `8506ae8e84`: only a change of face is drawn at once. The test of the head resizes through both thresholds and requires that the window reports no error.
+
+### Calendar budgets | low | the benchmark measured nothing of the calendar
+
+Resolved in `79ec2f1c64`: the benchmark draws the calendar over the fixture with nine windows open at once and holds five numbers to budgets: the time to be drawn, nodes and listeners left by forty rounds of its faces, a month drawn whole and a choice, the frames of a drag of the split out to both faces and back, and the heap. The drag fails the run if it never reaches both faces. On the machine it ran on: drawn in thirty to forty milliseconds, nothing left behind, ninety-fifth percentile frame 16.8 ms with one frame of 50 ms at the change of face. The catalogue's calendar stories took their dates from a language set after they had rendered and showed English months around translated words; resolved in `a1d057edd6`.
+
+### Calendar key and way back | low | the months' marks had no key, and a reader far from today no way back
+
+Resolved in `c2f093685b`: the counts in the page's head carry the mark each reading has among the months, a key to the marks on the days stands beside them while the months are shown, a control named in the language's word for today brings both faces back to where the calendar stands, and from one obligation the arrow keys, Home and End go to the others.
+
+### Eighth review cap | high | a crowded week hid what was late behind what opened first
+
+An independent review of the lane cap, the anchor and the log fix. What a crowded week kept was decided by the row a window had been packed into, and rows were packed by opening day: three annual filings that opened on the first hid a late one that opened on the fourth, and in the fixture a filed window was drawn while a due and an unknown one were drawn nowhere. Resolved in `a6676fb307`: a crowded week keeps by reading, late then due then not known then filed, and within a reading by closing day, at `native/desktop/frontend/src/shell/calendarGrid.ts:235`; windows that share no day share a row. Unit tests use windows with staggered openings and mixed readings, which the earlier tests lacked: they had all opened on one day and one of them asserted the soonest-closing window hidden.
+
+### Eighth review choice | high | choosing a window redrew its month under the hand
+
+A month holding a counted part of the chosen obligation was drawn whole. Choosing a window that was drawn in one week and counted in another therefore grew the month under the pointer, and left keyboard focus on a part hidden from assistive technology, three hundred pixels below the view. Deselecting by keyboard a window drawn only for being chosen removed it from under the key. Resolved in `a6676fb307`: what is chosen is drawn in place of what its week would keep last, so the month is no taller and the window pressed does not move; it keeps the stop it had before it was chosen; and let go with the keyboard on it, it stays until the keyboard leaves. The count of a week now opens its month with that week held where it was pressed, where before the view went to the month's top.
+
+### Eighth review place | high | the reader's month walked backwards at every layout
+
+The scroll that put the months back on the reader's month was itself taken for a new place, and the place taken was the first month of the row, so each maximize and restore moved the reader a row back: January, October, July. The offset was measured from the page's edge though the head above it changes height with the width; a resize put the choice before the reader's place; the list had no place of its own; and putting the calendar away took the page down with its face, its choice, its whole months and its place. Resolved in `a6676fb307`: the page knows the scroll positions it set and does not take them for the reader's, at `native/desktop/frontend/src/components/FilingCalendar.tsx:373`; a place is measured from under the head, kept for the list as well as the months, and comes before the choice when a face is only laid out anew; and the shell keeps all of it while the page is away and lets it go with the profile. A test maximizes and restores three times and sweeps the window's width, holding the month that begins the reader's row to a pixel, and another puts the calendar away and brings it back.
+
+### Eighth review log | medium | a fast feed could still leave the keyboard out of view
+
+With a batch of records every thirty milliseconds, one could commit between a key and the scroll it caused and keep the log following: six of sixty PageDown presses. Resolved in `a6676fb307`: a key that moves to a record other than the newest ends following itself, without waiting for the scroll. A test presses thirty keys under that feed.
+
+### Eighth review edges | low | the windows' edges were too faint, and filed differed from due by colour alone
+
+The late edge measured 2.8 to 1 against the card and the due edge 1.6 to 1. Resolved in `a6676fb307`: every edge is at full strength, between 5.9 and 7.1 to 1 in both schemes; what is filed is drawn hollow where what is due is filled, and takes a double edge where the system forces its colours. A window whose only known day is past the range now extends the months as any other does.
+
+### Eighth review left | low | not changed
+
+A crowded month can still be taller than a short page, eight hundred pixels in a pane of five hundred: four rows a week is what keeps a deadline legible, and the page scrolls. A reader's scroll in the same frame as a resize is taken for the layout's and not recorded. A window that is counted in every week it crosses is reached by the keyboard from the list or by drawing its month whole. Not exercised by the review or since: a real contrast theme, real browser zoom, a screen reader, the native host.
 
 ## Recommendations
 

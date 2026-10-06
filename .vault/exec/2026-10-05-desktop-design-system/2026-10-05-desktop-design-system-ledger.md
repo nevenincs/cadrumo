@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:d33877112fdba3f8264492203f968ba8bff0ee19720fb2f32ccdade0aa5f8baf'
+body_hash: 'sha256:529cd71afcfb88be476946b8a465a702d67c2f600645109947dc354d3168cc68'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -299,6 +299,7 @@ related:
 - `S11` `A` `native/desktop/frontend/src/dev/fixtures/calendarBusy.ts`
 - `S11` `M` `native/desktop/frontend/src/shell/calendarGrid.ts`
 - `S11` `M` `native/desktop/frontend/src/components/CalendarMonths.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/calendarMarks.ts`
 
 ## Notes
 
