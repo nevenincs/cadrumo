@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ad46c835352f1683fb06e7af3d1f6d7f0430e320dee480e594635f3a94a5e98'
+body_hash: 'sha256:3207b01bb2a0a994bc843f8fca7e63663970823799be79ba03d1f0ae60fbcdf7'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
 ---
@@ -309,6 +309,17 @@ related:
 - `S11` `A` `native/desktop/frontend/src/shell/profiles.ts`
 - `S11` `A` `native/desktop/frontend/tests/profiles.spec.ts`
 - `S11` `A` `native/desktop/frontend/tests/scenarios/profiles.spec.ts`
+- `S11` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/sign_in/cli_contract_fixtures.py`
+- `S11` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S11` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npm test` -> `pass`
+- `S11` `verify:` `host unit tests` -> `pass`
+- `S11` `verify:` `host live package test` -> `pass`
+- `S11` `verify:` `host clippy` -> `pass`
 
 ## Notes
 

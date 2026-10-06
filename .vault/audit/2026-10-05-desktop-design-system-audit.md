@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff986d43675504f4b189a34c39d4f7e12fbab0257de835d5517941d71928228f'
+body_hash: 'sha256:19f5080e174bb502e0ede8d794f228df8a66f20fd456039095c617d06475e7ce'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -462,6 +462,18 @@ A keyboard pass through settings, the palette and the sign-in dialog at 200 perc
 ### Tenth review | medium | a stop the keyboard was handed to could be out of view, and a list brought back was pulled to the choice
 
 An independent review of the ninth review's fixes. The keyboard handed on to an obligation's new stop was left there with the view unmoved, and the stop could be several hundred pixels above; the test only asserted focus. A list shown in a pane was pulled back to the chosen row each time the calendar was brought back, because the rule that shows a choice in the other face ran whenever the page was shown. Resolved in `c43f5e567d`: the view goes to the stop for a keyboard and stays for a pointer, and the rule runs when a choice is made. The room kept for the page's scrollbar left an empty strip on a page with nothing to scroll and put its words off centre; it is kept only where there are months. The check of it asserted a style and not what the style is for; it now presses a week's count on a page that did not scroll and requires the same width and the week unmoved, which the suite can see because the scrollbars are styled and drawn. The places are started afresh with a new memory whether or not the page was without a calendar in between. Checked and found correct by the review: what a crowded week keeps over twenty thousand random weeks, the place over sixty-one positions with no drift, the width sweep, mounts at the threshold, first show, sign-out and sign-in. Not exercised: a switch between two profiles, which the scenario host cannot make.
+
+### sign-in view | high | the window could not show, choose or create a profile, and no evidence came from the real product
+
+Found by the operator on first seeing the running window on 2026-10-06: the sign-in dialog named the profile in small unlabelled text, offered no choice between profiles, and sent a first-time user to the TUI to create one. Every check until then ran on the scenario host, whose status always names a profile, so none could fail on it. Resolved in four steps, each on `feature/tui`: the dialog labels the profile, offers the choice and is the form that creates one, with scenarios for none, one and several profiles (`native/desktop/frontend/src/components/SignIn.tsx`, `native/desktop/frontend/src/shell/profiles.ts`, `native/desktop/frontend/tests/scenarios/profiles.spec.ts`); `2026-10-04-application-sign-in-adr` is amended on the operator's ruling; the desktop host gains `profile_list`, a named profile on `sign_in_submit` and `profile_create` over the canonical CLI (`native/desktop/src-tauri/src/shell/sign_in/mod.rs`, `native/desktop/src-tauri/src/shell/sign_in/wire.rs`); and the Tauri adapter speaks them (`native/desktop/frontend/src/shell/tauriHost.ts`).
+
+### sign-in view | medium | what the real command line answers differs from what the scenario host assumed
+
+Asked directly on throwaway storage, the packaged `aeat` prints a placeholder where a profile's identity would be, so the shell names a profile by its label; refuses a taken label with `REFUSED_PROFILE_REGISTRATION` and no reason, its context being the label alone, which the host names `profile_already_exists`; and answers a label that begins with a hyphen with `INTERNAL_INVARIANT` even after the option terminator, which the form and the host both refuse before anything is sent. The host's contract fixtures are generated from the product's models, and `a_real_package_lists_creates_and_refuses_profiles_as_the_window_expects` asks a real package for the same answers on storage of its own.
+
+### sign-in view | medium | the real window has not been seen with the new commands
+
+The host commands are proven by unit tests, contract fixtures and a live test against a real package's command line; the window is proven on a mocked Tauri transport and on the scenario host. No run has yet put the built host, the built frontend, a real runtime and a person's sign-in together: this shell runs in Windows Session 0, where a runtime cannot host sign-in and a window cannot be shown. A launch script on throwaway storage exists for the operator's own session; a host image built from this branch is still owed to it.
 
 ## Recommendations
 
