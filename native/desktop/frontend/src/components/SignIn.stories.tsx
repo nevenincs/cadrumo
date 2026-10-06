@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
 import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
-import type { ProfileList } from "../shell/profiles";
+import type { ProfileList } from "../ipc/contract";
 import type { SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
 import { Account, SignedOut, SignInDialog } from "./SignIn";

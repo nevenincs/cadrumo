@@ -35,6 +35,14 @@ async function signInHost(
         rawPassword: false,
         tokenHeader: false,
         secretCleared: false,
+        profiles: [{ name: "Test profile", active: true }],
+        listReads: 0,
+        profileHeader: null as string | null,
+        creations: 0,
+        createdHeader: null as string | null,
+        createdRawPassword: false,
+        createdTokenHeader: false,
+        createdSecretCleared: false,
         deferStatus: deferInitial,
         releaseStatus: null as (() => void) | null,
         exitTui: null as (() => void) | null,
@@ -89,6 +97,8 @@ async function signInHost(
                   new TextDecoder().decode(args) === "secret á漢";
                 state.tokenHeader =
                   options?.headers?.["x-cadrumo-token"] === "a".repeat(64);
+                state.profileHeader =
+                  options?.headers?.["x-cadrumo-profile"] ?? null;
                 setTimeout(() => {
                   state.secretCleared =
                     args instanceof Uint8Array &&
@@ -102,6 +112,30 @@ async function signInHost(
                   };
                 state.presence = "present";
                 return { kind: "signed-in" };
+              }
+              case "profile_list":
+                ++state.listReads;
+                return { profiles: state.profiles, complete: true };
+              case "profile_create": {
+                ++state.creations;
+                state.createdHeader =
+                  options?.headers?.["x-cadrumo-profile"] ?? null;
+                state.createdRawPassword =
+                  args instanceof Uint8Array &&
+                  new TextDecoder().decode(args) === "secret á漢";
+                state.createdTokenHeader =
+                  options?.headers?.["x-cadrumo-token"] === "a".repeat(64);
+                setTimeout(() => {
+                  state.createdSecretCleared =
+                    args instanceof Uint8Array &&
+                    args.every((byte) => byte === 0);
+                }, 0);
+                const name = decodeURIComponent(state.createdHeader ?? "");
+                state.profiles = [
+                  ...state.profiles.map((held) => ({ ...held, active: false })),
+                  { name, active: true },
+                ];
+                return { kind: "created", name };
               }
               case "sign_out":
                 ++state.signOuts;
@@ -284,6 +318,87 @@ test("sign-in gates TUI, sends a raw secret once, clears it and refreshes refusa
   expect(
     await target.evaluate(() => JSON.stringify(localStorage)),
   ).not.toContain("secret á漢");
+});
+
+test("a chosen profile is named to the host by its label, percent-encoded in a header", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  await target.evaluate(() => {
+    const state = (
+      window as unknown as {
+        __signInTest: {
+          profiles: { name: string; active: boolean }[];
+          submitCode: string;
+        };
+      }
+    ).__signInTest;
+    state.profiles = [
+      { name: "Taller Ribera, S.L. á漢", active: false },
+      { name: "Test profile", active: true },
+    ];
+    state.submitCode = "";
+    window.dispatchEvent(new Event("focus"));
+  });
+  const dialog = target.locator(".sign-in");
+  const choice = dialog.getByLabel(label("desktop.signin.profile"), {
+    exact: true,
+  });
+  await expect(choice.locator("option:checked")).toHaveText("Test profile");
+  await choice.selectOption({ label: "Taller Ribera, S.L. á漢" });
+  await target
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  await target
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect
+    .poll(async () => (await signInState(target)).submissions)
+    .toBe(1);
+  const state = await signInState(target);
+  expect(state.profileHeader).toBe(
+    "Taller%20Ribera%2C%20S.L.%20%C3%A1%E6%BC%A2",
+  );
+  // The label is ASCII on the wire, and the password is not in it.
+  expect(state.profileHeader).toMatch(/^[\x21-\x7e]+$/);
+  expect(state.rawPassword).toBe(true);
+  expect(state.tokenHeader).toBe(true);
+});
+
+test("a profile is created through the host with one raw password body, its label in a header", async ({
+  page: target,
+}) => {
+  await signInHost(target);
+  const dialog = target.locator(".sign-in");
+  await dialog
+    .getByRole("button", { name: label("desktop.account.new_profile") })
+    .click();
+  const form = dialog.locator(".create-profile");
+  await form
+    .getByLabel(label("desktop.account.create.name"), { exact: true })
+    .fill("Marta Ruiz á漢");
+  await form
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret á漢");
+  await form
+    .getByLabel(label("desktop.account.create.confirm"), { exact: true })
+    .fill("secret á漢");
+  await form
+    .getByRole("button", { name: label("desktop.account.create.submit") })
+    .click();
+  // Created and selected, and not signed in: its password is asked for.
+  await expect(dialog.locator("#profile-password")).toBeFocused();
+  await expect(dialog.locator("#profile-choice option:checked")).toHaveText(
+    "Marta Ruiz á漢",
+  );
+  const state = await signInState(target);
+  expect(state.creations).toBe(1);
+  expect(state.createdHeader).toBe("Marta%20Ruiz%20%C3%A1%E6%BC%A2");
+  expect(state.createdRawPassword).toBe(true);
+  expect(state.createdTokenHeader).toBe(true);
+  expect(state.createdSecretCleared).toBe(true);
+  expect(state.submissions).toBe(0);
+  expect(state.tuiStarts).toBe(0);
 });
 
 test("throttling counts down without retry and a successful sign-in hands over to TUI", async ({

@@ -62,6 +62,37 @@ pub enum SignInResult {
 }
 
 #[derive(Debug, Serialize)]
+pub struct Profile {
+    pub name: String,
+    pub active: bool,
+}
+
+/// The profiles on this computer as the product lists them. Only labels and
+/// the selection cross: the product keeps identities out of what it prints.
+#[derive(Debug, Serialize)]
+pub struct ProfileList {
+    pub profiles: Vec<Profile>,
+    /// False when the product could not read its profiles coherently: its
+    /// rows are then no evidence of which profiles exist.
+    pub complete: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum ProfileCreateResult {
+    Created {
+        name: String,
+    },
+    Refused {
+        #[serde(flatten)]
+        refusal: Refusal,
+    },
+}
+
+/// The notice a listing carries when its observation could not be trusted.
+const INCOHERENT_LISTING: &str = "config.profile.list.incoherent_observation";
+
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemainingAccess {
     automation_enabled: Option<bool>,
@@ -139,6 +170,14 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
             let code = match code.as_str() {
                 "credential_rejected" => "CREDENTIAL_REJECTED".into(),
                 "REFUSED_PROFILE_LOGIN_THROTTLED" => "THROTTLED".into(),
+                // A registration refused for its password names a reason. One
+                // refused because the label is taken names none: its context
+                // is that label and nothing else.
+                "REFUSED_PROFILE_REGISTRATION"
+                    if context.len() == 1 && context.contains_key("profile") =>
+                {
+                    "profile_already_exists".into()
+                }
                 "authentication_required"
                     if context.get("sign_in_reason").map(String::as_str) == Some("throttled") =>
                 {
@@ -249,6 +288,78 @@ pub fn logout(outcome: Outcome) -> std::result::Result<SignOutResult, CommandFai
                     automation_enabled: result.automation_enabled,
                     automation_revoked: false,
                 },
+            })
+        }
+    }
+}
+
+pub fn profiles(output: &Output) -> std::result::Result<ProfileList, CommandFailure> {
+    match decode("profile.list", output)? {
+        Outcome::Refused { refusal, .. } => Err(CommandFailure::Refused(refusal)),
+        Outcome::Success { result, .. } => {
+            #[derive(Deserialize)]
+            struct Row {
+                name: String,
+                active: bool,
+            }
+            #[derive(Deserialize)]
+            struct Listing {
+                profiles: Vec<Row>,
+            }
+            #[derive(Deserialize)]
+            struct Notice {
+                code: String,
+            }
+            #[derive(Deserialize)]
+            struct Notices {
+                #[serde(default)]
+                notices: Vec<Notice>,
+            }
+            let listing: Listing =
+                serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
+            let said: Notices = serde_json::from_slice(&output.stdout)
+                .map_err(|_| failure(ErrorCode::ReadFailed))?;
+            // A label is never empty, and at most one profile is selected.
+            if listing.profiles.iter().any(|row| row.name.is_empty())
+                || listing.profiles.iter().filter(|row| row.active).count() > 1
+            {
+                return Err(failure(ErrorCode::ReadFailed).into());
+            }
+            Ok(ProfileList {
+                profiles: listing
+                    .profiles
+                    .into_iter()
+                    .map(|row| Profile {
+                        name: row.name,
+                        active: row.active,
+                    })
+                    .collect(),
+                complete: !said
+                    .notices
+                    .iter()
+                    .any(|notice| notice.code == INCOHERENT_LISTING),
+            })
+        }
+    }
+}
+
+pub fn created(outcome: Outcome) -> Result<ProfileCreateResult> {
+    match outcome {
+        Outcome::Refused { refusal, .. } => Ok(ProfileCreateResult::Refused { refusal }),
+        Outcome::Success { result, .. } => {
+            #[derive(Deserialize)]
+            struct Created {
+                profile_name: String,
+                status: String,
+            }
+            let result: Created =
+                serde_json::from_value(result).map_err(|_| failure(ErrorCode::ReadFailed))?;
+            // Anything but a profile that was created is not a creation.
+            if result.status != "created" || result.profile_name.is_empty() {
+                return Err(failure(ErrorCode::ReadFailed));
+            }
+            Ok(ProfileCreateResult::Created {
+                name: result.profile_name,
             })
         }
     }

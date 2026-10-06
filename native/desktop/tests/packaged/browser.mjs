@@ -306,7 +306,11 @@ export function instrument(config) {
           for (const [key, value] of Object.entries(parsed))
             if (key !== "token" && key !== "text")
               args[key] = typeof value === "string" ? text(value, 200) : value;
-          entry.args = entry.cmd === "sign_in_submit" ? null : args;
+          // Both carry a password and nothing else as their body.
+          entry.args =
+            entry.cmd === "sign_in_submit" || entry.cmd === "profile_create"
+              ? null
+              : args;
           if (typeof args.session === "number") entry.session = args.session;
         }
       } catch {

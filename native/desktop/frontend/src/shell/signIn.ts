@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  ProfileList,
   SignInRefusal,
   SignInStatus,
   SignOutResult,
 } from "../ipc/contract";
 import type { Host } from "./host";
-import { targetOf, type ProfileList } from "./profiles";
+import { targetOf } from "./profiles";
 import { failureCode } from "../errors";
 
 const unknownStatus: SignInStatus = {

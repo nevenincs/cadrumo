@@ -489,9 +489,37 @@ export type SignOutResult = {
   };
 };
 
+export type ProfileChoice = {
+  /** The label the person gave it. It is also what a sign-in names: labels
+   * are unique on a computer, and the product keeps a profile's identity
+   * out of everything it prints. */
+  name: string;
+  /** The profile the product has selected. */
+  active: boolean;
+};
+
+export type ProfileList = {
+  profiles: ProfileChoice[];
+  /** False when the product could not read its profiles coherently: an
+   * empty list is then not proof that there are none. */
+  complete: boolean;
+};
+
+/**
+ * sign_in_submit and profile_create name a profile in the
+ * `x-cadrumo-profile` header: its label as UTF-8, percent-encoded, since a
+ * header carries no other text. sign_in_submit may leave it out, and then
+ * signs in to the profile the product has selected. profile_create uses a
+ * raw UTF-8 password body, as sign_in_submit does.
+ */
+export type ProfileCreateResult =
+  { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
+
 export interface HostCommands {
   sign_in_status: { args: Authorized; result: SignInStatus };
   sign_out: { args: Authorized; result: SignOutResult };
+  /** Needs no password, session or runtime, and changes nothing. */
+  profile_list: { args: Authorized; result: ProfileList };
   desktop_environment: {
     args: Authorized;
     result: DesktopEnvironment;

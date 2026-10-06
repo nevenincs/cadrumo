@@ -16,11 +16,15 @@ from cadrumo.application.runtime.sign_in import SignInPresence, SignInStatus
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.application.user_profile.login_session import ProfileLoginThrottledError
+from cadrumo.application.user_profile.registration import ProfileRegistrationError
 from cadrumo.application.user_profile.sign_in_refusals import SignInRefusal
+from cadrumo.application.wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import render_error_json
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.json_contract import EnvelopeStatus, SchemaEnvelope
+from cadrumo.core.json_contract import EnvelopeStatus, Notice, NoticeSeverity, SchemaEnvelope
+from cadrumo.entrypoints.cli._modelo_rendering import advisory_notice
+from cadrumo.entrypoints.cli.config.profile_list_payloads import ConfigListResult, ProfilePointerPayload
 from cadrumo.entrypoints.cli.config_payloads import ConfigLoginResult, ConfigLogoutResult, ConfigSignInStatusResult
 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 
@@ -92,6 +96,69 @@ def documents() -> dict[str, object]:
                 automation_enabled=automation,
             ),
         ).model_dump(mode="json")
+    other = "22222222-2222-4222-8222-222222222222"
+    rows = [
+        ProfilePointerPayload(name="Another profile", bucket_id=other, active=False),
+        ProfilePointerPayload(name="Test profile", bucket_id=profile, active=True),
+    ]
+    cases["profile-list"] = SchemaEnvelope(
+        command="config.profile.list",
+        active_profile="Test profile",
+        status=EnvelopeStatus.SUCCESS,
+        result=ConfigListResult(active_profile="Test profile", profiles=rows),
+    ).model_dump(mode="json")
+    cases["profile-list-empty"] = SchemaEnvelope(
+        command="config.profile.list",
+        active_profile=None,
+        status=EnvelopeStatus.SUCCESS,
+        result=ConfigListResult(active_profile=None, profiles=[]),
+    ).model_dump(mode="json")
+    # config.profile_list_cli reports a degraded or concurrent observation as
+    # no rows under this notice.
+    cases["profile-list-incoherent"] = SchemaEnvelope(
+        command="config.profile.list",
+        active_profile=None,
+        status=EnvelopeStatus.WARNING,
+        result=ConfigListResult(active_profile=None, profiles=[]),
+        notices=[
+            advisory_notice(
+                "config.profile.list.incoherent_observation",
+                "The profile listing could not be trusted.",
+                context={"outcome": "degraded", "detail": ""},
+            )
+        ],
+    ).model_dump(mode="json")
+    cases["profile-create"] = SchemaEnvelope(
+        command="config.profile.create",
+        active_profile="Test profile",
+        status=EnvelopeStatus.WARNING,
+        result=ConfigProfileCreateResult(
+            profile_name="Test profile",
+            status=ProfileWizardStatus.CREATED,
+            active_profile="Test profile",
+        ),
+        notices=[
+            Notice(code="PROFILE_LOGIN_REQUIRED", severity=NoticeSeverity.WARNING, message="Sign in to the profile.")
+        ],
+    ).model_dump(mode="json")
+    # registration._refuse_a_label_already_taken raises exactly this.
+    failure(
+        "profile-create-taken",
+        "profile.create",
+        ProfileRegistrationError(
+            translated_message="application.user_profile.errors.profile_already_exists",
+            context={"profile": "Test profile"},
+        ),
+    )
+    failure(
+        "profile-create-short-password",
+        "profile.create",
+        ProfileRegistrationError(
+            translated_message="application.user_profile.errors.profile_password_too_few_scalars",
+            context={"reason": "too_few_scalars", "scalar_count": 5, "utf8_byte_count": 5, "minimum_scalars": 8},
+        ),
+    )
+    failure("profile-create-boundary", "profile.create", CliRefusedBoundaryError())
     return cases
 
 

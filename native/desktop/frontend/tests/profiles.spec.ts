@@ -1,12 +1,7 @@
 import { expect, test } from "@playwright/test";
-import {
-  nameProblem,
-  passwordProblem,
-  targetOf,
-  type ProfileList,
-} from "../src/shell/profiles";
+import { nameProblem, passwordProblem, targetOf } from "../src/shell/profiles";
 import { canSignIn, phaseOf } from "../src/shell/signIn";
-import type { SignInStatus } from "../src/ipc/contract";
+import type { ProfileList, SignInStatus } from "../src/ipc/contract";
 
 // The rules of choosing and creating a profile, checked at their
 // boundaries. No page is opened.

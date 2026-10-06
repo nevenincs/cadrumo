@@ -4,26 +4,11 @@
 // of it leaves `Host.profiles` out, and the shell then signs in to the one
 // profile the status names and sends everything else to the TUI.
 
-import type { SignInRefusal } from "../ipc/contract";
-
-export type ProfileChoice = {
-  /** The label the person gave it. It is also what a sign-in names: labels
-   * are unique on a computer, and the product keeps a profile's identity
-   * out of everything it prints. */
-  name: string;
-  /** The profile the product has selected. */
-  active: boolean;
-};
-
-export type ProfileList = {
-  profiles: ProfileChoice[];
-  /** False when the product could not read its profiles coherently: an
-   * empty list is then not proof that there are none. */
-  complete: boolean;
-};
-
-export type ProfileCreateResult =
-  { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
+import type {
+  ProfileChoice,
+  ProfileCreateResult,
+  ProfileList,
+} from "../ipc/contract";
 
 export interface ProfileAccounts {
   list(): Promise<ProfileList>;

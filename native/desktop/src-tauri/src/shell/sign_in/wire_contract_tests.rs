@@ -158,3 +158,104 @@ fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refu
     revoked["result"]["automation_revoked"] = json!(true);
     assert!(logout(from_document(revoked).unwrap()).is_err());
 }
+
+fn output_of(document: Value) -> Output {
+    let success = document["status"] != "error";
+    let bytes = Zeroizing::new(serde_json::to_vec(&document).unwrap());
+    let empty = Zeroizing::new(Vec::new());
+    let (stdout, stderr) = if success {
+        (bytes, empty)
+    } else {
+        (empty, bytes)
+    };
+    Output {
+        success,
+        stdout,
+        stderr,
+    }
+}
+
+#[test]
+fn python_profile_list_crosses_as_labels_and_the_selection_only() {
+    let listed = profiles(&output_of(fixture("profile-list"))).ok().unwrap();
+    assert_eq!(
+        serde_json::to_value(listed).unwrap(),
+        json!({
+            "profiles": [
+                {"name": "Another profile", "active": false},
+                {"name": "Test profile", "active": true}
+            ],
+            "complete": true
+        })
+    );
+    let none = profiles(&output_of(fixture("profile-list-empty")))
+        .ok()
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(none).unwrap(),
+        json!({"profiles": [], "complete": true})
+    );
+}
+
+#[test]
+fn a_listing_the_product_could_not_trust_is_not_an_empty_one() {
+    let listed = profiles(&output_of(fixture("profile-list-incoherent")))
+        .ok()
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(listed).unwrap(),
+        json!({"profiles": [], "complete": false})
+    );
+}
+
+#[test]
+fn a_listing_with_an_unnamed_profile_or_two_selected_is_refused() {
+    let mut unnamed = fixture("profile-list");
+    unnamed["result"]["profiles"][0]["name"] = json!("");
+    assert!(profiles(&output_of(unnamed)).is_err());
+    let mut two = fixture("profile-list");
+    two["result"]["profiles"][0]["active"] = json!(true);
+    assert!(profiles(&output_of(two)).is_err());
+    let mut other = fixture("profile-list");
+    other["command"] = json!("config.profile.status");
+    assert!(profiles(&output_of(other)).is_err());
+}
+
+#[test]
+fn python_profile_creation_reports_the_label_and_only_a_creation() {
+    assert_eq!(
+        serde_json::to_value(created(from_document(fixture("profile-create")).unwrap()).unwrap())
+            .unwrap(),
+        json!({"kind": "created", "name": "Test profile"})
+    );
+    for status in ["updated", "unchanged", "abandoned"] {
+        let mut document = fixture("profile-create");
+        document["result"]["status"] = json!(status);
+        assert!(
+            created(from_document(document).unwrap()).is_err(),
+            "{status}"
+        );
+    }
+}
+
+#[test]
+fn python_profile_creation_refusals_keep_their_reason_and_name_a_taken_label() {
+    for (case, code) in [
+        ("profile-create-taken", "profile_already_exists"),
+        ("profile-create-short-password", "too_few_scalars"),
+        ("profile-create-boundary", "REFUSED_CLI_BOUNDARY"),
+    ] {
+        assert_eq!(
+            serde_json::to_value(created(from_document(fixture(case)).unwrap()).unwrap()).unwrap(),
+            json!({"kind": "refused", "code": code, "retryAfterSeconds": null}),
+            "{case}"
+        );
+    }
+    // A registration refusal that says more than the label is not that one.
+    let mut other = fixture("profile-create-taken");
+    other["error"]["context"]["detail"] = json!("x");
+    assert_eq!(
+        serde_json::to_value(created(from_document(other).unwrap()).unwrap()).unwrap()["code"],
+        "REFUSED_PROFILE_REGISTRATION"
+    );
+}
