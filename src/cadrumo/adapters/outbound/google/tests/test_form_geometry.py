@@ -11,11 +11,13 @@ from openpyxl import load_workbook
 from .....application.storage.calc_sheets.number_formats import numeric_format
 from .....application.storage.calc_sheets.records import (
     SheetCellAddress,
+    SheetColumnWidth,
     SheetExportMetadata,
     SheetExportPlan,
     SheetGuideContent,
     SheetMergedRange,
     SheetNumberFormat,
+    SheetProtectedRange,
     SheetReviewMetadata,
     SheetRowHeight,
     SheetStyledRange,
@@ -122,6 +124,39 @@ def test_geometry_alone_extends_the_native_grid() -> None:
     grid = requests[0]["updateSheetProperties"]["properties"]["gridProperties"]
     assert grid["rowCount"] >= 1101
     assert grid["columnCount"] >= 30
+
+
+def test_form_grid_trims_only_beyond_declared_padding() -> None:
+    data = dict(_plan())
+    data["column_widths"] = (SheetColumnWidth(tab=TabName.FORM, column=13, width=3),)
+    data["protected_ranges"] = (
+        SheetProtectedRange(
+            tab=TabName.FORM,
+            start_row=1,
+            end_row=8,
+            start_column=1,
+            end_column=13,
+            description="Includes empty outer padding",
+        ),
+    )
+    plan = SheetExportPlan[SheetReviewMetadata].model_validate(data)
+    requests = build_grid_resize_requests(plan, sheet_id_by_tab={"Modelo": 42, "Guía": 43})
+    grids = {
+        r["updateSheetProperties"]["properties"]["sheetId"]: r["updateSheetProperties"]["properties"]["gridProperties"]
+        for r in requests
+    }
+    assert grids[42] == {"rowCount": 8, "columnCount": 13}
+    assert grids[43]["rowCount"] >= 1000
+    assert grids[43]["columnCount"] >= 26
+
+
+def test_form_grid_keeps_blank_dimensions_outside_content() -> None:
+    data = dict(_plan())
+    data["column_widths"] = (SheetColumnWidth(tab=TabName.FORM, column=17, width=3),)
+    data["row_heights"] = (SheetRowHeight(tab=TabName.FORM, row=21, height_pixels=12),)
+    plan = SheetExportPlan[SheetReviewMetadata].model_validate(data)
+    request = build_grid_resize_requests(plan, sheet_id_by_tab={"Modelo": 42})[0]
+    assert request["updateSheetProperties"]["properties"]["gridProperties"] == {"rowCount": 21, "columnCount": 17}
 
 
 def test_derived_guide_content_cannot_be_erased_by_a_merge() -> None:

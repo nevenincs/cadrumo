@@ -390,9 +390,11 @@ def build_grid_resize_requests(
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
-    """Compute requests to grow tabs beyond the default Sheets grid.
+    """Fit generated forms to their declared canvas; retain working grids elsewhere.
 
-    Resizes always grow; an operator-expanded grid is never shrunk.
+    Form bounds include empty styled fields, explicit dimensions and the protected
+    outer padding. Only trailing space is removed: internal gaps keep their cell
+    addresses so merges and formula references remain stable.
     """
     default_rows = 1000
     default_columns = 26
@@ -419,6 +421,22 @@ def build_grid_resize_requests(
     for row_set in plan.row_sets:
         bump(row_set.tab.value, row_set.first_data_row + 50, len(row_set.columns))
 
+    # The form's protected rectangle includes its final spacer row and narrow
+    # outside columns. Non-value facets can also own intentionally blank space.
+    for region in (*plan.styled_ranges, *plan.protected_ranges, *plan.auto_filters):
+        if region.tab is TabName.FORM:
+            bump(region.tab.value, region.end_row, region.end_column)
+    for width in plan.column_widths:
+        if width.tab is TabName.FORM:
+            bump(width.tab.value, 1, width.column)
+    for facet in (*plan.number_formats, *plan.cell_constraints):
+        address = facet.address
+        if address.tab is TabName.FORM:
+            bump(address.tab.value, address.row, address.column)
+    for frozen in plan.frozen_views:
+        if frozen.tab is TabName.FORM:
+            bump(frozen.tab.value, frozen.frozen_rows + 1, frozen.frozen_columns + 1)
+
     requests: list[Request] = []
     for tab_value, max_r in max_row.items():
         sheet_id = sheet_id_by_tab.get(tab_value)
@@ -430,8 +448,14 @@ def build_grid_resize_requests(
                     "properties": {
                         "sheetId": sheet_id,
                         "gridProperties": {
-                            "rowCount": max(max_r + row_headroom, default_rows),
-                            "columnCount": max(max_col.get(tab_value, 1), default_columns),
+                            "rowCount": max_r
+                            if tab_value == TabName.FORM.value
+                            else max(max_r + row_headroom, default_rows),
+                            "columnCount": (
+                                max_col.get(tab_value, 1)
+                                if tab_value == TabName.FORM.value
+                                else max(max_col.get(tab_value, 1), default_columns)
+                            ),
                         },
                     },
                     "fields": "gridProperties.rowCount,gridProperties.columnCount",
