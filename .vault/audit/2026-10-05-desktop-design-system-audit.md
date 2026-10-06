@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:19f5080e174bb502e0ede8d794f228df8a66f20fd456039095c617d06475e7ce'
+body_hash: 'sha256:a6432267a8052535960539888cd1d06452127d72c341fd1e7be74fea3ae37141'
 related:
   - "[[2026-10-05-desktop-design-system-plan]]"
   - "[[2026-10-05-desktop-design-system-adr]]"
@@ -474,6 +474,26 @@ Asked directly on throwaway storage, the packaged `aeat` prints a placeholder wh
 ### sign-in view | medium | the real window has not been seen with the new commands
 
 The host commands are proven by unit tests, contract fixtures and a live test against a real package's command line; the window is proven on a mocked Tauri transport and on the scenario host. No run has yet put the built host, the built frontend, a real runtime and a person's sign-in together: this shell runs in Windows Session 0, where a runtime cannot host sign-in and a window cannot be shown. A launch script on throwaway storage exists for the operator's own session; a host image built from this branch is still owed to it.
+
+### sign-in host | high | a profile creation outlived the host's one deadline and would have been killed part-way
+
+Measured against a real package on storage of its own: `config profile list` and `config sign-in-status` take about 8 seconds each, a profile creation 29 to 35, and a refused creation for a taken label 21, on a machine that other builds kept at half load. The host gave every child 30 seconds, so the live test `a_real_package_lists_creates_and_refuses_profiles_as_the_window_expects` failed with `TimedOut` once the machine was busy, and the window would have reported a failure and stopped the child in the middle of a creation. Resolved: creation runs under `CREATION_DEADLINE` of 300 seconds (`native/desktop/src-tauri/src/shell/sign_in/process.rs`), which is what the packaged test's own fixture already allowed it, and the form says while it waits that it takes about half a minute. Reads and sign-in keep 30 seconds; whether a sign-in can pass it on a loaded machine is not known, because no runtime can host a sign-in in this session.
+
+### sign-in view | medium | the window waited for two product calls before showing anything, and read the profiles while signed in
+
+With each read costing seconds, the status and the list of profiles were read together and neither shown until both answered, on every refresh. Resolved in `native/desktop/frontend/src/shell/signIn.ts`: the status is shown as it arrives, the list is read after it and only while there is a sign-in to prepare, and with no profile selected the account stays in its checking phase until the list has answered, so that the form that creates a profile is not shown and then withdrawn.
+
+### sign-in view | medium | a long profile name pushed controls out of the dialog and the sign-out out of settings
+
+Probed with the longest label the product takes, in words and as one unbroken run, in four languages at three sizes (`review-probes/profiles-long.mjs` in the session scratchpad): the dialog's fields grew past the dialog, and in settings the sign-out button left the panel. The dialog and the settings panel laid their content out in one implied column as wide as its widest item. Resolved by giving those grids a column of the surface's own width (`native/desktop/frontend/src/components/ui/dialog.tsx`, `native/desktop/frontend/src/components/Settings.tsx`, `native/desktop/frontend/src/components/SignIn.tsx`), breaking long words in a notice (`native/desktop/frontend/src/components/ui/alert.tsx`) and giving a cut name its whole text as a title. Four tests hold it, and fail on the earlier components.
+
+### sign-in view | low | two stops with one name in the creation form, and a main action without an edge in forced colours
+
+Walked by keyboard at 200 percent and looked at in forced colours: each password field of the creation form carried its own control to show what was typed, and either showed both; and a filled button, having lost its fill, had no border, so the main action of both forms read as text. Resolved: the second field follows the first one's control, and filled buttons take the system's button border in forced colours (`native/desktop/frontend/src/components/ui/button.tsx`). Every other stop was named, in sight and visibly focused, errors were tied to their fields, and Escape returned the keyboard to the pane's action.
+
+### sign-in view | low | another profile could be used only by knowing to sign out first
+
+Resolved: settings and the palette offer Switch profile while signed in, where the host lists profiles. It signs out once and goes on to the sign-in with its choice; a sign-out that fails is said in settings wherever the switch was asked from. The product itself does not sign the previous profile out when another is signed in to, which is why the window does it first.
 
 ## Recommendations
 
