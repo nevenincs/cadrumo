@@ -241,8 +241,10 @@ typed in `src/shell/views.ts`.
   cannot load. The desktop host offers none yet: in the product none of this
   is on screen, and what the scenarios show of it is design evidence.
 - **A view is read for a profile, when something shows it.** The calendar is
-  read when its page is shown; the counts when the profile becomes readable
-  and when the window is returned to, at most once a minute. What was read is
+  read when its page is shown, and not again for being put away and brought
+  back within half a minute; its Refresh always asks. The counts are read
+  when the profile becomes readable and when the window is returned to, at
+  most once a minute. What was read is
   dropped when the profile or its sign-in changes. A read that is refused has
   the account's status read again, since the account may have changed
   underneath.

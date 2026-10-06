@@ -1240,6 +1240,35 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   ).toHaveCount(0);
 });
 
+test("the calendar is not read again for being put away and brought back", async ({
+  page: target,
+}) => {
+  await target.clock.install();
+  await open(target, "signed-in");
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  for (let round = 0; round < 3; round++) {
+    await calendarButton(target).click();
+    await expect(page.getByRole("listitem").first()).toBeVisible();
+    await calendarButton(target).click();
+    await expect(page).toHaveCount(0);
+  }
+  expect(await calendarReads(target)()).toBe(1);
+  // Refresh always asks.
+  await calendarButton(target).click();
+  await page
+    .getByRole("button", { name: label("desktop.calendar.refresh") })
+    .click();
+  await expect.poll(calendarReads(target)).toBe(2);
+  await calendarButton(target).click();
+  // Shown anew after a while, it is read again.
+  await target.clock.runFor(31_000);
+  await calendarButton(target).click();
+  await expect.poll(calendarReads(target)).toBe(3);
+  await expect(page.getByRole("listitem").first()).toBeVisible();
+});
+
 test("the documentation keeps its place under the calendar", async ({
   page: target,
 }) => {

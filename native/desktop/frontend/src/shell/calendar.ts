@@ -29,9 +29,14 @@ export function calendarRange(today: Date): { from: string; to: string } {
   };
 }
 
+/** A calendar read this recently is shown again as it is: on a real host a
+ * read is a process, and putting the page away and back is not a question.
+ * Refresh always asks. */
+const FRESH_MS = 30_000;
+
 /**
  * The filing calendar of a profile, read when its page is shown and again
- * each time it is shown anew. Nothing is read for a page nobody is looking
+ * when it is shown anew after a while. Nothing is read for a page nobody is looking
  * at. `reader` names whose calendar it is, and is null while the account
  * withholds the read: what was read is dropped whenever it changes, because
  * a calendar belongs to its profile and not to the window. A read that is
@@ -47,6 +52,8 @@ export function useFilingCalendar(
   const [refreshing, setRefreshing] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const request = useRef(0);
+  // When the calendar on screen was read; zero while there is none.
+  const readAt = useRef(0);
   const refused = useRef(onRefused);
   refused.current = onRefused;
 
@@ -67,6 +74,7 @@ export function useFilingCalendar(
       .then((next) => {
         // An answer to a question no longer being asked is not shown.
         if (mine !== request.current) return;
+        readAt.current = next.kind === "ready" ? Date.now() : 0;
         setRead(next);
         setRefreshing(false);
         setAttempt((count) => count + 1);
@@ -76,12 +84,14 @@ export function useFilingCalendar(
 
   useEffect(() => {
     ++request.current;
+    readAt.current = 0;
     setRead({ kind: "loading" });
     setRefreshing(false);
   }, [reader]);
 
   useEffect(() => {
-    if (reader !== null && shown) refresh();
+    if (reader !== null && shown && Date.now() - readAt.current >= FRESH_MS)
+      refresh();
   }, [reader, shown, refresh]);
 
   const state: CalendarState = reader === null ? { kind: "withheld" } : read;
