@@ -5,7 +5,7 @@ tags:
 date: '2026-10-06'
 modified: '2026-10-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf1fb276acc97a54ab423f68e4e40fbb09843edf84365e6c2b5a550644f1709e'
+body_hash: 'sha256:e85927b733200d837ae33dacf8182d05fb2b405eda7fa1eb91db063d45082480'
 related:
   - "[[2026-10-06-user-docs-weight-research]]"
   - "[[2026-07-18-user-docs-localization-adr]]"
@@ -57,6 +57,8 @@ The documentation is compiled once per language and shipped once per language. E
 Affected wording in `2026-07-18-user-docs-localization-adr`: its Implementation item "Build matrix" and its Constraint on per-language `-W` builds describe the means this decision replaces, and remain in force only as D5 says, mechanism by mechanism. D4 of `2026-09-24-docs-build-performance-adr` (language roots build concurrently) lapses when the last per-language build is retired. D6 replaces the per-language index of D5 in `2026-06-10-docs-terminology-search-adr` and the localization decision's constraint that the index is built once per language; the record kinds, their ranking tiers and their destinations stay as those decisions set them.
 
 Affected wording in `2026-10-04-desktop-shell-adr`: it places the documentation under `docs/user/` in the published layout, English at the top and the other languages under `<lang>/`, with a manifest of languages, entries and a sha256 inventory. Under D3 that layout is the layout of the addresses the scheme handler answers, which the language switcher depends on, and no longer the layout of the files stored. The inventory covers the files stored, and the manifest also says how each address is served. Its path containment, closed media-type table, script hashes and content security policy apply to the composed response as they did to the file.
+
+- D7, how the one compile carries every language. Operator direction 2026-10-06: the documentation must not be compiled once per language, in the package build, the published site, CI or a local build; "imagine if we supported localization for 40 languages". The compile's output is the structure itself: wherever a string depends on the language the compiled page carries a slot, and each language's string for that slot is collected beside it. Three sources fill slots. The generated references render every language from one projection, and their sources are factored before they are compiled. Theme, Sphinx and site-chrome strings are answered by a translator that returns a slot and records each language's catalogue value. An authored page's translatable messages become slots through a generated catalogue, and each language's translation of a message is rendered once, as a fragment in its page's own context. A language then costs the rendering of its text and nothing else, so adding one adds no compile. The published site is composed from the same structure and text, with the one index of D6. These three mechanisms are how C2 is met and may change; the commitment is that no step compiles pages per language. Each is proven by D2 against that language's own build before the build is retired, and a difference kept on purpose, such as an anchor that no longer depends on the language, is listed with its reason where the comparison is made.
 
 ## Rationale
 
