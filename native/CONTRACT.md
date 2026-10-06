@@ -926,11 +926,48 @@ with exit status 1.
 
 ### Runtime and sign-in dependency
 
-The desktop holds no runtime connection and no runtime authority. The TUI tab
-runs the TUI process and shows only its output, including the reason the TUI
-writes on standard error and its exit when no runtime admits it. Starting or
-reaching a runtime manager and the sign-in host commands are not implemented:
-the desktop starts, stops and authenticates nothing.
+The desktop holds no runtime connection and no runtime authority, and keeps no
+session, receipt or credential. The TUI tab runs the TUI process and shows only
+its output, including the reason the TUI writes on standard error and its exit
+when no runtime admits it. Starting or reaching a runtime manager is not
+implemented: the desktop starts and stops nothing.
+
+Sign-in and profiles go through the packaged command line
+(`src-tauri/src/shell/sign_in/`). Each command below spawns one short-lived
+`aeat --format json config …` from the package, after checking the image against
+the package manifest, with the storage environment the host pinned. One runs at
+a time: `sign_in_status` and `profile_list` wait for the one that is running,
+and the others are refused with `queue_full`. A child has 30 seconds, and the
+creation of a profile 300, because the product derives a profile's key from its
+password slowly on purpose; a child that passes its deadline is stopped and the
+command refused with `timed_out`. Output above 64 KiB is refused with
+`output_limit`. The host decodes the schema 2 envelope and requires the
+command's own name in it. Of a refusal only the code crosses to the window, with
+the seconds of a throttle: never a message or other context. Children are
+stopped when the window closes.
+
+| Command | Arguments | Command line | Result and refusals |
+| --- | --- | --- | --- |
+| `sign_in_status` | `token` | `config sign-in-status` | `{supported, state, active_profile, runtimeAvailable, refusal}`. `state` is `present`, `absent` or `unknown`; `active_profile` is the selected profile's label or null. Reading it never resumes or extends a sign-in. |
+| `sign_in_submit` | Raw UTF-8 password body of at most 8192 bytes; header `x-cadrumo-token`; optional header `x-cadrumo-profile` | `config login --secrets-stdin`, then `-- LABEL` when a profile is named | `{kind: "signed-in"}`, or `{kind: "refused", code, retryAfterSeconds}`. Unnamed, it signs in to the selected profile. One attempt: nothing is retried. |
+| `sign_out` | `token` | `config logout` | `{remainingAccess: {automationEnabled, automationRevoked: false}}`. A refusal rejects with `{code, retryAfterSeconds}`. |
+| `profile_list` | `token` | `config profile list` | `{profiles: [{name, active}], complete}`, in the product's order. It needs no password, session or runtime. `complete` is false when the product reports that it could not read its profiles coherently: the list is then no evidence of which profiles exist. |
+| `profile_create` | Raw UTF-8 password body of at most 8192 bytes; headers `x-cadrumo-token` and `x-cadrumo-profile` | `config profile create --quiet --secrets-stdin -- LABEL` | `{kind: "created", name}`, or `{kind: "refused", code, retryAfterSeconds}`. The new profile is selected and left signed out. A label already in use is refused with the code `profile_already_exists`. One attempt: nothing is retried. |
+
+`x-cadrumo-profile` carries a profile's label as UTF-8, percent-encoded, since
+a header carries no other text. The product prints no profile identity, so the
+label, which is unique on a computer, is how a profile is named. The host
+refuses with `invalid_arguments` a label that is empty, longer than 160
+characters, surrounded by white space, holding a control character, or
+beginning with a hyphen, and it passes the label after `--` so that none of it
+is read as an option. The password is written once to the child's standard
+input as one JSON object, `passphrase` alone or with the same text as
+`passphrase_confirmation` for a creation, from a buffer that is wiped when
+dropped, and the input is then closed. The copies the webview and its transport
+hold cannot be wiped.
+
+These commands are implemented on Windows. Elsewhere `sign_in_status` reports
+`supported: false` and the others are refused with `unsupported_platform`.
 
 ### Desktop build and test procedure
 
