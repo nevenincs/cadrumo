@@ -198,6 +198,21 @@ if language not in _VALID_DOCS_LANGUAGES:
 locale_dirs = ["locales"]
 gettext_compact = False
 _BUILD_LANGUAGE = OutputLanguage(language)
+
+# ── One compile carrying every language ──────────────────────────────────────
+# ``CADRUMO_DOCS_MULTILINGUAL`` makes this the ONE compile the documentation
+# gets: wherever a string depends on the language the pages carry a mark and
+# every language's string for it is recorded beside them, and the driver that
+# ran this build factors the output into the structure and each language's text
+# (:mod:`dev.docs.compile_slots`, :func:`dev.docs.compile_once.compile_once`).
+# Recording starts here, above the first resolver that resolves a string, and
+# the record is written into the output when the build finishes, because the
+# resolvers run inside this child process and the driver does not.
+_COMPILE_SLOTS = import_module("dev.docs.compile_slots")
+_MULTILINGUAL = os.environ.get("CADRUMO_DOCS_MULTILINGUAL") == "1"
+if _MULTILINGUAL:
+    _COMPILE_SLOTS.activate([member.value for member in OutputLanguage])
+
 _SITE_LABELS = site_labels(_BUILD_LANGUAGE)
 
 exclude_patterns = [
@@ -1780,6 +1795,21 @@ def setup(app):
                     continue
         check_sequence_goldens(app, pages=pages)
 
+    def _write_compile_slots(app, exception):
+        """Leave the recorded marks where the driver that ran this build reads them.
+
+        Args:
+            app: The Sphinx application instance.
+            exception: The build's failure, or None when it succeeded. A failed
+                build's record says nothing about a site that was not written.
+        """
+        slots = _COMPILE_SLOTS.active()
+        if exception is not None or slots is None:
+            return
+        slots.write(Path(app.outdir) / _COMPILE_SLOTS.SLOTS_FILE)
+
+    if _MULTILINGUAL:
+        app.connect("build-finished", _write_compile_slots)
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)

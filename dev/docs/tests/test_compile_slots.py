@@ -1,0 +1,217 @@
+"""One compile's marks become the stored form's slots, written as each position needs.
+
+A page is written by hand carrying marks in the four positions a page offers --
+a text node, an attribute value, the ``<title>`` element, and bare markup -- and
+the strings each position must receive are stated here rather than taken from
+the module. The expected renderings are the ones the writers that own those
+positions produce: the docutils HTML writer escapes ``& < > " @`` in text and
+folds whitespace in an attribute value, while the theme's ``<title>`` reaches
+the page through Jinja, which escapes ``& < > " '`` and leaves ``@`` alone. The
+apostrophe is the clearest case of why a mark must declare its writer: docutils
+leaves it, Jinja writes ``&#39;`` and a generator's own :func:`html.escape`
+writes ``&#x27;``, and the three are indistinguishable from the markup around
+them.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from ..compile_slots import (
+    MARK_CLOSE,
+    MARK_OPEN,
+    SLOTS_SCHEMA,
+    CompileSlots,
+    CompileSlotsError,
+    Position,
+    Rendering,
+    activate,
+    cache_key_slots,
+    deactivate,
+    escape,
+    factor_page,
+    mark_positions,
+    read_slots,
+)
+from ..shared_structure import LanguageText, compose_page
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
+_LANGUAGES = ("en", "es", "ca")
+
+
+@pytest.fixture
+def slots() -> Iterator[CompileSlots]:
+    """A compile recording three languages, with nothing left active after."""
+    recorded = activate(_LANGUAGES)
+    yield recorded
+    deactivate()
+
+
+def test_the_same_strings_are_one_mark(slots: CompileSlots) -> None:
+    """A string that recurs is recorded once, so it is stored once."""
+    first = slots.mark(Rendering.DOCUTILS, ["Filing", "Presentación", "Presentació"])
+    again = slots.mark(Rendering.DOCUTILS, ["Filing", "Presentación", "Presentació"])
+    assert first == again == f"{MARK_OPEN}0{MARK_CLOSE}"
+    assert len(slots.values) == 1
+
+
+def test_the_owning_writer_separates_two_marks(slots: CompileSlots) -> None:
+    """The same strings written by two writers are two marks: they reach the page differently."""
+    text = slots.mark(Rendering.DOCUTILS, ["a&b", "a&b", "a&b"])
+    raw = slots.mark(Rendering.VERBATIM, ["a&b", "a&b", "a&b"])
+    assert text != raw
+    assert len(slots.values) == 2
+
+
+def test_a_mark_needs_one_string_per_language(slots: CompileSlots) -> None:
+    """A compile that recorded two of three languages would store a language's text short."""
+    with pytest.raises(CompileSlotsError, match="one string per language"):
+        slots.mark(Rendering.DOCUTILS, ["Filing", "Presentación"])
+
+
+def test_a_recorded_string_may_not_carry_a_delimiter(slots: CompileSlots) -> None:
+    """A string holding a delimiter would read as a mark of its own."""
+    with pytest.raises(CompileSlotsError, match="reserved for mark delimiters"):
+        slots.mark(Rendering.VERBATIM, ["ok", f"no{MARK_OPEN}", "ok"])
+
+
+def test_every_position_a_page_offers_is_recognised(slots: CompileSlots) -> None:
+    """The four positions are told apart, including a title tag that has closed."""
+    mark = slots.mark(Rendering.VERBATIM, ["a", "b", "c"])
+    page = f'<head><title>{mark}</title></head><body><p class="{mark}">{mark}</p><p {mark}>t</p></body>'
+    assert [position for _, position in mark_positions(page)] == [
+        Position.TITLE,
+        Position.ATTRIBUTE,
+        Position.TEXT,
+        Position.MARKUP,
+    ]
+
+
+def test_each_position_receives_the_string_its_writer_writes(slots: CompileSlots) -> None:
+    """A docutils mark's strings are escaped as the writer that owns the position escapes."""
+    mark = slots.mark(Rendering.DOCUTILS, ['a&b<c>"d"@e', "x\ty\nz", "d'IVA"])
+    page = f'<head><title>{mark}</title></head><body><p>{mark}</p><p title="{mark}">t</p></body>'
+    factored = factor_page(page, slots)
+    assert factored == [
+        "<head><title>",
+        ("a&amp;b&lt;c&gt;&#34;d&#34;@e", "x y z", "d&#39;IVA"),
+        "</title></head><body><p>",
+        ("a&amp;b&lt;c&gt;&quot;d&quot;&#64;e", "x\ty\nz", "d'IVA"),
+        '</p><p title="',
+        ("a&amp;b&lt;c&gt;&quot;d&quot;&#64;e", "x y z", "d'IVA"),
+        '">t</p></body>',
+    ]
+
+
+def test_a_verbatim_mark_is_placed_as_it_was_recorded(slots: CompileSlots) -> None:
+    """A generator that wrote its own markup already escaped its strings for it."""
+    mark = slots.mark(Rendering.VERBATIM, ["a&amp;b", "x", "y"])
+    assert factor_page(f'<p title="{mark}">{mark}</p>', slots) == [
+        '<p title="',
+        ("a&amp;b", "x", "y"),
+        '">',
+        ("a&amp;b", "x", "y"),
+        "</p>",
+    ]
+
+
+def test_a_docutils_mark_in_bare_markup_is_refused(slots: CompileSlots) -> None:
+    """Nothing can say how a docutils writer would have written a tag's own bytes."""
+    mark = slots.mark(Rendering.DOCUTILS, ["a", "b", "c"])
+    with pytest.raises(CompileSlotsError, match="reached page markup"):
+        factor_page(f"<p {mark}>t</p>", slots)
+
+
+def test_a_mark_the_compile_never_recorded_is_refused(slots: CompileSlots) -> None:
+    """A page naming an unrecorded mark would store a slot with no string."""
+    slots.mark(Rendering.VERBATIM, ["a", "b", "c"])
+    with pytest.raises(CompileSlotsError, match="recorded 1 mark"):
+        factor_page(f"<p>{MARK_OPEN}9{MARK_CLOSE}</p>", slots)
+
+
+def test_escaping_reaches_every_language_rather_than_the_mark(slots: CompileSlots) -> None:
+    """Escaping a mark changes nothing, so the strings are escaped instead."""
+    mark = slots.mark(Rendering.DOCUTILS, ["a&b", "d'IVA", "<x>"])
+    escaped = escape(f"prefix {mark}", quote=True)
+    assert escaped.startswith("prefix ")
+    rendering, values = slots.strings(int(escaped.removeprefix("prefix ")[1:-1], 36))
+    assert rendering is Rendering.VERBATIM
+    assert values == ("a&amp;b", "d&#x27;IVA", "&lt;x&gt;")
+
+
+def test_escaping_outside_a_compile_is_ordinary_escaping() -> None:
+    """One root's build has no marks and must escape exactly as it does today."""
+    deactivate()
+    assert escape("a&b<c>", quote=True) == "a&amp;b&lt;c&gt;"
+
+
+def test_each_language_composes_back_to_its_own_page(slots: CompileSlots) -> None:
+    """The stored form is only as good as the page it gives back."""
+    mark = slots.mark(Rendering.DOCUTILS, ["Filing", "Presentación", "Presentació"])
+    other = slots.mark(Rendering.VERBATIM, ["en", "es", "ca"])
+    page = f'<html lang="{other}"><h1>{mark}</h1></html>'
+    text = LanguageText(_LANGUAGES)
+    structure = text.structure(factor_page(page, slots))
+    assert [compose_page(structure, text.strings[language]) for language in _LANGUAGES] == [
+        '<html lang="en"><h1>Filing</h1></html>',
+        '<html lang="es"><h1>Presentación</h1></html>',
+        '<html lang="ca"><h1>Presentació</h1></html>',
+    ]
+
+
+def test_a_language_dependent_assets_cache_key_becomes_a_slot(slots: CompileSlots) -> None:
+    """Each language's file has its own key, and one compile wrote neither."""
+    page = '<script src="_static/chrome.js?v=0000"></script><link href="_static/app.css?v=1111">'
+    assert cache_key_slots(page, {"_static/chrome.js?v=0000": ("aa", "bb", "cc")}) == [
+        '<script src="',
+        ("_static/chrome.js?v=aa", "_static/chrome.js?v=bb", "_static/chrome.js?v=cc"),
+        '"></script><link href="_static/app.css?v=1111">',
+    ]
+
+
+def test_the_recorded_marks_survive_the_process_that_wrote_them(slots: CompileSlots, tmp_path: Path) -> None:
+    """The compile records marks in the Sphinx child; the driver factors the site after it."""
+    slots.mark(Rendering.DOCUTILS, ["a", "b", "c"])
+    slots.mark(Rendering.VERBATIM, ["x&amp;", "y", "z"])
+    written = tmp_path / "marks.json"
+    slots.write(written)
+    assert json.loads(written.read_text(encoding="utf-8"))["schema"] == SLOTS_SCHEMA
+    read = read_slots(written)
+    assert read.languages == _LANGUAGES
+    assert read.strings(0) == (Rendering.DOCUTILS, ("a", "b", "c"))
+    assert read.strings(1) == (Rendering.VERBATIM, ("x&amp;", "y", "z"))
+
+
+def test_an_unreadable_mark_record_is_refused(tmp_path: Path) -> None:
+    """A driver that factored a site without the compile's strings would store English four times."""
+    absent = tmp_path / "missing.json"
+    with pytest.raises(CompileSlotsError, match="no readable compile marks"):
+        read_slots(absent)
+    wrong = tmp_path / "wrong.json"
+    wrong.write_text(json.dumps({"schema": SLOTS_SCHEMA + 1}), encoding="utf-8")
+    with pytest.raises(CompileSlotsError, match="schema"):
+        read_slots(wrong)
+
+
+def test_a_string_a_mark_is_built_from_may_itself_hold_marks(slots: CompileSlots) -> None:
+    """A chrome string takes an argument, and the argument can be a translated one."""
+    argument = slots.mark(Rendering.DOCUTILS, ["filing", "presentación", "presentació"])
+    composed = slots.mark(
+        Rendering.DOCUTILS,
+        [slots.resolved(f"Navigation of {argument}", index) for index in range(len(_LANGUAGES))],
+    )
+    assert slots.strings(int(composed[1:-1], 36))[1] == (
+        "Navigation of filing",
+        "Navigation of presentación",
+        "Navigation of presentació",
+    )
+
+
+def test_resolving_leaves_a_string_with_no_marks_alone(slots: CompileSlots) -> None:
+    """The ordinary case must not pay for the composed one."""
+    assert slots.resolved("Ley 37/1992", 0) == "Ley 37/1992"

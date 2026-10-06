@@ -24,10 +24,14 @@ written.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
+
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
 
-__all__ = ["DocsChromeError", "docs_chrome"]
+from .compile_slots import Rendering, active
+
+__all__ = ["DocsChromeError", "docs_chrome", "docs_fragment"]
 
 
 class DocsChromeError(RuntimeError):
@@ -37,13 +41,21 @@ class DocsChromeError(RuntimeError):
 def docs_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
     """Return one chrome string in ``language``, or refuse.
 
+    Under the one multilingual compile (:mod:`dev.docs.compile_slots`) there is
+    no one language to return: the compile writes a mark here and records what
+    every language reads, each language's own authored value filled with the
+    same placeholders. ``language`` is still resolved and still refused when it
+    has no authored value, so a build cannot pass by rendering the languages it
+    can and marking the one it cannot.
+
     Args:
         key: The dotted catalogue key holding the string.
         language: The language this docs root is being built for.
         values: Placeholder values interpolated into the authored string.
 
     Returns:
-        The authored string for ``language``, with placeholders filled.
+        The authored string for ``language``, with placeholders filled, or the
+        mark standing for every language's string under a multilingual compile.
 
     Raises:
         DocsChromeError: If the catalogue carries no authored value for the
@@ -51,6 +63,56 @@ def docs_chrome(key: str, language: OutputLanguage, /, **values: object) -> str:
             match the ones supplied.  Both are authoring faults that must
             surface at build time rather than reaching a reader.
     """
+    slots = active()
+    if slots is not None:
+        return slots.mark(
+            Rendering.DOCUTILS,
+            [
+                _authored(
+                    key,
+                    OutputLanguage(carried),
+                    {
+                        name: slots.resolved(value, index) if isinstance(value, str) else value
+                        for name, value in values.items()
+                    },
+                )
+                for index, carried in enumerate(slots.languages)
+            ],
+        )
+    return _authored(key, language, values)
+
+
+def docs_fragment(render: Callable[[OutputLanguage], str], language: OutputLanguage, /) -> str:
+    """Return one language's rendering of a fragment whose MARKUP depends on the language.
+
+    A label a language does not carry is not a shorter label, it is a heading
+    the page does not have, so the difference between two languages is markup
+    and not a string. Only the writer of that markup can say what each language
+    reads, so the fragment is rendered once per language and recorded whole.
+    The rendering runs ordinarily inside, which is what keeps a generator's own
+    escaping, joining and conditionals correct without a slot-aware copy of each.
+
+    Outside the one multilingual compile this is the fragment in ``language``
+    and nothing else, so a single-language build is unchanged.
+
+    Args:
+        render: Renders the fragment in one language.
+        language: The language a single-language build renders.
+
+    Returns:
+        The fragment, or the mark standing for every language's fragment.
+    """
+    slots = active()
+    if slots is None:
+        return render(language)
+    return slots.mark(
+        Rendering.VERBATIM,
+        [slots.resolved(render(OutputLanguage(carried)), index) for index, carried in enumerate(slots.languages)],
+    )
+
+
+def _authored(key: str, language: OutputLanguage, values: Mapping[str, object]) -> str:
+    """Return one language's authored string for *key*, placeholders filled."""
     authored = lookup_translation(key, locale=language.value)
     if authored is None:
         raise DocsChromeError(

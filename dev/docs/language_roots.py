@@ -18,11 +18,15 @@ form does not give back byte for byte.
 from __future__ import annotations
 
 import json
+import zlib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Final
 
+from .compile_slots import MARK, MARK_OPEN, CompileSlots, Rendering
+from .compile_slots import cache_key_slots as _cache_key_slots
+from .compile_slots import factor_page as _factor_compiled_page
 from .shared_structure import LanguageText, compose_page, factor_page
 
 STRUCTURE_DIRECTORY: Final[str] = "structure"
@@ -158,6 +162,139 @@ def factor_roots(files: Mapping[str, Mapping[str, Path]], destination: Path) -> 
         pages=tuple(pages),
         shared=tuple(shared),
         language_files={language: tuple(paths) for language, paths in language_files.items()},
+    )
+    _write(destination / LAYOUT_FILE, (json.dumps(layout.document(), indent=1) + "\n").encode(_UTF_8))
+    return layout
+
+
+def asset_cache_key(content: bytes) -> str:
+    """Return the cache key a built page carries for an asset of these bytes.
+
+    The same key Sphinx appends to every asset reference
+    (``sphinx.builders.html._assets``): a CRC-32 of the file's bytes with
+    carriage returns removed, and empty for empty content. A file stored once
+    per language has one key per language, so the key in a page is a string
+    that depends on the language exactly as a translated label does.
+    """
+    stripped = content.translate(None, b"\r")
+    return f"{zlib.crc32(stripped):08x}" if stripped else ""
+
+
+def _rendered_language_file(content: bytes, slots: CompileSlots, language_index: int, path: str) -> bytes:
+    """Return one language's bytes for a compiled file that is not a page.
+
+    A file that is not a page has no markup for a position to be read from, so
+    only a mark whose creation site already wrote its strings for that file's
+    syntax can appear in one.
+    """
+    text = content.decode(_UTF_8)
+    pieces: list[str] = []
+    position = 0
+    for mark in MARK.finditer(text):
+        rendering, values = slots.strings(int(mark.group(1), 36))
+        if rendering is not Rendering.VERBATIM:
+            raise LanguageRootsError(
+                f"{path} is not a page and carries a mark whose strings a docutils writer owns; "
+                "a file written outside a page must record its strings in its own syntax"
+            )
+        pieces.extend((text[position : mark.start()], values[language_index]))
+        position = mark.end()
+    pieces.append(text[position:])
+    return "".join(pieces).encode(_UTF_8)
+
+
+def store_compiled_root(
+    compiled: Mapping[str, Path],
+    slots: CompileSlots,
+    destination: Path,
+    *,
+    language_files: Mapping[str, Mapping[str, Path]] | None = None,
+) -> Layout:
+    """Write one compiled site as the structure and each language's text.
+
+    The stored form is the same one :func:`factor_roots` writes from several
+    built roots, and :func:`compose_root` reads either without knowing which
+    wrote it. What differs is where the slots come from: here each is a mark the
+    one compile recorded (:mod:`dev.docs.compile_slots`), so no alignment is
+    guessed and a slot's strings are what the compile resolved.
+
+    Args:
+        compiled: The compiled site's files by their path inside the root.
+        slots: The marks the compile recorded, naming the languages in the
+            order their strings are stored.
+        destination: An empty or absent directory to write the stored form into.
+        language_files: For each language, files that belong to that language
+            alone and are not pages, such as its search index. A path given
+            here is stored per language even when the compile also wrote it.
+
+    Returns:
+        How each path was stored.
+
+    Raises:
+        LanguageRootsError: If ``destination`` is not empty, a file that is not
+            a page carries a mark it cannot answer, or a page carries a slot
+            delimiter of its own.
+    """
+    languages = slots.languages
+    if destination.exists() and any(destination.iterdir()):
+        raise LanguageRootsError(f"the destination is not empty: {destination}")
+    extra = language_files or {language: {} for language in languages}
+    if set(extra) != set(languages):
+        raise LanguageRootsError(f"the per-language files must name exactly {list(languages)}")
+    text = LanguageText(languages)
+    own: dict[str, list[str]] = {language: [] for language in languages}
+    keys: dict[str, tuple[str, ...]] = {}
+    for path in sorted({name for language in languages for name in extra[language]}):
+        written: list[str] = []
+        for language in languages:
+            source = extra[language].get(path)
+            if source is None:
+                continue
+            content = source.read_bytes()
+            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), content)
+            own[language].append(path)
+            written.append(asset_cache_key(content))
+        if len(written) == len(languages) and path in compiled:
+            name = PurePosixPath(path).name
+            keys[f"{name}?v={asset_cache_key(compiled[path].read_bytes())}"] = tuple(written)
+    per_language = {path for language in languages for path in own[language]}
+    pages: list[str] = []
+    shared: list[str] = []
+    for path in sorted(compiled):
+        if path in per_language:
+            continue
+        content = compiled[path].read_bytes()
+        page = _page_text(content) if path.endswith(_PAGE_SUFFIX) else None
+        if page is None:
+            if MARK_OPEN in content.decode(_UTF_8, errors="replace"):
+                for index, language in enumerate(languages):
+                    _write(
+                        _inside(destination / LANGUAGES_DIRECTORY / language, path),
+                        _rendered_language_file(content, slots, index, path),
+                    )
+                    own[language].append(path)
+                continue
+            _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
+            shared.append(path)
+            continue
+        factored: list[str | tuple[str, ...]] = []
+        for part in _factor_compiled_page(page, slots):
+            factored.extend(_cache_key_slots(part, keys) if isinstance(part, str) else [part])
+        if not any(isinstance(part, tuple) for part in factored):
+            _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
+            shared.append(path)
+            continue
+        structure = text.structure(factored)
+        _write(_inside(destination / STRUCTURE_DIRECTORY, path), structure.encode(_UTF_8))
+        pages.append(path)
+    for language in languages:
+        strings = json.dumps(text.strings[language], ensure_ascii=False, separators=(",", ":"))
+        _write(destination / text_file(language), strings.encode(_UTF_8))
+    layout = Layout(
+        languages=languages,
+        pages=tuple(pages),
+        shared=tuple(shared),
+        language_files={language: tuple(sorted(paths)) for language, paths in own.items()},
     )
     _write(destination / LAYOUT_FILE, (json.dumps(layout.document(), indent=1) + "\n").encode(_UTF_8))
     return layout

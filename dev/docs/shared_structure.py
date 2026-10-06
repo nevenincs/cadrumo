@@ -126,6 +126,42 @@ def _slots(differences: Sequence[Sequence[tuple[int, int, str]]]) -> Iterator[tu
     yield low, high
 
 
+@dataclass(frozen=True)
+class Difference:
+    """One stretch two renderings of the same page do not share.
+
+    Attributes:
+        offset: Where the stretch starts in the first page.
+        base: What the first page reads there.
+        other: What the second page reads in its place.
+    """
+
+    offset: int
+    base: str
+    other: str
+
+
+def compare_page(base: str, other: str) -> list[Difference]:
+    """Return every stretch of ``base`` that ``other`` reads differently.
+
+    The same alignment :func:`factor_page` factors by, reported rather than
+    stored: it is how a page composed from the stored form is measured against
+    the page a language's own build produced while the two still differ, so the
+    remaining work is a count per kind of difference instead of a yes or no.
+    """
+    pieces, shapes = _pieces(base)
+    offsets: list[int] = []
+    at = 0
+    for piece in pieces:
+        offsets.append(at)
+        at += len(piece)
+    offsets.append(at)
+    return [
+        Difference(offsets[start], "".join(pieces[start:end]), replacement)
+        for start, end, replacement in _differences((pieces, shapes), _pieces(other))
+    ]
+
+
 def factor_page(pages: Sequence[str]) -> list[str | tuple[str, ...]]:
     """Return one page's structure as shared text and, per slot, each language's string.
 
